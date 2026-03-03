@@ -69,6 +69,14 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T008 Configure error handling and logging infrastructure
 - [ ] T009 Setup environment configuration management
 
+<!-- BudFin constitution-driven task types that MUST appear in every BudFin feature's Phase 2:
+  - Configure fixed-point decimal library for monetary arithmetic (Principle I — Financial Accuracy, TC-001)
+  - Implement or wire into the append-only audit log service (Principle IV — Full Auditability)
+  - Implement or wire into the version isolation storage layer (Principle V — Version Isolation)
+  These tasks may already exist as shared infrastructure after the first feature; subsequent features
+  reference the shared service rather than re-implementing it.
+-->
+
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
 ---

@@ -1,0 +1,36 @@
+ID,Category,Edge Case,Severity,Affected_FRs,Phase,Status
+PO-001,Data Entry,Zero enrollment in a grade,High,"FR-REV-001, FR-CAP-001, FR-DHG-001, FR-DHG-002, FR-SAL-001",Phase 5,Pending
+PO-002,Data Entry,Negative discount rates (data entry),High,"FR-REV-002, FR-INP-003",Phase 2,Pending
+PO-003,Data Entry,Duplicate employee records during upload,Critical,"FR-SAL-001, FR-AUD-001, FR-INP-002",Phase 3,Critical_Path
+PO-004,Business Rules,Joining date after period start,High,"FR-SAL-002, FR-EOS-001, FR-GOI-001, FR-AJR-001",Phase 3,Pending
+PO-005,Academic Calendar,Enrollment decrease mid-year,High,"FR-DHG-001, FR-DHG-002, FR-SAL-001, FR-SAL-003, FR-AUD-001",Phase 5,Pending
+PO-006,Business Rules,GOSI calculation for partially-Saudi employees,High,"FR-GOI-001, FR-AJR-001, FR-AUD-001, FR-INP-002",Phase 3,Pending
+PO-007,Version Lifecycle,Fee grid update mid-year; retroactive application,Critical,"FR-REV-001, FR-VER-001, FR-VER-003, FR-AUD-001",Phase 4,Critical_Path
+PO-008,Version Lifecycle,Version comparison with different enrollment counts,Medium,"FR-CMP-001, FR-DSH-005",Phase 4,Pending
+PO-009,Business Rules,Scenario modeling with conflicting parameters,High,"FR-SCN-001, FR-ADD-003, FR-ADD-004",Phase 4,Pending
+PO-010,Data Entry,Historic enrollment with missing data points,Medium,"FR-ENR-001, FR-DSH-003, FR-INP-002",Phase 2,Pending
+PO-011,Academic Calendar,AY1 vs. AY2 fee grid discrepancy,High,"FR-REV-001, FR-ENR-006, FR-REV-005",Phase 2,Pending
+PO-012,Version Lifecycle,EoS calculation with retroactive joining date update,Critical,"FR-EOS-001, FR-SAL-003, FR-AUD-001, FR-VER-003",Phase 4,Critical_Path
+PO-013,Reporting,Rounding and precision in multi-step calculations,Critical,"FR-NFR-004, FR-REV-001, FR-SAL-003, FR-EOS-001",Phase 4,Critical_Path
+PO-014,Business Rules,Enrollment exceeds Plafond; capacity impact on staff,High,"FR-CAP-001, FR-CAP-002, FR-DHG-001, FR-INP-002",Phase 5,Pending
+PO-015,Version Lifecycle,Comparison report with deleted line items in one version,Medium,"FR-CMP-001, FR-REV-004, FR-AUD-001",Phase 4,Pending
+PO-016,Data Entry,Hourly percentage below 0 or above 100%,Medium,"FR-SAL-001, FR-INP-002, FR-INP-003",Phase 3,Pending
+PO-017,Version Lifecycle,Scenario base parameters locked while assumptions change,Medium,"FR-SCN-001, FR-ASM-001",Phase 4,Pending
+PO-018,Academic Calendar,HSA exclusion logic during Jul-Aug,Medium,"FR-SAL-002, FR-EOS-001, FR-SAL-003",Phase 3,Pending
+PO-019,Business Rules,Ajeer vs. GOSI for employees transitioning nationalities,High,"FR-GOI-001, FR-AJR-001, FR-AUD-001",Phase 3,Pending
+PO-020,Reporting,Rounding in capacity sections (CEILING function),Low,"FR-CAP-001",Phase 2,Pending
+PO-021,Version Lifecycle,Lock version after publication; subsequent edit requests,High,"FR-VER-001, FR-VER-003, FR-AUD-001, FR-AUD-002",Phase 4,Pending
+PO-022,Missing Requirement,Currency changes (SAR only vs. multi-currency support),Medium,"FR-ASM-001, FR-REV-001, FR-SAL-003",Cross-Phase,Pending
+PO-023,Data Entry,Enrollment with unknown grade (data quality issue),Medium,"FR-ENR-001, FR-INP-002",Phase 2,Pending
+PO-024,Data Entry,Discount rate exceeds 100%,Medium,"FR-REV-002, FR-INP-002",Phase 2,Pending
+PO-025,Reporting,P&L with zero revenue (closed school scenario),Low,"FR-SCN-001, FR-DSH-001, FR-INP-003",Phase 5,Pending
+PO-026,Reporting,Monthly revenue breakdown mismatch with annual total,Medium,"FR-REV-006, FR-NFR-004",Phase 2,Pending
+PO-027,Missing Requirement,Audit trail retention policy (7 years but what then),Low,"FR-NFR-005, FR-AUD-003",Cross-Phase,Pending
+PO-028,Missing Requirement,User role changes (Admin to Viewer); old data permissions,Medium,"FR-NFR-006, FR-AUD-001, FR-AUD-002",Cross-Phase,Pending
+PO-029,Version Lifecycle,Master data changes (grade levels); retroactive impact,High,"FR-ASM-001, FR-MAS-001, FR-VER-001",Cross-Phase,Pending
+PO-030,Business Rules,Revenue recognition timing (IFRS 15) and monthly billing,Critical,"FR-REV-001, FR-IFR-001, FR-ADD-024",Phase 4,Critical_Path
+PO-031,Business Rules,Staff augmentation on different dates,High,"FR-SAL-002, FR-SAL-003, FR-INP-002",Phase 3,Pending
+PO-032,Academic Calendar,Version comparison with different academic calendar structures,Medium,"FR-ENR-006, FR-CMP-001, FR-VER-001",Cross-Phase,Pending
+PO-033,Version Lifecycle,Deleted employee's historical data during staff cost comparison,High,"FR-SAL-001, FR-SAL-003, FR-AUD-001, FR-CMP-001",Phase 4,Pending
+PO-034,Business Rules,Discount policies mutually exclusive; user applies both,Medium,"FR-REV-002, FR-INP-002",Phase 2,Pending
+PO-035,Reporting,Zero staff for a grade; DHG still calculated,Low,"FR-DHG-001, FR-DHG-002, FR-INP-002",Phase 5,Pending

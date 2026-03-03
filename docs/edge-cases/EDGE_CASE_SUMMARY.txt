@@ -1,0 +1,234 @@
+================================================================================
+BUDFIN EDGE CASE ANALYSIS - EXECUTIVE SUMMARY
+================================================================================
+
+Date:       March 3, 2026
+Scope:      BudFin PRD v1.0 Product Owner Review
+Total Cases: 35 Edge Cases Identified
+
+================================================================================
+SEVERITY BREAKDOWN
+================================================================================
+
+CRITICAL (5):   Must resolve before UAT
+- PO-003: Duplicate employee records (breaks payroll)
+- PO-007: Fee grid retroactive changes (financial restatement)
+- PO-012: EoS retroactive joining date (over/under-provision)
+- PO-013: Rounding precision (fails Excel match requirement)
+- PO-030: Revenue recognition timing IFRS 15 (P&L inaccuracy)
+
+HIGH (14):      Must resolve before go-live
+- PO-001, PO-002, PO-004, PO-005, PO-006, PO-008, PO-009
+- PO-011, PO-014, PO-019, PO-021, PO-029, PO-031, PO-033
+
+MEDIUM (12):    Should resolve in v1.0
+- PO-010, PO-015, PO-016, PO-017, PO-018, PO-022
+- PO-026, PO-028, PO-032, PO-034
+
+LOW (4):        Can defer to v1.1
+- PO-020, PO-025, PO-027, PO-035
+
+================================================================================
+CATEGORY DISTRIBUTION
+================================================================================
+
+Data Entry Edge Cases (7):
+  PO-001, PO-002, PO-010, PO-016, PO-023, PO-024
+
+Business Rule Conflicts (9):
+  PO-004, PO-006, PO-009, PO-014, PO-019, PO-030, PO-031, PO-034
+
+Version & Lifecycle Edge Cases (9):
+  PO-007, PO-008, PO-012, PO-015, PO-017, PO-021, PO-029, PO-033
+
+Academic Calendar Edge Cases (4):
+  PO-005, PO-011, PO-018, PO-032
+
+Reporting Edge Cases (4):
+  PO-013, PO-020, PO-025, PO-026, PO-035
+
+Missing Requirements (2):
+  PO-022, PO-027, PO-028
+
+================================================================================
+KEY FINDINGS
+================================================================================
+
+1. DATA INTEGRITY RISKS
+   - No duplicate detection for employee imports (PO-003 - CRITICAL)
+   - Rounding logic not specified; fails Excel match requirement (PO-013 - CRITICAL)
+   - Negative/out-of-range values not validated (PO-002, PO-016, PO-024)
+
+2. VERSION MANAGEMENT GAPS
+   - No mechanism to handle retroactive fee grid changes (PO-007 - CRITICAL)
+   - Fee grids should be version-specific, not global (PO-007)
+   - Variance analysis doesn't attribute enrollment vs. assumption changes (PO-008)
+   - Version unlock workflow not specified (PO-021)
+
+3. BUSINESS RULE AMBIGUITIES
+   - Mid-year employee joining not covered; assumes Sep start (PO-004)
+   - Salary augmentation assumed global in Sep; doesn't support staggered dates (PO-031)
+   - GOSI/Ajeer transition for nationality changes not addressed (PO-006, PO-019)
+   - Scenario parameter sequencing (fee collection vs. scholarships) unclear (PO-009)
+   - Plafond treated as soft target; no validation if exceeded (PO-014)
+
+4. ACADEMIC CALENDAR ISSUES
+   - AY1 vs. AY2 fee grids need per-period enrollment detail (PO-011)
+   - Zero-enrollment grades not handled explicitly (PO-001)
+   - Mid-year enrollment changes trigger no staffing workflow (PO-005)
+   - HSA Jul-Aug exclusion not clearly specified (PO-018)
+
+5. REPORTING BOUNDARIES
+   - Zero enrollment, zero revenue scenarios allowed but not flagged (PO-025)
+   - Monthly revenue sum != annual (rounding) not addressed (PO-026)
+   - Deleted employees not soft-deleted; version comparison breaks (PO-033)
+   - Capacity over-utilization doesn't trigger staffing adjustment (PO-014)
+
+6. MISSING SPECIFICATIONS
+   - Revenue recognition policy (cash vs. IFRS accrual) not defined (PO-030 - CRITICAL)
+   - Currency handling (SAR-only vs. multi-currency) not specified (PO-022)
+   - Audit trail retention lifecycle (delete/archive after 7 years) not defined (PO-027)
+   - Role change impact on user permissions not specified (PO-028)
+
+================================================================================
+IMPACT ON USER WORKFLOWS
+================================================================================
+
+CAO / Chief Accounting Officer:
+- Cannot safely unlock & modify locked versions (PO-021 blocks workflow)
+- Cannot compare versions with enrollment deltas (PO-008 lacks variance attribution)
+- Cannot handle mid-year hiring adjustments (PO-004 assumes Sep start)
+- Faces rounding discrepancies vs. Excel (PO-013 blocks Excel comparison)
+
+Finance Manager:
+- Duplicate employee imports will corrupt payroll (PO-003 breaks calculation)
+- Negative discounts could create -ve revenue (PO-002, PO-024)
+- Fee grid retroactive changes not supported (PO-007 blocks correction scenario)
+- Mid-year enrollment changes cause staffing warnings but no workflow (PO-005)
+
+Department Heads (HR/Staffing):
+- Cannot stagger salary augmentation dates (PO-031 assumes global Sep)
+- Cannot update employee joining date retroactively (PO-012 blocks HR correction)
+- Cannot track nationality transitions for GOSI/Ajeer (PO-006, PO-019)
+
+Finance Team (Monthly Close):
+- Monthly P&L may not reconcile to annual if rounding is wrong (PO-026)
+- Revenue recognition policy undefined; could affect IFRS reporting (PO-030)
+- EoS retroactive adjustments not supported (PO-012 blocks correction)
+
+================================================================================
+IMPLEMENTATION PRIORITY
+================================================================================
+
+PHASE 2 (Enrollment & Revenue):
+  - Validate discount rates (PO-002, PO-024)
+  - Handle zero enrollment (PO-001)
+  - Support AY1/AY2 fee grids (PO-011)
+  - Validate grade codes (PO-023)
+  - Reconcile monthly to annual (PO-026)
+
+PHASE 3 (Staffing & Costs):
+  - Duplicate employee detection (PO-003)
+  - Mid-year joining date support (PO-004)
+  - Nationality history for GOSI/Ajeer (PO-006, PO-019)
+  - HSA Jul-Aug logic (PO-018)
+  - Hourly % validation (PO-016)
+  - Staggered augmentation dates (PO-031)
+  - Soft-delete employees (PO-033)
+
+PHASE 4 (Reporting & Versions):
+  - Version-specific fee grids (PO-007)
+  - Variance bridge analysis (PO-008)
+  - Scenario parameter sequencing (PO-009)
+  - Rounding precision specification (PO-013)
+  - Version unlock workflow (PO-021)
+  - Revenue recognition policy (PO-030)
+  - Discount mutual exclusivity (PO-034)
+
+PHASE 5 (Dashboard & Analytics):
+  - Capacity over-enrollment workflow (PO-005, PO-014)
+  - Zero-revenue scenario flagging (PO-025)
+  - Zero-enrollment grade labeling (PO-035)
+
+CROSS-PHASE (Foundational):
+  - Currency policy (PO-022)
+  - Audit trail retention lifecycle (PO-027)
+  - Role change impact on permissions (PO-028)
+  - Master data versioning strategy (PO-029)
+  - Fiscal year structure handling (PO-032)
+
+================================================================================
+TESTING IMPLICATIONS
+================================================================================
+
+Unit Tests:
+- Rounding: All calculations must match Excel to 2 decimal places (PO-013)
+- Validation: Discount/hourly/enrollment range checks
+- Enrollment: Zero enrollment, over-capacity scenarios
+
+Integration Tests:
+- Duplicate employee detection in bulk import
+- Fee grid changes in locked versions
+- Mid-year employee joining → payroll calculation
+- Nationality transitions → GOSI/Ajeer calculation
+
+User Acceptance Tests:
+- Version unlock workflow (manager approval, audit trail)
+- Mid-year enrollment change workflow (staffing impact)
+- Variance report attribution (enrollment vs. assumption)
+
+Regression Tests:
+- All revenue calculations vs. Excel baseline (exact match, PO-013)
+- All staff cost calculations vs. Excel baseline (exact match, PO-013)
+- IFRS P&L output vs. Excel consolidated budget
+
+================================================================================
+RISK MITIGATION STRATEGY
+================================================================================
+
+SHORT TERM (Before Phase 4):
+  1. Define and document rounding rule (PO-013)
+  2. Implement duplicate employee detection (PO-003)
+  3. Specify revenue recognition policy (PO-030)
+  4. Define version unlock workflow (PO-021)
+
+MEDIUM TERM (Before Phase 5):
+  1. Implement validation for all out-of-range inputs (PO-002, PO-016, PO-024)
+  2. Add mid-year hiring support (PO-004)
+  3. Implement version-specific fee grids (PO-007)
+  4. Add variance bridge analysis (PO-008)
+  5. Support staggered salary augmentation (PO-031)
+
+LONG TERM (v1.1 or later):
+  1. Currency support (PO-022)
+  2. Audit trail archival & deletion (PO-027)
+  3. Sophisticated role change workflows (PO-028)
+  4. Master data versioning (PO-029)
+
+================================================================================
+RECOMMENDED ACTIONS
+================================================================================
+
+For Product Owner:
+  [ ] Prioritize 5 CRITICAL cases for Phase 4 + UAT
+  [ ] Schedule decision meeting on revenue recognition (IFRS vs. cash)
+  [ ] Clarify Plafond enforcement (hard limit vs. soft target)
+  [ ] Define audit trail retention & deletion policy
+  [ ] Confirm currency policy (SAR-only or multi-currency)
+
+For Technical Lead:
+  [ ] Design rounding precision architecture (DECIMAL type, final-step rule)
+  [ ] Design duplicate detection algorithm for employee import
+  [ ] Design version-specific fee grid data model
+  [ ] Design audit trail lifecycle management
+  [ ] Create test suite for all 35 edge cases vs. Excel baseline
+
+For Project Manager:
+  [ ] Add 2+ weeks to Phase 3 for employee edge cases (PO-003, 004, 006, 031, 033)
+  [ ] Add 1+ week to Phase 4 for version management (PO-007, 008, 021)
+  [ ] Add 1+ week to Phase 4 for rounding/validation (PO-013, 002, 016, 024)
+  [ ] Schedule decision meetings for missing requirements (PO-022, 027, 028, 029, 030)
+
+================================================================================
+END OF SUMMARY
+================================================================================

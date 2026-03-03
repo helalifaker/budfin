@@ -1,0 +1,186 @@
+# .github/workflows/ci.yml
+#
+# Full CI/CD pipeline for the project.
+# Copy this to your project's .github/workflows/ directory and customize
+# the commands to match your stack (see PROJECT.md for exact commands).
+
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'    # Customize per stack
+  # PYTHON_VERSION: '3.12'  # Uncomment for Python projects
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Stage 1: Fast checks (run in parallel)
+  # ─────────────────────────────────────────────
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'   # Change to pnpm/yarn if needed
+      - run: npm ci
+      - run: npm run lint
+        # Replace with your lint command from PROJECT.md
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run typecheck
+        # Replace with your typecheck command from PROJECT.md
+
+  doc-lint:
+    name: Documentation Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npx markdownlint-cli2 "docs/**/*.md" "*.md"
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      # Add additional security scanning tools as needed
+
+  # ─────────────────────────────────────────────
+  # Stage 2: Tests (after fast checks pass)
+  # ─────────────────────────────────────────────
+
+  unit-tests:
+    name: Unit & Integration Tests
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test -- --coverage
+        # Replace with your test + coverage command
+      - name: Check coverage threshold
+        run: |
+          # Parse coverage and fail if below 90%
+          # Customize this based on your coverage reporter
+          echo "Coverage check — see PROJECT.md for threshold"
+
+  # ─────────────────────────────────────────────
+  # Stage 3: Build (after tests pass)
+  # ─────────────────────────────────────────────
+
+  build:
+    name: Build
+    needs: [unit-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: .next/   # Customize for your build output directory
+          retention-days: 1
+
+  # ─────────────────────────────────────────────
+  # Stage 4: E2E Tests (after build)
+  # ─────────────────────────────────────────────
+
+  e2e-tests:
+    name: E2E Tests
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: .next/
+      - run: npm run e2e
+        # Replace with your E2E command from PROJECT.md
+
+  # ─────────────────────────────────────────────
+  # Stage 5: Deploy (main branch only)
+  # ─────────────────────────────────────────────
+
+  deploy-staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [e2e-tests, security, doc-lint]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      # Add your deployment steps here
+      # Example for Vercel:
+      # - run: npx vercel --token=${{ secrets.VERCEL_TOKEN }} --prod
+      - run: echo "Deploy to staging — customize this step"
+
+  smoke-tests:
+    name: Smoke Tests on Staging
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run smoke -- --base-url=${{ vars.STAGING_URL }}
+        # Replace with your smoke test command
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [smoke-tests]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      # This creates a manual approval gate in GitHub
+    steps:
+      - uses: actions/checkout@v4
+      # Add your production deployment steps here
+      - run: echo "Deploy to production — customize this step"

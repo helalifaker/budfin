@@ -31,7 +31,21 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify compliance with all six BudFin constitutional principles before proceeding:
+
+- [ ] **I. Financial Accuracy** — Does this feature perform monetary calculations? If yes, confirm
+  fixed-point decimal arithmetic (TC-001) is planned. Identify all calculation paths that require
+  Excel baseline validation (±1 SAR tolerance).
+- [ ] **II. IFRS Compliance** — Does this feature produce or contribute to P&L, revenue, or
+  expense outputs? If yes, confirm IFRS 15 / IAS 1 classification is explicit in the design.
+- [ ] **III. Saudi Statutory Compliance** — Does this feature touch GOSI, Ajeer, or EoS
+  calculations? If yes, confirm statutory formulas match PRD Section 10 and TC-002 (YEARFRAC).
+- [ ] **IV. Full Auditability** — Does this feature create, modify, or delete financial data?
+  If yes, confirm every mutation path writes an immutable audit log entry with full attribution.
+- [ ] **V. Version Isolation** — Does this feature read or write versioned data? If yes, confirm
+  that no data path crosses version boundaries and that version snapshots remain self-contained.
+- [ ] **VI. Workspace Continuity** — Does this feature affect the context bar or add navigation?
+  If yes, confirm context bar state is preserved across navigation events and page refresh.
 
 ## Project Structure
 
