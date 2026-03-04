@@ -372,3 +372,39 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 - **AG Grid Enterprise:** Not justified at this user scale; $1,200/dev/year license cost.
 
 **Consequences:** TanStack Table renders nothing by default — each table must be explicitly wired to shadcn/ui components. This requires more initial boilerplate than AG Grid but gives complete control over rendering. Excel-like keyboard navigation (the original justification for AG Grid) must be implemented manually via `tabIndex` and `onKeyDown` handlers on the shadcn Table cells.
+
+---
+
+### ADR-012: JWT Token TTL Reconciliation (Access 30 min / Refresh 8 hr)
+
+**Status:** Accepted (resolves schema findings S-03 and S-04 from the 360-degree schema review, 2026-03-04)
+
+**Context:** A 360-degree schema review identified a contradiction between two authoritative sources on security-critical JWT TTL parameters:
+
+- The `system_config` seed data (TDD §5.1 Table 21) set `jwt_access_token_ttl_minutes = '15'` (15 minutes) and `jwt_refresh_token_ttl_days = '7'` (7 days).
+- ADR-005 (accepted, see above) explicitly states: "Stateless JWT access tokens (30-minute TTL) plus refresh tokens stored in HTTP-only Secure cookies (8-hour TTL)."
+
+This 21x discrepancy on the refresh token TTL (7 days vs. 8 hours) is security-critical: a 7-day refresh token dramatically increases the window for token theft compared to an 8-hour token.
+
+**Decision:**
+
+1. **Access token TTL = 30 minutes.** ADR-005 is the authoritative source. The seed data value `'15'` was a draft-time placeholder that was not updated when ADR-005 was finalised. The seed data is corrected to `'30'`.
+
+2. **Refresh token TTL = 8 hours.** ADR-005 explicitly states "8-hour TTL" for the HTTP-only cookie. The `system_config` key is renamed from `jwt_refresh_token_ttl_days` to `jwt_refresh_token_ttl_hours` with value `'8'` to avoid unit confusion and prevent a future implementer from interpreting the field as days (0.33 days would be a type mismatch for an INTEGER column).
+
+**Rationale:**
+
+- **Security:** An 8-hour refresh token expires with the workday for a school finance application. A 7-day token survives an entire week, increasing the blast radius if a token is stolen from a cookie jar backup or server log.
+- **Consistency:** ADR-005 is the security architecture decision, written with full consideration of the threat model. The seed data is a schema artefact — it has no independent authority over security parameters.
+- **Implementation alignment:** The `TokenService` (TDD §4.1) is the consuming code. It reads the TTL from `system_config` at runtime. Correcting the seed data ensures the implementation matches the security specification from first deployment.
+
+**Alternatives Rejected:**
+
+- **Keep 15-min access / 7-day refresh:** Misaligns with ADR-005, reduces security. No justification for the 7-day value exists in any requirement.
+- **Keep field name `jwt_refresh_token_ttl_days` with value `'0.333333'`:** The `data_type` for this field is `INTEGER` — storing a fractional day value would cause a parse error. Renaming to `_hours` with integer `'8'` is unambiguous.
+
+**Consequences:**
+
+- The `TokenService` must reference `jwt_refresh_token_ttl_hours` (not `jwt_refresh_token_ttl_days`) when setting cookie expiry.
+- Any environment that ran the original seed data must update the key: `UPDATE system_config SET key = 'jwt_refresh_token_ttl_hours', value = '8' WHERE key = 'jwt_refresh_token_ttl_days'; UPDATE system_config SET value = '30' WHERE key = 'jwt_access_token_ttl_minutes';`
+- All integration tests for token expiry must use 30 min / 8 hr, not 15 min / 7 days.

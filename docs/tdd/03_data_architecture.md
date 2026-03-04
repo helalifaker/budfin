@@ -92,6 +92,11 @@ COMMENT ON COLUMN users.locked_until IS 'If set and in the future, the account i
 COMMENT ON COLUMN users.last_login IS 'Timestamp of the most recent successful authentication. NULL if never logged in.';
 COMMENT ON COLUMN users.created_at IS 'Row creation timestamp (UTC). Set once on INSERT.';
 COMMENT ON COLUMN users.updated_at IS 'Last modification timestamp (UTC). Auto-updated by trigger on every UPDATE.';
+-- S-28: The users table intentionally omits created_by and updated_by audit columns.
+-- Rationale: (1) The first Admin user is seeded at deploy time with no creator; (2) self-referential
+-- FKs (user modifies themselves) add no meaningful audit value; (3) all user management actions
+-- are captured by audit_entries (operation = 'INSERT'/'UPDATE' on table_name = 'users').
+-- This exception is documented here to prevent future "fix" attempts that would add unused columns.
 
 -- Index: supports login lookup by email (every authentication request)
 CREATE INDEX users_email_idx ON users (email);
@@ -167,14 +172,21 @@ CREATE TABLE budget_versions (
   created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   created_by          BIGINT       NOT NULL,
+  updated_by          BIGINT,
   data_source         TEXT         NOT NULL DEFAULT 'CALCULATED',
 
   CONSTRAINT budget_versions_type_check        CHECK (type IN ('Actual', 'Budget', 'Forecast')),
   CONSTRAINT budget_versions_status_check      CHECK (status IN ('Draft', 'Published', 'Locked', 'Archived')),
   CONSTRAINT budget_versions_data_source_check CHECK (data_source IN ('CALCULATED', 'IMPORTED')),
+  -- S-27 ADVISORY: The UNIQUE (fiscal_year, name) constraint intentionally blocks reusing a version name
+  -- even after archiving. This prevents confusion between an active version and a retired one with the same name.
+  -- Business decision: version names are permanent identifiers within a fiscal year regardless of status.
+  -- If this causes UX friction (users wanting to reuse "Base Budget" after archiving), revisit in Phase 2
+  -- with a partial unique: UNIQUE (fiscal_year, name) WHERE status != 'Archived'. Not implemented now.
   CONSTRAINT budget_versions_fiscal_year_name_unique UNIQUE (fiscal_year, name),
   CONSTRAINT budget_versions_source_fk         FOREIGN KEY (source_version_id) REFERENCES budget_versions(id) ON DELETE SET NULL,
-  CONSTRAINT budget_versions_created_by_fk     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+  CONSTRAINT budget_versions_created_by_fk     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT budget_versions_updated_by_fk     FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 COMMENT ON TABLE budget_versions IS 'Budget version container. All planning data is scoped by version_id FK. Versions are isolated snapshots — cloning creates independent copies with no shared mutable state.';
@@ -192,6 +204,7 @@ COMMENT ON COLUMN budget_versions.archived_at IS 'Timestamp when status transiti
 COMMENT ON COLUMN budget_versions.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN budget_versions.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN budget_versions.created_by IS 'FK to users. The user who created this version. RESTRICT delete to preserve audit trail.';
+COMMENT ON COLUMN budget_versions.updated_by IS 'FK to users. The user who last modified this version. SET NULL if that user is deleted. NULL for versions not yet modified after creation.';
 COMMENT ON COLUMN budget_versions.data_source IS
   'Data origin for this version. CALCULATED: all output rows written by calculation engines (Revenue, Staffing, P&L).
    IMPORTED: all output rows written directly by the Excel import service. Calculation engine endpoints return 409 Conflict
@@ -206,6 +219,12 @@ CREATE INDEX budget_versions_status_idx ON budget_versions (status);
 
 -- Index: filter by data_source (import service pre-flight check)
 CREATE INDEX budget_versions_data_source_idx ON budget_versions (data_source);
+
+-- Index: version lineage queries (find clones of a source version) (Phase 3 I-04)
+CREATE INDEX budget_versions_source_version_idx ON budget_versions (source_version_id);
+
+-- Index: FK column created_by — required per FK indexing convention (Phase 3)
+CREATE INDEX budget_versions_created_by_idx ON budget_versions (created_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER budget_versions_updated_at_trigger
@@ -230,6 +249,7 @@ CREATE TABLE fiscal_periods (
   locked_by         BIGINT,
   created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_by        BIGINT,
 
   CONSTRAINT fiscal_periods_year_month_unique  UNIQUE (fiscal_year, month),
   CONSTRAINT fiscal_periods_month_check        CHECK (month BETWEEN 1 AND 12),
@@ -237,7 +257,9 @@ CREATE TABLE fiscal_periods (
   CONSTRAINT fiscal_periods_actual_version_fk
     FOREIGN KEY (actual_version_id) REFERENCES budget_versions(id) ON DELETE SET NULL,
   CONSTRAINT fiscal_periods_locked_by_fk
-    FOREIGN KEY (locked_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (locked_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fiscal_periods_updated_by_fk
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 COMMENT ON TABLE fiscal_periods IS
@@ -261,12 +283,20 @@ COMMENT ON COLUMN fiscal_periods.locked_at IS 'Timestamp when status was set to 
 COMMENT ON COLUMN fiscal_periods.locked_by IS 'FK to the user who locked this period.';
 COMMENT ON COLUMN fiscal_periods.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN fiscal_periods.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
+COMMENT ON COLUMN fiscal_periods.updated_by IS 'FK to users. The user who last modified this period record. SET NULL if that user is deleted.';
 
 -- Index: lookup all periods for a fiscal year (Latest Estimate query)
 CREATE INDEX fiscal_periods_fiscal_year_idx ON fiscal_periods (fiscal_year);
 
 -- Index: find all locked periods (rollup queries filtering by status)
 CREATE INDEX fiscal_periods_status_idx ON fiscal_periods (status);
+
+-- Index: Latest Estimate query — JOIN fiscal_periods.actual_version_id to budget_versions (Phase 3 I-01 MAJOR)
+-- This is used in the hot path: for each locked period, fetch the confirmed actual version.
+CREATE INDEX fiscal_periods_actual_version_idx ON fiscal_periods (actual_version_id);
+
+-- Index: FK column locked_by (Phase 3)
+CREATE INDEX fiscal_periods_locked_by_idx ON fiscal_periods (locked_by);
 
 CREATE TRIGGER fiscal_periods_updated_at_trigger
   BEFORE UPDATE ON fiscal_periods
@@ -335,6 +365,9 @@ CREATE INDEX actuals_import_log_version_idx ON actuals_import_log (version_id);
 
 -- Index: filter imports by validation outcome
 CREATE INDEX actuals_import_log_status_idx ON actuals_import_log (validation_status);
+
+-- Index: FK column imported_by (Phase 3)
+CREATE INDEX actuals_import_log_imported_by_idx ON actuals_import_log (imported_by);
 ```
 
 ---
@@ -368,12 +401,16 @@ CREATE TABLE employees (
   created_at                        TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at                        TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   created_by                        BIGINT          NOT NULL,
+  updated_by                        BIGINT,
 
   CONSTRAINT employees_version_fk          FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT employees_created_by_fk       FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT employees_updated_by_fk       FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT employees_version_code_unique UNIQUE (version_id, employee_code),
   CONSTRAINT employees_department_check    CHECK (department IN ('Maternelle', 'Elementaire', 'College', 'Lycee', 'Administration', 'Vie Scolaire & Support')),
   CONSTRAINT employees_status_check        CHECK (status IN ('Existing', 'New', 'Departed')),
+  -- S-25: payment_method constrained to the three values present in source EFIR data.
+  CONSTRAINT employees_payment_method_check CHECK (payment_method IN ('Bank Transfer', 'Cash', 'Cheque')),
   CONSTRAINT employees_hourly_pct_check    CHECK (hourly_percentage > 0 AND hourly_percentage <= 1.0000),
   CONSTRAINT employees_augmentation_check  CHECK (augmentation >= 0)
 );
@@ -387,7 +424,8 @@ COMMENT ON COLUMN employees.function_role IS 'Job title or function (e.g., "Prof
 COMMENT ON COLUMN employees.department IS 'School department: Maternelle, Elementaire, College, Lycee, Administration, or Vie Scolaire & Support.';
 COMMENT ON COLUMN employees.status IS 'Employment status within this budget version: Existing (continuing), New (joining during the fiscal year), Departed (leaving during the fiscal year).';
 COMMENT ON COLUMN employees.joining_date IS 'Date the employee started or will start employment. Used by YEARFRAC US 30/360 for EoS calculation (TC-002).';
-COMMENT ON COLUMN employees.payment_method IS 'Payment method (e.g., "Bank Transfer", "Cash"). Informational field from source data.';
+-- S-25: payment_method is constrained to the three values present in source EFIR data.
+COMMENT ON COLUMN employees.payment_method IS 'Payment method for salary disbursement. Valid values: ''Bank Transfer'', ''Cash'', ''Cheque''. Informational field sourced from the EFIR staff spreadsheet.';
 COMMENT ON COLUMN employees.is_saudi IS 'TRUE if the employee is a Saudi national. Determines GOSI applicability (11.75% employer contribution for Saudis only).';
 COMMENT ON COLUMN employees.is_ajeer IS 'TRUE if the employee is registered on the Ajeer platform. Determines Ajeer levy and monthly fee applicability.';
 COMMENT ON COLUMN employees.hourly_percentage IS 'Teaching load fraction (0.0001 to 1.0000). 1.0000 = full-time. Part-time employees have proportionally reduced salary costs. DECIMAL(5,4) per TC-003.';
@@ -402,6 +440,7 @@ COMMENT ON COLUMN employees.notes IS 'Optional free-text notes about the employe
 COMMENT ON COLUMN employees.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN employees.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN employees.created_by IS 'FK to users. The user who created or imported this employee record.';
+COMMENT ON COLUMN employees.updated_by IS 'FK to users. The user who last modified this employee record. SET NULL if that user is deleted.';
 
 -- Index: all employees for a version (employee list page)
 CREATE INDEX employees_version_id_idx ON employees (version_id);
@@ -411,6 +450,9 @@ CREATE INDEX employees_version_department_idx ON employees (version_id, departme
 
 -- Index: employees filtered by version and status (filter by Existing/New/Departed)
 CREATE INDEX employees_version_status_idx ON employees (version_id, status);
+
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX employees_created_by_idx ON employees (created_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER employees_updated_at_trigger
@@ -462,10 +504,14 @@ CREATE TABLE fee_grids (
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   created_by      BIGINT          NOT NULL,
+  updated_by      BIGINT,
 
   CONSTRAINT fee_grids_version_fk     FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT fee_grids_created_by_fk  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT fee_grids_updated_by_fk  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fee_grids_period_check   CHECK (academic_period IN ('AY1', 'AY2')),
+  -- S-10: grade_level constrained to the 15 canonical EFIR grade values (PRD Appendix A).
+  CONSTRAINT fee_grids_grade_check    CHECK (grade_level IN ('PS','MS','GS','CP','CE1','CE2','CM1','CM2','6eme','5eme','4eme','3eme','2nde','1ere','Terminale')),
   CONSTRAINT fee_grids_nationality_check CHECK (nationality IN ('Francais', 'Nationaux', 'Autres')),
   CONSTRAINT fee_grids_tariff_check   CHECK (tariff IN ('RP', 'R3+', 'Plein')),
   CONSTRAINT fee_grids_dai_check      CHECK (dai >= 0),
@@ -490,12 +536,16 @@ COMMENT ON COLUMN fee_grids.term3_amount IS 'Term 3 payment amount for installme
 COMMENT ON COLUMN fee_grids.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN fee_grids.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN fee_grids.created_by IS 'FK to users who created or imported this fee grid row.';
+COMMENT ON COLUMN fee_grids.updated_by IS 'FK to users who last modified this fee grid row. SET NULL if that user is deleted.';
 
--- Index: revenue calculation JOIN (enrollment_detail JOIN fee_grids on version+period)
-CREATE INDEX fee_grids_version_period_idx ON fee_grids (version_id, academic_period);
+-- Index: revenue calculation 5-column covering index (Phase 3 I-02 MAJOR).
+-- The Revenue Engine JOIN is: enrollment_detail JOIN fee_grids ON
+--   version_id, academic_period, grade_level, nationality, tariff.
+-- The old 2-column (version_id, academic_period) index was too narrow — replaced with covering index.
+CREATE INDEX fee_grids_revenue_calc_idx ON fee_grids (version_id, academic_period, grade_level, nationality, tariff);
 
--- Index: fee grid lookup by version, grade, and tariff
-CREATE INDEX fee_grids_version_grade_idx ON fee_grids (version_id, grade_level);
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX fee_grids_created_by_idx ON fee_grids (created_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER fee_grids_updated_at_trigger
@@ -537,6 +587,16 @@ COMMENT ON COLUMN enrollment_historical.created_by IS 'FK to users who imported 
 
 -- Index: filter/sort by academic year for trend analysis views
 CREATE INDEX enrollment_historical_academic_year_idx ON enrollment_historical (academic_year);
+
+-- Index: FK column created_by — ADVISORY (table is DEPRECATED, included for completeness) (Phase 3)
+CREATE INDEX enrollment_historical_created_by_idx ON enrollment_historical (created_by);
+
+-- S-30: This table is scheduled for removal in v1.1 (Phase 2).
+-- Add the following migration script to the v1.1 migration set:
+--   DROP TABLE enrollment_historical CASCADE;
+-- Verify before dropping: SELECT COUNT(*) FROM enrollment_historical; -- must be 0 or migrated
+-- Historical data is now represented as Actual budget_versions (type='Actual', data_source='IMPORTED').
+-- Migration guidance: enrollment_historical rows map to enrollment_headcount rows within Actual versions.
 ```
 
 ---
@@ -555,10 +615,14 @@ CREATE TABLE enrollment_headcount (
   created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   created_by      BIGINT       NOT NULL,
+  updated_by      BIGINT,
 
   CONSTRAINT enrollment_headcount_version_fk    FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT enrollment_headcount_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT enrollment_headcount_updated_by_fk FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT enrollment_headcount_period_check  CHECK (academic_period IN ('AY1', 'AY2')),
+  -- S-10: grade_level constrained to canonical 15 values (PRD Appendix A).
+  CONSTRAINT enrollment_headcount_grade_check   CHECK (grade_level IN ('PS','MS','GS','CP','CE1','CE2','CM1','CM2','6eme','5eme','4eme','3eme','2nde','1ere','Terminale')),
   CONSTRAINT enrollment_headcount_count_check   CHECK (headcount >= 0),
   CONSTRAINT enrollment_headcount_composite_unique UNIQUE (version_id, academic_period, grade_level)
 );
@@ -572,9 +636,13 @@ COMMENT ON COLUMN enrollment_headcount.headcount IS 'Total number of students in
 COMMENT ON COLUMN enrollment_headcount.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN enrollment_headcount.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN enrollment_headcount.created_by IS 'FK to users who entered this enrollment data.';
+COMMENT ON COLUMN enrollment_headcount.updated_by IS 'FK to users who last modified this headcount entry. SET NULL if that user is deleted.';
 
 -- Index: enrollment data retrieval for a version and period
 CREATE INDEX enrollment_headcount_version_period_idx ON enrollment_headcount (version_id, academic_period);
+
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX enrollment_headcount_created_by_idx ON enrollment_headcount (created_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER enrollment_headcount_updated_at_trigger
@@ -600,10 +668,18 @@ CREATE TABLE enrollment_detail (
   created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   created_by      BIGINT       NOT NULL,
+  updated_by      BIGINT,
 
   CONSTRAINT enrollment_detail_version_fk    FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT enrollment_detail_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT enrollment_detail_updated_by_fk FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+  -- S-11: FK to enrollment_headcount parent ensures detail rows cannot exist without a headcount row.
+  -- CASCADE preserves the invariant: deleting a headcount row removes all its detail rows.
+  CONSTRAINT enrollment_detail_headcount_fk  FOREIGN KEY (version_id, academic_period, grade_level)
+    REFERENCES enrollment_headcount(version_id, academic_period, grade_level) ON DELETE CASCADE,
   CONSTRAINT enrollment_detail_period_check  CHECK (academic_period IN ('AY1', 'AY2')),
+  -- S-10: grade_level constrained to canonical 15 values (PRD Appendix A).
+  CONSTRAINT enrollment_detail_grade_check   CHECK (grade_level IN ('PS','MS','GS','CP','CE1','CE2','CM1','CM2','6eme','5eme','4eme','3eme','2nde','1ere','Terminale')),
   CONSTRAINT enrollment_detail_nationality_check CHECK (nationality IN ('Francais', 'Nationaux', 'Autres')),
   CONSTRAINT enrollment_detail_tariff_check  CHECK (tariff IN ('RP', 'R3+', 'Plein')),
   CONSTRAINT enrollment_detail_count_check   CHECK (headcount >= 0),
@@ -621,9 +697,13 @@ COMMENT ON COLUMN enrollment_detail.headcount IS 'Number of students in this gra
 COMMENT ON COLUMN enrollment_detail.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN enrollment_detail.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN enrollment_detail.created_by IS 'FK to users who entered this breakdown.';
+COMMENT ON COLUMN enrollment_detail.updated_by IS 'FK to users who last modified this detail row. SET NULL if that user is deleted.';
 
 -- Index: revenue calculation JOIN with fee_grids (version + period + grade)
 CREATE INDEX enrollment_detail_version_period_grade_idx ON enrollment_detail (version_id, academic_period, grade_level);
+
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX enrollment_detail_created_by_idx ON enrollment_detail (created_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER enrollment_detail_updated_at_trigger
@@ -649,14 +729,21 @@ CREATE TABLE class_capacity_config (
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   created_by      BIGINT,
+  updated_by      BIGINT,
 
   CONSTRAINT class_capacity_grade_unique     UNIQUE (grade_level),
+  -- S-10: grade_level constrained to canonical 15 values (PRD Appendix A).
+  CONSTRAINT class_capacity_grade_check      CHECK (grade_level IN ('PS','MS','GS','CP','CE1','CE2','CM1','CM2','6eme','5eme','4eme','3eme','2nde','1ere','Terminale')),
   CONSTRAINT class_capacity_band_check       CHECK (grade_band IN ('Maternelle', 'Elementaire', 'College', 'Lycee')),
   CONSTRAINT class_capacity_size_check       CHECK (max_class_size > 0),
   CONSTRAINT class_capacity_plancher_check   CHECK (plancher_pct >= 0 AND plancher_pct <= 1.0000),
   CONSTRAINT class_capacity_cible_check      CHECK (cible_pct >= 0 AND cible_pct <= 1.0000),
   CONSTRAINT class_capacity_plafond_check    CHECK (plafond_pct >= 0 AND plafond_pct <= 1.0000),
-  CONSTRAINT class_capacity_created_by_fk    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+  -- S-26: Cross-column ordering constraint prevents logically invalid configs (e.g., plancher=0.9, cible=0.5).
+  -- Invariant: plancher (floor) < cible (target) <= plafond (ceiling). FR-CAP-002.
+  CONSTRAINT class_capacity_pct_ordering_check CHECK (plancher_pct < cible_pct AND cible_pct <= plafond_pct),
+  CONSTRAINT class_capacity_created_by_fk    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT class_capacity_updated_by_fk    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 COMMENT ON TABLE class_capacity_config IS 'School-wide class size limits and capacity thresholds per grade. Used by DHG engine to calculate sections_needed = CEILING(headcount / max_class_size). Not version-scoped.';
@@ -670,6 +757,7 @@ COMMENT ON COLUMN class_capacity_config.plafond_pct IS 'Ceiling threshold (plafo
 COMMENT ON COLUMN class_capacity_config.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN class_capacity_config.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN class_capacity_config.created_by IS 'FK to users who configured this capacity. SET NULL if user deleted.';
+COMMENT ON COLUMN class_capacity_config.updated_by IS 'FK to users who last modified this capacity configuration. SET NULL if user deleted.';
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER class_capacity_config_updated_at_trigger
@@ -693,9 +781,11 @@ CREATE TABLE discount_policies (
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   created_by      BIGINT          NOT NULL,
+  updated_by      BIGINT,
 
   CONSTRAINT discount_policies_version_fk    FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT discount_policies_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT discount_policies_updated_by_fk FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT discount_policies_tariff_check  CHECK (tariff IN ('RP', 'R3+')),
   CONSTRAINT discount_policies_nationality_check CHECK (nationality IS NULL OR nationality IN ('Francais', 'Nationaux', 'Autres')),
   CONSTRAINT discount_policies_rate_check    CHECK (discount_rate >= 0 AND discount_rate <= 1),
@@ -711,9 +801,15 @@ COMMENT ON COLUMN discount_policies.discount_rate IS 'Discount as a decimal frac
 COMMENT ON COLUMN discount_policies.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN discount_policies.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN discount_policies.created_by IS 'FK to users who set this discount policy.';
+COMMENT ON COLUMN discount_policies.updated_by IS 'FK to users who last modified this discount policy. SET NULL if that user is deleted.';
 
--- Index: discount lookup during revenue calculation
-CREATE INDEX discount_policies_version_idx ON discount_policies (version_id);
+-- Index: revenue calculation discount lookup — composite index for JOIN on (version_id, tariff, nationality) (Phase 3 I-03 MAJOR).
+-- The Revenue Engine looks up discounts by (version, tariff, nationality). The old single-column index
+-- required a version-level scan; the composite index provides O(log n) lookup for each enrollment_detail row.
+CREATE INDEX discount_policies_calc_idx ON discount_policies (version_id, tariff, nationality);
+
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX discount_policies_created_by_idx ON discount_policies (created_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER discount_policies_updated_at_trigger
@@ -740,19 +836,44 @@ CREATE TABLE other_revenue_items (
   created_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   created_by            BIGINT          NOT NULL,
+  updated_by            BIGINT,
 
   CONSTRAINT other_revenue_version_fk      FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT other_revenue_created_by_fk   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
-  CONSTRAINT other_revenue_amount_check    CHECK (annual_amount >= 0),
+  CONSTRAINT other_revenue_updated_by_fk   FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+  -- S-02: Negative amounts allowed for Social Aid / Bourses deduction items (FR-REV-016).
+  -- A lower-bound guard prevents runaway data errors; no upper-bound restriction needed.
+  CONSTRAINT other_revenue_amount_check    CHECK (annual_amount > -1000000000),
   CONSTRAINT other_revenue_method_check    CHECK (distribution_method IN ('ACADEMIC_10', 'YEAR_ROUND_12', 'CUSTOM_WEIGHTS', 'SPECIFIC_PERIOD')),
-  CONSTRAINT other_revenue_name_unique     UNIQUE (version_id, line_item_name)
+  -- S-17: ifrs_category constrained to the same enumeration as ifrs_line_items (FR-REV-013).
+  CONSTRAINT other_revenue_ifrs_check      CHECK (ifrs_category IN (
+    'REVENUE_FROM_CONTRACTS',
+    'OTHER_OPERATING_INCOME',
+    'EMPLOYEE_BENEFITS_EXPENSE',
+    'DEPRECIATION_AMORTIZATION',
+    'OPERATING_EXPENSES',
+    'FINANCE_INCOME',
+    'FINANCE_COSTS',
+    'ZAKAT'
+  )),
+  CONSTRAINT other_revenue_name_unique     UNIQUE (version_id, line_item_name),
+  -- S-24: Validate that specific_months elements are valid calendar months (1-12).
+  -- Uses ALL operator (no subquery) to check every element in the array.
+  -- array_length check ensures the array is non-empty when provided.
+  CONSTRAINT other_revenue_specific_months_check CHECK (
+    specific_months IS NULL OR (
+      array_length(specific_months, 1) >= 1
+      AND 1 <= ALL(specific_months)
+      AND 12 >= ALL(specific_months)
+    )
+  )
 );
 
 COMMENT ON TABLE other_revenue_items IS 'Non-tuition revenue: cantine, transport, DAI, AEFE subventions, etc. Each item defines how its annual_amount is distributed across 12 months.';
 COMMENT ON COLUMN other_revenue_items.id IS 'Auto-incrementing primary key.';
 COMMENT ON COLUMN other_revenue_items.version_id IS 'FK to budget_versions. CASCADE delete.';
 COMMENT ON COLUMN other_revenue_items.line_item_name IS 'Descriptive name (e.g., "Cantine Revenue", "Transport Services"). Unique within a version.';
-COMMENT ON COLUMN other_revenue_items.annual_amount IS 'Total annual amount for this line item. DECIMAL(15,4).';
+COMMENT ON COLUMN other_revenue_items.annual_amount IS 'Total annual amount for this line item. DECIMAL(15,4). Negative values are permitted for Social Aid / Bourses deduction items (e.g., Bourses AEFE, Bourses AESH) per FR-REV-016.';
 COMMENT ON COLUMN other_revenue_items.distribution_method IS 'How to spread annual_amount across months: ACADEMIC_10 (10 academic months, 0 for Jul-Aug), YEAR_ROUND_12 (equal 12-month split), CUSTOM_WEIGHTS (use weight_array), SPECIFIC_PERIOD (only in specific_months).';
 COMMENT ON COLUMN other_revenue_items.weight_array IS 'JSON array of 12 decimal values summing to 1.0. Required when distribution_method = CUSTOM_WEIGHTS. Each element is the fraction allocated to that month (index 0 = January).';
 COMMENT ON COLUMN other_revenue_items.specific_months IS 'Integer array of month numbers (1-12). Required when distribution_method = SPECIFIC_PERIOD. Amount is split equally across these months.';
@@ -760,6 +881,10 @@ COMMENT ON COLUMN other_revenue_items.ifrs_category IS 'IFRS 15 revenue classifi
 COMMENT ON COLUMN other_revenue_items.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN other_revenue_items.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN other_revenue_items.created_by IS 'FK to users who created this line item.';
+COMMENT ON COLUMN other_revenue_items.updated_by IS 'FK to users who last modified this revenue item. SET NULL if that user is deleted.';
+
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX other_revenue_items_created_by_idx ON other_revenue_items (created_by);
 
 -- Index: list all other revenue items for a version
 CREATE INDEX other_revenue_items_version_idx ON other_revenue_items (version_id);
@@ -780,6 +905,9 @@ Calculated output: monthly revenue broken down by grade, nationality, and tariff
 CREATE TABLE monthly_revenue (
   id                      BIGSERIAL       PRIMARY KEY,
   version_id              BIGINT          NOT NULL,
+  -- S-07: scenario_name discriminator enables storing multiple scenario outputs per version
+  -- without overwriting each other, supporting FR-SCN-004 side-by-side scenario comparison.
+  scenario_name           TEXT            NOT NULL DEFAULT 'Base',
   academic_period         TEXT            NOT NULL,
   grade_level             TEXT            NOT NULL,
   nationality             TEXT            NOT NULL,
@@ -798,13 +926,18 @@ CREATE TABLE monthly_revenue (
   CONSTRAINT monthly_revenue_version_fk       FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT monthly_revenue_calculated_by_fk FOREIGN KEY (calculated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT monthly_revenue_period_check     CHECK (academic_period IN ('AY1', 'AY2')),
+  -- S-10: grade_level constrained to canonical 15 values (PRD Appendix A).
+  CONSTRAINT monthly_revenue_grade_check      CHECK (grade_level IN ('PS','MS','GS','CP','CE1','CE2','CM1','CM2','6eme','5eme','4eme','3eme','2nde','1ere','Terminale')),
   CONSTRAINT monthly_revenue_month_check      CHECK (month BETWEEN 1 AND 12),
-  CONSTRAINT monthly_revenue_composite_unique UNIQUE (version_id, academic_period, grade_level, nationality, tariff, month)
+  CONSTRAINT monthly_revenue_scenario_check   CHECK (scenario_name IN ('Base', 'Optimistic', 'Pessimistic')),
+  -- S-07: scenario_name added to unique key to allow multiple scenario outputs per version.
+  CONSTRAINT monthly_revenue_composite_unique UNIQUE (version_id, scenario_name, academic_period, grade_level, nationality, tariff, month)
 );
 
 COMMENT ON TABLE monthly_revenue IS 'Calculated monthly revenue output. Populated by Revenue Engine. One row per grade/nationality/tariff/month combination. Months 7-8 (Jul-Aug) are zero (summer).';
 COMMENT ON COLUMN monthly_revenue.id IS 'Auto-incrementing primary key.';
 COMMENT ON COLUMN monthly_revenue.version_id IS 'FK to budget_versions. CASCADE delete.';
+COMMENT ON COLUMN monthly_revenue.scenario_name IS 'Scenario this row belongs to: Base (default), Optimistic, or Pessimistic. Allows side-by-side scenario comparison (FR-SCN-004) without re-running all calculations. The Revenue Engine passes the active scenario_name as a parameter; the P&L Engine aggregates by scenario_name.';
 COMMENT ON COLUMN monthly_revenue.academic_period IS 'AY1 or AY2. Determines which fee grid and enrollment data were used.';
 COMMENT ON COLUMN monthly_revenue.grade_level IS 'Grade identifier.';
 COMMENT ON COLUMN monthly_revenue.nationality IS 'Nationality category from enrollment detail.';
@@ -825,6 +958,9 @@ CREATE INDEX monthly_revenue_version_month_idx ON monthly_revenue (version_id, m
 
 -- Index: revenue detail view by version and academic period
 CREATE INDEX monthly_revenue_version_period_idx ON monthly_revenue (version_id, academic_period);
+
+-- Index: FK column calculated_by (Phase 3)
+CREATE INDEX monthly_revenue_calculated_by_idx ON monthly_revenue (calculated_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER monthly_revenue_updated_at_trigger
@@ -850,12 +986,18 @@ CREATE TABLE dhg_grille_config (
   created_at                    TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at                    TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   created_by                    BIGINT,
+  updated_by                    BIGINT,
 
   CONSTRAINT dhg_grille_band_check    CHECK (band IN ('Maternelle', 'Elementaire', 'College', 'Lycee')),
+  -- S-10: grade_level constrained to canonical 15 values (PRD Appendix A).
+  CONSTRAINT dhg_grille_grade_check   CHECK (grade_level IN ('PS','MS','GS','CP','CE1','CE2','CM1','CM2','6eme','5eme','4eme','3eme','2nde','1ere','Terminale')),
   CONSTRAINT dhg_grille_hours_check   CHECK (hours_per_week_per_section >= 0),
   CONSTRAINT dhg_grille_type_check    CHECK (dhg_type IN ('Structural', 'Host_Country', 'Complementary')),
-  CONSTRAINT dhg_grille_composite_unique UNIQUE (band, grade_level, subject, effective_from_year),
-  CONSTRAINT dhg_grille_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+  -- S-08: UNIQUE constraint removed. PostgreSQL NULL != NULL semantics allow duplicate (band, grade_level, subject)
+  -- rows when effective_from_year IS NULL, producing duplicate default-grille rows and incorrect FTE calculations.
+  -- Replaced with two partial unique indexes below.
+  CONSTRAINT dhg_grille_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT dhg_grille_updated_by_fk FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 COMMENT ON TABLE dhg_grille_config IS 'DHG grille: teaching hours per subject per grade per section. Used by DHG engine to compute total weekly hours and FTE requirements. Not version-scoped.';
@@ -865,13 +1007,29 @@ COMMENT ON COLUMN dhg_grille_config.grade_level IS 'Grade identifier within the 
 COMMENT ON COLUMN dhg_grille_config.subject IS 'Teaching subject (e.g., "Francais", "Mathematiques", "Arabe", "EPS").';
 COMMENT ON COLUMN dhg_grille_config.hours_per_week_per_section IS 'Weekly teaching hours required for this subject per section (class group). DECIMAL(7,4).';
 COMMENT ON COLUMN dhg_grille_config.dhg_type IS 'DHG category: Structural (core curriculum), Host_Country (Arabic, Islamic studies — KSA requirement), Complementary (electives, support).';
-COMMENT ON COLUMN dhg_grille_config.effective_from_year IS 'Fiscal year this grille version applies from. NULL means it applies to all years (default grille).';
+COMMENT ON COLUMN dhg_grille_config.effective_from_year IS 'Fiscal year this grille version applies from. NULL means it applies to all years (default grille). Uniqueness for NULL rows is enforced via a partial unique index (not a standard UNIQUE constraint) because PostgreSQL NULL != NULL semantics would allow duplicate default rows under a standard constraint.';
 COMMENT ON COLUMN dhg_grille_config.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN dhg_grille_config.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN dhg_grille_config.created_by IS 'FK to users who configured this grille. SET NULL if user deleted.';
+COMMENT ON COLUMN dhg_grille_config.updated_by IS 'FK to users who last modified this grille entry. SET NULL if user deleted.';
 
 -- Index: DHG calculation lookup by band and grade
 CREATE INDEX dhg_grille_band_grade_idx ON dhg_grille_config (band, grade_level);
+
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX dhg_grille_config_created_by_idx ON dhg_grille_config (created_by);
+
+-- S-08: Partial unique index for default grille rows (effective_from_year IS NULL).
+-- Prevents duplicate default-grille rows; a standard UNIQUE constraint would allow duplicates
+-- because PostgreSQL treats NULL != NULL, making (band, grade_level, subject, NULL) non-unique.
+CREATE UNIQUE INDEX dhg_grille_default_unique
+  ON dhg_grille_config (band, grade_level, subject)
+  WHERE effective_from_year IS NULL;
+
+-- S-08: Partial unique index for year-specific grille rows (effective_from_year IS NOT NULL).
+CREATE UNIQUE INDEX dhg_grille_year_unique
+  ON dhg_grille_config (band, grade_level, subject, effective_from_year)
+  WHERE effective_from_year IS NOT NULL;
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER dhg_grille_config_updated_at_trigger
@@ -899,10 +1057,14 @@ CREATE TABLE dhg_requirements (
   calculated_by               BIGINT,
   created_at                  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  updated_by                  BIGINT,
 
   CONSTRAINT dhg_requirements_version_fk       FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT dhg_requirements_calculated_by_fk FOREIGN KEY (calculated_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT dhg_requirements_updated_by_fk    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT dhg_requirements_period_check     CHECK (academic_period IN ('AY1', 'AY2')),
+  -- S-10: grade_level constrained to canonical 15 values (PRD Appendix A).
+  CONSTRAINT dhg_requirements_grade_check      CHECK (grade_level IN ('PS','MS','GS','CP','CE1','CE2','CM1','CM2','6eme','5eme','4eme','3eme','2nde','1ere','Terminale')),
   CONSTRAINT dhg_requirements_sections_check   CHECK (sections_needed >= 0),
   CONSTRAINT dhg_requirements_composite_unique UNIQUE (version_id, academic_period, grade_level)
 );
@@ -920,9 +1082,13 @@ COMMENT ON COLUMN dhg_requirements.calculated_at IS 'Timestamp of the calculatio
 COMMENT ON COLUMN dhg_requirements.calculated_by IS 'FK to user who triggered the calculation.';
 COMMENT ON COLUMN dhg_requirements.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN dhg_requirements.updated_at IS 'Last modification timestamp.';
+COMMENT ON COLUMN dhg_requirements.updated_by IS 'FK to user who last modified this row (e.g., manual override of sections_needed). SET NULL if user deleted.';
 
 -- Index: DHG results for a version and period
 CREATE INDEX dhg_requirements_version_period_idx ON dhg_requirements (version_id, academic_period);
+
+-- Index: FK column calculated_by (Phase 3)
+CREATE INDEX dhg_requirements_calculated_by_idx ON dhg_requirements (calculated_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER dhg_requirements_updated_at_trigger
@@ -952,6 +1118,8 @@ CREATE TABLE monthly_staff_costs (
   calculated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   calculated_by       BIGINT,
   created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  -- S-19: updated_at added for consistency with all other calculated output tables.
+  updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
 
   CONSTRAINT monthly_staff_costs_version_fk      FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT monthly_staff_costs_employee_fk     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
@@ -975,12 +1143,22 @@ COMMENT ON COLUMN monthly_staff_costs.total_cost IS 'Total employer cost = adjus
 COMMENT ON COLUMN monthly_staff_costs.calculated_at IS 'Timestamp of the calculation run.';
 COMMENT ON COLUMN monthly_staff_costs.calculated_by IS 'FK to user who triggered the calculation.';
 COMMENT ON COLUMN monthly_staff_costs.created_at IS 'Row creation timestamp.';
+-- S-19: updated_at tracks last UPSERT timestamp for consistency with sibling output tables.
+COMMENT ON COLUMN monthly_staff_costs.updated_at IS 'Auto-updated on every UPSERT via trigger. Consistent with monthly_revenue, dhg_requirements, monthly_budget_summary. DECIMAL(15,4) monetary columns are immutable once written — updated_at records when the last recalculation overwrote this row.';
 
 -- Index: P&L aggregation (sum costs by version and month)
 CREATE INDEX monthly_staff_costs_version_month_idx ON monthly_staff_costs (version_id, month);
 
 -- Index: employee cost detail view (all months for one employee in a version)
 CREATE INDEX monthly_staff_costs_version_employee_idx ON monthly_staff_costs (version_id, employee_id);
+
+-- Index: FK column calculated_by (Phase 3)
+CREATE INDEX monthly_staff_costs_calculated_by_idx ON monthly_staff_costs (calculated_by);
+
+-- Trigger: auto-update updated_at (S-19)
+CREATE TRIGGER monthly_staff_costs_updated_at_trigger
+  BEFORE UPDATE ON monthly_staff_costs
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
 ---
@@ -997,12 +1175,20 @@ CREATE TABLE eos_provisions (
   as_of_date          DATE            NOT NULL,
   years_of_service    DECIMAL(7,4)    NOT NULL,
   eos_base            DECIMAL(15,4)   NOT NULL,
+  -- S-16: opening_provision = EoS(Dec prior year) for the same employee.
+  -- Allows computing annual_fy_charge = provision_amount - opening_provision (PRD §10.3).
+  opening_provision   DECIMAL(15,4)   NOT NULL DEFAULT 0.0000,
+  -- S-16: annual_fy_charge = provision_amount - opening_provision.
+  -- Computed and stored at calculation time to avoid re-querying prior year versions.
+  annual_fy_charge    DECIMAL(15,4)   NOT NULL DEFAULT 0.0000,
   provision_amount    DECIMAL(15,4)   NOT NULL,
   monthly_accrual     DECIMAL(15,4)   NOT NULL,
   calculation_note    TEXT,
   calculated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   calculated_by       BIGINT,
   created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  -- S-20: updated_at added for consistency with sibling calculated output tables.
+  updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
 
   CONSTRAINT eos_provisions_version_fk       FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT eos_provisions_employee_fk      FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
@@ -1017,15 +1203,27 @@ COMMENT ON COLUMN eos_provisions.employee_id IS 'FK to employees. CASCADE delete
 COMMENT ON COLUMN eos_provisions.as_of_date IS 'Reference date for YoS calculation. Typically December 31 of the budget fiscal year.';
 COMMENT ON COLUMN eos_provisions.years_of_service IS 'YEARFRAC(joining_date, as_of_date) using US 30/360 day-count convention (TC-002). DECIMAL(7,4).';
 COMMENT ON COLUMN eos_provisions.eos_base IS 'EoS base salary = base + housing + transport + premium (excludes HSA). DECIMAL(15,4).';
-COMMENT ON COLUMN eos_provisions.provision_amount IS 'Annual EoS charge. For YoS<=5: (YoS * eos_base * 0.5) / year. For YoS>5: (5 * eos_base * 0.5 + (YoS-5) * eos_base) / year. DECIMAL(15,4).';
+COMMENT ON COLUMN eos_provisions.opening_provision IS 'EoS provision at December 31 of the prior fiscal year for this employee. Sourced from the prior year''s eos_provisions row (same employee_id, as_of_date = prior year Dec 31). 0.0000 for employees with no prior year record (first year of employment). DECIMAL(15,4).';
+COMMENT ON COLUMN eos_provisions.annual_fy_charge IS 'Annual FY charge = provision_amount - opening_provision (PRD §10.3). Represents the incremental EoS cost for this fiscal year. Written to monthly_staff_costs.eos_monthly_accrual = annual_fy_charge / 12. DECIMAL(15,4).';
+COMMENT ON COLUMN eos_provisions.provision_amount IS 'Closing EoS provision = total liability as of as_of_date. For YoS<=5: (YoS * eos_base * 0.5) / year. For YoS>5: (5 * eos_base * 0.5 + (YoS-5) * eos_base) / year. DECIMAL(15,4).';
 COMMENT ON COLUMN eos_provisions.monthly_accrual IS 'provision_amount / 12. Written to monthly_staff_costs.eos_monthly_accrual. DECIMAL(15,4).';
 COMMENT ON COLUMN eos_provisions.calculation_note IS 'Documents the YoS bracket applied and any edge cases (e.g., "YoS=3.2500, bracket <=5yr, rate=0.5").';
 COMMENT ON COLUMN eos_provisions.calculated_at IS 'Timestamp of the calculation run.';
 COMMENT ON COLUMN eos_provisions.calculated_by IS 'FK to user who triggered the calculation.';
 COMMENT ON COLUMN eos_provisions.created_at IS 'Row creation timestamp.';
+-- S-20: updated_at tracks recalculation timestamp for consistency with sibling output tables.
+COMMENT ON COLUMN eos_provisions.updated_at IS 'Auto-updated on every UPSERT via trigger. Consistent with monthly_staff_costs and other calculated output tables.';
 
 -- Index: EoS lookup by version and employee
 CREATE INDEX eos_provisions_version_employee_idx ON eos_provisions (version_id, employee_id);
+
+-- Index: FK column calculated_by (Phase 3)
+CREATE INDEX eos_provisions_calculated_by_idx ON eos_provisions (calculated_by);
+
+-- Trigger: auto-update updated_at (S-20)
+CREATE TRIGGER eos_provisions_updated_at_trigger
+  BEFORE UPDATE ON eos_provisions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
 ---
@@ -1038,6 +1236,8 @@ Consolidated P&L summary per month. Populated by the P&L Engine after revenue an
 CREATE TABLE monthly_budget_summary (
   id                          BIGSERIAL       PRIMARY KEY,
   version_id                  BIGINT          NOT NULL,
+  -- S-07: scenario_name discriminator mirrors monthly_revenue.scenario_name (FR-SCN-004).
+  scenario_name               TEXT            NOT NULL DEFAULT 'Base',
   month                       INTEGER         NOT NULL,
   total_tuition_revenue_ht    DECIMAL(15,4)   NOT NULL DEFAULT 0.0000,
   total_other_revenue_ht      DECIMAL(15,4)   NOT NULL DEFAULT 0.0000,
@@ -1058,16 +1258,21 @@ CREATE TABLE monthly_budget_summary (
   calculated_at               TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   calculated_by               BIGINT,
   created_at                  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  -- S-21: updated_at added for consistency with monthly_revenue and other output tables.
+  updated_at                  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
 
   CONSTRAINT monthly_budget_summary_version_fk       FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT monthly_budget_summary_calculated_by_fk FOREIGN KEY (calculated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT monthly_budget_summary_month_check      CHECK (month BETWEEN 1 AND 12),
-  CONSTRAINT monthly_budget_summary_composite_unique UNIQUE (version_id, month)
+  CONSTRAINT monthly_budget_summary_scenario_check   CHECK (scenario_name IN ('Base', 'Optimistic', 'Pessimistic')),
+  -- S-07: scenario_name added to unique key (FR-SCN-004).
+  CONSTRAINT monthly_budget_summary_composite_unique UNIQUE (version_id, scenario_name, month)
 );
 
 COMMENT ON TABLE monthly_budget_summary IS 'Consolidated monthly P&L summary. Primary output for dashboards and reports. Populated by P&L Engine after revenue and staff cost calculations.';
 COMMENT ON COLUMN monthly_budget_summary.id IS 'Auto-incrementing primary key.';
 COMMENT ON COLUMN monthly_budget_summary.version_id IS 'FK to budget_versions. CASCADE delete.';
+COMMENT ON COLUMN monthly_budget_summary.scenario_name IS 'Scenario this P&L row belongs to: Base, Optimistic, or Pessimistic. Mirrors monthly_revenue.scenario_name (FR-SCN-004). The P&L Engine aggregates monthly_revenue rows for the matching scenario_name.';
 COMMENT ON COLUMN monthly_budget_summary.month IS 'Calendar month (1=Jan, 12=Dec).';
 COMMENT ON COLUMN monthly_budget_summary.total_tuition_revenue_ht IS 'SUM of monthly_revenue.net_revenue_ht for this month. DECIMAL(15,4).';
 COMMENT ON COLUMN monthly_budget_summary.total_other_revenue_ht IS 'SUM of other_revenue_items distributed to this month. DECIMAL(15,4).';
@@ -1088,9 +1293,19 @@ COMMENT ON COLUMN monthly_budget_summary.net_profit IS 'profit_before_zakat - za
 COMMENT ON COLUMN monthly_budget_summary.calculated_at IS 'Timestamp of the P&L calculation run.';
 COMMENT ON COLUMN monthly_budget_summary.calculated_by IS 'FK to user who triggered the P&L calculation.';
 COMMENT ON COLUMN monthly_budget_summary.created_at IS 'Row creation timestamp.';
+-- S-21: updated_at tracks recalculation timestamp for UPSERT idempotency and audit consistency.
+COMMENT ON COLUMN monthly_budget_summary.updated_at IS 'Auto-updated on every UPSERT via trigger. Consistent with monthly_revenue and other calculated output tables.';
 
 -- Index: version comparison queries (load all 12 months for a version)
 CREATE INDEX monthly_budget_summary_version_idx ON monthly_budget_summary (version_id);
+
+-- Index: FK column calculated_by (Phase 3)
+CREATE INDEX monthly_budget_summary_calculated_by_idx ON monthly_budget_summary (calculated_by);
+
+-- Trigger: auto-update updated_at (S-21)
+CREATE TRIGGER monthly_budget_summary_updated_at_trigger
+  BEFORE UPDATE ON monthly_budget_summary
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
 ---
@@ -1103,6 +1318,8 @@ IFRS-classified financial line items for standards-compliant P&L reporting. Gene
 CREATE TABLE ifrs_line_items (
   id              BIGSERIAL       PRIMARY KEY,
   version_id      BIGINT          NOT NULL,
+  -- S-07 awareness: scenario_name matches monthly_budget_summary.scenario_name.
+  scenario_name   TEXT            NOT NULL DEFAULT 'Base',
   month           INTEGER         NOT NULL,
   ifrs_category   TEXT            NOT NULL,
   ifrs_sub_category TEXT          NOT NULL,
@@ -1110,10 +1327,29 @@ CREATE TABLE ifrs_line_items (
   amount_ht       DECIMAL(15,4)   NOT NULL,
   line_order      INTEGER         NOT NULL DEFAULT 0,
   calculated_at   TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  -- S-12: calculated_by FK added — consistent with all other calculated output tables.
+  calculated_by   BIGINT,
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  -- S-12: updated_at added — consistent with all other calculated output tables.
+  updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
 
-  CONSTRAINT ifrs_line_items_version_fk   FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
-  CONSTRAINT ifrs_line_items_month_check  CHECK (month BETWEEN 1 AND 12)
+  CONSTRAINT ifrs_line_items_version_fk        FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
+  CONSTRAINT ifrs_line_items_calculated_by_fk  FOREIGN KEY (calculated_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT ifrs_line_items_month_check        CHECK (month BETWEEN 1 AND 12),
+  CONSTRAINT ifrs_line_items_scenario_check     CHECK (scenario_name IN ('Base', 'Optimistic', 'Pessimistic')),
+  -- S-14: ifrs_category CHECK — IFRS categories are a fixed regulatory enumeration.
+  CONSTRAINT ifrs_line_items_category_check     CHECK (ifrs_category IN (
+    'REVENUE_FROM_CONTRACTS',
+    'OTHER_OPERATING_INCOME',
+    'EMPLOYEE_BENEFITS_EXPENSE',
+    'DEPRECIATION_AMORTIZATION',
+    'OPERATING_EXPENSES',
+    'FINANCE_INCOME',
+    'FINANCE_COSTS',
+    'ZAKAT'
+  )),
+  -- S-13: composite UNIQUE — prevents duplicate rows on re-calculation (other output tables use UPSERT).
+  CONSTRAINT ifrs_line_items_composite_unique   UNIQUE (version_id, scenario_name, month, ifrs_category, ifrs_sub_category)
 );
 
 COMMENT ON TABLE ifrs_line_items IS 'IFRS-classified P&L line items for standards-compliant reporting. Generated by P&L Engine. Each row is a single line item for one month.';
@@ -1125,11 +1361,19 @@ COMMENT ON COLUMN ifrs_line_items.ifrs_sub_category IS 'Detailed sub-category (e
 COMMENT ON COLUMN ifrs_line_items.ifrs_standard IS 'Applicable IFRS standard reference (e.g., "IFRS 15", "IAS 19", "IAS 1"). NULL if no specific standard applies.';
 COMMENT ON COLUMN ifrs_line_items.amount_ht IS 'Amount excluding VAT. All IFRS reporting uses HT values per IFRS 15. DECIMAL(15,4).';
 COMMENT ON COLUMN ifrs_line_items.line_order IS 'Display order within a category for structured P&L presentation. Lower values appear first.';
+COMMENT ON COLUMN ifrs_line_items.scenario_name IS 'Scenario label matching monthly_budget_summary.scenario_name.';
 COMMENT ON COLUMN ifrs_line_items.calculated_at IS 'Timestamp of the calculation run.';
+COMMENT ON COLUMN ifrs_line_items.calculated_by IS 'FK to user who triggered the P&L calculation. SET NULL if user deleted.';
 COMMENT ON COLUMN ifrs_line_items.created_at IS 'Row creation timestamp.';
+COMMENT ON COLUMN ifrs_line_items.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 
 -- Index: IFRS P&L report query (version + month + category)
 CREATE INDEX ifrs_line_items_version_month_category_idx ON ifrs_line_items (version_id, month, ifrs_category);
+
+-- Trigger: auto-update updated_at
+CREATE TRIGGER ifrs_line_items_updated_at_trigger
+  BEFORE UPDATE ON ifrs_line_items
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
 ---
@@ -1152,9 +1396,11 @@ CREATE TABLE scenario_parameters (
   created_at                TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   updated_at                TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
   created_by                BIGINT          NOT NULL,
+  updated_by                BIGINT,
 
   CONSTRAINT scenario_params_version_fk    FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
   CONSTRAINT scenario_params_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT scenario_params_updated_by_fk FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT scenario_params_name_check    CHECK (scenario_name IN ('Base', 'Optimistic', 'Pessimistic')),
   CONSTRAINT scenario_params_composite_unique UNIQUE (version_id, scenario_name)
 );
@@ -1172,9 +1418,13 @@ COMMENT ON COLUMN scenario_parameters.ors_hours IS 'ORS (Obligation Reglementair
 COMMENT ON COLUMN scenario_parameters.created_at IS 'Row creation timestamp.';
 COMMENT ON COLUMN scenario_parameters.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
 COMMENT ON COLUMN scenario_parameters.created_by IS 'FK to users who configured this scenario.';
+COMMENT ON COLUMN scenario_parameters.updated_by IS 'FK to users who last modified this scenario configuration. SET NULL if that user is deleted.';
 
 -- Index: scenario lookup by version
 CREATE INDEX scenario_parameters_version_idx ON scenario_parameters (version_id);
+
+-- Index: FK column created_by (Phase 3)
+CREATE INDEX scenario_parameters_created_by_idx ON scenario_parameters (created_by);
 
 -- Trigger: auto-update updated_at
 CREATE TRIGGER scenario_parameters_updated_at_trigger
@@ -1204,7 +1454,7 @@ CREATE TABLE audit_entries (
   audit_note      TEXT,
 
   CONSTRAINT audit_entries_operation_check CHECK (
-    operation IN ('INSERT', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'VERSION_TRANSITION', 'CALCULATION_RUN')
+    operation IN ('INSERT', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'VERSION_TRANSITION', 'CALCULATION_RUN', 'ACCOUNT_LOCKOUT', 'EXPORT_DOWNLOAD')
   )
 );
 
@@ -1215,7 +1465,7 @@ COMMENT ON COLUMN audit_entries.user_id IS 'User who performed the action. NULL 
 COMMENT ON COLUMN audit_entries.user_email IS 'Denormalized email at the time of the event. Preserved even if user record changes or is deactivated. Ensures audit durability.';
 COMMENT ON COLUMN audit_entries.table_name IS 'Name of the database table affected by the operation.';
 COMMENT ON COLUMN audit_entries.record_id IS 'Primary key of the affected record. NULL for non-record operations (LOGIN, LOGOUT).';
-COMMENT ON COLUMN audit_entries.operation IS 'Type of audited event: INSERT, UPDATE, DELETE (data ops), LOGIN, LOGOUT (auth events), VERSION_TRANSITION (status changes), CALCULATION_RUN (engine executions).';
+COMMENT ON COLUMN audit_entries.operation IS 'Type of audited event: INSERT, UPDATE, DELETE (data ops), LOGIN, LOGOUT (auth events), VERSION_TRANSITION (status changes), CALCULATION_RUN (engine executions), ACCOUNT_LOCKOUT (account locked after 5 failed attempts — NFR 11.3.2), EXPORT_DOWNLOAD (file download event — NFR 11.10).';
 COMMENT ON COLUMN audit_entries.old_values IS 'JSONB snapshot of the record before modification. NULL for INSERT and LOGIN/LOGOUT operations.';
 COMMENT ON COLUMN audit_entries.new_values IS 'JSONB snapshot of the record after modification. NULL for DELETE and LOGIN/LOGOUT operations.';
 COMMENT ON COLUMN audit_entries.ip_address IS 'Client IP address at the time of the event. INET type for efficient storage and query.';
@@ -1235,6 +1485,13 @@ CREATE INDEX audit_entries_user_id_idx ON audit_entries (user_id);
 
 -- Index: filter by table (table-specific audit history)
 CREATE INDEX audit_entries_table_name_idx ON audit_entries (table_name);
+
+-- Index: composite partial index for recent user activity queries (Phase 3 I-02 ADVISORY).
+-- audit_entries is projected to grow to 10M+ rows over the 7-year retention period.
+-- The most common admin query is: recent entries for a specific user (last 1 year).
+-- This partial index covers that query pattern efficiently.
+CREATE INDEX audit_entries_user_recent_idx ON audit_entries (user_id, occurred_at DESC)
+  WHERE occurred_at > NOW() - INTERVAL '1 year';
 
 -- Index: filter by operation type
 CREATE INDEX audit_entries_operation_idx ON audit_entries (operation);
@@ -1267,6 +1524,9 @@ COMMENT ON COLUMN system_config.data_type IS 'Data type hint for parsing: STRING
 COMMENT ON COLUMN system_config.updated_at IS 'Last modification timestamp.';
 COMMENT ON COLUMN system_config.updated_by IS 'FK to users who last updated this value. SET NULL if user deleted.';
 
+-- Index: FK column updated_by — low traffic (system_config is rarely modified) (Phase 3 ADVISORY)
+CREATE INDEX system_config_updated_by_idx ON system_config (updated_by);
+
 -- Trigger: auto-update updated_at
 CREATE TRIGGER system_config_updated_at_trigger
   BEFORE UPDATE ON system_config
@@ -1280,7 +1540,10 @@ INSERT INTO system_config (key, value, description, data_type) VALUES
   ('fiscal_year', '2026', 'Current fiscal year for budget planning.', 'INTEGER'),
   ('vat_rate', '0.150000', 'Saudi Arabia VAT rate (15%). Applied to non-Nationaux tuition.', 'DECIMAL'),
   ('gosi_rate_saudi', '0.117500', 'GOSI employer contribution rate for Saudi employees (11.75%).', 'DECIMAL'),
-  ('gosi_rate_non_saudi', '0.020000', 'GOSI employer contribution rate for non-Saudi employees (2% — occupational hazards only).', 'DECIMAL'),
+  -- S-29: gosi_rate_non_saudi is stored for reference only. The Staff Cost Engine does NOT use this
+  -- rate — non-Saudi GOSI is employee-only (not employer-funded) in the EFIR model (TDD §5.2 Flow 3).
+  -- gosi_amount = 0 for all non-Saudi employees regardless of this value.
+  ('gosi_rate_non_saudi', '0.020000', 'GOSI rate for non-Saudi employees — REFERENCE ONLY, NOT USED BY EMPLOYER COST MODEL. Non-Saudi GOSI is employee-only, not employer-funded in this model. gosi_amount = 0 for all non-Saudi employees (see TDD §5.2 Flow 3 step 3b).', 'DECIMAL'),
   ('ajeer_levy_nitaqat', '1500', 'Annual Ajeer levy per non-Saudi employee (Nitaqat-compliant employer) in SAR.', 'INTEGER'),
   ('ajeer_levy_non_nitaqat', '9500', 'Annual Ajeer levy per non-Saudi employee (non-Nitaqat-compliant) in SAR.', 'INTEGER'),
   ('ajeer_monthly_fee', '160', 'Monthly Ajeer platform fee per non-Saudi employee in SAR.', 'INTEGER'),
@@ -1290,8 +1553,11 @@ INSERT INTO system_config (key, value, description, data_type) VALUES
   ('salary_encryption_key_id', 'SALARY_ENCRYPTION_KEY', 'Reference to the Docker secret / env var name holding the pgcrypto encryption key. The actual key is NEVER stored in this table.', 'STRING'),
   ('max_failed_login_attempts', '5', 'Number of consecutive failed login attempts before account lockout.', 'INTEGER'),
   ('lockout_duration_minutes', '30', 'Duration in minutes that a locked account remains locked.', 'INTEGER'),
-  ('jwt_access_token_ttl_minutes', '15', 'JWT access token time-to-live in minutes.', 'INTEGER'),
-  ('jwt_refresh_token_ttl_days', '7', 'JWT refresh token time-to-live in days.', 'INTEGER'),
+  -- S-03: Reconciled with ADR-005 and ADR-012. Access token TTL = 30 min (not 15).
+  ('jwt_access_token_ttl_minutes', '30', 'JWT access token time-to-live in minutes. Reconciled with ADR-005 (30-min stateless JWT). See ADR-012.', 'INTEGER'),
+  -- S-04: Reconciled with ADR-005 and ADR-012. Refresh token TTL = 8 hours (not 7 days).
+  -- Stored as hours for precision; field renamed to _hours to avoid unit confusion.
+  ('jwt_refresh_token_ttl_hours', '8', 'JWT refresh token time-to-live in hours. Reconciled with ADR-005 (8-hour HTTP-only cookie). See ADR-012.', 'INTEGER'),
   ('export_download_ttl_minutes', '60', 'Export file download link expiry in minutes.', 'INTEGER');
 ```
 
@@ -1317,7 +1583,8 @@ CREATE TABLE calculation_audit_log (
 
   CONSTRAINT calc_audit_user_fk    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT calc_audit_version_fk FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE SET NULL,
-  CONSTRAINT calc_audit_module_check CHECK (module IN ('ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL')),
+  -- S-15: DHG module added — DHG calculation runs are triggered separately via POST /calculate/dhg.
+  CONSTRAINT calc_audit_module_check CHECK (module IN ('ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL', 'DHG')),
   CONSTRAINT calc_audit_status_check CHECK (status IN ('STARTED', 'COMPLETED', 'FAILED'))
 );
 
@@ -1326,7 +1593,7 @@ COMMENT ON COLUMN calculation_audit_log.id IS 'Auto-incrementing primary key.';
 COMMENT ON COLUMN calculation_audit_log.run_id IS 'UUID identifying this specific calculation run. Used for correlation in logs and error reports.';
 COMMENT ON COLUMN calculation_audit_log.user_id IS 'FK to user who triggered the calculation. SET NULL if user deleted.';
 COMMENT ON COLUMN calculation_audit_log.version_id IS 'FK to budget_versions being calculated. SET NULL if version deleted.';
-COMMENT ON COLUMN calculation_audit_log.module IS 'Calculation engine module: ENROLLMENT (validation), REVENUE, STAFFING, or PNL.';
+COMMENT ON COLUMN calculation_audit_log.module IS 'Calculation engine module: ENROLLMENT (validation), REVENUE, STAFFING, PNL, or DHG (separate engine triggered via POST /calculate/dhg).';
 COMMENT ON COLUMN calculation_audit_log.input_snapshot IS 'JSONB summary or hash of inputs used (e.g., enrollment totals, fee grid checksums, employee count). For reproducibility.';
 COMMENT ON COLUMN calculation_audit_log.output_summary IS 'JSONB summary of key outputs (e.g., total_revenue_ht, total_staff_costs, net_profit). For quick inspection.';
 COMMENT ON COLUMN calculation_audit_log.duration_ms IS 'Calculation execution time in milliseconds. Used for performance monitoring.';
@@ -1339,6 +1606,9 @@ CREATE INDEX calc_audit_version_module_idx ON calculation_audit_log (version_id,
 
 -- Index: lookup by run_id for correlation
 CREATE INDEX calc_audit_run_id_idx ON calculation_audit_log (run_id);
+
+-- Index: FK column user_id — query recent calculations by a specific user (Phase 3)
+CREATE INDEX calc_audit_user_id_idx ON calculation_audit_log (user_id);
 ```
 
 ---
@@ -1354,7 +1624,8 @@ CREATE TABLE export_jobs (
   version_id      BIGINT,
   format          TEXT         NOT NULL,
   report_type     TEXT         NOT NULL,
-  status          TEXT         NOT NULL DEFAULT 'pending',
+  -- S-23: Status values uppercased for consistency with all other status columns in the schema.
+  status          TEXT         NOT NULL DEFAULT 'PENDING',
   file_path       TEXT,
   file_size_bytes BIGINT,
   expires_at      TIMESTAMPTZ,
@@ -1365,7 +1636,8 @@ CREATE TABLE export_jobs (
   CONSTRAINT export_jobs_user_fk     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT export_jobs_version_fk  FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE SET NULL,
   CONSTRAINT export_jobs_format_check CHECK (format IN ('xlsx', 'pdf', 'csv')),
-  CONSTRAINT export_jobs_status_check CHECK (status IN ('pending', 'processing', 'done', 'failed'))
+  -- S-23: Uppercase values match the convention used by all other status columns.
+  CONSTRAINT export_jobs_status_check CHECK (status IN ('PENDING', 'PROCESSING', 'DONE', 'FAILED'))
 );
 
 COMMENT ON TABLE export_jobs IS 'Async export job tracking. Jobs are queued, processed by the worker container, and produce downloadable files. Files expire after 1 hour; job records retained 30 days.';
@@ -1374,7 +1646,8 @@ COMMENT ON COLUMN export_jobs.user_id IS 'FK to users who requested the export. 
 COMMENT ON COLUMN export_jobs.version_id IS 'FK to budget_versions being exported. SET NULL if version deleted (job record preserved for audit).';
 COMMENT ON COLUMN export_jobs.format IS 'Export file format: xlsx (Excel), pdf, or csv.';
 COMMENT ON COLUMN export_jobs.report_type IS 'Report identifier (e.g., "REVENUE_DETAIL", "STAFF_COSTS", "PNL_MONTHLY", "IFRS_PL"). Determines which data and template are used.';
-COMMENT ON COLUMN export_jobs.status IS 'Job lifecycle: pending (queued), processing (worker picked up), done (file ready), failed (error — see error_message).';
+-- S-23: Status values uppercase for consistency with all other status columns.
+COMMENT ON COLUMN export_jobs.status IS 'Job lifecycle: PENDING (queued), PROCESSING (worker picked up), DONE (file ready), FAILED (error — see error_message).';
 COMMENT ON COLUMN export_jobs.file_path IS 'Server-side file path to the generated export. Populated when status = done.';
 COMMENT ON COLUMN export_jobs.file_size_bytes IS 'Size of the generated file in bytes. Populated when status = done.';
 COMMENT ON COLUMN export_jobs.expires_at IS 'Download link expiry timestamp. Set to NOW() + 1 hour when status transitions to done.';
@@ -1385,9 +1658,188 @@ COMMENT ON COLUMN export_jobs.updated_at IS 'Last status change timestamp. Auto-
 -- Index: user's export history (most recent first)
 CREATE INDEX export_jobs_user_status_idx ON export_jobs (user_id, status, created_at DESC);
 
+-- Index: FK column version_id — find all exports for a given budget version (Phase 3)
+CREATE INDEX export_jobs_version_id_idx ON export_jobs (version_id);
+
+-- Index: partial index for worker queue — efficiently find PENDING/PROCESSING jobs (Phase 3 I-04 ADVISORY)
+CREATE INDEX export_jobs_pending_idx ON export_jobs (created_at ASC)
+  WHERE status IN ('PENDING', 'PROCESSING');
+
 -- Trigger: auto-update updated_at
 CREATE TRIGGER export_jobs_updated_at_trigger
   BEFORE UPDATE ON export_jobs
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+### Table 24: other_operating_costs
+
+Input table for non-staff operating expenses (facilities, utilities, materials, D&A, finance items). Provides the source data for `monthly_budget_summary.other_operating_expenses`, `depreciation_amortization`, and `net_finance_income` populated by the P&L Engine. Added to resolve S-06 (missing P&L input source).
+
+```sql
+CREATE TABLE other_operating_costs (
+  id                    BIGSERIAL       PRIMARY KEY,
+  version_id            BIGINT          NOT NULL,
+  -- S-07 awareness: scenario_name allows per-scenario OpEx assumptions.
+  scenario_name         TEXT            NOT NULL DEFAULT 'Base',
+  cost_category         TEXT            NOT NULL,
+  line_item_name        TEXT            NOT NULL,
+  annual_amount         DECIMAL(15,4)   NOT NULL,
+  distribution_method   TEXT            NOT NULL,
+  weight_array          JSONB,
+  specific_months       INTEGER[],
+  created_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  created_by            BIGINT          NOT NULL,
+
+  CONSTRAINT other_costs_version_fk       FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
+  CONSTRAINT other_costs_created_by_fk    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT other_costs_scenario_check   CHECK (scenario_name IN ('Base', 'Optimistic', 'Pessimistic')),
+  CONSTRAINT other_costs_category_check   CHECK (cost_category IN (
+    'OPERATING_EXPENSES',
+    'DEPRECIATION_AMORTIZATION',
+    'FINANCE_INCOME',
+    'FINANCE_COSTS'
+  )),
+  CONSTRAINT other_costs_method_check     CHECK (distribution_method IN ('ACADEMIC_10', 'YEAR_ROUND_12', 'CUSTOM_WEIGHTS', 'SPECIFIC_PERIOD')),
+  CONSTRAINT other_costs_name_unique      UNIQUE (version_id, scenario_name, cost_category, line_item_name)
+);
+
+COMMENT ON TABLE other_operating_costs IS
+  'Input table for non-staff P&L expenses: facilities, utilities, materials, D&A, and finance items.
+   Provides the source data for monthly_budget_summary.other_operating_expenses,
+   depreciation_amortization, and net_finance_income (FR-PNL-003, FR-PNL-010, FR-PNL-011).
+   The P&L Engine distributes each row across 12 months per the distribution_method,
+   then aggregates by cost_category into the corresponding monthly_budget_summary column.';
+COMMENT ON COLUMN other_operating_costs.id IS 'Auto-incrementing primary key.';
+COMMENT ON COLUMN other_operating_costs.version_id IS 'FK to budget_versions. CASCADE delete.';
+COMMENT ON COLUMN other_operating_costs.scenario_name IS 'Scenario label matching monthly_budget_summary.scenario_name. Allows scenario-specific OpEx assumptions.';
+COMMENT ON COLUMN other_operating_costs.cost_category IS 'P&L line mapping: OPERATING_EXPENSES -> other_operating_expenses, DEPRECIATION_AMORTIZATION -> depreciation_amortization, FINANCE_INCOME or FINANCE_COSTS -> net_finance_income (income positive, costs negative).';
+COMMENT ON COLUMN other_operating_costs.line_item_name IS 'Descriptive name (e.g., "Building Rent", "Equipment Depreciation"). Unique within version + scenario + category.';
+COMMENT ON COLUMN other_operating_costs.annual_amount IS 'Annual amount in SAR. Positive for costs/expenses. For FINANCE_INCOME items, use positive values — the engine maps them as positive contributors to net_finance_income.';
+COMMENT ON COLUMN other_operating_costs.distribution_method IS 'Monthly allocation method: ACADEMIC_10, YEAR_ROUND_12, CUSTOM_WEIGHTS, or SPECIFIC_PERIOD.';
+COMMENT ON COLUMN other_operating_costs.weight_array IS 'JSON array of 12 decimal weights summing to 1.0. Required for CUSTOM_WEIGHTS distribution.';
+COMMENT ON COLUMN other_operating_costs.specific_months IS 'Month numbers (1-12) for SPECIFIC_PERIOD distribution.';
+COMMENT ON COLUMN other_operating_costs.created_at IS 'Row creation timestamp.';
+COMMENT ON COLUMN other_operating_costs.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
+COMMENT ON COLUMN other_operating_costs.created_by IS 'FK to users who created this cost item.';
+
+-- Index: P&L Engine loads all costs for a version and scenario
+CREATE INDEX other_operating_costs_version_scenario_idx ON other_operating_costs (version_id, scenario_name);
+
+-- Trigger: auto-update updated_at
+CREATE TRIGGER other_operating_costs_updated_at_trigger
+  BEFORE UPDATE ON other_operating_costs
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+### Table 25: pdpl_consent_records
+
+PDPL Article 11 compliance: records employee consent for processing of personal data (salary, HR data). Consent grant and withdrawal events are captured as separate rows for an immutable audit trail. Added to resolve S-05.
+
+```sql
+CREATE TABLE pdpl_consent_records (
+  id              BIGSERIAL    PRIMARY KEY,
+  employee_id     BIGINT       NOT NULL,
+  consent_type    TEXT         NOT NULL,
+  granted_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  withdrawn_at    TIMESTAMPTZ,
+  granted_by      BIGINT       NOT NULL,
+  withdrawn_by    BIGINT,
+  notes           TEXT,
+  created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT pdpl_consent_employee_fk   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
+  CONSTRAINT pdpl_consent_granted_by_fk FOREIGN KEY (granted_by) REFERENCES users(id) ON DELETE RESTRICT,
+  CONSTRAINT pdpl_consent_withdrawn_by_fk FOREIGN KEY (withdrawn_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT pdpl_consent_type_check    CHECK (consent_type IN (
+    'SALARY_DATA_PROCESSING',
+    'HR_DATA_PROCESSING',
+    'FINANCIAL_REPORTING',
+    'THIRD_PARTY_DISCLOSURE'
+  ))
+);
+
+COMMENT ON TABLE pdpl_consent_records IS
+  'PDPL Article 11 compliance: employee consent records for personal data processing.
+   Each consent event (grant or withdrawal) is a separate row — append-only for audit integrity.
+   Active consent = latest row for (employee_id, consent_type) with withdrawn_at IS NULL.
+   Withdrawn consent = withdrawn_at IS NOT NULL.
+   Application MUST check active consent before processing salary or HR data (NFR 11.7).';
+COMMENT ON COLUMN pdpl_consent_records.id IS 'Auto-incrementing primary key.';
+COMMENT ON COLUMN pdpl_consent_records.employee_id IS 'FK to employees. RESTRICT delete: employee cannot be hard-deleted while consent records exist.';
+COMMENT ON COLUMN pdpl_consent_records.consent_type IS 'Category of data processing consented to: SALARY_DATA_PROCESSING (payroll, EoS), HR_DATA_PROCESSING (attendance, appraisals), FINANCIAL_REPORTING (inclusion in budget reports), THIRD_PARTY_DISCLOSURE (auditors, AEFE reporting).';
+COMMENT ON COLUMN pdpl_consent_records.granted_at IS 'Timestamp when consent was given.';
+COMMENT ON COLUMN pdpl_consent_records.withdrawn_at IS 'Timestamp when consent was withdrawn. NULL while consent is active.';
+COMMENT ON COLUMN pdpl_consent_records.granted_by IS 'FK to the Admin user who recorded the consent grant on behalf of the employee.';
+COMMENT ON COLUMN pdpl_consent_records.withdrawn_by IS 'FK to the Admin user who recorded the consent withdrawal. SET NULL if that user is later deleted.';
+COMMENT ON COLUMN pdpl_consent_records.notes IS 'Optional note (e.g., "Consent form ref: CF-2026-042", "Employee verbally requested withdrawal").';
+COMMENT ON COLUMN pdpl_consent_records.created_at IS 'Row creation timestamp. Append-only: no UPDATE or DELETE permitted on this table.';
+
+-- Revoke mutating privileges from application user (same pattern as audit_entries):
+-- REVOKE UPDATE, DELETE ON pdpl_consent_records FROM app_user;
+-- GRANT INSERT, SELECT ON pdpl_consent_records TO app_user;
+
+-- Index: active consent check for an employee (most common query: "does this employee consent to X?")
+CREATE INDEX pdpl_consent_employee_type_idx ON pdpl_consent_records (employee_id, consent_type, granted_at DESC);
+```
+
+---
+
+### Table 26: pdpl_data_requests
+
+PDPL Article 12–14 compliance: tracks data subject access requests (DSAR), correction requests, and deletion requests. The 30-day fulfilment window (NFR 11.7) is enforced by setting `due_by` at insert time. Added to resolve S-18.
+
+```sql
+CREATE TABLE pdpl_data_requests (
+  id              BIGSERIAL    PRIMARY KEY,
+  employee_id     BIGINT       NOT NULL,
+  request_type    TEXT         NOT NULL,
+  requested_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  due_by          TIMESTAMPTZ  NOT NULL,
+  fulfilled_at    TIMESTAMPTZ,
+  fulfilled_by    BIGINT,
+  status          TEXT         NOT NULL DEFAULT 'PENDING',
+  notes           TEXT,
+  created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT pdpl_request_employee_fk   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
+  CONSTRAINT pdpl_request_fulfilled_by_fk FOREIGN KEY (fulfilled_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT pdpl_request_type_check    CHECK (request_type IN ('ACCESS', 'CORRECTION', 'DELETION', 'PORTABILITY')),
+  CONSTRAINT pdpl_request_status_check  CHECK (status IN ('PENDING', 'IN_PROGRESS', 'FULFILLED', 'DENIED')),
+  CONSTRAINT pdpl_request_due_by_check  CHECK (due_by > requested_at)
+);
+
+COMMENT ON TABLE pdpl_data_requests IS
+  'PDPL data subject rights tracker (NFR 11.7). Tracks access, correction, deletion, and portability
+   requests. due_by = requested_at + 30 days (set by application on INSERT). Admin receives an alert
+   when due_by approaches. Fulfilment documentation should be attached via the notes column.';
+COMMENT ON COLUMN pdpl_data_requests.id IS 'Auto-incrementing primary key.';
+COMMENT ON COLUMN pdpl_data_requests.employee_id IS 'FK to the employee making the request. RESTRICT delete to preserve compliance records.';
+COMMENT ON COLUMN pdpl_data_requests.request_type IS 'Type of PDPL data subject right exercised: ACCESS (copy of held data), CORRECTION (fix inaccurate data), DELETION (right to be forgotten), PORTABILITY (machine-readable export).';
+COMMENT ON COLUMN pdpl_data_requests.requested_at IS 'Timestamp the request was received.';
+COMMENT ON COLUMN pdpl_data_requests.due_by IS 'Deadline for fulfilment: requested_at + 30 days per PDPL Article 12. Set by application on INSERT.';
+COMMENT ON COLUMN pdpl_data_requests.fulfilled_at IS 'Timestamp when the request was fulfilled. NULL while status = PENDING or IN_PROGRESS.';
+COMMENT ON COLUMN pdpl_data_requests.fulfilled_by IS 'FK to the Admin user who fulfilled the request.';
+COMMENT ON COLUMN pdpl_data_requests.status IS 'Request lifecycle: PENDING (not started), IN_PROGRESS (being processed), FULFILLED (completed), DENIED (refused with documented reason in notes).';
+COMMENT ON COLUMN pdpl_data_requests.notes IS 'Fulfilment notes, denial reasons, or references to documents provided to the data subject.';
+COMMENT ON COLUMN pdpl_data_requests.created_at IS 'Row creation timestamp.';
+COMMENT ON COLUMN pdpl_data_requests.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
+
+-- Index: Admin dashboard — show all pending requests ordered by due date (SLA monitoring)
+CREATE INDEX pdpl_requests_status_due_idx ON pdpl_data_requests (status, due_by)
+  WHERE status IN ('PENDING', 'IN_PROGRESS');
+
+-- Index: employee-specific request history
+CREATE INDEX pdpl_requests_employee_idx ON pdpl_data_requests (employee_id, requested_at DESC);
+
+-- Trigger: auto-update updated_at
+CREATE TRIGGER pdpl_data_requests_updated_at_trigger
+  BEFORE UPDATE ON pdpl_data_requests
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
@@ -1419,7 +1871,7 @@ This section documents the four critical calculation flows that transform input 
    - **VAT** = `net_revenue_ht * vat_rate` (15% for Francais and Autres; 0% for Nationaux).
    - **Monthly distribution:** AY1 rows are distributed to months 1-6; AY2 rows to months 9-12. Months 7-8 (summer) are always zero.
 
-6. **Batch UPSERT.** All computed `monthly_revenue` rows are upserted in a single transaction using `INSERT ... ON CONFLICT (version_id, academic_period, grade_level, nationality, tariff, month) DO UPDATE`.
+6. **Batch UPSERT.** All computed `monthly_revenue` rows are upserted in a single transaction using `INSERT ... ON CONFLICT (version_id, scenario_name, academic_period, grade_level, nationality, tariff, month) DO UPDATE`.
 
 7. **Staleness propagation.** The system marks the P&L module as stale for this version (revenue inputs changed). The P&L Engine will refuse to run until revenue is recalculated or confirmed current.
 
