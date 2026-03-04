@@ -1,0 +1,14 @@
+// Prisma schema for BudFin API
+// Documentation: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Models will be defined during Phase 2 implementation.
+// See docs/tdd/02_component_design.md for the entity model.
