@@ -8,8 +8,8 @@ that achieves it.
 ### Page Load < 1 Second (NFR 11.1)
 
 - Vite builds with code splitting: each route module is a separate JS chunk (lazy import)
-- Initial bundle target: < 150 KB gzipped (excludes AG Grid which lazy-loads)
-- AG Grid loaded only on module pages that require it (not on Dashboard/Auth pages)
+- Initial bundle target: < 150 KB gzipped (TanStack Table is headless — no UI overhead; shadcn/ui components are copy-paste, tree-shakeable)
+- TanStack Table and shadcn/ui Table components loaded only on module pages that require them (not on Dashboard/Auth pages)
 - Static assets (JS, CSS) served from Nginx with `Cache-Control: public, immutable` and 1-year max-age
 - Recharts loaded lazily for Dashboard charts
 
@@ -36,10 +36,10 @@ that achieves it.
 
 ### Data Grid Render < 500ms (NFR 11.4)
 
-- AG Grid `rowModelType: 'clientSide'` for datasets of 500 rows or fewer (all EFIR use cases)
-- AG Grid row virtualization enabled by default — only visible rows rendered to DOM
-- Server-side pagination for audit log (only list > 500 rows): AG Grid `rowModelType: 'serverSide'`
-- Column definitions defined once outside React render cycle (not recreated on each render)
+- TanStack Table v8 with `@tanstack/react-virtual` v3 for virtual scrolling — only visible rows rendered to DOM
+- For datasets of 500 rows or fewer (all EFIR use cases): client-side row model via `getCoreRowModel()`
+- For audit log (> 500 rows): server-side pagination via `manualPagination: true` with TanStack Query
+- Column definitions memoized via `useMemo` — not recreated on each render
 
 ### API Response Targets
 
@@ -140,7 +140,7 @@ that achieves it.
 
 ### Code Quality Gates (CI)
 
-- ESLint: zero errors + zero warnings (no disable comments without justification in PR description)
+- ESLint 9 (flat config via `eslint.config.ts` — breaking change from `.eslintrc.*`): zero errors + zero warnings (no disable comments without justification in PR description)
 - Prettier: all files formatted (checked, not auto-fixed, in CI)
 - TypeScript: zero type errors with `strict: true` tsconfig
 

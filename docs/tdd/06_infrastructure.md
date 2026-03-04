@@ -11,7 +11,7 @@ BudFin deploys as a four-service Docker Compose stack on a single host. This arc
 | Service | Image | Role | Port Exposure |
 | --------- | ------- | ------ | --------------- |
 | `nginx` | `nginx:1.25-alpine` | TLS termination, static file serving, reverse proxy | 443 (HTTPS), 80 (HTTP redirect) |
-| `api` | Custom (Node.js 20 LTS) | Express REST API server | Internal only (3001) |
+| `api` | Custom (Node.js 22 LTS) | Fastify REST API server | Internal only (3001) |
 | `worker` | Custom (same image, different entrypoint) | Background job processor (exports, calculations) | None |
 | `db` | `postgres:16-alpine` | PostgreSQL database | Internal only (not exposed to host) |
 
@@ -108,6 +108,37 @@ secrets:
 - The `api` service depends on `db` with a health check condition, preventing startup before PostgreSQL is ready to accept connections.
 - Docker secrets are used for the JWT private key and salary encryption key. These are mounted as files at `/run/secrets/` inside the container, never passed as environment variable values in the Compose file.
 - The `worker` service shares the same Docker image as `api` but uses a different entrypoint (`dist/worker.js`). This avoids maintaining a separate build pipeline for background job processing.
+
+### 8.1.1 Dockerfile Reference
+
+The `api` and `worker` services share a single multi-stage Dockerfile. The base image is `node:22-alpine`.
+
+```dockerfile
+# Stage 1: dependencies
+FROM node:22-alpine AS deps
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
+COPY apps/api/package.json apps/api/
+RUN pnpm install --frozen-lockfile --filter @budfin/api
+
+# Stage 2: build
+FROM deps AS build
+COPY apps/api/src apps/api/src
+COPY apps/api/tsconfig.json apps/api/
+COPY tsconfig.base.json ./
+RUN pnpm --filter @budfin/api exec tsc
+
+# Stage 3: production
+FROM node:22-alpine AS production
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/apps/api/dist ./dist
+COPY --from=deps /app/node_modules ./node_modules
+CMD ["node", "dist/index.js"]
+```
+
+> Note: This is a reference stub. The actual Dockerfile lives at `apps/api/Dockerfile`. Node.js base image: `node:22-alpine` (updated from `node:20-alpine` in TDD v1.0).
 
 ### 8.2 Nginx Configuration
 
@@ -256,7 +287,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint

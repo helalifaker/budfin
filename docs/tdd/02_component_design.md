@@ -921,3 +921,50 @@ interface ImportService {
 
 - **FR**: FR-IMP-01 (CSV enrollment import), FR-IMP-02 (xlsx employee import), FR-IMP-03 (two-phase validate-then-commit), FR-IMP-04 (preview before commit), FR-IMP-05 (error report with row-level detail)
 - **NFR**: NFR 11.8.1 (atomic commit — all or nothing), NFR 11.8.2 (validation < 5s for 10,000 rows), NFR 11.8.3 (clear error messages with row numbers)
+
+---
+
+## 4.9 Data Grid (UI Component)
+
+### Purpose and Responsibility
+
+The Data Grid component renders financial data tables across all module pages: enrollment grids, fee grids, revenue results, staff cost breakdowns, and the P&L summary. It provides sortable columns, client-side filtering, pagination, keyboard navigation, and virtual scrolling for large datasets.
+
+### Technology Choice
+
+**TanStack Table v8 + TanStack Virtual v3 + shadcn/ui `<Table>`** (replaces AG Grid Community from TDD v1.0). See ADR-011 in `09_decisions_log.md`.
+
+| Responsibility | Library |
+| --- | --- |
+| Table logic (sorting, filtering, pagination, row selection) | `@tanstack/react-table` v8 |
+| Virtual scrolling for datasets > 100 rows | `@tanstack/react-virtual` v3 |
+| Table rendering (HTML structure, accessibility) | shadcn/ui `<Table>`, `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableCell>` |
+| Styling | Tailwind CSS v4 |
+
+### Internal Modules
+
+| Module | Responsibility |
+| --- | --- |
+| `useFinancialTable` | Custom hook wrapping `useReactTable`; configures sort, filter, pagination; memoizes column definitions |
+| `VirtualTableBody` | Renders only visible rows via `useVirtualizer`; used for datasets > 100 rows |
+| `TablePagination` | shadcn/ui-based pagination controls; wired to TanStack Table `manualPagination` for server-side paging |
+| `ColumnHeader` | Sortable column header component with sort direction indicator |
+
+### Key Patterns
+
+- Column definitions are created once with `useMemo` and passed to `useReactTable` — never recreated on render.
+- For virtual scrolling: the `<TableBody>` renders a spacer element above and below the visible rows to maintain correct scroll height.
+- For server-side pagination (audit log): `manualPagination: true` with `pageCount` driven by TanStack Query metadata.
+- Monetary cell values are formatted using `Decimal.js` `toFixed(2)` with `ROUND_HALF_UP` for display per TC-004.
+
+### Component Interactions
+
+| Direction | Partner | Mechanism |
+| --- | --- | --- |
+| Receives data from | TanStack Query (`useQuery` / `useSuspenseQuery`) | Server state passed as `data` prop |
+| Reads context from | `useWorkspaceContext` | Scopes queries to active `versionId` and `academicPeriod` |
+| Consumes | shadcn/ui `<Table>` primitives | Copy-paste components in `src/components/ui/table.tsx` |
+
+### Traceability
+
+- **NFR**: NFR 11.4 (data grid render < 500ms), NFR 11.4 (keyboard navigation), NFR Accessibility (WCAG AA via shadcn/ui Radix primitives)

@@ -43,12 +43,13 @@ BudFin adopts a **monolithic SPA + REST API** architecture. The system is not de
 
 | Decision | Choice | Alternatives Rejected | Rationale |
 | --- | --- | --- | --- |
-| Backend runtime | Node.js 20 LTS + TypeScript 5 | Python/FastAPI, Java/Spring Boot | Decimal.js ecosystem for TC-001; Prisma ORM native Decimal type; full-stack TypeScript consistency |
+| Backend runtime | Node.js 22 LTS + TypeScript 6 | Python/FastAPI, Java/Spring Boot | Decimal.js ecosystem for TC-001; Prisma ORM native Decimal type; full-stack TypeScript consistency; Node 20 EOL April 2026 |
 | Database | PostgreSQL 16 | MySQL 8, SQLite | pgcrypto for PDPL field encryption; native DECIMAL(15,4) per TC-003; JSONB audit log; row-level security primitives; superior Prisma integration |
-| Decimal library | Decimal.js 10.x | big.js, native Number | TC-001 compliance; arbitrary precision; actively maintained; works in Node.js; Prisma Decimal compatibility |
-| ORM | Prisma 5 | TypeORM, Drizzle, raw SQL | Native Decimal type; type-safe migrations; typed client generation; audit middleware via $extends |
-| Frontend | React 18 + Vite + TypeScript | Next.js, Vue.js | Modern SSR not needed (internal tool, no SEO); Vite fast dev cycle; TypeScript safety on financial data |
-| Data grid | AG Grid Community | Tanstack Table, Handsontable Enterprise | Excel-like keyboard navigation per NFR Usability; virtual scrolling for 200-row grids; column pinning for variance views; free tier sufficient |
+| Decimal library | Decimal.js 10.6.x | big.js, native Number | TC-001 compliance; arbitrary precision; actively maintained; works in Node.js; Prisma Decimal compatibility |
+| ORM | Prisma 6 | TypeORM, Drizzle, raw SQL | Native Decimal type; type-safe migrations; typed client generation; audit middleware via $extends |
+| Frontend | React 19 + Vite 7 + TypeScript | Next.js, Vue.js | Modern SSR not needed (internal tool, no SEO); Vite fast dev cycle; TypeScript safety on financial data |
+| UI component library | shadcn/ui + Tailwind CSS 4 | MUI, Chakra UI | WCAG AA compliant; copy-paste components on Radix UI; CSS-first Tailwind v4 with Oxide engine |
+| Data grid | TanStack Table v8 + TanStack Virtual v3 | AG Grid Community | Headless table logic paired with shadcn/ui Table components; virtual scrolling via @tanstack/react-virtual; integrates with Tailwind v4 |
 | Excel export | ExcelJS | SheetJS (xlsx) | Server-side xlsx generation; formula preservation; column width/formatting per NFR 11.10; active maintenance |
 | PDF export | Puppeteer (headless Chrome) | PDFKit, jsPDF | CSS-formatted P&L reports; page breaks; headers/footers; WYSIWYG fidelity |
 | Authentication | JWT + bcrypt cost 12 | Server-side sessions, OAuth | Stateless tokens; bcrypt cost 12 per NFR 11.3.1; refresh token rotation; horizontal scale-ready |
@@ -186,14 +187,15 @@ The system defines four trust levels in descending order of privilege. The full 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │  PRESENTATION LAYER                                                 │
-│  React 18 SPA (Vite + TypeScript)                                   │
+│  React 19 SPA (Vite 7 + TypeScript)                                 │
 │  Context Bar | Navigation | Module Pages | Export UI                │
-│  AG Grid (data tables) | Recharts (charts) | Decimal.js (display)  │
+│  TanStack Table + shadcn/ui (data tables) | Recharts (charts)       │
+│  Tailwind CSS 4 (styling) | Decimal.js (display formatting)         │
 └──────────────────────────┬──────────────────────────────────────────┘
                            │ HTTPS / REST JSON (/api/v1/)
 ┌──────────────────────────▼──────────────────────────────────────────┐
 │  APPLICATION LAYER                                                  │
-│  Node.js 20 + TypeScript + Express/Fastify                          │
+│  Node.js 22 + TypeScript 6 + Fastify 5                              │
 │  Auth Middleware | RBAC Guards | Route Handlers | Zod Validation    │
 │  Winston Logger | prom-client Metrics | Request ID Middleware       │
 └──────────────────────────┬──────────────────────────────────────────┘
@@ -223,9 +225,9 @@ The system defines four trust levels in descending order of privilege. The full 
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Presentation Layer.** The React 18 SPA is the sole user interface. It communicates with the backend exclusively through REST API calls over HTTPS. AG Grid renders financial data tables with Excel-like keyboard navigation and virtual scrolling. Recharts provides visualization for dashboards. Decimal.js is used on the client side solely for display formatting — rounding monetary values to 2 decimal places (round-half-up) for presentation per TC-004. No financial calculations are performed client-side.
+**Presentation Layer.** The React 19 SPA is the sole user interface. It communicates with the backend exclusively through REST API calls over HTTPS. TanStack Table v8 (headless) combined with shadcn/ui `<Table>` components and `@tanstack/react-virtual` v3 renders financial data tables with keyboard navigation and virtual scrolling. Recharts provides visualization for dashboards. Tailwind CSS v4 handles all layout and styling. Decimal.js is used on the client side solely for display formatting — rounding monetary values to 2 decimal places (round-half-up) for presentation per TC-004. No financial calculations are performed client-side.
 
-**Application Layer.** Express or Fastify (final choice deferred to Phase 1 spike) handles HTTP routing, request parsing, and response serialization. Every request passes through authentication middleware (JWT verification), RBAC guards (role and permission checks), and Zod schema validation before reaching a route handler. Winston provides structured JSON logging with a correlation `requestId` propagated through all log entries for a given request. The `prom-client` library exposes Prometheus-compatible metrics for latency percentiles and error rates.
+**Application Layer.** Fastify 5 handles HTTP routing, request parsing, and response serialization. Every request passes through authentication middleware (JWT verification), RBAC guards (role and permission checks), and Zod schema validation before reaching a route handler. Winston provides structured JSON logging with a correlation `requestId` propagated through all log entries for a given request. The `prom-client` library exposes Prometheus-compatible metrics for latency percentiles and error rates.
 
 **Domain / Service Layer.** This is the core of the system. The calculation engine is implemented as pure TypeScript functions operating on Decimal.js values. Each engine (Revenue, DHG, Staff Cost, P&L) is a self-contained module with explicit inputs and outputs. Calculations are always explicitly invoked (never triggered by implicit events — this is architectural decision D-004) via command objects: `CalculateRevenueCommand`, `CalculateDHGCommand`, `CalculateStaffCostsCommand`, `CalculateConsolidatedPLCommand`. The Version Manager handles version creation, cloning (snapshot copy), status transitions, and locking. The Audit Logger, implemented as Prisma `$extends` middleware, intercepts every write operation and appends an entry to the audit trail automatically. The Export Service generates Excel (ExcelJS), PDF (Puppeteer), and CSV (fast-csv) outputs. The Data Import Service validates uploaded CSV/xlsx files in two phases (structural validation, then business rule validation) before committing data.
 

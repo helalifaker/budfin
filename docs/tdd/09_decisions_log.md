@@ -27,7 +27,7 @@ Each assumption below records what was assumed, the reasoning behind it, the alt
 
 ### A-TDD-001: Node.js + TypeScript Selected as Backend Runtime
 
-**Assumed:** Node.js 20 LTS + TypeScript 5 is the backend technology.
+**Assumed:** Node.js 22 LTS + TypeScript 6 is the backend technology. Node.js 20 LTS EOL is April 2026 — v22 LTS is required. TypeScript 6 is accepted as a beta-risk on this greenfield project.
 
 **Alternatives considered:**
 
@@ -55,17 +55,18 @@ Each assumption below records what was assumed, the reasoning behind it, the alt
 
 ---
 
-### A-TDD-003: AG Grid Community (Free Tier) Sufficient
+### A-TDD-003: TanStack Table Replaces AG Grid Community
 
-**Assumed:** AG Grid Community license is adequate for all v1 requirements.
+**Assumed:** `@tanstack/react-table` v8 + `@tanstack/react-virtual` v3 + shadcn/ui `<Table>` components are sufficient for all v1 data grid requirements.
 
-**Rationale:** Enterprise features are not needed for v1 data volumes (at most 2,500 students, at most 168 employees):
+**Rationale:**
 
-- **Server-side row model:** Not needed — all datasets contain fewer than 500 rows and fit comfortably in client-side memory.
-- **Pivoting:** Not needed — reports are pre-aggregated server-side before being sent to the grid.
-- **Advanced filtering:** Community filtering is sufficient for grids with 50 to 200 rows.
+- AG Grid Community is replaced by TanStack Table (headless) + TanStack Virtual + shadcn/ui. This stack integrates with Tailwind v4 and the broader shadcn/ui component library without CSS conflicts.
+- All required grid features (sorting, filtering, pagination, row selection, column definitions) are provided by TanStack Table v8 at no licensing cost.
+- Virtual scrolling for large datasets (the audit log) is provided by `@tanstack/react-virtual` v3 — equivalent to AG Grid's built-in row virtualization.
+- Headless design means no imposed styles — Tailwind v4 controls all layout.
 
-**Consequence if wrong:** AG Grid Enterprise license costs approximately $1,200 per developer per year. Any feature gap would need to be identified in Phase 2 before committing to Community. Risk is assessed as low.
+**Consequence if wrong:** If AG Grid-specific features are needed (e.g., clipboard paste, complex column grouping), migrating back to AG Grid Community or Enterprise is a UI-layer replacement only — the data fetching and domain logic layers are unaffected.
 
 ---
 
@@ -260,3 +261,114 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 - **Raw SQL (pg driver):** No type safety; significantly more boilerplate; audit logging requires manual wrapping of every write operation.
 
 **Consequences:** Prisma generates a client that must be regenerated after schema changes (`prisma generate`). Prisma migrations are forward-only by design — rollback requires a `pg_dump` restore, which is acceptable per the disaster recovery plan in Section 8 (`06_infrastructure.md`).
+
+---
+
+### ADR-008: Fastify 5 over Express 5
+
+**Status:** Accepted
+
+**Context:** The TDD v1.0 deferred the backend framework decision to Phase 1. Fastify 4 EOL passed June 2025, so v5 is mandatory if Fastify is chosen. Express v5 is also a viable option.
+
+**Decision:** Fastify 5 as the HTTP framework.
+
+**Rationale:**
+
+1. **Schema-first validation:** Fastify integrates with Zod via `@fastify/type-provider-zod`, validating request/response shapes at the framework level before route handlers execute. Express requires manual Zod calls in each handler.
+2. **Native TypeScript:** Fastify 5 ships with full TypeScript support. Express 5 requires `@types/express`.
+3. **Performance:** Fastify benchmarks ~5–10% faster than Express on equivalent workloads. Negligible at this scale, but not a negative.
+4. **Active maintenance:** Fastify 5 is the current supported major version (v4 EOL June 2025).
+
+**Alternatives Rejected:**
+
+- **Express 5:** More familiar but requires more boilerplate for schema validation; no built-in type provider pattern; slightly slower.
+
+**Consequences:** Fastify uses a plugin-based architecture. All cross-cutting middleware (auth, CORS, rate limiting, cookies) is registered as Fastify plugins (`@fastify/jwt`, `@fastify/cors`, `@fastify/rate-limit`, `@fastify/cookie`). Route handlers are typed via the Zod type provider.
+
+---
+
+### ADR-009: jose over jsonwebtoken for JWT Operations
+
+**Status:** Accepted
+
+**Context:** The auth service requires JWT generation, validation, and refresh token signing. The TDD v1.0 referenced `jsonwebtoken` implicitly.
+
+**Decision:** `jose` v5 replaces `jsonwebtoken` for all JWT operations.
+
+**Rationale:**
+
+1. **ESM-native:** `jose` ships as pure ESM. `jsonwebtoken` is CommonJS — creates bundler friction in an ESM-first Node.js 22 project.
+2. **Standards compliance:** `jose` implements IETF standards (RFC 7519 JWT, RFC 7515 JWS, RFC 7516 JWE) with full algorithm support including EdDSA and RSA-PSS.
+3. **Tree-shakeable:** Only the JWT operations used are included in the bundle.
+4. **Active maintenance:** `jsonwebtoken` has known CVEs and slower response to security updates.
+5. **Fastify integration:** `@fastify/jwt` wraps `jose` internally in v9.
+
+**Alternatives Rejected:**
+
+- **jsonwebtoken:** CommonJS only; slower CVE response; effectively legacy for new ESM projects.
+
+**Consequences:** JWT signing and verification APIs differ from `jsonwebtoken`. The `jose` API is promise-based and explicit about algorithm choice. All auth service code must use `jose` primitives (`SignJWT`, `jwtVerify`).
+
+---
+
+### ADR-010: Tailwind CSS v4 + shadcn/ui as UI Stack
+
+**Status:** Accepted
+
+**Context:** The TDD v1.0 did not include a component library or CSS framework. This left the frontend UI layer unspecified, risking inconsistent styling and accessibility compliance.
+
+**Decision:** Tailwind CSS v4 + shadcn/ui (built on Radix UI) as the complete UI stack.
+
+**Rationale:**
+
+1. **WCAG AA compliance:** shadcn/ui components are built on Radix UI headless primitives, which are fully keyboard-accessible and ARIA-compliant by design. Meets NFR accessibility requirements without manual audit overhead.
+2. **Tailwind v4 CSS-first config:** No `tailwind.config.js` required. Configuration lives in CSS via `@theme` directives. The Oxide engine builds 5x faster than v3.
+3. **React 19 compatibility:** shadcn/ui and the unified `radix-ui` package (Feb 2026 release) are fully compatible with React 19.
+4. **Copy-paste ownership:** shadcn/ui components are copied into the codebase (`src/components/ui/`), not imported from a package. This gives full control over component code and prevents upstream breaking changes from affecting the application.
+5. **Vite integration:** The `@tailwindcss/vite` plugin replaces PostCSS integration, providing faster HMR and build times.
+
+**Alternatives Rejected:**
+
+- **Material UI (MUI):** Opinionated styling; difficult to override with Tailwind; large bundle.
+- **Chakra UI:** Good accessibility but slower adoption of React 19; Tailwind integration conflicts.
+- **No component library (custom):** Significant time investment to build accessible components from scratch; reinvents the wheel.
+
+**Consequences:** All UI components live in `src/components/ui/` and are tracked in Git. shadcn/ui CLI is used to add new components (`npx shadcn@latest add button`). Any upstream changes to shadcn/ui components require manual re-copy. Tailwind v4 uses a different configuration model than v3 — no `tailwind.config.js`; theme customization uses `@theme` CSS blocks in the global stylesheet.
+
+---
+
+### ADR-011: TanStack Table v8 + TanStack Virtual v3 over AG Grid
+
+**Status:** Accepted (supersedes A-TDD-003)
+
+**Context:** The TDD v1.0 selected AG Grid Community for data grid rendering. The stack upgrade introduces Tailwind v4 + shadcn/ui, which conflict with AG Grid's own CSS theming system.
+
+**Decision:** Replace AG Grid Community with `@tanstack/react-table` v8 (headless table logic) + `@tanstack/react-virtual` v3 (virtual scrolling) + shadcn/ui `<Table>` components (rendering).
+
+**Rationale:**
+
+1. **Tailwind integration:** TanStack Table is headless — it provides zero CSS. All rendering is done by the developer using shadcn/ui Table components and Tailwind classes. No style conflicts.
+2. **No licensing concerns:** Both packages are MIT-licensed. AG Grid Community is also free, but the Enterprise upgrade path ($1,200/dev/year) is now irrelevant.
+3. **Bundle size:** AG Grid Community adds ~300 KB gzipped. TanStack Table + Virtual is headless and tree-shakeable.
+4. **Feature parity for v1 requirements:** Sorting, filtering, pagination, row selection, and virtual scrolling are all covered. The audit log pagination requirement is handled by `manualPagination: true` + TanStack Query server-side fetching.
+5. **React 19 compatibility:** TanStack Table v8 and Virtual v3 are fully compatible with React 19.
+
+**Feature mapping:**
+
+| AG Grid Feature | TanStack Replacement |
+| --- | --- |
+| Client-side row model | `getCoreRowModel()` |
+| Server-side row model | `manualPagination: true` + TanStack Query |
+| Row virtualization | `@tanstack/react-virtual` v3 `useVirtualizer` |
+| Column sorting | `getSortedRowModel()` |
+| Column filtering | `getFilteredRowModel()` |
+| Pagination | `getPaginationRowModel()` |
+| Row selection | `getSelectedRowModel()` |
+| Column pinning | `columnPinning` state |
+
+**Alternatives Rejected:**
+
+- **Keep AG Grid Community:** CSS conflicts with Tailwind v4; unnecessary given the headless alternative covers all v1 requirements.
+- **AG Grid Enterprise:** Not justified at this user scale; $1,200/dev/year license cost.
+
+**Consequences:** TanStack Table renders nothing by default — each table must be explicitly wired to shadcn/ui components. This requires more initial boilerplate than AG Grid but gives complete control over rendering. Excel-like keyboard navigation (the original justification for AG Grid) must be implemented manually via `tabIndex` and `onKeyDown` handlers on the shadcn Table cells.
