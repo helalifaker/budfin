@@ -27,7 +27,7 @@ Each assumption below records what was assumed, the reasoning behind it, the alt
 
 ### A-TDD-001: Node.js + TypeScript Selected as Backend Runtime
 
-**Assumed:** Node.js 22 LTS + TypeScript 6 is the backend technology. Node.js 20 LTS EOL is April 2026 — v22 LTS is required. TypeScript 6 is accepted as a beta-risk on this greenfield project.
+**Assumed:** Node.js 22 LTS + TypeScript 5.9.3 is the backend technology. Node.js 20 LTS EOL is April 2026 — v22 LTS is required. TypeScript is pinned at 5.9.3 (latest stable); see ADR-013 for the decision to use TS 5.9.3 over the 6.0.0-beta that was originally planned.
 
 **Alternatives considered:**
 
@@ -57,13 +57,13 @@ Each assumption below records what was assumed, the reasoning behind it, the alt
 
 ### A-TDD-003: TanStack Table Replaces AG Grid Community
 
-**Assumed:** `@tanstack/react-table` v8 + `@tanstack/react-virtual` v3 + shadcn/ui `<Table>` components are sufficient for all v1 data grid requirements.
+**Assumed:** `@tanstack/react-table` v8 + shadcn/ui `<Table>` components are sufficient for all v1 data grid requirements. `@tanstack/react-virtual` is **not included** (see ADR-016 — not needed at < 300 rows per view).
 
 **Rationale:**
 
-- AG Grid Community is replaced by TanStack Table (headless) + TanStack Virtual + shadcn/ui. This stack integrates with Tailwind v4 and the broader shadcn/ui component library without CSS conflicts.
+- AG Grid Community is replaced by TanStack Table (headless) + shadcn/ui. This stack integrates with Tailwind v4 and the broader shadcn/ui component library without CSS conflicts.
 - All required grid features (sorting, filtering, pagination, row selection, column definitions) are provided by TanStack Table v8 at no licensing cost.
-- Virtual scrolling for large datasets (the audit log) is provided by `@tanstack/react-virtual` v3 — equivalent to AG Grid's built-in row virtualization.
+- Server-side pagination (`manualPagination: true`) handles large datasets (audit log). Virtual scrolling is deferred to v2 per ADR-016.
 - Headless design means no imposed styles — Tailwind v4 controls all layout.
 
 **Consequence if wrong:** If AG Grid-specific features are needed (e.g., clipboard paste, complex column grouping), migrating back to AG Grid Community or Enterprise is a UI-layer replacement only — the data fetching and domain logic layers are unaffected.
@@ -337,13 +337,13 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 
 ---
 
-### ADR-011: TanStack Table v8 + TanStack Virtual v3 over AG Grid
+### ADR-011: TanStack Table v8 over AG Grid
 
-**Status:** Accepted (supersedes A-TDD-003)
+**Status:** Accepted (supersedes A-TDD-003; partially superseded by ADR-016 which removes react-virtual)
 
 **Context:** The TDD v1.0 selected AG Grid Community for data grid rendering. The stack upgrade introduces Tailwind v4 + shadcn/ui, which conflict with AG Grid's own CSS theming system.
 
-**Decision:** Replace AG Grid Community with `@tanstack/react-table` v8 (headless table logic) + `@tanstack/react-virtual` v3 (virtual scrolling) + shadcn/ui `<Table>` components (rendering).
+**Decision:** Replace AG Grid Community with `@tanstack/react-table` v8 (headless table logic) + shadcn/ui `<Table>` components (rendering). `@tanstack/react-virtual` is excluded per ADR-016.
 
 **Rationale:**
 
@@ -359,7 +359,7 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 | --- | --- |
 | Client-side row model | `getCoreRowModel()` |
 | Server-side row model | `manualPagination: true` + TanStack Query |
-| Row virtualization | `@tanstack/react-virtual` v3 `useVirtualizer` |
+| Row virtualization | Server-side pagination (`manualPagination: true`) for v1; `@tanstack/react-virtual` available in v2 per ADR-016 |
 | Column sorting | `getSortedRowModel()` |
 | Column filtering | `getFilteredRowModel()` |
 | Pagination | `getPaginationRowModel()` |
@@ -408,3 +408,126 @@ This 21x discrepancy on the refresh token TTL (7 days vs. 8 hours) is security-c
 - The `TokenService` must reference `jwt_refresh_token_ttl_hours` (not `jwt_refresh_token_ttl_days`) when setting cookie expiry.
 - Any environment that ran the original seed data must update the key: `UPDATE system_config SET key = 'jwt_refresh_token_ttl_hours', value = '8' WHERE key = 'jwt_refresh_token_ttl_days'; UPDATE system_config SET value = '30' WHERE key = 'jwt_access_token_ttl_minutes';`
 - All integration tests for token expiry must use 30 min / 8 hr, not 15 min / 7 days.
+
+---
+
+### ADR-013: TypeScript 5.9.3 over 6.0.0-beta
+
+**Status:** Accepted (supersedes A-TDD-001 TypeScript version selection; stack-versions.md v1.2)
+
+**Context:** The original stack pinned TypeScript at `6.0.0-beta` on the rationale that TS 6 was the "last JS-based compiler before the Go rewrite in v7" and that the beta was an accepted risk on a greenfield project. A March 2026 verification via Context7 confirmed that no TypeScript 6.0 stable release exists on npm — the latest stable versions are 5.9.2 and 5.9.3.
+
+**Decision:** Downgrade TypeScript to **5.9.3** (pinned) across all workspaces.
+
+**Rationale:**
+
+1. **No stable TS 6 release exists.** The `6.0.0-beta` tag is a pre-release. Financial systems require stable tooling — betting on a beta compiler is not acceptable when a stable alternative exists.
+2. **No material benefit for this project.** The primary TS 6 gain is compile speed via the Go-based compiler. This matters for large monorepos. BudFin has 3 workspace packages; `tsc --noEmit` runs in under 5 seconds on TS 5.9.3.
+3. **Beta risk is real.** Pre-release compilers can introduce new inference behaviors, edge-case bugs in algebraic types, and breaking changes between beta releases. Community resources (Stack Overflow, GitHub issues) are minimal for beta versions.
+4. **TS 5.9.3 has all features needed for v1.** Decorators, `satisfies`, `const` type parameters, and all other features used in this codebase are stable in TS 5.9.
+
+**Alternatives Rejected:**
+
+- **Keep TS 6.0.0-beta:** Pre-release risk with no benefit at this project scale. Rejected.
+- **Pin to TS 5.7.x:** TS 5.9.3 is newer and has additional improvements. Use the latest stable.
+
+**Consequences:** `typescript: "5.9.3"` is pinned in root `package.json`. Re-evaluate when TS 6 publishes a stable npm tag. The `ignoreDeprecations: "6.0"` pattern seen in TS 5.x error messages confirms TS 6 is a planned future release — it is not yet published.
+
+---
+
+### ADR-014: @react-pdf/renderer over Puppeteer for PDF Export
+
+**Status:** Accepted (stack-versions.md v1.2)
+
+**Context:** The original stack used Puppeteer v24 (headless Chromium) to generate PDF exports for P&L statements, staff cost breakdowns, and scenario comparison reports. For an on-premise server where RAM is the primary cost driver, Puppeteer introduces significant operational overhead.
+
+**Decision:** Replace Puppeteer with **`@react-pdf/renderer`** for all PDF export use cases.
+
+**Rationale:**
+
+1. **RAM footprint.** Puppeteer spawns a full headless Chromium process (~300–500 MB RAM per concurrent export). `@react-pdf/renderer` uses < 50 MB per job. For 5 concurrent export jobs, Puppeteer creates up to 2 GB of RAM spikes vs. ~250 MB with react-pdf.
+2. **Docker image size.** Puppeteer adds ~300 MB of Chromium binaries to the Docker image. Removing it reduces the image from ~800 MB+ to ~200 MB.
+3. **Startup time.** Chrome startup takes 1–3 seconds per spawn. `@react-pdf/renderer` starts in < 100 ms.
+4. **Output fidelity.** BudFin's PDF exports are tabular financial data (P&L statements, staff cost breakdowns, scenario comparisons). `@react-pdf/renderer` handles tables natively and produces PDFs with excellent fidelity for tabular data. No complex CSS animations or SVG rendering is required.
+5. **React syntax.** `@react-pdf/renderer` uses React component syntax, which is idiomatic for a TypeScript + React team. PDF layout components are defined as React trees.
+6. **Server cost reduction.** Eliminating the ~400 MB per-export RAM spike allows the production server to run on 4 GB RAM instead of 8 GB, cutting hosting cost.
+
+**Alternatives Rejected:**
+
+- **Keep Puppeteer:** 300–500 MB per Chrome process; Docker image bloat; zombie-process risk; not justified for tabular-only output.
+- **pdfkit:** Programmatic PDF API; no React syntax; manual layout computation required; higher implementation burden.
+- **jspdf + jspdf-autotable:** Primarily a client-side library; server-side usage is less well-documented; react-pdf is a better fit for a React-first team.
+
+**Consequences:** PDF templates must be written as `@react-pdf/renderer` React components (`<Document>`, `<Page>`, `<View>`, `<Text>`, `<StyleSheet>`). No Chromium installation is required in the Docker image. The `puppeteer` entry is removed from `pnpm.onlyBuiltDependencies` in root `package.json`.
+
+---
+
+### ADR-015: pg-boss In-Process Workers over Separate Worker Container
+
+**Status:** Accepted (stack-versions.md v1.2)
+
+**Context:** The original architecture used a four-container Docker Compose stack: nginx, api, worker, db. The `worker` container ran the same Node.js image with a different entrypoint (`dist/worker.js`) to process pg-boss background jobs (PDF exports, calculation tasks).
+
+**Decision:** Fold the background worker into the `api` process. pg-boss workers are registered inside the Fastify server startup using `boss.work('job-type', handler)`. The Docker Compose stack reduces from 4 containers to **3 containers** (nginx, api, db).
+
+**Rationale:**
+
+1. **pg-boss natively supports in-process workers.** `boss.work()` registers a polling handler in the same Node.js process. There is no architectural requirement for a separate process.
+2. **Scale fit.** At most 5 concurrent export jobs for 20 users is well within what a single Node.js event loop handles, particularly with `@react-pdf/renderer` (< 50 MB per job, < 100 ms startup).
+3. **Operational simplicity.** One fewer container to monitor, restart, log, and alert on. The worker and API already share the same codebase and secrets — the separation provided no isolation benefit.
+4. **Reduced coordination overhead.** A separate worker container requires the same Docker secrets, the same database credentials, and produces logs in a separate stream. Folding it in simplifies the operational runbook.
+5. **Memory.** The separate worker process consumed ~200 MB idle RAM. In-process workers add negligible overhead to the existing API process.
+
+**Alternatives Rejected:**
+
+- **Keep separate worker container:** Adds operational overhead with no benefit at 20-user scale. Rejected.
+- **Use a thread pool for workers:** Node.js Worker Threads are appropriate for CPU-bound tasks (calculation engine). pg-boss job dispatch and `@react-pdf/renderer` rendering are I/O-bounded enough for the main event loop, or can be isolated to Worker Threads if needed in v2.
+
+**Consequences:** The `worker:` service block is removed from `docker-compose.yml`. The `api` container startup registers pg-boss workers after Fastify is ready. The `dist/worker.js` entrypoint is eliminated. All job processing logs appear in the `api` container log stream.
+
+---
+
+### ADR-016: @tanstack/react-virtual Not Required for v1
+
+**Status:** Accepted (supersedes ADR-011 which included react-virtual; stack-versions.md v1.2)
+
+**Context:** ADR-011 selected `@tanstack/react-virtual` v3 alongside `@tanstack/react-table` v8 as the replacement for AG Grid's built-in row virtualization. The rationale cited "large datasets" and equivalence with AG Grid's virtualization.
+
+**Decision:** Remove `@tanstack/react-virtual` from the v1 dependency set. It is not required and adds unnecessary complexity.
+
+**Rationale:**
+
+1. **Maximum table size is ~300 rows.** The largest table in BudFin v1 is the staff cost grid: at most 700 employees, but paginated (the UI specification shows 50 rows per page). The full-table view maxes out at 300 rows for a scenario comparison. Modern browsers render 300 DOM rows trivially; virtualization is not needed below ~2,000 rows.
+2. **NFR confirms this.** NFR 11.3 targets `< 500ms` for "data grid rendering (up to 200 rows)" — the specification itself caps the expected data at 200 rows per view.
+3. **Complexity cost.** Virtualization requires explicit row heights, scroll container sizing, and `useVirtualizer` hooks. This boilerplate is not justified for 300-row tables.
+4. **Re-evaluate in v2.** If a full audit log UI (10M+ entries, served without pagination) is required in a future version, `@tanstack/react-virtual` can be added then. The API pagination layer (`manualPagination: true` in TanStack Table) is already designed for server-side paging.
+
+**Alternatives Rejected:**
+
+- **Keep react-virtual for future-proofing:** YAGNI. Adding complexity for a hypothetical future requirement that is explicitly scoped to v2+ is premature.
+
+**Consequences:** `@tanstack/react-virtual` is removed from `apps/web/package.json`. All table components use `@tanstack/react-table` v8 with server-side pagination (`manualPagination: true`) for large datasets. Virtual scrolling is available as a v2 addition with no architectural changes required.
+
+---
+
+### ADR-017: Grafana Deferred to v2 (UptimeRobot + Winston for v1)
+
+**Status:** Accepted (stack-versions.md v1.2)
+
+**Context:** The original environment matrix listed "Grafana + UptimeRobot" for production monitoring. `prom-client` metrics instrumentation is already planned in the codebase. Grafana requires a Prometheus container (scrape target), a Grafana container (dashboard), persistent storage for both, and alert configuration.
+
+**Decision:** Deploy Grafana and the Prometheus scraper in **v2 only**. For v1, use UptimeRobot (free tier) for health check monitoring and Winston's built-in email transport for ERROR/FATAL alerts.
+
+**Rationale:**
+
+1. **Operational overhead is disproportionate for v1.** Grafana + Prometheus adds 2 containers, alert rule configuration, dashboard maintenance, and persistent storage management. For a 20-user internal tool with a small IT team, this is significant overhead before the system has even served its first production user.
+2. **v1 alerting needs are simple.** ERROR/FATAL → email within 5 minutes (Winston email transport); disk > 80% → email (cron + shell); health check failure → email/SMS (UptimeRobot free tier). These three requirements cover all NFR 11.12 alerts without Grafana.
+3. **`prom-client` stays in the codebase.** Metrics instrumentation (`http_request_duration_ms`, `calculation_duration_ms`, etc.) is retained. The `/metrics` endpoint is available. This future-proofs for Grafana in v2 with zero additional code changes.
+4. **Docker Compose stays at 3 containers.** nginx + api + db. Adding Prometheus + Grafana would bring the v1 stack to 5 containers.
+
+**Alternatives Rejected:**
+
+- **Deploy Grafana in v1:** Operational overhead is not justified before the system has proven its load characteristics. Premature.
+- **Remove prom-client:** Removing the instrumentation would require re-adding it in v2 alongside Grafana. Keeping it in code costs nothing.
+
+**Consequences:** The production environment matrix is updated: "Grafana + UptimeRobot" → "UptimeRobot + Winston email alerts". Grafana setup is documented as a v2 deliverable in `08_implementation_roadmap.md`. The `/metrics` endpoint is protected by nginx (subnet restriction) but is live and ready for a future Prometheus scraper.

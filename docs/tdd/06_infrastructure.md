@@ -4,15 +4,14 @@
 
 ### 8.1 Docker Compose Stack
 
-BudFin deploys as a four-service Docker Compose stack on a single host. This architecture matches the single-school, single-tenant deployment model (SA-006) and keeps operational complexity proportional to the team size.
+BudFin deploys as a three-service Docker Compose stack on a single host. This architecture matches the single-school, single-tenant deployment model (SA-006) and keeps operational complexity proportional to the team size. The background worker runs in-process inside the `api` container using pg-boss in-process workers (see ADR-015).
 
 **Services:**
 
 | Service | Image | Role | Port Exposure |
 | --------- | ------- | ------ | --------------- |
 | `nginx` | `nginx:1.25-alpine` | TLS termination, static file serving, reverse proxy | 443 (HTTPS), 80 (HTTP redirect) |
-| `api` | Custom (Node.js 22 LTS) | Fastify REST API server | Internal only (3001) |
-| `worker` | Custom (same image, different entrypoint) | Background job processor (exports, calculations) | None |
+| `api` | Custom (Node.js 22 LTS) | Fastify REST API server + pg-boss in-process workers | Internal only (3001) |
 | `db` | `postgres:16-alpine` | PostgreSQL database | Internal only (not exposed to host) |
 
 ```yaml
@@ -57,23 +56,6 @@ services:
       timeout: 10s
       retries: 3
 
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    command: ["node", "dist/worker.js"]
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://app_user:${DB_PASSWORD}@db:5432/budfindb
-      SALARY_ENCRYPTION_KEY: /run/secrets/salary_encryption_key
-    secrets:
-      - salary_encryption_key
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-
   db:
     image: postgres:16-alpine
     environment:
@@ -107,11 +89,11 @@ secrets:
 - The `db` service has no port mapping to the host. Database access is restricted to the internal Docker network, eliminating external attack surface.
 - The `api` service depends on `db` with a health check condition, preventing startup before PostgreSQL is ready to accept connections.
 - Docker secrets are used for the JWT private key and salary encryption key. These are mounted as files at `/run/secrets/` inside the container, never passed as environment variable values in the Compose file.
-- The `worker` service shares the same Docker image as `api` but uses a different entrypoint (`dist/worker.js`). This avoids maintaining a separate build pipeline for background job processing.
+- Background job processing (PDF exports, calculation jobs) runs in-process inside the `api` container using `pg-boss` workers registered at server startup (`boss.work('export-job', handler)`). This eliminates a fourth container with no loss of functionality at 20-user scale. See ADR-015.
 
 ### 8.1.1 Dockerfile Reference
 
-The `api` and `worker` services share a single multi-stage Dockerfile. The base image is `node:22-alpine`.
+The `api` service uses a single multi-stage Dockerfile. The base image is `node:22-alpine`. There is no separate worker entrypoint — pg-boss workers start inside the Fastify server process.
 
 ```dockerfile
 # Stage 1: dependencies
@@ -208,7 +190,7 @@ server {
 | Backup | None | Daily to local disk | Daily pg_dump + encrypted offsite copy |
 | Log level | DEBUG | INFO | INFO (ERROR to email alert) |
 | TLS | Self-signed (mkcert) | Self-signed | Valid certificate (Let's Encrypt or CA) |
-| Monitoring | None | Grafana (optional) | Grafana + UptimeRobot |
+| Monitoring | None | UptimeRobot | UptimeRobot + Winston email alerts (Grafana deferred to v2; see ADR-017) |
 | DB port exposure | 5432 (host-accessible) | Internal only | Internal only |
 | JWT TTL | 30 minutes | 30 minutes | 30 minutes |
 | Rate limiting | Disabled | Enabled | Enabled |

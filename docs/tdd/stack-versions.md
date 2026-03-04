@@ -1,6 +1,6 @@
 # BudFin — Pinned Stack Version Manifest
 
-**Document Version:** 1.1
+**Document Version:** 1.2
 **Date:** March 4, 2026
 **Status:** Adopted — supersedes TDD v1.0 version table
 
@@ -13,7 +13,7 @@ This file is the canonical source of truth for all package versions used in BudF
 | Package | Version | Notes |
 | ------- | ------- | ----- |
 | Node.js | **22 LTS (v22.x)** | v20 EOL April 2026; v22 LTS supported to April 2027; required by Vite 7 |
-| TypeScript | **6.0.0-beta** (pinned) | Last JS-based TS compiler before Go rewrite in v7; beta as of March 2026 — accepted risk for greenfield; pinned to exact beta to prevent accidental upgrades to dev snapshots |
+| TypeScript | **5.9.3** (pinned) | Latest stable release as of March 2026; confirmed via Context7 (no TS 6 stable exists yet). TS 6 is planned but unreleased; see ADR-013. |
 | pnpm | **>=10.0.0** | Workspace-based monorepo manager |
 
 ---
@@ -37,7 +37,7 @@ This file is the canonical source of truth for all package versions used in BudF
 | winston | ^3.19.0 | Structured JSON logging |
 | prom-client | ^15.1.0 | Prometheus metrics; audit for security — aging but stable |
 | exceljs | ^4.4.0 | Server-side xlsx; aging (2yr no update) but stable; monitor for security |
-| puppeteer | ^24.0.0 | Headless Chrome PDF export; actively maintained |
+| @react-pdf/renderer | ^4.3.0 | Server-side PDF generation; replaces Puppeteer (see ADR-014); no Chrome dependency, < 50 MB RAM per job |
 | fast-csv | ^5.0.0 | CSV import/export |
 | pg-boss | ^10.0.0 | PostgreSQL-backed job queue (no Redis dependency) |
 | date-fns | ^4.0.0 | Timezone support via `@date-fns/tz`; critical for AST (UTC+3) handling |
@@ -64,7 +64,6 @@ This file is the canonical source of truth for all package versions used in BudF
 | @hookform/resolvers | ^5.0.0 | Zod resolver for React Hook Form; **v5 required for Zod 4** (v3 is Zod 3 only) |
 | zod | ^4.0.0 | Shared with backend; form + API validation |
 | @tanstack/react-table | ^8.0.0 | **Replaces AG Grid Community**; headless table logic |
-| @tanstack/react-virtual | ^3.0.0 | Virtual scrolling for large datasets; replaces AG Grid's built-in virtualization |
 | @tanstack/react-query | ^5.0.0 | Server-state management; caching, background sync, pagination |
 | recharts | ^3.0.0 | Charts; React 19 compatible |
 | zustand | ^5.0.0 | Client-side UI state; minimal API; React 19 compatible |
@@ -96,7 +95,7 @@ This file is the canonical source of truth for all package versions used in BudF
 
 | Package | Version | Notes |
 | ------- | ------- | ----- |
-| typescript | 6.0.0-beta (pinned) | Shared compiler across all workspaces |
+| typescript | 5.9.3 (pinned) | Shared compiler across all workspaces; see ADR-013 |
 | prettier | ^3.8.0 | No breaking changes |
 | eslint | ^9.0.0 | **Flat config** (`eslint.config.ts`) — breaking from `.eslintrc`; v9 chosen for stability over v10 |
 | markdownlint-cli | ^0.48.0 | Markdown linting |
@@ -126,17 +125,18 @@ This file is the canonical source of truth for all package versions used in BudF
 
 `jose` replaces `jsonwebtoken` for JWT operations. It is ESM-native, standards-compliant (IETF JWT/JWS/JWE), tree-shakeable, and supports modern algorithms (EdDSA, RSA-PSS). The `@fastify/jwt` plugin wraps `jose` internally.
 
-### TanStack Table vs AG Grid Community
+### TanStack Table (no virtual scrolling)
 
 `@tanstack/react-table` v8 is headless — provides sorting, filtering, pagination, and row selection logic with no UI. Combine with:
 
-- `@tanstack/react-virtual` v3 for virtual scrolling on large datasets (replaces AG Grid's built-in virtualization)
 - shadcn/ui `<Table>` components for rendering
 - Tailwind v4 for layout and styling
 
-### TypeScript 6 Risk
+`@tanstack/react-virtual` is **not included** (see ADR-016). Maximum table size in v1 is ~300 rows (staff costs); modern browsers render 300 DOM rows trivially without virtualization. Re-evaluate in v2 if an audit log UI with 10,000+ rows is required.
 
-TS 6.0 is in beta as of March 2026. Pin to a specific beta in `pnpm-lock.yaml`. Monitor for the stable release (expected mid-2026). Mitigation: greenfield codebase, no TS 5 migration cost.
+### TypeScript Version
+
+TypeScript is pinned at **5.9.3** (latest stable as of March 2026). There is no TypeScript 6.0 stable release on npm. TS 6 exists only as a pre-release. See ADR-013 for rationale. Re-evaluate when TS 6 reaches a stable npm tag.
 
 ### ESLint 9 Flat Config
 
