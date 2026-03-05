@@ -60,6 +60,43 @@ ls docs/specs/epic-$EPIC_NUMBER/*.md 2>/dev/null
 If a spec file already exists for this epic, show its path and ask:
 "A spec file already exists at [path]. Open it for editing, or start a new one?"
 
+## Step 4.5: Load UI/UX Context
+
+Determine the relevant UI/UX spec file(s) for this epic:
+
+| Epic | Primary UI/UX Spec |
+|------|-------------------|
+| 1 | docs/ui-ux-spec/03-enrollment-capacity.md |
+| 2 | docs/ui-ux-spec/04-revenue.md |
+| 3 | docs/ui-ux-spec/05-staffing-costs.md |
+| 4 | docs/ui-ux-spec/05-staffing-costs.md |
+| 5 | docs/ui-ux-spec/06-pnl-reporting.md |
+| 6 | docs/ui-ux-spec/07-scenarios.md |
+| 7 | docs/ui-ux-spec/08-master-data.md |
+| 8 | docs/ui-ux-spec/09-admin.md |
+| 9 | docs/ui-ux-spec/01-dashboard.md |
+| 10 | docs/ui-ux-spec/02-version-management.md |
+| 11 | docs/ui-ux-spec/09-admin.md |
+| 12 | (none — backend only) |
+| 13 | (none — backend only) |
+
+Cross-cutting files (always load for epics 1–11):
+- `docs/ui-ux-spec/00-global-framework.md`
+- `docs/ui-ux-spec/00b-workspace-philosophy.md`
+- `docs/ui-ux-spec/10-input-management.md` (if epic uses planning grids: epics 1–6, 9)
+
+**For epics 1–11**: Read the primary UI/UX spec file and the cross-cutting files. Extract:
+- Shell type (PlanningShell vs ManagementShell)
+- Layout structure (ASCII diagram or section reference)
+- Component list with types (shadcn/ui, TanStack Table, custom)
+- User flows (Actor -> Trigger -> Screen -> Action -> Outcome)
+- Interaction patterns (inline editing, keyboard nav, cell highlighting)
+- Accessibility requirements (WCAG AA specifics)
+
+Store these for use in Step 6.
+
+**For epics 12–13**: Skip this step. The UI/UX section will be filled with "N/A — backend-only epic".
+
 ## Step 5: Create the Spec File
 
 ```bash
@@ -86,21 +123,23 @@ Sections:
 3. Stories (table: #, Story title, Depends On, GitHub Issue — leave GitHub Issue blank for now)
 4. Data Model Changes (SQL DDL or "none")
 5. API Endpoints (table: Method, Path, Request, Response, Auth)
-6. Edge Cases Cross-Reference (from `docs/edge-cases/` — list relevant cases by ID)
-7. Out of Scope (explicit exclusions)
-8. Open Questions (must be empty before gate passes)
+6. UI/UX Specification (pre-populated from Step 4.5 context — confirm/modify each sub-section: Shell & Layout, Key Components, User Flows, Interaction Patterns, Accessibility Requirements, Responsive/Viewport. For backend-only epics 12–13, auto-fill "N/A — backend-only epic")
+7. Edge Cases Cross-Reference (from `docs/edge-cases/` — list relevant cases by ID)
+8. Out of Scope (explicit exclusions)
+9. Open Questions (must be empty before gate passes)
 
 After each section, re-display it and ask: "Does this look correct? (yes to continue / no to redo)"
 
 ## Step 7: Completeness Gate
 
-Before launching the orchestrator review, verify all 8 sections are non-empty:
+Before launching the orchestrator review, verify all 9 sections are non-empty:
 
 - Summary: at least one paragraph
 - Acceptance Criteria: at least one AC in Given/When/Then form
 - Stories: at least one story in the table
 - Data Model Changes: explicit content or "none"
 - API Endpoints: explicit content or "none"
+- UI/UX Specification: non-empty content OR "N/A — backend-only epic"
 - Edge Cases: at least one case ID or "none applicable"
 - Out of Scope: at least one explicit exclusion
 - Open Questions: must be empty (all resolved)

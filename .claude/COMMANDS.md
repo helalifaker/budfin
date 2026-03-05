@@ -27,6 +27,8 @@ are covered by the commands below — you should rarely need to type a custom pr
 | Scaffold a Fastify route | `/impl:route "[resource]" "[method]"` |
 | Scaffold a Prisma model | `/impl:model "[ModelName]"` |
 | Scaffold a React component | `/impl:component "[ComponentName]"` |
+| Commit, push, and open draft PR linked to story + epic | `/impl:commit [story-#]` |
+| Verify CI + reviews, squash-merge, roll up Epic status | `/pr:merge [story-#]` |
 
 ### Something is broken
 
@@ -88,6 +90,8 @@ Or use `/workflow:run [epic-N]` to drive the full Epic lifecycle with one comman
 | `/impl:route` | — | — | — | — | ✓ | ✓ | — |
 | `/impl:model` | — | — | — | — | ✓ | ✓ | — |
 | `/impl:component` | — | — | — | — | ✓ | ✓ | — |
+| `/impl:commit` | — | — | — | — | — | ✓ | ✓ |
+| `/pr:merge` | — | — | — | — | — | — | ✓ |
 | `/fix:*` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `/workflow:status` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `/workflow:advance` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -138,6 +142,16 @@ Example: `/impl:model "Enrollment"`
 **`/impl:component "[ComponentName]"`**
 Scaffolds a React 19 component + test file. Applies Tailwind v4, shadcn/ui, WCAG AA rules.
 Example: `/impl:component "EnrollmentTable"`
+
+**`/impl:commit [story-#]`**
+Phase 6. Runs pre-flight gates (test/lint/typecheck), derives a conventional commit message
+from the story issue, stages and pushes the branch, then opens a draft PR with
+`Fixes #[story-#]` and `Part of Epic #[epic-#]` linkage. Moves story to "In Review".
+
+**`/pr:merge [story-#]`**
+Phase 7. Verifies CI checks green and PR is not a draft, then squash-merges with branch
+deletion. Auto-closes the story via `Fixes #N`. Runs Epic rollup: closes the Epic issue and
+moves it to Done if all sibling stories are merged.
 
 ### Fix Commands
 
