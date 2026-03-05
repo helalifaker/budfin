@@ -33,6 +33,12 @@ pnpm --filter @budfin/api exec prisma migrate dev
 
 API dev server uses `tsx watch` (not `ts-node`). No compilation step needed during development.
 
+### Environment setup
+
+Copy `.env.example` to `.env` before first run. The API requires a `DATABASE_URL` (PostgreSQL)
+and `PGCRYPTO_KEY` (salary field encryption). In Docker Compose, `PGCRYPTO_KEY` is mounted as
+a Docker secret at `/run/secrets/pgcrypto_key`.
+
 ## Architecture
 
 ### Monorepo structure
@@ -89,27 +95,28 @@ Flat config only (`eslint.config.ts`). No `.eslintrc` files. All plugins must su
 
 All development follows the 7-phase BudFin workflow defined in `.claude/workflow/WORKFLOW.md`. Current phase is tracked in `.claude/workflow/STATUS.md`.
 
-Key commands:
+See `.claude/COMMANDS.md` for the full command reference. Key commands:
 
 - `/workflow:status` — show current phase and checklist
 - `/workflow:advance` — gate-check and move to next phase
-- `/workflow:decompose` — create all 13 GitHub Epics + Projects board (Phase 2)
-- `/workflow:epic` — create a single Epic issue
-- `/workflow:story` — create a Story issue linked to an Epic
-- `/workflow:specify [epic#] "[name]"` — Phase 4: write a feature spec
+- `/plan:decompose` — create all 13 GitHub Epics + Projects board (Phase 2)
+- `/plan:epic [N] "[name]" [priority] [tier]` — create a single Epic issue
+- `/plan:spec [epic-N]` — Phase 4: write a feature spec
+- `/plan:stories [epic-N]` — Phase 4: create story issues from a spec
+- `/workflow:run [epic-N]` — drive full Epic lifecycle (spec → stories → implement)
 
 ## File Output Rules
 
-- Plans → `./plans/`
+- Plans → `./docs/plans/` — ALWAYS write implementation plans as files here (format: `YYYY-MM-DD-<feature-name>.md`). Never keep plans only in the conversation.
 - Specs → `./docs/specs/epic-N/` (e.g., `docs/specs/epic-1/enrollment-capacity.md`)
-- Tasks → `./tasks/`
 - Data files (budgets, enrollment) → `./data/`
-- Never write generated artifacts to `~/.claude/`.
+- Tasks → tracked as GitHub Issues (Epics → Stories)
 
 ## Reference Documents
 
 | Purpose | Location |
 | --- | --- |
+| Full command reference (plan/impl/fix/workflow) | `.claude/COMMANDS.md` |
 | Canonical pinned versions | `docs/tdd/stack-versions.md` |
 | Architecture overview | `docs/tdd/01_overview.md` |
 | ADRs (ADR-008 to ADR-017) | `docs/tdd/09_decisions_log.md` |
