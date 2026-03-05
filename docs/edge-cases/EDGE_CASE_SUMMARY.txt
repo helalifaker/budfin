@@ -3,7 +3,7 @@ BUDFIN EDGE CASE ANALYSIS - EXECUTIVE SUMMARY
 ================================================================================
 
 Date:       March 3, 2026
-Scope:      BudFin PRD v1.0 Product Owner Review
+Scope:      BudFin PRD v1.0 Product Owner Review [NOTE: v1.0-era analysis; canonical PRD is now v2.0 at docs/prd/BudFin_PRD_v2.0.md]
 Total Cases: 35 Edge Cases Identified
 
 ================================================================================

@@ -54,7 +54,7 @@ This analysis identifies 35+ critical edge cases across the BudFin architecture 
 | SA-031 | Security | RBAC for Version Locking | High | Security, Version Mgmt |
 | SA-032 | Security | Audit Trail Tampering Detection | High | Security, Audit Trail |
 | SA-033 | Security | Data Export Controls by Role | Medium | Security, Export |
-| SA-034 | Security | SSO Token Expiration During Long Recalculation | Medium | Security, Auth |
+| SA-034 | Security | SSO Token Expiration During Long Recalculation | Medium | Security, Auth | DEFERRED — SSO is out of scope for v1 per API contract. |
 | SA-035 | Security | Sensitive Data in Undo/Redo Stack | Medium | Security, Undo/Redo |
 
 ---
@@ -1777,6 +1777,8 @@ If application doesn't enforce export controls:
 ---
 
 ### SA-034: SSO Token Expiration During Long Recalculation
+
+> **DEFERRED — SSO is out of scope for v1 per API contract.** SSO/SAML/OIDC is explicitly deferred (see 04_api_contract.md). This edge case does not apply to v1 and requires no implementation.
 
 **Edge Case Description**
 

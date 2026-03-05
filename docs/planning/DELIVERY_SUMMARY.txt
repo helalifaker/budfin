@@ -77,7 +77,7 @@ The comprehensive edge case analysis document contains:
    ├─ SA-031: RBAC for Version Locking [HIGH]
    ├─ SA-032: Audit Trail Tampering Detection [HIGH]
    ├─ SA-033: Data Export Controls by Role [MEDIUM]
-   ├─ SA-034: SSO Token Expiration During Long Recalculation [MEDIUM]
+   ├─ SA-034: SSO Token Expiration During Long Recalculation [MEDIUM] — OUT OF SCOPE for v1 — SSO/SAML/OIDC is explicitly deferred (see 04_api_contract.md)
    └─ SA-035: Sensitive Data in Undo/Redo Stack [MEDIUM]
 
 4. FOR EACH EDGE CASE:

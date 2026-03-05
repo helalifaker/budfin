@@ -2,7 +2,7 @@
 ## Complete Product Owner Review & Risk Assessment
 
 **Date**: March 3, 2026  
-**Scope**: BudFin v1.0 PRD for EFIR (École Française Internationale de Riyad)  
+**Scope**: BudFin v1.0 PRD for EFIR (École Française Internationale de Riyad) — NOTE: This analysis was prepared against PRD v1.0. The canonical PRD is now v2.0 (`docs/prd/BudFin_PRD_v2.0.md`). Review edge cases against v2.0 before implementation.
 **Total Cases Identified**: 35 edge cases across 7 categories
 
 ---
@@ -274,7 +274,7 @@ Add 1 week for:
 
 1. **Distribute** this analysis to Product Owner, Technical Lead, Project Manager, and Finance Leadership
 2. **Schedule** decision meeting for 5 missing requirements (PO-022, 027, 028, 029, 030)
-3. **Update** BudFin_PRD_v1.0.md with resolutions for all 35 edge cases
+3. **Update** BudFin_PRD_v2.0.md (the canonical PRD) with resolutions for all 35 edge cases
 4. **Create** Jira/Azure DevOps issues from EDGE_CASE_QUICK_REFERENCE.csv
 5. **Adjust** project schedule to account for 6-8 weeks of additional work
 6. **Add** all 35 edge cases to test plan and define acceptance criteria
