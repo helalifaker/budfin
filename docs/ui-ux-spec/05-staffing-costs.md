@@ -21,6 +21,8 @@ The Staffing & Staff Costs module is the central workspace for curriculum-driven
 
 ## 2. Information Architecture
 
+This module renders inside PlanningShell. The context bar and docked right panel are managed by the shell (Global Framework Section 12.1).
+
 ### 2.1 Tab Structure
 
 The module uses a top-level `<Tabs>` component (shadcn/ui) with three tabs:
@@ -341,6 +343,8 @@ Monthly Gross Breakdown:
 
   * HSA excluded Jul-Aug
 ```
+
+**HSA for mid-year hires:** HSA is strictly zeroed for July and August calendar months regardless of join date. For employees with a `joining_date` after September 1st, HSA is included only for months from the joining month through June (excluding Jul-Aug). Example: an employee joining in November receives HSA for November through June (8 months), not the full 10-month period.
 
 ### 5.6 Grand Total Row
 

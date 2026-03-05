@@ -53,10 +53,10 @@
 
 | Token | Value | Status | Usage |
 | --- | --- | --- | --- |
-| `--status-draft` | `#6B7280` | Draft | Status badge (gray-500) |
+| `--status-draft` | `#4B5563` | Draft | Status badge (gray-600) — WCAG AA ~5.7:1 on gray-100 |
 | `--status-published` | `#2563EB` | Published | Status badge (blue-600) |
 | `--status-locked` | `#7C3AED` | Locked | Status badge (violet-600) |
-| `--status-archived` | `#9CA3AF` | Archived | Status badge (gray-400) |
+| `--status-archived` | `#6B7280` | Archived | Status badge (gray-500) — WCAG AA ~4.6:1 on gray-100 |
 
 #### Semantic Colors
 
@@ -145,21 +145,103 @@ Based on a 4px grid system.
 
 ### 2.1 Application Shell Structure
 
-```
-+--------------------------------------------------+
-|                  Context Bar (56px)               |
-+--------+-----------------------------------------+
-|        |                                         |
-| Side-  |              Main Workspace             |
-| bar    |                                         |
-| (240px |              (flex: 1)                   |
-|  or    |                                         |
-|  64px) |                                         |
-|        |                                         |
-+--------+-----------------------------------------+
+BudFin uses two distinct shell layouts based on module category.
+
+#### Module Classification
+
+**Category A -- PlanningShell** (context bar + docked right panel):
+
+| Module | Route |
+| --- | --- |
+| Dashboard | `/planning` |
+| Enrollment & Capacity | `/planning/enrollment` |
+| Revenue | `/planning/revenue` |
+| Staffing & Staff Costs | `/planning/staffing` |
+| P&L & Reporting | `/planning/pnl` |
+| Scenarios | `/planning/scenarios` |
+
+**Category B -- ManagementShell** (sidebar + toolbar only, NO context bar, NO docked panel):
+
+| Module | Route |
+| --- | --- |
+| Version Management | `/planning/version-management` |
+| Chart of Accounts | `/master-data/accounts` |
+| Academic Years & Grades | `/master-data/academic` |
+| Reference Data | `/master-data/reference` |
+| Assumptions & Parameters | `/master-data/assumptions` |
+| User Settings | `/admin/users` |
+| Audit Trail | `/admin/audit` |
+| System Settings | `/admin/settings` |
+
+#### PlanningShell Layout
+
+```text
++--------+---------------------------------------------------+---[drag]---+-----------+
+|        | CONTEXT BAR (56px)                                |            |           |
+|        | [Logo > FY/Ver > Module] [FY][Ver][Compare]       |            |           |
+|        | [Period][Scenario]     [Save][Stale][PanelTgl][Usr]|            |           |
+| SIDE-  +---------------------------------------------------+            |  RIGHT    |
+| BAR    | Module Toolbar (48px)                             |            |  PANEL    |
+| (240/  +---------------------------------------------------+   resize   | (280-50%) |
+| 64px)  |                                                   |   handle   |  default  |
+|        |  Main Workspace (flex:1, min 480px)               |   (4px)    |  400px    |
+|        |  Grids, charts, inline editing                    |            |           |
+|        |  Content SHIFTS when panel opens                  |            | [Details] |
+|        |                                                   |            | [Activity]|
+|        |                                                   |            | [Audit]   |
+|        |                                                   |            | [Help]    |
++--------+---------------------------------------------------+------------+-----------+
 ```
 
+#### ManagementShell Layout
+
+```text
++--------+--------------------------------------------------------------+
+|        | Module Toolbar (48px)                                        |
+| SIDE-  | [Title] [Filters...] [Search] [Actions...]                   |
+| BAR    +--------------------------------------------------------------+
+| (240/  |                                                              |
+| 64px)  |  Main Workspace (flex:1, full width)                         |
+|        |  CRUD tables, forms, settings                                |
+|        |                                                              |
+|        |  Overlay side panels (480px, z-index:30) for CRUD forms     |
++--------+--------------------------------------------------------------+
+```
+
+#### Auto-Collapse Behavior
+
+| Event | Sidebar | Right Panel |
+| --- | --- | --- |
+| Right panel opens | Auto-collapses to 64px (icon-only) | Opens to saved width |
+| User manually expands sidebar while panel open | Expands to 240px | Auto-closes |
+| Comparison toggle ON | No change | Auto-closes (maximize horizontal viewport) |
+| Navigate to Scenarios module | No change | Switches to overlay mode (z-index:30) |
+| Navigate away from Scenarios | No change | Reverts to docked mode |
+
 **Desktop-only constraint:** Minimum viewport 1280x720. No responsive breakpoints. No mobile support (SA-007). If viewport is below 1280px wide, show a centered message: "BudFin requires a minimum screen width of 1280px."
+
+#### React Router Structure (implementation reference)
+
+```tsx
+<RootLayout>              // renders <Sidebar /> + <Outlet />
+  <PlanningShell>          // renders ContextBar + main + RightPanel + <Outlet />
+    /planning              -> DashboardPage
+    /planning/enrollment   -> EnrollmentPage
+    /planning/revenue      -> RevenuePage
+    /planning/staffing     -> StaffingPage
+    /planning/pnl          -> PnlPage
+    /planning/scenarios    -> ScenariosPage
+
+  <ManagementShell>        // renders <Outlet /> only (no context bar, no right panel)
+    /planning/version-management -> VersionManagementPage
+    /master-data/accounts        -> ChartOfAccountsPage
+    /master-data/academic        -> AcademicYearsPage
+    /master-data/reference       -> ReferenceDataPage
+    /master-data/assumptions     -> AssumptionsPage
+    /admin/users                 -> UserSettingsPage
+    /admin/audit                 -> AuditTrailPage
+    /admin/settings              -> SystemSettingsPage
+```
 
 ### 2.2 Sidebar
 
@@ -200,16 +282,16 @@ Based on a 4px grid system.
 
 ### 2.3 Context Bar
 
-Fixed at the top of the viewport. Height: 56px. Background: `--workspace-bg-muted`. Border-bottom: 1px solid `--workspace-border`.
+Rendered by PlanningShell only. Fixed at the top of the viewport, right of sidebar. Height: 56px. Background: `--workspace-bg-muted`. Border-bottom: 1px solid `--workspace-border`.
 
 ```
 +-----------------------------------------------------------------------+
-| [FY Dropdown] [Version Dropdown+Badge] [Compare Toggle] [Period Toggle]
-|                                              [Scenario Dropdown] [Save]
+| [LEFT: Logo > Breadcrumb]  [CENTER: FY, Ver, Compare, Period, Scenario]|
+|                                [RIGHT: Save, Stale, PanelToggle, User] |
 +-----------------------------------------------------------------------+
 ```
 
-**Layout:** Flexbox row, `justify-content: space-between`. Left group: FY + Version + Compare. Right group: Period + Scenario + Save indicator.
+**Layout:** Flexbox row with three zones. Left: logo + breadcrumb. Center: FY + Version + Compare + Period + Scenario. Right: Save + Stale + Panel Toggle + User avatar.
 
 See **Section 3: Context Bar Specification** for full detail.
 
@@ -217,9 +299,20 @@ See **Section 3: Context Bar Specification** for full detail.
 
 ## 3. Context Bar Specification
 
-The context bar is the persistent header that maintains user working context across all modules (PRD Section 6.1).
+The context bar is the persistent header that maintains user working context across all **planning** modules (PRD Section 6.1). It is rendered by PlanningShell only and does not appear on ManagementShell pages (Version Management, Master Data, Admin).
 
 ### 3.1 Elements (Left to Right)
+
+#### 3.1.0 Breadcrumb
+
+| Property | Value |
+| --- | --- |
+| Component | Custom `<Breadcrumb>` |
+| Position | Left zone, after logo |
+| Format | `FY2026 / Budget v1 > Enrollment` |
+| FY+Version segment | Clickable -- opens FY/Version selector popover |
+| Module name segment | Text-only, not clickable |
+| Separator | `>` between version context and module name |
 
 #### 3.1.1 Fiscal Year Selector
 
@@ -314,6 +407,17 @@ Displays the last auto-save timestamp in `--text-muted`: "Last saved 2 min ago".
 | Visibility | Shown only when `stale_modules` array from API is non-empty |
 | Tooltip | Lists stale modules: "Revenue, P&L need recalculation" |
 
+#### 3.1.8 Right Panel Toggle
+
+| Property | Value |
+| --- | --- |
+| Component | `<Button variant="ghost">` |
+| Icon | Lucide `PanelRight` |
+| Position | Right zone, before user avatar |
+| Tooltip | "Toggle detail panel (Ctrl+Shift+P)" |
+| Behavior | Toggles `useRightPanelStore.toggle()` |
+| Active state | `--color-info` tint when panel is open |
+
 ---
 
 ## 4. Shared Components
@@ -363,6 +467,19 @@ All cell editors activate on double-click or Enter key when cell is focused. Con
 | `dropdown` | `<Select>` (shadcn/ui) | Enum values | Left-aligned, shows selected label |
 | `boolean` | `<Checkbox>` (shadcn/ui) | — | Centered checkbox |
 
+**Default inline error messages by cell type:**
+
+| Type | Failure | Message |
+| --- | --- | --- |
+| `integer` | Negative value | "Value must be a non-negative integer" |
+| `integer` | Non-integer | "Value must be a whole number" |
+| `number` | Below min | "Value must be at least {min}" |
+| `number` | Above max | "Value must be at most {max}" |
+| `currency` | Negative | "Amount cannot be negative" |
+| `percentage` | Out of range | "Percentage must be between 0% and 100%" |
+
+Module specs may override with contextual messages (e.g., "Headcount must be >= 0").
+
 **Inline validation pattern:**
 1. On blur or Enter: validate against cell rules
 2. Invalid: red border (`--cell-error-border`), red tooltip with error message below cell
@@ -382,9 +499,15 @@ All cell editors activate on double-click or Enter key when cell is focused. Con
 
 Validation tooltips auto-dismiss after 5 seconds or on next interaction. Multiple validation errors on a cell show as a stacked list in the tooltip.
 
-### 4.4 Side Panel
+**Screen reader announcement:** The error tooltip container uses `aria-live="assertive"` so screen readers announce validation errors immediately when `aria-invalid` is set. When the error clears, the region is emptied silently.
 
-Used for detail views, create/edit forms, and drill-down information.
+### 4.4 Side Panels
+
+BudFin uses two distinct panel patterns depending on the shell context.
+
+#### 4.4.1 Overlay Side Panel (ManagementShell + CRUD forms)
+
+Used for create/edit forms, detail views in ManagementShell pages, and CRUD forms in planning modules that don't use the docked right panel's Form tab.
 
 | Property | Value |
 | --- | --- |
@@ -399,6 +522,75 @@ Used for detail views, create/edit forms, and drill-down information.
 | Body | Scrollable content area |
 
 Close triggers: X button, Escape key, clicking overlay backdrop (if modal mode).
+
+#### 4.4.2 Docked Right Panel (PlanningShell only)
+
+A resizable flex child that shifts workspace content. Does NOT overlay.
+
+**Exception:** In the Scenarios module, the right panel uses overlay mode (z-index:30) instead of docking, because the 40/60 split layout already fills the workspace.
+
+#### 4.4.3 Unsaved Changes Guard
+
+When a side panel or dialog contains a form with unsaved changes (dirty state
+detected via React Hook Form `isDirty`), closing the panel triggers a
+confirmation dialog before discarding:
+
+| Property | Value |
+| --- | --- |
+| Component | shadcn/ui `<AlertDialog>` |
+| Title | "Unsaved Changes" |
+| Description | "You have unsaved changes. Are you sure you want to close?" |
+| Confirm button | "Discard" (`<Button variant="destructive">`) |
+| Cancel button | "Keep Editing" (`<Button variant="outline">`) |
+
+Close triggers that invoke the guard: X button, Escape key, backdrop click.
+
+If the form is clean (no changes), the panel closes immediately without the
+guard.
+
+**Resize:**
+
+| Property | Value |
+| --- | --- |
+| Drag handle | 4px visible, 12px hit target, cursor: `col-resize` |
+| Handle visual | 1px `--workspace-border`, hover: 2px `--color-info` |
+| Min width | 280px |
+| Max width | 50% of space right of sidebar |
+| Default width | 400px |
+| Resize method | mousedown/mousemove/mouseup with requestAnimationFrame |
+| Accessibility | `role="separator"`, `aria-orientation="vertical"`, arrow keys resize 10px |
+| Body during drag | `user-select: none` applied |
+
+**Persistence (localStorage):**
+
+| Key | Type | Default |
+| --- | --- | --- |
+| `budfin:rightPanel:width` | number (px) | 400 |
+| `budfin:rightPanel:open` | boolean | true |
+| `budfin:rightPanel:activeTab` | string | `'details'` |
+
+Written on: toggle, resize commit (mouseup), tab switch. Debounced 100ms during drag.
+
+**Panel Modes (left-edge icon strip, 32px wide):**
+
+| Mode | Icon (Lucide) | Content |
+| --- | --- | --- |
+| Details | `FileText` | Version metadata, stale modules, last calculated timestamps |
+| Activity | `Activity` | Session event feed (calcs, exports, saves, errors) -- last 20 events |
+| Audit | `ScrollText` | Audit trail entries for current version + module |
+| Help | `HelpCircle` | Contextual docs for the active module |
+| Form | `FormInput` | CRUD forms (replaces per-module overlay side panels in planning modules) |
+
+Active mode: `--color-info` left border (3px).
+
+**Toggle:**
+
+| Trigger | Action |
+| --- | --- |
+| Context bar toggle button (Lucide `PanelRight`) | Toggle open/closed |
+| `Ctrl+Shift+P` | Toggle open/closed |
+| Panel header X button | Close |
+| Escape (when panel focused) | Close |
 
 ### 4.5 Module Toolbar
 
@@ -433,6 +625,7 @@ Each module page has a toolbar below the context bar.
 | Running | `<Button disabled>` with spinner | Shows progress |
 | Success | Brief green check flash (2s), then returns to default | Auto-resets |
 | Error | Red badge with error count, clickable to show details | Opens error panel |
+| Timeout (30s) | `<Button>` with amber exclamation icon + "Taking longer than expected" | Tooltip: "Calculation is still running. You can continue working." After 60s, changes to: "Calculation may have failed. Click to retry." with a retry action that cancels the current job and starts a new one |
 
 **Calculate button behavior** (PRD Section 12):
 1. Saves current module data (equivalent to manual save)
@@ -440,6 +633,10 @@ Each module page has a toolbar below the context bar.
 3. Displays validation results and highlights any errors or warnings
 4. On success: toast notification with summary (e.g., "Revenue recalculated -- Total Revenue: 42.3M SAR")
 5. On error: error panel slides in with links to problematic fields
+
+**Last-calculated timestamp:** After a successful calculation, a subtle label appears next to the Calculate button: `--text-xs`, `--text-muted`, "Calculated 2 min ago" (relative time via `date-fns` `formatDistanceToNow`, updates every 60s). Tooltip shows absolute AST: "Last calculated: 04 Mar 2026, 14:32 AST". No timestamp shown if version has never been calculated.
+
+**Focus during calculation:** When the Calculate button transitions to disabled "Running" state, focus is not moved. The button retains DOM focus (`aria-disabled="true"`). Status is announced via `aria-live="polite"`. On completion, the button re-enables with focus still on it.
 
 ### 4.6 Toast Notifications
 
@@ -450,6 +647,11 @@ Each module page has a toolbar below the context bar.
 | Duration | 5 seconds (auto-dismiss) |
 | Max visible | 3 stacked |
 | Variants | `success` (green), `error` (red), `warning` (amber), `info` (blue) |
+
+**Action button rules:**
+- Clicking an action button (e.g., "Retry", "Undo") dismisses the toast immediately after triggering the action.
+- Error-variant toasts that include an action button do **not** auto-dismiss. They persist until the user clicks the action button or the dismiss (X) control.
+- Action buttons do not receive auto-focus. Focus remains on the user's current element. The toast is announced via `aria-live` but does not steal keyboard focus.
 
 ### 4.7 Confirmation Dialog
 
@@ -483,6 +685,9 @@ Shown when a module has no data (e.g., new version with no enrollment entered).
 | Spinner | Used in buttons and inline loading indicators |
 | Full-page | Skeleton grid with animated shimmer, replaces workspace content |
 | Duration before showing | 200ms delay (avoid flash for fast loads) |
+| Minimum display | 500ms after skeleton appears (prevents sub-second flash) |
+
+**Flash prevention:** If data arrives within 200ms, no skeleton is shown. If the skeleton is rendered (data took > 200ms), it remains visible for at least 500ms total (measured from when the skeleton first appeared) before transitioning to content.
 
 ### 4.10 Read-Only Mode Indicator
 
@@ -494,6 +699,16 @@ When the active version is Locked or Archived, the module workspace shows a read
 | Text | "This version is [Locked/Archived] -- all fields are read-only" |
 | Icon | Lock icon (Lucide `Lock`) |
 | Effect | All editable cells lose `--cell-editable-bg`, cursor changes to `default` |
+
+### 4.11 Tab Patterns
+
+| Pattern | Component | Use Case | Example |
+| --- | --- | --- | --- |
+| Navigation tabs | shadcn/ui `<Tabs>` underline variant | Switch between data views within a module | Enrollment: By Grade / By Nationality / By Tariff |
+| Sub-navigation tabs | shadcn/ui `<Tabs>` pill variant | Select a sub-category within a tab | Staffing DHG: Maternelle / Elementaire / College / Lycee |
+| Mode toggle | shadcn/ui `<ToggleGroup>` single | Switch display format (no data change) | P&L: Summary / Detailed / IFRS |
+
+Do not mix patterns within the same hierarchy level.
 
 ---
 
@@ -513,6 +728,9 @@ When the active version is Locked or Archived, the module workspace shows a read
 | `End` | Move to last cell in current row |
 | `Ctrl+Home` | Move to first cell in grid (A1) |
 | `Ctrl+End` | Move to last cell with data |
+| `Space` or `Enter` | Toggle expand/collapse on focused group row |
+| `Arrow Right` | Expand collapsed group row (no-op if already expanded) |
+| `Arrow Left` | Collapse expanded group row (no-op if already collapsed) |
 | `Page Up/Down` | Scroll one viewport height up/down |
 
 ### 5.2 Application Shortcuts
@@ -523,16 +741,17 @@ When the active version is Locked or Archived, the module workspace shows a read
 | `Ctrl+Shift+C` | Toggle comparison mode | Global |
 | `Ctrl+E` | Export current view | Module |
 | `Ctrl+/` | Show keyboard shortcuts help overlay | Global |
+| `Ctrl+Shift+P` | Toggle right detail panel | PlanningShell |
 | `Escape` | Close side panel / dialog / dropdown | Global |
 
 ### 5.3 Focus Management
 
 - On module navigation: focus moves to first interactive element in the workspace (typically the first editable cell or the search input)
 - On side panel open: focus traps inside panel, first form field receives focus
-- On side panel close: focus returns to the element that triggered the panel
+- On side panel close: focus returns to the element that triggered the panel. If that element no longer exists in the DOM (e.g., the row was deleted), focus moves to the nearest sibling. If no sibling exists, focus moves to the first interactive element in the workspace.
 - On dialog open: focus traps inside dialog
 - On dialog close: focus returns to trigger element
-- Tab order follows visual layout: toolbar > filters > grid headers > grid cells (left-to-right, top-to-bottom)
+- Tab order follows visual layout: toolbar > filters > grid headers > grid cells (left-to-right, top-to-bottom). When the right panel is open, panel content follows the grid in tab order: grid cells > right panel icon strip > right panel content. The panel is not a focus trap; Tab moves freely between workspace and panel.
 
 ---
 
@@ -594,6 +813,25 @@ Each numeric column gains two additional sub-columns:
 - Primary version data: normal text color
 - Comparison version data: slightly muted (`--text-secondary`)
 - Variance columns: background tinted with the comparison version's type color at 5% opacity
+
+### 7.3 Export While Stale
+
+When a user triggers an export and the current module is in the `stale_modules`
+array:
+
+1. Show a warning dialog before proceeding:
+
+| Property | Value |
+| --- | --- |
+| Component | shadcn/ui `<AlertDialog>` |
+| Title | "Data May Be Outdated" |
+| Description | "The current data has not been recalculated since inputs changed. The export will reflect the last calculated values." |
+| Confirm button | "Export Anyway" (`<Button variant="default">`) |
+| Cancel button | "Cancel" |
+| Secondary | "Recalculate First" (`<Button variant="outline">`) -- triggers Calculate |
+
+2. If the user confirms, the export proceeds with last-calculated data.
+3. The exported file header includes a timestamp note: "Data as of [last_calculated_at]".
 
 ---
 
@@ -662,6 +900,28 @@ Full-screen error overlay with:
 - Auto-retry with exponential backoff (1s, 2s, 4s, 8s, max 30s)
 - Manual retry button
 
+**Pending edit behavior during network loss:**
+- Cell edits made while offline are queued in memory (maximum 50 pending changes).
+- Save indicator transitions to "Unsaved changes" (amber dot) for the duration.
+- On reconnection, queued edits flush as a single batch save.
+- If the queue exceeds 50 items, warning toast: "Many unsaved changes. Some edits may be lost if the page is closed."
+- Browser `beforeunload` dialog is triggered if the user navigates away with queued edits.
+
+### 9.3 Component-Level Error Fallback
+
+When a page contains multiple independent data sources (e.g., Dashboard KPI cards + charts), each component handles its own error state independently:
+
+| Property | Value |
+| --- | --- |
+| Failed component | Renders inline error card in place of its content |
+| Error card | Icon (`AlertTriangle`, 24px, `--color-error`) + message + "Retry" button |
+| Error card background | `--color-error-bg`, `--workspace-border`, `--radius-md` |
+| Error card height | Matches expected component height (prevents layout shift) |
+| Surrounding components | Render normally |
+| Role | `role="alert"` on the error card |
+
+Each independent data region is wrapped in its own TanStack Query error boundary.
+
 ---
 
 ## 10. Accessibility (WCAG AA)
@@ -694,6 +954,7 @@ Full-screen error overlay with:
 | `aria-describedby` | Cells with errors | ID of error tooltip |
 | `aria-expanded` | Expandable group rows | `true` / `false` |
 | `aria-level` | Hierarchical rows (P&L) | Nesting depth (1, 2, 3) |
+| `aria-live="assertive"` | Error tooltip container | Announces inline validation errors when `aria-invalid` is set |
 
 ---
 
@@ -715,6 +976,28 @@ UI-only state managed via Zustand stores:
 - `useSidebarStore`: expanded/collapsed, active nav item
 - `useGridStore` (per module): column visibility, sort state, filter state, selected rows
 - `useUIStore`: active side panel, active dialog, toast queue
+- `useRightPanelStore`: right panel state (PlanningShell only)
+
+**`useRightPanelStore` definition:**
+
+```typescript
+interface RightPanelStore {
+  isOpen: boolean;
+  width: number;
+  activeTab: 'details' | 'activity' | 'audit' | 'help' | 'form';
+  mode: 'docked' | 'overlay'; // overlay for Scenarios
+  events: ActivityEvent[];
+  unreadCount: number;
+  toggle: () => void;
+  open: () => void;
+  close: () => void;
+  setWidth: (width: number) => void;
+  setActiveTab: (tab: RightPanelStore['activeTab']) => void;
+  setMode: (mode: 'docked' | 'overlay') => void;
+  addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void;
+  markAllRead: () => void;
+}
+```
 
 ### 11.3 URL State
 
@@ -724,13 +1007,15 @@ Context bar state is synced to URL search params for deep linking:
 
 ---
 
-## 12. Module Page Template
+## 12. Module Page Templates
 
-Every module page follows this consistent structure:
+### 12.1 PlanningShell Module Template
+
+Every planning module page follows this structure. The context bar, sidebar, and right panel are rendered by PlanningShell and are NOT repeated per-module.
 
 ```tsx
-<ModulePage>
-  {/* Context bar is rendered at shell level, not per-module */}
+<PlanningShell>
+  {/* Context bar, sidebar, right panel rendered by shell */}
 
   <ModuleToolbar>
     <ModuleTitle />
@@ -751,10 +1036,38 @@ Every module page follows this consistent structure:
     {/* Error: error state with retry */}
     {/* Data: grid / charts / panels */}
   </ModuleContent>
+</PlanningShell>
+```
 
-  {/* Optional: Side panel for detail views */}
-  <SidePanel />
-</ModulePage>
+### 12.2 ManagementShell Module Template
+
+Management pages (Version Management, Master Data, Admin) use this simpler template. No context bar, no docked right panel.
+
+```tsx
+<ManagementShell>
+  {/* Sidebar rendered by RootLayout */}
+  {/* NO context bar */}
+  {/* NO docked right panel */}
+
+  <ModuleToolbar>
+    <ModuleTitle />
+    <FilterControls />       {/* Module-specific filters, search */}
+    <ToolbarActions>
+      <ActionButtons />      {/* CRUD actions */}
+      <ExportButton />
+    </ToolbarActions>
+  </ModuleToolbar>
+
+  {/* Optional: Tab navigation */}
+  <TabNavigation />
+
+  <ModuleContent>
+    {/* CRUD tables, forms, settings */}
+  </ModuleContent>
+
+  {/* Optional: Overlay side panel (480px, z-index:30) for CRUD forms */}
+  <OverlaySidePanel />
+</ManagementShell>
 ```
 
 ---

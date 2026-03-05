@@ -46,12 +46,10 @@ All six personas have View access to the Dashboard. No role-specific restriction
 
 ### 2.1 Workspace Structure
 
-The Dashboard uses the standard application shell (sidebar + context bar) from `00-global-framework.md` Section 2. The workspace area is divided into a scrollable single-column layout with distinct sections.
+The Dashboard renders inside PlanningShell (context bar + docked right panel). It is the default landing page and responds to all context bar elements. See Global Framework Section 2.1 for shell details and Section 12.1 for the module template. The workspace area is divided into a scrollable single-column layout with distinct sections.
 
 ```
 +--------+------------------------------------------------------------+
-|        |  Context Bar (56px)                                        |
-|        +------------------------------------------------------------+
 |        |  Module Toolbar (48px)                                     |
 | Side-  +------------------------------------------------------------+
 | bar    |                                                            |
@@ -75,6 +73,8 @@ The Dashboard uses the standard application shell (sidebar + context bar) from `
 |        |  Comparison Variance Gauges (conditional)      Section D   |
 +--------+------------------------------------------------------------+
 ```
+
+Note: The context bar and right panel are rendered by PlanningShell at the shell level.
 
 ### 2.2 Section Grid
 
@@ -149,6 +149,8 @@ A reusable card component used in Section A. Four instances, one per KPI (FR-DSH
 | 2 | Total Students | `total_students_ay1` + `total_students_ay2` | Integer with thousands separator | `Users` | Mini bar chart (AY1 vs AY2 side-by-side, 60px tall) | YoY from `enrollment_trend` |
 | 3 | School Utilization | `school_utilization_pct` | Percentage, 1 decimal | `Building2` | Circular gauge (SVG, 64px diameter, target line at 85%) | None (static target) |
 | 4 | Discount Rate | `discount_rate_pct` | Percentage, 1 decimal | `Percent` | None | YoY comparison if historical data available |
+
+**Zero-division guard (School Utilization):** If `sections_needed * max_class_size` evaluates to zero (no enrollment data or all headcounts are zero), the utilization KPI card displays "N/A" in `--text-muted` instead of a percentage. The circular gauge renders as an empty ring (0% fill) with a centered "N/A" label. Tooltip: "Utilization unavailable -- no capacity data."
 
 ### 3.2 P&L Summary Strip
 

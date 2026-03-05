@@ -43,7 +43,7 @@ This module is restricted exclusively to the Admin role. No other roles can acce
 
 ### 2.1 Workspace Structure
 
-The Admin module uses the standard application shell (sidebar + context bar) from `00-global-framework.md` Section 2. The context bar remains visible but version/comparison/period/scenario selectors are not relevant to this module and should be visually de-emphasized (muted state, non-interactive) when an Admin sub-module is active.
+The Admin module renders inside ManagementShell -- no context bar, no docked right panel. The workspace uses the ManagementShell Module Template (Global Framework Section 12.2). Only the sidebar and module toolbar are present.
 
 The workspace is organized into three sub-modules, navigated via the sidebar nav items under the **Admin** group:
 
@@ -51,7 +51,7 @@ The workspace is organized into three sub-modules, navigated via the sidebar nav
 2. **Audit Trail** -- `/admin/audit`
 3. **System Settings** -- `/admin/settings`
 
-Each sub-module uses the standard Module Page Template from `00-global-framework.md` Section 12.
+Each sub-module uses the ManagementShell Module Template from `00-global-framework.md` Section 12.2.
 
 ### 2.2 Sub-Module Navigation
 

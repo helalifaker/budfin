@@ -45,7 +45,7 @@ The Enrollment & Capacity module is the primary data-entry point for student hea
 
 ## 3. Page Layout
 
-The module follows the standard `<ModulePage>` template (Section 12, 00-global-framework.md).
+The module renders inside PlanningShell and follows the PlanningShell Module Template (Global Framework Section 12.1). The context bar and docked right panel are managed by the shell.
 
 ```
 +-----------------------------------------------------------------------+
@@ -77,6 +77,8 @@ Follows the shared toolbar pattern (Section 4.5, 00-global-framework.md).
 | Calculate button | Right | `<CalculateButton>` | Triggers `POST /api/v1/versions/:versionId/calculate/enrollment`. States per Section 4.5 of framework. Hidden for Viewer role. |
 | Export button | Right | `<ExportButton>` | Dropdown: XLSX, CSV, PDF. Exports visible tab data. |
 | More menu | Right | `<MoreMenu>` | Items: "Import Historical CSV" (hidden for Viewer), "Capacity Settings" (Admin only) |
+
+**Comparison mode:** When the context bar comparison toggle is activated, enrollment grids gain variance columns per 00-global-framework.md Section 7. The right panel auto-closes per the auto-collapse rules in 00-global-framework.md Section 2.1.
 
 ### 3.2 Tab Bar
 

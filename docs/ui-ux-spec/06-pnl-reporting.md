@@ -37,11 +37,9 @@ The P&L & Reporting module presents a consolidated IFRS Income Statement built f
 
 ### 2.1 Page Layout
 
-The module follows the standard Module Page Template (Global Framework Section 12).
+The module renders inside PlanningShell and follows the PlanningShell Module Template (Global Framework Section 12.1). The context bar and docked right panel are managed by the shell.
 
 ```
-+-----------------------------------------------------------------------+
-|                        Context Bar (56px)                              |
 +--------+--------------------------------------------------------------+
 |        | Module Toolbar (48px)                                        |
 |        | [P&L & Reporting]  [Format Toggle]  [Calculate] [Export] [...] |
@@ -56,6 +54,8 @@ The module follows the standard Module Page Template (Global Framework Section 1
 |        |                                                              |
 +--------+--------------------------------------------------------------+
 ```
+
+**Auto-close panel on comparison:** When comparison mode is toggled ON in the context bar, the docked right panel auto-closes to maximize horizontal viewport for the variance columns. The user can manually re-open the panel if desired.
 
 ### 2.2 Module Toolbar
 
@@ -340,6 +340,11 @@ In comparison mode, the total grid width increases significantly. Horizontal scr
 | --- | --- | --- |
 | Standard (13 value columns) | 320 + (12 x 110) + 130 = 1,770px | Minimal |
 | Comparison (13 x 3 sub-columns) | 320 + (12 x 270) + 270 = 3,830px | Horizontal scroll required |
+
+**Viewport guidance:** At viewports below 1920px with comparison mode active, the grid may require significant horizontal scrolling. Consider:
+- Month headers condense to 3-letter abbreviations (already used)
+- Variance (%) sub-column can be hidden via column visibility toggle (reduces width by ~840px)
+- A toolbar chip shows: "Comparison mode -- wide view recommended"
 
 ---
 

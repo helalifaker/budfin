@@ -51,6 +51,8 @@ _**Persona note:** "Budget Analyst" and "HR/Payroll Coordinator" are persona dis
 
 The Input Control Panel renders as a side panel (480px width, per Global Framework Section 4.4) triggered from the module toolbar "More" menu item "Input Map" or via `Ctrl+I` shortcut.
 
+**Shell context:** The Input Control Panel renders as an overlay side panel (Global Framework Section 4.4.1) within PlanningShell. It does not use the docked right panel -- it overlays content independently, consistent with its role as a cross-module utility panel.
+
 ```
 +--------+--------------------------------------------+-----------+
 |        |  Context Bar (56px)                        |           |

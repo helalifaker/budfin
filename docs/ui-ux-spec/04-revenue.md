@@ -18,11 +18,11 @@ The Revenue module manages the three inputs that drive tuition revenue: the fee 
 
 ## 2. Layout Structure
 
-The Revenue module follows the standard `<ModulePage>` template (Global Framework Section 12).
+The Revenue module renders inside PlanningShell and follows the PlanningShell Module Template (Global Framework Section 12.1). The context bar and docked right panel are managed by the shell.
 
 ```
 +-----------------------------------------------------------------------+
-| Context Bar (global shell)                                            |
+| {Context bar + right panel rendered by PlanningShell}                  |
 +-----------------------------------------------------------------------+
 | Module Toolbar                                                        |
 |   [Revenue]  [AY1 | AY2 filter]    [Calculate] [Export] [More]       |
@@ -112,11 +112,12 @@ When a user edits the Tuition TTC cell:
 
 ### 3.6 Term Installment Validation
 
-On blur of T1, T2, or T3, if the sum `T1 + T2 + T3` does not equal `Tuition TTC`:
+On blur of T1, T2, or T3, if the absolute difference `|T1 + T2 + T3 - Tuition TTC|` exceeds 0.01 SAR:
 
 - Show a non-blocking amber warning icon in the row (not a red error).
-- Tooltip: "Term installments (X SAR) do not equal Tuition TTC (Y SAR)".
+- Tooltip: "Term installments (X SAR) do not equal Tuition TTC (Y SAR). Difference: Z SAR".
 - This is a warning, not a hard block -- the user can save regardless.
+- Differences within 0.01 SAR are considered matching and do not trigger the warning.
 
 ### 3.7 Academic Period Filter
 

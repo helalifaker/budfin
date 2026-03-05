@@ -47,15 +47,13 @@ The Version Management module provides full lifecycle management for budget vers
 
 ## 3. Layout Structure
 
-The module follows the standard Module Page Template (Global Framework Section 12).
+The module renders inside ManagementShell -- no context bar, no docked right panel. It follows the ManagementShell Module Template (Global Framework Section 12.2).
 
 ```
-+-----------------------------------------------------------------------+
-|                        Context Bar (56px)                              |
 +--------+--------------------------------------------------------------+
 |        | Module Toolbar (48px)                                        |
-| Side-  |  [Version Management]  [Type Filter] [Status Filter] [Search]|
-| bar    |                                    [Compare] [+ New Version]  |
+| Side-  |  [Version Management] [FY: v] [Type Filter] [Status Filter] |
+| bar    |  [Search]                            [Compare] [+ New Version]|
 |        +--------------------------------------------------------------+
 |        |                                                              |
 |        |                    Version Table                             |
@@ -80,6 +78,7 @@ The module follows the standard Module Page Template (Global Framework Section 1
 
 | Element | Position | Component | Behavior |
 | --- | --- | --- | --- |
+| Fiscal Year filter | Left (after title) | `<Select>` (shadcn/ui), width 120px | Options: FY2020-FY2029. Default: current FY. Reloads version list on change. Replaces context bar FY selector for this module. |
 | Module title | Left | `<h1>` with `--text-xl`, weight 600 | Static text: "Version Management" |
 | Type filter | Center-left | `<Select>` (shadcn/ui), width 140px | Options: All Types, Actual, Budget, Forecast. Filters table rows client-side. Default: "All Types" |
 | Status filter | Center | `<Select>` (shadcn/ui), width 160px | Options: All Statuses, Draft, Published, Locked, Archived. Filters table rows client-side. Default: "All Statuses" |
@@ -143,10 +142,10 @@ Status badges use a filled pill shape with background tint and text color.
 
 | Status | Background | Text Color | Border |
 | --- | --- | --- | --- |
-| Draft | `#F3F4F6` (gray-100) | `--status-draft` (#6B7280) | none |
+| Draft | `#F3F4F6` (gray-100) | `--status-draft` (#4B5563) | none |
 | Published | `#DBEAFE` (blue-100) | `--status-published` (#2563EB) | none |
 | Locked | `#EDE9FE` (violet-100) | `--status-locked` (#7C3AED) | none |
-| Archived | `#F9FAFB` (gray-50) | `--status-archived` (#9CA3AF) | none |
+| Archived | `#F3F4F6` (gray-100) | `--status-archived` (#6B7280) | none |
 
 **Badge styling:** `padding: 2px 8px`, `border-radius: --radius-sm` (4px), `font-size: --text-xs` (11px), weight 500.
 
@@ -194,7 +193,7 @@ Triggered by the "New Version" toolbar button. Opens the standard side panel (Gl
 | Source Version | `<Select>` (shadcn/ui) | No | Must reference an existing version for the current fiscal year | Label: "Copy Data From". Placeholder: "None (start empty)". Options: all versions for current FY, grouped by type. Actual versions excluded from this list |
 
 **Form behavior:**
-- Fiscal year is inherited from the context bar's current FY selection (not editable in form, shown as read-only label above the form: "Fiscal Year: FY2026")
+- Fiscal year is inherited from the toolbar FY filter (not editable in form, shown as read-only label above the form: "Fiscal Year: FY2026")
 - On submit: `POST /api/v1/versions` with `fiscal_year`, `name`, `type`, `description`, `source_version_id`
 - Success: close panel, add new row to table with highlight animation (brief `--color-info-bg` flash), show success toast: "Version '[name]' created"
 - Error (409 DUPLICATE_VERSION_NAME): inline error on Name field: "A version with this name already exists for FY2026"
@@ -441,8 +440,8 @@ Triggered by the "Compare" toolbar button. This launches a comparison selection 
 **Actions:** "Compare" (primary) + "Cancel"
 
 **Behavior:**
-- On confirm: activates comparison mode in the context bar (sets primary version, enables comparison toggle, sets comparison version). Navigates to the Dashboard module to show the comparison summary
-- URL updates to: `?fy=2026&version=[primary]&compare=[comparison]&period=full&scenario=base`
+- On confirm: navigates to `/planning?fy=X&version=Y&compare=Z` (Dashboard in PlanningShell) where comparison mode is active via the context bar
+- Navigates to: `/planning?fy=2026&version=[primary]&compare=[comparison]&period=full&scenario=base`
 - The comparison data is also available via `GET /api/v1/versions/compare?primary=X&comparison=Y` for the annual summary view within this module
 
 ### 9.2 Inline Comparison Summary (Optional)
@@ -542,7 +541,7 @@ interface VersionManagementStore {
 
 ### 11.4 URL State
 
-The module does not add module-specific URL params beyond the standard context bar params (`fy`, `version`, `compare`, `period`, `scenario`). The detail panel state is client-only (opening the detail panel does not change the URL).
+The module uses only `?fy=2026` as URL state (synced from the toolbar FY filter). Context bar params (`version`, `compare`, `period`, `scenario`) do not apply -- this module renders in ManagementShell without a context bar. The detail panel state is client-only (opening the detail panel does not change the URL).
 
 ### 11.5 Error Handling
 

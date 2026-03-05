@@ -23,7 +23,7 @@ The Master Data module manages all reference data that feeds into BudFin plannin
 
 **Interaction pattern:** All four sub-modules follow a consistent CRUD table + side panel pattern. The left area (~65% width) holds a searchable, filterable data table. The right area hosts a 480px slide-in side panel for create/edit forms.
 
-**No context bar dependency:** Master data is version-independent. The context bar fiscal year, version, period, and scenario selectors do not affect master data views. The context bar remains visible but its selectors are visually muted (opacity 0.5) when a master data sub-module is active.
+**Shell:** Master Data renders inside ManagementShell -- no context bar, no docked right panel. Master data is version-independent. Side panels use the overlay pattern (480px, z-index:30) per Global Framework Section 4.4.1.
 
 ---
 
@@ -32,8 +32,6 @@ The Master Data module manages all reference data that feeds into BudFin plannin
 ### 2.1 Page Layout
 
 ```
-+------------------------------------------------------------------+
-|                    Context Bar (56px, muted)                     |
 +--------+---------------------------------------------------------+
 |        | Module Toolbar (48px)                                   |
 | Side-  |---------------------------------------------------------|

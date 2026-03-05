@@ -42,6 +42,10 @@ The context bar scenario selector and the left-panel scenario tabs are synchroni
 
 ## 3. Layout Structure
 
+This module renders inside PlanningShell (Global Framework Section 12.1). The context bar is managed by the shell.
+
+**Right panel mode:** In the Scenarios module, the PlanningShell right panel uses **overlay mode** (z-index:30) instead of the default docked mode. This is because the Scenarios module already uses a 40/60 split panel layout that fills the workspace. The right panel auto-switches to overlay mode when navigating to this module and reverts to docked mode when navigating away.
+
 The Scenarios module uses a split-panel layout instead of a full-width data grid.
 
 ```
@@ -55,7 +59,7 @@ The Scenarios module uses a split-panel layout instead of a full-width data grid
 |  [Base] [Optimistic]       |  Key Metrics Table                      |
 |  [Pessimistic]             |  Delta vs Base Table                    |
 |                            |  Net Revenue Chart                      |
-|  5x Parameter Sliders      |                                          |
+|  6x Parameter Sliders      |                                          |
 |                            |                                          |
 |  [Reset] [Save]            |                                          |
 +----------------------------+------------------------------------------+
@@ -149,7 +153,7 @@ Each tab label is prefixed with a colored dot to distinguish scenarios at a glan
 
 ### 5.3 Parameter Controls
 
-Below the tabs, five parameter controls are displayed in a vertical stack for the active scenario. Each control is a labeled row with a slider and a numeric input.
+Below the tabs, six parameter controls are displayed in a vertical stack for the active scenario. Each control is a labeled row with a slider and a numeric input.
 
 **Parameter control layout (per parameter):**
 
@@ -182,6 +186,7 @@ Below the tabs, five parameter controls are displayed in a vertical stack for th
 | Attrition Rate | `attrition_rate` | percentage | 2% | 1% | 5% | 0% | 10% | 0.1% | `x.x%` | Expected student departure rate per academic period. |
 | Fee Collection Rate | `fee_collection_rate` | percentage | 95% | 98% | 90% | 80% | 100% | 0.1% | `x.x%` | Percentage of billed fees expected to be collected. |
 | Scholarship Allocation | `scholarship_allocation` | percentage | 2% | 1% | 3% | 0% | 5% | 0.1% | `x.x%` | Percentage of gross revenue allocated to scholarships. |
+| ORS Hours | `ors_hours` | hours | 18 | 18 | 18 | 15 | 21 | 0.5 | `x.x h` | Weekly teaching service obligation (Obligation Reglementaire de Service). Controls FTE requirement calculation in the DHG engine. Lower ORS = more FTE needed. |
 
 **Slider-input synchronization:**
 - Moving the slider updates the numeric input in real-time.
