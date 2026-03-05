@@ -630,7 +630,7 @@ When a user selects a primary version and a comparison version in the context ba
 The Version Management module (accessible from the Planning group in navigation) provides full lifecycle management for budget versions. The context bar version dropdown selects the active working version; the Version Management module manages the version lifecycle.
 
 - FR-VER-001 [MUST]: Create a new version (Budget or Forecast) by specifying name, type, and optional base data copy from an existing version. New versions start in Draft status.
-- FR-VER-002 [MUST]: Delete draft versions. Published or locked versions require explicit confirmation plus a mandatory audit note explaining the reason for deletion.
+- FR-VER-002 [MUST]: Delete draft versions. Published, Locked, and Archived versions are immutable financial records and cannot be deleted.
 - FR-VER-003 [MUST]: Version lifecycle transitions follow the path: Draft --> Published --> Locked --> Archived. Each transition is logged as an audit event (see FR-AUD-002). Reverse transitions (e.g., Locked --> Published) require authorized user action and an audit note.
 - FR-VER-004 [MUST]: Version comparison with variance columns. User selects two versions and the system displays side-by-side data with absolute and percentage variance columns across all modules (see Section 7.3).
 - FR-VER-005 [MUST]: Clone an existing version as the starting point for a new version. All data, assumptions, and configuration from the source version are copied into a new Draft version.
@@ -913,7 +913,7 @@ explicitly enumerated in the original PRD scope sections but derived from the re
 | FR-CTX-02 | MUST | Restore workspace context correctly after page refresh |
 | FR-CTX-03 | MUST | Context bar updates must not reset state of any active planning module |
 | FR-EXP-01 | MUST | Export P&L and module data to xlsx format with column formatting preserved |
-| FR-EXP-02 | MUST | Export P&L reports to PDF (A4 landscape) via @react-pdf/renderer |
+| FR-EXP-02 | MUST | Export P&L reports to PDF (A3 landscape) via @react-pdf/renderer |
 | FR-EXP-03 | SHOULD | Export module data to CSV with UTF-8 BOM for Excel compatibility |
 | FR-EXP-04 | MUST | Generate exports asynchronously; return job ID for polling |
 | FR-IMP-01 | MUST | Import employee data from Excel/CSV into a Draft version |
@@ -2026,7 +2026,7 @@ The following acceptance criteria use Given/When/Then format for the 30 most cri
 
 **FR-VER-001 (Create Version):** New version created in Draft; appears in context bar; audit logged. Duplicate names rejected. Base data copy creates independent snapshot.
 
-**FR-VER-002 (Delete Version):** Draft versions deleted directly. Published/Locked require confirmation + mandatory audit note. In-use versions produce warning.
+**FR-VER-002 (Delete Version):** Draft versions deleted directly. Published, Locked, and Archived versions are immutable financial records and cannot be deleted.
 
 **FR-VER-003 (Lifecycle Transitions):** Draft -> Published -> Locked -> Archived. Each transition logged. Reverse transitions require authorized user + audit note. Unauthorized users rejected.
 
@@ -2421,7 +2421,7 @@ The following sign-off is required before the PRD is considered an approved base
 ### 19.3 Communication Plan
 
 **1. Version Control**
-The PRD is maintained under Git version control in the project repository at `docs/prd/BudFin_PRD_v1.0.md`. All changes are tracked through Git commits, providing a complete history of who changed what, when, and why.
+The PRD is maintained under Git version control in the project repository at `docs/prd/BudFin_PRD_v2.0.md`. All changes are tracked through Git commits, providing a complete history of who changed what, when, and why.
 
 **2. Change Notifications**
 - Every PRD modification is accompanied by a descriptive Git commit message.
