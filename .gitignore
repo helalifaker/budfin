@@ -39,6 +39,9 @@ apps/api/prisma/*.db-journal
 # Secrets directory (generated keys, never commit)
 secrets/
 
+# mkcert-generated TLS certificates for local dev
+nginx/ssl/
+
 # Python artifacts (should not exist in this Node.js project)
 .mypy_cache/
 
