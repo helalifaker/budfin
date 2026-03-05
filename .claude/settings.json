@@ -1,6 +1,31 @@
 {
   "model": "claude-sonnet-4-6",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "STATUS_FILE=\"$PWD/.claude/workflow/STATUS.md\"; if [ -f \"$STATUS_FILE\" ]; then PHASE=$(grep '^\\*\\*Phase\\*\\*:' \"$STATUS_FILE\" | head -1 | sed 's/\\*\\*Phase\\*\\*: //'); EPIC=$(grep '^\\*\\*Current Epic\\*\\*:' \"$STATUS_FILE\" | head -1 | sed 's/\\*\\*Current Epic\\*\\*: //'); echo \"=== BudFin Workflow ===\"; echo \"Phase: $PHASE\"; echo \"Epic: $EPIC\"; echo \"Run /workflow:status for full checklist.\"; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_FILE_PATH\" =~ (^|/)secrets(/|$) ]] || [[ \"$CLAUDE_FILE_PATH\" =~ (^|/)\\.env ]]; then echo 'ERROR: Writing to secrets/ or .env files is blocked by hook.'; exit 2; fi"
+          },
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_FILE_PATH\" =~ \\.(ts|tsx|js|jsx|mjs|cjs)$ ]] && [[ ! \"$CLAUDE_FILE_PATH\" =~ \\.(test|spec)\\. ]]; then STATUS_FILE=\"$PWD/.claude/workflow/STATUS.md\"; if [ -f \"$STATUS_FILE\" ]; then PHASE_LINE=$(grep '^\\*\\*Phase\\*\\*:' \"$STATUS_FILE\" | head -1); PHASE_NUM=$(echo \"$PHASE_LINE\" | grep -o '[0-9]' | head -1); if [ -n \"$PHASE_NUM\" ] && [ \"$PHASE_NUM\" -lt 5 ] 2>/dev/null; then echo \"WORKFLOW WARNING: Writing implementation code but current phase is $PHASE_NUM ($PHASE_LINE). Phase 5 (TDD RED) should be active before writing any code. Check /workflow:status.\"; fi; fi; fi"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
@@ -8,6 +33,10 @@
           {
             "type": "command",
             "command": "pnpm markdownlint --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "[[ \"$CLAUDE_FILE_PATH\" =~ \\.(ts|tsx|js|jsx|mjs|cjs)$ ]] && pnpm eslint --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
           }
         ]
       }
