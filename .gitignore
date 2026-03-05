@@ -44,3 +44,7 @@ secrets/
 
 # Git worktrees (recreated on demand)
 .worktrees/
+
+# Claude session artifacts — tracked as GitHub Issues instead
+/plans/
+/tasks/
