@@ -59,7 +59,7 @@ pnpm lint:md      # Lint Markdown documentation
 
 ## Project Layout
 
-```
+```text
 apps/api/        Fastify REST API
 apps/web/        React SPA
 packages/types/  Shared TypeScript types

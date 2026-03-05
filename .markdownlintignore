@@ -1,3 +1,10 @@
 node_modules/
 **/node_modules/
 archive/
+plugins/
+docs/edge-cases/
+docs/plans/
+docs/prd/
+docs/reviews/
+docs/ui-ux-spec/
+docs/tdd/

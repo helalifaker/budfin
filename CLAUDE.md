@@ -43,7 +43,7 @@ a Docker secret at `/run/secrets/pgcrypto_key`.
 
 ### Monorepo structure
 
-```
+```text
 apps/api/          Fastify 5 REST API (@budfin/api)
 apps/web/          React 19 + Vite 7 SPA (@budfin/web)
 packages/types/    Shared TypeScript types (@budfin/types)
