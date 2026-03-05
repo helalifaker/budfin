@@ -17,9 +17,9 @@ BudFin uses JWT-based stateless authentication with asymmetric signing to elimin
 
 ```json
 {
-  "userId": 42,
+  "sub": 42,
+  "email": "user@efir.edu.sa",
   "role": "Editor",
-  "sessionId": "uuid-v4",
   "iat": 1709452200,
   "exp": 1709454000
 }
@@ -94,11 +94,26 @@ BudFin defines four roles with progressively increasing privileges. The role hie
 | Publish versions (Draft -> Published) | Y | Y | -- | -- |
 | Lock versions (Published -> Locked) | Y | Y | -- | -- |
 | Archive versions | Y | -- | -- | -- |
-| Reverse lifecycle (Locked -> Published) | Y | -- | -- | -- |
+| Reverse lifecycle (revert to Draft) | Y | -- | -- | -- |
 | Manage users | Y | -- | -- | -- |
 | View audit trail | Y | -- | -- | -- |
 | Edit system config | Y | -- | -- | -- |
 | Force unlock accounts | Y | -- | -- | -- |
+
+#### Persona-to-Role Mapping
+
+BudFin's PRD defines six user personas. Each persona maps to one of the four RBAC roles above:
+
+| PRD Persona | RBAC Role | Rationale |
+| --- | --- | --- |
+| System Administrator | Admin | Full system access including user management, audit trail, and system configuration |
+| Budget Owner (CAO / Finance Director) | BudgetOwner | Version lifecycle control (create, publish, lock); cannot archive or manage users |
+| Budget Analyst (Finance Manager / Controller) | Editor | Data entry and calculation across all planning modules; no version lifecycle control |
+| HR/Payroll Coordinator | Editor | Same permissions as Budget Analyst; focused on employee master data and salary entry |
+| School Administrator (Proviseur / Principal) | Viewer | Read-only access to all planning data and exports; no data entry or calculations |
+| External Auditor | Viewer | Read-only access per PRD §11.3; receives exported reports; no direct audit trail access (audit data provided via exports) |
+
+This mapping is authoritative. Any future persona that requires capabilities not covered by these four roles requires a new role definition and CAO approval.
 
 **Enforcement architecture:**
 

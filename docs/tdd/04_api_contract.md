@@ -170,6 +170,43 @@ Invalidate the current refresh token and clear the cookie.
 
 ---
 
+#### GET /api/v1/context
+
+Returns application context for the currently authenticated user: identity, active school year, and resolved permissions list. Intended to be called once on application load to bootstrap the frontend state.
+
+**RBAC:** Authenticated (any role).
+
+**Request params:** None.
+
+**Request body:** None.
+
+**Response 200:**
+
+```json
+{
+  "user": {
+    "id": "integer",
+    "email": "string",
+    "role": "Admin|BudgetOwner|Editor|Viewer"
+  },
+  "schoolYear": {
+    "id": "integer",
+    "label": "string (e.g. \"2025-26\")",
+    "startDate": "string (ISO 8601 date)",
+    "endDate": "string (ISO 8601 date)"
+  },
+  "permissions": ["string"]
+}
+```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 401 | UNAUTHORIZED | Missing or invalid access token |
+
+---
+
 ### 6.3.2 Version Endpoints
 
 #### GET /api/v1/versions
@@ -982,6 +1019,77 @@ Check which modules have stale calculated data for a version.
 
 ---
 
+#### POST /api/v1/versions/:id/calculations/run
+
+Triggers an async full-version salary and budget recalculation job. The job is queued via pg-boss and runs in-process. Returns immediately with a job reference; use `GET /api/v1/versions/:versionId/calculate/status` to poll progress.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Path params:** `id` (integer, required) — version ID.
+
+**Request body (optional):**
+
+```json
+{
+  "scope": "full|incremental"
+}
+```
+
+If `scope` is omitted the server defaults to `"full"`.
+
+**Response 202:**
+
+```json
+{
+  "jobId": "string",
+  "status": "queued"
+}
+```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 404 | VERSION_NOT_FOUND | No version with this ID |
+| 409 | VERSION_LOCKED | Version is Locked or Archived |
+| 409 | VERSION_DATA_SOURCE_MISMATCH | Version uses imported data — calculation engine is disabled for Actual versions |
+
+---
+
+#### GET /api/v1/versions/:versionId/calculate/status
+
+Polls the status of an async calculation job for a version. If `jobId` is omitted, returns the status of the most recently queued job for this version.
+
+**RBAC:** All authenticated.
+
+**Path params:** `versionId` (integer, required).
+
+**Query parameters:**
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `jobId` | string | No | Specific pg-boss job ID to poll; if omitted, returns latest job |
+
+**Response 200:**
+
+```json
+{
+  "status": "queued|running|completed|failed",
+  "progress": "number (0-100)",
+  "completedAt": "string (ISO 8601)|null",
+  "error": "string|null"
+}
+```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 404 | VERSION_NOT_FOUND | No version with this ID |
+| 404 | JOB_NOT_FOUND | `jobId` does not reference any known calculation job |
+
+---
+
 ### 6.3.6 Employee Endpoints
 
 #### GET /api/v1/versions/:versionId/employees
@@ -1256,6 +1364,72 @@ Retrieve calculated staff cost results.
 
 ---
 
+#### GET /api/v1/versions/:versionId/dhg-grilles
+
+Returns DHG (Dotation Horaire Globale) grid data for a version. The DHG grid defines hourly allocations per teaching level and is the basis for FTE calculations in the staffing engine.
+
+**RBAC:** All authenticated.
+
+**Path params:** `versionId` (integer, required).
+
+**Response 200:**
+
+```json
+{
+  "grilles": [
+    {
+      "id": "integer",
+      "level": "string (grade level code)",
+      "weeklyHours": "number",
+      "coefficient": "string (decimal)",
+      "annualHours": "string (decimal)"
+    }
+  ]
+}
+```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 404 | VERSION_NOT_FOUND | No version with this ID |
+| 409 | STALE_DATA | Staffing has not been (re)calculated since last input change |
+
+---
+
+#### GET /api/v1/versions/:versionId/staffing-summary
+
+Returns a high-level staffing cost summary for a version, aggregated by department. Useful for the dashboard and executive reporting views.
+
+**RBAC:** All authenticated.
+
+**Path params:** `versionId` (integer, required).
+
+**Response 200:**
+
+```json
+{
+  "totalFTE": "number",
+  "totalSalaryCost": "string (decimal)",
+  "byDepartment": [
+    {
+      "department": "string",
+      "fte": "number",
+      "cost": "string (decimal)"
+    }
+  ]
+}
+```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 404 | VERSION_NOT_FOUND | No version with this ID |
+| 409 | STALE_DATA | Staffing has not been (re)calculated since last input change |
+
+---
+
 #### GET /api/v1/versions/:versionId/pnl
 
 Retrieve the IFRS monthly P&L statement (FR-PNL-001 through FR-PNL-018).
@@ -1367,7 +1541,7 @@ Returns aggregated dashboard data for all 4 KPI cards, chart data, alerts, and a
 
 | Param | Type | Required | Description |
 | --- | --- | --- | --- |
-| `versionId` | UUID | Yes | Budget version identifier |
+| `versionId` | integer | Yes | Budget version identifier |
 
 **Query params:** None.
 
@@ -1777,6 +1951,7 @@ Lock a fiscal period and set the authoritative Actual version for that month.
 ```
 
 **Validations:**
+
 - Referenced version must exist.
 - Version must have `type='Actual'`, `data_source='IMPORTED'`, and `status='Locked'`.
 - Sets `fiscal_periods.status='Locked'`, `locked_at=NOW()`, `locked_by=requesting user`.
@@ -1886,6 +2061,94 @@ List all `actuals_import_log` rows for the given version.
   ]
 }
 ```
+
+---
+
+### 6.3.13 Two-Phase Import Endpoints
+
+Two-phase import for enrollment and employee data into Draft versions. Phase 1 validates without committing; Phase 2 commits using the token returned by Phase 1.
+
+#### POST /api/v1/versions/:id/import/:module/validate
+
+Phase 1 of the two-phase import workflow. Parses and validates the uploaded file without writing any data to the database. Returns a validation token that must be passed to the commit endpoint.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Path params:**
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | integer | Yes | Version ID (must be in Draft status) |
+| `module` | string | Yes | `enrollment` or `employee` |
+
+**Request:** `multipart/form-data` with a single `file` field containing the CSV (enrollment) or xlsx (employee) data file.
+
+**Response 200:**
+
+```json
+{
+  "valid": "boolean",
+  "rowCount": "integer",
+  "errors": [
+    {
+      "row": "integer",
+      "field": "string",
+      "message": "string"
+    }
+  ],
+  "validationToken": "string (opaque token, required for commit step)"
+}
+```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 400 | MISSING_FILE | No file was attached to the request |
+| 404 | VERSION_NOT_FOUND | No version with this ID |
+| 409 | VERSION_NOT_DRAFT | Import is only allowed on Draft versions |
+| 422 | UNSUPPORTED_MODULE | `module` is not `enrollment` or `employee` |
+
+---
+
+#### POST /api/v1/versions/:id/import/:module/commit
+
+Phase 2 of the two-phase import workflow. Commits previously validated import data using the token issued by the validate endpoint. Data is written within a single Prisma interactive transaction; any failure rolls back the entire import.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Path params:**
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | integer | Yes | Version ID (must be in Draft status) |
+| `module` | string | Yes | `enrollment` or `employee` |
+
+**Request body:**
+
+```json
+{
+  "validationToken": "string (required, token from validate step)"
+}
+```
+
+**Response 201:**
+
+```json
+{
+  "imported": "integer",
+  "warnings": ["string"]
+}
+```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 400 | INVALID_VALIDATION_TOKEN | Token is missing, expired, or does not match this version/module |
+| 404 | VERSION_NOT_FOUND | No version with this ID |
+| 409 | VERSION_NOT_DRAFT | Import is only allowed on Draft versions |
+| 422 | COMMIT_FAILED | Unexpected constraint violation during transaction; full rollback applied |
 
 ---
 

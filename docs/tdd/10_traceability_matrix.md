@@ -257,7 +257,7 @@ This appendix maps every functional requirement from PRD v2.0 to the TDD design 
 | Security — Auth (NFR 11.3.1) | bcrypt cost 12; JWT 30min TTL; refresh rotation | Section 7 (05_security.md) |
 | Security — RBAC (NFR 11.3.2) | 4-role permission matrix; 403 on violation | Section 7 (05_security.md) |
 | Security — Encryption (NFR 11.3.3) | TLS 1.3; pgcrypto AES-256 salary fields | Section 7 (05_security.md) |
-| Usability (NFR 11.4) | AG Grid keyboard nav; auto-save; stale indicator | Section 3 (01_overview.md) |
+| Usability (NFR 11.4) | TanStack Table v8 keyboard nav; auto-save; stale indicator | Section 3 (01_overview.md) |
 | Data Retention (NFR 11.5) | audit_entries 7yr; versions 10yr | Section 5 (03_data_architecture.md) |
 | Scalability (NFR 11.6) | 20 users; 300 employees; 2,500 students | Section 9 (07_nfr_and_testing.md) |
 | PDPL Compliance (NFR 11.7) | Field encryption; KSA residency; purpose limitation | Section 7 (05_security.md), pdpl_consent_records, pdpl_data_requests |

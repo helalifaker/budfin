@@ -770,7 +770,7 @@ The Export Service generates downloadable files in xlsx, PDF, and CSV formats fr
 | --- | --- |
 | `ExportJobManager` | Creates job records, polls for pending jobs, updates status on completion |
 | `ExcelExporter` | Generates xlsx files using ExcelJS with stream-based writing for memory efficiency |
-| `PdfExporter` | Generates PDF files using `@react-pdf/renderer` v4.3. Renders a React-PDF document component to a Node.js stream. Produces A4 landscape for P&L, A4 portrait for other reports. No Chromium dependency (ADR-014). |
+| `PdfExporter` | Generates PDF files using `@react-pdf/renderer` v4.3. Renders a React-PDF document component to a Node.js stream. Produces A3 landscape for P&L, A4 portrait for other reports. No Chromium dependency (ADR-014). |
 | `CsvExporter` | Generates CSV files using fast-csv with UTF-8 BOM for Excel compatibility |
 | `FileCleanupWorker` | Periodic job that deletes expired export files from local storage |
 
@@ -818,7 +818,7 @@ interface ExportService {
 ### Format-Specific Details
 
 - **ExcelJS (xlsx)**: Uses streaming `workbook.xlsx.write(stream)` for large datasets. Column widths are explicitly set to match PRD specifications (NFR 11.10). Monetary cells use number format `#,##0.00 "SAR"`. Headers are bold with frozen panes.
-- **@react-pdf/renderer (PDF)** (ADR-014): Uses `@react-pdf/renderer` v4.3 to render a React-PDF document component directly to a Node.js `Readable` stream. No Chromium or headless browser is required. Page size is A4 landscape for P&L reports, A4 portrait for all others. Styling uses the `StyleSheet.create()` API with SAR number formatting.
+- **@react-pdf/renderer (PDF)** (ADR-014): Uses `@react-pdf/renderer` v4.3 to render a React-PDF document component directly to a Node.js `Readable` stream. No Chromium or headless browser is required. Page size is A3 landscape for P&L reports, A4 portrait for all others. Styling uses the `StyleSheet.create()` API with SAR number formatting.
 - **fast-csv (CSV)**: Uses streaming write mode. Prepends UTF-8 BOM (`\uFEFF`) to the output stream so that Microsoft Excel correctly detects the encoding. Column headers match the database field names in snake_case.
 
 ### Component Interactions
@@ -851,6 +851,27 @@ The Data Import Service handles ingestion of external data files (CSV for enroll
 | `EnrollmentValidator` | Validates enrollment CSV rows: grade code existence, non-negative headcount, academic year format |
 | `EmployeeValidator` | Validates employee xlsx rows: required fields present, salary fields non-negative, date format validation, duplicate employee detection |
 | `ImportCommitter` | Writes validated data to the database within a Prisma interactive transaction; rolls back entirely on any failure |
+
+#### Duplicate Employee Detection Rules
+
+During employee xlsx import, the `EmployeeValidator` applies fuzzy duplicate detection per PRD §16.1 (PO-003):
+
+**Match criteria:** A candidate row is flagged as a potential duplicate when **2 or more** of the following conditions are met against existing employees in the same budget version:
+
+| Field | Match Rule |
+| --- | --- |
+| Full name | Case-insensitive exact match (`LOWER(name) = LOWER(candidate_name)`) |
+| Department | Exact match on `department_id` |
+| Joining date | Within +/- 30 calendar days (`ABS(existing.joining_date - candidate.joining_date) <= 30`) |
+
+**Behavior on match:**
+- The import validation response includes a `duplicates` array listing each flagged row with the matching existing employee(s).
+- The UI presents a confirmation dialog per flagged row: "This employee may already exist as [existing name] in [department]. Confirm import or skip?"
+- User choice is recorded in `audit_entries` with operation `EMPLOYEE_IMPORT_DUPLICATE_RESOLVED` and the resolution (`CONFIRMED` or `SKIPPED`).
+- If the user confirms, the row is imported as a new employee record (no merge).
+- If the user skips, the row is excluded from the import batch.
+
+**Deduplication key for programmatic use:** The combination `(LOWER(name), department_id)` serves as the soft deduplication key. The joining date proximity is an additional signal, not a hard key. There is no unique constraint on these fields in the database — deduplication is advisory, not enforced at the schema level.
 
 ### Key TypeScript Interfaces
 
@@ -887,9 +908,9 @@ interface ImportService {
 
 ### Two-Phase Workflow
 
-**Phase 1 — Validate**: The client uploads a file to `POST /api/v1/import/validate?type=enrollment` (or `type=employee`). The service parses every row, runs all validation rules, and returns an `ImportResult` containing counts, errors, and a 5-row preview. No data is written to the database. The client displays the preview and error list to the user.
+**Phase 1 — Validate**: The client uploads a file to `POST /api/v1/versions/:id/import/:module/validate` (where `module` is `enrollment` or `employee`). The service parses every row, runs all validation rules, and returns an `ImportResult` containing counts, errors, and a 5-row preview. No data is written to the database. The client displays the preview and error list to the user.
 
-**Phase 2 — Commit**: If the user confirms after reviewing the preview, the client calls `POST /api/v1/import/commit?type=enrollment&versionId=3`. The service re-parses the file (the original file is held in memory or temporary storage from the validate phase), writes all valid rows to the database within a single Prisma interactive transaction, and returns success. If any row fails during the commit (unexpected constraint violation), the entire transaction is rolled back and the error is returned.
+**Phase 2 — Commit**: If the user confirms after reviewing the preview, the client calls `POST /api/v1/versions/:id/import/:module/commit` with the `validationToken` returned by the validate step. The service re-parses the file (the original file is held in memory or temporary storage from the validate phase), writes all valid rows to the database within a single Prisma interactive transaction, and returns success. If any row fails during the commit (unexpected constraint violation), the entire transaction is rolled back and the error is returned.
 
 ### Expected File Formats
 

@@ -28,7 +28,7 @@ Deliverables:
 - Decimal.js precision validation: write 50+ unit tests covering revenue and EoS calculations; confirm +/- 0 SAR vs. manual calculation
 - YEARFRAC TypeScript implementation: validate against 10 known employee joining dates vs. Excel formula output; zero tolerance for discrepancy
 - PostgreSQL DECIMAL(15,4) schema: create sample tables, insert test values, verify no precision loss on read
-- Docker Compose skeleton: all 4 services start cleanly; health checks pass
+- Docker Compose skeleton: all 3 services start cleanly; health checks pass
 - Repository setup: Git, GitHub Actions CI skeleton (lint + type-check passes on empty project)
 
 Owner: Tech Lead + Dev 1
@@ -65,7 +65,7 @@ Owner: Dev 1 + Dev 2
 
 Deliverables:
 
-- React SPA scaffold: Vite + TypeScript + React Router v6 + AG Grid (installed)
+- React SPA scaffold: Vite + TypeScript + React Router v6 + @tanstack/react-table v8 + shadcn/ui Table
 - Login page with JWT flow (access token in memory, refresh cookie)
 - Navigation shell: 4 groups (Dashboard, Planning, Master Data, Admin)
 - Context bar component: fiscalYear, versionId, comparisonVersionId, scenario selectors
@@ -90,7 +90,7 @@ First Excel regression validation.
 - CSV import endpoint (validate + commit modes); 5 enrollment CSVs imported as Actual budget_versions (type='Actual', data_source='IMPORTED') using `migrate_enrollment_actuals.py`. `enrollment_historical` table left empty and deprecated. Trend analysis tested using `enrollment_headcount JOIN budget_versions WHERE type='Actual'`.
 - GET /enrollment/historical with CAGR and moving average calculation
 - Enrollment trend chart (Recharts line chart)
-- Two-stage enrollment entry UI (Stage 1 headcount grid using AG Grid)
+- Two-stage enrollment entry UI (Stage 1 headcount grid using TanStack Table v8)
 
 Owner: Dev 1 (backend) + Dev 2 (frontend)
 
@@ -104,7 +104,7 @@ Owner: Dev 1 (backend) + Dev 2 (frontend)
 
 ### Week 7 -- Fee Grid + Discounts
 
-- Fee grid management UI (AG Grid; 45+ combinations)
+- Fee grid management UI (TanStack Table v8; 45+ combinations)
 - PUT /fee-grid with server-side HT validation (tuition_ht = tuition_ttc / 1.15)
 - VAT exemption for Nationaux (VAT = 0%)
 - Discount policies UI and API
@@ -120,7 +120,7 @@ Owner: Dev 1 (backend) + Dev 2 (frontend)
 
 ### Week 9 -- Revenue UI + Stale Indicators
 
-- Revenue results grid (AG Grid; monthly breakdown by grade/nationality/tariff)
+- Revenue results grid (TanStack Table v8; monthly breakdown by grade/nationality/tariff)
 - Stale indicator on Calculate button
 - IFRS 15 classification display (FR-REV-013)
 - Revenue summary: total AY1, total AY2, annual total
@@ -153,7 +153,7 @@ GOSI/Ajeer/EoS.
 ### Week 13 -- Employee Import + Salary UI
 
 - Employee xlsx import (validate + commit) for 168 records from Staff Costs workbook
-- Employee list/detail UI with AG Grid
+- Employee list/detail UI with TanStack Table v8
 - Salary components form (5 fields + augmentation); encrypted at write, decrypted at read
 - Part-time factor (hourly_percentage)
 
@@ -168,7 +168,7 @@ GOSI/Ajeer/EoS.
 
 - YEARFRAC EoS provision: validated against all 168 employees (+/- 0.001 years vs. Excel)
 - EoS <= 5yr and > 5yr branches
-- 12-month budget grid UI (AG Grid; employees as rows, months as columns)
+- 12-month budget grid UI (TanStack Table v8; employees as rows, months as columns)
 - Sep step-change visually highlighted in grid
 - POST /calculate/staffing endpoint
 
@@ -245,9 +245,10 @@ scenario modeling.
 - Full chain regression: enrollment -> revenue -> staffing -> P&L end-to-end within +/- 1 SAR
 - M4 Gate criteria: full calculation chain validated; all FR-VER, FR-PNL, FR-SCN tests passing; version comparison producing correct variances
 
-## 11.6 Phase 5: Dashboard and Export (Weeks 26-29.5)
+## 11.6 Phase 5: Dashboard, Audit UI, and Export (Weeks 26-29.5)
 
-**Objective:** Executive dashboard, data export, input management, polish.
+**Objective:** Executive dashboard, audit trail browsing UI, data export, input
+management, polish.
 
 ### Week 26 -- Dashboard
 
@@ -256,6 +257,16 @@ scenario modeling.
 - Enrollment trend charts using Recharts (FR-DSH-003)
 - Capacity utilization alerts summary (FR-DSH-004)
 - Version comparison indicator (FR-DSH-005)
+
+### Week 26 (continued) -- Audit Trail Browsing UI
+
+- Audit log viewer page: paginated table of `audit_entries` (TanStack Table v8)
+- Filters: user, date range, module, entity type
+- On-screen before/after diff view for individual audit entries
+- Leverages Prisma `$extends` audit middleware deployed in Phase 1 (Week 2)
+- All FR-AUD requirements for on-screen browsing implemented
+
+Owner: Dev 2
 
 ### Week 27 -- Export (xlsx + CSV)
 
@@ -267,16 +278,16 @@ scenario modeling.
 
 ### Week 28 -- Export (PDF) + Input Management
 
-- `@react-pdf/renderer` PDF generation for P&L reports (A4 landscape, ADR-014)
+- `@react-pdf/renderer` PDF generation for P&L reports (A3 landscape, ADR-014)
 - Input management module (FR-INP-001 through FR-INP-003)
 - Input control panel: count of editable fields per module
-- Visual highlighting of editable cells in AG Grid (yellow background)
+- Visual highlighting of editable cells in TanStack Table v8 (yellow background)
 - Input guidance notes per parameter
 
 ### Week 29 -- Performance + Accessibility
 
 - k6 performance test execution; fix any p95 > 3s endpoints
-- Accessibility audit: keyboard navigation for AG Grid; WCAG AA contrast ratios; semantic HTML
+- Accessibility audit: keyboard navigation for TanStack Table v8; WCAG AA contrast ratios; semantic HTML
 - Final UI polish per UX Designer review
 
 ### Week 29.5 -- Buffer + M5 Gate

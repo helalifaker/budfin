@@ -386,11 +386,11 @@ The health endpoint returns:
 
 ```json
 {
-  "status": "healthy",
-  "version": "1.0.0",
+  "status": "ok",
+  "db": "connected",
   "uptime_seconds": 86400,
-  "database": "connected"
+  "version": "1.0.0"
 }
 ```
 
-The endpoint verifies database connectivity by executing a lightweight query (`SELECT 1`). If the database is unreachable, the endpoint returns HTTP 503 with `"status": "unhealthy"`.
+The endpoint verifies database connectivity by executing a lightweight query (`SELECT 1`). If the database is unreachable, the endpoint returns HTTP 503 with `"status": "degraded"`.
