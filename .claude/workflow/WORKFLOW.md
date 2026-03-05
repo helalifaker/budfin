@@ -113,13 +113,13 @@ These three phases set up the whole project. You are currently in Phase 2.
 
 > Build the empty, running project skeleton before any feature work starts.
 
-- [ ] Tech stack decided and recorded as `docs/adr/ADR-001-tech-stack.md`
-- [ ] Repository structure created (`src/`, `tests/`, `migrations/`, `docs/adr/`)
-- [ ] Docker Compose for local development starts cleanly (`docker compose up`)
-- [ ] CI/CD pipeline configured (`ci/ci-pipeline.yml` → `.github/workflows/ci.yml`)
-- [ ] PostgreSQL schema bootstrapped — first migration runs clean
-- [ ] Test harness running — `pnpm test` passes with zero tests (green baseline)
-- [ ] First CI run passes green on GitHub Actions
+- [x] Tech stack decided and recorded as `docs/adr/ADR-001-tech-stack.md`
+- [x] Repository structure created (`src/`, `tests/`, `migrations/`, `docs/adr/`)
+- [x] Docker Compose for local development starts cleanly (`docker compose up`)
+- [x] CI/CD pipeline configured (`ci/ci-pipeline.yml` → `.github/workflows/ci.yml`)
+- [x] PostgreSQL schema bootstrapped — first migration runs clean
+- [x] Test harness running — `pnpm test` passes with zero tests (green baseline)
+- [x] First CI run passes green on GitHub Actions
 
 **Gate**: `pnpm test` green, `docker compose up` works, CI green. No feature code yet.
 
