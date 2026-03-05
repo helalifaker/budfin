@@ -10,5 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Models will be defined during Phase 2 implementation.
+// Models will be defined during feature implementation.
 // See docs/tdd/02_component_design.md for the entity model.
+
+model SchemaVersion {
+  id        Int      @id @default(1)
+  version   String   @default("0.0.1")
+  appliedAt DateTime @default(now()) @map("applied_at")
+
+  @@map("schema_version")
+}

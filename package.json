@@ -22,9 +22,11 @@
 		]
 	},
 	"devDependencies": {
-		"typescript": "5.9.3",
-		"prettier": "^3.8.0",
 		"eslint": "^9.0.0",
-		"markdownlint-cli": "^0.48.0"
+		"globals": "^17.4.0",
+		"markdownlint-cli": "^0.48.0",
+		"prettier": "^3.8.0",
+		"typescript": "5.9.3",
+		"typescript-eslint": "^8.56.1"
 	}
 }

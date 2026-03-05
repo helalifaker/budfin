@@ -1,0 +1,63 @@
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - '443:443'
+      - '80:80'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./apps/web/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://app_user:${DB_PASSWORD}@db:5432/budfindb
+      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
+      SALARY_ENCRYPTION_KEY: /run/secrets/salary_encryption_key
+      LOG_LEVEL: info
+    secrets:
+      - jwt_private_key
+      - salary_encryption_key
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/v1/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: budfindb
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U app_user -d budfindb']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+    driver: local
+
+secrets:
+  jwt_private_key:
+    file: ./secrets/jwt_private_key.pem
+  salary_encryption_key:
+    file: ./secrets/salary_encryption_key.txt
