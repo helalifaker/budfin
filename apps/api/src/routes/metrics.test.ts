@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import { buildApp } from '../index.js';
 
 describe('GET /metrics', () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import client from 'prom-client';
 import {
 	httpRequestDuration,

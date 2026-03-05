@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, vi, beforeAll } from 'vitest';
+import { describe, it, expect, afterAll, vi } from 'vitest';
 
 vi.mock('./lib/prisma.js', () => ({
 	prisma: {
