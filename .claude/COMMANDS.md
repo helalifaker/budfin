@@ -69,7 +69,13 @@ are covered by the commands below — you should rarely need to type a custom pr
        ↓
 /impl:story [#]  (Phase 5/6 — repeat per story)
        ↓
-/workflow:advance  (Phase 7 → next Epic)
+/impl:commit [#]  (Phase 6 — branch + commit + draft PR)
+       ↓
+[Review agents run on PR — Phase 7]
+       ↓
+/pr:merge [#]  (Phase 7 — squash-merge + close issue)
+       ↓
+/workflow:advance  (Phase 7 → next Epic, after ALL stories merged)
 ```
 
 Or use `/workflow:run [epic-N]` to drive the full Epic lifecycle with one command.

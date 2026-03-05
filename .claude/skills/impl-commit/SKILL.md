@@ -99,6 +99,12 @@ git commit -m "type(scope): description"
 git push -u origin HEAD
 ```
 
+After push, verify the remote branch exists:
+
+```bash
+git ls-remote --heads origin $(git branch --show-current) | grep -q . || { echo "Push failed — remote branch not found"; exit 1; }
+```
+
 ### Step 7 — Create draft PR
 
 ```bash

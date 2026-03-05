@@ -111,6 +111,30 @@ Wait for implementer to report all tests GREEN before proceeding.
 
 ---
 
+## Step 4.5 — Branch + PR Gate (MANDATORY)
+
+After GREEN is confirmed and BEFORE spawning review agents:
+
+1. Create feature branch (if not already on one):
+   ```bash
+   git checkout -b story/[story-#]-<slug>
+   ```
+2. Stage, commit, and push:
+   ```bash
+   git add -A
+   git commit -m "feat(scope): description"
+   git push -u origin HEAD
+   ```
+3. Create draft PR with issue linkage:
+   ```bash
+   gh pr create --draft --title "[story title]" --body "Fixes #[story-#]\nPart of Epic #[epic-#]"
+   ```
+4. **HARD GATE**: If `gh pr create` fails, STOP. Do not proceed to review.
+
+Provide the PR URL and diff to review agents in Step 5.
+
+---
+
 ## Step 5 — Parallel Review Phase
 
 Once GREEN is confirmed, spawn all three review agents SIMULTANEOUSLY:
@@ -133,8 +157,16 @@ Wait for ALL THREE agents to return results.
 
 ### PASS (all three agents return PASS / APPROVED / COMPLETE)
 
+#### Step 6.5 — Merge PR
+
+After all three review agents PASS:
+
+1. Mark PR ready: `gh pr ready [pr-#]`
+2. Squash-merge: `gh pr merge [pr-#] --squash --delete-branch`
+3. Confirm issue auto-closed: `gh issue view [story-#] --json state`
+4. If not closed: `gh issue close [story-#] --comment "Closed by PR #[pr-#]"`
+
 ```bash
-gh pr ready [pr-number]
 gh issue edit [story-number] --add-label "in-review"
 ```
 
