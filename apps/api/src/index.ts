@@ -4,16 +4,18 @@ import {
 	serializerCompiler,
 	validatorCompiler,
 } from 'fastify-type-provider-zod';
+import { logging } from './plugins/logging.js';
 import { healthRoutes } from './routes/health.js';
 
 export async function buildApp() {
 	const app = Fastify({
-		logger: true,
+		logger: false,
 	});
 
 	app.setValidatorCompiler(validatorCompiler);
 	app.setSerializerCompiler(serializerCompiler);
 
+	await app.register(logging);
 	await app.register(cors);
 	await app.register(healthRoutes, { prefix: '/api/v1' });
 
