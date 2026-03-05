@@ -1,14 +1,10 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW (COMPLETE)
-**Current Epic**: 13 — Infrastructure & CI/CD (#2)
-**Current Story**: All 10 stories reviewed and documented
+**Phase**: 4 — SPECIFY
+**Current Epic**: None selected — pick next Epic
+**Current Story**: None
 **Last updated**: 2026-03-06
-**Advanced from Phase 2**: 2026-03-05
-**Advanced from Phase 3**: 2026-03-05
-**Advanced from Phase 4**: 2026-03-06
-**Advanced from Phase 5**: 2026-03-06
-**Advanced from Phase 6**: 2026-03-06
+**Advanced from Phase 7 (Epic 13)**: 2026-03-06
 
 ## Phase History
 
@@ -20,7 +16,8 @@
 | 4 — SPECIFY | ✅ Complete | 2026-03-06 |
 | 5 — TDD RED | ✅ Complete | 2026-03-06 |
 | 6 — IMPLEMENT | ✅ Complete | 2026-03-06 |
-| 7 — REVIEW | ✅ Complete | 2026-03-06 |
+| 7 — REVIEW (Epic 13) | ✅ Complete | 2026-03-06 |
+| 4 — SPECIFY (next Epic) | :arrows_counterclockwise: In Progress | — |
 
 ## Feature Progress
 
