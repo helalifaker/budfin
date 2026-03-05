@@ -1,0 +1,87 @@
+# BudFin Code Review Checklist
+
+> Used by: `workflow-reviewer` agent in Phase 7
+> Severity: **Blocker** (must fix before merge) | **Warning** (should fix, justify if not) | **Nit** (optional)
+
+---
+
+## Correctness
+
+- **Blocker** — All acceptance criteria from the spec are implemented
+- **Blocker** — No test is skipped, commented out, or marked `.only`
+- **Blocker** — `pnpm test` passes with coverage ≥ 80% for this story
+- **Blocker** — No `TODO`, `FIXME`, or `console.log` in committed code
+- **Warning** — Edge cases from `docs/edge-cases/` relevant to this story are tested
+
+## Financial Precision (TC-001)
+
+- **Blocker** — All monetary values use `Decimal.js` — no native `number` arithmetic on currency
+- **Blocker** — No IEEE 754 arithmetic on financial values (no `+`, `-`, `*`, `/` on money)
+- **Blocker** — `toFixed()` only used for display formatting, never for computation
+- **Warning** — Intermediate calculations stay in `Decimal` throughout the chain
+
+## Date Calculations (TC-002)
+
+- **Blocker** — Staff cost proration uses YEARFRAC algorithm, not simple day division
+- **Warning** — Date arithmetic uses `date-fns` or explicit UTC handling — no timezone assumptions
+
+## Security
+
+- **Blocker** — No raw SQL string concatenation — parameterized queries only
+- **Blocker** — All route handlers verify the authenticated user's school context (no cross-tenant leakage)
+- **Blocker** — No secrets, tokens, or credentials in source files
+- **Blocker** — Input validated with Zod at all API boundaries
+- **Warning** — RBAC checks are at the service layer, not only at the route layer
+- **Warning** — Error responses do not leak internal implementation details
+
+## Code Quality
+
+- **Blocker** — ESLint passes with 0 errors and 0 warnings (`pnpm lint`)
+- **Blocker** — TypeScript strict mode — no `any` types without explicit justification
+- **Warning** — No function longer than 40 lines — extract if longer
+- **Warning** — No file longer than 300 lines — split if longer
+- **Warning** — Prisma queries use `select` to avoid over-fetching
+- **Nit** — Variable and function names are unambiguous and self-documenting
+
+## Database
+
+- **Blocker** — Migrations are reversible (has `down` migration or explicit note why not)
+- **Blocker** — No N+1 query patterns — related data loaded with `include` or batch queries
+- **Warning** — New queries on large tables have appropriate indexes
+- **Warning** — Transactions used for multi-step writes that must be atomic
+
+## API Contract
+
+- **Blocker** — Request/response shapes match the spec exactly
+- **Blocker** — HTTP status codes are semantically correct (201 for create, 409 for conflict, etc.)
+- **Warning** — Pagination implemented for any list endpoint that could return > 50 rows
+
+## Tests
+
+- **Blocker** — Unit tests cover every acceptance criterion
+- **Blocker** — Integration tests hit the actual HTTP layer (not mocked routes)
+- **Warning** — Unhappy paths tested: invalid input, auth failure, not-found
+- **Warning** — Tests are deterministic — no flaky time-dependent assertions
+- **Nit** — Test names follow pattern: `should [expected behavior] when [condition]`
+
+## Documentation
+
+- **Warning** — CHANGELOG updated with user-visible changes
+- **Warning** — If a new ADR was needed (architectural decision), it is written
+- **Nit** — Complex business logic has inline comments explaining the "why"
+
+---
+
+## Sign-Off Template
+
+Paste this into the PR after review:
+
+```
+## Reviewer Agent Sign-Off
+
+- Blockers found: [N] — [all resolved / outstanding: list]
+- Warnings found: [N] — [all resolved / accepted with justification: list]
+- Nits found: [N] — [addressed / deferred]
+
+Status: APPROVED / CHANGES REQUESTED
+```
