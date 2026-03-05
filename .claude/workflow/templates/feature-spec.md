@@ -37,6 +37,36 @@ List every new table, column, constraint, or index. Leave blank if none.
 |--------|------|---------|----------|------|
 | POST | /api/... | `{ field: type }` | `{ field: type }` | Bearer |
 
+## UI/UX Specification
+
+> Source: `docs/ui-ux-spec/[relevant-file].md` | Cross-cutting: `00-global-framework.md`, `10-input-management.md`
+
+### Shell & Layout
+
+[Which shell (PlanningShell or ManagementShell)? Layout structure from UI/UX spec — ASCII diagram or description. Reference global framework section numbers.]
+
+### Key Components
+
+| Component | Type | Source | Notes |
+|-----------|------|--------|-------|
+| [Name] | [shadcn/ui primitive, custom, TanStack Table] | [UI/UX spec section ref] | [Key behaviors] |
+
+### User Flows
+
+[Primary user flows from the UI/UX spec. Format: Actor -> Trigger -> Screen -> Action -> Outcome]
+
+### Interaction Patterns
+
+[Inline editing behavior, keyboard navigation, cell highlighting states, validation feedback. Reference `10-input-management.md` if applicable.]
+
+### Accessibility Requirements
+
+[WCAG AA requirements specific to this feature. Keyboard nav, ARIA labels, contrast ratios. Reference global framework Section 11.]
+
+### Responsive / Viewport
+
+> BudFin targets desktop (1280px min). Note any specific layout considerations.
+
 ## Edge Cases Cross-Reference
 
 From `docs/edge-cases/` — list all relevant cases for this feature.
@@ -64,3 +94,4 @@ Track any unresolved ambiguities. Must be empty before gate passes.
 - [ ] Edge cases cross-referenced
 - [ ] Data model complete
 - [ ] API contract complete
+- [ ] UI/UX specification complete (or "N/A — backend-only epic")
