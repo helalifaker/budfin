@@ -5,6 +5,7 @@ import { createLogger } from '../lib/logger.js';
 declare module 'fastify' {
 	interface FastifyRequest {
 		logContext?: { requestId: string; userId: string | null };
+		user?: { id?: string };
 	}
 }
 
@@ -14,7 +15,7 @@ async function loggingPlugin(app: FastifyInstance) {
 	app.addHook('onRequest', async (request) => {
 		request.logContext = {
 			requestId: request.id,
-			userId: (request.user as { id?: string })?.id ?? null,
+			userId: request.user?.id ?? null,
 		};
 		log.info({
 			...request.logContext,
