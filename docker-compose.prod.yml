@@ -9,7 +9,8 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./apps/web/dist:/usr/share/nginx/html:ro
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
 
   api:
@@ -21,20 +22,23 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://app_user:${DB_PASSWORD}@db:5432/budfindb
       JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
-      SALARY_ENCRYPTION_KEY: /run/secrets/salary_encryption_key
+      JWT_PUBLIC_KEY_PATH: /run/secrets/jwt_public_key
+      SALARY_ENCRYPTION_KEY_PATH: /run/secrets/salary_encryption_key
       LOG_LEVEL: info
     secrets:
       - jwt_private_key
+      - jwt_public_key
       - salary_encryption_key
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/v1/health']
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001/api/v1/health']
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
   db:
     image: postgres:16-alpine
@@ -59,5 +63,7 @@ volumes:
 secrets:
   jwt_private_key:
     file: ./secrets/jwt_private_key.pem
+  jwt_public_key:
+    file: ./secrets/jwt_public_key.pem
   salary_encryption_key:
     file: ./secrets/salary_encryption_key.txt
