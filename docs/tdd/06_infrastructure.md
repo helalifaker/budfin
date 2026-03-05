@@ -178,7 +178,7 @@ server {
 - HTTP port 80 returns a 308 Permanent Redirect to HTTPS. No unencrypted traffic is served.
 - Static frontend assets use aggressive caching (`expires 1y`, `Cache-Control: public, immutable`) because Vite produces content-hashed filenames. Cache invalidation happens automatically when file hashes change on rebuild.
 - The `try_files` directive with `/index.html` fallback supports client-side routing in the React SPA.
-- `client_max_body_size 10m` on the API location matches the Express body parser limit and permits xlsx file imports.
+- `client_max_body_size 10m` on the API location matches Fastify's native `bodyLimit` setting and permits xlsx file imports.
 - `proxy_read_timeout 60s` accommodates long-running calculation and export requests.
 
 ### 8.3 Environment Matrix
@@ -296,6 +296,7 @@ Every PR and push to `main` must pass all of the following gates before merge:
 | Type checking | `tsc --noEmit` | Zero type errors | Build fails |
 | Unit test coverage (overall) | Vitest | >= 60% | Build fails |
 | Unit test coverage (calculation engine) | Vitest | >= 80% | Build fails |
+| Unit test coverage (RBAC) | Vitest | >= 80% | Build fails |
 | Integration tests | Vitest | All pass | Build fails |
 | Excel regression suite (Phase 2+) | Custom Vitest suite | All results within +/- 1 SAR tolerance | Build fails |
 | Dependency audit | `npm audit --audit-level=high` | No HIGH or CRITICAL CVEs | Build fails |

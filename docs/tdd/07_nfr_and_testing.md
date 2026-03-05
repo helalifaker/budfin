@@ -36,7 +36,7 @@ that achieves it.
 
 ### Data Grid Render < 500ms (NFR 11.4)
 
-- TanStack Table v8 with `@tanstack/react-virtual` v3 for virtual scrolling — only visible rows rendered to DOM
+- TanStack Table v8 (no virtual scrolling — ADR-016), memoized column defs
 - For datasets of 500 rows or fewer (all EFIR use cases): client-side row model via `getCoreRowModel()`
 - For audit log (> 500 rows): server-side pagination via `manualPagination: true` with TanStack Query
 - Column definitions memoized via `useMemo` — not recreated on each render

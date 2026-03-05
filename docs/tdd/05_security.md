@@ -143,6 +143,10 @@ FROM employees WHERE id = $id;
 - In production, the key is provided as a Docker secret (`salary_encryption_key`) mounted at `/run/secrets/salary_encryption_key`.
 - Key rotation procedure: an application-level script decrypts all encrypted rows with the old key, re-encrypts with the new key, within a single database transaction. If any row fails, the entire transaction rolls back.
 
+#### Salary Field Visibility Enforcement
+
+Salary field visibility is enforced via the `salary:view` permission (see 02_component_design.md §RBAC Permission Matrix). The Viewer role does not hold this permission. Salary columns are masked as `--` in the UI for Viewers, and the encrypted column value is never decrypted for Viewer-role queries at the application layer.
+
 #### PDPL Principles Mapping
 
 | PDPL Principle | BudFin Implementation |
@@ -180,14 +184,14 @@ FROM employees WHERE id = $id;
 | `Content-Security-Policy` | `default-src 'self'` |
 | `Referrer-Policy` | `no-referrer` |
 
-**Rate limiting** (via `express-rate-limit`):
+**Rate limiting** (via `@fastify/rate-limit`):
 
 | Scope | Limit | Window | Key |
 | ------- | ------- | -------- | ----- |
 | Authenticated API | 100 requests | 1 minute | JWT `userId` |
 | Login endpoint | 10 attempts | 15 minutes | Client IP |
 
-**Request size limit:** 10MB maximum, enforced by Express `bodyParser`. This ceiling accommodates xlsx file imports while preventing abuse.
+**Request size limit:** 10MB maximum, enforced by Fastify's native `bodyLimit` option. This ceiling accommodates xlsx file imports while preventing abuse.
 
 **IDOR prevention:** Every version-scoped database query includes an ownership check:
 

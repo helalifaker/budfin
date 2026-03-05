@@ -93,7 +93,7 @@ The `users` table carries `failed_attempts INTEGER DEFAULT 0` and `locked_until 
 
 ### Purpose and Responsibility
 
-The RBAC Middleware intercepts every inbound HTTP request after authentication, extracts the caller's role from the validated `JwtPayload`, and gates execution based on a statically defined permission matrix. It is implemented as Express middleware and is the sole enforcement point for authorization policy.
+The RBAC Middleware intercepts every inbound HTTP request after authentication, extracts the caller's role from the validated `JwtPayload`, and gates execution based on a statically defined permission matrix. It is implemented as a Fastify plugin and is the sole enforcement point for authorization policy.
 
 ### Internal Modules
 
@@ -119,20 +119,21 @@ type Permission =
  | 'audit:view'
  | 'config:edit'
  | 'data:import'
- | 'data:export';
+ | 'data:export'
+ | 'salary:view';
 
 const PERMISSION_MAP: Record<Role, ReadonlySet<Permission>> = {
  Admin: new Set([
   'versions:create', 'versions:delete', 'data:edit', 'calculations:run',
   'data:view', 'versions:publish', 'users:manage', 'audit:view',
-  'config:edit', 'data:import', 'data:export',
+  'config:edit', 'data:import', 'data:export', 'salary:view',
  ]),
  BudgetOwner: new Set([
   'versions:create', 'versions:delete', 'data:edit', 'calculations:run',
-  'data:view', 'versions:publish', 'data:import', 'data:export',
+  'data:view', 'versions:publish', 'data:import', 'data:export', 'salary:view',
  ]),
  Editor: new Set([
-  'data:edit', 'calculations:run', 'data:view', 'data:import', 'data:export',
+  'data:edit', 'calculations:run', 'data:view', 'data:import', 'data:export', 'salary:view',
  ]),
  Viewer: new Set([
   'data:view', 'data:export',
@@ -158,6 +159,7 @@ function requirePermission(permission: Permission): RequestHandler;
 | `config:edit` | Yes | No | No | No |
 | `data:import` | Yes | Yes | Yes | No |
 | `data:export` | Yes | Yes | Yes | Yes |
+| `salary:view` | Yes | Yes | Yes | No |
 
 ### Rejection Response
 
@@ -173,7 +175,7 @@ The response intentionally omits details about which permission was missing to a
 
 | Direction | Partner | Mechanism |
 | --- | --- | --- |
-| Called by | Express router (registered before route handlers) | Middleware chain |
+| Called by | Fastify router (registered as an `onRequest` hook before route handlers) | Middleware chain |
 | Calls | Auth Service | `validateAccessToken()` to extract `JwtPayload` |
 | Guards | All API route handlers | Blocks execution before handler runs |
 
@@ -206,7 +208,7 @@ interface WorkspaceContext {
  fiscalYear: number;
  versionId: number;
  comparisonVersionId: number | null;
- academicPeriod: 'AY1' | 'AY2' | 'FULL_YEAR';
+ academicPeriod: 'AY1' | 'AY2' | 'Summer' | 'FULL_YEAR';
  scenario: 'Base' | 'Optimistic' | 'Pessimistic';
 }
 
@@ -768,7 +770,7 @@ The Export Service generates downloadable files in xlsx, PDF, and CSV formats fr
 | --- | --- |
 | `ExportJobManager` | Creates job records, polls for pending jobs, updates status on completion |
 | `ExcelExporter` | Generates xlsx files using ExcelJS with stream-based writing for memory efficiency |
-| `PdfExporter` | Renders React components to HTML and prints to PDF via headless Puppeteer |
+| `PdfExporter` | Generates PDF files using `@react-pdf/renderer` v4.3. Renders a React-PDF document component to a Node.js stream. Produces A4 landscape for P&L, A4 portrait for other reports. No Chromium dependency (ADR-014). |
 | `CsvExporter` | Generates CSV files using fast-csv with UTF-8 BOM for Excel compatibility |
 | `FileCleanupWorker` | Periodic job that deletes expired export files from local storage |
 
@@ -816,7 +818,7 @@ interface ExportService {
 ### Format-Specific Details
 
 - **ExcelJS (xlsx)**: Uses streaming `workbook.xlsx.write(stream)` for large datasets. Column widths are explicitly set to match PRD specifications (NFR 11.10). Monetary cells use number format `#,##0.00 "SAR"`. Headers are bold with frozen panes.
-- **Puppeteer (PDF)**: Renders the target React report component to static HTML, launches a headless Chromium instance, and calls `page.pdf()` with A4 landscape format for P&L reports and A4 portrait for other reports. Page margins, headers, and footers are configured via the Puppeteer print options.
+- **@react-pdf/renderer (PDF)** (ADR-014): Uses `@react-pdf/renderer` v4.3 to render a React-PDF document component directly to a Node.js `Readable` stream. No Chromium or headless browser is required. Page size is A4 landscape for P&L reports, A4 portrait for all others. Styling uses the `StyleSheet.create()` API with SAR number formatting.
 - **fast-csv (CSV)**: Uses streaming write mode. Prepends UTF-8 BOM (`\uFEFF`) to the output stream so that Microsoft Excel correctly detects the encoding. Column headers match the database field names in snake_case.
 
 ### Component Interactions
@@ -825,7 +827,7 @@ interface ExportService {
 | --- | --- | --- |
 | Called by | API route handlers (export endpoints) | Direct function call (job creation); worker picks up asynchronously |
 | Calls | Prisma client | Reads version data for report generation |
-| Calls | ExcelJS, Puppeteer, fast-csv | File generation libraries |
+| Calls | ExcelJS, @react-pdf/renderer, fast-csv | File generation libraries |
 | Calls | Local filesystem | File storage (write on generation, read on download, delete on expiry) |
 
 ### Traceability
@@ -928,16 +930,17 @@ interface ImportService {
 
 ### Purpose and Responsibility
 
-The Data Grid component renders financial data tables across all module pages: enrollment grids, fee grids, revenue results, staff cost breakdowns, and the P&L summary. It provides sortable columns, client-side filtering, pagination, keyboard navigation, and virtual scrolling for large datasets.
+The Data Grid component renders financial data tables across all module pages: enrollment grids, fee grids, revenue results, staff cost breakdowns, and the P&L summary. It provides sortable columns, client-side filtering, pagination, and keyboard navigation. No virtual scrolling — see ADR-016.
 
 ### Technology Choice
 
-**TanStack Table v8 + TanStack Virtual v3 + shadcn/ui `<Table>`** (replaces AG Grid Community from TDD v1.0). See ADR-011 in `09_decisions_log.md`.
+**TanStack Table v8 + shadcn/ui `<Table>`** (ADR-011, ADR-016 — no virtual scrolling)
+
+> **Note (ADR-016):** Virtual scrolling (`@tanstack/react-virtual`) is excluded from v1. All EFIR datasets fit within 500 rows. The audit log (>500 rows) uses server-side pagination via `manualPagination: true` with TanStack Query — not virtualization.
 
 | Responsibility | Library |
 | --- | --- |
 | Table logic (sorting, filtering, pagination, row selection) | `@tanstack/react-table` v8 |
-| Virtual scrolling for datasets > 100 rows | `@tanstack/react-virtual` v3 |
 | Table rendering (HTML structure, accessibility) | shadcn/ui `<Table>`, `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableCell>` |
 | Styling | Tailwind CSS v4 |
 
@@ -946,14 +949,12 @@ The Data Grid component renders financial data tables across all module pages: e
 | Module | Responsibility |
 | --- | --- |
 | `useFinancialTable` | Custom hook wrapping `useReactTable`; configures sort, filter, pagination; memoizes column definitions |
-| `VirtualTableBody` | Renders only visible rows via `useVirtualizer`; used for datasets > 100 rows |
 | `TablePagination` | shadcn/ui-based pagination controls; wired to TanStack Table `manualPagination` for server-side paging |
 | `ColumnHeader` | Sortable column header component with sort direction indicator |
 
 ### Key Patterns
 
 - Column definitions are created once with `useMemo` and passed to `useReactTable` — never recreated on render.
-- For virtual scrolling: the `<TableBody>` renders a spacer element above and below the visible rows to maintain correct scroll height.
 - For server-side pagination (audit log): `manualPagination: true` with `pageCount` driven by TanStack Query metadata.
 - Monetary cell values are formatted using `Decimal.js` `toFixed(2)` with `ROUND_HALF_UP` for display per TC-004.
 

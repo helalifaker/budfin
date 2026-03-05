@@ -11,12 +11,13 @@
 
 This document set is the complete Technical Design Document (TDD) and Software Architecture Document (SAD) for BudFin, the school financial planning application built for EFIR (École Française Internationale de Riyad). The TDD translates every functional requirement from the PRD v2.0 into concrete technical design decisions, data models, API contracts, and implementation plans.
 
-The documentation is split across 10 files to keep each section focused and navigable. Together they provide a single source of truth for architecture, component design, data architecture, API contracts, security, infrastructure, testing, implementation roadmap, decision records, and full requirements traceability.
+The documentation is split across 12 files (this README, a pinned stack-versions manifest, and 10 numbered content files) to keep each section focused and navigable. Together they provide a single source of truth for architecture, component design, data architecture, API contracts, security, infrastructure, testing, implementation roadmap, decision records, and full requirements traceability.
 
 ## Table of Contents
 
 | # | File | Sections | Description |
 | --- | ------ | ---------- | ------------- |
+| — | [`stack-versions.md`](stack-versions.md) | — | Pinned runtime and dependency version manifest |
 | 1 | [`01_overview.md`](01_overview.md) | 0–3 | Document Control, Executive Summary, System Context, Architecture Overview |
 | 2 | [`02_component_design.md`](02_component_design.md) | 4 | Detailed Component Design (8 components) |
 | 3 | [`03_data_architecture.md`](03_data_architecture.md) | 5 | Data Architecture, Full SQL DDL, Data Flows, Migration |

@@ -267,7 +267,7 @@ scenario modeling.
 
 ### Week 28 -- Export (PDF) + Input Management
 
-- Puppeteer PDF generation for P&L reports (A4 landscape)
+- `@react-pdf/renderer` PDF generation for P&L reports (A4 landscape, ADR-014)
 - Input management module (FR-INP-001 through FR-INP-003)
 - Input control panel: count of editable fields per module
 - Visual highlighting of editable cells in AG Grid (yellow background)

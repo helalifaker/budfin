@@ -555,53 +555,7 @@ CREATE TRIGGER fee_grids_updated_at_trigger
 
 ---
 
-### Table 6: enrollment_historical
-
-Five years of historical enrollment data (2021-22 through 2025-26) imported from CSV files. Used for trend analysis and enrollment forecasting. Not version-scoped — historical data is shared across all versions.
-
-```sql
-CREATE TABLE enrollment_historical (
-  id              BIGSERIAL    PRIMARY KEY,
-  grade_level     TEXT         NOT NULL,
-  academic_year   TEXT         NOT NULL,
-  student_count   INTEGER      NOT NULL,
-  created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  created_by      BIGINT,
-
-  CONSTRAINT enrollment_historical_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-  CONSTRAINT enrollment_historical_grade_year_unique UNIQUE (grade_level, academic_year),
-  CONSTRAINT enrollment_historical_count_check CHECK (student_count >= 0)
-);
-
-COMMENT ON TABLE enrollment_historical IS
-  'DEPRECATED — will be removed in v1.1. Historical enrollment data is now stored as
-   Actual budget versions (type=Actual, data_source=IMPORTED, status=Locked).
-   To query enrollment trends, use enrollment_headcount JOIN budget_versions WHERE type=Actual.
-   This table is retained temporarily during the migration period (Phase 2).';
-COMMENT ON COLUMN enrollment_historical.id IS 'Auto-incrementing primary key.';
-COMMENT ON COLUMN enrollment_historical.grade_level IS 'Grade identifier (e.g., PS, MS, GS, CP, CE1, ..., Terminale).';
-COMMENT ON COLUMN enrollment_historical.academic_year IS 'Academic year label (e.g., "2024-25"). Text format for display consistency.';
-COMMENT ON COLUMN enrollment_historical.student_count IS 'Total students enrolled in this grade for this academic year. Must be >= 0.';
-COMMENT ON COLUMN enrollment_historical.created_at IS 'Row creation timestamp.';
-COMMENT ON COLUMN enrollment_historical.created_by IS 'FK to users who imported this data. SET NULL if user is deleted.';
-
--- Index: filter/sort by academic year for trend analysis views
-CREATE INDEX enrollment_historical_academic_year_idx ON enrollment_historical (academic_year);
-
--- Index: FK column created_by — ADVISORY (table is DEPRECATED, included for completeness) (Phase 3)
-CREATE INDEX enrollment_historical_created_by_idx ON enrollment_historical (created_by);
-
--- S-30: This table is scheduled for removal in v1.1 (Phase 2).
--- Add the following migration script to the v1.1 migration set:
---   DROP TABLE enrollment_historical CASCADE;
--- Verify before dropping: SELECT COUNT(*) FROM enrollment_historical; -- must be 0 or migrated
--- Historical data is now represented as Actual budget_versions (type='Actual', data_source='IMPORTED').
--- Migration guidance: enrollment_historical rows map to enrollment_headcount rows within Actual versions.
-```
-
----
-
-### Table 7: enrollment_headcount
+### Table 6: enrollment_headcount
 
 Stage 1 enrollment data: total headcount per grade and academic period within a budget version. Stage 2 (enrollment_detail) must sum to these totals.
 
@@ -652,7 +606,7 @@ CREATE TRIGGER enrollment_headcount_updated_at_trigger
 
 ---
 
-### Table 8: enrollment_detail
+### Table 7: enrollment_detail
 
 Stage 2 enrollment: breakdown by nationality and tariff. The sum of headcount rows per (version_id, academic_period, grade_level) must equal the corresponding enrollment_headcount row (validated by the application before saving).
 
@@ -713,7 +667,7 @@ CREATE TRIGGER enrollment_detail_updated_at_trigger
 
 ---
 
-### Table 9: class_capacity_config
+### Table 8: class_capacity_config
 
 Reference table defining maximum class sizes and capacity thresholds per grade level. Not version-scoped — these are school-wide structural parameters. Used by the DHG engine to calculate sections needed.
 
@@ -767,7 +721,7 @@ CREATE TRIGGER class_capacity_config_updated_at_trigger
 
 ---
 
-### Table 10: discount_policies
+### Table 9: discount_policies
 
 Version-scoped discount rates for reduced-price tariffs. The discount rate is a percentage off the Plein (full) tariff. Only RP and R3+ tariffs have discounts.
 
@@ -819,7 +773,7 @@ CREATE TRIGGER discount_policies_updated_at_trigger
 
 ---
 
-### Table 11: other_revenue_items
+### Table 10: other_revenue_items
 
 Non-tuition revenue line items (e.g., cantine, transport services, DAI totals, AEFE subventions). Each item has a distribution method for monthly allocation.
 
@@ -897,7 +851,7 @@ CREATE TRIGGER other_revenue_items_updated_at_trigger
 
 ---
 
-### Table 12: monthly_revenue
+### Table 11: monthly_revenue
 
 Calculated output: monthly revenue broken down by grade, nationality, and tariff. Populated by the Revenue Engine. Zero for months 7-8 (summer).
 
@@ -970,7 +924,7 @@ CREATE TRIGGER monthly_revenue_updated_at_trigger
 
 ---
 
-### Table 13: dhg_grille_config
+### Table 12: dhg_grille_config
 
 DHG (Dotation Horaire Globale) teaching hour allocations per grade and subject. Defines the structural teaching requirements. Not version-scoped — represents the school's pedagogical structure. The `effective_from_year` allows grille changes across fiscal years.
 
@@ -1039,7 +993,7 @@ CREATE TRIGGER dhg_grille_config_updated_at_trigger
 
 ---
 
-### Table 14: dhg_requirements
+### Table 13: dhg_requirements
 
 Calculated output: sections needed and FTE requirements per grade and academic period. Populated by the DHG Engine based on enrollment headcount and dhg_grille_config.
 
@@ -1098,7 +1052,7 @@ CREATE TRIGGER dhg_requirements_updated_at_trigger
 
 ---
 
-### Table 15: monthly_staff_costs
+### Table 14: monthly_staff_costs
 
 Calculated output: monthly cost breakdown per employee. Includes base gross, adjusted gross (after hourly percentage), GOSI, Ajeer, and EoS accrual. Populated by the Staff Cost Engine.
 
@@ -1163,7 +1117,7 @@ CREATE TRIGGER monthly_staff_costs_updated_at_trigger
 
 ---
 
-### Table 16: eos_provisions
+### Table 15: eos_provisions
 
 End-of-Service provision calculations per employee. Uses YEARFRAC US 30/360 (TC-002) to compute years of service and applies the KSA Labor Law brackets (<=5 years: 0.5 month per year; >5 years: 1 month per year for the excess).
 
@@ -1228,7 +1182,7 @@ CREATE TRIGGER eos_provisions_updated_at_trigger
 
 ---
 
-### Table 17: monthly_budget_summary
+### Table 16: monthly_budget_summary
 
 Consolidated P&L summary per month. Populated by the P&L Engine after revenue and staff costs are calculated. This is the primary output table for dashboard display and report generation.
 
@@ -1310,7 +1264,7 @@ CREATE TRIGGER monthly_budget_summary_updated_at_trigger
 
 ---
 
-### Table 18: ifrs_line_items
+### Table 17: ifrs_line_items
 
 IFRS-classified financial line items for standards-compliant P&L reporting. Generated alongside monthly_budget_summary by the P&L Engine.
 
@@ -1378,7 +1332,7 @@ CREATE TRIGGER ifrs_line_items_updated_at_trigger
 
 ---
 
-### Table 19: scenario_parameters
+### Table 18: scenario_parameters
 
 Per-version scenario assumptions. Each version can have Base, Optimistic, and Pessimistic parameter sets. These feed into the calculation engines as adjustment factors.
 
@@ -1434,28 +1388,48 @@ CREATE TRIGGER scenario_parameters_updated_at_trigger
 
 ---
 
-### Table 20: audit_entries
+### Enum: audit_operation
+
+Defines the set of auditable event types used by the `audit_entries` table. Using a PostgreSQL ENUM enforces type safety at the database level and provides clearer schema documentation than an inline CHECK constraint. See also 05_security.md §Audit Logging.
+
+```sql
+-- =============================================================================
+-- ENUM: audit_operation
+-- All recognised audit event types. See also 05_security.md §Audit Logging.
+-- =============================================================================
+CREATE TYPE audit_operation AS ENUM (
+  'INSERT',
+  'UPDATE',
+  'DELETE',
+  'LOGIN',
+  'LOGOUT',
+  'VERSION_TRANSITION',
+  'CALCULATION_RUN',
+  'ACCOUNT_LOCKOUT',
+  'EXPORT_DOWNLOAD'
+);
+```
+
+---
+
+### Table 19: audit_entries
 
 Append-only audit trail. No UPDATE or DELETE permitted for the application role. Captures every data modification, authentication event, version transition, and calculation run.
 
 ```sql
 CREATE TABLE audit_entries (
-  id              BIGSERIAL    PRIMARY KEY,
-  occurred_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  id              BIGSERIAL        PRIMARY KEY,
+  occurred_at     TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
   user_id         BIGINT,
   user_email      TEXT,
-  table_name      TEXT         NOT NULL,
+  table_name      TEXT             NOT NULL,
   record_id       BIGINT,
-  operation       TEXT         NOT NULL,
+  operation       audit_operation  NOT NULL,  -- See also 05_security.md §Audit Logging
   old_values      JSONB,
   new_values      JSONB,
   ip_address      INET,
   session_id      TEXT,
-  audit_note      TEXT,
-
-  CONSTRAINT audit_entries_operation_check CHECK (
-    operation IN ('INSERT', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'VERSION_TRANSITION', 'CALCULATION_RUN', 'ACCOUNT_LOCKOUT', 'EXPORT_DOWNLOAD')
-  )
+  audit_note      TEXT
 );
 
 COMMENT ON TABLE audit_entries IS 'Append-only audit log. Application role has INSERT+SELECT only — no UPDATE or DELETE permitted. 7-year retention per NFR 11.5. Archived to cold storage after 3 years.';
@@ -1465,7 +1439,7 @@ COMMENT ON COLUMN audit_entries.user_id IS 'User who performed the action. NULL 
 COMMENT ON COLUMN audit_entries.user_email IS 'Denormalized email at the time of the event. Preserved even if user record changes or is deactivated. Ensures audit durability.';
 COMMENT ON COLUMN audit_entries.table_name IS 'Name of the database table affected by the operation.';
 COMMENT ON COLUMN audit_entries.record_id IS 'Primary key of the affected record. NULL for non-record operations (LOGIN, LOGOUT).';
-COMMENT ON COLUMN audit_entries.operation IS 'Type of audited event: INSERT, UPDATE, DELETE (data ops), LOGIN, LOGOUT (auth events), VERSION_TRANSITION (status changes), CALCULATION_RUN (engine executions), ACCOUNT_LOCKOUT (account locked after 5 failed attempts — NFR 11.3.2), EXPORT_DOWNLOAD (file download event — NFR 11.10).';
+COMMENT ON COLUMN audit_entries.operation IS 'Type of audited event (audit_operation ENUM): INSERT, UPDATE, DELETE (data ops), LOGIN, LOGOUT (auth events), VERSION_TRANSITION (status changes), CALCULATION_RUN (engine executions), ACCOUNT_LOCKOUT (account locked after 5 failed attempts — NFR 11.3.2), EXPORT_DOWNLOAD (file download event — NFR 11.10). See also 05_security.md §Audit Logging.';
 COMMENT ON COLUMN audit_entries.old_values IS 'JSONB snapshot of the record before modification. NULL for INSERT and LOGIN/LOGOUT operations.';
 COMMENT ON COLUMN audit_entries.new_values IS 'JSONB snapshot of the record after modification. NULL for DELETE and LOGIN/LOGOUT operations.';
 COMMENT ON COLUMN audit_entries.ip_address IS 'Client IP address at the time of the event. INET type for efficient storage and query.';
@@ -1499,7 +1473,7 @@ CREATE INDEX audit_entries_operation_idx ON audit_entries (operation);
 
 ---
 
-### Table 21: system_config
+### Table 20: system_config
 
 Key-value store for global system parameters. Single source of truth for rates, thresholds, and configuration values used across all calculation engines.
 
@@ -1563,7 +1537,7 @@ INSERT INTO system_config (key, value, description, data_type) VALUES
 
 ---
 
-### Table 22: calculation_audit_log
+### Table 21: calculation_audit_log
 
 Tracks every calculation engine run with input snapshots, output summaries, timing, and status. Separate from audit_entries — this table is specifically for calculation reproducibility and debugging (NFR 11.12).
 
@@ -1613,7 +1587,7 @@ CREATE INDEX calc_audit_user_id_idx ON calculation_audit_log (user_id);
 
 ---
 
-### Table 23: export_jobs
+### Table 22: export_jobs
 
 Tracks asynchronous export operations (Excel, PDF, CSV). Jobs are queued, processed by the worker container, and expire after 1 hour. Job records are retained for 30 days.
 
@@ -1673,7 +1647,7 @@ CREATE TRIGGER export_jobs_updated_at_trigger
 
 ---
 
-### Table 24: other_operating_costs
+### Table 23: other_operating_costs
 
 Input table for non-staff operating expenses (facilities, utilities, materials, D&A, finance items). Provides the source data for `monthly_budget_summary.other_operating_expenses`, `depreciation_amortization`, and `net_finance_income` populated by the P&L Engine. Added to resolve S-06 (missing P&L input source).
 
@@ -1736,7 +1710,7 @@ CREATE TRIGGER other_operating_costs_updated_at_trigger
 
 ---
 
-### Table 25: pdpl_consent_records
+### Table 24: pdpl_consent_records
 
 PDPL Article 11 compliance: records employee consent for processing of personal data (salary, HR data). Consent grant and withdrawal events are captured as separate rows for an immutable audit trail. Added to resolve S-05.
 
@@ -1789,7 +1763,7 @@ CREATE INDEX pdpl_consent_employee_type_idx ON pdpl_consent_records (employee_id
 
 ---
 
-### Table 26: pdpl_data_requests
+### Table 25: pdpl_data_requests
 
 PDPL Article 12–14 compliance: tracks data subject access requests (DSAR), correction requests, and deletion requests. The 30-day fulfilment window (NFR 11.7) is enforced by setting `due_by` at insert time. Added to resolve S-18.
 
@@ -1847,7 +1821,7 @@ CREATE TRIGGER pdpl_data_requests_updated_at_trigger
 
 ## 5.2 Data Flows
 
-This section documents the four critical calculation flows that transform input data into financial outputs. Each flow is triggered explicitly by the user (architectural decision D-004) and executes within a single PostgreSQL transaction.
+This section documents the five critical calculation flows that transform input data into financial outputs. Each flow is triggered explicitly by the user (architectural decision D-004) and executes within a single PostgreSQL transaction.
 
 **Guard: IMPORTED versions reject calculation engines.** Before any calculation engine flow (Flows 1–4) executes, the API checks `budget_versions.data_source`. If `data_source = 'IMPORTED'`, all three calculation endpoints (`POST /calculate/revenue`, `/calculate/staffing`, `/calculate/pnl`) return `409 Conflict` with: "Version uses imported data — calculation engine is disabled for this version."
 
@@ -1996,7 +1970,6 @@ This section documents the four critical calculation flows that transform input 
 | `export_jobs` (files) | 1 hour (download expiry) | N/A | Files deleted after 24 hours |
 | `export_jobs` (records) | 30 days | N/A | Records purged after 30 days |
 | `calculation_audit_log` | 2 years | Cold storage | 5 years |
-| `enrollment_historical` | Until v1.1 | Removed on deprecation | Superseded by Actual budget_versions in Phase 2 |
 
 ### Delete Policy
 
@@ -2034,10 +2007,9 @@ Enrollment data crosses academic year boundaries. Academic years at EFIR span tw
 
 The import UI must ask the user to confirm which academic year they are uploading and which fiscal year + period it maps to. The `actuals_import_log.academic_year_label`, `target_fiscal_year`, and `target_period` columns capture this explicitly for the audit trail.
 
-**Trend analysis query (replaces `enrollment_historical` after Phase 2 migration):**
+**Trend analysis query:**
 
 ```sql
--- Replaces: SELECT * FROM enrollment_historical WHERE grade_level = 'CP'
 SELECT bv.fiscal_year, eh.academic_period, eh.grade_level, eh.headcount
 FROM enrollment_headcount eh
 JOIN budget_versions bv ON eh.version_id = bv.id
@@ -2110,7 +2082,7 @@ This merge is performed at the API layer. No additional database tables are requ
 | 2 | `02_EFIR_DHG_FY2026_v1.xlsx` | DHG grilles, FTE calculations |
 | 3 | `EFIR_Staff_Costs_Budget_FY2026_V3.xlsx` | Employee records, salary components, statutory costs |
 | 4 | `EFIR_Consolidated_Monthly_Budget_FY2026.xlsx` | P&L consolidation, IFRS mapping |
-| 5 | `enrollment_2021-22.csv` through `enrollment_2025-26.csv` | 5 years historical enrollment — imported as Actual budget_versions (type='Actual', data_source='IMPORTED'), not into `enrollment_historical` |
+| 5 | `enrollment_2021-22.csv` through `enrollment_2025-26.csv` | 5 years historical enrollment — imported as Actual budget_versions (type='Actual', data_source='IMPORTED') |
 
 ### Source -> Target Mapping
 

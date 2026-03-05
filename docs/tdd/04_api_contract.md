@@ -20,7 +20,8 @@ BudFin exposes a RESTful JSON API with URL-based versioning under the `/api/v1/`
 | Date format | ISO 8601 (`YYYY-MM-DDTHH:mm:ssZ`) everywhere |
 | Request content type | `application/json` (except file uploads: `multipart/form-data`) |
 | Auth header | `Authorization: Bearer <access_token>` on all protected endpoints |
-| Rate limiting | 100 requests/minute per authenticated user via `express-rate-limit` |
+| JWT signing algorithm | RS256 (asymmetric). Private key path: `JWT_PRIVATE_KEY_PATH`. Public key path: `JWT_PUBLIC_KEY_PATH`. See `05_security.md §7.1`. |
+| Rate limiting | 100 requests/minute per authenticated user via `@fastify/rate-limit` |
 | OpenAPI spec | Auto-generated from Zod schemas via `zod-to-openapi`; served at `/api/openapi.json` |
 | Swagger UI | Available at `/api/docs` in development environment only |
 
@@ -67,7 +68,7 @@ BudFin uses a dual-token authentication pattern:
 
 | Token | Type | TTL | Transport | Storage |
 | --- | --- | --- | --- | --- |
-| Access token | JWT (HS256) | 30 minutes | `Authorization: Bearer` header | Client memory only |
+| Access token | JWT (RS256) | 30 minutes | `Authorization: Bearer` header | Client memory only |
 | Refresh token | Opaque random string (64 hex chars) | 8 hours | HTTP-only cookie | `refresh_tokens` table |
 
 **JWT access token payload:**
@@ -1358,36 +1359,64 @@ Scenario comparison view (FR-SCN-004, FR-SCN-006). Returns Base, Optimistic, and
 
 #### GET /api/v1/versions/:versionId/dashboard
 
-KPI widgets for the version dashboard (FR-DSH-001 through FR-DSH-005).
+Returns aggregated dashboard data for all 4 KPI cards, chart data, alerts, and a stale flag in a single response (FR-DSH-001 through FR-DSH-005). Designed to avoid N+1 requests from the dashboard UI.
 
-**RBAC:** All authenticated.
+**RBAC:** All authenticated (Admin, BudgetOwner, Editor, Viewer).
+
+**Path params:**
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `versionId` | UUID | Yes | Budget version identifier |
+
+**Query params:** None.
+
+**Request body:** None.
 
 **Response 200:**
 
 ```json
 {
-  "total_revenue_ht": "string (decimal)",
-  "total_students_ay1": "number",
-  "total_students_ay2": "number",
-  "school_utilization_pct": "string (percentage)",
-  "discount_rate_pct": "string (percentage)",
-  "ebitda": "string (decimal)",
-  "net_profit": "string (decimal)",
-  "capacity_alerts": [
+  "kpi": {
+    "totalBudget": "string (decimal, e.g. \"1250000.0000\")",
+    "enrollmentCount": "number",
+    "costPerStudent": "string (decimal, e.g. \"3654.9700\")",
+    "variancePercent": "string (decimal, e.g. \"-2.30\")"
+  },
+  "charts": {
+    "monthlyTrend": [
+      {
+        "month": "string (YYYY-MM)",
+        "budget": "string (decimal)",
+        "actual": "string (decimal)"
+      }
+    ],
+    "categoryBreakdown": [
+      {
+        "category": "string",
+        "amount": "string (decimal)",
+        "percent": "string (decimal)"
+      }
+    ]
+  },
+  "alerts": [
     {
-      "grade_level": "string",
-      "status": "OVER|NEAR_CAP|OK|UNDER",
-      "utilization_pct": "string (percentage)"
+      "type": "string (e.g. \"variance_threshold\")",
+      "message": "string",
+      "severity": "warning|critical|info"
     }
   ],
-  "enrollment_trend": [
-    {
-      "academic_year": "string",
-      "total_students": "number"
-    }
-  ]
+  "staleAt": "string (ISO 8601, nullable)"
 }
 ```
+
+**Error responses:**
+
+| Status | Code | Condition |
+| --- | --- | --- |
+| 401 | UNAUTHORIZED | Missing or invalid access token |
+| 403 | FORBIDDEN | User role lacks access to this version |
+| 404 | VERSION_NOT_FOUND | No version with this ID |
 
 ---
 

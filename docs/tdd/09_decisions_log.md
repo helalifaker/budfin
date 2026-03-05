@@ -245,7 +245,7 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 
 **Context:** The application needs a database access layer with strong TypeScript integration and support for PostgreSQL DECIMAL types.
 
-**Decision:** Prisma 5 as the ORM for all database access.
+**Decision:** Prisma 6 as the ORM for all database access.
 
 **Rationale:**
 
@@ -260,7 +260,12 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 - **Drizzle ORM:** Newer with a less mature ecosystem; Decimal support is less proven in production.
 - **Raw SQL (pg driver):** No type safety; significantly more boilerplate; audit logging requires manual wrapping of every write operation.
 
-**Consequences:** Prisma generates a client that must be regenerated after schema changes (`prisma generate`). Prisma migrations are forward-only by design — rollback requires a `pg_dump` restore, which is acceptable per the disaster recovery plan in Section 8 (`06_infrastructure.md`).
+**Consequences:** Prisma generates a client that must be regenerated after schema changes (`prisma generate`). Prisma 6 migrations are forward-only by design — rollback requires a `pg_dump` restore, which is acceptable per the disaster recovery plan in Section 8 (`06_infrastructure.md`).
+
+**Prisma 6 Breaking Changes (relevant to BudFin):**
+1. `Buffer` → `Uint8Array`: All binary columns (e.g., `*_encrypted BYTEA`) use `Uint8Array` in the generated client, not `Buffer`.
+2. `NotFoundError` removed: Use `PrismaClientKnownRequestError` with code `P2025` instead.
+3. Implicit many-to-many `_id` fields renamed: Check generated schema if m-n relations added.
 
 ---
 

@@ -43,15 +43,15 @@ BudFin adopts a **monolithic SPA + REST API** architecture. The system is not de
 
 | Decision | Choice | Alternatives Rejected | Rationale |
 | --- | --- | --- | --- |
-| Backend runtime | Node.js 22 LTS + TypeScript 6 | Python/FastAPI, Java/Spring Boot | Decimal.js ecosystem for TC-001; Prisma ORM native Decimal type; full-stack TypeScript consistency; Node 20 EOL April 2026 |
+| Backend runtime | Node.js 22 LTS + TypeScript 5.9.3 (pinned — ADR-013) | Python/FastAPI, Java/Spring Boot | Decimal.js ecosystem for TC-001; Prisma ORM native Decimal type; full-stack TypeScript consistency; Node 20 EOL April 2026 |
 | Database | PostgreSQL 16 | MySQL 8, SQLite | pgcrypto for PDPL field encryption; native DECIMAL(15,4) per TC-003; JSONB audit log; row-level security primitives; superior Prisma integration |
 | Decimal library | Decimal.js 10.6.x | big.js, native Number | TC-001 compliance; arbitrary precision; actively maintained; works in Node.js; Prisma Decimal compatibility |
 | ORM | Prisma 6 | TypeORM, Drizzle, raw SQL | Native Decimal type; type-safe migrations; typed client generation; audit middleware via $extends |
 | Frontend | React 19 + Vite 7 + TypeScript | Next.js, Vue.js | Modern SSR not needed (internal tool, no SEO); Vite fast dev cycle; TypeScript safety on financial data |
 | UI component library | shadcn/ui + Tailwind CSS 4 | MUI, Chakra UI | WCAG AA compliant; copy-paste components on Radix UI; CSS-first Tailwind v4 with Oxide engine |
-| Data grid | TanStack Table v8 + TanStack Virtual v3 | AG Grid Community | Headless table logic paired with shadcn/ui Table components; virtual scrolling via @tanstack/react-virtual; integrates with Tailwind v4 |
+| Data grid | TanStack Table v8 (no virtual scrolling — ADR-016) | AG Grid Community | Headless table logic paired with shadcn/ui Table components; server-side pagination for audit log; integrates with Tailwind v4 |
 | Excel export | ExcelJS | SheetJS (xlsx) | Server-side xlsx generation; formula preservation; column width/formatting per NFR 11.10; active maintenance |
-| PDF export | Puppeteer (headless Chrome) | PDFKit, jsPDF | CSS-formatted P&L reports; page breaks; headers/footers; WYSIWYG fidelity |
+| PDF export | @react-pdf/renderer v4.3 (ADR-014) | Puppeteer, PDFKit, jsPDF | React-PDF document components; A4 landscape for P&L; no Chromium dependency; < 50 MB RAM per job |
 | Authentication | JWT + bcrypt cost 12 | Server-side sessions, OAuth | Stateless tokens; bcrypt cost 12 per NFR 11.3.1; refresh token rotation; horizontal scale-ready |
 | Deployment | Single Docker Compose stack | Kubernetes, bare metal | Single-school; on-premise/private cloud KSA per PDPL SA-008; no orchestration overhead |
 | YEARFRAC | Custom server-side function | Excel-compatible library | TC-002 US 30/360 algorithm exactly; validated against 168 employee records |
@@ -195,7 +195,7 @@ The system defines four trust levels in descending order of privilege. The full 
                            │ HTTPS / REST JSON (/api/v1/)
 ┌──────────────────────────▼──────────────────────────────────────────┐
 │  APPLICATION LAYER                                                  │
-│  Node.js 22 + TypeScript 6 + Fastify 5                              │
+│  Node.js 22 + TypeScript 5.9.3 (pinned) + Fastify 5                 │
 │  Auth Middleware | RBAC Guards | Route Handlers | Zod Validation    │
 │  Winston Logger | prom-client Metrics | Request ID Middleware       │
 └──────────────────────────┬──────────────────────────────────────────┘
@@ -206,7 +206,7 @@ The system defines four trust levels in descending order of privilege. The full 
 │  ├── Revenue Engine      ├── DHG Engine                             │
 │  ├── Staff Cost Engine   └── P&L Engine                             │
 │  Version Manager | Audit Logger ($extends middleware)               │
-│  Export Service (ExcelJS / Puppeteer / fast-csv)                    │
+│  Export Service (ExcelJS / @react-pdf/renderer / fast-csv)          │
 │  Data Import Service (two-phase validation + commit)                │
 └──────────────────────────┬──────────────────────────────────────────┘
                            │ Prisma ORM
@@ -220,16 +220,16 @@ The system defines four trust levels in descending order of privilege. The full 
                            │
 ┌──────────────────────────▼──────────────────────────────────────────┐
 │  INFRASTRUCTURE                                                     │
-│  Docker Compose: nginx | api | db | worker                         │
+│  Docker Compose: nginx | api | db                (ADR-015 — worker in-process) │
 │  GitHub Actions CI/CD | pg_dump backups | UptimeRobot monitoring    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Presentation Layer.** The React 19 SPA is the sole user interface. It communicates with the backend exclusively through REST API calls over HTTPS. TanStack Table v8 (headless) combined with shadcn/ui `<Table>` components and `@tanstack/react-virtual` v3 renders financial data tables with keyboard navigation and virtual scrolling. Recharts provides visualization for dashboards. Tailwind CSS v4 handles all layout and styling. Decimal.js is used on the client side solely for display formatting — rounding monetary values to 2 decimal places (round-half-up) for presentation per TC-004. No financial calculations are performed client-side.
+**Presentation Layer.** The React 19 SPA is the sole user interface. It communicates with the backend exclusively through REST API calls over HTTPS. TanStack Table v8 (headless) combined with shadcn/ui `<Table>` components renders financial data tables with keyboard navigation and server-side pagination (ADR-016 — no virtual scrolling). Recharts provides visualization for dashboards. Tailwind CSS v4 handles all layout and styling. Decimal.js is used on the client side solely for display formatting — rounding monetary values to 2 decimal places (round-half-up) for presentation per TC-004. No financial calculations are performed client-side.
 
 **Application Layer.** Fastify 5 handles HTTP routing, request parsing, and response serialization. Every request passes through authentication middleware (JWT verification), RBAC guards (role and permission checks), and Zod schema validation before reaching a route handler. Winston provides structured JSON logging with a correlation `requestId` propagated through all log entries for a given request. The `prom-client` library exposes Prometheus-compatible metrics for latency percentiles and error rates.
 
-**Domain / Service Layer.** This is the core of the system. The calculation engine is implemented as pure TypeScript functions operating on Decimal.js values. Each engine (Revenue, DHG, Staff Cost, P&L) is a self-contained module with explicit inputs and outputs. Calculations are always explicitly invoked (never triggered by implicit events — this is architectural decision D-004) via command objects: `CalculateRevenueCommand`, `CalculateDHGCommand`, `CalculateStaffCostsCommand`, `CalculateConsolidatedPLCommand`. The Version Manager handles version creation, cloning (snapshot copy), status transitions, and locking. The Audit Logger, implemented as Prisma `$extends` middleware, intercepts every write operation and appends an entry to the audit trail automatically. The Export Service generates Excel (ExcelJS), PDF (Puppeteer), and CSV (fast-csv) outputs. The Data Import Service validates uploaded CSV/xlsx files in two phases (structural validation, then business rule validation) before committing data.
+**Domain / Service Layer.** This is the core of the system. The calculation engine is implemented as pure TypeScript functions operating on Decimal.js values. Each engine (Revenue, DHG, Staff Cost, P&L) is a self-contained module with explicit inputs and outputs. Calculations are always explicitly invoked (never triggered by implicit events — this is architectural decision D-004) via command objects: `CalculateRevenueCommand`, `CalculateDHGCommand`, `CalculateStaffCostsCommand`, `CalculateConsolidatedPLCommand`. The Version Manager handles version creation, cloning (snapshot copy), status transitions, and locking. The Audit Logger, implemented as Prisma `$extends` middleware, intercepts every write operation and appends an entry to the audit trail automatically. The Export Service generates Excel (ExcelJS), PDF (@react-pdf/renderer — ADR-014), and CSV (fast-csv) outputs. The Data Import Service validates uploaded CSV/xlsx files in two phases (structural validation, then business rule validation) before committing data.
 
 **Data Layer.** PostgreSQL 16 stores all persistent state. The schema enforces decimal precision at the column level per TC-003. PII fields in the `employees` table are encrypted at rest using pgcrypto (AES-256) per PDPL requirements. The `audit_entries` table is append-only — no UPDATE or DELETE operations are permitted, enforced by a database trigger. The `calculation_audit_log` captures the inputs, outputs, and intermediate values of every calculation run for reproducibility and debugging.
 
