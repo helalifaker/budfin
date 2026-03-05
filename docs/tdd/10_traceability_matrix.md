@@ -267,6 +267,33 @@ This appendix maps every functional requirement from PRD v2.0 to the TDD design 
 
 ---
 
+## Epic 13 — Infrastructure & CI/CD (Implementation Traceability)
+
+This section maps each Epic 13 story to its implementation files, test files, and verification status. Epic 13 stories implement non-functional requirements (NFRs) rather than functional requirements (FRs).
+
+| AC-ID | Story # | Description | Spec File | Implementation File(s) | Test File | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-15-01 | #15 | DB extensions created on init | 06_infrastructure.md | db/init/01-extensions.sql | apps/api/src/db-init.test.ts | PASS |
+| AC-15-02 | #15 | DB roles created on init | 06_infrastructure.md | db/init/02-roles.sql | apps/api/src/db-init.test.ts | PASS |
+| AC-16-01 | #16 | Secrets generation script | 05_security.md | scripts/generate-secrets.sh | apps/api/src/generate-secrets.test.ts | PASS |
+| AC-17-01 | #17 | Structured Winston logging | 06_infrastructure.md | apps/api/src/lib/logger.ts | apps/api/src/lib/logger.test.ts | PASS |
+| AC-17-02 | #17 | Logging Fastify plugin | 06_infrastructure.md | apps/api/src/plugins/logging.ts | apps/api/src/plugins/logging.test.ts | PASS |
+| AC-18-01 | #18 | CI pipeline with parallel jobs | 06_infrastructure.md | .github/workflows/ci.yml | apps/api/src/ci-pipeline.test.ts | PASS |
+| AC-18-02 | #18 | Lint workflow | 06_infrastructure.md | .github/workflows/lint.yml | apps/api/src/ci-pipeline.test.ts | PASS |
+| AC-19-01 | #19 | Database backup script | 06_infrastructure.md | scripts/backup.sh | apps/api/src/backup-scripts.test.ts | PASS |
+| AC-19-02 | #19 | Database restore script | 06_infrastructure.md | scripts/restore.sh | apps/api/src/backup-scripts.test.ts | PASS |
+| AC-20-01 | #20 | Vacuum maintenance script | 06_infrastructure.md | scripts/maintenance/vacuum.sh | apps/api/src/maintenance-scripts.test.ts | PASS |
+| AC-20-02 | #20 | Reindex maintenance script | 06_infrastructure.md | scripts/maintenance/reindex.sh | apps/api/src/maintenance-scripts.test.ts | PASS |
+| AC-21-01 | #21 | Nginx SSL hardening config | 06_infrastructure.md | nginx/nginx.conf | apps/api/src/nginx-config.test.ts | PASS |
+| AC-21-02 | #21 | mkcert dev setup script | 06_infrastructure.md | scripts/setup-mkcert.sh | apps/api/src/nginx-config.test.ts | PASS |
+| AC-22-01 | #22 | Health endpoint with DB check | 06_infrastructure.md | apps/api/src/routes/health.ts | apps/api/src/health.test.ts | PASS |
+| AC-23-01 | #23 | prom-client metrics plugin | 06_infrastructure.md | apps/api/src/plugins/metrics.ts | apps/api/src/plugins/metrics.test.ts | PASS |
+| AC-23-02 | #23 | Metrics route endpoint | 06_infrastructure.md | apps/api/src/routes/metrics.ts | apps/api/src/routes/metrics.test.ts | PASS |
+| AC-24-01 | #24 | Docker hardening (non-root, read-only, limits) | 06_infrastructure.md | docker-compose.prod.yml | apps/api/src/docker-hardening.test.ts | PASS |
+| AC-24-02 | #24 | Dev Docker Compose | 06_infrastructure.md | docker-compose.dev.yml | apps/api/src/docker-hardening.test.ts | PASS |
+
+---
+
 ## Coverage Summary
 
 | Domain | MUST | SHOULD | COULD | Total |
@@ -284,6 +311,7 @@ This appendix maps every functional requirement from PRD v2.0 to the TDD design 
 | Audit Trail | 3 | 0 | 0 | 3 |
 | Dashboard | 0 | 5 | 0 | 5 |
 | Input Management | 3 | 0 | 0 | 3 |
-| **Total** | **111** | **20** | **10** | **141** |
+| Infrastructure & CI/CD (Epic 13) | 10 stories | 18 ACs | All PASS | 18 |
+| **Total** | **111** | **20** | **10** | **141 + 18 infra** |
 
 All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned.

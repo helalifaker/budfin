@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, vi, beforeAll } from 'vitest';
 
 vi.mock('./lib/prisma.js', () => ({
 	prisma: {
-		$queryRawUnsafe: vi.fn().mockResolvedValue([{ '?column?': 1 }]),
+		$queryRaw: vi.fn().mockResolvedValue([{ '?column?': 1 }]),
 		$disconnect: vi.fn(),
 	},
 }));
@@ -51,7 +51,7 @@ describe('GET /api/v1/health', () => {
 describe('GET /api/v1/health (DB unreachable)', () => {
 	it('returns 503 with degraded status when DB fails', async () => {
 		const { prisma } = await import('./lib/prisma.js');
-		vi.mocked(prisma.$queryRawUnsafe).mockRejectedValueOnce(new Error('Connection refused'));
+		vi.mocked(prisma.$queryRaw).mockRejectedValueOnce(new Error('Connection refused'));
 
 		const app = await buildApp();
 		const response = await app.inject({

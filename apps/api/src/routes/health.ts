@@ -20,7 +20,7 @@ export async function healthRoutes(app: FastifyInstance) {
 
 		try {
 			const { prisma } = await import('../lib/prisma.js');
-			await prisma.$queryRawUnsafe('SELECT 1');
+			await prisma.$queryRaw`SELECT 1`;
 			dbStatus = 'connected';
 		} catch {
 			// DB is unreachable
