@@ -17,12 +17,11 @@ describe('generate-secrets.sh', () => {
 		expect(existsSync(resolve(secretsDir, '.gitkeep'))).toBe(true);
 	});
 
-	it('script generates EC P-256 key pair via openssl', () => {
+	it('script generates RSA-2048 key pair via openssl', () => {
 		const content = readFileSync(scriptPath, 'utf-8');
-		expect(content).toContain('openssl ecparam');
-		expect(content).toContain('prime256v1');
-		expect(content).toContain('openssl pkcs8 -topk8 -nocrypt');
-		expect(content).toContain('openssl ec -in');
+		expect(content).toContain('openssl genpkey');
+		expect(content).toContain('rsa_keygen_bits:2048');
+		expect(content).toContain('openssl pkey -in');
 		expect(content).toContain('-pubout');
 	});
 
