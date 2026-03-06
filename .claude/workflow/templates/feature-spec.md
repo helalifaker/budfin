@@ -67,6 +67,22 @@ List every new table, column, constraint, or index. Leave blank if none.
 
 > BudFin targets desktop (1280px min). Note any specific layout considerations.
 
+## UI Compliance (required for all stories with frontend changes)
+
+Read before implementing any new screen:
+
+- `docs/ui-ux-spec/00-global-framework.md` — tokens, shells, shared components
+- `docs/ui-ux-spec/00b-workspace-philosophy.md` — two-shell architecture, progressive disclosure
+- `docs/ui-ux-spec/NN-<module>.md` — module-specific layout, columns, interactions
+
+Acceptance criteria:
+
+- [ ] All interactive elements use shadcn/ui primitives from `apps/web/src/components/ui/`
+- [ ] Design tokens used (`var(--token)`) — no arbitrary hex colors
+- [ ] Mutation feedback via `toast` — no inline div status messages
+- [ ] Async states via `Skeleton` / `TableSkeleton` — no plain "Loading..." text
+- [ ] Table ARIA: `role="table"` (read-only) or `role="grid"` (inline-editable only)
+
 ## Edge Cases Cross-Reference
 
 From `docs/edge-cases/` — list all relevant cases for this feature.

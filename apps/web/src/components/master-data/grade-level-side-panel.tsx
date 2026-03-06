@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import { useUpdateGradeLevel, type GradeLevel } from '../../hooks/use-grade-levels';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { toast } from '../ui/toast-state';
 
 const baseGradeLevelSchema = z.object({
 	maxClassSize: z.coerce.number().int().min(1).max(50),
@@ -105,17 +108,21 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 				plafondPct: String(data.plafondPct),
 				displayOrder: data.displayOrder,
 			},
-			{ onSuccess: onClose }
+			{
+				onSuccess: () => {
+					onClose();
+					toast.success('Grade level updated');
+				},
+				onError: () => {
+					toast.error('Failed to update grade level');
+				},
+			}
 		);
 	}
 
 	if (!open || !gradeLevel) return null;
 
-	const inputClass = (hasError: boolean) =>
-		cn(
-			'mt-1 block w-full rounded-md border px-3 py-2 text-sm',
-			hasError ? 'border-red-500' : 'border-slate-300'
-		);
+	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-red-500');
 
 	return (
 		<>
@@ -141,12 +148,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							<label htmlFor="gl-code" className="block text-sm font-medium">
 								Grade Code
 							</label>
-							<input
+							<Input
 								id="gl-code"
 								type="text"
 								disabled
 								value={gradeLevel.gradeCode}
-								className="mt-1 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+								className="mt-1 bg-slate-50 text-slate-500"
 							/>
 						</div>
 
@@ -154,12 +161,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							<label htmlFor="gl-name" className="block text-sm font-medium">
 								Grade Name
 							</label>
-							<input
+							<Input
 								id="gl-name"
 								type="text"
 								disabled
 								value={gradeLevel.gradeName}
-								className="mt-1 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+								className="mt-1 bg-slate-50 text-slate-500"
 							/>
 						</div>
 
@@ -167,12 +174,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							<label htmlFor="gl-band" className="block text-sm font-medium">
 								Band
 							</label>
-							<input
+							<Input
 								id="gl-band"
 								type="text"
 								disabled
 								value={gradeLevel.band}
-								className="mt-1 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+								className="mt-1 bg-slate-50 text-slate-500"
 							/>
 						</div>
 
@@ -180,7 +187,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							<label htmlFor="maxClassSize" className="block text-sm font-medium">
 								Max Class Size
 							</label>
-							<input
+							<Input
 								id="maxClassSize"
 								type="number"
 								min={1}
@@ -198,7 +205,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								<label htmlFor="plancherPct" className="block text-sm font-medium">
 									Plancher %
 								</label>
-								<input
+								<Input
 									id="plancherPct"
 									type="number"
 									step="0.01"
@@ -215,7 +222,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								<label htmlFor="ciblePct" className="block text-sm font-medium">
 									Cible %
 								</label>
-								<input
+								<Input
 									id="ciblePct"
 									type="number"
 									step="0.01"
@@ -232,7 +239,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								<label htmlFor="plafondPct" className="block text-sm font-medium">
 									Plafond %
 								</label>
-								<input
+								<Input
 									id="plafondPct"
 									type="number"
 									step="0.01"
@@ -251,7 +258,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							<label htmlFor="displayOrder" className="block text-sm font-medium">
 								Display Order
 							</label>
-							<input
+							<Input
 								id="displayOrder"
 								type="number"
 								min={0}
@@ -266,35 +273,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 				</div>
 
 				<div className="flex justify-end gap-3 border-t px-6 py-4">
-					<button
-						type="button"
-						onClick={onClose}
-						className={cn(
-							'rounded-md border border-slate-300',
-							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50'
-						)}
-					>
+					<Button type="button" variant="outline" onClick={onClose}>
 						Cancel
-					</button>
-					<button
-						type="submit"
-						form="grade-form"
-						disabled={updateMutation.isPending}
-						className={cn(
-							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white',
-							'hover:bg-blue-700',
-							'disabled:opacity-50'
-						)}
-					>
-						{updateMutation.isPending ? 'Saving...' : 'Save'}
-					</button>
-				</div>
-
-				<div aria-live="polite" className="sr-only">
-					{updateMutation.isError && 'Failed to update grade level'}
-					{updateMutation.isSuccess && 'Grade level updated'}
+					</Button>
+					<Button type="submit" form="grade-form" loading={updateMutation.isPending}>
+						Save
+					</Button>
 				</div>
 			</div>
 		</>

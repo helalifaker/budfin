@@ -1,31 +1,56 @@
 import { NavLink, Outlet } from 'react-router';
+import type { LucideIcon } from 'lucide-react';
+import {
+	Landmark,
+	GraduationCap,
+	Database,
+	SlidersHorizontal,
+	Layers,
+	Calendar,
+	Users,
+	ScrollText,
+	Settings,
+} from 'lucide-react';
+import { cn } from '../lib/cn';
 import { useAuthStore } from '../stores/auth-store';
 
-const navGroups = [
+interface NavItem {
+	to: string;
+	label: string;
+	Icon: LucideIcon;
+}
+
+interface NavGroup {
+	label: string;
+	adminOnly?: boolean;
+	items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
 	{
 		label: 'Master Data',
 		items: [
-			{ to: '/master-data/accounts', label: 'Accounts & Centers' },
-			{ to: '/master-data/academic', label: 'Academic Years & Grades' },
-			{ to: '/master-data/reference', label: 'Reference Data' },
-			{ to: '/master-data/assumptions', label: 'Assumptions' },
+			{ to: '/master-data/accounts', label: 'Accounts & Centers', Icon: Landmark },
+			{ to: '/master-data/academic', label: 'Academic Years & Grades', Icon: GraduationCap },
+			{ to: '/master-data/reference', label: 'Reference Data', Icon: Database },
+			{ to: '/master-data/assumptions', label: 'Assumptions', Icon: SlidersHorizontal },
 		],
 	},
 	{
 		label: 'Planning',
 		adminOnly: true,
 		items: [
-			{ to: '/versions', label: 'Version Management' },
-			{ to: '/fiscal-periods', label: 'Fiscal Periods' },
+			{ to: '/versions', label: 'Version Management', Icon: Layers },
+			{ to: '/fiscal-periods', label: 'Fiscal Periods', Icon: Calendar },
 		],
 	},
 	{
 		label: 'Admin',
 		adminOnly: true,
 		items: [
-			{ to: '/admin/users', label: 'Users' },
-			{ to: '/admin/audit', label: 'Audit Trail' },
-			{ to: '/admin/settings', label: 'Settings' },
+			{ to: '/admin/users', label: 'Users', Icon: Users },
+			{ to: '/admin/audit', label: 'Audit Trail', Icon: ScrollText },
+			{ to: '/admin/settings', label: 'Settings', Icon: Settings },
 		],
 	},
 ];
@@ -38,14 +63,21 @@ export function ManagementShell() {
 
 	return (
 		<div className="min-h-screen flex bg-gray-50">
-			<aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
-				<div className="px-4 py-4 border-b border-gray-200">
-					<span className="text-lg font-bold text-gray-900">BudFin</span>
+			<aside
+				className="w-60 flex flex-col"
+				style={{
+					background: 'var(--sidebar-bg)',
+					borderRight: '1px solid var(--sidebar-border)',
+					boxShadow: 'var(--shadow-sidebar)',
+				}}
+			>
+				<div className="px-4 py-4" style={{ borderBottom: '1px solid var(--sidebar-border)' }}>
+					<span className="text-lg font-bold text-white">BudFin</span>
 				</div>
 				<nav className="flex-1 px-2 py-4 space-y-6" aria-label="Primary">
 					{visibleGroups.map((group) => (
 						<section key={group.label} aria-label={group.label}>
-							<h2 className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+							<h2 className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
 								{group.label}
 							</h2>
 							<div className="space-y-1">
@@ -54,11 +86,15 @@ export function ManagementShell() {
 										key={item.to}
 										to={item.to}
 										className={({ isActive }) =>
-											`block rounded px-3 py-2 text-sm font-medium ${
-												isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-											}`
+											cn(
+												'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+												isActive
+													? 'bg-[#1E40AF] text-white'
+													: 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
+											)
 										}
 									>
+										<item.Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
 										{item.label}
 									</NavLink>
 								))}

@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
 import {
@@ -15,6 +16,27 @@ import {
 } from '../../hooks/use-accounts';
 import type { Account, AccountFilters } from '../../hooks/use-accounts';
 import { AccountsSidePanel } from '../../components/master-data/accounts-side-panel';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from '../../components/ui/alert-dialog';
+import {
+	DropdownMenu,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+} from '../../components/ui/dropdown-menu';
+import { TableSkeleton } from '../../components/ui/skeleton';
+import { toast } from '../../components/ui/toast-state';
 
 const columnHelper = createColumnHelper<Account>();
 
@@ -87,16 +109,16 @@ export function AccountsPage() {
 	const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
 	const [deleteConfirmCode, setDeleteConfirmCode] = useState('');
 
-	// Status message
-	const [statusMessage, setStatusMessage] = useState<{
-		text: string;
-		type: 'success' | 'error';
-	} | null>(null);
-
-	const showStatus = useCallback((text: string, type: 'success' | 'error') => {
-		setStatusMessage({ text, type });
-		setTimeout(() => setStatusMessage(null), 4000);
-	}, []);
+	// 200ms-delayed skeleton
+	const [showSkeleton, setShowSkeleton] = useState(false);
+	useEffect(() => {
+		if (!isLoading) {
+			setShowSkeleton(false);
+			return;
+		}
+		const t = setTimeout(() => setShowSkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [isLoading]);
 
 	const handleSave = useCallback(
 		(formData: Record<string, unknown>) => {
@@ -117,10 +139,10 @@ export function AccountsPage() {
 						onSuccess: () => {
 							setPanelOpen(false);
 							setEditingAccount(null);
-							showStatus('Account updated successfully', 'success');
+							toast.success('Account updated successfully');
 						},
 						onError: () => {
-							showStatus('Failed to update account', 'error');
+							toast.error('Failed to update account');
 						},
 					}
 				);
@@ -138,16 +160,16 @@ export function AccountsPage() {
 					{
 						onSuccess: () => {
 							setPanelOpen(false);
-							showStatus('Account created successfully', 'success');
+							toast.success('Account created successfully');
 						},
 						onError: () => {
-							showStatus('Failed to create account', 'error');
+							toast.error('Failed to create account');
 						},
 					}
 				);
 			}
 		},
-		[editingAccount, updateMutation, createMutation, showStatus]
+		[editingAccount, updateMutation, createMutation]
 	);
 
 	const handleDelete = useCallback(() => {
@@ -156,13 +178,13 @@ export function AccountsPage() {
 			onSuccess: () => {
 				setDeleteTarget(null);
 				setDeleteConfirmCode('');
-				showStatus('Account deleted successfully', 'success');
+				toast.success('Account deleted successfully');
 			},
 			onError: () => {
-				showStatus('Failed to delete account', 'error');
+				toast.error('Failed to delete account');
 			},
 		});
-	}, [deleteTarget, deleteConfirmCode, deleteMutation, showStatus]);
+	}, [deleteTarget, deleteConfirmCode, deleteMutation]);
 
 	const columns = useMemo(
 		() => [
@@ -236,25 +258,31 @@ export function AccountsPage() {
 							cell: ({ row }) => {
 								const account = row.original;
 								return (
-									<div className="flex gap-2">
-										<button
-											type="button"
-											className="text-xs text-blue-600 hover:underline"
-											onClick={() => {
-												setEditingAccount(account);
-												setPanelOpen(true);
-											}}
-										>
-											Edit
-										</button>
-										<button
-											type="button"
-											className="text-xs text-red-600 hover:underline"
-											onClick={() => setDeleteTarget(account)}
-										>
-											Delete
-										</button>
-									</div>
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<button
+												type="button"
+												className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+												aria-label={`Actions for ${account.accountCode}`}
+											>
+												<MoreHorizontal className="h-4 w-4 text-slate-500" />
+											</button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent align="end">
+											<DropdownMenuItem
+												onSelect={() => {
+													setEditingAccount(account);
+													setPanelOpen(true);
+												}}
+											>
+												<Pencil className="h-4 w-4" /> Edit
+											</DropdownMenuItem>
+											<DropdownMenuSeparator />
+											<DropdownMenuItem destructive onSelect={() => setDeleteTarget(account)}>
+												<Trash2 className="h-4 w-4" /> Delete
+											</DropdownMenuItem>
+										</DropdownMenuContent>
+									</DropdownMenu>
 								);
 							},
 						}),
@@ -272,42 +300,27 @@ export function AccountsPage() {
 
 	return (
 		<div className="p-6">
-			{/* Status message */}
-			{statusMessage && (
-				<div
-					aria-live="polite"
-					className={cn(
-						'mb-4 rounded-md px-4 py-3 text-sm font-medium',
-						statusMessage.type === 'success'
-							? 'bg-green-50 text-green-800'
-							: 'bg-red-50 text-red-800'
-					)}
-				>
-					{statusMessage.text}
-				</div>
-			)}
-
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
 				<h1 className="mr-auto text-xl font-semibold">Chart of Accounts</h1>
 
-				<input
+				<Input
 					type="search"
 					placeholder="Search accounts..."
 					value={searchInput}
 					onChange={(e) => handleSearchChange(e.target.value)}
-					className={cn(
-						'w-[280px] rounded-md border border-slate-300',
-						'px-3 py-2 text-sm',
-						'placeholder:text-slate-400'
-					)}
+					className="w-[280px]"
 					aria-label="Search accounts"
 				/>
 
 				<select
 					value={typeFilter}
 					onChange={(e) => setTypeFilter(e.target.value)}
-					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
+					className={cn(
+						'flex h-9 rounded-md border border-slate-300 bg-white',
+						'px-3 py-2 text-sm text-slate-900',
+						'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+					)}
 					aria-label="Filter by type"
 				>
 					<option value="">All Types</option>
@@ -320,7 +333,11 @@ export function AccountsPage() {
 				<select
 					value={centerTypeFilter}
 					onChange={(e) => setCenterTypeFilter(e.target.value)}
-					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
+					className={cn(
+						'flex h-9 rounded-md border border-slate-300 bg-white',
+						'px-3 py-2 text-sm text-slate-900',
+						'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+					)}
 					aria-label="Filter by center type"
 				>
 					<option value="">All Center Types</option>
@@ -331,7 +348,11 @@ export function AccountsPage() {
 				<select
 					value={statusFilter}
 					onChange={(e) => setStatusFilter(e.target.value)}
-					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
+					className={cn(
+						'flex h-9 rounded-md border border-slate-300 bg-white',
+						'px-3 py-2 text-sm text-slate-900',
+						'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+					)}
 					aria-label="Filter by status"
 				>
 					<option value="">All Statuses</option>
@@ -340,68 +361,58 @@ export function AccountsPage() {
 				</select>
 
 				{isAdmin && (
-					<button
+					<Button
 						type="button"
-						className={cn(
-							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white hover:bg-blue-700'
-						)}
 						onClick={() => {
 							setEditingAccount(null);
 							setPanelOpen(true);
 						}}
 					>
 						+ Add Account
-					</button>
+					</Button>
 				)}
 			</div>
 
 			{/* Data table */}
-			{isLoading ? (
-				<p className="text-sm text-slate-500">Loading...</p>
-			) : (
-				<div className="overflow-x-auto rounded-lg border">
-					<table role="grid" className="w-full text-left text-sm">
-						<thead className="border-b bg-slate-50">
-							{table.getHeaderGroups().map((hg) => (
-								<tr key={hg.id} role="row">
-									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											role="columnheader"
-											className="px-4 py-3 font-medium text-slate-600"
-										>
-											{flexRender(header.column.columnDef.header, header.getContext())}
-										</th>
+			<div className="overflow-x-auto rounded-lg border">
+				<table role="table" className="w-full text-left text-sm">
+					<thead className="border-b bg-slate-50">
+						{table.getHeaderGroups().map((hg) => (
+							<tr key={hg.id}>
+								{hg.headers.map((header) => (
+									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+										{flexRender(header.column.columnDef.header, header.getContext())}
+									</th>
+								))}
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{isLoading && showSkeleton ? (
+							<TableSkeleton rows={10} cols={columns.length} />
+						) : table.getRowModel().rows.length === 0 ? (
+							<tr>
+								<td
+									colSpan={columns.length}
+									className="px-4 py-8 text-center text-sm text-slate-500"
+								>
+									No accounts found
+								</td>
+							</tr>
+						) : (
+							table.getRowModel().rows.map((row) => (
+								<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+									{row.getVisibleCells().map((cell) => (
+										<td key={cell.id} className="px-4 py-3">
+											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										</td>
 									))}
 								</tr>
-							))}
-						</thead>
-						<tbody>
-							{table.getRowModel().rows.length === 0 ? (
-								<tr>
-									<td
-										colSpan={columns.length}
-										className="px-4 py-8 text-center text-sm text-slate-500"
-									>
-										No accounts found
-									</td>
-								</tr>
-							) : (
-								table.getRowModel().rows.map((row) => (
-									<tr key={row.id} role="row" className="border-b last:border-0 hover:bg-slate-50">
-										{row.getVisibleCells().map((cell) => (
-											<td key={cell.id} role="gridcell" aria-readonly="true" className="px-4 py-3">
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
-											</td>
-										))}
-									</tr>
-								))
-							)}
-						</tbody>
-					</table>
-				</div>
-			)}
+							))
+						)}
+					</tbody>
+				</table>
+			</div>
 
 			{/* Side panel */}
 			<AccountsSidePanel
@@ -416,85 +427,55 @@ export function AccountsPage() {
 			/>
 
 			{/* Delete confirmation dialog */}
-			{deleteTarget && (
-				<>
-					<div className="fixed inset-0 z-40 bg-black/30" aria-hidden="true" />
-					<div
-						role="alertdialog"
-						aria-modal="true"
-						aria-labelledby="delete-dialog-title"
-						aria-describedby="delete-dialog-desc"
-						className={cn(
-							'fixed left-1/2 top-1/2 z-50 w-[420px]',
-							'-translate-x-1/2 -translate-y-1/2',
-							'rounded-lg bg-white p-6 shadow-xl'
-						)}
-					>
-						<h3 id="delete-dialog-title" className="text-lg font-semibold text-slate-900">
-							Delete Account
-						</h3>
-						<p id="delete-dialog-desc" className="mt-2 text-sm text-slate-600">
+			<AlertDialog
+				open={!!deleteTarget}
+				onOpenChange={(v) => {
+					if (!v) {
+						setDeleteTarget(null);
+						setDeleteConfirmCode('');
+					}
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Account</AlertDialogTitle>
+						<AlertDialogDescription>
 							This action cannot be undone. Type{' '}
-							<strong className="font-semibold">{deleteTarget.accountCode}</strong> to confirm
+							<strong className="font-semibold">{deleteTarget?.accountCode}</strong> to confirm
 							deletion.
-						</p>
-						<div className="mt-4">
-							<label htmlFor="delete-confirm" className="sr-only">
-								Type account code to confirm
-							</label>
-							<input
-								id="delete-confirm"
-								type="text"
-								value={deleteConfirmCode}
-								onChange={(e) => setDeleteConfirmCode(e.target.value)}
-								placeholder={deleteTarget.accountCode}
-								className={cn(
-									'block w-full rounded-md border border-slate-300',
-									'px-3 py-2 text-sm'
-								)}
-								autoFocus
-								onKeyDown={(e) => {
-									if (e.key === 'Escape') {
-										setDeleteTarget(null);
-										setDeleteConfirmCode('');
-									}
-								}}
-							/>
-						</div>
-						<div className="mt-4 flex justify-end gap-3">
-							<button
-								type="button"
-								onClick={() => {
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<div className="mt-2">
+						<label htmlFor="delete-confirm" className="sr-only">
+							Type account code to confirm
+						</label>
+						<Input
+							id="delete-confirm"
+							type="text"
+							value={deleteConfirmCode}
+							onChange={(e) => setDeleteConfirmCode(e.target.value)}
+							placeholder={deleteTarget?.accountCode ?? ''}
+							autoFocus
+							onKeyDown={(e) => {
+								if (e.key === 'Escape') {
 									setDeleteTarget(null);
 									setDeleteConfirmCode('');
-								}}
-								className={cn(
-									'rounded-md border border-slate-300',
-									'px-4 py-2 text-sm font-medium',
-									'hover:bg-slate-50'
-								)}
-							>
-								Cancel
-							</button>
-							<button
-								type="button"
-								disabled={
-									deleteConfirmCode !== deleteTarget.accountCode || deleteMutation.isPending
 								}
-								onClick={handleDelete}
-								className={cn(
-									'rounded-md bg-red-600 px-4 py-2 text-sm',
-									'font-medium text-white',
-									'hover:bg-red-700',
-									'disabled:opacity-50'
-								)}
-							>
-								{deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-							</button>
-						</div>
+							}}
+						/>
 					</div>
-				</>
-			)}
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							className="bg-red-600 hover:bg-red-700"
+							disabled={deleteConfirmCode !== deleteTarget?.accountCode || deleteMutation.isPending}
+							onClick={handleDelete}
+						>
+							{deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

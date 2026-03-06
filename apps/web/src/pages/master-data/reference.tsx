@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Table as TanstackTable } from '@tanstack/react-table';
 import {
 	createColumnHelper,
@@ -7,6 +7,7 @@ import {
 	getFilteredRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
 import {
@@ -27,6 +28,27 @@ import type { Nationality, Tariff, Department, BandMapping } from '../../hooks/u
 import { NationalitySidePanel } from '../../components/master-data/nationality-side-panel';
 import { TariffSidePanel } from '../../components/master-data/tariff-side-panel';
 import { DepartmentSidePanel } from '../../components/master-data/department-side-panel';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from '../../components/ui/alert-dialog';
+import {
+	DropdownMenu,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+} from '../../components/ui/dropdown-menu';
+import { TableSkeleton } from '../../components/ui/skeleton';
+import { toast } from '../../components/ui/toast-state';
 
 // --- Delete Confirmation Dialog ---
 
@@ -47,7 +69,6 @@ function DeleteConfirmDialog({
 	onCancel,
 	loading,
 }: DeleteDialogProps) {
-	const dialogRef = useRef<HTMLDivElement>(null);
 	const [confirmText, setConfirmText] = useState('');
 
 	useEffect(() => {
@@ -55,102 +76,41 @@ function DeleteConfirmDialog({
 		if (open) setConfirmText('');
 	}, [open]);
 
-	useEffect(() => {
-		if (!open) return;
-		const dialog = dialogRef.current;
-		if (!dialog) return;
-
-		const focusable = dialog.querySelectorAll<HTMLElement>(
-			'input, button, [tabindex]:not([tabindex="-1"])'
-		);
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
-		first?.focus();
-
-		function handleKeyDown(e: KeyboardEvent) {
-			if (e.key === 'Escape') {
-				onCancel();
-				return;
-			}
-			if (e.key !== 'Tab') return;
-			if (e.shiftKey && document.activeElement === first) {
-				e.preventDefault();
-				last?.focus();
-			} else if (!e.shiftKey && document.activeElement === last) {
-				e.preventDefault();
-				first?.focus();
-			}
-		}
-
-		dialog.addEventListener('keydown', handleKeyDown);
-		return () => dialog.removeEventListener('keydown', handleKeyDown);
-	}, [open, onCancel]);
-
-	if (!open) return null;
-
 	return (
-		<>
-			<div className="fixed inset-0 z-50 bg-black/30" onClick={onCancel} aria-hidden="true" />
-			<div
-				ref={dialogRef}
-				role="alertdialog"
-				aria-modal="true"
-				aria-label={`Delete ${entityType}`}
-				aria-describedby="delete-desc"
-				className={cn(
-					'fixed left-1/2 top-1/2 z-50 w-[420px] -translate-x-1/2 -translate-y-1/2',
-					'rounded-lg bg-white p-6 shadow-xl'
-				)}
-			>
-				<h3 className="text-lg font-semibold text-red-700">Delete {entityType}</h3>
-				<p id="delete-desc" className="mt-2 text-sm text-slate-600">
-					This action cannot be undone. Type <strong className="font-mono">{entityCode}</strong> to
-					confirm deletion.
-				</p>
-				<div className="mt-4">
+		<AlertDialog open={open} onOpenChange={(v) => !v && onCancel()}>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle className="text-red-700">Delete {entityType}</AlertDialogTitle>
+					<AlertDialogDescription>
+						This action cannot be undone. Type <strong className="font-mono">{entityCode}</strong>{' '}
+						to confirm deletion.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<div className="mt-2">
 					<label htmlFor="delete-confirm" className="sr-only">
 						Type code to confirm
 					</label>
-					<input
+					<Input
 						id="delete-confirm"
 						type="text"
 						value={confirmText}
 						onChange={(e) => setConfirmText(e.target.value)}
 						placeholder={entityCode}
-						className={cn(
-							'block w-full rounded-md border border-slate-300',
-							'px-3 py-2 text-sm font-mono'
-						)}
+						className="font-mono"
 					/>
 				</div>
-				<div className="mt-4 flex justify-end gap-3">
-					<button
-						type="button"
-						onClick={onCancel}
-						className={cn(
-							'rounded-md border border-slate-300',
-							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50'
-						)}
-					>
-						Cancel
-					</button>
-					<button
-						type="button"
+				<AlertDialogFooter>
+					<AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+					<AlertDialogAction
+						className="bg-red-600 hover:bg-red-700"
 						disabled={confirmText !== entityCode || loading}
 						onClick={onConfirm}
-						className={cn(
-							'rounded-md bg-red-600 px-4 py-2 text-sm',
-							'font-medium text-white',
-							'hover:bg-red-700',
-							'disabled:opacity-50'
-						)}
 					>
 						{loading ? 'Deleting...' : 'Delete'}
-					</button>
-				</div>
-			</div>
-		</>
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
 	);
 }
 
@@ -190,10 +150,18 @@ const deptColumnHelper = createColumnHelper<Department>();
 
 // --- Generic Data Grid ---
 
-function DataGrid<T>({ table }: { table: TanstackTable<T> }) {
+function DataGrid<T>({
+	table,
+	isLoading,
+	showSkeleton,
+}: {
+	table: TanstackTable<T>;
+	isLoading: boolean;
+	showSkeleton: boolean;
+}) {
 	return (
 		<div className="overflow-x-auto rounded-lg border">
-			<table role="grid" className="w-full text-left text-sm">
+			<table role="table" className="w-full text-left text-sm">
 				<thead className="border-b bg-slate-50">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
@@ -206,7 +174,9 @@ function DataGrid<T>({ table }: { table: TanstackTable<T> }) {
 					))}
 				</thead>
 				<tbody>
-					{table.getRowModel().rows.length === 0 ? (
+					{isLoading && showSkeleton ? (
+						<TableSkeleton rows={10} cols={table.getAllColumns().length} />
+					) : table.getRowModel().rows.length === 0 ? (
 						<tr>
 							<td
 								colSpan={table.getAllColumns().length}
@@ -291,31 +261,40 @@ export function ReferencePage() {
 					if (!isAdmin) return null;
 					const item = row.original;
 					return (
-						<div className="flex gap-2">
-							<button
-								type="button"
-								className="text-xs text-blue-600 hover:underline"
-								onClick={() => {
-									setEditingNationality(item);
-									setPanelOpen(true);
-								}}
-							>
-								Edit
-							</button>
-							<button
-								type="button"
-								className="text-xs text-red-600 hover:underline"
-								onClick={() =>
-									setDeleteTarget({
-										type: 'nationality',
-										code: item.code,
-										id: item.id,
-									})
-								}
-							>
-								Delete
-							</button>
-						</div>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+									aria-label={`Actions for ${item.code}`}
+								>
+									<MoreHorizontal className="h-4 w-4 text-slate-500" />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem
+									onSelect={() => {
+										setEditingNationality(item);
+										setPanelOpen(true);
+									}}
+								>
+									<Pencil className="h-4 w-4" /> Edit
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									destructive
+									onSelect={() =>
+										setDeleteTarget({
+											type: 'nationality',
+											code: item.code,
+											id: item.id,
+										})
+									}
+								>
+									<Trash2 className="h-4 w-4" /> Delete
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					);
 				},
 			}),
@@ -356,31 +335,40 @@ export function ReferencePage() {
 					if (!isAdmin) return null;
 					const item = row.original;
 					return (
-						<div className="flex gap-2">
-							<button
-								type="button"
-								className="text-xs text-blue-600 hover:underline"
-								onClick={() => {
-									setEditingTariff(item);
-									setPanelOpen(true);
-								}}
-							>
-								Edit
-							</button>
-							<button
-								type="button"
-								className="text-xs text-red-600 hover:underline"
-								onClick={() =>
-									setDeleteTarget({
-										type: 'tariff',
-										code: item.code,
-										id: item.id,
-									})
-								}
-							>
-								Delete
-							</button>
-						</div>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+									aria-label={`Actions for ${item.code}`}
+								>
+									<MoreHorizontal className="h-4 w-4 text-slate-500" />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem
+									onSelect={() => {
+										setEditingTariff(item);
+										setPanelOpen(true);
+									}}
+								>
+									<Pencil className="h-4 w-4" /> Edit
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									destructive
+									onSelect={() =>
+										setDeleteTarget({
+											type: 'tariff',
+											code: item.code,
+											id: item.id,
+										})
+									}
+								>
+									<Trash2 className="h-4 w-4" /> Delete
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					);
 				},
 			}),
@@ -421,31 +409,40 @@ export function ReferencePage() {
 					if (!isAdmin) return null;
 					const item = row.original;
 					return (
-						<div className="flex gap-2">
-							<button
-								type="button"
-								className="text-xs text-blue-600 hover:underline"
-								onClick={() => {
-									setEditingDepartment(item);
-									setPanelOpen(true);
-								}}
-							>
-								Edit
-							</button>
-							<button
-								type="button"
-								className="text-xs text-red-600 hover:underline"
-								onClick={() =>
-									setDeleteTarget({
-										type: 'department',
-										code: item.code,
-										id: item.id,
-									})
-								}
-							>
-								Delete
-							</button>
-						</div>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+									aria-label={`Actions for ${item.code}`}
+								>
+									<MoreHorizontal className="h-4 w-4 text-slate-500" />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem
+									onSelect={() => {
+										setEditingDepartment(item);
+										setPanelOpen(true);
+									}}
+								>
+									<Pencil className="h-4 w-4" /> Edit
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									destructive
+									onSelect={() =>
+										setDeleteTarget({
+											type: 'department',
+											code: item.code,
+											id: item.id,
+										})
+									}
+								>
+									<Trash2 className="h-4 w-4" /> Delete
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					);
 				},
 			}),
@@ -487,10 +484,26 @@ export function ReferencePage() {
 						version: editingNationality.version,
 						...data,
 					},
-					{ onSuccess: handleClosePanel }
+					{
+						onSuccess: () => {
+							handleClosePanel();
+							toast.success('Nationality updated successfully');
+						},
+						onError: () => {
+							toast.error('Failed to update nationality');
+						},
+					}
 				);
 			} else {
-				createNat.mutate(data, { onSuccess: handleClosePanel });
+				createNat.mutate(data, {
+					onSuccess: () => {
+						handleClosePanel();
+						toast.success('Nationality created successfully');
+					},
+					onError: () => {
+						toast.error('Failed to create nationality');
+					},
+				});
 			}
 		},
 		[editingNationality, createNat, updateNat, handleClosePanel]
@@ -505,10 +518,26 @@ export function ReferencePage() {
 						version: editingTariff.version,
 						...data,
 					},
-					{ onSuccess: handleClosePanel }
+					{
+						onSuccess: () => {
+							handleClosePanel();
+							toast.success('Tariff updated successfully');
+						},
+						onError: () => {
+							toast.error('Failed to update tariff');
+						},
+					}
 				);
 			} else {
-				createTariff.mutate(data, { onSuccess: handleClosePanel });
+				createTariff.mutate(data, {
+					onSuccess: () => {
+						handleClosePanel();
+						toast.success('Tariff created successfully');
+					},
+					onError: () => {
+						toast.error('Failed to create tariff');
+					},
+				});
 			}
 		},
 		[editingTariff, createTariff, updateTariff, handleClosePanel]
@@ -523,10 +552,26 @@ export function ReferencePage() {
 						version: editingDepartment.version,
 						...data,
 					},
-					{ onSuccess: handleClosePanel }
+					{
+						onSuccess: () => {
+							handleClosePanel();
+							toast.success('Department updated successfully');
+						},
+						onError: () => {
+							toast.error('Failed to update department');
+						},
+					}
 				);
 			} else {
-				createDept.mutate(data, { onSuccess: handleClosePanel });
+				createDept.mutate(data, {
+					onSuccess: () => {
+						handleClosePanel();
+						toast.success('Department created successfully');
+					},
+					onError: () => {
+						toast.error('Failed to create department');
+					},
+				});
 			}
 		},
 		[editingDepartment, createDept, updateDept, handleClosePanel]
@@ -534,13 +579,21 @@ export function ReferencePage() {
 
 	const handleDeleteConfirm = useCallback(() => {
 		if (!deleteTarget) return;
-		const onSuccess = () => setDeleteTarget(null);
+		const onSuccess = () => {
+			setDeleteTarget(null);
+			toast.success(
+				`${deleteTarget.type.charAt(0).toUpperCase() + deleteTarget.type.slice(1)} deleted successfully`
+			);
+		};
+		const onError = () => {
+			toast.error(`Failed to delete ${deleteTarget.type}`);
+		};
 		if (deleteTarget.type === 'nationality') {
-			deleteNat.mutate(deleteTarget.id, { onSuccess });
+			deleteNat.mutate(deleteTarget.id, { onSuccess, onError });
 		} else if (deleteTarget.type === 'tariff') {
-			deleteTariff.mutate(deleteTarget.id, { onSuccess });
+			deleteTariff.mutate(deleteTarget.id, { onSuccess, onError });
 		} else {
-			deleteDept.mutate(deleteTarget.id, { onSuccess });
+			deleteDept.mutate(deleteTarget.id, { onSuccess, onError });
 		}
 	}, [deleteTarget, deleteNat, deleteTariff, deleteDept]);
 
@@ -550,6 +603,17 @@ export function ReferencePage() {
 			: activeTab === 'tariffs'
 				? tariffLoading
 				: deptLoading;
+
+	// 200ms-delayed skeleton
+	const [showSkeleton, setShowSkeleton] = useState(false);
+	useEffect(() => {
+		if (!isLoading) {
+			setShowSkeleton(false);
+			return;
+		}
+		const t = setTimeout(() => setShowSkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [isLoading]);
 
 	return (
 		<div className="p-6">
@@ -595,42 +659,31 @@ export function ReferencePage() {
 						<label htmlFor="ref-search" className="sr-only">
 							Search
 						</label>
-						<input
+						<Input
 							id="ref-search"
 							type="text"
 							placeholder="Search..."
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
-							className={cn(
-								'rounded-md border border-slate-300',
-								'px-3 py-2 text-sm w-64',
-								'placeholder:text-slate-400'
-							)}
+							className="w-64"
 						/>
 					</div>
 					{isAdmin && (
-						<button
-							type="button"
-							onClick={handleAddNew}
-							className={cn(
-								'rounded-md bg-blue-600 px-4 py-2 text-sm',
-								'font-medium text-white hover:bg-blue-700'
-							)}
-						>
+						<Button type="button" onClick={handleAddNew}>
 							+ Add New
-						</button>
+						</Button>
 					)}
 				</div>
 
 				{/* Table */}
-				{isLoading ? (
-					<p className="text-sm text-slate-500">Loading...</p>
-				) : (
-					<>
-						{activeTab === 'nationalities' && <DataGrid table={natTable} />}
-						{activeTab === 'tariffs' && <DataGrid table={tariffTable} />}
-						{activeTab === 'departments' && <DataGrid table={deptTable} />}
-					</>
+				{activeTab === 'nationalities' && (
+					<DataGrid table={natTable} isLoading={natLoading} showSkeleton={showSkeleton} />
+				)}
+				{activeTab === 'tariffs' && (
+					<DataGrid table={tariffTable} isLoading={tariffLoading} showSkeleton={showSkeleton} />
+				)}
+				{activeTab === 'departments' && (
+					<DataGrid table={deptTable} isLoading={deptLoading} showSkeleton={showSkeleton} />
 				)}
 			</div>
 

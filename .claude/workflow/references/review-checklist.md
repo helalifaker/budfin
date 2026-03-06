@@ -5,6 +5,26 @@
 
 ---
 
+## UI/UX Spec Compliance
+
+> Severity: **Blocker** on all items. No story may merge with any of these failing.
+
+- **Blocker** — Sidebar uses CSS token `var(--sidebar-bg)` (#0F172A) — NOT `bg-white` or `bg-gray-*`
+- **Blocker** — All `<button>` elements use `<Button>` from `components/ui/button`
+- **Blocker** — All `<input>` elements use `<Input>` from `components/ui/input`
+- **Blocker** — All `<select>` elements use `<Select>` from `components/ui/select`
+- **Blocker** — Dropdown menus use `<DropdownMenu>` from `components/ui/dropdown-menu`
+- **Blocker** — Confirmation modals use `<AlertDialog>` from `components/ui/alert-dialog`
+- **Blocker** — Form modals use `<Dialog>` from `components/ui/dialog`
+- **Blocker** — Mutation feedback uses `toast.success()` / `toast.error()` from `components/ui/toast-state`
+- **Blocker** — Loading states use `<TableSkeleton>` or `<Skeleton>` from `components/ui/skeleton`
+- **Blocker** — Data tables: `role="table"`, cells: `role="cell"` (NOT `role="grid"` / `role="gridcell"` unless cells are editable)
+- **Blocker** — Colors reference CSS custom properties from `index.css :root` or matching Tailwind values
+- **Blocker** — Lucide icons used for all icon needs (no inline SVG except in `skeleton.tsx` spinner)
+- **Blocker** — Module-specific UI spec consulted: `docs/ui-ux-spec/NN-<module>.md`
+
+---
+
 ## Correctness
 
 - **Blocker** — All acceptance criteria from the spec are implemented

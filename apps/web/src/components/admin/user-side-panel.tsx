@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 
 const createSchema = z.object({
 	email: z.string().email('Invalid email'),
@@ -117,6 +119,13 @@ export function UserSidePanel({
 
 	if (!open) return null;
 
+	const selectClassName = cn(
+		'flex h-9 w-full rounded-md border border-slate-300 bg-white',
+		'px-3 py-2 text-sm text-slate-900',
+		'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+		'disabled:cursor-not-allowed disabled:opacity-50'
+	);
+
 	return (
 		<>
 			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
@@ -148,14 +157,10 @@ export function UserSidePanel({
 								<label htmlFor="email" className="block text-sm font-medium">
 									Email
 								</label>
-								<input
+								<Input
 									id="email"
 									type="email"
-									className={cn(
-										'mt-1 block w-full rounded-md border',
-										'px-3 py-2 text-sm',
-										createForm.formState.errors.email ? 'border-red-500' : 'border-slate-300'
-									)}
+									className={cn('mt-1', createForm.formState.errors.email && 'border-red-500')}
 									{...createForm.register('email')}
 								/>
 								{createForm.formState.errors.email && (
@@ -168,14 +173,10 @@ export function UserSidePanel({
 								<label htmlFor="password" className="block text-sm font-medium">
 									Password
 								</label>
-								<input
+								<Input
 									id="password"
 									type="password"
-									className={cn(
-										'mt-1 block w-full rounded-md border',
-										'px-3 py-2 text-sm',
-										createForm.formState.errors.password ? 'border-red-500' : 'border-slate-300'
-									)}
+									className={cn('mt-1', createForm.formState.errors.password && 'border-red-500')}
 									{...createForm.register('password')}
 								/>
 								{createForm.formState.errors.password && (
@@ -190,10 +191,7 @@ export function UserSidePanel({
 								</label>
 								<select
 									id="role"
-									className={cn(
-										'mt-1 block w-full rounded-md border',
-										'border-slate-300 px-3 py-2 text-sm'
-									)}
+									className={cn(selectClassName, 'mt-1')}
 									{...createForm.register('role')}
 								>
 									{ROLES.map((r) => (
@@ -216,10 +214,7 @@ export function UserSidePanel({
 								</label>
 								<select
 									id="edit-role"
-									className={cn(
-										'mt-1 block w-full rounded-md border',
-										'border-slate-300 px-3 py-2 text-sm'
-									)}
+									className={cn(selectClassName, 'mt-1')}
 									{...editForm.register('role')}
 								>
 									{ROLES.map((r) => (
@@ -256,30 +251,12 @@ export function UserSidePanel({
 				</div>
 
 				<div className="border-t px-6 py-4 flex justify-end gap-3">
-					<button
-						type="button"
-						onClick={onClose}
-						className={cn(
-							'rounded-md border border-slate-300',
-							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50'
-						)}
-					>
+					<Button type="button" variant="outline" onClick={onClose}>
 						Cancel
-					</button>
-					<button
-						type="submit"
-						form="user-form"
-						disabled={loading}
-						className={cn(
-							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white',
-							'hover:bg-blue-700',
-							'disabled:opacity-50'
-						)}
-					>
+					</Button>
+					<Button type="submit" form="user-form" loading={loading}>
 						{loading ? 'Saving...' : 'Save'}
-					</button>
+					</Button>
 				</div>
 			</div>
 		</>

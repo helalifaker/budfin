@@ -1,1 +1,83 @@
 @import 'tailwindcss';
+
+:root {
+	/* Sidebar */
+	--sidebar-bg: #0f172a;
+	--sidebar-bg-hover: #1e293b;
+	--sidebar-bg-active: #1e40af;
+	--sidebar-text: #cbd5e1;
+	--sidebar-text-active: #ffffff;
+	--sidebar-icon: #94a3b8;
+	--sidebar-icon-active: #ffffff;
+	--sidebar-border: #334155;
+
+	/* Workspace */
+	--workspace-bg: #ffffff;
+	--workspace-bg-subtle: #f8fafc;
+	--workspace-bg-muted: #f1f5f9;
+	--workspace-border: #e2e8f0;
+	--workspace-border-strong: #cbd5e1;
+
+	/* Text */
+	--text-primary: #0f172a;
+	--text-secondary: #475569;
+	--text-muted: #94a3b8;
+
+	/* Version type */
+	--version-budget: #2563eb;
+	--version-budget-bg: #dbeafe;
+	--version-actual: #16a34a;
+	--version-actual-bg: #dcfce7;
+	--version-forecast: #ea580c;
+	--version-forecast-bg: #fff7ed;
+
+	/* Status */
+	--status-draft: #4b5563;
+	--status-published: #2563eb;
+	--status-locked: #7c3aed;
+	--status-archived: #6b7280;
+
+	/* Semantic */
+	--color-success: #16a34a;
+	--color-success-bg: #f0fdf4;
+	--color-warning: #d97706;
+	--color-warning-bg: #fffbeb;
+	--color-error: #dc2626;
+	--color-error-bg: #fef2f2;
+	--color-info: #2563eb;
+	--color-info-bg: #eff6ff;
+	--color-stale: #f59e0b;
+
+	/* Editable cells */
+	--cell-editable-bg: #fefce8;
+	--cell-editable-focus: #2563eb;
+	--cell-readonly-bg: #f8fafc;
+	--cell-error-border: #dc2626;
+
+	/* Typography */
+	--font-family: Inter, system-ui, -apple-system, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+	/* Spacing (4px grid) */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 20px;
+	--space-6: 24px;
+	--space-8: 32px;
+	--space-10: 40px;
+
+	/* Border radii */
+	--radius-none: 0px;
+	--radius-sm: 4px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
+	--radius-xl: 12px;
+
+	/* Shadows */
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+	--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+	--shadow-sidebar: 4px 0 6px -1px rgba(0, 0, 0, 0.1);
+}

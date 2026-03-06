@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { Input } from '../ui/input';
+import { cn } from '../../lib/cn';
 
 export interface AuditFilterValues {
 	from?: string;
@@ -30,6 +32,13 @@ const OPERATIONS = [
 
 const ENTITIES = ['users', 'refresh_tokens', 'system_config'];
 
+const selectClassName = cn(
+	'flex h-9 w-full rounded-md border border-slate-300 bg-white',
+	'px-3 py-2 text-sm text-slate-900',
+	'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+	'disabled:cursor-not-allowed disabled:opacity-50'
+);
+
 export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 	const [filters, setFilters] = useState<AuditFilterValues>({});
 	const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -57,10 +66,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				<label htmlFor="filter-from" className="block text-xs font-medium text-slate-600">
 					From
 				</label>
-				<input
+				<Input
 					id="filter-from"
 					type="date"
-					className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+					className="mt-1"
 					onChange={(e) => update('from', e.target.value)}
 				/>
 			</div>
@@ -68,10 +77,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				<label htmlFor="filter-to" className="block text-xs font-medium text-slate-600">
 					To
 				</label>
-				<input
+				<Input
 					id="filter-to"
 					type="date"
-					className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+					className="mt-1"
 					onChange={(e) => update('to', e.target.value)}
 				/>
 			</div>
@@ -79,11 +88,11 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				<label htmlFor="filter-user" className="block text-xs font-medium text-slate-600">
 					User ID
 				</label>
-				<input
+				<Input
 					id="filter-user"
 					type="text"
 					placeholder="e.g. 1"
-					className="mt-1 w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+					className="mt-1 w-20"
 					onChange={(e) => update('user_id', e.target.value)}
 				/>
 			</div>
@@ -93,7 +102,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				</label>
 				<select
 					id="filter-action"
-					className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+					className={cn(selectClassName, 'mt-1')}
 					onChange={(e) => update('operation', e.target.value)}
 				>
 					<option value="">All</option>
@@ -110,7 +119,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				</label>
 				<select
 					id="filter-entity"
-					className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+					className={cn(selectClassName, 'mt-1')}
 					onChange={(e) => update('table_name', e.target.value)}
 				>
 					<option value="">All</option>

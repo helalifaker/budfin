@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import { useCreateVersion } from '../../hooks/use-versions';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 
 const createSchema = z.object({
 	name: z.string().min(1, 'Name is required').max(100, 'Name must be ≤ 100 characters'),
@@ -113,15 +115,12 @@ export function CreateVersionPanel({
 									*
 								</span>
 							</label>
-							<input
+							<Input
 								id="cv-name"
 								type="text"
 								aria-required="true"
 								maxLength={100}
-								className={cn(
-									'mt-1 w-full rounded-md border px-3 py-2 text-sm',
-									form.formState.errors.name ? 'border-red-400' : 'border-slate-300'
-								)}
+								className={cn('mt-1', form.formState.errors.name && 'border-red-400')}
 								{...form.register('name')}
 							/>
 							{form.formState.errors.name && (
@@ -141,7 +140,7 @@ export function CreateVersionPanel({
 							<select
 								id="cv-type"
 								aria-required="true"
-								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+								className="mt-1 flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 								{...form.register('type')}
 							>
 								<option value="Budget">Budget</option>
@@ -162,7 +161,7 @@ export function CreateVersionPanel({
 								id="cv-description"
 								rows={3}
 								maxLength={500}
-								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 								{...form.register('description')}
 							/>
 						</div>
@@ -170,25 +169,12 @@ export function CreateVersionPanel({
 				</div>
 
 				<div className="flex items-center justify-end gap-3 border-t px-6 py-4">
-					<button
-						type="button"
-						onClick={onClose}
-						disabled={isPending}
-						className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
-					>
+					<Button variant="outline" onClick={onClose} disabled={isPending}>
 						Cancel
-					</button>
-					<button
-						type="submit"
-						form="create-version-form"
-						disabled={isPending}
-						className={cn(
-							'rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white',
-							'hover:bg-blue-700 disabled:opacity-50'
-						)}
-					>
-						{isPending ? 'Creating...' : 'Create Version'}
-					</button>
+					</Button>
+					<Button type="submit" form="create-version-form" loading={isPending}>
+						Create Version
+					</Button>
 				</div>
 			</div>
 		</>

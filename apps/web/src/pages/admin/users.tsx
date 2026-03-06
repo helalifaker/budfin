@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
 	createColumnHelper,
@@ -6,12 +6,22 @@ import {
 	getCoreRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
 import { useAuthStore } from '../../stores/auth-store';
 import { RoleBadge } from '../../components/admin/role-badge';
 import { StatusBadge } from '../../components/admin/status-badge';
 import { UserSidePanel } from '../../components/admin/user-side-panel';
-import { cn } from '../../lib/cn';
+import { Button } from '../../components/ui/button';
+import { TableSkeleton } from '../../components/ui/skeleton';
+import {
+	DropdownMenu,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+} from '../../components/ui/dropdown-menu';
+import { toast } from '../../components/ui/toast-state';
 
 interface User {
 	id: number;
@@ -58,6 +68,10 @@ export function UsersPage() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['users'] });
 			setPanelOpen(false);
+			toast.success('User created successfully');
+		},
+		onError: () => {
+			toast.error('Failed to create user');
 		},
 	});
 
@@ -70,6 +84,10 @@ export function UsersPage() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['users'] });
 			setPanelOpen(false);
+			toast.success('User updated successfully');
+		},
+		onError: () => {
+			toast.error('Failed to update user');
 		},
 	});
 
@@ -149,40 +167,43 @@ export function UsersPage() {
 				cell: ({ row }) => {
 					const user = row.original;
 					const isSelf = user.id === currentUser?.id;
+					if (isSelf) return null;
 					return (
-						<div className="flex gap-2">
-							{!isSelf && (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
 								<button
 									type="button"
-									className="text-xs text-blue-600 hover:underline"
-									onClick={() => {
+									className="inline-flex h-8 w-8 items-center justify-center
+										rounded-md hover:bg-slate-100"
+									aria-label={`Actions for ${user.email}`}
+								>
+									<MoreHorizontal className="h-4 w-4 text-slate-500" />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem
+									onSelect={() => {
 										setEditingUser(user);
 										setPanelMode('edit');
 										setPanelOpen(true);
 									}}
 								>
 									Edit
-								</button>
-							)}
-							{!isSelf && user.locked_until && (
-								<button
-									type="button"
-									className="text-xs text-amber-600 hover:underline"
-									onClick={() => handleUnlock(user)}
-								>
-									Unlock
-								</button>
-							)}
-							{!isSelf && (
-								<button
-									type="button"
-									className="text-xs text-red-600 hover:underline"
-									onClick={() => handleForceLogout(user)}
-								>
+								</DropdownMenuItem>
+								{user.locked_until && (
+									<>
+										<DropdownMenuSeparator />
+										<DropdownMenuItem onSelect={() => handleUnlock(user)}>
+											Unlock Account
+										</DropdownMenuItem>
+									</>
+								)}
+								<DropdownMenuSeparator />
+								<DropdownMenuItem destructive onSelect={() => handleForceLogout(user)}>
 									Force Logout
-								</button>
-							)}
-						</div>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					);
 				},
 			}),
@@ -196,16 +217,22 @@ export function UsersPage() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
+	const [showSkeleton, setShowSkeleton] = useState(false);
+	useEffect(() => {
+		if (!isLoading) {
+			const t = setTimeout(() => setShowSkeleton(false), 0);
+			return () => clearTimeout(t);
+		}
+		const t = setTimeout(() => setShowSkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [isLoading]);
+
 	return (
 		<div className="p-6">
 			<div className="flex items-center justify-between pb-4">
 				<h1 className="text-xl font-semibold">User Management</h1>
-				<button
+				<Button
 					type="button"
-					className={cn(
-						'rounded-md bg-blue-600 px-4 py-2 text-sm',
-						'font-medium text-white hover:bg-blue-700'
-					)}
 					onClick={() => {
 						setEditingUser(null);
 						setPanelMode('create');
@@ -213,27 +240,27 @@ export function UsersPage() {
 					}}
 				>
 					+ Add User
-				</button>
+				</Button>
 			</div>
 
-			{isLoading ? (
-				<p className="text-sm text-slate-500">Loading...</p>
-			) : (
-				<div className="overflow-x-auto rounded-lg border">
-					<table role="grid" className="w-full text-left text-sm">
-						<thead className="border-b bg-slate-50">
-							{table.getHeaderGroups().map((hg) => (
-								<tr key={hg.id}>
-									{hg.headers.map((header) => (
-										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
-											{flexRender(header.column.columnDef.header, header.getContext())}
-										</th>
-									))}
-								</tr>
-							))}
-						</thead>
-						<tbody>
-							{table.getRowModel().rows.map((row) => (
+			<div className="overflow-x-auto rounded-lg border">
+				<table role="table" className="w-full text-left text-sm">
+					<thead className="border-b bg-slate-50">
+						{table.getHeaderGroups().map((hg) => (
+							<tr key={hg.id}>
+								{hg.headers.map((header) => (
+									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+										{flexRender(header.column.columnDef.header, header.getContext())}
+									</th>
+								))}
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{isLoading && showSkeleton ? (
+							<TableSkeleton rows={5} cols={8} />
+						) : (
+							table.getRowModel().rows.map((row) => (
 								<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
 									{row.getVisibleCells().map((cell) => (
 										<td key={cell.id} className="px-4 py-3">
@@ -241,11 +268,11 @@ export function UsersPage() {
 										</td>
 									))}
 								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
-			)}
+							))
+						)}
+					</tbody>
+				</table>
+			</div>
 
 			<UserSidePanel
 				open={panelOpen}
