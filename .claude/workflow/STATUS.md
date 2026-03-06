@@ -1,10 +1,10 @@
 # BudFin — Current Status
 
-**Phase**: 4 — SPECIFY
-**Current Epic**: None selected — pick next Epic
-**Current Story**: None
+**Phase**: 5 — TDD RED
+**Current Epic**: Epic 11 — Authentication & RBAC
+**Current Story**: #25 (Prisma schema)
 **Last updated**: 2026-03-06
-**Advanced from Phase 7 (Epic 13)**: 2026-03-06
+**Advanced from Phase 4 (Epic 11)**: 2026-03-06
 
 ## Phase History
 
@@ -17,7 +17,8 @@
 | 5 — TDD RED | ✅ Complete | 2026-03-06 |
 | 6 — IMPLEMENT | ✅ Complete | 2026-03-06 |
 | 7 — REVIEW (Epic 13) | ✅ Complete | 2026-03-06 |
-| 4 — SPECIFY (next Epic) | :arrows_counterclockwise: In Progress | — |
+| 4 — SPECIFY (Epic 11) | ✅ Complete | 2026-03-06 |
+| 5 — TDD RED (Epic 11) | 🔄 In Progress | — |
 
 ## Feature Progress
 
@@ -33,7 +34,7 @@
 | 8 | Audit Trail | 2 | Epic Created (#9) |
 | 9 | Dashboard | 2 | Epic Created (#13) |
 | 10 | Version Management | 2 | Epic Created (#14) |
-| 11 | Authentication & RBAC | 2 | Epic Created (#4) |
+| 11 | Authentication & RBAC | 4 | Spec Complete, 10 stories created (#4: #25-#34) |
 | 12 | Data Migration | 2 | Epic Created (#10) |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 

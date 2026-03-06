@@ -4,8 +4,7 @@ import { createLogger } from '../lib/logger.js';
 
 declare module 'fastify' {
 	interface FastifyRequest {
-		logContext?: { requestId: string; userId: string | null };
-		user?: { id?: string };
+		logContext?: { requestId: string; userId: number | null };
 	}
 }
 

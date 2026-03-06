@@ -14,7 +14,7 @@ describe('logging plugin', () => {
 		const app = Fastify({ logger: false });
 		await app.register(logging);
 
-		let capturedContext: { requestId: string; userId: string | null } | undefined;
+		let capturedContext: { requestId: string; userId: number | null } | undefined;
 		app.get('/test', async (request) => {
 			capturedContext = request.logContext;
 			return { ok: true };
