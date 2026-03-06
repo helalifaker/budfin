@@ -10,6 +10,7 @@ export async function contextRoutes(app: FastifyInstance) {
 				email: request.user.email,
 				role: request.user.role,
 			},
+			schoolYear: null,
 			permissions: getPermissionsForRole(request.user.role),
 		}),
 	});

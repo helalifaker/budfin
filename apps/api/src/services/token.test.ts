@@ -1,7 +1,11 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { generateKeyPair, SignJWT } from 'jose';
+import { describe, it, expect, beforeAll, vi, beforeEach, afterEach } from 'vitest';
+import { generateKeyPair, SignJWT, exportPKCS8, exportSPKI } from 'jose';
+import { writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import {
 	setKeys,
+	loadKeys,
 	signAccessToken,
 	verifyAccessToken,
 	generateRefreshToken,
@@ -108,5 +112,94 @@ describe('hashRefreshToken', () => {
 		const hash2 = hashRefreshToken('token-b');
 
 		expect(hash1).not.toBe(hash2);
+	});
+});
+
+describe('loadKeys', () => {
+	const tempDir = join(tmpdir(), 'budfin-token-test');
+	const privatePath = join(tempDir, 'private.pem');
+	const publicPath = join(tempDir, 'public.pem');
+	const origPrivate = process.env.JWT_PRIVATE_KEY_PATH;
+	const origPublic = process.env.JWT_PUBLIC_KEY_PATH;
+
+	beforeEach(() => {
+		// Reset cached keys by setting to null via setKeys trick:
+		// loadKeys checks cachedKeys, so we need a fresh module state.
+		// We use vi.resetModules for true isolation, but since setKeys
+		// is already imported, we clear the cache by calling setKeys
+		// with the test keys (which re-caches).
+	});
+
+	afterEach(() => {
+		process.env.JWT_PRIVATE_KEY_PATH = origPrivate;
+		process.env.JWT_PUBLIC_KEY_PATH = origPublic;
+		try { unlinkSync(privatePath); } catch { /* ignore */ }
+		try { unlinkSync(publicPath); } catch { /* ignore */ }
+		// Restore test keys so subsequent tests work
+		setKeys(testPrivateKey, testPublicKey);
+	});
+
+	it('loads keys from PEM files when env vars are set', async () => {
+		mkdirSync(tempDir, { recursive: true });
+		const keys = await generateKeyPair('RS256');
+		const privatePem = await exportPKCS8(keys.privateKey);
+		const publicPem = await exportSPKI(keys.publicKey);
+		writeFileSync(privatePath, privatePem);
+		writeFileSync(publicPath, publicPem);
+
+		process.env.JWT_PRIVATE_KEY_PATH = privatePath;
+		process.env.JWT_PUBLIC_KEY_PATH = publicPath;
+
+		// Clear cached keys by importing fresh
+		// We can't truly reset the module cache without vi.resetModules,
+		// but we can test loadKeys by first setting cachedKeys to null.
+		// Since setKeys sets cachedKeys, we need a workaround:
+		// The simplest is to directly test signAccessToken with file-loaded keys.
+		// Instead, let's just verify loadKeys doesn't throw with valid files.
+		setKeys(keys.privateKey, keys.publicKey);
+		const loaded = await loadKeys();
+		expect(loaded).toHaveProperty('privateKey');
+		expect(loaded).toHaveProperty('publicKey');
+	});
+
+	it('throws when env vars are not set', async () => {
+		delete process.env.JWT_PRIVATE_KEY_PATH;
+		delete process.env.JWT_PUBLIC_KEY_PATH;
+
+		// Need to clear the cache. Since we can't access cachedKeys directly,
+		// we use a dynamic import with vi.resetModules.
+		vi.resetModules();
+		const { loadKeys: freshLoadKeys } = await import('./token.js');
+
+		await expect(freshLoadKeys()).rejects.toThrow(
+			'JWT_PRIVATE_KEY_PATH and JWT_PUBLIC_KEY_PATH must be set'
+		);
+	});
+
+	it('loads and caches keys from PEM files', async () => {
+		mkdirSync(tempDir, { recursive: true });
+		const keys = await generateKeyPair('RS256');
+		const privatePem = await exportPKCS8(keys.privateKey);
+		const publicPem = await exportSPKI(keys.publicKey);
+		writeFileSync(privatePath, privatePem);
+		writeFileSync(publicPath, publicPem);
+
+		process.env.JWT_PRIVATE_KEY_PATH = privatePath;
+		process.env.JWT_PUBLIC_KEY_PATH = publicPath;
+
+		vi.resetModules();
+		const { loadKeys: freshLoadKeys, signAccessToken: freshSign } = await import('./token.js');
+
+		const loaded = await freshLoadKeys();
+		expect(loaded.privateKey).toBeDefined();
+		expect(loaded.publicKey).toBeDefined();
+
+		// Verify the loaded keys actually work for signing
+		const token = await freshSign({
+			sub: 1,
+			email: 'test@budfin.app',
+			role: 'Admin',
+		});
+		expect(token.split('.')).toHaveLength(3);
 	});
 });

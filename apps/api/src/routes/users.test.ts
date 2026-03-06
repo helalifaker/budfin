@@ -294,5 +294,68 @@ describe('GET /api/v1/context', () => {
 		});
 		expect(body.permissions).toContain('data:view');
 		expect(body.permissions).not.toContain('salary:view');
+		expect(body).toHaveProperty('schoolYear', null);
+	});
+});
+
+describe('POST /api/v1/users — duplicate email', () => {
+	it('returns 409 CONFLICT for existing email', async () => {
+		vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/users',
+			headers: authHeader(token),
+			payload: {
+				email: 'editor@budfin.app',
+				password: 'securepass1',
+				role: 'Viewer',
+			},
+		});
+		expect(res.statusCode).toBe(409);
+		expect(res.json().error).toBe('CONFLICT');
+	});
+});
+
+describe('PATCH /api/v1/users/:id — not found', () => {
+	it('returns 404 NOT_FOUND for unknown user', async () => {
+		vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+		const token = await makeToken({ sub: 1, role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/users/999',
+			headers: authHeader(token),
+			payload: { role: 'Viewer' },
+		});
+		expect(res.statusCode).toBe(404);
+		expect(res.json().error).toBe('NOT_FOUND');
+	});
+});
+
+describe('PATCH /api/v1/users/:id — force_password_reset', () => {
+	it('sets forcePasswordReset and logs audit', async () => {
+		vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+		vi.mocked(prisma.user.update).mockResolvedValue({
+			...mockUser,
+			forcePasswordReset: true,
+		});
+
+		const token = await makeToken({ sub: 1, role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/users/2',
+			headers: authHeader(token),
+			payload: { force_password_reset: true },
+		});
+		expect(res.statusCode).toBe(200);
+
+		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
+		const updateAudit = auditCalls.find(
+			(c) => c[0].data.operation === 'USER_UPDATED',
+		);
+		expect(updateAudit).toBeDefined();
+		expect(updateAudit![0].data.newValues).toMatchObject({
+			forcePasswordReset: true,
+		});
 	});
 });

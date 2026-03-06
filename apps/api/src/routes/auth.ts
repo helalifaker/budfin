@@ -252,7 +252,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			// Look up the token record
 			const existing = await prisma.refreshToken.findFirst({
 				where: { tokenHash },
-				include: { user: true },
+				include: { user: { select: { id: true, email: true, role: true } } },
 			})
 
 			if (!existing) {

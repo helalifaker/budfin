@@ -21,7 +21,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Set<Permission>> = {
 		'data:view', 'data:edit', 'salary:view', 'salary:edit',
 	]),
 	Editor: new Set([
-		'data:view', 'data:edit',
+		'data:view', 'data:edit', 'salary:view',
 	]),
 	Viewer: new Set([
 		'data:view',

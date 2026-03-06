@@ -8,10 +8,12 @@ describe('ROLE_PERMISSIONS', () => {
 		expect(ROLE_PERMISSIONS.Viewer.size).toBe(1);
 	});
 
-	it('Editor can view and edit data', () => {
+	it('Editor can view/edit data and view salaries', () => {
 		expect(ROLE_PERMISSIONS.Editor.has('data:view')).toBe(true);
 		expect(ROLE_PERMISSIONS.Editor.has('data:edit')).toBe(true);
-		expect(ROLE_PERMISSIONS.Editor.has('salary:view')).toBe(false);
+		expect(ROLE_PERMISSIONS.Editor.has('salary:view')).toBe(true);
+		expect(ROLE_PERMISSIONS.Editor.has('salary:edit')).toBe(false);
+		expect(ROLE_PERMISSIONS.Editor.size).toBe(3);
 	});
 
 	it('BudgetOwner has salary access but no admin', () => {
@@ -37,7 +39,8 @@ describe('getPermissionsForRole', () => {
 		const perms = getPermissionsForRole('Editor');
 		expect(perms).toContain('data:view');
 		expect(perms).toContain('data:edit');
-		expect(perms).toHaveLength(2);
+		expect(perms).toContain('salary:view');
+		expect(perms).toHaveLength(3);
 	});
 
 	it('returns all 7 permissions for Admin', () => {
