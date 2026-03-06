@@ -1,10 +1,9 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 11 — Authentication & RBAC
-**Current Story**: All 10 stories complete (#25-#34)
+**Phase**: 4 — SPECIFY
+**Current Epic**: Epic 10 -- Version Management
 **Last updated**: 2026-03-06
-**PR**: #35 (draft, pending review)
+**Note**: Epic order corrected — Epic 10 moved before Epic 1 (version dependency)
 
 ## Phase History
 
@@ -21,6 +20,10 @@
 | 5 — TDD RED (Epic 11) | ✅ Complete | 2026-03-06 |
 | 6 — IMPLEMENT (Epic 11) | ✅ Complete | 2026-03-06 |
 | 7 — REVIEW (Epic 11) | ✅ Complete | 2026-03-06 |
+| 4 — SPECIFY (Epic 7) | ✅ Complete | 2026-03-06 |
+| 5 — TDD RED (Epic 7) | ✅ Complete | 2026-03-06 |
+| 6 — IMPLEMENT (Epic 7) | ✅ Complete | 2026-03-06 |
+| 7 — REVIEW (Epic 7) | ✅ Complete | 2026-03-06 |
 
 ## Feature Progress
 
@@ -32,13 +35,22 @@
 | 4 | Staff Costs | 2 | Epic Created (#8) |
 | 5 | P&L Reporting | 2 | Epic Created (#11) |
 | 6 | Scenario Modeling | 2 | Epic Created (#12) |
-| 7 | Master Data Management | 2 | Epic Created (#5) |
+| 7 | Master Data Management | DONE | All 12 stories complete (12/12) -- 2026-03-06 |
 | 8 | Audit Trail | 2 | Epic Created (#9) |
 | 9 | Dashboard | 2 | Epic Created (#13) |
-| 10 | Version Management | 2 | Epic Created (#14) |
+| 10 | Version Management | 4 | NEXT — spec + stories pending (#14) |
 | 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) -- 2026-03-06 |
 | 12 | Data Migration | 2 | Epic Created (#10) |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
+
+## Implementation Order (corrected 2026-03-06)
+
+```
+13 (DONE) -> 11 (DONE) -> 7 (DONE) -> 10 (NEXT) -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 8 -> 9 -> 12
+```
+
+Rationale: budget_versions is the central entity — 19 tables have version_id FK.
+Without Epic 10, Epics 1-6 cannot be tested because data has no version to scope to.
 
 ## Update Instructions
 

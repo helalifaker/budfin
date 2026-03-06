@@ -49,6 +49,19 @@ model User {
   auditEntries  AuditEntry[]
   configUpdates SystemConfig[] @relation("ConfigUpdatedBy")
 
+  // Master Data relations (Epic 7)
+  createdAccounts      ChartOfAccount[] @relation("AccountCreator")
+  updatedAccounts      ChartOfAccount[] @relation("AccountUpdater")
+  createdAcademicYears AcademicYear[]   @relation("AcademicYearCreator")
+  updatedAcademicYears AcademicYear[]   @relation("AcademicYearUpdater")
+  createdNationalities Nationality[]    @relation("NationalityCreator")
+  updatedNationalities Nationality[]    @relation("NationalityUpdater")
+  createdTariffs       Tariff[]         @relation("TariffCreator")
+  updatedTariffs       Tariff[]         @relation("TariffUpdater")
+  createdDepartments   Department[]     @relation("DepartmentCreator")
+  updatedDepartments   Department[]     @relation("DepartmentUpdater")
+  updatedAssumptions   Assumption[]     @relation("AssumptionUpdater")
+
   @@map("users")
 }
 
@@ -97,4 +110,187 @@ model AuditEntry {
   @@index([createdAt], map: "idx_audit_entries_created")
   @@index([userId], map: "idx_audit_entries_user")
   @@map("audit_entries")
+}
+
+// ── Master Data Management (Epic 7) ──────────────────────────────────────────
+
+enum AccountType {
+  REVENUE
+  EXPENSE
+  ASSET
+  LIABILITY
+
+  @@map("account_type")
+}
+
+enum CenterType {
+  PROFIT_CENTER
+  COST_CENTER
+
+  @@map("center_type")
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+
+  @@map("account_status")
+}
+
+enum GradeBand {
+  MATERNELLE
+  ELEMENTAIRE
+  COLLEGE
+  LYCEE
+
+  @@map("grade_band")
+}
+
+enum DepartmentBand {
+  MATERNELLE
+  ELEMENTAIRE
+  COLLEGE
+  LYCEE
+  NON_ACADEMIC
+
+  @@map("department_band")
+}
+
+enum AssumptionValueType {
+  PERCENTAGE
+  CURRENCY
+  INTEGER
+  DECIMAL
+  TEXT
+
+  @@map("assumption_value_type")
+}
+
+model ChartOfAccount {
+  id           Int           @id @default(autoincrement())
+  accountCode  String        @unique @map("account_code") @db.VarChar(10)
+  accountName  String        @map("account_name") @db.VarChar(100)
+  type         AccountType
+  ifrsCategory String        @map("ifrs_category") @db.VarChar(100)
+  centerType   CenterType    @map("center_type")
+  description  String?       @db.VarChar(500)
+  status       AccountStatus @default(ACTIVE)
+  version      Int           @default(1)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy    Int           @map("created_by")
+  updatedBy    Int           @map("updated_by")
+
+  creator User @relation("AccountCreator", fields: [createdBy], references: [id])
+  updater User @relation("AccountUpdater", fields: [updatedBy], references: [id])
+
+  @@map("chart_of_accounts")
+}
+
+model AcademicYear {
+  id            Int      @id @default(autoincrement())
+  fiscalYear    String   @unique @map("fiscal_year") @db.VarChar(6)
+  ay1Start      DateTime @map("ay1_start") @db.Date
+  ay1End        DateTime @map("ay1_end") @db.Date
+  ay2Start      DateTime @map("ay2_start") @db.Date
+  ay2End        DateTime @map("ay2_end") @db.Date
+  summerStart   DateTime @map("summer_start") @db.Date
+  summerEnd     DateTime @map("summer_end") @db.Date
+  academicWeeks Int      @map("academic_weeks")
+  version       Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy     Int      @map("created_by")
+  updatedBy     Int      @map("updated_by")
+
+  creator User @relation("AcademicYearCreator", fields: [createdBy], references: [id])
+  updater User @relation("AcademicYearUpdater", fields: [updatedBy], references: [id])
+
+  @@map("academic_years")
+}
+
+model GradeLevel {
+  id           Int       @id @default(autoincrement())
+  gradeCode    String    @unique @map("grade_code") @db.VarChar(10)
+  gradeName    String    @map("grade_name") @db.VarChar(60)
+  band         GradeBand
+  maxClassSize Int       @map("max_class_size")
+  plancherPct  Decimal   @map("plancher_pct") @db.Decimal(5, 4)
+  ciblePct     Decimal   @map("cible_pct") @db.Decimal(5, 4)
+  plafondPct   Decimal   @map("plafond_pct") @db.Decimal(5, 4)
+  displayOrder Int       @map("display_order")
+  version      Int       @default(1)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("grade_levels")
+}
+
+model Nationality {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique @db.VarChar(5)
+  label     String   @db.VarChar(100)
+  vatExempt Boolean  @default(false) @map("vat_exempt")
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy Int      @map("created_by")
+  updatedBy Int      @map("updated_by")
+
+  creator User @relation("NationalityCreator", fields: [createdBy], references: [id])
+  updater User @relation("NationalityUpdater", fields: [updatedBy], references: [id])
+
+  @@map("nationalities")
+}
+
+model Tariff {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique @db.VarChar(10)
+  label       String   @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy   Int      @map("created_by")
+  updatedBy   Int      @map("updated_by")
+
+  creator User @relation("TariffCreator", fields: [createdBy], references: [id])
+  updater User @relation("TariffUpdater", fields: [updatedBy], references: [id])
+
+  @@map("tariffs")
+}
+
+model Department {
+  id          Int            @id @default(autoincrement())
+  code        String         @unique @db.VarChar(20)
+  label       String         @db.VarChar(100)
+  bandMapping DepartmentBand @map("band_mapping")
+  version     Int            @default(1)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy   Int            @map("created_by")
+  updatedBy   Int            @map("updated_by")
+
+  creator User @relation("DepartmentCreator", fields: [createdBy], references: [id])
+  updater User @relation("DepartmentUpdater", fields: [updatedBy], references: [id])
+
+  @@map("departments")
+}
+
+model Assumption {
+  id        Int                 @id @default(autoincrement())
+  key       String              @unique @db.VarChar(50)
+  value     String              @db.VarChar(500)
+  unit      String              @db.VarChar(20)
+  section   String              @db.VarChar(50)
+  label     String              @db.VarChar(100)
+  valueType AssumptionValueType @map("value_type")
+  version   Int                 @default(1)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  updatedBy Int?                @map("updated_by")
+
+  updater User? @relation("AssumptionUpdater", fields: [updatedBy], references: [id])
+
+  @@map("assumptions")
 }

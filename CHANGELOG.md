@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Chart of Accounts management for defining IFRS-compliant account codes, types (Revenue/Expense/Asset/Liability), and profit/cost center mappings (#37, #42)
+- Academic Years management for configuring fiscal year calendar periods (AY1, Summer, AY2) with date ordering validation (#38, #43)
+- Grade Levels configuration for the 15-grade structure with plancher/cible/plafond capacity thresholds (edit-only; grades cannot be added or removed) (#39, #43)
+- Reference Data management for Nationalities (with VAT exemption flag), Tariff categories, and Departments (#40, #44)
+- Assumptions and Parameters configuration for tax rates, GOSI social charges, discount rates, and academic settings with auto-computed GOSI total (#41, #45)
+- Database seed migration pre-populates 15 grade levels and 14 assumption parameters with EFIR default values on first setup (#46)
+- Optimistic locking on all master data entities prevents concurrent editing conflicts with clear error messaging (#37-#41)
+- Duplicate code detection returns a clear error when attempting to create records with codes that already exist (#37, #40)
+- Referential integrity protection prevents deletion of master data records that are referenced by downstream planning modules (#37)
+- Master Data navigation section in the sidebar with four pages: Chart of Accounts, Academic Years and Grades, Reference Data, and Assumptions (#42-#45)
 - User authentication with secure login, automatic session refresh, and logout (#29, #30)
 - Role-based access control with four roles (Admin, BudgetOwner, Editor, Viewer) restricting features by permission level (#31)
 - Account lockout after 5 failed login attempts with 30-minute cooldown to prevent brute-force attacks (#29)
