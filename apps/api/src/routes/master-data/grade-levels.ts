@@ -105,6 +105,7 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 						userId: request.user.id,
 						operation: 'GRADE_LEVEL_UPDATED',
 						tableName: 'grade_levels',
+						recordId: id,
 						ipAddress: request.ip,
 						oldValues,
 						newValues: {
