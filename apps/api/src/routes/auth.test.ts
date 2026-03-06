@@ -186,6 +186,32 @@ describe('POST /api/v1/auth/login', () => {
 		expect(res.json().error).toBe('INVALID_CREDENTIALS');
 	});
 
+	it('creates LOGIN_FAILED_UNKNOWN_EMAIL audit entry for unknown email', async () => {
+		const app = await buildTestApp();
+		mockUserFindUnique.mockResolvedValue(null);
+
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/auth/login',
+			payload: {
+				email: 'unknown@efir.edu.sa',
+				password: 'any',
+			},
+		});
+
+		expect(res.statusCode).toBe(401);
+		expect(res.json().error).toBe('INVALID_CREDENTIALS');
+
+		expect(mockAuditEntryCreate).toHaveBeenCalledWith({
+			data: expect.objectContaining({
+				userId: null,
+				operation: 'LOGIN_FAILED_UNKNOWN_EMAIL',
+				tableName: 'users',
+				newValues: { email: 'unknown@efir.edu.sa' },
+			}),
+		});
+	});
+
 	it('returns 401 and increments failedAttempts on wrong password', async () => {
 		const app = await buildTestApp();
 		mockUserFindUnique.mockResolvedValue({ ...baseUser });
@@ -234,7 +260,7 @@ describe('POST /api/v1/auth/login', () => {
 		expect(body.locked_until).toBe(lockedUntil.toISOString());
 	});
 
-	it('triggers lockout after threshold failures', async () => {
+	it('triggers lockout after threshold failures and returns ACCOUNT_LOCKED', async () => {
 		const app = await buildTestApp();
 		mockUserFindUnique.mockResolvedValue({
 			...baseUser,
@@ -242,7 +268,7 @@ describe('POST /api/v1/auth/login', () => {
 		});
 		mockVerifyPassword.mockResolvedValue(false);
 
-		await app.inject({
+		const res = await app.inject({
 			method: 'POST',
 			url: '/api/v1/auth/login',
 			payload: {
@@ -250,6 +276,11 @@ describe('POST /api/v1/auth/login', () => {
 				password: 'wrong',
 			},
 		});
+
+		expect(res.statusCode).toBe(401);
+		const body = res.json();
+		expect(body.error).toBe('ACCOUNT_LOCKED');
+		expect(body.locked_until).toBeTruthy();
 
 		const updateCall = mockUserUpdate.mock.calls[0]![0];
 		expect(updateCall.data.failedAttempts).toBe(5);

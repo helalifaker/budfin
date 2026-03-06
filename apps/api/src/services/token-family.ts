@@ -56,21 +56,48 @@ export async function createFamily(
 	return { token, tokenHash, familyId, expiresAt };
 }
 
+async function revokeFamily(tx: TokenFamilyClient, familyId: string, ipAddress?: string) {
+	await tx.refreshToken.updateMany({
+		where: { familyId, isRevoked: false },
+		data: { isRevoked: true },
+	});
+
+	await tx.auditEntry.create({
+		data: {
+			userId: null,
+			operation: 'TOKEN_FAMILY_REVOKED',
+			tableName: 'refresh_tokens',
+			ipAddress: ipAddress ?? null,
+			newValues: {
+				familyId,
+				reason: 'concurrent_rotation_detected',
+			},
+		},
+	});
+}
+
 /**
  * Rotate a refresh token within its family.
  * Revokes the old token and issues a new one in the same family.
+ * Returns null when concurrent rotation is detected (token already rotated).
  */
 export async function rotateToken(
 	oldTokenHash: string,
 	familyId: string,
 	ipAddress?: string
-): Promise<RotateTokenResult> {
+): Promise<RotateTokenResult | null> {
 	return prisma.$transaction(async (tx: TxClient) => {
-		// Revoke old token
-		await tx.refreshToken.updateMany({
-			where: { tokenHash: oldTokenHash, familyId },
+		// Atomically revoke — only succeeds if not already revoked
+		const revoked = await tx.refreshToken.updateMany({
+			where: { tokenHash: oldTokenHash, familyId, isRevoked: false },
 			data: { isRevoked: true },
 		});
+
+		if (revoked.count === 0) {
+			// Token was already rotated by a concurrent request — replay detected
+			await revokeFamily(tx, familyId, ipAddress);
+			return null;
+		}
 
 		// Find userId from family
 		const familyToken = await tx.refreshToken.findFirst({

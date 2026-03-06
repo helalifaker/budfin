@@ -92,17 +92,19 @@ describe('token-family service', () => {
 	describe('rotateToken', () => {
 		it('revokes old token and creates new token in same family', async () => {
 			const familyId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+			mockRefreshTokenUpdateMany.mockResolvedValue({ count: 1 });
 			mockRefreshTokenFindFirst.mockResolvedValue({ userId: 10 });
 
 			const result = await rotateToken('old-hash', familyId);
 
-			expect(result.token).toBeTruthy();
-			expect(result.tokenHash).toBeTruthy();
-			expect(result.expiresAt).toBeInstanceOf(Date);
+			expect(result).not.toBeNull();
+			expect(result!.token).toBeTruthy();
+			expect(result!.tokenHash).toBeTruthy();
+			expect(result!.expiresAt).toBeInstanceOf(Date);
 
 			// Old token was revoked
 			expect(mockRefreshTokenUpdateMany).toHaveBeenCalledWith({
-				where: { tokenHash: 'old-hash', familyId },
+				where: { tokenHash: 'old-hash', familyId, isRevoked: false },
 				data: { isRevoked: true },
 			});
 
@@ -113,6 +115,7 @@ describe('token-family service', () => {
 		});
 
 		it('creates audit entry with TOKEN_ROTATION', async () => {
+			mockRefreshTokenUpdateMany.mockResolvedValue({ count: 1 });
 			mockRefreshTokenFindFirst.mockResolvedValue({ userId: 5 });
 
 			await rotateToken('hash', 'family-1', '10.0.0.1');
@@ -124,6 +127,30 @@ describe('token-family service', () => {
 					tableName: 'refresh_tokens',
 					ipAddress: '10.0.0.1',
 				},
+			});
+		});
+
+		it('returns null and revokes family on concurrent rotation', async () => {
+			mockRefreshTokenUpdateMany.mockResolvedValue({ count: 0 });
+
+			const result = await rotateToken('old-hash', 'family-1', '10.0.0.1');
+
+			expect(result).toBeNull();
+
+			// First call tries to revoke the specific token
+			expect(mockRefreshTokenUpdateMany).toHaveBeenCalledWith({
+				where: {
+					tokenHash: 'old-hash',
+					familyId: 'family-1',
+					isRevoked: false,
+				},
+				data: { isRevoked: true },
+			});
+
+			// Second call revokes the whole family
+			expect(mockRefreshTokenUpdateMany).toHaveBeenCalledWith({
+				where: { familyId: 'family-1', isRevoked: false },
+				data: { isRevoked: true },
 			});
 		});
 	});
