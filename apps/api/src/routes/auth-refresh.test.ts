@@ -275,6 +275,34 @@ describe('POST /api/v1/auth/refresh', () => {
 		expect(rc).toBeTruthy();
 		expect(rc!.value).toBe('');
 	});
+
+	it('revokes sessions for inactive user even with an expired token', async () => {
+		const app = await buildTestApp();
+		mockRefreshTokenFindFirst.mockResolvedValue({
+			id: 10,
+			userId: 1,
+			tokenHash: 'hash',
+			familyId: 'fam-1',
+			isRevoked: false,
+			expiresAt: new Date(Date.now() - 1000), // expired
+			user: { ...baseUser, isActive: false },
+		});
+
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/auth/refresh',
+			cookies: { refresh_token: 'inactive-expired-token' },
+		});
+
+		expect(res.statusCode).toBe(401);
+		expect(res.json().error).toBe('ACCOUNT_DISABLED');
+		expect(mockRevokeAllUserTokens).toHaveBeenCalledWith(1, expect.any(String));
+
+		const cookies = res.cookies as { name: string; value: string }[];
+		const rc = cookies.find((c) => c.name === 'refresh_token');
+		expect(rc).toBeTruthy();
+		expect(rc!.value).toBe('');
+	});
 });
 
 // ── Logout Tests ─────────────────────────────────────────────────────────

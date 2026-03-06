@@ -178,15 +178,6 @@ export async function authRoutes(fastify: FastifyInstance) {
 
 				const createdFamily = await createFamily(user.id, ip, tx);
 
-				await tx.auditEntry.create({
-					data: {
-						userId: user.id,
-						operation: 'LOGIN_SUCCESS',
-						tableName: 'users',
-						ipAddress: ip,
-					},
-				});
-
 				return createdFamily;
 			});
 
@@ -196,6 +187,17 @@ export async function authRoutes(fastify: FastifyInstance) {
 				email: user.email,
 				role: user.role,
 				sessionId: family.familyId,
+			});
+
+			// Audit after token issuance so a signing failure doesn't leave a
+			// false LOGIN_SUCCESS record.
+			await prisma.auditEntry.create({
+				data: {
+					userId: user.id,
+					operation: 'LOGIN_SUCCESS',
+					tableName: 'users',
+					ipAddress: ip,
+				},
 			});
 
 			// 7. Set refresh token cookie
@@ -260,14 +262,9 @@ export async function authRoutes(fastify: FastifyInstance) {
 				});
 			}
 
-			// Check expiry
-			if (existing.expiresAt < new Date()) {
-				return reply.status(401).send({
-					error: 'TOKEN_EXPIRED',
-					message: 'Refresh token expired',
-				});
-			}
-
+			// Check inactive before expiry so an inactive user's remaining
+			// sessions are always revoked, even when the presented token is
+			// expired.
 			if (!existing.user.isActive) {
 				await revokeAllUserTokens(existing.userId, ip);
 				await prisma.auditEntry.create({
@@ -284,6 +281,14 @@ export async function authRoutes(fastify: FastifyInstance) {
 				return reply.status(401).send({
 					error: 'ACCOUNT_DISABLED',
 					message: 'Account is disabled',
+				});
+			}
+
+			// Check expiry
+			if (existing.expiresAt < new Date()) {
+				return reply.status(401).send({
+					error: 'TOKEN_EXPIRED',
+					message: 'Refresh token expired',
 				});
 			}
 
