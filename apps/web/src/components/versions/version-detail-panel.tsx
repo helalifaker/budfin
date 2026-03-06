@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { cn } from '../../lib/cn';
 import { formatDateTime } from '../../lib/format-date';
 import type { BudgetVersion } from '../../hooks/use-versions';
+import { Button } from '../ui/button';
 
 export type VersionDetailPanelProps = {
 	open: boolean;
@@ -189,17 +190,9 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 
 				{/* Footer */}
 				<div className="flex justify-end border-t px-6 py-4">
-					<button
-						type="button"
-						onClick={onClose}
-						className={cn(
-							'rounded-md border border-slate-300',
-							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50'
-						)}
-					>
+					<Button variant="outline" onClick={onClose}>
 						Close
-					</button>
+					</Button>
 				</div>
 			</aside>
 		</>

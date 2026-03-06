@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuthStore } from '../../stores/auth-store';
 import { useAssumptions, useUpdateAssumptions, type Assumption } from '../../hooks/use-assumptions';
 import { cn } from '../../lib/cn';
+import { Input } from '../../components/ui/input';
+import { TableSkeleton } from '../../components/ui/skeleton';
+import { toast } from '../../components/ui/toast-state';
 
 const SECTION_ORDER = ['tax', 'financial', 'social_charges', 'academic', 'fees'] as const;
 
@@ -93,14 +96,19 @@ export function AssumptionsPage() {
 								[key]: { status: 'idle' },
 							}));
 						}, 2000);
-						return { ...prev, [key]: { status: 'saved', timerId } };
+						return {
+							...prev,
+							[key]: { status: 'saved', timerId },
+						};
 					});
+					toast.success('Assumption updated');
 				},
 				onError: () => {
 					setSaveStatuses((prev) => ({
 						...prev,
 						[key]: { status: 'error' },
 					}));
+					toast.error('Failed to update assumption');
 				},
 			});
 			setEditingKey(null);
@@ -174,11 +182,45 @@ export function AssumptionsPage() {
 		[saveStatuses]
 	);
 
-	if (isLoading) {
+	// 200ms-delayed skeleton
+	const [showSkeleton, setShowSkeleton] = useState(false);
+	useEffect(() => {
+		if (!isLoading) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect -- reset skeleton visibility to sync with loading prop; intentional
+			setShowSkeleton(false);
+			return;
+		}
+		const t = setTimeout(() => setShowSkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [isLoading]);
+
+	if (isLoading && !showSkeleton) {
 		return (
 			<div className="p-6">
 				<h1 className="text-xl font-semibold">Assumptions &amp; Parameters</h1>
-				<p className="mt-4 text-sm text-slate-500">Loading...</p>
+			</div>
+		);
+	}
+
+	if (isLoading && showSkeleton) {
+		return (
+			<div className="p-6">
+				<h1 className="text-xl font-semibold pb-4">Assumptions &amp; Parameters</h1>
+				<div className="overflow-x-auto rounded-lg border">
+					<table role="table" className="w-full text-left text-sm">
+						<thead className="border-b bg-slate-50">
+							<tr>
+								<th className="w-[40%] px-4 py-3 font-medium text-slate-600">Label</th>
+								<th className="w-[30%] px-4 py-3 font-medium text-slate-600">Value</th>
+								<th className="w-[15%] px-4 py-3 font-medium text-slate-600">Unit</th>
+								<th className="w-[15%] px-4 py-3 font-medium text-slate-600">Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							<TableSkeleton rows={15} cols={4} />
+						</tbody>
+					</table>
+				</div>
 			</div>
 		);
 	}
@@ -188,9 +230,9 @@ export function AssumptionsPage() {
 			<h1 className="text-xl font-semibold pb-4">Assumptions &amp; Parameters</h1>
 
 			<div className="overflow-x-auto rounded-lg border">
-				<table role="grid" className="w-full text-left text-sm">
+				<table role="table" className="w-full text-left text-sm">
 					<thead className="border-b bg-slate-50">
-						<tr role="row">
+						<tr>
 							<th className="w-[40%] px-4 py-3 font-medium text-slate-600">Label</th>
 							<th className="w-[30%] px-4 py-3 font-medium text-slate-600">Value</th>
 							<th className="w-[15%] px-4 py-3 font-medium text-slate-600">Unit</th>
@@ -198,13 +240,13 @@ export function AssumptionsPage() {
 						</tr>
 					</thead>
 					<tbody>
-						{Array.from(grouped.entries()).map(([section, assumptions]) => {
+						{Array.from(grouped.entries()).map(([section, sectionAssumptions]) => {
 							const isCollapsed = collapsedSections.has(section);
 							return (
 								<SectionGroup
 									key={section}
 									section={section}
-									assumptions={assumptions}
+									assumptions={sectionAssumptions}
 									isCollapsed={isCollapsed}
 									onToggle={() => toggleSection(section)}
 									editingKey={editingKey}
@@ -216,7 +258,9 @@ export function AssumptionsPage() {
 									onBlur={(a) => saveEdit(a.key, editValue, a.version)}
 									renderSaveStatus={renderSaveStatus}
 									{...(section === 'social_charges' && data?.computed.gosiRateTotal
-										? { gosiRateTotal: data.computed.gosiRateTotal }
+										? {
+												gosiRateTotal: data.computed.gosiRateTotal,
+											}
 										: {})}
 									inputRef={inputRef}
 								/>
@@ -265,7 +309,6 @@ function SectionGroup({
 	return (
 		<>
 			<tr
-				role="row"
 				className="cursor-pointer bg-slate-100 hover:bg-slate-200"
 				onClick={onToggle}
 				onKeyDown={(e) => {
@@ -287,63 +330,43 @@ function SectionGroup({
 
 			{!isCollapsed &&
 				assumptions.map((assumption) => (
-					<tr key={assumption.key} role="row" className="border-b last:border-0 hover:bg-slate-50">
-						<td role="gridcell" aria-readonly="true" className="px-4 py-3 text-slate-700">
-							{assumption.label}
-						</td>
+					<tr key={assumption.key} className="border-b last:border-0 hover:bg-slate-50">
+						<td className="px-4 py-3 text-slate-700">{assumption.label}</td>
 						<td
-							role="gridcell"
-							aria-readonly={!canEdit}
 							className={cn('px-4 py-3', canEdit && 'cursor-pointer bg-yellow-50')}
 							onClick={() => onStartEdit(assumption)}
 						>
 							{editingKey === assumption.key ? (
-								<input
+								<Input
 									ref={inputRef}
 									type="text"
 									value={editValue}
 									onChange={(e) => onEditValueChange(e.target.value)}
 									onKeyDown={(e) => onKeyDown(e, assumption)}
 									onBlur={() => onBlur(assumption)}
-									className={cn(
-										'w-full rounded border border-blue-400',
-										'px-2 py-1 text-sm outline-none',
-										'focus:ring-2 focus:ring-blue-300'
-									)}
+									className="h-8 border-blue-400 focus:ring-blue-300"
 									aria-label={`Edit ${assumption.label}`}
 								/>
 							) : (
 								<span>{assumption.value}</span>
 							)}
 						</td>
-						<td role="gridcell" aria-readonly="true" className="px-4 py-3 text-slate-500">
-							{assumption.unit}
-						</td>
-						<td role="gridcell" aria-readonly="true" className="px-4 py-3">
-							{renderSaveStatus(assumption.key)}
-						</td>
+						<td className="px-4 py-3 text-slate-500">{assumption.unit}</td>
+						<td className="px-4 py-3">{renderSaveStatus(assumption.key)}</td>
 					</tr>
 				))}
 
 			{!isCollapsed && gosiRateTotal !== undefined && (
-				<tr role="row" className="border-b last:border-0">
-					<td
-						role="gridcell"
-						aria-readonly="true"
-						className="px-4 py-3 bg-gray-100 font-medium text-slate-700"
-					>
+				<tr className="border-b last:border-0">
+					<td className="px-4 py-3 bg-gray-100 font-medium text-slate-700">
 						<span className="inline-flex items-center gap-2">
 							<CalculatorIcon />
 							GOSI Total Rate
 						</span>
 					</td>
-					<td role="gridcell" aria-readonly="true" className="px-4 py-3 bg-gray-100 font-medium">
-						{gosiRateTotal}
-					</td>
-					<td role="gridcell" aria-readonly="true" className="px-4 py-3 bg-gray-100 text-slate-500">
-						%
-					</td>
-					<td role="gridcell" aria-readonly="true" className="px-4 py-3 bg-gray-100" />
+					<td className="px-4 py-3 bg-gray-100 font-medium">{gosiRateTotal}</td>
+					<td className="px-4 py-3 bg-gray-100 text-slate-500">%</td>
+					<td className="px-4 py-3 bg-gray-100" />
 				</tr>
 			)}
 		</>

@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import type { Nationality } from '../../hooks/use-reference-data';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 
 const nationalitySchema = z.object({
 	code: z
@@ -118,15 +120,14 @@ export function NationalitySidePanel({
 							<label htmlFor="nat-code" className="block text-sm font-medium">
 								Code
 							</label>
-							<input
+							<Input
 								id="nat-code"
 								type="text"
 								disabled={isEdit}
 								className={cn(
-									'mt-1 block w-full rounded-md border px-3 py-2 text-sm',
-									'uppercase',
+									'mt-1 uppercase',
 									isEdit && 'bg-slate-100 text-slate-500',
-									form.formState.errors.code ? 'border-red-500' : 'border-slate-300'
+									form.formState.errors.code && 'border-red-500'
 								)}
 								{...form.register('code')}
 							/>
@@ -138,13 +139,10 @@ export function NationalitySidePanel({
 							<label htmlFor="nat-label" className="block text-sm font-medium">
 								Label
 							</label>
-							<input
+							<Input
 								id="nat-label"
 								type="text"
-								className={cn(
-									'mt-1 block w-full rounded-md border px-3 py-2 text-sm',
-									form.formState.errors.label ? 'border-red-500' : 'border-slate-300'
-								)}
+								className={cn('mt-1', form.formState.errors.label && 'border-red-500')}
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (
@@ -166,30 +164,12 @@ export function NationalitySidePanel({
 				</div>
 
 				<div className="flex justify-end gap-3 border-t px-6 py-4">
-					<button
-						type="button"
-						onClick={onClose}
-						className={cn(
-							'rounded-md border border-slate-300',
-							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50'
-						)}
-					>
+					<Button type="button" variant="outline" onClick={onClose}>
 						Cancel
-					</button>
-					<button
-						type="submit"
-						form="nationality-form"
-						disabled={loading}
-						className={cn(
-							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white',
-							'hover:bg-blue-700',
-							'disabled:opacity-50'
-						)}
-					>
-						{loading ? 'Saving...' : 'Save'}
-					</button>
+					</Button>
+					<Button type="submit" form="nationality-form" loading={loading}>
+						Save
+					</Button>
 				</div>
 			</div>
 		</>

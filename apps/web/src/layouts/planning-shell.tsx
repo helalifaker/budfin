@@ -1,37 +1,39 @@
 import { NavLink, Outlet } from 'react-router';
+import type { LucideIcon } from 'lucide-react';
+import { UserRound, Briefcase, DollarSign, BarChart2 } from 'lucide-react';
+import { cn } from '../lib/cn';
 import { useAuthStore } from '../stores/auth-store';
 import { ContextBar } from '../components/context-bar';
 
-const navItems = [
-	{ to: '/planning/enrollment', label: 'Enrollment' },
-	{ to: '/planning/staff', label: 'Staff & Positions' },
-	{ to: '/planning/budget', label: 'Budget' },
-	{ to: '/planning/reports', label: 'Reports' },
+interface NavItem {
+	to: string;
+	label: string;
+	Icon: LucideIcon;
+}
+
+const navItems: NavItem[] = [
+	{ to: '/planning/enrollment', label: 'Enrollment', Icon: UserRound },
+	{ to: '/planning/staff', label: 'Staff & Positions', Icon: Briefcase },
+	{ to: '/planning/budget', label: 'Budget', Icon: DollarSign },
+	{ to: '/planning/reports', label: 'Reports', Icon: BarChart2 },
 ];
 
-/**
- * PlanningShell — layout for all planning screens.
- *
- * Structure:
- *   ┌─ Sidebar ──────────────┬─ Main column ──────────────────────┐
- *   │  BudFin logo           │  ContextBar (sticky, 40px)         │
- *   │  Nav links             │  Content area (<Outlet />)          │
- *   │  ...                   │                                     │
- *   │  User info / Logout    │                                     │
- *   └────────────────────────┴────────────────────────────────────┘
- *
- * The ContextBar persists across all planning child routes and keeps
- * FY / Version / Comparison / Period / Scenario in URL search params.
- */
 export function PlanningShell() {
 	const user = useAuthStore((s) => s.user);
 	const logout = useAuthStore((s) => s.logout);
 
 	return (
 		<div className="min-h-screen flex bg-gray-50">
-			<aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
-				<div className="px-4 py-4 border-b border-gray-200">
-					<span className="text-lg font-bold text-gray-900">BudFin</span>
+			<aside
+				className="w-60 flex flex-col"
+				style={{
+					background: 'var(--sidebar-bg)',
+					borderRight: '1px solid var(--sidebar-border)',
+					boxShadow: 'var(--shadow-sidebar)',
+				}}
+			>
+				<div className="px-4 py-4" style={{ borderBottom: '1px solid var(--sidebar-border)' }}>
+					<span className="text-lg font-bold text-white">BudFin</span>
 				</div>
 				<nav className="flex-1 px-2 py-4 space-y-1" aria-label="Planning navigation">
 					{navItems.map((item) => (
@@ -39,24 +41,31 @@ export function PlanningShell() {
 							key={item.to}
 							to={item.to}
 							className={({ isActive }) =>
-								`block rounded px-3 py-2 text-sm font-medium ${
-									isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-								}`
+								cn(
+									'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+									isActive
+										? 'bg-[#1E40AF] text-white'
+										: 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
+								)
 							}
 						>
+							<item.Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
 							{item.label}
 						</NavLink>
 					))}
 				</nav>
-				<div className="border-t border-gray-200 px-4 py-3 flex flex-col gap-1">
-					<span className="text-xs text-gray-500 truncate">{user?.email}</span>
-					<span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded w-fit">
+				<div
+					className="px-4 py-3 flex flex-col gap-1"
+					style={{ borderTop: '1px solid var(--sidebar-border)' }}
+				>
+					<span className="text-xs text-[#94A3B8] truncate">{user?.email}</span>
+					<span className="text-xs bg-[#1E293B] text-[#CBD5E1] px-2 py-0.5 rounded w-fit">
 						{user?.role}
 					</span>
 					<button
 						type="button"
 						onClick={() => logout()}
-						className="mt-1 text-left text-xs text-red-600 hover:text-red-700"
+						className="mt-1 text-left text-xs text-red-400 hover:text-red-300"
 					>
 						Logout
 					</button>
@@ -64,7 +73,6 @@ export function PlanningShell() {
 			</aside>
 
 			<div className="flex-1 flex flex-col min-w-0">
-				{/* ContextBar is sticky and persists across all child routes */}
 				<ContextBar />
 
 				<main className="flex-1 p-6 overflow-auto">

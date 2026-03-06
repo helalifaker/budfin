@@ -1,8 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { SettingsCard } from '../../components/admin/settings-card';
-import { cn } from '../../lib/cn';
+import { Button } from '../../components/ui/button';
+import { Skeleton } from '../../components/ui/skeleton';
+import { toast } from '../../components/ui/toast-state';
 
 interface ConfigItem {
 	key: string;
@@ -103,6 +105,10 @@ export function SettingsPage() {
 			queryClient.invalidateQueries({
 				queryKey: ['system-config'],
 			});
+			toast.success('Settings saved successfully');
+		},
+		onError: () => {
+			toast.error('Failed to save settings');
 		},
 	});
 
@@ -121,31 +127,55 @@ export function SettingsPage() {
 		saveMutation.mutate(updates);
 	}, [changedKeys, values, saveMutation]);
 
-	if (isLoading) {
+	const [showSkeleton, setShowSkeleton] = useState(false);
+	useEffect(() => {
+		if (!isLoading) {
+			const t = setTimeout(() => setShowSkeleton(false), 0);
+			return () => clearTimeout(t);
+		}
+		const t = setTimeout(() => setShowSkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [isLoading]);
+
+	if (isLoading && showSkeleton) {
 		return (
 			<div className="p-6">
-				<p className="text-sm text-slate-500">Loading...</p>
+				<div className="flex items-center justify-between pb-6">
+					<Skeleton className="h-7 w-40" />
+					<Skeleton className="h-9 w-32" />
+				</div>
+				<div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+					{Array.from({ length: 3 }).map((_, i) => (
+						<div key={i} className="rounded-lg border border-slate-200 bg-white p-6">
+							<Skeleton className="h-5 w-24" />
+							<Skeleton className="mt-2 h-4 w-48" />
+							<div className="mt-4 space-y-3">
+								<Skeleton className="h-9 w-full" />
+								<Skeleton className="h-9 w-full" />
+							</div>
+						</div>
+					))}
+				</div>
 			</div>
 		);
+	}
+
+	if (isLoading) {
+		return <div className="p-6" />;
 	}
 
 	return (
 		<div className="p-6">
 			<div className="flex items-center justify-between pb-6">
 				<h1 className="text-xl font-semibold">System Settings</h1>
-				<button
+				<Button
 					type="button"
-					disabled={!hasChanges || saveMutation.isPending}
+					disabled={!hasChanges}
+					loading={saveMutation.isPending}
 					onClick={handleSave}
-					className={cn(
-						'rounded-md bg-blue-600 px-4 py-2',
-						'text-sm font-medium text-white',
-						'hover:bg-blue-700',
-						'disabled:opacity-50'
-					)}
 				>
 					{saveMutation.isPending ? 'Saving...' : 'Save Changes'}
-				</button>
+				</Button>
 			</div>
 
 			<div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">

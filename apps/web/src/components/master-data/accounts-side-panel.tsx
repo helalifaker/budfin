@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import type { Account } from '../../hooks/use-accounts';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const accountSchema = z.object({
 	accountCode: z.string().min(1, 'Account code is required'),
@@ -156,14 +159,14 @@ export function AccountsSidePanel({
 							<label htmlFor="accountCode" className="block text-sm font-medium">
 								Account Code
 							</label>
-							<input
+							<Input
 								id="accountCode"
 								type="text"
 								disabled={isEdit}
 								className={cn(
-									'mt-1 block w-full rounded-md border px-3 py-2 text-sm',
+									'mt-1',
 									isEdit && 'bg-slate-100 text-slate-500',
-									form.formState.errors.accountCode ? 'border-red-500' : 'border-slate-300'
+									form.formState.errors.accountCode && 'border-red-500'
 								)}
 								{...form.register('accountCode')}
 							/>
@@ -178,13 +181,10 @@ export function AccountsSidePanel({
 							<label htmlFor="accountName" className="block text-sm font-medium">
 								Account Name
 							</label>
-							<input
+							<Input
 								id="accountName"
 								type="text"
-								className={cn(
-									'mt-1 block w-full rounded-md border px-3 py-2 text-sm',
-									form.formState.errors.accountName ? 'border-red-500' : 'border-slate-300'
-								)}
+								className={cn('mt-1', form.formState.errors.accountName && 'border-red-500')}
 								{...form.register('accountName')}
 							/>
 							{form.formState.errors.accountName && (
@@ -198,33 +198,34 @@ export function AccountsSidePanel({
 							<label htmlFor="type" className="block text-sm font-medium">
 								Type
 							</label>
-							<select
-								id="type"
-								className={cn(
-									'mt-1 block w-full rounded-md border',
-									'border-slate-300 px-3 py-2 text-sm'
+							<Controller
+								control={form.control}
+								name="type"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="type" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{TYPES.map((t) => (
+												<SelectItem key={t} value={t}>
+													{TYPE_LABELS[t]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								)}
-								{...form.register('type')}
-							>
-								{TYPES.map((t) => (
-									<option key={t} value={t}>
-										{TYPE_LABELS[t]}
-									</option>
-								))}
-							</select>
+							/>
 						</div>
 
 						<div>
 							<label htmlFor="ifrsCategory" className="block text-sm font-medium">
 								IFRS Category
 							</label>
-							<input
+							<Input
 								id="ifrsCategory"
 								type="text"
-								className={cn(
-									'mt-1 block w-full rounded-md border px-3 py-2 text-sm',
-									form.formState.errors.ifrsCategory ? 'border-red-500' : 'border-slate-300'
-								)}
+								className={cn('mt-1', form.formState.errors.ifrsCategory && 'border-red-500')}
 								{...form.register('ifrsCategory')}
 							/>
 							{form.formState.errors.ifrsCategory && (
@@ -238,20 +239,24 @@ export function AccountsSidePanel({
 							<label htmlFor="centerType" className="block text-sm font-medium">
 								Center Type
 							</label>
-							<select
-								id="centerType"
-								className={cn(
-									'mt-1 block w-full rounded-md border',
-									'border-slate-300 px-3 py-2 text-sm'
+							<Controller
+								control={form.control}
+								name="centerType"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="centerType" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{CENTER_TYPES.map((ct) => (
+												<SelectItem key={ct} value={ct}>
+													{CENTER_TYPE_LABELS[ct]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								)}
-								{...form.register('centerType')}
-							>
-								{CENTER_TYPES.map((ct) => (
-									<option key={ct} value={ct}>
-										{CENTER_TYPE_LABELS[ct]}
-									</option>
-								))}
-							</select>
+							/>
 						</div>
 
 						<div>
@@ -262,8 +267,9 @@ export function AccountsSidePanel({
 								id="description"
 								rows={3}
 								className={cn(
-									'mt-1 block w-full rounded-md border',
-									'border-slate-300 px-3 py-2 text-sm'
+									'mt-1 flex w-full rounded-md border',
+									'border-slate-300 bg-white px-3 py-2 text-sm text-slate-900',
+									'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
 								)}
 								{...form.register('description')}
 							/>
@@ -273,49 +279,35 @@ export function AccountsSidePanel({
 							<label htmlFor="status" className="block text-sm font-medium">
 								Status
 							</label>
-							<select
-								id="status"
-								className={cn(
-									'mt-1 block w-full rounded-md border',
-									'border-slate-300 px-3 py-2 text-sm'
+							<Controller
+								control={form.control}
+								name="status"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="status" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{STATUSES.map((s) => (
+												<SelectItem key={s} value={s}>
+													{s === 'ACTIVE' ? 'Active' : 'Inactive'}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								)}
-								{...form.register('status')}
-							>
-								{STATUSES.map((s) => (
-									<option key={s} value={s}>
-										{s === 'ACTIVE' ? 'Active' : 'Inactive'}
-									</option>
-								))}
-							</select>
+							/>
 						</div>
 					</form>
 				</div>
 
 				<div className="flex justify-end gap-3 border-t px-6 py-4">
-					<button
-						type="button"
-						onClick={onClose}
-						className={cn(
-							'rounded-md border border-slate-300',
-							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50'
-						)}
-					>
+					<Button type="button" variant="outline" onClick={onClose}>
 						Cancel
-					</button>
-					<button
-						type="submit"
-						form="account-form"
-						disabled={loading}
-						className={cn(
-							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white',
-							'hover:bg-blue-700',
-							'disabled:opacity-50'
-						)}
-					>
-						{loading ? 'Saving...' : 'Save'}
-					</button>
+					</Button>
+					<Button type="submit" form="account-form" loading={loading}>
+						Save
+					</Button>
 				</div>
 			</div>
 		</>

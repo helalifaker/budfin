@@ -8,6 +8,9 @@ import {
 	useUpdateAcademicYear,
 	type AcademicYear,
 } from '../../hooks/use-academic-years';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { toast } from '../ui/toast-state';
 
 const baseAcademicYearSchema = z.object({
 	fiscalYear: z.string().min(1, 'Fiscal year is required'),
@@ -144,20 +147,32 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 					version: academicYear.version,
 					...data,
 				},
-				{ onSuccess: onClose }
+				{
+					onSuccess: () => {
+						onClose();
+						toast.success('Academic year updated');
+					},
+					onError: () => {
+						toast.error('Failed to update academic year');
+					},
+				}
 			);
 		} else {
-			createMutation.mutate(data, { onSuccess: onClose });
+			createMutation.mutate(data, {
+				onSuccess: () => {
+					onClose();
+					toast.success('Academic year created');
+				},
+				onError: () => {
+					toast.error('Failed to create academic year');
+				},
+			});
 		}
 	}
 
 	if (!open) return null;
 
-	const inputClass = (hasError: boolean) =>
-		cn(
-			'mt-1 block w-full rounded-md border px-3 py-2 text-sm',
-			hasError ? 'border-red-500' : 'border-slate-300'
-		);
+	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-red-500');
 
 	return (
 		<>
@@ -185,7 +200,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 							<label htmlFor="fiscalYear" className="block text-sm font-medium">
 								Fiscal Year
 							</label>
-							<input
+							<Input
 								id="fiscalYear"
 								type="text"
 								placeholder="e.g. 2025-2026"
@@ -202,7 +217,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								<label htmlFor="ay1Start" className="block text-sm font-medium">
 									AY1 Start
 								</label>
-								<input
+								<Input
 									id="ay1Start"
 									type="date"
 									className={inputClass(!!errors.ay1Start)}
@@ -216,7 +231,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								<label htmlFor="ay1End" className="block text-sm font-medium">
 									AY1 End
 								</label>
-								<input
+								<Input
 									id="ay1End"
 									type="date"
 									className={inputClass(!!errors.ay1End)}
@@ -233,7 +248,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								<label htmlFor="summerStart" className="block text-sm font-medium">
 									Summer Start
 								</label>
-								<input
+								<Input
 									id="summerStart"
 									type="date"
 									className={inputClass(!!errors.summerStart)}
@@ -247,7 +262,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								<label htmlFor="summerEnd" className="block text-sm font-medium">
 									Summer End
 								</label>
-								<input
+								<Input
 									id="summerEnd"
 									type="date"
 									className={inputClass(!!errors.summerEnd)}
@@ -264,7 +279,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								<label htmlFor="ay2Start" className="block text-sm font-medium">
 									AY2 Start
 								</label>
-								<input
+								<Input
 									id="ay2Start"
 									type="date"
 									className={inputClass(!!errors.ay2Start)}
@@ -278,7 +293,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								<label htmlFor="ay2End" className="block text-sm font-medium">
 									AY2 End
 								</label>
-								<input
+								<Input
 									id="ay2End"
 									type="date"
 									className={inputClass(!!errors.ay2End)}
@@ -294,7 +309,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 							<label htmlFor="academicWeeks" className="block text-sm font-medium">
 								Academic Weeks
 							</label>
-							<input
+							<Input
 								id="academicWeeks"
 								type="number"
 								min={1}
@@ -310,37 +325,12 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 				</div>
 
 				<div className="flex justify-end gap-3 border-t px-6 py-4">
-					<button
-						type="button"
-						onClick={onClose}
-						className={cn(
-							'rounded-md border border-slate-300',
-							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50'
-						)}
-					>
+					<Button type="button" variant="outline" onClick={onClose}>
 						Cancel
-					</button>
-					<button
-						type="submit"
-						form="ay-form"
-						disabled={isPending}
-						className={cn(
-							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white',
-							'hover:bg-blue-700',
-							'disabled:opacity-50'
-						)}
-					>
-						{isPending ? 'Saving...' : 'Save'}
-					</button>
-				</div>
-
-				<div aria-live="polite" className="sr-only">
-					{createMutation.isError && 'Failed to create academic year'}
-					{updateMutation.isError && 'Failed to update academic year'}
-					{createMutation.isSuccess && 'Academic year created'}
-					{updateMutation.isSuccess && 'Academic year updated'}
+					</Button>
+					<Button type="submit" form="ay-form" loading={isPending}>
+						Save
+					</Button>
 				</div>
 			</div>
 		</>

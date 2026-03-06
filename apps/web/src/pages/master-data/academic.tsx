@@ -1,16 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
+import { Pencil } from 'lucide-react';
 import { useAcademicYears, type AcademicYear } from '../../hooks/use-academic-years';
 import { useGradeLevels, type GradeLevel, type GradeBand } from '../../hooks/use-grade-levels';
 import { useAuthStore } from '../../stores/auth-store';
 import { AcademicYearSidePanel } from '../../components/master-data/academic-year-side-panel';
 import { GradeLevelSidePanel } from '../../components/master-data/grade-level-side-panel';
 import { cn } from '../../lib/cn';
+import { Button } from '../../components/ui/button';
+import { TableSkeleton } from '../../components/ui/skeleton';
 
 function formatDate(iso: string): string {
 	if (!iso) return '-';
@@ -40,6 +43,28 @@ export function AcademicPage() {
 	const [editingAy, setEditingAy] = useState<AcademicYear | null>(null);
 	const [glPanelOpen, setGlPanelOpen] = useState(false);
 	const [editingGl, setEditingGl] = useState<GradeLevel | null>(null);
+
+	// 200ms-delayed skeletons
+	const [showAySkeleton, setShowAySkeleton] = useState(false);
+	const [showGlSkeleton, setShowGlSkeleton] = useState(false);
+
+	useEffect(() => {
+		if (!ayLoading) {
+			setShowAySkeleton(false);
+			return;
+		}
+		const t = setTimeout(() => setShowAySkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [ayLoading]);
+
+	useEffect(() => {
+		if (!glLoading) {
+			setShowGlSkeleton(false);
+			return;
+		}
+		const t = setTimeout(() => setShowGlSkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [glLoading]);
 
 	const ayColumns = useMemo(
 		() => [
@@ -81,14 +106,15 @@ export function AcademicPage() {
 				cell: ({ row }) => (
 					<button
 						type="button"
-						className="text-xs text-blue-600 hover:underline"
+						className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+						aria-label={`Edit ${row.original.fiscalYear}`}
 						onClick={(e) => {
 							e.stopPropagation();
 							setEditingAy(row.original);
 							setAyPanelOpen(true);
 						}}
 					>
-						Edit
+						<Pencil className="h-4 w-4 text-slate-500" />
 					</button>
 				),
 			}),
@@ -149,14 +175,15 @@ export function AcademicPage() {
 				cell: ({ row }) => (
 					<button
 						type="button"
-						className="text-xs text-blue-600 hover:underline"
+						className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+						aria-label={`Edit ${row.original.gradeName}`}
 						onClick={(e) => {
 							e.stopPropagation();
 							setEditingGl(row.original);
 							setGlPanelOpen(true);
 						}}
 					>
-						Edit
+						<Pencil className="h-4 w-4 text-slate-500" />
 					</button>
 				),
 			}),
@@ -183,40 +210,42 @@ export function AcademicPage() {
 				<div className="flex items-center justify-between pb-4">
 					<h2 className="text-xl font-semibold">Academic Years</h2>
 					{isAdmin && (
-						<button
+						<Button
 							type="button"
-							className={cn(
-								'rounded-md bg-blue-600 px-4 py-2 text-sm',
-								'font-medium text-white hover:bg-blue-700'
-							)}
 							onClick={() => {
 								setEditingAy(null);
 								setAyPanelOpen(true);
 							}}
 						>
 							+ Add New
-						</button>
+						</Button>
 					)}
 				</div>
 
-				{ayLoading ? (
-					<p className="text-sm text-slate-500">Loading academic years...</p>
-				) : (
-					<div className="overflow-x-auto rounded-lg border">
-						<table role="grid" className="w-full text-left text-sm">
-							<thead className="border-b bg-slate-50">
-								{ayTable.getHeaderGroups().map((hg) => (
-									<tr key={hg.id}>
-										{hg.headers.map((header) => (
-											<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
-												{flexRender(header.column.columnDef.header, header.getContext())}
-											</th>
-										))}
-									</tr>
-								))}
-							</thead>
-							<tbody>
-								{ayTable.getRowModel().rows.map((row) => (
+				<div className="overflow-x-auto rounded-lg border">
+					<table role="table" className="w-full text-left text-sm">
+						<thead className="border-b bg-slate-50">
+							{ayTable.getHeaderGroups().map((hg) => (
+								<tr key={hg.id}>
+									{hg.headers.map((header) => (
+										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+											{flexRender(header.column.columnDef.header, header.getContext())}
+										</th>
+									))}
+								</tr>
+							))}
+						</thead>
+						<tbody>
+							{ayLoading && showAySkeleton ? (
+								<TableSkeleton rows={5} cols={ayColumns.length} />
+							) : ayTable.getRowModel().rows.length === 0 ? (
+								<tr>
+									<td colSpan={ayColumns.length} className="px-4 py-6 text-center text-slate-500">
+										No academic years found
+									</td>
+								</tr>
+							) : (
+								ayTable.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
 										className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
@@ -231,18 +260,11 @@ export function AcademicPage() {
 											</td>
 										))}
 									</tr>
-								))}
-								{ayTable.getRowModel().rows.length === 0 && (
-									<tr>
-										<td colSpan={ayColumns.length} className="px-4 py-6 text-center text-slate-500">
-											No academic years found
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-					</div>
-				)}
+								))
+							)}
+						</tbody>
+					</table>
+				</div>
 			</section>
 
 			{/* Grade Levels Section */}
@@ -251,24 +273,30 @@ export function AcademicPage() {
 					<h2 className="text-xl font-semibold">Grade Levels</h2>
 				</div>
 
-				{glLoading ? (
-					<p className="text-sm text-slate-500">Loading grade levels...</p>
-				) : (
-					<div className="overflow-x-auto rounded-lg border">
-						<table role="grid" className="w-full text-left text-sm">
-							<thead className="border-b bg-slate-50">
-								{glTable.getHeaderGroups().map((hg) => (
-									<tr key={hg.id}>
-										{hg.headers.map((header) => (
-											<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
-												{flexRender(header.column.columnDef.header, header.getContext())}
-											</th>
-										))}
-									</tr>
-								))}
-							</thead>
-							<tbody>
-								{glTable.getRowModel().rows.map((row) => (
+				<div className="overflow-x-auto rounded-lg border">
+					<table role="table" className="w-full text-left text-sm">
+						<thead className="border-b bg-slate-50">
+							{glTable.getHeaderGroups().map((hg) => (
+								<tr key={hg.id}>
+									{hg.headers.map((header) => (
+										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+											{flexRender(header.column.columnDef.header, header.getContext())}
+										</th>
+									))}
+								</tr>
+							))}
+						</thead>
+						<tbody>
+							{glLoading && showGlSkeleton ? (
+								<TableSkeleton rows={10} cols={glColumns.length} />
+							) : glTable.getRowModel().rows.length === 0 ? (
+								<tr>
+									<td colSpan={glColumns.length} className="px-4 py-6 text-center text-slate-500">
+										No grade levels found
+									</td>
+								</tr>
+							) : (
+								glTable.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
 										className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
@@ -283,18 +311,11 @@ export function AcademicPage() {
 											</td>
 										))}
 									</tr>
-								))}
-								{glTable.getRowModel().rows.length === 0 && (
-									<tr>
-										<td colSpan={glColumns.length} className="px-4 py-6 text-center text-slate-500">
-											No grade levels found
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-					</div>
-				)}
+								))
+							)}
+						</tbody>
+					</table>
+				</div>
 			</section>
 
 			<AcademicYearSidePanel

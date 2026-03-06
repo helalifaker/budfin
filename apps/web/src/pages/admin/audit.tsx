@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
 	createColumnHelper,
@@ -8,6 +8,8 @@ import {
 } from '@tanstack/react-table';
 import { apiClient } from '../../lib/api-client';
 import { AuditFilters, type AuditFilterValues } from '../../components/admin/audit-filters';
+import { Button } from '../../components/ui/button';
+import { TableSkeleton } from '../../components/ui/skeleton';
 
 interface AuditEntry {
 	id: number;
@@ -126,68 +128,80 @@ export function AuditPage() {
 
 	const totalPages = data ? Math.ceil(data.total / data.page_size) : 0;
 
+	const [showSkeleton, setShowSkeleton] = useState(false);
+	useEffect(() => {
+		if (!isLoading) {
+			const t = setTimeout(() => setShowSkeleton(false), 0);
+			return () => clearTimeout(t);
+		}
+		const t = setTimeout(() => setShowSkeleton(true), 200);
+		return () => clearTimeout(t);
+	}, [isLoading]);
+
 	return (
 		<div className="p-6">
 			<h1 className="pb-4 text-xl font-semibold">Audit Trail</h1>
 
 			<AuditFilters onFilterChange={handleFilterChange} />
 
-			{isLoading ? (
-				<p className="text-sm text-slate-500">Loading...</p>
-			) : (
-				<>
-					<div className="overflow-x-auto rounded-lg border">
-						<table role="grid" className="w-full text-left text-sm">
-							<thead className="border-b bg-slate-50">
-								{table.getHeaderGroups().map((hg) => (
-									<tr key={hg.id}>
-										{hg.headers.map((header) => (
-											<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
-												{flexRender(header.column.columnDef.header, header.getContext())}
-											</th>
-										))}
-									</tr>
+			<div className="overflow-x-auto rounded-lg border">
+				<table role="table" className="w-full text-left text-sm">
+					<thead className="border-b bg-slate-50">
+						{table.getHeaderGroups().map((hg) => (
+							<tr key={hg.id}>
+								{hg.headers.map((header) => (
+									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+										{flexRender(header.column.columnDef.header, header.getContext())}
+									</th>
 								))}
-							</thead>
-							<tbody>
-								{table.getRowModel().rows.map((row) => (
-									<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
-										{row.getVisibleCells().map((cell) => (
-											<td key={cell.id} className="px-4 py-3">
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
-											</td>
-										))}
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{isLoading && showSkeleton ? (
+							<TableSkeleton rows={10} cols={6} />
+						) : (
+							table.getRowModel().rows.map((row) => (
+								<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+									{row.getVisibleCells().map((cell) => (
+										<td key={cell.id} className="px-4 py-3">
+											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										</td>
+									))}
+								</tr>
+							))
+						)}
+					</tbody>
+				</table>
+			</div>
 
-					<div className="flex items-center justify-between pt-4 text-sm">
-						<span className="text-slate-500">{data?.total ?? 0} total entries</span>
-						<div className="flex gap-2">
-							<button
-								type="button"
-								disabled={page <= 1}
-								onClick={() => setPage((p) => p - 1)}
-								className="rounded border px-3 py-1 disabled:opacity-50"
-							>
-								Previous
-							</button>
-							<span className="px-2 py-1">
-								Page {page} of {totalPages || 1}
-							</span>
-							<button
-								type="button"
-								disabled={page >= totalPages}
-								onClick={() => setPage((p) => p + 1)}
-								className="rounded border px-3 py-1 disabled:opacity-50"
-							>
-								Next
-							</button>
-						</div>
+			{!isLoading && (
+				<div className="flex items-center justify-between pt-4 text-sm">
+					<span className="text-slate-500">{data?.total ?? 0} total entries</span>
+					<div className="flex gap-2">
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							disabled={page <= 1}
+							onClick={() => setPage((p) => p - 1)}
+						>
+							Previous
+						</Button>
+						<span className="px-2 py-1">
+							Page {page} of {totalPages || 1}
+						</span>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							disabled={page >= totalPages}
+							onClick={() => setPage((p) => p + 1)}
+						>
+							Next
+						</Button>
 					</div>
-				</>
+				</div>
 			)}
 		</div>
 	);

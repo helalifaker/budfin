@@ -1,4 +1,5 @@
 import { cn } from '../../lib/cn';
+import { Input } from '../ui/input';
 
 interface SettingField {
 	key: string;
@@ -32,16 +33,12 @@ export function SettingsCard({ title, description, fields }: SettingsCardProps) 
 						<label htmlFor={`setting-${field.key}`} className="text-sm font-medium">
 							{field.label}
 						</label>
-						<input
+						<Input
 							id={`setting-${field.key}`}
 							type="number"
 							value={field.value}
 							onChange={(e) => field.onChange(e.target.value)}
-							className={cn(
-								'w-24 rounded-md border px-2 py-1',
-								'text-right text-sm',
-								'border-slate-300'
-							)}
+							className="w-24 text-right"
 						/>
 					</div>
 				))}
