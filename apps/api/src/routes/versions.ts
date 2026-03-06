@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { Decimal } from 'decimal.js';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 
@@ -16,6 +17,11 @@ const patchStatusSchema = z.object({
 const cloneVersionSchema = z.object({
 	name: z.string().min(1).max(100),
 	fiscalYear: z.number().int().min(2000).max(2100).optional(),
+});
+
+const compareQuerySchema = z.object({
+	primary: z.coerce.number().int().positive(),
+	comparison: z.coerce.number().int().positive(),
 });
 
 // ── State machine ─────────────────────────────────────────────────────────────
@@ -162,6 +168,73 @@ export async function versionRoutes(app: FastifyInstance) {
 				total,
 				nextCursor,
 			};
+		},
+	});
+
+	// GET /compare — Version comparison (AC-13, TC-001)
+	app.get('/compare', {
+		schema: { querystring: compareQuerySchema },
+		preHandler: [app.authenticate],
+		handler: async (request, reply) => {
+			const { primary, comparison } = request.query as z.infer<typeof compareQuerySchema>;
+
+			const [primaryVersion, compVersion] = await Promise.all([
+				prisma.budgetVersion.findUnique({ where: { id: primary } }),
+				prisma.budgetVersion.findUnique({ where: { id: comparison } }),
+			]);
+
+			if (!primaryVersion) {
+				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${primary} not found` });
+			}
+			if (!compVersion) {
+				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${comparison} not found` });
+			}
+
+			const [primarySummaries, compSummaries] = await Promise.all([
+				prisma.monthlyBudgetSummary.findMany({ where: { versionId: primary } }),
+				prisma.monthlyBudgetSummary.findMany({ where: { versionId: comparison } }),
+			]);
+
+			type SummaryRow = { month: number; revenueHt: unknown; staffCosts: unknown; netProfit: unknown };
+			const primaryByMonth = new Map<number, SummaryRow>(
+				(primarySummaries as SummaryRow[]).map((s) => [s.month, s]),
+			);
+			const compByMonth = new Map<number, SummaryRow>(
+				(compSummaries as SummaryRow[]).map((s) => [s.month, s]),
+			);
+
+			const allMonths = new Set([...primaryByMonth.keys(), ...compByMonth.keys()]);
+
+			if (allMonths.size === 0) {
+				return [];
+			}
+
+			function variance(pVal: unknown, cVal: unknown) {
+				const p = new Decimal(String(pVal ?? 0));
+				const c = new Decimal(String(cVal ?? 0));
+				const abs = p.minus(c);
+				const pct = c.isZero() ? null : abs.div(c.abs()).times(100);
+				return { abs: abs.toString(), pct: pct ? pct.toString() : null };
+			}
+
+			return Array.from(allMonths)
+				.sort((a, b) => a - b)
+				.map((month) => {
+					const p = primaryByMonth.get(month);
+					const c = compByMonth.get(month);
+					const rev = variance(p?.revenueHt, c?.revenueHt);
+					const staff = variance(p?.staffCosts, c?.staffCosts);
+					const net = variance(p?.netProfit, c?.netProfit);
+					return {
+						month,
+						revenue_abs: rev.abs,
+						revenue_pct: rev.pct,
+						staff_costs_abs: staff.abs,
+						staff_costs_pct: staff.pct,
+						net_profit_abs: net.abs,
+						net_profit_pct: net.pct,
+					};
+				});
 		},
 	});
 
