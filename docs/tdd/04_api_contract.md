@@ -158,9 +158,9 @@ Rotate the refresh token and issue a new token pair. Implements token family tra
 
 #### POST /api/v1/auth/logout
 
-Invalidate the current refresh token and clear the cookie.
+Invalidate the current refresh token and clear the cookie. This endpoint does **not** require a valid access token so that users can log out even when their session has expired. If an `Authorization: Bearer <token>` header is present, the server makes a best-effort attempt to extract the `userId` for the audit trail; if the token is expired or missing, the audit entry records `userId: null`.
 
-**RBAC:** Authenticated (any role).
+**RBAC:** None (unauthenticated). The refresh-token cookie, if present, is used to identify and revoke the session.
 
 **Request:** No body. Server reads the `refresh_token` cookie.
 
@@ -187,12 +187,7 @@ Returns application context for the currently authenticated user: identity, acti
         "email": "string",
         "role": "Admin|BudgetOwner|Editor|Viewer"
     },
-    "schoolYear": {
-        "id": "integer",
-        "label": "string (e.g. \"2025-26\")",
-        "startDate": "string (ISO 8601 date)",
-        "endDate": "string (ISO 8601 date)"
-    },
+    "schoolYear": "string | null (e.g. \"2025-26\", read from system_config)",
     "permissions": ["string"]
 }
 ```
