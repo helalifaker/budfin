@@ -27,7 +27,10 @@ export async function buildApp() {
 
 	await app.register(logging);
 	await app.register(metrics);
-	await app.register(cors);
+	await app.register(cors, {
+		origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+		credentials: true,
+	});
 	await app.register(cookie);
 	await app.register(rateLimit, {
 		max: 100,
