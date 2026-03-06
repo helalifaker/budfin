@@ -61,19 +61,21 @@ Run the full `impl:epic` workflow:
 4. Continue until all stories have approved PRs
 
 ### If Phase 7 (REVIEW):
-```
-This Epic is in the REVIEW phase. All PRs are open.
+Execute the `review:run --all` workflow inline:
+1. Load all open PRs for this Epic in dependency order
+2. For each PR: check CI -> fix if needed -> run review agents -> merge
+3. Epic rollup: close Epic issue, update STATUS.md
+4. Auto-advance to Phase 4 for next Epic
+5. Output: "Epic #$EPIC_NUMBER complete. Next: /workflow:run [next-epic-#]"
 
-Action needed:
-1. Review and merge each PR in dependency order
-2. After all PRs merged: /workflow:advance
+## Zero-Prompt Mode
 
-PRs to review:
-```
-```bash
-gh pr list --json number,title,headRefName | grep "epic-$EPIC_NUMBER"
-```
-Stop.
+When invoked as /workflow:run, all sub-workflows run without confirmation prompts.
+The user has expressed intent by running the full driver.
+
+Suppressed prompts:
+- impl:epic "Ready to implement N stories?" -> auto-yes
+- workflow:advance "Which Epic next?" -> auto-advance, show next epic
 
 ## Step 3 — Epic Completion (after all stories implemented and approved)
 

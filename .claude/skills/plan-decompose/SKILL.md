@@ -1,6 +1,9 @@
 ---
 name: plan-decompose
 description: Use when running /plan:decompose or /plan:epic to create BudFin GitHub Epics. Provides canonical Epic definitions with rich summaries, dependency maps, MoSCoW priorities, and tier classifications. Load before creating any Epic issues.
+invocations:
+  - user: /plan-decompose
+  - agent: plan-decompose
 ---
 
 # plan-decompose

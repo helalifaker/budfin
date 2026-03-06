@@ -47,9 +47,9 @@ Recommended next command:
 ```
 
 Phase-to-command mapping:
-- Phase 2: `/plan:decompose` (primary), `/plan:epic`, `/workflow:advance`
+- Phase 2: `/plan:decompose` (primary), `/workflow:advance`
 - Phase 3: setup work (no slash command), `/workflow:advance`
 - Phase 4: `/plan:spec [epic-N]`, `/plan:stories [epic-N]`, `/plan:adr`, `/workflow:advance`
-- Phase 5/6: `/impl:story [#]`, `/impl:epic [#]`, `/fix:*` (any), `/workflow:advance`
-- Phase 7: review and merge PRs, `/workflow:advance`
-- Any phase: `/workflow:status`, `/workflow:advance`, `/fix:*`, `/plan:adr`
+- Phase 5/6: `/impl:story [#]`, `/impl:epic [#]`, `/impl:commit [#]`, `/fix:*` (any), `/workflow:advance`
+- Phase 7: `/review:run [story-#|--all]`, `/ci:check [story-#]`, `/pr:merge [story-#]`, `/workflow:advance`
+- Any phase: `/workflow:status`, `/workflow:advance`, `/workflow:run [epic-#]`, `/fix:*`, `/plan:adr`

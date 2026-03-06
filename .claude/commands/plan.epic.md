@@ -5,6 +5,13 @@ argument-hint: '[epic-number] "[feature name]" [must|should|could|wont] [mvp|tar
 allowed-tools: Bash, Read
 ---
 
+## Phase Guard
+
+If Phase > 2, output: "All 13 Epics were created in Phase 2. This command is no longer needed.
+Use /workflow:status to see Epics." Then stop.
+
+## Arguments
+
 Parse the arguments:
 
 - `epic-number`: integer (1–13)

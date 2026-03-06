@@ -9,6 +9,9 @@ argument-hint: '"[ComponentName]"'
 allowed-tools: Bash, Read, Write, Edit, Skill
 ---
 
+> **Internal scaffolding command.** Called by story-orchestrator agents during /impl:story.
+> Not intended for direct user invocation.
+
 Parse the argument:
 
 - `ComponentName`: PascalCase component name (e.g., "EnrollmentTable", "StaffForm", "BudgetSummary")
