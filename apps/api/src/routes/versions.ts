@@ -16,6 +16,7 @@ const patchStatusSchema = z.object({
 
 const cloneVersionSchema = z.object({
 	name: z.string().min(1).max(100),
+	description: z.string().max(500).optional(),
 	fiscalYear: z.number().int().min(2000).max(2100).optional(),
 });
 
@@ -181,19 +182,25 @@ export async function versionRoutes(app: FastifyInstance) {
 			const { primary, comparison } = request.query as z.infer<typeof compareQuerySchema>;
 
 			const [primaryVersion, compVersion] = await Promise.all([
-				prisma.budgetVersion.findUnique({ where: { id: primary } }),
-				prisma.budgetVersion.findUnique({ where: { id: comparison } }),
+				prisma.budgetVersion.findUnique({
+					where: { id: primary },
+					select: { id: true, name: true },
+				}),
+				prisma.budgetVersion.findUnique({
+					where: { id: comparison },
+					select: { id: true, name: true },
+				}),
 			]);
 
 			if (!primaryVersion) {
 				return reply
 					.status(404)
-					.send({ code: 'NOT_FOUND', message: `Version ${primary} not found` });
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${primary} not found` });
 			}
 			if (!compVersion) {
 				return reply
 					.status(404)
-					.send({ code: 'NOT_FOUND', message: `Version ${comparison} not found` });
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${comparison} not found` });
 			}
 
 			const [primarySummaries, compSummaries] = await Promise.all([
@@ -214,38 +221,107 @@ export async function versionRoutes(app: FastifyInstance) {
 				(compSummaries as SummaryRow[]).map((s) => [s.month, s])
 			);
 
-			const allMonths = new Set([...primaryByMonth.keys(), ...compByMonth.keys()]);
-
-			if (allMonths.size === 0) {
-				return [];
+			function toDecStr(val: unknown): string {
+				return new Decimal(String(val ?? 0)).toString();
 			}
 
-			function variance(pVal: unknown, cVal: unknown) {
+			function calcVariance(pVal: unknown, cVal: unknown) {
 				const p = new Decimal(String(pVal ?? 0));
 				const c = new Decimal(String(cVal ?? 0));
 				const abs = p.minus(c);
-				const pct = c.isZero() ? null : abs.div(c.abs()).times(100);
-				return { abs: abs.toString(), pct: pct ? pct.toString() : null };
+				const pct = c.isZero() ? null : abs.div(c.abs()).times(100).toString();
+				return { abs: abs.toString(), pct };
 			}
 
-			return Array.from(allMonths)
-				.sort((a, b) => a - b)
-				.map((month) => {
-					const p = primaryByMonth.get(month);
-					const c = compByMonth.get(month);
-					const rev = variance(p?.revenueHt, c?.revenueHt);
-					const staff = variance(p?.staffCosts, c?.staffCosts);
-					const net = variance(p?.netProfit, c?.netProfit);
-					return {
-						month,
-						revenue_abs: rev.abs,
-						revenue_pct: rev.pct,
-						staff_costs_abs: staff.abs,
-						staff_costs_pct: staff.pct,
-						net_profit_abs: net.abs,
-						net_profit_pct: net.pct,
-					};
-				});
+			function buildMetrics(row: SummaryRow | undefined) {
+				return {
+					total_revenue_ht: toDecStr(row?.revenueHt),
+					total_staff_costs: toDecStr(row?.staffCosts),
+					net_profit: toDecStr(row?.netProfit),
+				};
+			}
+
+			// Always return exactly 12 months (AC-13)
+			const monthlyComparison = Array.from({ length: 12 }, (_, i) => {
+				const month = i + 1;
+				const p = primaryByMonth.get(month);
+				const c = compByMonth.get(month);
+				const revVar = calcVariance(p?.revenueHt, c?.revenueHt);
+				const staffVar = calcVariance(p?.staffCosts, c?.staffCosts);
+				const netVar = calcVariance(p?.netProfit, c?.netProfit);
+				return {
+					month,
+					primary: buildMetrics(p),
+					comparison: buildMetrics(c),
+					variance_absolute: {
+						total_revenue_ht: revVar.abs,
+						total_staff_costs: staffVar.abs,
+						net_profit: netVar.abs,
+					},
+					variance_pct: {
+						total_revenue_ht: revVar.pct,
+						total_staff_costs: staffVar.pct,
+						net_profit: netVar.pct,
+					},
+				};
+			});
+
+			// Annual totals — sum across all 12 months
+			function sumField(
+				byMonth: Map<number, SummaryRow>,
+				field: keyof Pick<SummaryRow, 'revenueHt' | 'staffCosts' | 'netProfit'>
+			): Decimal {
+				let total = new Decimal(0);
+				for (let m = 1; m <= 12; m++) {
+					total = total.plus(new Decimal(String(byMonth.get(m)?.[field] ?? 0)));
+				}
+				return total;
+			}
+
+			const pRevTotal = sumField(primaryByMonth, 'revenueHt');
+			const pStaffTotal = sumField(primaryByMonth, 'staffCosts');
+			const pNetTotal = sumField(primaryByMonth, 'netProfit');
+			const cRevTotal = sumField(compByMonth, 'revenueHt');
+			const cStaffTotal = sumField(compByMonth, 'staffCosts');
+			const cNetTotal = sumField(compByMonth, 'netProfit');
+
+			function annualVariance(p: Decimal, c: Decimal) {
+				const abs = p.minus(c);
+				const pct = c.isZero() ? null : abs.div(c.abs()).times(100).toString();
+				return { abs: abs.toString(), pct };
+			}
+
+			const revAnnual = annualVariance(pRevTotal, cRevTotal);
+			const staffAnnual = annualVariance(pStaffTotal, cStaffTotal);
+			const netAnnual = annualVariance(pNetTotal, cNetTotal);
+
+			return {
+				primary_version: { id: primaryVersion.id, name: primaryVersion.name },
+				comparison_version: { id: compVersion.id, name: compVersion.name },
+				monthly_comparison: monthlyComparison,
+				annual_totals: {
+					primary: {
+						total_revenue_ht: pRevTotal.toString(),
+						total_staff_costs: pStaffTotal.toString(),
+						net_profit: pNetTotal.toString(),
+					},
+					comparison: {
+						total_revenue_ht: cRevTotal.toString(),
+						total_staff_costs: cStaffTotal.toString(),
+						net_profit: cNetTotal.toString(),
+					},
+					variance_absolute: {
+						total_revenue_ht: revAnnual.abs,
+						total_staff_costs: staffAnnual.abs,
+						net_profit: netAnnual.abs,
+					},
+					variance_pct: {
+						total_revenue_ht: revAnnual.pct,
+						total_staff_costs: staffAnnual.pct,
+						net_profit: netAnnual.pct,
+					},
+				},
+			};
 		},
 	});
 
@@ -262,7 +338,9 @@ export async function versionRoutes(app: FastifyInstance) {
 			});
 
 			if (!version) {
-				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+				return reply
+					.status(404)
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${id} not found` });
 			}
 
 			return formatVersion(version);
@@ -279,7 +357,9 @@ export async function versionRoutes(app: FastifyInstance) {
 			const version = await prisma.budgetVersion.findUnique({ where: { id } });
 
 			if (!version) {
-				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+				return reply
+					.status(404)
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${id} not found` });
 			}
 
 			// Fetch fiscal periods for this version's fiscal year
@@ -423,7 +503,9 @@ export async function versionRoutes(app: FastifyInstance) {
 			const version = await prisma.budgetVersion.findUnique({ where: { id } });
 
 			if (!version) {
-				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+				return reply
+					.status(404)
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${id} not found` });
 			}
 
 			// AC-10: only Draft versions can be deleted
@@ -467,7 +549,9 @@ export async function versionRoutes(app: FastifyInstance) {
 			});
 
 			if (!source) {
-				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+				return reply
+					.status(404)
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${id} not found` });
 			}
 
 			// AC-12: Actual versions cannot be cloned
@@ -490,7 +574,7 @@ export async function versionRoutes(app: FastifyInstance) {
 							name: body.name,
 							type: source.type,
 							fiscalYear: body.fiscalYear ?? source.fiscalYear,
-							description: source.description,
+							description: body.description ?? source.description,
 							sourceVersionId: id,
 							createdById: request.user.id,
 							modificationCount: 0,
@@ -555,7 +639,9 @@ export async function versionRoutes(app: FastifyInstance) {
 			});
 
 			if (!version) {
-				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+				return reply
+					.status(404)
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${id} not found` });
 			}
 
 			const currentStatus = version.status;

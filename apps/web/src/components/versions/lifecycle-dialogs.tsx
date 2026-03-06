@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '../../lib/cn';
+import { ApiError } from '../../lib/api-client';
 import { usePatchVersionStatus, useDeleteVersion } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
 
@@ -57,20 +58,36 @@ function useFocusTrap(
 	}, [ref, open, onClose]);
 }
 
+// ---------- shared error banner ----------
+
+function ErrorBanner({ message }: { message: string }) {
+	return (
+		<div className="mx-6 mt-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+			{message}
+		</div>
+	);
+}
+
 // ---------- PublishDialog ----------
 
 export function PublishDialog({ open, version, onClose, onSuccess }: BaseDialogProps) {
 	const dialogRef = useRef<HTMLDivElement>(null);
 	const titleId = 'publish-dialog-title';
 	const { mutateAsync, isPending } = usePatchVersionStatus();
+	const [error, setError] = useState<string | null>(null);
 
 	useFocusTrap(dialogRef, open, onClose);
 
 	if (!open || !version) return null;
 
 	async function handleConfirm() {
-		await mutateAsync({ id: version!.id, new_status: 'Published' });
-		onSuccess();
+		setError(null);
+		try {
+			await mutateAsync({ id: version!.id, new_status: 'Published' });
+			onSuccess();
+		} catch (err) {
+			setError(err instanceof ApiError ? err.message : 'An unexpected error occurred');
+		}
 	}
 
 	return (
@@ -89,6 +106,8 @@ export function PublishDialog({ open, version, onClose, onSuccess }: BaseDialogP
 							Publish Version
 						</h2>
 					</div>
+
+					{error && <ErrorBanner message={error} />}
 
 					<div className="px-6 py-4">
 						<p className="text-sm text-slate-700">
@@ -134,14 +153,20 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 	const dialogRef = useRef<HTMLDivElement>(null);
 	const titleId = 'lock-dialog-title';
 	const { mutateAsync, isPending } = usePatchVersionStatus();
+	const [error, setError] = useState<string | null>(null);
 
 	useFocusTrap(dialogRef, open, onClose);
 
 	if (!open || !version) return null;
 
 	async function handleConfirm() {
-		await mutateAsync({ id: version!.id, new_status: 'Locked' });
-		onSuccess();
+		setError(null);
+		try {
+			await mutateAsync({ id: version!.id, new_status: 'Locked' });
+			onSuccess();
+		} catch (err) {
+			setError(err instanceof ApiError ? err.message : 'An unexpected error occurred');
+		}
 	}
 
 	return (
@@ -160,6 +185,8 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 							Lock Version
 						</h2>
 					</div>
+
+					{error && <ErrorBanner message={error} />}
 
 					<div className="px-6 py-4">
 						<p className="text-sm text-slate-700">
@@ -224,14 +251,20 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 	const dialogRef = useRef<HTMLDivElement>(null);
 	const titleId = 'archive-dialog-title';
 	const { mutateAsync, isPending } = usePatchVersionStatus();
+	const [error, setError] = useState<string | null>(null);
 
 	useFocusTrap(dialogRef, open, onClose);
 
 	if (!open || !version) return null;
 
 	async function handleConfirm() {
-		await mutateAsync({ id: version!.id, new_status: 'Archived' });
-		onSuccess();
+		setError(null);
+		try {
+			await mutateAsync({ id: version!.id, new_status: 'Archived' });
+			onSuccess();
+		} catch (err) {
+			setError(err instanceof ApiError ? err.message : 'An unexpected error occurred');
+		}
 	}
 
 	return (
@@ -250,6 +283,8 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 							Archive Version
 						</h2>
 					</div>
+
+					{error && <ErrorBanner message={error} />}
 
 					<div className="px-6 py-4">
 						<p className="text-sm text-slate-700">
@@ -299,6 +334,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 	const titleId = 'revert-dialog-title';
 	const { mutateAsync, isPending } = usePatchVersionStatus();
 	const [auditNote, setAuditNote] = useState('');
+	const [error, setError] = useState<string | null>(null);
 
 	useFocusTrap(dialogRef, true, onClose);
 
@@ -306,12 +342,17 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 	const isValid = noteLength >= 10;
 
 	async function handleConfirm() {
-		await mutateAsync({
-			id: version.id,
-			new_status: 'Draft',
-			audit_note: auditNote,
-		});
-		onSuccess();
+		setError(null);
+		try {
+			await mutateAsync({
+				id: version.id,
+				new_status: 'Draft',
+				audit_note: auditNote,
+			});
+			onSuccess();
+		} catch (err) {
+			setError(err instanceof ApiError ? err.message : 'An unexpected error occurred');
+		}
 	}
 
 	return (
@@ -330,6 +371,8 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 							Revert to Draft
 						</h2>
 					</div>
+
+					{error && <ErrorBanner message={error} />}
 
 					<div className="px-6 py-4">
 						<p className="mb-4 text-sm text-slate-700">
@@ -414,14 +457,20 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 	const descId = 'delete-dialog-desc';
 	const { mutateAsync, isPending } = useDeleteVersion();
 	const [confirmText, setConfirmText] = useState('');
+	const [error, setError] = useState<string | null>(null);
 
 	useFocusTrap(dialogRef, true, onClose);
 
 	const canDelete = confirmText === version.name;
 
 	async function handleConfirm() {
-		await mutateAsync(version.id);
-		onSuccess();
+		setError(null);
+		try {
+			await mutateAsync(version.id);
+			onSuccess();
+		} catch (err) {
+			setError(err instanceof ApiError ? err.message : 'An unexpected error occurred');
+		}
 	}
 
 	return (
@@ -441,6 +490,8 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 							Delete Version
 						</h2>
 					</div>
+
+					{error && <ErrorBanner message={error} />}
 
 					<div className="px-6 py-4">
 						<p id={descId} className="mb-4 text-sm text-slate-700">

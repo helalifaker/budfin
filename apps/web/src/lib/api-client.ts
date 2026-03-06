@@ -8,9 +8,24 @@ interface ApiOptions extends RequestInit {
 
 export class ApiError extends Error {
 	status: number;
-	constructor(response: Response) {
-		super(`API error: ${response.status}`);
-		this.status = response.status;
+	code: string;
+	constructor(status: number, code: string, message: string) {
+		super(message);
+		this.status = status;
+		this.code = code;
+	}
+}
+
+async function parseErrorResponse(response: Response): Promise<ApiError> {
+	try {
+		const body = await response.json();
+		return new ApiError(
+			response.status,
+			body.code ?? 'UNKNOWN_ERROR',
+			body.message ?? `API error: ${response.status}`
+		);
+	} catch {
+		return new ApiError(response.status, 'UNKNOWN_ERROR', `API error: ${response.status}`);
 	}
 }
 
@@ -45,15 +60,15 @@ export async function apiClient<T>(path: string, options: ApiOptions = {}): Prom
 				headers,
 				credentials: 'include',
 			});
-			if (!retryResponse.ok) throw new ApiError(retryResponse);
+			if (!retryResponse.ok) throw await parseErrorResponse(retryResponse);
 			if (retryResponse.status === 204) return undefined as T;
 			return retryResponse.json();
 		}
 		useAuthStore.getState().logout();
-		throw new ApiError(response);
+		throw await parseErrorResponse(response);
 	}
 
-	if (!response.ok) throw new ApiError(response);
+	if (!response.ok) throw await parseErrorResponse(response);
 	if (response.status === 204) return undefined as T;
 	return response.json();
 }

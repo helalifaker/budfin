@@ -48,9 +48,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Health check endpoint now reports database connectivity status and application uptime, enabling monitoring tools to detect outages faster (#22)
 - Application performance metrics (request durations, error rates, calculation times) are collected and exposed for future Grafana dashboards (#23)
 - Docker containers are hardened for production with non-root users, read-only filesystems, resource limits, and automatic restart policies (#24)
+- Compare Versions dialog on the Versions page navigates to the Planning workspace with comparison parameters (#14)
+- Planning workspace landing page at /planning under PlanningShell layout (#14)
+- Error banners in all version lifecycle dialogs display server error messages instead of failing silently (#14)
+
+### Changed
+
+- Version comparison endpoint returns nested shape with version metadata, 12 month rows (zero-filled), and annual totals with variance calculations (#14)
+- Fiscal period locking validates that the referenced Actual version has dataSource=IMPORTED and rejects already-locked periods with 409 (#14)
+- All version API error codes aligned to spec: VERSION_NOT_FOUND, PERIOD_ALREADY_LOCKED, INVALID_ACTUAL_VERSION (#14)
+- Date and time displays render in Arabia Standard Time (UTC+3) via @date-fns/tz instead of browser locale (#14)
+- Version and Fiscal Period pages accessible to all authenticated roles, not only Admin (#14)
+- Version cloning accepts optional description override (#14)
 
 ### Fixed
 
+- API client now parses structured error responses (code + message) from the server, providing meaningful error text (#14)
+- Workspace context version change correctly invalidates the versions query key (#14)
 - Authentication session enforcement now keeps the advisory lock, session eviction, token-family creation, last-login update, and audit writes inside a single database transaction so concurrent logins cannot exceed the configured session cap (#30)
 - Deactivating a user now revokes active refresh-token sessions automatically, and refresh requests for inactive users are rejected with cookie clearing plus audit logging (#30, #32)
 - Master Data API endpoints are now mounted through the real `buildApp()` bootstrap under `/api/v1/master-data`, with regression coverage to prevent route modules from being implemented without being shipped (#47)

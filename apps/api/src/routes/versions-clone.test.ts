@@ -282,8 +282,37 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		expect(res.json().code).toBe('DUPLICATE_VERSION_NAME');
 	});
 
+	it('AC-11: clone with description override uses provided description', async () => {
+		const source = makeVersion({ id: 1, description: 'Original description' });
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Clone With Desc',
+			description: 'Overridden description',
+			status: 'Draft',
+			sourceVersionId: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		});
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
+		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions/1/clone',
+			headers: authHeader(token),
+			payload: { name: 'Clone With Desc', description: 'Overridden description' },
+		});
+
+		expect(res.statusCode).toBe(201);
+		expect(mockPrisma.budgetVersion.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({ description: 'Overridden description' }),
+			})
+		);
+	});
+
 	// 404 not found
-	it('returns 404 when source version not found', async () => {
+	it('returns 404 VERSION_NOT_FOUND when source version not found', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
 
 		const token = await makeToken({ role: 'Admin' });
@@ -295,6 +324,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		});
 
 		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
 	});
 
 	// AC-19: RBAC

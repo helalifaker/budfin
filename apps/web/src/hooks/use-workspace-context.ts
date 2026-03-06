@@ -33,8 +33,8 @@ export function useWorkspaceContext() {
 				}
 				return next;
 			});
-			// Invalidate all version-scoped queries on version change
-			void queryClient.invalidateQueries({ queryKey: ['version'] });
+			// Invalidate version-scoped queries on version change
+			void queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
 		[setSearchParams, queryClient]
 	);

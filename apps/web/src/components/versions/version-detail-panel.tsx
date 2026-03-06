@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { cn } from '../../lib/cn';
+import { formatDateTime } from '../../lib/format-date';
 import type { BudgetVersion } from '../../hooks/use-versions';
 
 export type VersionDetailPanelProps = {
@@ -20,11 +21,6 @@ const TYPE_DOT_COLORS: Record<BudgetVersion['type'], string> = {
 	Forecast: 'bg-amber-500',
 	Actual: 'bg-green-500',
 };
-
-function formatDate(iso: string | null): string {
-	if (!iso) return '\u2014';
-	return new Date(iso).toLocaleString();
-}
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
 	return (
@@ -143,9 +139,9 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 						<SectionHeading>Lifecycle</SectionHeading>
 						<dl className="grid grid-cols-2 gap-4">
 							<Field label="Status">{version.status}</Field>
-							<Field label="Published At">{formatDate(version.publishedAt)}</Field>
-							<Field label="Locked At">{formatDate(version.lockedAt)}</Field>
-							<Field label="Archived At">{formatDate(version.archivedAt)}</Field>
+							<Field label="Published At">{formatDateTime(version.publishedAt)}</Field>
+							<Field label="Locked At">{formatDateTime(version.lockedAt)}</Field>
+							<Field label="Archived At">{formatDateTime(version.archivedAt)}</Field>
 						</dl>
 					</section>
 
@@ -185,8 +181,8 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 						<SectionHeading>Audit</SectionHeading>
 						<dl className="grid grid-cols-2 gap-4">
 							<Field label="Created By">{version.createdByEmail ?? '\u2014'}</Field>
-							<Field label="Created At">{formatDate(version.createdAt)}</Field>
-							<Field label="Updated At">{formatDate(version.updatedAt)}</Field>
+							<Field label="Created At">{formatDateTime(version.createdAt)}</Field>
+							<Field label="Updated At">{formatDateTime(version.updatedAt)}</Field>
 						</dl>
 					</section>
 				</div>

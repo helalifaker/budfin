@@ -88,20 +88,36 @@ export async function fiscalPeriodRoutes(app: FastifyInstance) {
 			const { fiscalYear, month } = request.params as z.infer<typeof monthParams>;
 			const { actual_version_id } = request.body as z.infer<typeof lockBodySchema>;
 
-			// Validate the referenced version exists and is a Locked Actual
+			// Check if period is already locked (PERIOD_ALREADY_LOCKED)
+			const existingPeriod = await prisma.fiscalPeriod.findUnique({
+				where: { fiscalYear_month: { fiscalYear, month } },
+			});
+			if (existingPeriod && (existingPeriod as { status: string }).status === 'Locked') {
+				return reply.status(409).send({
+					code: 'PERIOD_ALREADY_LOCKED',
+					message: `Fiscal period ${fiscalYear}/${month} is already locked`,
+				});
+			}
+
+			// Validate the referenced version exists and is a Locked Actual with IMPORTED data
 			const version = await prisma.budgetVersion.findUnique({ where: { id: actual_version_id } });
 
 			if (!version) {
 				return reply.status(404).send({
-					code: 'NOT_FOUND',
+					code: 'VERSION_NOT_FOUND',
 					message: `Version ${actual_version_id} not found`,
 				});
 			}
 
-			if (version.type !== 'Actual' || version.status !== 'Locked') {
+			if (
+				version.type !== 'Actual' ||
+				version.status !== 'Locked' ||
+				(version as { dataSource: string }).dataSource !== 'IMPORTED'
+			) {
 				return reply.status(422).send({
-					code: 'ACTUAL_VERSION_REQUIRED',
-					message: 'actual_version_id must reference a version with type=Actual and status=Locked',
+					code: 'INVALID_ACTUAL_VERSION',
+					message:
+						'actual_version_id must reference a version with type=Actual, status=Locked, and dataSource=IMPORTED',
 				});
 			}
 
