@@ -16,6 +16,7 @@ vi.mock('../../lib/prisma.js', () => {
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 			delete: vi.fn(),
 		},
 		academicYear: {
@@ -23,18 +24,21 @@ vi.mock('../../lib/prisma.js', () => {
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 			delete: vi.fn(),
 		},
 		gradeLevel: {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 		},
 		nationality: {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 			delete: vi.fn(),
 		},
 		tariff: {
@@ -42,6 +46,7 @@ vi.mock('../../lib/prisma.js', () => {
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 			delete: vi.fn(),
 		},
 		department: {
@@ -49,12 +54,14 @@ vi.mock('../../lib/prisma.js', () => {
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 			delete: vi.fn(),
 		},
 		assumption: {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
@@ -255,8 +262,10 @@ describe('Full CRUD lifecycle — accounts', () => {
 			accountName: 'Updated Revenue',
 			version: 2,
 		};
-		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue(updated);
+		vi.mocked(prisma.chartOfAccount.findUnique)
+			.mockResolvedValueOnce(mockAccount)
+			.mockResolvedValueOnce(updated);
+		vi.mocked(prisma.chartOfAccount.updateMany).mockResolvedValue({ count: 1 });
 		const updateRes = await app.inject({
 			method: 'PUT',
 			url: '/api/v1/master-data/accounts/1',
@@ -439,11 +448,7 @@ describe('RBAC enforcement', () => {
 	it('BudgetOwner gets 200 on PATCH assumptions (data:edit)', async () => {
 		const token = await makeToken({ role: 'BudgetOwner' });
 
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...mockAssumptions[0]!,
-			value: '10.00',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([mockAssumptions[0]!])
@@ -466,8 +471,10 @@ describe('RBAC enforcement', () => {
 describe('Optimistic locking — accounts', () => {
 	it('succeeds with correct version', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue({ ...mockAccount, version: 2 });
+		vi.mocked(prisma.chartOfAccount.findUnique)
+			.mockResolvedValueOnce(mockAccount)
+			.mockResolvedValueOnce({ ...mockAccount, version: 2 });
+		vi.mocked(prisma.chartOfAccount.updateMany).mockResolvedValue({ count: 1 });
 
 		const res = await app.inject({
 			method: 'PUT',
@@ -487,7 +494,8 @@ describe('Optimistic locking — accounts', () => {
 
 	it('returns 409 OPTIMISTIC_LOCK with wrong version', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue({ ...mockAccount, version: 5 });
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.updateMany).mockResolvedValue({ count: 0 });
 
 		const res = await app.inject({
 			method: 'PUT',
@@ -671,12 +679,14 @@ describe('Audit log verification — accounts', () => {
 
 	it('logs ACCOUNT_UPDATED with oldValues and newValues', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue({
-			...mockAccount,
-			accountName: 'Updated',
-			version: 2,
-		});
+		vi.mocked(prisma.chartOfAccount.findUnique)
+			.mockResolvedValueOnce(mockAccount)
+			.mockResolvedValueOnce({
+				...mockAccount,
+				accountName: 'Updated',
+				version: 2,
+			});
+		vi.mocked(prisma.chartOfAccount.updateMany).mockResolvedValue({ count: 1 });
 
 		await app.inject({
 			method: 'PUT',

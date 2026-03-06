@@ -13,6 +13,7 @@ vi.mock('../../lib/prisma.js', () => {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
@@ -134,15 +135,18 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 	};
 
 	it('updates a grade level and returns 200', async () => {
-		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue(mockGradeLevel as never);
-		vi.mocked(prisma.gradeLevel.update).mockResolvedValue({
+		const updatedGrade = {
 			...mockGradeLevel,
 			maxClassSize: 30,
 			plancherPct: { toString: () => '0.7500' },
 			ciblePct: { toString: () => '0.8500' },
 			plafondPct: { toString: () => '0.9500' },
 			version: 2,
-		} as never);
+		};
+		vi.mocked(prisma.gradeLevel.findUnique)
+			.mockResolvedValueOnce(mockGradeLevel as never)
+			.mockResolvedValueOnce(updatedGrade as never);
+		vi.mocked(prisma.gradeLevel.updateMany).mockResolvedValue({ count: 1 });
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -159,15 +163,18 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 	});
 
 	it('creates audit entry with old/new values', async () => {
-		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue(mockGradeLevel as never);
-		vi.mocked(prisma.gradeLevel.update).mockResolvedValue({
+		const updatedGrade = {
 			...mockGradeLevel,
 			...validPayload,
 			version: 2,
 			plancherPct: { toString: () => '0.7500' },
 			ciblePct: { toString: () => '0.8500' },
 			plafondPct: { toString: () => '0.9500' },
-		} as never);
+		};
+		vi.mocked(prisma.gradeLevel.findUnique)
+			.mockResolvedValueOnce(mockGradeLevel as never)
+			.mockResolvedValueOnce(updatedGrade as never);
+		vi.mocked(prisma.gradeLevel.updateMany).mockResolvedValue({ count: 1 });
 
 		const token = await makeToken();
 		await app.inject({
@@ -220,10 +227,8 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 	});
 
 	it('returns 409 on version mismatch', async () => {
-		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue({
-			...mockGradeLevel,
-			version: 3,
-		} as never);
+		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue(mockGradeLevel as never);
+		vi.mocked(prisma.gradeLevel.updateMany).mockResolvedValue({ count: 0 });
 
 		const token = await makeToken();
 		const res = await app.inject({

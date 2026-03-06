@@ -15,6 +15,7 @@ vi.mock('../../lib/prisma.js', () => {
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 			delete: vi.fn(),
 		},
 		auditEntry: {
@@ -285,12 +286,15 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 	};
 
 	it('updates account with optimistic lock', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue({
+		const updatedAccount = {
 			...mockAccount,
 			accountName: 'Updated Revenue',
 			version: 2,
-		});
+		};
+		vi.mocked(prisma.chartOfAccount.findUnique)
+			.mockResolvedValueOnce(mockAccount)
+			.mockResolvedValueOnce(updatedAccount);
+		vi.mocked(prisma.chartOfAccount.updateMany).mockResolvedValue({ count: 1 });
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -326,7 +330,8 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 	});
 
 	it('returns 409 for version mismatch', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue({ ...mockAccount, version: 2 });
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.updateMany).mockResolvedValue({ count: 0 });
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -346,7 +351,7 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 			code: 'P2002',
 			clientVersion: '6.0.0',
 		});
-		vi.mocked(prisma.chartOfAccount.update).mockRejectedValue(error);
+		vi.mocked(prisma.chartOfAccount.updateMany).mockRejectedValue(error);
 
 		const token = await makeToken();
 		const res = await app.inject({

@@ -14,6 +14,7 @@ vi.mock('../../lib/prisma.js', () => {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
@@ -158,11 +159,7 @@ describe('GET /api/v1/master-data/assumptions', () => {
 
 describe('PATCH /api/v1/master-data/assumptions', () => {
 	it('updates assumption value and returns refreshed list', async () => {
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...mockAssumptions[0]!,
-			value: '10.0000',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch for validation; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([mockAssumptions[0]!])
@@ -191,6 +188,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 
 	it('returns 409 on version mismatch', async () => {
 		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce([mockAssumptions[0]!]);
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 0 });
 
 		const token = await makeToken({ role: 'Editor' });
 		const res = await app.inject({
@@ -240,11 +238,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 	});
 
 	it('allows BudgetOwner role to PATCH', async () => {
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...mockAssumptions[0]!,
-			value: '8.50',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([mockAssumptions[0]!])
@@ -300,11 +294,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			valueType: 'CURRENCY' as AssumptionValueType,
 			value: '5000',
 		};
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...currencyAssumption,
-			value: '6000',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([currencyAssumption])
@@ -356,11 +346,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			valueType: 'INTEGER' as AssumptionValueType,
 			value: '36',
 		};
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...integerAssumption,
-			value: '38',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([integerAssumption])
@@ -412,11 +398,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			valueType: 'DECIMAL' as AssumptionValueType,
 			value: '3.75',
 		};
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...decimalAssumption,
-			value: '3.80',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([decimalAssumption])
@@ -442,11 +424,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			valueType: 'TEXT' as AssumptionValueType,
 			value: '2025-26',
 		};
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...textAssumption,
-			value: '2026-27',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([textAssumption])
@@ -466,11 +444,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 	});
 
 	it('creates audit entry on update', async () => {
-		vi.mocked(prisma.assumption.update).mockResolvedValue({
-			...mockAssumptions[0]!,
-			value: '10.0000',
-			version: 2,
-		});
+		vi.mocked(prisma.assumption.updateMany).mockResolvedValue({ count: 1 });
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([mockAssumptions[0]!])

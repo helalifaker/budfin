@@ -15,6 +15,7 @@ vi.mock('../../lib/prisma.js', () => ({
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			updateMany: vi.fn(),
 			delete: vi.fn(),
 		},
 		auditEntry: {
@@ -269,7 +270,8 @@ describe('PUT /api/v1/master-data/academic-years/:id', () => {
 			async (fn: (tx: unknown) => Promise<unknown>) => {
 				return fn({
 					academicYear: {
-						update: vi.fn().mockResolvedValue(updatedYear),
+						updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+						findUnique: vi.fn().mockResolvedValue(updatedYear),
 					},
 					auditEntry: {
 						create: vi.fn().mockResolvedValue({ id: 2 }),
@@ -296,10 +298,20 @@ describe('PUT /api/v1/master-data/academic-years/:id', () => {
 	});
 
 	it('returns 409 for version mismatch (optimistic lock)', async () => {
-		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue({
-			...mockAcademicYear,
-			version: 3,
-		});
+		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(mockAcademicYear);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		vi.mocked(prisma.$transaction as any).mockImplementation(
+			async (fn: (tx: unknown) => Promise<unknown>) => {
+				return fn({
+					academicYear: {
+						updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+					},
+					auditEntry: {
+						create: vi.fn().mockResolvedValue({ id: 1 }),
+					},
+				});
+			}
+		);
 
 		const token = await makeToken();
 		const res = await app.inject({

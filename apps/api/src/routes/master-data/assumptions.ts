@@ -103,13 +103,6 @@ export async function assumptionRoutes(app: FastifyInstance) {
 				const existing = existingMap.get(update.key);
 				if (!existing) continue;
 
-				if (existing.version !== update.version) {
-					return reply.status(409).send({
-						code: 'OPTIMISTIC_LOCK',
-						message: `Assumption "${update.key}" has been modified by another user`,
-					});
-				}
-
 				const validationError = validateAssumptionValue(update.value, existing.valueType);
 				if (validationError) {
 					fieldErrors.push({ field: update.key, message: validationError });
@@ -125,21 +118,25 @@ export async function assumptionRoutes(app: FastifyInstance) {
 			}
 
 			// Wrap all writes + final read in a single transaction
-			const assumptions = await prisma.$transaction(async (tx) => {
+			const result = await prisma.$transaction(async (tx) => {
 				for (const update of updates) {
 					const existing = existingMap.get(update.key);
 					if (!existing) continue;
 
 					const canonicalValue = canonicalizeValue(update.value, existing.valueType);
 
-					await tx.assumption.update({
-						where: { key: update.key },
+					const updated = await tx.assumption.updateMany({
+						where: { key: update.key, version: update.version },
 						data: {
 							value: canonicalValue,
 							updatedBy: request.user.id,
 							version: { increment: 1 },
 						},
 					});
+
+					if (updated.count === 0) {
+						return null;
+					}
 
 					await tx.auditEntry.create({
 						data: {
@@ -166,10 +163,17 @@ export async function assumptionRoutes(app: FastifyInstance) {
 				});
 			});
 
+			if (!result) {
+				return reply.status(409).send({
+					code: 'OPTIMISTIC_LOCK',
+					message: 'An assumption has been modified by another user',
+				});
+			}
+
 			return {
-				assumptions,
+				assumptions: result,
 				computed: {
-					gosiRateTotal: computeGosiTotal(assumptions),
+					gosiRateTotal: computeGosiTotal(result),
 				},
 			};
 		},

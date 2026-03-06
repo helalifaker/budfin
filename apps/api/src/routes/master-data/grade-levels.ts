@@ -65,13 +65,6 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 
 			const body = request.body as z.infer<typeof updateGradeLevelSchema>;
 
-			if (existing.version !== body.version) {
-				return reply.status(409).send({
-					code: 'OPTIMISTIC_LOCK',
-					message: 'Record has been modified by another user. Please refresh.',
-				});
-			}
-
 			const oldValues = {
 				maxClassSize: existing.maxClassSize,
 				plancherPct: String(existing.plancherPct),
@@ -81,8 +74,8 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 			};
 
 			const updated = await prisma.$transaction(async (tx) => {
-				const result = await tx.gradeLevel.update({
-					where: { id },
+				const result = await tx.gradeLevel.updateMany({
+					where: { id, version: body.version },
 					data: {
 						maxClassSize: body.maxClassSize,
 						plancherPct: new Decimal(body.plancherPct)
@@ -97,6 +90,14 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 						displayOrder: body.displayOrder,
 						version: { increment: 1 },
 					},
+				});
+
+				if (result.count === 0) {
+					return null;
+				}
+
+				const refetched = await tx.gradeLevel.findUnique({
+					where: { id },
 				});
 
 				await tx.auditEntry.create({
@@ -116,8 +117,15 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 					},
 				});
 
-				return result;
+				return refetched;
 			});
+
+			if (!updated) {
+				return reply.status(409).send({
+					code: 'OPTIMISTIC_LOCK',
+					message: 'Record has been modified by another user. Please refresh.',
+				});
+			}
 
 			return serializeGradeLevel(updated);
 		},

@@ -192,16 +192,10 @@ export async function academicYearRoutes(app: FastifyInstance) {
 					message: 'Academic year not found',
 				});
 			}
-			if (existing.version !== body.version) {
-				return reply.status(409).send({
-					code: 'OPTIMISTIC_LOCK',
-					message: 'Record has been modified by another user',
-				});
-			}
 
 			const ay = await prisma.$transaction(async (tx) => {
-				const updated = await tx.academicYear.update({
-					where: { id },
+				const result = await tx.academicYear.updateMany({
+					where: { id, version: body.version },
 					data: {
 						fiscalYear: body.fiscalYear,
 						...dates,
@@ -210,6 +204,15 @@ export async function academicYearRoutes(app: FastifyInstance) {
 						version: { increment: 1 },
 					},
 				});
+
+				if (result.count === 0) {
+					return null;
+				}
+
+				const updated = await tx.academicYear.findUnique({
+					where: { id },
+				});
+
 				await tx.auditEntry.create({
 					data: {
 						userId: request.user.id,
@@ -223,6 +226,13 @@ export async function academicYearRoutes(app: FastifyInstance) {
 				});
 				return updated;
 			});
+
+			if (!ay) {
+				return reply.status(409).send({
+					code: 'OPTIMISTIC_LOCK',
+					message: 'Record has been modified by another user',
+				});
+			}
 			return formatAcademicYear(ay);
 		},
 	});

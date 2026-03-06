@@ -155,17 +155,10 @@ export async function accountRoutes(app: FastifyInstance) {
 				});
 			}
 
-			if (existing.version !== version) {
-				return reply.status(409).send({
-					code: 'OPTIMISTIC_LOCK',
-					message: 'Record has been modified by another user',
-				});
-			}
-
 			try {
 				const account = await prisma.$transaction(async (tx) => {
-					const updated = await tx.chartOfAccount.update({
-						where: { id },
+					const result = await tx.chartOfAccount.updateMany({
+						where: { id, version },
 						data: {
 							accountCode: data.accountCode,
 							accountName: data.accountName,
@@ -179,12 +172,20 @@ export async function accountRoutes(app: FastifyInstance) {
 						},
 					});
 
+					if (result.count === 0) {
+						return null;
+					}
+
+					const updated = await tx.chartOfAccount.findUnique({
+						where: { id },
+					});
+
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
 							operation: 'ACCOUNT_UPDATED',
 							tableName: 'chart_of_accounts',
-							recordId: updated.id,
+							recordId: id,
 							ipAddress: request.ip,
 							oldValues: existing as unknown as Prisma.InputJsonValue,
 							newValues: data as unknown as Prisma.InputJsonValue,
@@ -193,6 +194,13 @@ export async function accountRoutes(app: FastifyInstance) {
 
 					return updated;
 				});
+
+				if (!account) {
+					return reply.status(409).send({
+						code: 'OPTIMISTIC_LOCK',
+						message: 'Record has been modified by another user',
+					});
+				}
 
 				return account;
 			} catch (error) {

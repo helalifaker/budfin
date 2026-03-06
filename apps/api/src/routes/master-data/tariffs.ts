@@ -98,17 +98,10 @@ export async function tariffRoutes(app: FastifyInstance) {
 				});
 			}
 
-			if (existing.version !== version) {
-				return reply.status(409).send({
-					code: 'OPTIMISTIC_LOCK',
-					message: 'Record has been modified by another user',
-				});
-			}
-
 			try {
 				const tariff = await prisma.$transaction(async (tx) => {
-					const updated = await tx.tariff.update({
-						where: { id },
+					const result = await tx.tariff.updateMany({
+						where: { id, version },
 						data: {
 							code: data.code,
 							label: data.label,
@@ -118,12 +111,20 @@ export async function tariffRoutes(app: FastifyInstance) {
 						},
 					});
 
+					if (result.count === 0) {
+						return null;
+					}
+
+					const updated = await tx.tariff.findUnique({
+						where: { id },
+					});
+
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
 							operation: 'TARIFF_UPDATED',
 							tableName: 'tariffs',
-							recordId: updated.id,
+							recordId: id,
 							ipAddress: request.ip,
 							oldValues: existing as unknown as Prisma.InputJsonValue,
 							newValues: data as unknown as Prisma.InputJsonValue,
@@ -132,6 +133,13 @@ export async function tariffRoutes(app: FastifyInstance) {
 
 					return updated;
 				});
+
+				if (!tariff) {
+					return reply.status(409).send({
+						code: 'OPTIMISTIC_LOCK',
+						message: 'Record has been modified by another user',
+					});
+				}
 
 				return tariff;
 			} catch (error) {

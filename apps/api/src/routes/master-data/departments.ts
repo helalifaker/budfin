@@ -104,17 +104,10 @@ export async function departmentRoutes(app: FastifyInstance) {
 				});
 			}
 
-			if (existing.version !== version) {
-				return reply.status(409).send({
-					code: 'OPTIMISTIC_LOCK',
-					message: 'Record has been modified by another user',
-				});
-			}
-
 			try {
 				const department = await prisma.$transaction(async (tx) => {
-					const updated = await tx.department.update({
-						where: { id },
+					const result = await tx.department.updateMany({
+						where: { id, version },
 						data: {
 							...data,
 							updatedBy: request.user.id,
@@ -122,12 +115,20 @@ export async function departmentRoutes(app: FastifyInstance) {
 						},
 					});
 
+					if (result.count === 0) {
+						return null;
+					}
+
+					const updated = await tx.department.findUnique({
+						where: { id },
+					});
+
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
 							operation: 'DEPARTMENT_UPDATED',
 							tableName: 'departments',
-							recordId: updated.id,
+							recordId: id,
 							ipAddress: request.ip,
 							oldValues: existing as unknown as Prisma.InputJsonValue,
 							newValues: data as unknown as Prisma.InputJsonValue,
@@ -136,6 +137,13 @@ export async function departmentRoutes(app: FastifyInstance) {
 
 					return updated;
 				});
+
+				if (!department) {
+					return reply.status(409).send({
+						code: 'OPTIMISTIC_LOCK',
+						message: 'Record has been modified by another user',
+					});
+				}
 
 				return department;
 			} catch (error) {

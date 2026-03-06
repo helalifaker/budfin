@@ -7,19 +7,14 @@ import { useUpdateGradeLevel, type GradeLevel } from '../../hooks/use-grade-leve
 
 const baseGradeLevelSchema = z.object({
 	maxClassSize: z.coerce.number().int().min(1).max(50),
-	plancherPct: z.string().min(1, 'Required'),
-	ciblePct: z.string().min(1, 'Required'),
-	plafondPct: z.string().min(1, 'Required'),
+	plancherPct: z.coerce.number().min(0).max(1),
+	ciblePct: z.coerce.number().min(0).max(1),
+	plafondPct: z.coerce.number().min(0).max(1),
 	displayOrder: z.coerce.number().int().min(0),
 });
 
 const gradeLevelSchema = baseGradeLevelSchema.refine(
-	(d) => {
-		const p = parseFloat(d.plancherPct);
-		const c = parseFloat(d.ciblePct);
-		const f = parseFloat(d.plafondPct);
-		return p <= c && c <= f;
-	},
+	(d) => d.plancherPct <= d.ciblePct && d.ciblePct <= d.plafondPct,
 	{
 		message: 'Must satisfy: plancher <= cible <= plafond',
 		path: ['plafondPct'],
@@ -48,9 +43,9 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 		resolver: zodResolver(gradeLevelSchema) as any,
 		defaultValues: {
 			maxClassSize: 25,
-			plancherPct: '0',
-			ciblePct: '0',
-			plafondPct: '0',
+			plancherPct: 0,
+			ciblePct: 0,
+			plafondPct: 0,
 			displayOrder: 0,
 		},
 	});
@@ -59,9 +54,9 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 		if (!open || !gradeLevel) return;
 		reset({
 			maxClassSize: gradeLevel.maxClassSize,
-			plancherPct: gradeLevel.plancherPct,
-			ciblePct: gradeLevel.ciblePct,
-			plafondPct: gradeLevel.plafondPct,
+			plancherPct: Number(gradeLevel.plancherPct),
+			ciblePct: Number(gradeLevel.ciblePct),
+			plafondPct: Number(gradeLevel.plafondPct),
 			displayOrder: gradeLevel.displayOrder,
 		});
 	}, [open, gradeLevel, reset]);
@@ -201,8 +196,10 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								</label>
 								<input
 									id="plancherPct"
-									type="text"
-									inputMode="decimal"
+									type="number"
+									step="0.01"
+									min={0}
+									max={1}
 									className={inputClass(!!errors.plancherPct)}
 									{...register('plancherPct')}
 								/>
@@ -216,8 +213,10 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								</label>
 								<input
 									id="ciblePct"
-									type="text"
-									inputMode="decimal"
+									type="number"
+									step="0.01"
+									min={0}
+									max={1}
 									className={inputClass(!!errors.ciblePct)}
 									{...register('ciblePct')}
 								/>
@@ -231,8 +230,10 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								</label>
 								<input
 									id="plafondPct"
-									type="text"
-									inputMode="decimal"
+									type="number"
+									step="0.01"
+									min={0}
+									max={1}
 									className={inputClass(!!errors.plafondPct)}
 									{...register('plafondPct')}
 								/>

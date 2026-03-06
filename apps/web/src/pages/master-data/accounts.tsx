@@ -105,6 +105,7 @@ export function AccountsPage() {
 					{
 						id: editingAccount.id,
 						version: formData.version as number,
+						accountCode: formData.accountCode as string,
 						accountName: formData.accountName as string,
 						type: formData.type as Account['type'],
 						ifrsCategory: formData.ifrsCategory as string,
