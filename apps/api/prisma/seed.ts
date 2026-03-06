@@ -70,6 +70,12 @@ async function main() {
 			dataType: 'number',
 			description: 'Auto-save interval in seconds',
 		},
+		{
+			key: 'schoolYear',
+			value: '2025-2026',
+			dataType: 'string',
+			description: 'Current school year displayed in context bar',
+		},
 	];
 
 	for (const config of configDefaults) {
@@ -80,7 +86,7 @@ async function main() {
 		});
 	}
 
-	console.log('Seeded 7 system_config defaults.');
+	console.log('Seeded 8 system_config defaults.');
 }
 
 main()
