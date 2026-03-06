@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
-import { useCreateVersion } from '../../hooks/use-versions';
+import { useCreateVersion, useVersions } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
@@ -12,6 +12,7 @@ const createSchema = z.object({
 	name: z.string().min(1, 'Name is required').max(100, 'Name must be ≤ 100 characters'),
 	type: z.enum(['Budget', 'Forecast']),
 	description: z.string().max(500).optional(),
+	sourceVersionId: z.string().optional(),
 });
 
 type CreateForm = z.infer<typeof createSchema>;
@@ -32,10 +33,15 @@ export function CreateVersionPanel({
 	const panelRef = useRef<HTMLDivElement>(null);
 	const titleId = 'create-version-panel-title';
 	const { mutateAsync, isPending } = useCreateVersion();
+	const { data: versionsData } = useVersions(fiscalYear);
+	const sourceVersionOptions = useMemo(
+		() => (versionsData?.data ?? []).filter((v) => v.type !== 'Actual'),
+		[versionsData]
+	);
 
 	const form = useForm<CreateForm>({
 		resolver: zodResolver(createSchema),
-		defaultValues: { name: '', type: 'Budget', description: '' },
+		defaultValues: { name: '', type: 'Budget', description: '', sourceVersionId: '' },
 	});
 
 	// Focus trap + Escape
@@ -71,20 +77,10 @@ export function CreateVersionPanel({
 	}, [open, onClose]);
 
 	useEffect(() => {
-		if (open) form.reset({ name: '', type: 'Budget', description: '' });
+		if (open) form.reset({ name: '', type: 'Budget', description: '', sourceVersionId: '' });
 	}, [open, form]);
 
 	if (!open) return null;
-
-	const handleSubmit = form.handleSubmit(async (data) => {
-		await mutateAsync({
-			name: data.name,
-			type: data.type,
-			fiscalYear,
-			...(data.description ? { description: data.description } : {}),
-		});
-		onSuccess(data.name);
-	});
 
 	return (
 		<>
@@ -108,7 +104,23 @@ export function CreateVersionPanel({
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-6 py-4">
-					<form id="create-version-form" onSubmit={handleSubmit} className="space-y-4">
+					<form
+						id="create-version-form"
+						onSubmit={form.handleSubmit(async (data) => {
+							const parsedSourceId = data.sourceVersionId
+								? Number(data.sourceVersionId)
+								: undefined;
+							await mutateAsync({
+								name: data.name,
+								type: data.type,
+								fiscalYear,
+								...(data.description ? { description: data.description } : {}),
+								...(parsedSourceId ? { sourceVersionId: parsedSourceId } : {}),
+							});
+							onSuccess(data.name);
+						})}
+						className="space-y-4"
+					>
 						<div>
 							<label htmlFor="cv-name" className="block text-sm font-medium">
 								Name{' '}
@@ -171,6 +183,24 @@ export function CreateVersionPanel({
 								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 								{...form.register('description')}
 							/>
+						</div>
+
+						<div>
+							<label htmlFor="cv-source" className="block text-sm font-medium">
+								Copy Data From
+							</label>
+							<select
+								id="cv-source"
+								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+								{...form.register('sourceVersionId')}
+							>
+								<option value="">None (start empty)</option>
+								{sourceVersionOptions.map((v) => (
+									<option key={v.id} value={v.id}>
+										{v.name} ({v.type})
+									</option>
+								))}
+							</select>
 						</div>
 					</form>
 				</div>

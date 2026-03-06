@@ -469,7 +469,7 @@ function VersionActions({
 
 	const canPublish = isMutator && version.status === 'Draft';
 	const canLock = isMutator && version.status === 'Published';
-	const canArchive = isMutator && version.status === 'Locked';
+	const canArchive = isAdmin && version.status === 'Locked';
 	const canRevert = isAdmin && (version.status === 'Published' || version.status === 'Locked');
 	const canDelete = isMutator && version.status === 'Draft';
 

@@ -208,6 +208,21 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 		expect(res.json().status).toBe('Archived');
 	});
 
+	it('AC-06: BudgetOwner gets 403 on Locked → Archived', async () => {
+		const locked = makeDraft({ status: 'Locked', publishedAt: now, lockedAt: now });
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(locked);
+
+		const token = await makeToken({ role: 'BudgetOwner' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/1/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Archived' },
+		});
+
+		expect(res.statusCode).toBe(403);
+	});
+
 	// AC-07: reverse transition (Published → Draft)
 	it('AC-07: Published → Draft with valid audit_note increments modificationCount', async () => {
 		const published = makeDraft({ status: 'Published', publishedAt: now });

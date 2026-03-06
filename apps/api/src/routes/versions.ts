@@ -60,7 +60,7 @@ const TRANSITIONS: Record<string, Record<string, TransitionDef>> = {
 	},
 	Locked: {
 		Archived: {
-			roles: ['Admin', 'BudgetOwner'],
+			roles: ['Admin'],
 			isReverse: false,
 			timestampField: 'archivedAt',
 			operation: 'VERSION_ARCHIVED',
@@ -464,6 +464,44 @@ export async function versionRoutes(app: FastifyInstance) {
 						include: { createdBy: { select: { email: true } } },
 					});
 
+					// Clone data from source version if specified
+					if (body.sourceVersionId) {
+						const source = await (tx as typeof prisma).budgetVersion.findUnique({
+							where: { id: body.sourceVersionId },
+						});
+
+						if (!source) {
+							throw Object.assign(new Error('Source version not found'), {
+								statusCode: 404,
+								code: 'SOURCE_NOT_FOUND',
+							});
+						}
+
+						if (source.type === 'Actual') {
+							throw Object.assign(new Error('Cannot copy from Actual version'), {
+								statusCode: 409,
+								code: 'ACTUAL_COPY_PROHIBITED',
+							});
+						}
+
+						const summaries = await (tx as typeof prisma).monthlyBudgetSummary.findMany({
+							where: { versionId: body.sourceVersionId },
+						});
+
+						if (summaries.length > 0) {
+							await (tx as typeof prisma).monthlyBudgetSummary.createMany({
+								data: summaries.map((s) => ({
+									versionId: created.id,
+									month: s.month,
+									revenueHt: s.revenueHt,
+									staffCosts: s.staffCosts,
+									netProfit: s.netProfit,
+									calculatedAt: s.calculatedAt,
+								})),
+							});
+						}
+					}
+
 					await (tx as typeof prisma).auditEntry.create({
 						data: {
 							userId: request.user.id,
@@ -482,6 +520,13 @@ export async function versionRoutes(app: FastifyInstance) {
 					.status(201)
 					.send(formatVersion(version as Parameters<typeof formatVersion>[0]));
 			} catch (error) {
+				if (error instanceof Error && 'statusCode' in error && 'code' in error) {
+					const err = error as Error & { statusCode: number; code: string };
+					return reply.status(err.statusCode).send({
+						code: err.code,
+						message: err.message,
+					});
+				}
 				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_VERSION_NAME',
