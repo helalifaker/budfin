@@ -6,6 +6,7 @@ const navItems = [
 	{ to: '/admin/audit', label: 'Audit Trail' },
 	{ to: '/admin/settings', label: 'Settings' },
 	{ to: '/versions', label: 'Version Management' },
+	{ to: '/fiscal-periods', label: 'Fiscal Periods' },
 ];
 
 export function ManagementShell() {

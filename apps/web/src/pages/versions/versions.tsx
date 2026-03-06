@@ -9,6 +9,16 @@ import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
 import { useVersions } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
+import { CreateVersionPanel } from '../../components/versions/create-version-panel';
+import { CloneVersionDialog } from '../../components/versions/clone-version-dialog';
+import { VersionDetailPanel } from '../../components/versions/version-detail-panel';
+import {
+	PublishDialog,
+	LockDialog,
+	ArchiveDialog,
+	RevertDialog,
+	DeleteDialog,
+} from '../../components/versions/lifecycle-dialogs';
 
 const columnHelper = createColumnHelper<BudgetVersion>();
 
@@ -37,7 +47,6 @@ const CURRENT_FISCAL_YEAR = new Date().getFullYear();
 
 export function VersionsPage() {
 	const currentUser = useAuthStore((s) => s.user);
-	// Admin can create new versions; Editor and Viewer cannot
 	const canCreate = currentUser?.role === 'Admin';
 
 	// Filters
@@ -55,7 +64,7 @@ export function VersionsPage() {
 			const timer = setTimeout(() => setSearchDebounced(value), 300);
 			setSearchTimer(timer);
 		},
-		[searchTimer]
+		[searchTimer],
 	);
 
 	// Server-side filtering: fiscal year and status go to the API
@@ -73,7 +82,7 @@ export function VersionsPage() {
 		}
 		// Default sort: createdAt DESC
 		rows = [...rows].sort(
-			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
 		);
 		return rows;
 	}, [data, typeFilter, searchDebounced]);
@@ -89,11 +98,21 @@ export function VersionsPage() {
 		setTimeout(() => setStatusMessage(null), 4000);
 	}, []);
 
-	// Fiscal year options: current year ± 2
+	// Fiscal year options: current year +/- 2
 	const fiscalYearOptions = useMemo(() => {
 		const base = CURRENT_FISCAL_YEAR;
 		return [base - 2, base - 1, base, base + 1, base + 2];
 	}, []);
+
+	// --- Panel / Dialog state ---
+	const [createOpen, setCreateOpen] = useState(false);
+	const [cloneSource, setCloneSource] = useState<BudgetVersion | null>(null);
+	const [detailVersion, setDetailVersion] = useState<BudgetVersion | null>(null);
+	const [publishTarget, setPublishTarget] = useState<BudgetVersion | null>(null);
+	const [lockTarget, setLockTarget] = useState<BudgetVersion | null>(null);
+	const [archiveTarget, setArchiveTarget] = useState<BudgetVersion | null>(null);
+	const [revertTarget, setRevertTarget] = useState<BudgetVersion | null>(null);
+	const [deleteTarget, setDeleteTarget] = useState<BudgetVersion | null>(null);
 
 	const columns = useMemo(
 		() => [
@@ -127,7 +146,7 @@ export function VersionsPage() {
 						<span
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-								STATUS_BADGE_COLORS[value]
+								STATUS_BADGE_COLORS[value],
 							)}
 							aria-label={`Status: ${value}`}
 						>
@@ -141,13 +160,12 @@ export function VersionsPage() {
 			}),
 			columnHelper.accessor('createdByEmail', {
 				header: 'Created By',
-				cell: (info) => info.getValue() ?? '—',
+				cell: (info) => info.getValue() ?? '\u2014',
 			}),
 			columnHelper.accessor('createdAt', {
 				header: 'Created At',
 				cell: (info) => {
 					const iso = info.getValue();
-					// Display date in local locale without timezone manipulation (display-only)
 					return new Date(iso).toLocaleDateString();
 				},
 			}),
@@ -182,7 +200,13 @@ export function VersionsPage() {
 								return (
 									<VersionActions
 										version={version}
-										onStatusMessage={showStatus}
+										onViewDetails={setDetailVersion}
+										onClone={setCloneSource}
+										onPublish={setPublishTarget}
+										onLock={setLockTarget}
+										onArchive={setArchiveTarget}
+										onRevert={setRevertTarget}
+										onDelete={setDeleteTarget}
 									/>
 								);
 							},
@@ -190,7 +214,7 @@ export function VersionsPage() {
 					]
 				: []),
 		],
-		[canCreate, showStatus]
+		[canCreate],
 	);
 
 	const table = useReactTable({
@@ -209,7 +233,7 @@ export function VersionsPage() {
 						'mb-4 rounded-md px-4 py-3 text-sm font-medium',
 						statusMessage.type === 'success'
 							? 'bg-green-50 text-green-800'
-							: 'bg-red-50 text-red-800'
+							: 'bg-red-50 text-red-800',
 					)}
 				>
 					{statusMessage.text}
@@ -228,7 +252,7 @@ export function VersionsPage() {
 					className={cn(
 						'w-[240px] rounded-md border border-slate-300',
 						'px-3 py-2 text-sm',
-						'placeholder:text-slate-400'
+						'placeholder:text-slate-400',
 					)}
 					aria-label="Search versions"
 				/>
@@ -276,12 +300,9 @@ export function VersionsPage() {
 						type="button"
 						className={cn(
 							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white hover:bg-blue-700'
+							'font-medium text-white hover:bg-blue-700',
 						)}
-						onClick={() => {
-							// Story #58 will wire this to the New Version dialog
-							showStatus('New Version dialog coming in Story #58', 'error');
-						}}
+						onClick={() => setCreateOpen(true)}
 					>
 						+ New Version
 					</button>
@@ -303,7 +324,10 @@ export function VersionsPage() {
 											role="columnheader"
 											className="px-4 py-3 font-medium text-slate-600"
 										>
-											{flexRender(header.column.columnDef.header, header.getContext())}
+											{flexRender(
+												header.column.columnDef.header,
+												header.getContext(),
+											)}
 										</th>
 									))}
 								</tr>
@@ -333,7 +357,10 @@ export function VersionsPage() {
 												aria-readonly="true"
 												className="px-4 py-3"
 											>
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext(),
+												)}
 											</td>
 										))}
 									</tr>
@@ -343,6 +370,97 @@ export function VersionsPage() {
 					</table>
 				</div>
 			)}
+
+			{/* Story #58 — Create Version Panel */}
+			<CreateVersionPanel
+				open={createOpen}
+				fiscalYear={fiscalYear}
+				onClose={() => setCreateOpen(false)}
+				onSuccess={(name) => {
+					setCreateOpen(false);
+					showStatus(`Version "${name}" created successfully.`, 'success');
+				}}
+			/>
+
+			{/* Story #58 — Clone Version Dialog */}
+			<CloneVersionDialog
+				open={cloneSource !== null}
+				source={cloneSource}
+				onClose={() => setCloneSource(null)}
+				onSuccess={(clonedName, sourceName) => {
+					setCloneSource(null);
+					showStatus(
+						`"${clonedName}" cloned from "${sourceName}" successfully.`,
+						'success',
+					);
+				}}
+			/>
+
+			{/* Story #60 — Version Detail Panel */}
+			<VersionDetailPanel
+				open={detailVersion !== null}
+				version={detailVersion}
+				onClose={() => setDetailVersion(null)}
+			/>
+
+			{/* Story #59 — Lifecycle Dialogs */}
+			<PublishDialog
+				open={publishTarget !== null}
+				version={publishTarget}
+				onClose={() => setPublishTarget(null)}
+				onSuccess={() => {
+					showStatus(
+						`"${publishTarget?.name}" published successfully.`,
+						'success',
+					);
+					setPublishTarget(null);
+				}}
+			/>
+			<LockDialog
+				open={lockTarget !== null}
+				version={lockTarget}
+				onClose={() => setLockTarget(null)}
+				onSuccess={() => {
+					showStatus(`"${lockTarget?.name}" locked successfully.`, 'success');
+					setLockTarget(null);
+				}}
+			/>
+			<ArchiveDialog
+				open={archiveTarget !== null}
+				version={archiveTarget}
+				onClose={() => setArchiveTarget(null)}
+				onSuccess={() => {
+					showStatus(
+						`"${archiveTarget?.name}" archived successfully.`,
+						'success',
+					);
+					setArchiveTarget(null);
+				}}
+			/>
+			<RevertDialog
+				open={revertTarget !== null}
+				version={revertTarget}
+				onClose={() => setRevertTarget(null)}
+				onSuccess={() => {
+					showStatus(
+						`"${revertTarget?.name}" reverted to Draft.`,
+						'success',
+					);
+					setRevertTarget(null);
+				}}
+			/>
+			<DeleteDialog
+				open={deleteTarget !== null}
+				version={deleteTarget}
+				onClose={() => setDeleteTarget(null)}
+				onSuccess={() => {
+					showStatus(
+						`"${deleteTarget?.name}" deleted successfully.`,
+						'success',
+					);
+					setDeleteTarget(null);
+				}}
+			/>
 		</div>
 	);
 }
@@ -353,10 +471,25 @@ export function VersionsPage() {
 
 type VersionActionsProps = {
 	version: BudgetVersion;
-	onStatusMessage: (text: string, type: 'success' | 'error') => void;
+	onViewDetails: (v: BudgetVersion) => void;
+	onClone: (v: BudgetVersion) => void;
+	onPublish: (v: BudgetVersion) => void;
+	onLock: (v: BudgetVersion) => void;
+	onArchive: (v: BudgetVersion) => void;
+	onRevert: (v: BudgetVersion) => void;
+	onDelete: (v: BudgetVersion) => void;
 };
 
-function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
+function VersionActions({
+	version,
+	onViewDetails,
+	onClone,
+	onPublish,
+	onLock,
+	onArchive,
+	onRevert,
+	onDelete,
+}: VersionActionsProps) {
 	const [open, setOpen] = useState(false);
 
 	const currentUser = useAuthStore((s) => s.user);
@@ -368,15 +501,6 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 	const canRevert = isAdmin && version.status === 'Locked';
 	const canDelete = isAdmin && version.status === 'Draft';
 
-	const handleAction = useCallback(
-		(label: string) => {
-			setOpen(false);
-			// Story #60 will implement actual mutations — placeholder for now
-			onStatusMessage(`${label} for "${version.name}" coming in Story #60`, 'error');
-		},
-		[onStatusMessage, version.name]
-	);
-
 	return (
 		<div className="relative">
 			<button
@@ -386,7 +510,7 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 				onClick={() => setOpen((prev) => !prev)}
 				className={cn(
 					'rounded-md border border-slate-300 px-2 py-1 text-xs font-medium',
-					'hover:bg-slate-50'
+					'hover:bg-slate-50',
 				)}
 			>
 				Actions
@@ -404,7 +528,7 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 						role="menu"
 						className={cn(
 							'absolute right-0 z-20 mt-1 w-44 rounded-md border bg-white py-1 shadow-lg',
-							'text-sm'
+							'text-sm',
 						)}
 					>
 						<button
@@ -413,10 +537,7 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 							className="block w-full px-4 py-2 text-left hover:bg-slate-50"
 							onClick={() => {
 								setOpen(false);
-								onStatusMessage(
-									`Detail view for "${version.name}" coming in Story #58`,
-									'error'
-								);
+								onViewDetails(version);
 							}}
 						>
 							View Details
@@ -425,7 +546,10 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 							type="button"
 							role="menuitem"
 							className="block w-full px-4 py-2 text-left hover:bg-slate-50"
-							onClick={() => handleAction('Clone')}
+							onClick={() => {
+								setOpen(false);
+								onClone(version);
+							}}
 						>
 							Clone
 						</button>
@@ -434,7 +558,10 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 								type="button"
 								role="menuitem"
 								className="block w-full px-4 py-2 text-left text-blue-700 hover:bg-blue-50"
-								onClick={() => handleAction('Publish')}
+								onClick={() => {
+									setOpen(false);
+									onPublish(version);
+								}}
 							>
 								Publish
 							</button>
@@ -444,7 +571,10 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 								type="button"
 								role="menuitem"
 								className="block w-full px-4 py-2 text-left text-violet-700 hover:bg-violet-50"
-								onClick={() => handleAction('Lock')}
+								onClick={() => {
+									setOpen(false);
+									onLock(version);
+								}}
 							>
 								Lock
 							</button>
@@ -454,7 +584,10 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 								type="button"
 								role="menuitem"
 								className="block w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50"
-								onClick={() => handleAction('Archive')}
+								onClick={() => {
+									setOpen(false);
+									onArchive(version);
+								}}
 							>
 								Archive
 							</button>
@@ -464,9 +597,12 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 								type="button"
 								role="menuitem"
 								className="block w-full px-4 py-2 text-left text-amber-700 hover:bg-amber-50"
-								onClick={() => handleAction('Revert')}
+								onClick={() => {
+									setOpen(false);
+									onRevert(version);
+								}}
 							>
-								Revert to Published
+								Revert to Draft
 							</button>
 						)}
 						{canDelete && (
@@ -474,7 +610,10 @@ function VersionActions({ version, onStatusMessage }: VersionActionsProps) {
 								type="button"
 								role="menuitem"
 								className="block w-full px-4 py-2 text-left text-red-600 hover:bg-red-50"
-								onClick={() => handleAction('Delete')}
+								onClick={() => {
+									setOpen(false);
+									onDelete(version);
+								}}
 							>
 								Delete
 							</button>
@@ -493,7 +632,6 @@ type EmptyStateProps = {
 function EmptyState({ fiscalYear }: EmptyStateProps) {
 	return (
 		<div className="flex flex-col items-center gap-3 py-4">
-			{/* Layers icon — inline SVG matching Lucide style, no npm dep needed */}
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="40"
