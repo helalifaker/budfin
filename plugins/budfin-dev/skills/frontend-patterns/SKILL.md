@@ -14,10 +14,10 @@ Tailwind v4 is fundamentally different from v3 — no `tailwind.config.js`:
 @import 'tailwindcss';
 
 @theme {
-	--color-primary: oklch(55% 0.2 250);
-	--color-primary-foreground: oklch(98% 0 0);
-	--font-sans: 'Inter', sans-serif;
-	--radius: 0.5rem;
+    --color-primary: oklch(55% 0.2 250);
+    --color-primary-foreground: oklch(98% 0 0);
+    --font-sans: 'Inter', sans-serif;
+    --radius: 0.5rem;
 }
 ```
 
@@ -48,41 +48,41 @@ src/components/ui/
 ```typescript
 import { useReactTable, getCoreRowModel, type ColumnDef } from '@tanstack/react-table';
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 
 // Column definitions MUST be wrapped in useMemo — never recreate on render
 const columns = useMemo<ColumnDef<BudgetRow>[]>(
-	() => [
-		{
-			accessorKey: 'staffName',
-			header: 'Staff Name',
-			cell: ({ getValue }) => getValue<string>(),
-		},
-		{
-			accessorKey: 'amount',
-			header: 'Amount (SAR)',
-			// TC-004: format at presentation layer only
-			cell: ({ getValue }) => new Decimal(getValue<string>()).toFixed(2),
-		},
-	],
-	[]
+    () => [
+        {
+            accessorKey: 'staffName',
+            header: 'Staff Name',
+            cell: ({ getValue }) => getValue<string>(),
+        },
+        {
+            accessorKey: 'amount',
+            header: 'Amount (SAR)',
+            // TC-004: format at presentation layer only
+            cell: ({ getValue }) => new Decimal(getValue<string>()).toFixed(2),
+        },
+    ],
+    []
 ); // dependencies array — add only stable references
 
 // Server-side pagination for all financial grids
 const table = useReactTable({
-	data,
-	columns,
-	manualPagination: true, // Always true for financial grids
-	pageCount,
-	state: { pagination },
-	onPaginationChange: setPagination,
-	getCoreRowModel: getCoreRowModel(),
+    data,
+    columns,
+    manualPagination: true, // Always true for financial grids
+    pageCount,
+    state: { pagination },
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
 });
 ```
 
@@ -94,18 +94,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 const schema = z.object({
-	name: z.string().min(1, 'Name is required'),
-	fiscalYear: z.number().int().min(2020),
+    name: z.string().min(1, 'Name is required'),
+    fiscalYear: z.number().int().min(2020),
 });
 
 type FormData = z.infer<typeof schema>;
 
 function MyForm() {
-	const form = useForm<FormData>({
-		resolver: zodResolver(schema),
-		defaultValues: { name: '', fiscalYear: 2026 },
-	});
-	// ...
+    const form = useForm<FormData>({
+        resolver: zodResolver(schema),
+        defaultValues: { name: '', fiscalYear: 2026 },
+    });
+    // ...
 }
 ```
 
@@ -123,14 +123,14 @@ function MyForm() {
 ```typescript
 // TanStack Query v5 — server state
 const { data, isLoading } = useQuery({
-	queryKey: ['budget-versions', fiscalYear],
-	queryFn: () => api.getBudgetVersions(fiscalYear),
+    queryKey: ['budget-versions', fiscalYear],
+    queryFn: () => api.getBudgetVersions(fiscalYear),
 });
 
 // Zustand v5 — UI state only
 const useSidebarStore = create<SidebarState>()((set) => ({
-	isOpen: false,
-	toggle: () => set((state) => ({ isOpen: !state.isOpen })),
+    isOpen: false,
+    toggle: () => set((state) => ({ isOpen: !state.isOpen })),
 }));
 ```
 
@@ -145,13 +145,13 @@ const useSidebarStore = create<SidebarState>()((set) => ({
 let accessToken: string | null = null;
 
 function setToken(token: string) {
-	accessToken = token;
+    accessToken = token;
 }
 function getToken() {
-	return accessToken;
+    return accessToken;
 }
 function clearToken() {
-	accessToken = null;
+    accessToken = null;
 }
 
 // Wrong — NEVER do this
@@ -184,9 +184,9 @@ File exports (PDF, Excel) use a job polling pattern:
 
 - Target: < 150 KB gzipped initial bundle
 - Code-split by route using Vite lazy imports:
-  ```typescript
-  const BudgetPage = lazy(() => import('./pages/BudgetPage'));
-  ```
+    ```typescript
+    const BudgetPage = lazy(() => import('./pages/BudgetPage'));
+    ```
 - No barrel files (`index.ts` that re-export everything) — they prevent tree-shaking
 
 ## WCAG AA Requirements

@@ -586,13 +586,13 @@ Button changes from "Validate" to "Import" after successful validation. User cli
 
 ```typescript
 interface EnrollmentGridStore {
-	activeTab: 'by-grade' | 'by-nationality' | 'by-tariff';
-	gradeBandFilter: 'All' | 'Maternelle' | 'Elementaire' | 'College' | 'Lycee';
-	expandedGroups: Set<string>;
-	columnVisibility: Record<string, boolean>;
-	sortState: { columnId: string; direction: 'asc' | 'desc' } | null;
-	historicalChartExpanded: boolean;
-	pendingEdits: Map<string, number>; // cellKey -> value (for optimistic batching)
+    activeTab: 'by-grade' | 'by-nationality' | 'by-tariff';
+    gradeBandFilter: 'All' | 'Maternelle' | 'Elementaire' | 'College' | 'Lycee';
+    expandedGroups: Set<string>;
+    columnVisibility: Record<string, boolean>;
+    sortState: { columnId: string; direction: 'asc' | 'desc' } | null;
+    historicalChartExpanded: boolean;
+    pendingEdits: Map<string, number>; // cellKey -> value (for optimistic batching)
 }
 ```
 

@@ -29,9 +29,9 @@ BudFin exposes a RESTful JSON API with URL-based versioning under the `/api/v1/`
 
 ```json
 {
-	"code": "VALIDATION_ERROR",
-	"message": "Enrollment headcount cannot be negative",
-	"field_errors": [{ "field": "headcount", "message": "Must be >= 0" }]
+    "code": "VALIDATION_ERROR",
+    "message": "Enrollment headcount cannot be negative",
+    "field_errors": [{ "field": "headcount", "message": "Must be >= 0" }]
 }
 ```
 
@@ -73,11 +73,11 @@ BudFin uses a dual-token authentication pattern:
 
 ```json
 {
-	"sub": 42,
-	"email": "user@efir.edu.sa",
-	"role": "BudgetOwner",
-	"iat": 1709510400,
-	"exp": 1709512200
+    "sub": 42,
+    "email": "user@efir.edu.sa",
+    "role": "BudgetOwner",
+    "iat": 1709510400,
+    "exp": 1709512200
 }
 ```
 
@@ -105,8 +105,8 @@ Authenticate a user with email and password, issue an access token and refresh t
 
 ```json
 {
-	"email": "string (required, valid email format)",
-	"password": "string (required, min 8 chars)"
+    "email": "string (required, valid email format)",
+    "password": "string (required, min 8 chars)"
 }
 ```
 
@@ -114,13 +114,13 @@ Authenticate a user with email and password, issue an access token and refresh t
 
 ```json
 {
-	"access_token": "string (JWT)",
-	"expires_in": 1800,
-	"user": {
-		"id": "number",
-		"email": "string",
-		"role": "Admin|BudgetOwner|Editor|Viewer"
-	}
+    "access_token": "string (JWT)",
+    "expires_in": 1800,
+    "user": {
+        "id": "number",
+        "email": "string",
+        "role": "Admin|BudgetOwner|Editor|Viewer"
+    }
 }
 ```
 
@@ -182,18 +182,18 @@ Returns application context for the currently authenticated user: identity, acti
 
 ```json
 {
-	"user": {
-		"id": "integer",
-		"email": "string",
-		"role": "Admin|BudgetOwner|Editor|Viewer"
-	},
-	"schoolYear": {
-		"id": "integer",
-		"label": "string (e.g. \"2025-26\")",
-		"startDate": "string (ISO 8601 date)",
-		"endDate": "string (ISO 8601 date)"
-	},
-	"permissions": ["string"]
+    "user": {
+        "id": "integer",
+        "email": "string",
+        "role": "Admin|BudgetOwner|Editor|Viewer"
+    },
+    "schoolYear": {
+        "id": "integer",
+        "label": "string (e.g. \"2025-26\")",
+        "startDate": "string (ISO 8601 date)",
+        "endDate": "string (ISO 8601 date)"
+    },
+    "permissions": ["string"]
 }
 ```
 
@@ -225,21 +225,21 @@ List budget versions for a fiscal year.
 
 ```json
 {
-	"versions": [
-		{
-			"id": "number",
-			"name": "string",
-			"type": "Actual|Budget|Forecast",
-			"status": "Draft|Published|Locked|Archived",
-			"data_source": "CALCULATED|IMPORTED",
-			"description": "string|null",
-			"modification_count": "number",
-			"created_at": "string (ISO 8601)",
-			"published_at": "string|null",
-			"locked_at": "string|null",
-			"created_by_email": "string"
-		}
-	]
+    "versions": [
+        {
+            "id": "number",
+            "name": "string",
+            "type": "Actual|Budget|Forecast",
+            "status": "Draft|Published|Locked|Archived",
+            "data_source": "CALCULATED|IMPORTED",
+            "description": "string|null",
+            "modification_count": "number",
+            "created_at": "string (ISO 8601)",
+            "published_at": "string|null",
+            "locked_at": "string|null",
+            "created_by_email": "string"
+        }
+    ]
 }
 ```
 
@@ -255,11 +255,11 @@ Create a new budget version (FR-VER-001). Optionally copy data from an existing 
 
 ```json
 {
-	"fiscal_year": "number (required, 2020-2099)",
-	"name": "string (required, 1-100 chars)",
-	"type": "Budget|Forecast (required)",
-	"description": "string (optional)",
-	"source_version_id": "number|null (optional, version to copy data from)"
+    "fiscal_year": "number (required, 2020-2099)",
+    "name": "string (required, 1-100 chars)",
+    "type": "Budget|Forecast (required)",
+    "description": "string (optional)",
+    "source_version_id": "number|null (optional, version to copy data from)"
 }
 ```
 
@@ -267,17 +267,17 @@ Create a new budget version (FR-VER-001). Optionally copy data from an existing 
 
 ```json
 {
-	"id": "number",
-	"name": "string",
-	"type": "Budget|Forecast",
-	"status": "Draft",
-	"data_source": "CALCULATED|IMPORTED",
-	"description": "string|null",
-	"modification_count": 0,
-	"created_at": "string (ISO 8601)",
-	"published_at": null,
-	"locked_at": null,
-	"created_by_email": "string"
+    "id": "number",
+    "name": "string",
+    "type": "Budget|Forecast",
+    "status": "Draft",
+    "data_source": "CALCULATED|IMPORTED",
+    "description": "string|null",
+    "modification_count": 0,
+    "created_at": "string (ISO 8601)",
+    "published_at": null,
+    "locked_at": null,
+    "created_by_email": "string"
 }
 ```
 
@@ -305,18 +305,18 @@ Get full version detail including stale module flags (FR-VER-006).
 
 ```json
 {
-	"id": "number",
-	"name": "string",
-	"type": "Actual|Budget|Forecast",
-	"status": "Draft|Published|Locked|Archived",
-	"data_source": "CALCULATED|IMPORTED",
-	"description": "string|null",
-	"modification_count": "number",
-	"created_at": "string (ISO 8601)",
-	"published_at": "string|null",
-	"locked_at": "string|null",
-	"created_by_email": "string",
-	"stale_modules": ["REVENUE", "PNL"]
+    "id": "number",
+    "name": "string",
+    "type": "Actual|Budget|Forecast",
+    "status": "Draft|Published|Locked|Archived",
+    "data_source": "CALCULATED|IMPORTED",
+    "description": "string|null",
+    "modification_count": "number",
+    "created_at": "string (ISO 8601)",
+    "published_at": "string|null",
+    "locked_at": "string|null",
+    "created_by_email": "string",
+    "stale_modules": ["REVENUE", "PNL"]
 }
 ```
 
@@ -342,8 +342,8 @@ Valid transitions: `Draft -> Published -> Locked -> Archived`. Reverting from `P
 
 ```json
 {
-	"new_status": "Published|Locked|Archived|Draft",
-	"audit_note": "string (required when reverting from Locked/Published)"
+    "new_status": "Published|Locked|Archived|Draft",
+    "audit_note": "string (required when reverting from Locked/Published)"
 }
 ```
 
@@ -371,8 +371,8 @@ Clone an existing version as a new Draft (FR-VER-005). Copies all associated dat
 
 ```json
 {
-	"name": "string (required, 1-100 chars)",
-	"description": "string (optional)"
+    "name": "string (required, 1-100 chars)",
+    "description": "string (optional)"
 }
 ```
 
@@ -406,55 +406,55 @@ Side-by-side comparison of two versions (FR-VER-004).
 
 ```json
 {
-	"primary_version": { "id": "number", "name": "string" },
-	"comparison_version": { "id": "number", "name": "string" },
-	"monthly_comparison": [
-		{
-			"month": 1,
-			"primary": {
-				"total_revenue_ht": "string",
-				"total_staff_costs": "string",
-				"net_profit": "string"
-			},
-			"comparison": {
-				"total_revenue_ht": "string",
-				"total_staff_costs": "string",
-				"net_profit": "string"
-			},
-			"variance_absolute": {
-				"total_revenue_ht": "string",
-				"total_staff_costs": "string",
-				"net_profit": "string"
-			},
-			"variance_pct": {
-				"total_revenue_ht": "string|null",
-				"total_staff_costs": "string|null",
-				"net_profit": "string|null"
-			}
-		}
-	],
-	"annual_totals": {
-		"primary": {
-			"total_revenue_ht": "string",
-			"total_staff_costs": "string",
-			"net_profit": "string"
-		},
-		"comparison": {
-			"total_revenue_ht": "string",
-			"total_staff_costs": "string",
-			"net_profit": "string"
-		},
-		"variance_absolute": {
-			"total_revenue_ht": "string",
-			"total_staff_costs": "string",
-			"net_profit": "string"
-		},
-		"variance_pct": {
-			"total_revenue_ht": "string|null",
-			"total_staff_costs": "string|null",
-			"net_profit": "string|null"
-		}
-	}
+    "primary_version": { "id": "number", "name": "string" },
+    "comparison_version": { "id": "number", "name": "string" },
+    "monthly_comparison": [
+        {
+            "month": 1,
+            "primary": {
+                "total_revenue_ht": "string",
+                "total_staff_costs": "string",
+                "net_profit": "string"
+            },
+            "comparison": {
+                "total_revenue_ht": "string",
+                "total_staff_costs": "string",
+                "net_profit": "string"
+            },
+            "variance_absolute": {
+                "total_revenue_ht": "string",
+                "total_staff_costs": "string",
+                "net_profit": "string"
+            },
+            "variance_pct": {
+                "total_revenue_ht": "string|null",
+                "total_staff_costs": "string|null",
+                "net_profit": "string|null"
+            }
+        }
+    ],
+    "annual_totals": {
+        "primary": {
+            "total_revenue_ht": "string",
+            "total_staff_costs": "string",
+            "net_profit": "string"
+        },
+        "comparison": {
+            "total_revenue_ht": "string",
+            "total_staff_costs": "string",
+            "net_profit": "string"
+        },
+        "variance_absolute": {
+            "total_revenue_ht": "string",
+            "total_staff_costs": "string",
+            "net_profit": "string"
+        },
+        "variance_pct": {
+            "total_revenue_ht": "string|null",
+            "total_staff_costs": "string|null",
+            "net_profit": "string|null"
+        }
+    }
 }
 ```
 
@@ -502,13 +502,13 @@ Retrieve Stage 1 enrollment headcount by grade and academic period.
 
 ```json
 {
-	"entries": [
-		{
-			"grade_level": "string",
-			"academic_period": "AY1|AY2",
-			"headcount": "number"
-		}
-	]
+    "entries": [
+        {
+            "grade_level": "string",
+            "academic_period": "AY1|AY2",
+            "headcount": "number"
+        }
+    ]
 }
 ```
 
@@ -524,13 +524,13 @@ Update Stage 1 enrollment headcount (FR-ENR-005). This marks downstream modules 
 
 ```json
 {
-	"entries": [
-		{
-			"grade_level": "string (required)",
-			"academic_period": "AY1|AY2 (required)",
-			"headcount": "number (required, >= 0)"
-		}
-	]
+    "entries": [
+        {
+            "grade_level": "string (required)",
+            "academic_period": "AY1|AY2 (required)",
+            "headcount": "number (required, >= 0)"
+        }
+    ]
 }
 ```
 
@@ -538,8 +538,8 @@ Update Stage 1 enrollment headcount (FR-ENR-005). This marks downstream modules 
 
 ```json
 {
-	"updated": "number",
-	"stale_modules": ["REVENUE", "DHG", "STAFFING", "PNL"]
+    "updated": "number",
+    "stale_modules": ["REVENUE", "DHG", "STAFFING", "PNL"]
 }
 ```
 
@@ -562,15 +562,15 @@ Retrieve Stage 2 enrollment detail (breakdown by nationality and tariff).
 
 ```json
 {
-	"entries": [
-		{
-			"grade_level": "string",
-			"academic_period": "AY1|AY2",
-			"nationality": "string",
-			"tariff": "string",
-			"headcount": "number"
-		}
-	]
+    "entries": [
+        {
+            "grade_level": "string",
+            "academic_period": "AY1|AY2",
+            "nationality": "string",
+            "tariff": "string",
+            "headcount": "number"
+        }
+    ]
 }
 ```
 
@@ -586,15 +586,15 @@ Update Stage 2 enrollment detail (FR-ENR-005, FR-ENR-006, FR-ENR-007). Server va
 
 ```json
 {
-	"entries": [
-		{
-			"grade_level": "string (required)",
-			"academic_period": "AY1|AY2 (required)",
-			"nationality": "string (required)",
-			"tariff": "string (required)",
-			"headcount": "number (required, >= 0)"
-		}
-	]
+    "entries": [
+        {
+            "grade_level": "string (required)",
+            "academic_period": "AY1|AY2 (required)",
+            "nationality": "string (required)",
+            "tariff": "string (required)",
+            "headcount": "number (required, >= 0)"
+        }
+    ]
 }
 ```
 
@@ -602,8 +602,8 @@ Update Stage 2 enrollment detail (FR-ENR-005, FR-ENR-006, FR-ENR-007). Server va
 
 ```json
 {
-	"updated": "number",
-	"validation_warnings": []
+    "updated": "number",
+    "validation_warnings": []
 }
 ```
 
@@ -632,25 +632,25 @@ Retrieve 5-year historical enrollment data with computed trend analytics (FR-ENR
 
 ```json
 {
-	"data": [
-		{
-			"academic_year": "string",
-			"grade_level": "string",
-			"student_count": "number"
-		}
-	],
-	"cagr_by_band": {
-		"Maternelle": "string (percentage)",
-		"Elementaire": "string (percentage)",
-		"College": "string (percentage)",
-		"Lycee": "string (percentage)"
-	},
-	"moving_avg_by_band": {
-		"Maternelle": "string",
-		"Elementaire": "string",
-		"College": "string",
-		"Lycee": "string"
-	}
+    "data": [
+        {
+            "academic_year": "string",
+            "grade_level": "string",
+            "student_count": "number"
+        }
+    ],
+    "cagr_by_band": {
+        "Maternelle": "string (percentage)",
+        "Elementaire": "string (percentage)",
+        "College": "string (percentage)",
+        "Lycee": "string (percentage)"
+    },
+    "moving_avg_by_band": {
+        "Maternelle": "string",
+        "Elementaire": "string",
+        "College": "string",
+        "Lycee": "string"
+    }
 }
 ```
 
@@ -674,10 +674,10 @@ Bulk CSV import of historical enrollment data (FR-ENR-002). Supports a two-phase
 
 ```json
 {
-	"total_rows": "number",
-	"valid_rows": "number",
-	"errors": [{ "row": "number", "field": "string", "message": "string" }],
-	"preview": [{ "grade_level": "string", "student_count": "number" }]
+    "total_rows": "number",
+    "valid_rows": "number",
+    "errors": [{ "row": "number", "field": "string", "message": "string" }],
+    "preview": [{ "grade_level": "string", "student_count": "number" }]
 }
 ```
 
@@ -685,8 +685,8 @@ Bulk CSV import of historical enrollment data (FR-ENR-002). Supports a two-phase
 
 ```json
 {
-	"imported": "number",
-	"academic_year": "string"
+    "imported": "number",
+    "academic_year": "string"
 }
 ```
 
@@ -717,23 +717,23 @@ Retrieve the fee grid for a version (FR-REV-001).
 
 ```json
 {
-	"entries": [
-		{
-			"academic_period": "AY1|AY2",
-			"grade_level": "string",
-			"nationality": "string",
-			"tariff": "string",
-			"dai": "string (decimal)",
-			"tuition_ttc": "string (decimal)",
-			"tuition_ht": "string (decimal)",
-			"term1_amount": "string (decimal)",
-			"term2_amount": "string (decimal)",
-			"term3_amount": "string (decimal)",
-			"registration_fee": "string (decimal)",
-			"re_registration_fee": "string (decimal)",
-			"insurance_fee": "string (decimal)"
-		}
-	]
+    "entries": [
+        {
+            "academic_period": "AY1|AY2",
+            "grade_level": "string",
+            "nationality": "string",
+            "tariff": "string",
+            "dai": "string (decimal)",
+            "tuition_ttc": "string (decimal)",
+            "tuition_ht": "string (decimal)",
+            "term1_amount": "string (decimal)",
+            "term2_amount": "string (decimal)",
+            "term3_amount": "string (decimal)",
+            "registration_fee": "string (decimal)",
+            "re_registration_fee": "string (decimal)",
+            "insurance_fee": "string (decimal)"
+        }
+    ]
 }
 ```
 
@@ -749,20 +749,20 @@ Update the fee grid (FR-REV-001 through FR-REV-006). Server validates `tuition_h
 
 ```json
 {
-	"entries": [
-		{
-			"academic_period": "AY1|AY2 (required)",
-			"grade_level": "string (required)",
-			"nationality": "string (required)",
-			"tariff": "string (required)",
-			"dai": "string (decimal, required)",
-			"tuition_ttc": "string (decimal, required)",
-			"tuition_ht": "string (decimal, required)",
-			"term1_amount": "string (decimal, required)",
-			"term2_amount": "string (decimal, required)",
-			"term3_amount": "string (decimal, required)"
-		}
-	]
+    "entries": [
+        {
+            "academic_period": "AY1|AY2 (required)",
+            "grade_level": "string (required)",
+            "nationality": "string (required)",
+            "tariff": "string (required)",
+            "dai": "string (decimal, required)",
+            "tuition_ttc": "string (decimal, required)",
+            "tuition_ht": "string (decimal, required)",
+            "term1_amount": "string (decimal, required)",
+            "term2_amount": "string (decimal, required)",
+            "term3_amount": "string (decimal, required)"
+        }
+    ]
 }
 ```
 
@@ -791,13 +791,13 @@ Retrieve discount policies by tariff and nationality.
 
 ```json
 {
-	"entries": [
-		{
-			"tariff": "string",
-			"nationality": "string",
-			"discount_rate": "string (decimal, 0.0000-1.0000)"
-		}
-	]
+    "entries": [
+        {
+            "tariff": "string",
+            "nationality": "string",
+            "discount_rate": "string (decimal, 0.0000-1.0000)"
+        }
+    ]
 }
 ```
 
@@ -813,13 +813,13 @@ Update discount policies (FR-REV-007 through FR-REV-010). Marks REVENUE module a
 
 ```json
 {
-	"entries": [
-		{
-			"tariff": "string (required)",
-			"nationality": "string (required)",
-			"discount_rate": "string (decimal, required, 0.0000-1.0000)"
-		}
-	]
+    "entries": [
+        {
+            "tariff": "string (required)",
+            "nationality": "string (required)",
+            "discount_rate": "string (decimal, required, 0.0000-1.0000)"
+        }
+    ]
 }
 ```
 
@@ -848,16 +848,16 @@ Retrieve non-tuition revenue line items.
 
 ```json
 {
-	"items": [
-		{
-			"id": "number",
-			"line_item_name": "string",
-			"annual_amount": "string (decimal)",
-			"distribution_method": "equal|weighted|custom",
-			"weight_array": ["string (12 decimal values)"],
-			"ifrs_category": "string"
-		}
-	]
+    "items": [
+        {
+            "id": "number",
+            "line_item_name": "string",
+            "annual_amount": "string (decimal)",
+            "distribution_method": "equal|weighted|custom",
+            "weight_array": ["string (12 decimal values)"],
+            "ifrs_category": "string"
+        }
+    ]
 }
 ```
 
@@ -873,15 +873,15 @@ Update non-tuition revenue items (FR-REV-014 through FR-REV-019). Validates that
 
 ```json
 {
-	"items": [
-		{
-			"line_item_name": "string (required)",
-			"annual_amount": "string (decimal, required)",
-			"distribution_method": "equal|weighted|custom (required)",
-			"weight_array": ["string (12 values, required when distribution_method is 'custom')"],
-			"ifrs_category": "string (required)"
-		}
-	]
+    "items": [
+        {
+            "line_item_name": "string (required)",
+            "annual_amount": "string (decimal, required)",
+            "distribution_method": "equal|weighted|custom (required)",
+            "weight_array": ["string (12 values, required when distribution_method is 'custom')"],
+            "ifrs_category": "string (required)"
+        }
+    ]
 }
 ```
 
@@ -909,9 +909,9 @@ All calculation endpoints share common behavior:
 - **Idempotency:** Re-running a calculation overwrites previous results for the same version and module.
 - **Response pattern:** Synchronous 200 with result summary (typical response time < 3 seconds for <= 20 concurrent users).
 - **Common errors:**
-  - `409 VERSION_LOCKED`: Cannot calculate on a Locked or Archived version.
-  - `409 VERSION_DATA_SOURCE_MISMATCH`: Version uses imported data — calculation engine is disabled for Actual versions. Response body: `{ "error": "VERSION_DATA_SOURCE_MISMATCH", "message": "Version uses imported data — calculation engine is disabled for Actual versions." }`
-  - `422 MISSING_PREREQUISITES`: Required upstream data has not been entered.
+    - `409 VERSION_LOCKED`: Cannot calculate on a Locked or Archived version.
+    - `409 VERSION_DATA_SOURCE_MISMATCH`: Version uses imported data — calculation engine is disabled for Actual versions. Response body: `{ "error": "VERSION_DATA_SOURCE_MISMATCH", "message": "Version uses imported data — calculation engine is disabled for Actual versions." }`
+    - `422 MISSING_PREREQUISITES`: Required upstream data has not been entered.
 
 ---
 
@@ -925,13 +925,13 @@ Run capacity calculation: compute section counts, classroom utilization, and ove
 
 ```json
 {
-	"run_id": "string (uuid)",
-	"duration_ms": "number",
-	"summary": {
-		"total_students_ay1": "number",
-		"total_students_ay2": "number",
-		"over_capacity_grades": [{ "grade_level": "string", "utilization_pct": "string" }]
-	}
+    "run_id": "string (uuid)",
+    "duration_ms": "number",
+    "summary": {
+        "total_students_ay1": "number",
+        "total_students_ay2": "number",
+        "over_capacity_grades": [{ "grade_level": "string", "utilization_pct": "string" }]
+    }
 }
 ```
 
@@ -947,13 +947,13 @@ Run the Revenue Engine (FR-REV-011, FR-REV-012). Computes gross revenue, applies
 
 ```json
 {
-	"run_id": "string (uuid)",
-	"duration_ms": "number",
-	"summary": {
-		"total_revenue_ht_ay1": "string (decimal)",
-		"total_revenue_ht_ay2": "string (decimal)",
-		"total_annual_revenue_ht": "string (decimal)"
-	}
+    "run_id": "string (uuid)",
+    "duration_ms": "number",
+    "summary": {
+        "total_revenue_ht_ay1": "string (decimal)",
+        "total_revenue_ht_ay2": "string (decimal)",
+        "total_annual_revenue_ht": "string (decimal)"
+    }
 }
 ```
 
@@ -969,12 +969,12 @@ Run the DHG (Dotation Horaire Globale) calculation and Staff Cost Engine. Comput
 
 ```json
 {
-	"run_id": "string (uuid)",
-	"duration_ms": "number",
-	"summary": {
-		"total_fte": "string (decimal)",
-		"total_annual_staff_costs": "string (decimal)"
-	}
+    "run_id": "string (uuid)",
+    "duration_ms": "number",
+    "summary": {
+        "total_fte": "string (decimal)",
+        "total_annual_staff_costs": "string (decimal)"
+    }
 }
 ```
 
@@ -990,13 +990,13 @@ Run P&L consolidation. Aggregates revenue and staff cost results into IFRS-align
 
 ```json
 {
-	"run_id": "string (uuid)",
-	"duration_ms": "number",
-	"summary": {
-		"total_revenue_ht": "string (decimal)",
-		"net_profit": "string (decimal)",
-		"ebitda_margin_pct": "string (percentage)"
-	}
+    "run_id": "string (uuid)",
+    "duration_ms": "number",
+    "summary": {
+        "total_revenue_ht": "string (decimal)",
+        "net_profit": "string (decimal)",
+        "ebitda_margin_pct": "string (percentage)"
+    }
 }
 ```
 
@@ -1018,10 +1018,10 @@ Check which modules have stale calculated data for a version.
 
 ```json
 {
-	"ENROLLMENT": false,
-	"REVENUE": true,
-	"STAFFING": false,
-	"PNL": true
+    "ENROLLMENT": false,
+    "REVENUE": true,
+    "STAFFING": false,
+    "PNL": true
 }
 ```
 
@@ -1039,7 +1039,7 @@ Triggers an async full-version salary and budget recalculation job. The job is q
 
 ```json
 {
-	"scope": "full|incremental"
+    "scope": "full|incremental"
 }
 ```
 
@@ -1049,8 +1049,8 @@ If `scope` is omitted the server defaults to `"full"`.
 
 ```json
 {
-	"jobId": "string",
-	"status": "queued"
+    "jobId": "string",
+    "status": "queued"
 }
 ```
 
@@ -1082,10 +1082,10 @@ Polls the status of an async calculation job for a version. If `jobId` is omitte
 
 ```json
 {
-	"status": "queued|running|completed|failed",
-	"progress": "number (0-100)",
-	"completedAt": "string (ISO 8601)|null",
-	"error": "string|null"
+    "status": "queued|running|completed|failed",
+    "progress": "number (0-100)",
+    "completedAt": "string (ISO 8601)|null",
+    "error": "string|null"
 }
 ```
 
@@ -1119,32 +1119,32 @@ List employees for a version with pagination and optional filters.
 
 ```json
 {
-	"employees": [
-		{
-			"id": "number",
-			"employee_code": "string",
-			"name": "string",
-			"function_role": "string",
-			"department": "string",
-			"status": "Existing|New|Departed",
-			"joining_date": "string (YYYY-MM-DD)",
-			"payment_method": "string",
-			"is_saudi": "boolean",
-			"is_ajeer": "boolean",
-			"hourly_percentage": "string (decimal)",
-			"base_salary": "string|null (decimal, null for Viewer)",
-			"housing_allowance": "string|null",
-			"transport_allowance": "string|null",
-			"responsibility_premium": "string|null",
-			"hsa_amount": "string|null",
-			"augmentation": "string|null",
-			"augmentation_effective_date": "string|null (YYYY-MM-DD)",
-			"updated_at": "string (ISO 8601)"
-		}
-	],
-	"total": "number",
-	"page": "number",
-	"page_size": "number"
+    "employees": [
+        {
+            "id": "number",
+            "employee_code": "string",
+            "name": "string",
+            "function_role": "string",
+            "department": "string",
+            "status": "Existing|New|Departed",
+            "joining_date": "string (YYYY-MM-DD)",
+            "payment_method": "string",
+            "is_saudi": "boolean",
+            "is_ajeer": "boolean",
+            "hourly_percentage": "string (decimal)",
+            "base_salary": "string|null (decimal, null for Viewer)",
+            "housing_allowance": "string|null",
+            "transport_allowance": "string|null",
+            "responsibility_premium": "string|null",
+            "hsa_amount": "string|null",
+            "augmentation": "string|null",
+            "augmentation_effective_date": "string|null (YYYY-MM-DD)",
+            "updated_at": "string (ISO 8601)"
+        }
+    ],
+    "total": "number",
+    "page": "number",
+    "page_size": "number"
 }
 ```
 
@@ -1160,23 +1160,23 @@ Create a new employee record (FR-STC-001). Marks STAFFING module as stale. Sensi
 
 ```json
 {
-	"employee_code": "string (required)",
-	"name": "string (required)",
-	"function_role": "string (required)",
-	"department": "Maternelle|Elementaire|College|Lycee|Administration|Vie Scolaire & Support (required)",
-	"status": "Existing|New|Departed (required)",
-	"joining_date": "YYYY-MM-DD (required)",
-	"payment_method": "string (required)",
-	"is_saudi": "boolean (required)",
-	"is_ajeer": "boolean (required)",
-	"hourly_percentage": "number (required, 0.01-1.0)",
-	"base_salary": "string (decimal, required)",
-	"housing_allowance": "string (decimal, required)",
-	"transport_allowance": "string (decimal, required)",
-	"responsibility_premium": "string (decimal, default '0.0000')",
-	"hsa_amount": "string (decimal, default '0.0000')",
-	"augmentation": "string (decimal, default '0.0000')",
-	"augmentation_effective_date": "YYYY-MM-DD|null (optional)"
+    "employee_code": "string (required)",
+    "name": "string (required)",
+    "function_role": "string (required)",
+    "department": "Maternelle|Elementaire|College|Lycee|Administration|Vie Scolaire & Support (required)",
+    "status": "Existing|New|Departed (required)",
+    "joining_date": "YYYY-MM-DD (required)",
+    "payment_method": "string (required)",
+    "is_saudi": "boolean (required)",
+    "is_ajeer": "boolean (required)",
+    "hourly_percentage": "number (required, 0.01-1.0)",
+    "base_salary": "string (decimal, required)",
+    "housing_allowance": "string (decimal, required)",
+    "transport_allowance": "string (decimal, required)",
+    "responsibility_premium": "string (decimal, default '0.0000')",
+    "hsa_amount": "string (decimal, default '0.0000')",
+    "augmentation": "string (decimal, default '0.0000')",
+    "augmentation_effective_date": "YYYY-MM-DD|null (optional)"
 }
 ```
 
@@ -1268,10 +1268,10 @@ Bulk xlsx import of employee records (FR-STC-001). Two-phase workflow: validate 
 
 ```json
 {
-	"total_rows": "number",
-	"valid_rows": "number",
-	"errors": [{ "row": "number", "field": "string", "message": "string" }],
-	"preview": [{ "employee_code": "string", "name": "string", "department": "string" }]
+    "total_rows": "number",
+    "valid_rows": "number",
+    "errors": [{ "row": "number", "field": "string", "message": "string" }],
+    "preview": [{ "employee_code": "string", "name": "string", "department": "string" }]
 }
 ```
 
@@ -1279,9 +1279,9 @@ Bulk xlsx import of employee records (FR-STC-001). Two-phase workflow: validate 
 
 ```json
 {
-	"imported": "number",
-	"skipped": "number",
-	"errors": []
+    "imported": "number",
+    "skipped": "number",
+    "errors": []
 }
 ```
 
@@ -1306,19 +1306,19 @@ Retrieve calculated revenue results with flexible grouping.
 
 ```json
 {
-	"data": [
-		{
-			"group_key": "string",
-			"gross_revenue_ttc": "string (decimal)",
-			"discount_amount": "string (decimal)",
-			"net_revenue_ht": "string (decimal)"
-		}
-	],
-	"totals": {
-		"gross_revenue_ttc": "string (decimal)",
-		"discount_amount": "string (decimal)",
-		"net_revenue_ht": "string (decimal)"
-	}
+    "data": [
+        {
+            "group_key": "string",
+            "gross_revenue_ttc": "string (decimal)",
+            "discount_amount": "string (decimal)",
+            "net_revenue_ht": "string (decimal)"
+        }
+    ],
+    "totals": {
+        "gross_revenue_ttc": "string (decimal)",
+        "discount_amount": "string (decimal)",
+        "net_revenue_ht": "string (decimal)"
+    }
 }
 ```
 
@@ -1347,22 +1347,22 @@ Retrieve calculated staff cost results.
 
 ```json
 {
-	"data": [
-		{
-			"group_key": "string",
-			"total_gross_salary": "string (decimal)",
-			"total_allowances": "string (decimal)",
-			"total_social_charges": "string (decimal)",
-			"total_staff_cost": "string (decimal)"
-		}
-	],
-	"totals": {
-		"total_gross_salary": "string (decimal)",
-		"total_allowances": "string (decimal)",
-		"total_social_charges": "string (decimal)",
-		"total_staff_cost": "string (decimal)"
-	},
-	"breakdown": "array|null (employee-level detail when include_breakdown=true)"
+    "data": [
+        {
+            "group_key": "string",
+            "total_gross_salary": "string (decimal)",
+            "total_allowances": "string (decimal)",
+            "total_social_charges": "string (decimal)",
+            "total_staff_cost": "string (decimal)"
+        }
+    ],
+    "totals": {
+        "total_gross_salary": "string (decimal)",
+        "total_allowances": "string (decimal)",
+        "total_social_charges": "string (decimal)",
+        "total_staff_cost": "string (decimal)"
+    },
+    "breakdown": "array|null (employee-level detail when include_breakdown=true)"
 }
 ```
 
@@ -1380,15 +1380,15 @@ Returns DHG (Dotation Horaire Globale) grid data for a version. The DHG grid def
 
 ```json
 {
-	"grilles": [
-		{
-			"id": "integer",
-			"level": "string (grade level code)",
-			"weeklyHours": "number",
-			"coefficient": "string (decimal)",
-			"annualHours": "string (decimal)"
-		}
-	]
+    "grilles": [
+        {
+            "id": "integer",
+            "level": "string (grade level code)",
+            "weeklyHours": "number",
+            "coefficient": "string (decimal)",
+            "annualHours": "string (decimal)"
+        }
+    ]
 }
 ```
 
@@ -1413,15 +1413,15 @@ Returns a high-level staffing cost summary for a version, aggregated by departme
 
 ```json
 {
-	"totalFTE": "number",
-	"totalSalaryCost": "string (decimal)",
-	"byDepartment": [
-		{
-			"department": "string",
-			"fte": "number",
-			"cost": "string (decimal)"
-		}
-	]
+    "totalFTE": "number",
+    "totalSalaryCost": "string (decimal)",
+    "byDepartment": [
+        {
+            "department": "string",
+            "fte": "number",
+            "cost": "string (decimal)"
+        }
+    ]
 }
 ```
 
@@ -1451,42 +1451,42 @@ Retrieve the IFRS monthly P&L statement (FR-PNL-001 through FR-PNL-018).
 
 ```json
 {
-	"version": { "id": "number", "name": "string" },
-	"months": [
-		{
-			"month": 1,
-			"label": "January",
-			"revenue_from_contracts": "string (decimal)",
-			"rental_income": "string (decimal)",
-			"total_revenue_ht": "string (decimal)",
-			"staff_costs": "string (decimal)",
-			"other_operating_expenses": "string (decimal)",
-			"ebitda": "string (decimal)",
-			"depreciation_amortization": "string (decimal)",
-			"operating_profit": "string (decimal)",
-			"finance_income": "string (decimal)",
-			"finance_costs": "string (decimal)",
-			"profit_before_zakat": "string (decimal)",
-			"zakat": "string (decimal)",
-			"net_profit": "string (decimal)"
-		}
-	],
-	"annual_totals": {
-		"revenue_from_contracts": "string (decimal)",
-		"rental_income": "string (decimal)",
-		"total_revenue_ht": "string (decimal)",
-		"staff_costs": "string (decimal)",
-		"other_operating_expenses": "string (decimal)",
-		"ebitda": "string (decimal)",
-		"depreciation_amortization": "string (decimal)",
-		"operating_profit": "string (decimal)",
-		"finance_income": "string (decimal)",
-		"finance_costs": "string (decimal)",
-		"profit_before_zakat": "string (decimal)",
-		"zakat": "string (decimal)",
-		"net_profit": "string (decimal)"
-	},
-	"comparison": "object|null (same structure when comparison_version_id is provided)"
+    "version": { "id": "number", "name": "string" },
+    "months": [
+        {
+            "month": 1,
+            "label": "January",
+            "revenue_from_contracts": "string (decimal)",
+            "rental_income": "string (decimal)",
+            "total_revenue_ht": "string (decimal)",
+            "staff_costs": "string (decimal)",
+            "other_operating_expenses": "string (decimal)",
+            "ebitda": "string (decimal)",
+            "depreciation_amortization": "string (decimal)",
+            "operating_profit": "string (decimal)",
+            "finance_income": "string (decimal)",
+            "finance_costs": "string (decimal)",
+            "profit_before_zakat": "string (decimal)",
+            "zakat": "string (decimal)",
+            "net_profit": "string (decimal)"
+        }
+    ],
+    "annual_totals": {
+        "revenue_from_contracts": "string (decimal)",
+        "rental_income": "string (decimal)",
+        "total_revenue_ht": "string (decimal)",
+        "staff_costs": "string (decimal)",
+        "other_operating_expenses": "string (decimal)",
+        "ebitda": "string (decimal)",
+        "depreciation_amortization": "string (decimal)",
+        "operating_profit": "string (decimal)",
+        "finance_income": "string (decimal)",
+        "finance_costs": "string (decimal)",
+        "profit_before_zakat": "string (decimal)",
+        "zakat": "string (decimal)",
+        "net_profit": "string (decimal)"
+    },
+    "comparison": "object|null (same structure when comparison_version_id is provided)"
 }
 ```
 
@@ -1502,34 +1502,34 @@ Scenario comparison view (FR-SCN-004, FR-SCN-006). Returns Base, Optimistic, and
 
 ```json
 {
-	"base": {
-		"total_revenue_ht": "string",
-		"total_staff_costs": "string",
-		"ebitda": "string",
-		"net_profit": "string"
-	},
-	"optimistic": {
-		"total_revenue_ht": "string",
-		"total_staff_costs": "string",
-		"ebitda": "string",
-		"net_profit": "string"
-	},
-	"pessimistic": {
-		"total_revenue_ht": "string",
-		"total_staff_costs": "string",
-		"ebitda": "string",
-		"net_profit": "string"
-	},
-	"deltas": {
-		"optimistic_vs_base": {
-			"revenue_delta_pct": "string",
-			"net_profit_delta_pct": "string"
-		},
-		"pessimistic_vs_base": {
-			"revenue_delta_pct": "string",
-			"net_profit_delta_pct": "string"
-		}
-	}
+    "base": {
+        "total_revenue_ht": "string",
+        "total_staff_costs": "string",
+        "ebitda": "string",
+        "net_profit": "string"
+    },
+    "optimistic": {
+        "total_revenue_ht": "string",
+        "total_staff_costs": "string",
+        "ebitda": "string",
+        "net_profit": "string"
+    },
+    "pessimistic": {
+        "total_revenue_ht": "string",
+        "total_staff_costs": "string",
+        "ebitda": "string",
+        "net_profit": "string"
+    },
+    "deltas": {
+        "optimistic_vs_base": {
+            "revenue_delta_pct": "string",
+            "net_profit_delta_pct": "string"
+        },
+        "pessimistic_vs_base": {
+            "revenue_delta_pct": "string",
+            "net_profit_delta_pct": "string"
+        }
+    }
 }
 ```
 
@@ -1555,36 +1555,36 @@ Returns aggregated dashboard data for all 4 KPI cards, chart data, alerts, and a
 
 ```json
 {
-	"kpi": {
-		"totalBudget": "string (decimal, e.g. \"1250000.0000\")",
-		"enrollmentCount": "number",
-		"costPerStudent": "string (decimal, e.g. \"3654.9700\")",
-		"variancePercent": "string (decimal, e.g. \"-2.30\")"
-	},
-	"charts": {
-		"monthlyTrend": [
-			{
-				"month": "string (YYYY-MM)",
-				"budget": "string (decimal)",
-				"actual": "string (decimal)"
-			}
-		],
-		"categoryBreakdown": [
-			{
-				"category": "string",
-				"amount": "string (decimal)",
-				"percent": "string (decimal)"
-			}
-		]
-	},
-	"alerts": [
-		{
-			"type": "string (e.g. \"variance_threshold\")",
-			"message": "string",
-			"severity": "warning|critical|info"
-		}
-	],
-	"staleAt": "string (ISO 8601, nullable)"
+    "kpi": {
+        "totalBudget": "string (decimal, e.g. \"1250000.0000\")",
+        "enrollmentCount": "number",
+        "costPerStudent": "string (decimal, e.g. \"3654.9700\")",
+        "variancePercent": "string (decimal, e.g. \"-2.30\")"
+    },
+    "charts": {
+        "monthlyTrend": [
+            {
+                "month": "string (YYYY-MM)",
+                "budget": "string (decimal)",
+                "actual": "string (decimal)"
+            }
+        ],
+        "categoryBreakdown": [
+            {
+                "category": "string",
+                "amount": "string (decimal)",
+                "percent": "string (decimal)"
+            }
+        ]
+    },
+    "alerts": [
+        {
+            "type": "string (e.g. \"variance_threshold\")",
+            "message": "string",
+            "severity": "warning|critical|info"
+        }
+    ],
+    "staleAt": "string (ISO 8601, nullable)"
 }
 ```
 
@@ -1612,9 +1612,9 @@ Create an export job. The server queues the job and returns immediately.
 
 ```json
 {
-	"version_id": "number (required)",
-	"format": "xlsx|pdf|csv (required)",
-	"report_type": "REVENUE_DETAIL|STAFF_COSTS|PNL_MONTHLY|FULL_BUDGET|AUDIT_TRAIL (required)"
+    "version_id": "number (required)",
+    "format": "xlsx|pdf|csv (required)",
+    "report_type": "REVENUE_DETAIL|STAFF_COSTS|PNL_MONTHLY|FULL_BUDGET|AUDIT_TRAIL (required)"
 }
 ```
 
@@ -1622,9 +1622,9 @@ Create an export job. The server queues the job and returns immediately.
 
 ```json
 {
-	"job_id": "number",
-	"status": "pending",
-	"poll_url": "/api/v1/export/jobs/123"
+    "job_id": "number",
+    "status": "pending",
+    "poll_url": "/api/v1/export/jobs/123"
 }
 ```
 
@@ -1640,12 +1640,12 @@ Poll export job status.
 
 ```json
 {
-	"id": "number",
-	"status": "pending|processing|done|failed",
-	"progress_pct": "number (0-100)",
-	"download_url": "string|null",
-	"expires_at": "string|null (ISO 8601)",
-	"error_message": "string|null"
+    "id": "number",
+    "status": "pending|processing|done|failed",
+    "progress_pct": "number (0-100)",
+    "download_url": "string|null",
+    "expires_at": "string|null (ISO 8601)",
+    "error_message": "string|null"
 }
 ```
 
@@ -1693,20 +1693,20 @@ Retrieve the audit log with filters (FR-AUD-003).
 
 ```json
 {
-	"entries": [
-		{
-			"id": "number",
-			"occurred_at": "string (ISO 8601)",
-			"user_email": "string",
-			"table_name": "string",
-			"record_id": "number",
-			"operation": "INSERT|UPDATE|DELETE",
-			"audit_note": "string|null"
-		}
-	],
-	"total": "number",
-	"page": "number",
-	"page_size": "number"
+    "entries": [
+        {
+            "id": "number",
+            "occurred_at": "string (ISO 8601)",
+            "user_email": "string",
+            "table_name": "string",
+            "record_id": "number",
+            "operation": "INSERT|UPDATE|DELETE",
+            "audit_note": "string|null"
+        }
+    ],
+    "total": "number",
+    "page": "number",
+    "page_size": "number"
 }
 ```
 
@@ -1731,16 +1731,16 @@ Retrieve calculation run history (NFR 11.12).
 
 ```json
 {
-	"runs": [
-		{
-			"run_id": "string (uuid)",
-			"module": "ENROLLMENT|REVENUE|STAFFING|PNL",
-			"status": "success|failed",
-			"duration_ms": "number",
-			"created_at": "string (ISO 8601)",
-			"output_summary": "object"
-		}
-	]
+    "runs": [
+        {
+            "run_id": "string (uuid)",
+            "module": "ENROLLMENT|REVENUE|STAFFING|PNL",
+            "status": "success|failed",
+            "duration_ms": "number",
+            "created_at": "string (ISO 8601)",
+            "output_summary": "object"
+        }
+    ]
 }
 ```
 
@@ -1758,15 +1758,15 @@ List all users in the system.
 
 ```json
 {
-	"users": [
-		{
-			"id": "number",
-			"email": "string",
-			"role": "Admin|BudgetOwner|Editor|Viewer",
-			"is_active": "boolean",
-			"last_login": "string|null (ISO 8601)"
-		}
-	]
+    "users": [
+        {
+            "id": "number",
+            "email": "string",
+            "role": "Admin|BudgetOwner|Editor|Viewer",
+            "is_active": "boolean",
+            "last_login": "string|null (ISO 8601)"
+        }
+    ]
 }
 ```
 
@@ -1782,9 +1782,9 @@ Create a new user account.
 
 ```json
 {
-	"email": "string (required, valid email)",
-	"password": "string (required, min 8 chars)",
-	"role": "Admin|BudgetOwner|Editor|Viewer (required)"
+    "email": "string (required, valid email)",
+    "password": "string (required, min 8 chars)",
+    "role": "Admin|BudgetOwner|Editor|Viewer (required)"
 }
 ```
 
@@ -1792,9 +1792,9 @@ Create a new user account.
 
 ```json
 {
-	"id": "number",
-	"email": "string",
-	"role": "string"
+    "id": "number",
+    "email": "string",
+    "role": "string"
 }
 ```
 
@@ -1817,9 +1817,9 @@ Update user properties.
 
 ```json
 {
-	"role": "Admin|BudgetOwner|Editor|Viewer",
-	"is_active": "boolean",
-	"force_password_reset": "boolean"
+    "role": "Admin|BudgetOwner|Editor|Viewer",
+    "is_active": "boolean",
+    "force_password_reset": "boolean"
 }
 ```
 
@@ -1837,14 +1837,14 @@ Retrieve system configuration values (VAT rate, max section size, fiscal year st
 
 ```json
 {
-	"config": [
-		{
-			"key": "string",
-			"value": "string",
-			"description": "string",
-			"data_type": "string|number|boolean"
-		}
-	]
+    "config": [
+        {
+            "key": "string",
+            "value": "string",
+            "description": "string",
+            "data_type": "string|number|boolean"
+        }
+    ]
 }
 ```
 
@@ -1860,7 +1860,7 @@ Update system configuration values.
 
 ```json
 {
-	"updates": [{ "key": "string (required)", "value": "string (required)" }]
+    "updates": [{ "key": "string (required)", "value": "string (required)" }]
 }
 ```
 
@@ -1889,10 +1889,10 @@ Health check endpoint for load balancers and monitoring. No authentication requi
 
 ```json
 {
-	"status": "ok",
-	"db": "connected",
-	"uptime_seconds": "number",
-	"version": "string (semver)"
+    "status": "ok",
+    "db": "connected",
+    "uptime_seconds": "number",
+    "version": "string (semver)"
 }
 ```
 
@@ -1900,8 +1900,8 @@ Health check endpoint for load balancers and monitoring. No authentication requi
 
 ```json
 {
-	"status": "degraded",
-	"db": "disconnected"
+    "status": "degraded",
+    "db": "disconnected"
 }
 ```
 
@@ -1921,16 +1921,16 @@ List all 12 fiscal period rows for the given fiscal year with status and actual 
 
 ```json
 {
-	"periods": [
-		{
-			"fiscal_year": "number",
-			"month": "number (1-12)",
-			"status": "Draft|Locked",
-			"actual_version_id": "number|null",
-			"locked_at": "string (ISO 8601)|null",
-			"locked_by": "string (email)|null"
-		}
-	]
+    "periods": [
+        {
+            "fiscal_year": "number",
+            "month": "number (1-12)",
+            "status": "Draft|Locked",
+            "actual_version_id": "number|null",
+            "locked_at": "string (ISO 8601)|null",
+            "locked_by": "string (email)|null"
+        }
+    ]
 }
 ```
 
@@ -1948,7 +1948,7 @@ Lock a fiscal period and set the authoritative Actual version for that month.
 
 ```json
 {
-	"actual_version_id": "number (required)"
+    "actual_version_id": "number (required)"
 }
 ```
 
@@ -1988,10 +1988,10 @@ Creates an `actuals_import_log` row. Writes directly to output tables without in
 
 ```json
 {
-	"import_log_id": "number",
-	"rows_imported": "number",
-	"validation_status": "PASSED|FAILED",
-	"validation_notes": "string|null"
+    "import_log_id": "number",
+    "rows_imported": "number",
+    "validation_status": "PASSED|FAILED",
+    "validation_notes": "string|null"
 }
 ```
 
@@ -2017,18 +2017,18 @@ Returns monthly budget summary for all 12 months of the version's fiscal year, b
 
 ```json
 {
-	"months": [
-		{
-			"month": "number (1-12)",
-			"source": "actual|budget",
-			"data": {
-				"total_revenue_ht": "string (decimal)",
-				"total_staff_costs": "string (decimal)",
-				"ebitda": "string (decimal)",
-				"net_profit": "string (decimal)"
-			}
-		}
-	]
+    "months": [
+        {
+            "month": "number (1-12)",
+            "source": "actual|budget",
+            "data": {
+                "total_revenue_ht": "string (decimal)",
+                "total_staff_costs": "string (decimal)",
+                "ebitda": "string (decimal)",
+                "net_profit": "string (decimal)"
+            }
+        }
+    ]
 }
 ```
 
@@ -2046,21 +2046,21 @@ List all `actuals_import_log` rows for the given version.
 
 ```json
 {
-	"import_log": [
-		{
-			"id": "number",
-			"import_module": "REVENUE|STAFF_COSTS|ENROLLMENT|PNL",
-			"source_file": "string",
-			"academic_year_label": "string|null",
-			"target_fiscal_year": "number|null",
-			"target_period": "string|null",
-			"validation_status": "PENDING|PASSED|FAILED",
-			"rows_imported": "number|null",
-			"validation_notes": "string|null",
-			"imported_at": "string (ISO 8601)",
-			"imported_by": "string (email)"
-		}
-	]
+    "import_log": [
+        {
+            "id": "number",
+            "import_module": "REVENUE|STAFF_COSTS|ENROLLMENT|PNL",
+            "source_file": "string",
+            "academic_year_label": "string|null",
+            "target_fiscal_year": "number|null",
+            "target_period": "string|null",
+            "validation_status": "PENDING|PASSED|FAILED",
+            "rows_imported": "number|null",
+            "validation_notes": "string|null",
+            "imported_at": "string (ISO 8601)",
+            "imported_by": "string (email)"
+        }
+    ]
 }
 ```
 
@@ -2089,16 +2089,16 @@ Phase 1 of the two-phase import workflow. Parses and validates the uploaded file
 
 ```json
 {
-	"valid": "boolean",
-	"rowCount": "integer",
-	"errors": [
-		{
-			"row": "integer",
-			"field": "string",
-			"message": "string"
-		}
-	],
-	"validationToken": "string (opaque token, required for commit step)"
+    "valid": "boolean",
+    "rowCount": "integer",
+    "errors": [
+        {
+            "row": "integer",
+            "field": "string",
+            "message": "string"
+        }
+    ],
+    "validationToken": "string (opaque token, required for commit step)"
 }
 ```
 
@@ -2130,7 +2130,7 @@ Phase 2 of the two-phase import workflow. Commits previously validated import da
 
 ```json
 {
-	"validationToken": "string (required, token from validate step)"
+    "validationToken": "string (required, token from validate step)"
 }
 ```
 
@@ -2138,8 +2138,8 @@ Phase 2 of the two-phase import workflow. Commits previously validated import da
 
 ```json
 {
-	"imported": "integer",
-	"warnings": ["string"]
+    "imported": "integer",
+    "warnings": ["string"]
 }
 ```
 
@@ -2179,28 +2179,32 @@ import { extendZodWithOpenApi } from 'zod-to-openapi';
 extendZodWithOpenApi(z);
 
 export const CreateVersionSchema = z
-	.object({
-		fiscal_year: z
-			.number()
-			.int()
-			.min(2020)
-			.max(2099)
-			.openapi({ description: 'Fiscal year for the budget version' }),
-		name: z
-			.string()
-			.min(1)
-			.max(100)
-			.openapi({ description: 'Unique version name within the fiscal year' }),
-		type: z.enum(['Budget', 'Forecast']).openapi({ description: 'Version type' }),
-		description: z.string().max(500).optional().openapi({ description: 'Optional description' }),
-		source_version_id: z
-			.number()
-			.int()
-			.positive()
-			.optional()
-			.openapi({ description: 'Copy data from this version if provided' }),
-	})
-	.openapi('CreateVersionRequest');
+    .object({
+        fiscal_year: z
+            .number()
+            .int()
+            .min(2020)
+            .max(2099)
+            .openapi({ description: 'Fiscal year for the budget version' }),
+        name: z
+            .string()
+            .min(1)
+            .max(100)
+            .openapi({ description: 'Unique version name within the fiscal year' }),
+        type: z.enum(['Budget', 'Forecast']).openapi({ description: 'Version type' }),
+        description: z
+            .string()
+            .max(500)
+            .optional()
+            .openapi({ description: 'Optional description' }),
+        source_version_id: z
+            .number()
+            .int()
+            .positive()
+            .optional()
+            .openapi({ description: 'Copy data from this version if provided' }),
+    })
+    .openapi('CreateVersionRequest');
 
 export type CreateVersionInput = z.infer<typeof CreateVersionSchema>;
 ```
@@ -2209,34 +2213,34 @@ export type CreateVersionInput = z.infer<typeof CreateVersionSchema>;
 
 ```typescript
 export const ErrorResponseSchema = z
-	.object({
-		code: z
-			.string()
-			.openapi({ description: 'Machine-readable error code', example: 'VALIDATION_ERROR' }),
-		message: z.string().openapi({ description: 'Human-readable error message' }),
-		field_errors: z
-			.array(
-				z.object({
-					field: z.string(),
-					message: z.string(),
-				})
-			)
-			.optional()
-			.openapi({ description: 'Per-field validation errors, present for 400/422 responses' }),
-	})
-	.openapi('ErrorResponse');
+    .object({
+        code: z
+            .string()
+            .openapi({ description: 'Machine-readable error code', example: 'VALIDATION_ERROR' }),
+        message: z.string().openapi({ description: 'Human-readable error message' }),
+        field_errors: z
+            .array(
+                z.object({
+                    field: z.string(),
+                    message: z.string(),
+                })
+            )
+            .optional()
+            .openapi({ description: 'Per-field validation errors, present for 400/422 responses' }),
+    })
+    .openapi('ErrorResponse');
 ```
 
 ### Example: Monetary String Schema (TC-001)
 
 ```typescript
 export const MonetaryStringSchema = z
-	.string()
-	.regex(/^-?\d+\.\d{4}$/, 'Must be a decimal string with 4 decimal places')
-	.openapi({
-		description: 'Monetary value as string to prevent floating-point precision loss',
-		example: '47250.0000',
-	});
+    .string()
+    .regex(/^-?\d+\.\d{4}$/, 'Must be a decimal string with 4 decimal places')
+    .openapi({
+        description: 'Monetary value as string to prevent floating-point precision loss',
+        example: '47250.0000',
+    });
 ```
 
 The OpenAPI spec is generated at build time and served at:

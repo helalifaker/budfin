@@ -19,7 +19,7 @@ The current planned order places Version Management at position 10, but **every 
 
 **Recommended order:** Shift Epic 10 immediately after Epic 11 (Auth), making it Epic 11B or renaming the sequence to:
 
-```text
+````text
 Epic 13 → Epic 11 → Epic 10 → Epic 7 → Epic 1 → Epic 2 → Epic 3 → Epic 4 → Epic 5 → Epic 6 → Epic 8 → Epic 9 → Epic 12
 ```text
 
@@ -227,3 +227,4 @@ Likely stories (to be confirmed in `/plan:spec epic-10`):
 - `docs/tdd/02_component_design.md` §4.5 — Version Manager component design
 - `docs/tdd/04_api_contract.md` — API endpoints with `:versionId` paths
 - `docs/plans/2026-03-06-audit-remediation-report.md` — current planned order
+````

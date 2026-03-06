@@ -651,33 +651,33 @@ Master data has a longer stale time (60s vs 30s default) because reference data 
 
 ```typescript
 interface MasterDataState {
-	// Active sub-module tab (for Reference Data)
-	activeReferenceTab: 'nationalities' | 'tariffs' | 'departments';
+    // Active sub-module tab (for Reference Data)
+    activeReferenceTab: 'nationalities' | 'tariffs' | 'departments';
 
-	// Table state per sub-module
-	accountsGrid: GridState;
-	academicYearsGrid: GridState;
-	gradeLevelsGrid: GridState;
-	nationalitiesGrid: GridState;
-	tariffsGrid: GridState;
-	departmentsGrid: GridState;
+    // Table state per sub-module
+    accountsGrid: GridState;
+    academicYearsGrid: GridState;
+    gradeLevelsGrid: GridState;
+    nationalitiesGrid: GridState;
+    tariffsGrid: GridState;
+    departmentsGrid: GridState;
 
-	// Side panel state
-	sidePanelOpen: boolean;
-	sidePanelMode: 'create' | 'edit' | 'view' | null;
-	sidePanelEntity: string | null; // entity type
-	sidePanelRecordId: string | null;
+    // Side panel state
+    sidePanelOpen: boolean;
+    sidePanelMode: 'create' | 'edit' | 'view' | null;
+    sidePanelEntity: string | null; // entity type
+    sidePanelRecordId: string | null;
 
-	// Assumptions section collapse state
-	assumptionSections: Record<string, boolean>; // section key -> collapsed
+    // Assumptions section collapse state
+    assumptionSections: Record<string, boolean>; // section key -> collapsed
 }
 
 interface GridState {
-	sortColumn: string | null;
-	sortDirection: 'asc' | 'desc';
-	searchQuery: string;
-	filters: Record<string, string>;
-	selectedRowId: string | null;
+    sortColumn: string | null;
+    sortDirection: 'asc' | 'desc';
+    searchQuery: string;
+    filters: Record<string, string>;
+    selectedRowId: string | null;
 }
 ```
 

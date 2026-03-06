@@ -528,26 +528,26 @@ Shown when no versions exist for the selected fiscal year.
 
 ```typescript
 interface VersionManagementStore {
-	// Toolbar filters (client-side, not sent to API)
-	typeFilter: 'all' | 'Actual' | 'Budget' | 'Forecast';
-	statusFilter: 'all' | 'Draft' | 'Published' | 'Locked' | 'Archived';
-	searchQuery: string;
+    // Toolbar filters (client-side, not sent to API)
+    typeFilter: 'all' | 'Actual' | 'Budget' | 'Forecast';
+    statusFilter: 'all' | 'Draft' | 'Published' | 'Locked' | 'Archived';
+    searchQuery: string;
 
-	// Table state
-	sortColumn: string;
-	sortDirection: 'asc' | 'desc';
-	columnVisibility: Record<string, boolean>;
+    // Table state
+    sortColumn: string;
+    sortDirection: 'asc' | 'desc';
+    columnVisibility: Record<string, boolean>;
 
-	// Panel state
-	detailPanelVersionId: number | null;
+    // Panel state
+    detailPanelVersionId: number | null;
 
-	// Actions
-	setTypeFilter: (filter: string) => void;
-	setStatusFilter: (filter: string) => void;
-	setSearchQuery: (query: string) => void;
-	setSortColumn: (column: string, direction: 'asc' | 'desc') => void;
-	openDetailPanel: (versionId: number) => void;
-	closeDetailPanel: () => void;
+    // Actions
+    setTypeFilter: (filter: string) => void;
+    setStatusFilter: (filter: string) => void;
+    setSearchQuery: (query: string) => void;
+    setSortColumn: (column: string, direction: 'asc' | 'desc') => void;
+    openDetailPanel: (versionId: number) => void;
+    closeDetailPanel: () => void;
 }
 ```
 

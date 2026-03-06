@@ -388,8 +388,8 @@ Positioned below the delta table with `--space-6` gap.
 ```typescript
 // Scenario comparison data (right panel)
 ['scenarios', 'comparison', versionId, period][
-	// Scenario parameters (left panel)
-	('scenarios', 'parameters', versionId)
+    // Scenario parameters (left panel)
+    ('scenarios', 'parameters', versionId)
 ];
 ```
 
@@ -397,33 +397,33 @@ Positioned below the delta table with `--space-6` gap.
 
 ```typescript
 interface ScenarioComparison {
-	base: ScenarioMetrics;
-	optimistic: ScenarioMetrics;
-	pessimistic: ScenarioMetrics;
-	deltas: {
-		optimistic_vs_base: ScenarioDeltas;
-		pessimistic_vs_base: ScenarioDeltas;
-	};
+    base: ScenarioMetrics;
+    optimistic: ScenarioMetrics;
+    pessimistic: ScenarioMetrics;
+    deltas: {
+        optimistic_vs_base: ScenarioDeltas;
+        pessimistic_vs_base: ScenarioDeltas;
+    };
 }
 
 interface ScenarioMetrics {
-	adjusted_total_enrollment: number;
-	total_tuition_revenue_ht: string; // decimal string
-	total_all_stream_revenue: string;
-	scholarship_deductions: string;
-	net_revenue: string;
-	revenue_per_student: string;
+    adjusted_total_enrollment: number;
+    total_tuition_revenue_ht: string; // decimal string
+    total_all_stream_revenue: string;
+    scholarship_deductions: string;
+    net_revenue: string;
+    revenue_per_student: string;
 }
 
 interface ScenarioDeltas {
-	enrollment_delta: number;
-	enrollment_delta_pct: string;
-	tuition_delta: string;
-	tuition_delta_pct: string;
-	net_revenue_delta: string;
-	net_revenue_delta_pct: string;
-	rev_per_student_delta: string;
-	rev_per_student_delta_pct: string;
+    enrollment_delta: number;
+    enrollment_delta_pct: string;
+    tuition_delta: string;
+    tuition_delta_pct: string;
+    net_revenue_delta: string;
+    net_revenue_delta_pct: string;
+    rev_per_student_delta: string;
+    rev_per_student_delta_pct: string;
 }
 ```
 
@@ -431,18 +431,18 @@ interface ScenarioDeltas {
 
 ```typescript
 interface ScenarioParametersResponse {
-	scenarios: ScenarioParameterSet[];
+    scenarios: ScenarioParameterSet[];
 }
 
 interface ScenarioParameterSet {
-	scenario_name: 'Base' | 'Optimistic' | 'Pessimistic';
-	new_enrollment_factor: string; // decimal string, e.g., "1.000000"
-	retention_adjustment: string; // decimal string
-	attrition_rate: string;
-	fee_collection_rate: string;
-	scholarship_allocation: string;
-	updated_at: string; // ISO 8601 timestamp
-	updated_by: string | null; // user email
+    scenario_name: 'Base' | 'Optimistic' | 'Pessimistic';
+    new_enrollment_factor: string; // decimal string, e.g., "1.000000"
+    retention_adjustment: string; // decimal string
+    attrition_rate: string;
+    fee_collection_rate: string;
+    scholarship_allocation: string;
+    updated_at: string; // ISO 8601 timestamp
+    updated_by: string | null; // user email
 }
 ```
 
@@ -450,12 +450,12 @@ interface ScenarioParameterSet {
 
 ```typescript
 interface UpdateScenarioParametersRequest {
-	scenario_name: 'Base' | 'Optimistic' | 'Pessimistic';
-	new_enrollment_factor: string;
-	retention_adjustment: string;
-	attrition_rate: string;
-	fee_collection_rate: string;
-	scholarship_allocation: string;
+    scenario_name: 'Base' | 'Optimistic' | 'Pessimistic';
+    new_enrollment_factor: string;
+    retention_adjustment: string;
+    attrition_rate: string;
+    fee_collection_rate: string;
+    scholarship_allocation: string;
 }
 ```
 
@@ -476,18 +476,18 @@ interface UpdateScenarioParametersRequest {
 
 ```typescript
 interface ScenariosStore {
-	// Active scenario tab in left panel
-	activeScenarioTab: 'Base' | 'Optimistic' | 'Pessimistic';
-	setActiveScenarioTab: (tab: string) => void;
+    // Active scenario tab in left panel
+    activeScenarioTab: 'Base' | 'Optimistic' | 'Pessimistic';
+    setActiveScenarioTab: (tab: string) => void;
 
-	// Draft parameter values (unsaved edits)
-	draftParameters: Record<string, ScenarioParameterSet>;
-	setDraftParameter: (scenario: string, key: string, value: number) => void;
-	resetDraftToServer: (scenario: string, serverParams: ScenarioParameterSet) => void;
-	resetDraftToDefaults: (scenario: string) => void;
+    // Draft parameter values (unsaved edits)
+    draftParameters: Record<string, ScenarioParameterSet>;
+    setDraftParameter: (scenario: string, key: string, value: number) => void;
+    resetDraftToServer: (scenario: string, serverParams: ScenarioParameterSet) => void;
+    resetDraftToDefaults: (scenario: string) => void;
 
-	// Dirty tracking
-	isDirty: (scenario: string) => boolean;
+    // Dirty tracking
+    isDirty: (scenario: string) => boolean;
 }
 ```
 

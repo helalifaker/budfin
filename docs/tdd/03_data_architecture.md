@@ -1838,12 +1838,12 @@ This section documents the five critical calculation flows that transform input 
 4. **Revenue Engine invoked.** A `CalculateRevenueCommand` is created and logged to `calculation_audit_log` with status `STARTED`.
 
 5. **Revenue computation.** For each row in `enrollment_detail`, the engine JOINs with `fee_grids` on `(version_id, academic_period, grade_level, nationality, tariff)`:
-   - **Gross revenue HT** = `headcount * tuition_ht / period_months` (AY1: 6 months, AY2: 4 months). Computed using Decimal.js at full precision (TC-001).
-   - **Discount** = look up `discount_policies` for `(version_id, tariff, nationality)`. Apply the highest applicable `discount_rate` to gross revenue. If no policy exists, discount = 0.
-   - **Scholarship deduction** = `gross_revenue_ht * scenario_parameters.scholarship_allocation` (from the active scenario).
-   - **Net revenue HT** = `gross_revenue_ht - discount_amount - scholarship_deduction`.
-   - **VAT** = `net_revenue_ht * vat_rate` (15% for Francais and Autres; 0% for Nationaux).
-   - **Monthly distribution:** AY1 rows are distributed to months 1-6; AY2 rows to months 9-12. Months 7-8 (summer) are always zero.
+    - **Gross revenue HT** = `headcount * tuition_ht / period_months` (AY1: 6 months, AY2: 4 months). Computed using Decimal.js at full precision (TC-001).
+    - **Discount** = look up `discount_policies` for `(version_id, tariff, nationality)`. Apply the highest applicable `discount_rate` to gross revenue. If no policy exists, discount = 0.
+    - **Scholarship deduction** = `gross_revenue_ht * scenario_parameters.scholarship_allocation` (from the active scenario).
+    - **Net revenue HT** = `gross_revenue_ht - discount_amount - scholarship_deduction`.
+    - **VAT** = `net_revenue_ht * vat_rate` (15% for Francais and Autres; 0% for Nationaux).
+    - **Monthly distribution:** AY1 rows are distributed to months 1-6; AY2 rows to months 9-12. Months 7-8 (summer) are always zero.
 
 6. **Batch UPSERT.** All computed `monthly_revenue` rows are upserted in a single transaction using `INSERT ... ON CONFLICT (version_id, scenario_name, academic_period, grade_level, nationality, tariff, month) DO UPDATE`.
 
@@ -1856,11 +1856,11 @@ This section documents the five critical calculation flows that transform input 
 **Trigger:** Calculated automatically as part of enrollment processing or explicitly via `POST /api/v1/versions/:id/calculate/dhg`
 
 1. **Sections calculation.** For each grade in `enrollment_headcount`, the DHG Engine looks up `class_capacity_config.max_class_size` and computes:
-   - `sections_needed = CEILING(headcount / max_class_size)` — integer arithmetic, always rounds up.
-   - If headcount = 0, sections_needed = 0.
+    - `sections_needed = CEILING(headcount / max_class_size)` — integer arithmetic, always rounds up.
+    - If headcount = 0, sections_needed = 0.
 
 2. **DHG hours computation.** For each grade, the engine JOINs `dhg_grille_config` (filtering by the appropriate `effective_from_year` or the default grille) and sums:
-   - `total_dhg_hours_per_week = SUM(hours_per_week_per_section * sections_needed)` across all subjects and DHG types (Structural, Host_Country, Complementary).
+    - `total_dhg_hours_per_week = SUM(hours_per_week_per_section * sections_needed)` across all subjects and DHG types (Structural, Host_Country, Complementary).
 
 3. **FTE requirement.** `fte_required = total_dhg_hours_per_week / ors_hours` where `ors_hours` comes from `scenario_parameters` for the active scenario (default 18.0000).
 
@@ -1878,29 +1878,29 @@ This section documents the five critical calculation flows that transform input 
 
 3. **Per-employee monthly computation.** For each employee in the version, for each month 1-12:
 
-   a. **Monthly gross:**
-   - Months 1-8: `base_salary + housing_allowance + transport_allowance + responsibility_premium + (hsa_amount if month NOT IN (7,8))`.
-   - Months 9-12: `(base_salary + augmentation) + housing_allowance + transport_allowance + responsibility_premium + hsa_amount`.
-   - `adjusted_gross = monthly_gross * hourly_percentage`.
+    a. **Monthly gross:**
+    - Months 1-8: `base_salary + housing_allowance + transport_allowance + responsibility_premium + (hsa_amount if month NOT IN (7,8))`.
+    - Months 9-12: `(base_salary + augmentation) + housing_allowance + transport_allowance + responsibility_premium + hsa_amount`.
+    - `adjusted_gross = monthly_gross * hourly_percentage`.
 
-   b. **GOSI (employer contribution):**
-   - If `is_saudi = TRUE`: `gosi_amount = adjusted_gross * gosi_rate_saudi` (11.75% from `system_config`).
-   - If `is_saudi = FALSE`: `gosi_amount = 0` (non-Saudi GOSI is employee-only, not employer-funded in this model).
+    b. **GOSI (employer contribution):**
+    - If `is_saudi = TRUE`: `gosi_amount = adjusted_gross * gosi_rate_saudi` (11.75% from `system_config`).
+    - If `is_saudi = FALSE`: `gosi_amount = 0` (non-Saudi GOSI is employee-only, not employer-funded in this model).
 
-   c. **Ajeer:**
-   - If `is_saudi = TRUE`: `ajeer_amount = 0`.
-   - If `is_ajeer = TRUE` and status = `Existing`: `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` per month.
-   - If `is_ajeer = TRUE` and status = `New`: Ajeer applies from Sep-Dec only (4 months). `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` for months 9-12; 0 for months 1-8.
-   - `ajeer_levy_nitaqat`, `ajeer_monthly_fee` from `system_config`.
+    c. **Ajeer:**
+    - If `is_saudi = TRUE`: `ajeer_amount = 0`.
+    - If `is_ajeer = TRUE` and status = `Existing`: `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` per month.
+    - If `is_ajeer = TRUE` and status = `New`: Ajeer applies from Sep-Dec only (4 months). `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` for months 9-12; 0 for months 1-8.
+    - `ajeer_levy_nitaqat`, `ajeer_monthly_fee` from `system_config`.
 
-   d. **EoS provision:**
-   - `years_of_service = YEARFRAC(joining_date, fiscal_year_dec_31)` using US 30/360 (TC-002).
-   - If `years_of_service <= 5`: `annual_provision = years_of_service * eos_base * 0.5`.
-   - If `years_of_service > 5`: `annual_provision = (5 * eos_base * 0.5) + ((years_of_service - 5) * eos_base * 1.0)`.
-   - `eos_base = base_salary + housing + transport + responsibility_premium` (excludes HSA).
-   - `monthly_accrual = annual_provision / 12`.
+    d. **EoS provision:**
+    - `years_of_service = YEARFRAC(joining_date, fiscal_year_dec_31)` using US 30/360 (TC-002).
+    - If `years_of_service <= 5`: `annual_provision = years_of_service * eos_base * 0.5`.
+    - If `years_of_service > 5`: `annual_provision = (5 * eos_base * 0.5) + ((years_of_service - 5) * eos_base * 1.0)`.
+    - `eos_base = base_salary + housing + transport + responsibility_premium` (excludes HSA).
+    - `monthly_accrual = annual_provision / 12`.
 
-   e. **Total cost:** `total_cost = adjusted_gross + gosi_amount + ajeer_amount + eos_monthly_accrual`.
+    e. **Total cost:** `total_cost = adjusted_gross + gosi_amount + ajeer_amount + eos_monthly_accrual`.
 
 4. **Batch UPSERT.** All `monthly_staff_costs` and `eos_provisions` rows are upserted in a single transaction.
 
@@ -1915,21 +1915,21 @@ This section documents the five critical calculation flows that transform input 
 2. **Calculation logged.** `calculation_audit_log` entry created with status `STARTED`.
 
 3. **Monthly consolidation.** For each month 1-12:
-   - **Total tuition revenue HT** = `SUM(monthly_revenue.net_revenue_ht)` for this version and month.
-   - **Total other revenue HT** = sum of `other_revenue_items` distributed to this month (per each item's `distribution_method`).
-   - **Total revenue HT** = tuition + other revenue.
-   - **Total local staff costs** = `SUM(monthly_staff_costs.adjusted_gross)` for this version and month.
-   - **Total employer charges** = `SUM(monthly_staff_costs.gosi_amount + ajeer_amount + eos_monthly_accrual)`.
-   - **Total additional costs** = Residents, replacements, and training costs (from `other_revenue_items` classified as cost items via `ifrs_category`).
-   - **Total staff costs** = local + employer charges + additional.
-   - **Gross profit** = total revenue - total staff costs.
-   - **Other operating expenses** = non-staff OpEx (from `other_revenue_items` or manual input).
-   - **EBITDA** = gross profit - other operating expenses.
-   - **Operating profit** = EBITDA - depreciation and amortization.
-   - **Net finance income** = finance income - finance costs.
-   - **Profit before Zakat** = operating profit + net finance income.
-   - **Zakat** = `MAX(0, profit_before_zakat * 0.025)`.
-   - **Net profit** = profit before Zakat - Zakat.
+    - **Total tuition revenue HT** = `SUM(monthly_revenue.net_revenue_ht)` for this version and month.
+    - **Total other revenue HT** = sum of `other_revenue_items` distributed to this month (per each item's `distribution_method`).
+    - **Total revenue HT** = tuition + other revenue.
+    - **Total local staff costs** = `SUM(monthly_staff_costs.adjusted_gross)` for this version and month.
+    - **Total employer charges** = `SUM(monthly_staff_costs.gosi_amount + ajeer_amount + eos_monthly_accrual)`.
+    - **Total additional costs** = Residents, replacements, and training costs (from `other_revenue_items` classified as cost items via `ifrs_category`).
+    - **Total staff costs** = local + employer charges + additional.
+    - **Gross profit** = total revenue - total staff costs.
+    - **Other operating expenses** = non-staff OpEx (from `other_revenue_items` or manual input).
+    - **EBITDA** = gross profit - other operating expenses.
+    - **Operating profit** = EBITDA - depreciation and amortization.
+    - **Net finance income** = finance income - finance costs.
+    - **Profit before Zakat** = operating profit + net finance income.
+    - **Zakat** = `MAX(0, profit_before_zakat * 0.025)`.
+    - **Net profit** = profit before Zakat - Zakat.
 
 4. **Upsert summary.** All 12 rows upserted to `monthly_budget_summary`.
 
@@ -2137,14 +2137,14 @@ Automated as a CI pipeline step in Phase 6. All validations must pass before mig
 - **Runtime:** Python 3.11 with explicit `decimal.Decimal` context — no `float` types are ever used for monetary values (mirroring TC-001 at the migration layer).
 - **Libraries:** `openpyxl` for xlsx reading, `pandas` with `decimal.Decimal` columns for data transformation, `psycopg2` with `decimal.Decimal` adapter for PostgreSQL writes.
 - **Script per workbook:**
-  - `migrate_revenue.py` — fee grids, enrollment data, discount policies.
-  - `migrate_staff_costs.py` — employee records with salary encryption.
-  - `migrate_dhg.py` — DHG grille configuration.
-  - `migrate_consolidated.py` — other revenue items, operating expenses, IFRS mappings.
-  - `migrate_enrollment_actuals.py` — converts 5 enrollment CSVs (2021-22 through 2025-26) into
-    Actual budget_versions. Creates one `budget_versions` row per academic year
-    (type='Actual', data_source='IMPORTED', status='Locked'), then populates
-    `enrollment_headcount` rows per grade per AY period using the AY→FY mapping rule.
+    - `migrate_revenue.py` — fee grids, enrollment data, discount policies.
+    - `migrate_staff_costs.py` — employee records with salary encryption.
+    - `migrate_dhg.py` — DHG grille configuration.
+    - `migrate_consolidated.py` — other revenue items, operating expenses, IFRS mappings.
+    - `migrate_enrollment_actuals.py` — converts 5 enrollment CSVs (2021-22 through 2025-26) into
+      Actual budget_versions. Creates one `budget_versions` row per academic year
+      (type='Actual', data_source='IMPORTED', status='Locked'), then populates
+      `enrollment_headcount` rows per grade per AY period using the AY→FY mapping rule.
 - **Idempotency:** All scripts use `INSERT ... ON CONFLICT DO UPDATE`. Safe to re-run without creating duplicates.
 - **Encryption:** `migrate_staff_costs.py` encrypts salary fields using `pgp_sym_encrypt()` via a raw SQL `INSERT` statement with the encryption key passed as a parameter from the `SALARY_ENCRYPTION_KEY` environment variable.
 - **Logging:** Each migration script writes a structured JSON log with row counts, checksums, duration, and any warnings or skipped rows.

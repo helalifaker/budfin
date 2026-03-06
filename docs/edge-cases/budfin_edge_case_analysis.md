@@ -203,11 +203,11 @@ For 30,000 SAR base salary:
 **Suggested Resolution**
 
 1. Match Excel's YEARFRAC exactly: use ISDA Actual/Actual basis (Excel default basis=1)
-   - Days = end_date - start_date (ISO calendar, respects leap years)
-   - Denominator = days in year of end_date (366 if leap, 365 if not)
+    - Days = end_date - start_date (ISO calendar, respects leap years)
+    - Denominator = days in year of end_date (366 if leap, 365 if not)
 2. Create leap-year fixture tests:
-   - Join Feb 29, 2024 → Calc Dec 31, 2024 (leap year) → Expect 0.8361 YoS
-   - Join Feb 28, 2024 → Calc Dec 31, 2024 → Expect 0.8356 YoS
+    - Join Feb 29, 2024 → Calc Dec 31, 2024 (leap year) → Expect 0.8361 YoS
+    - Join Feb 28, 2024 → Calc Dec 31, 2024 → Expect 0.8356 YoS
 3. Annual calibration: manually verify 3-5 employee EoS vs. Excel in Dec
 
 **Severity:** High
@@ -304,20 +304,20 @@ HSA (overtime) is zero during Jul--Aug per labor agreement.
 Edge cases:
 
 1. Employee joins Jul 15 (mid-summer):
-   - Jul: No HSA (summer month) ✓
-   - Aug: No HSA (summer month) ✓
-   - Sep: HSA resumes ✓
-   - Correct? Or should employee get prorated HSA for Jul 15-31?
+    - Jul: No HSA (summer month) ✓
+    - Aug: No HSA (summer month) ✓
+    - Sep: HSA resumes ✓
+    - Correct? Or should employee get prorated HSA for Jul 15-31?
 
 2. Employee departs Aug 20 (during summer):
-   - Jul: No HSA
-   - Aug (partial): No HSA
-   - Sep-Dec: Absent from payroll (no HSA needed)
-   - Correct, but how to handle partial month?
+    - Jul: No HSA
+    - Aug (partial): No HSA
+    - Sep-Dec: Absent from payroll (no HSA needed)
+    - Correct, but how to handle partial month?
 
 3. Scenario adjusts HSA retroactively to Jul (misconfiguration):
-   - "Increase HSA from 1 to 2 hours starting Jul" → costs recalculate incorrectly
-   - HSA change should only be effective Sep onwards
+    - "Increase HSA from 1 to 2 hours starting Jul" → costs recalculate incorrectly
+    - HSA change should only be effective Sep onwards
 
 **Technical Risk**
 
@@ -376,13 +376,13 @@ Excel model has specific formula. If app implements different order, results div
 
 1. Document formula explicitly in code and PRD addendum:
 
-   ```
-   Adjusted Enrollment = Base × New Enrollment Factor
-                       × (1 + Retention Adjustment)
-                       - (Base × Attrition Rate)
-   ```
+    ```
+    Adjusted Enrollment = Base × New Enrollment Factor
+                        × (1 + Retention Adjustment)
+                        - (Base × Attrition Rate)
+    ```
 
-   (Match Excel SCENARIOS sheet exactly)
+    (Match Excel SCENARIOS sheet exactly)
 
 2. Scenario parameter test matrix: test all 3 scenarios with documented expected outputs
 3. Test custom scenarios with single-parameter changes
@@ -404,17 +404,17 @@ Non-tuition items (e.g., Class Photos) use custom month weights: [0,0,0,0,0,0,0,
 Edge cases:
 
 1. **Weights don't sum to 1.0:**
-   - Weights: [0.4, 0.4, 0, ...] sum to 0.8 (20% of revenue lost)
-   - Weights: [0.6, 0.6, 0, ...] sum to 1.2 (20% double-counted)
+    - Weights: [0.4, 0.4, 0, ...] sum to 0.8 (20% of revenue lost)
+    - Weights: [0.6, 0.6, 0, ...] sum to 1.2 (20% double-counted)
 
 2. **Distribution method conflict:**
-   - Item marked "Academic /10" but custom weights provided
-   - Which takes precedence?
+    - Item marked "Academic /10" but custom weights provided
+    - Which takes precedence?
 
 3. **Academic /10 weight array semantics:**
-   - 10 academic months: Jan-Jun (6) + Sep-Dec (4)
-   - Correct weights: [1/10, 1/10, 1/10, 1/10, 1/10, 1/10, 0, 0, 1/10, 1/10, 1/10, 1/10]
-   - User mistakenly enters: [1/12, 1/12, ..., 1/12] (wrong for Academic /10)
+    - 10 academic months: Jan-Jun (6) + Sep-Dec (4)
+    - Correct weights: [1/10, 1/10, 1/10, 1/10, 1/10, 1/10, 0, 0, 1/10, 1/10, 1/10, 1/10]
+    - User mistakenly enters: [1/12, 1/12, ..., 1/12] (wrong for Academic /10)
 
 **Technical Risk**
 
@@ -427,9 +427,9 @@ Edge cases:
 
 1. Validate weight arrays: IF sum(weights) ≠ 1.0 THEN ERROR "Weights must sum to 1.0, got [sum]"
 2. Offer pre-defined templates (radio buttons), not freeform entry:
-   - "Academic months (10)" → [1/10, 1/10, ..., 0, 0, 1/10, ...]
-   - "Year-round (12)" → [1/12, 1/12, ..., 1/12]
-   - "Specific months" → custom weights with validation
+    - "Academic months (10)" → [1/10, 1/10, ..., 0, 0, 1/10, ...]
+    - "Year-round (12)" → [1/12, 1/12, ..., 1/12]
+    - "Specific months" → custom weights with validation
 3. Distribution method priority: if method AND custom weights both specified, choose method unless explicit UI selection
 4. Visual weight distribution bar chart during editing
 5. Regression test: all 20+ non-tuition items, verify monthly breakdown matches Excel
@@ -585,18 +585,18 @@ Negative enrollment produces:
 
 1. **Floor constraint:** MIN(Adjusted Enrollment, 0) → if negative, set to 0
 
-   ```
-   Adjusted = max(0, (Base × Factor) × (1 + Retention) - (Base × Attrition))
-   ```
+    ```
+    Adjusted = max(0, (Base × Factor) × (1 + Retention) - (Base × Attrition))
+    ```
 
 2. **Scenario validation:** Warn user if scenario produces enrollment < 5% of base: "This scenario results in only X students (5% of base). Reconsider parameters."
 
 3. **Extreme scenario handling:** For user-defined scenarios, validate that all three adjustment parameters produce reasonable ranges:
-   - Factor: 0.5 to 1.5 (50%-150% of base)
-   - Retention: -10% to +10%
-   - Attrition: 0% to 20%
+    - Factor: 0.5 to 1.5 (50%-150% of base)
+    - Retention: -10% to +10%
+    - Attrition: 0% to 20%
 
-   Warn if outside ranges.
+    Warn if outside ranges.
 
 4. **Scenario output display:** Show calculated intermediate: "Adjusted = (1,503 × 0.9) × (1 - 0.05) - (1,503 × 0.05) = [result]"
 
@@ -641,19 +641,19 @@ Example:
 **Suggested Resolution**
 
 1. **Cascade delete with constraints:** If grade deleted, either:
-   - **Option A (Hard delete):** Also delete all fee grid rows for that grade (with audit trail)
-   - **Option B (Soft delete):** Mark grade as inactive; keep fee grid for historical reference
+    - **Option A (Hard delete):** Also delete all fee grid rows for that grade (with audit trail)
+    - **Option B (Soft delete):** Mark grade as inactive; keep fee grid for historical reference
 
-   Recommend Option B for EFIR (maintain audit trail, allow "undo")
+    Recommend Option B for EFIR (maintain audit trail, allow "undo")
 
 2. **Foreign key enforcement:** Database constraint ensures fee_grid.grade_id references active grade_levels
 
 3. **Grade hierarchy stability:** Restrict deletion of grades if they have:
-   - Active enrollments
-   - Active fee grid definitions
-   - Recent audit trail entries
+    - Active enrollments
+    - Active fee grid definitions
+    - Recent audit trail entries
 
-   UI message: "Cannot delete Terminale: 3 students enrolled, 3 fee definitions active"
+    UI message: "Cannot delete Terminale: 3 students enrolled, 3 fee definitions active"
 
 4. **Fee grid validation report:** Quarterly check for orphaned fee rows or missing fees for active grades
 
@@ -705,23 +705,23 @@ If app blocks edit:
 **Suggested Resolution**
 
 1. **Optimistic locking:** Store version_timestamp on each record
-   - On save, check if version_timestamp matches database version_timestamp
-   - If not, collision detected → block save with message: "Version was locked/modified by another user. Your edits were not saved. Refresh to see latest state."
+    - On save, check if version_timestamp matches database version_timestamp
+    - If not, collision detected → block save with message: "Version was locked/modified by another user. Your edits were not saved. Refresh to see latest state."
 
 2. **Pessimistic locking (alternative):** Lock version at database level when edit begins
-   - User A begins editing → Version locked for editing by User A
-   - User B attempts to edit same version → Blocked: "Version locked by User A (editing since 2 min ago)"
-   - On save or abandon, release lock
+    - User A begins editing → Version locked for editing by User A
+    - User B attempts to edit same version → Blocked: "Version locked by User A (editing since 2 min ago)"
+    - On save or abandon, release lock
 
 3. **UI affordance:** Display version lock status prominently:
-   - "Budget v1 [LOCKED by CFO at 14:30]" → User cannot edit
-   - "Forecast v2 [DRAFT — being edited by You]" → User can edit
-   - "Forecast v3 [LOCKED by User X at 12:00]" → User cannot edit, can only view
+    - "Budget v1 [LOCKED by CFO at 14:30]" → User cannot edit
+    - "Forecast v2 [DRAFT — being edited by You]" → User can edit
+    - "Forecast v3 [LOCKED by User X at 12:00]" → User cannot edit, can only view
 
 4. **Conflict resolution:** If collision detected, offer options:
-   - "Create new Draft copy of your edits"
-   - "Discard your edits and view locked version"
-   - "Contact version lock holder to unlock"
+    - "Create new Draft copy of your edits"
+    - "Discard your edits and view locked version"
+    - "Contact version lock holder to unlock"
 
 **Severity:** High
 
@@ -764,22 +764,22 @@ Example:
 **Suggested Resolution**
 
 1. **Optimistic locking per field:** Store field-level timestamp
-   - On save, check if field_timestamp matches database version
-   - If conflict detected, show merge dialog: "Field X was modified by User Y at [time]. Your value: [A], database value: [B]. Keep yours? Keep theirs? Merge manually?"
+    - On save, check if field_timestamp matches database version
+    - If conflict detected, show merge dialog: "Field X was modified by User Y at [time]. Your value: [A], database value: [B]. Keep yours? Keep theirs? Merge manually?"
 
 2. **Pessimistic locking per record:** Lock entire record during active editing
-   - On first field blur (or edit start), acquire write lock
-   - On save or timeout (5 min inactive), release lock
-   - UI shows lock status: "Record locked for editing (auto-release at 14:35)"
+    - On first field blur (or edit start), acquire write lock
+    - On save or timeout (5 min inactive), release lock
+    - UI shows lock status: "Record locked for editing (auto-release at 14:35)"
 
 3. **Auto-save strategy:** Auto-save only if no active edits
-   - Track focus state of all input fields
-   - If any field has focus, defer auto-save
-   - Once all fields blurred, auto-save
+    - Track focus state of all input fields
+    - If any field has focus, defer auto-save
+    - Once all fields blurred, auto-save
 
 4. **Conflict notification:** If conflict detected,don't silently overwrite
-   - Show merge dialog with side-by-side diff
-   - Let user choose keep/discard/merge
+    - Show merge dialog with side-by-side diff
+    - Let user choose keep/discard/merge
 
 **Severity:** High
 
@@ -818,19 +818,19 @@ Race condition:
 **Suggested Resolution**
 
 1. **Centralized context store:** Use state management library (Redux, Vuex, Context API) with single source of truth
-   - Context changes trigger pub-sub notifications to all modules
-   - Modules subscribe to context changes and re-render atomically
+    - Context changes trigger pub-sub notifications to all modules
+    - Modules subscribe to context changes and re-render atomically
 
 2. **Context versioning:** Each calculation result is tagged with (fiscal_year, version, scenario, period)
-   - When context changes, all cached results are invalidated
-   - Module explicitly checks context tag before displaying cached data
+    - When context changes, all cached results are invalidated
+    - Module explicitly checks context tag before displaying cached data
 
 3. **Context lock during fetch:** Lock context mutations while async API calls are in-flight
-   - User cannot change context until pending API calls complete
-   - UI shows spinner: "Loading versions... Please wait"
+    - User cannot change context until pending API calls complete
+    - UI shows spinner: "Loading versions... Please wait"
 
 4. **Audit trail per context:** Log context changes with timestamp and user
-   - Correlate all calculations with their context state
+    - Correlate all calculations with their context state
 
 **Severity:** Medium
 
@@ -873,17 +873,17 @@ Example:
 **Suggested Resolution**
 
 1. **Version comparison snapshot:** When comparison is activated, snapshot both versions at that point in time
-   - Display variance relative to snapshot (not live data)
-   - If either version is edited, flag as "Comparison snapshot is stale"
-   - UI shows: "Comparison outdated. Refresh comparison to see latest variances?"
+    - Display variance relative to snapshot (not live data)
+    - If either version is edited, flag as "Comparison snapshot is stale"
+    - UI shows: "Comparison outdated. Refresh comparison to see latest variances?"
 
 2. **Read-only comparison version:** When comparison is active, lock the comparison version from editing
-   - Only the active (primary) version is editable
-   - Prevents simultaneous modification of both versions
+    - Only the active (primary) version is editable
+    - Prevents simultaneous modification of both versions
 
 3. **Variance cache invalidation:** On any data modification to either version, clear variance cache and trigger recalculation
-   - Variance columns show "loading" spinner during recalculation
-   - Once complete, display updated variances with timestamp: "Variance calculated at [time]"
+    - Variance columns show "loading" spinner during recalculation
+    - Once complete, display updated variances with timestamp: "Variance calculated at [time]"
 
 **Severity:** Medium
 
@@ -914,11 +914,11 @@ PRD target: <3 seconds full recalculation. But with complex cascades:
 - Revenue calculation: 50 combinations × 12 = 600 operations × 5 decimal operations per cell = 3,000 FP ops
 - Each FP operation with Decimal.js: ~1 ms (vs. native float: ~0.01 ms)
 - Cascade overhead: 600 × 1 ms = 600 ms (Revenue alone)
-- - DHG: 200 ms
-- - Staff Costs: 800 ms (168 × 12 × FTE lookup)
-- - P&L: 200 ms
-- - Dashboard: 100 ms
-- - Scenarios: 3x multiplier = 2,800 ms
+-   - DHG: 200 ms
+-   - Staff Costs: 800 ms (168 × 12 × FTE lookup)
+-   - P&L: 200 ms
+-   - Dashboard: 100 ms
+-   - Scenarios: 3x multiplier = 2,800 ms
 
 **Total: ~2.8 seconds** (within tolerance, but leaves no margin)
 
@@ -934,23 +934,23 @@ If database queries are slow (e.g., slow connection) or calculations are ineffic
 **Suggested Resolution**
 
 1. **Memoization & incremental calculation:** Cache intermediate results
-   - When single enrollment value changes, only recalculate affected fee combinations (not all 50)
-   - DHG FTE changes only for affected grade, not all 4 bands
-   - Staff cost changes only for affected cost rows
+    - When single enrollment value changes, only recalculate affected fee combinations (not all 50)
+    - DHG FTE changes only for affected grade, not all 4 bands
+    - Staff cost changes only for affected cost rows
 
 2. **Lazy evaluation:** Don't recalculate scenarios until user requests
-   - Base case recalculation first (< 1 second)
-   - Scenario calculations deferred (background/on-demand)
-   - UI shows "Scenarios updating..." spinner
+    - Base case recalculation first (< 1 second)
+    - Scenario calculations deferred (background/on-demand)
+    - UI shows "Scenarios updating..." spinner
 
 3. **Database query optimization:**
-   - Index on (grade_id, nationality, tariff, period) for fee grid lookup
-   - Pre-compute monthly revenue per combination (materialized view)
-   - Cache P&L totals, recalculate only affected line items
+    - Index on (grade_id, nationality, tariff, period) for fee grid lookup
+    - Pre-compute monthly revenue per combination (materialized view)
+    - Cache P&L totals, recalculate only affected line items
 
 4. **Asynchronous recalculation:** Trigger calculation in background, update UI progressively
-   - User sees "Recalculating: Revenue (complete), DHG (in progress), Staff Costs (pending)..."
-   - Page remains responsive
+    - User sees "Recalculating: Revenue (complete), DHG (in progress), Staff Costs (pending)..."
+    - Page remains responsive
 
 5. **Regression test:** Measure recalculation time with 1,500 students × 50 combinations × 12 months, ensure < 3s on standard hardware
 
@@ -994,8 +994,8 @@ PRD target: 5 seconds for version comparison. Scenario comparison is more comple
 2. **Streaming export:** For Excel/CSV export, stream rows incrementally (not all in memory at once)
 3. **Pre-calculated views:** Materialize scenario comparison results nightly; serve pre-computed snapshot
 4. **Asynchronous report generation:** Submit report job to background queue
-   - UI shows "Report generating... ETA 30s"
-   - Email report link when complete (similar to long-running batch jobs)
+    - UI shows "Report generating... ETA 30s"
+    - Email report link when complete (similar to long-running batch jobs)
 5. **Test with load:** Generate scenario comparison report with 1,500 students × 50 combos, measure time and memory usage
 
 **Severity:** Medium
@@ -1038,27 +1038,27 @@ If user requests large range (all changes for all grades for all years):
 **Suggested Resolution**
 
 1. **Indexing strategy:**
-   - Index on (module, resource_id, created_at)
-   - Index on (user_id, created_at)
-   - Separate historical audit partition (archive old events to separate table)
+    - Index on (module, resource_id, created_at)
+    - Index on (user_id, created_at)
+    - Separate historical audit partition (archive old events to separate table)
 
 2. **Pagination & filtering:**
-   - Default query shows last 100 events (fast)
-   - Offer date range filter: "Show changes between [date] and [date]"
-   - Require user to specify at least month/grade/module to query
+    - Default query shows last 100 events (fast)
+    - Offer date range filter: "Show changes between [date] and [date]"
+    - Require user to specify at least month/grade/module to query
 
 3. **Archive strategy:**
-   - Keep hot audit (current year) in main table
-   - Archive older events to historical table (accessible but slower)
-   - Enforce retention policy: purge after 7 years
+    - Keep hot audit (current year) in main table
+    - Archive older events to historical table (accessible but slower)
+    - Enforce retention policy: purge after 7 years
 
 4. **Async export:**
-   - "Export audit trail" initiates background job
-   - Email download link when ready (not inline in browser)
+    - "Export audit trail" initiates background job
+    - Email download link when ready (not inline in browser)
 
 5. **Audit aggregation:**
-   - Instead of 50 enrollment edits in a day, show: "Enrollment changed 50 times on [date]"
-   - Drill-down for details
+    - Instead of 50 enrollment edits in a day, show: "Enrollment changed 50 times on [date]"
+    - Drill-down for details
 
 **Severity:** High
 
@@ -1099,20 +1099,20 @@ Migration attempt:
 **Suggested Resolution**
 
 1. **Pre-migration validation:**
-   - Scan Excel files for formula errors, empty cells, invalid types
-   - Generate data quality report: "FEE_GRID has 3 formula errors, 5 missing values, 12 encoding issues"
-   - Block migration until issues resolved (or allow override with sign-off)
+    - Scan Excel files for formula errors, empty cells, invalid types
+    - Generate data quality report: "FEE_GRID has 3 formula errors, 5 missing values, 12 encoding issues"
+    - Block migration until issues resolved (or allow override with sign-off)
 
 2. **Data cleansing rules:**
-   - Formula errors: Replace with placeholder (0 or NULL) and flag in report
-   - Missing values: Prompt user "Fee grid missing value for [grade, nationality, tariff]. Enter value or import will skip this combination"
-   - Invalid types: Attempt coercion (text "47250" → numeric 47250); flag if coercion fails
-   - Encoding: Auto-detect encoding (UTF-8, Windows-1252) and convert
+    - Formula errors: Replace with placeholder (0 or NULL) and flag in report
+    - Missing values: Prompt user "Fee grid missing value for [grade, nationality, tariff]. Enter value or import will skip this combination"
+    - Invalid types: Attempt coercion (text "47250" → numeric 47250); flag if coercion fails
+    - Encoding: Auto-detect encoding (UTF-8, Windows-1252) and convert
 
 3. **Reconciliation script:**
-   - After import, verify all 45 fee combinations exist
-   - Verify no formula errors in imported data
-   - Generate before/after diff report: "45 fees imported, 0 skipped"
+    - After import, verify all 45 fee combinations exist
+    - Verify no formula errors in imported data
+    - Generate before/after diff report: "45 fees imported, 0 skipped"
 
 4. **Manual review audit trail:** Log data cleansing steps (user: "Replaced #REF! in FEE_GRID B45 with value 47500", timestamp, reason)
 
@@ -1151,18 +1151,18 @@ CSV encoding:
 **Suggested Resolution**
 
 1. **Auto-detect encoding:**
-   - Use chardet (Python) or similar library to detect CSV encoding
-   - Attempt UTF-8 first; fall back to Windows-1252 if detection fails
-   - Report detected encoding to user: "CSV detected as UTF-8. Proceed?"
+    - Use chardet (Python) or similar library to detect CSV encoding
+    - Attempt UTF-8 first; fall back to Windows-1252 if detection fails
+    - Report detected encoding to user: "CSV detected as UTF-8. Proceed?"
 
 2. **Normalize grade names:**
-   - Import with detected encoding
-   - Compare imported grade name against master list of valid grades (PS, MS, GS, CP, CE1, ...)
-   - If mismatch, prompt user: "Imported 'Él é mentaire' doesn't match master grade 'Élémentaire'. Map which grade?"
+    - Import with detected encoding
+    - Compare imported grade name against master list of valid grades (PS, MS, GS, CP, CE1, ...)
+    - If mismatch, prompt user: "Imported 'Él é mentaire' doesn't match master grade 'Élémentaire'. Map which grade?"
 
 3. **Normalization rules:**
-   - Remove accents, convert to standard ASCII: "Élémentaire" → "Elementaire" for comparison
-   - Then map back to correct grade code
+    - Remove accents, convert to standard ASCII: "Élémentaire" → "Elementaire" for comparison
+    - Then map back to correct grade code
 
 4. **Test CSV files with multiple encodings:** Create test fixtures in UTF-8, Windows-1252, and MacRoman; verify import handles all correctly
 
@@ -1215,17 +1215,17 @@ Over 50 combinations × 12 months = 600 line items, ±0.05 SAR × 600 = ±30 SAR
 **Suggested Resolution**
 
 1. **Preserve import precision:** Import fees as text/string, parse as Decimal (preserving all decimal places from Excel)
-   - Do NOT coerce to integer; preserve fractional cents
-   - Decimal("47250.25") maintains full precision
+    - Do NOT coerce to integer; preserve fractional cents
+    - Decimal("47250.25") maintains full precision
 
 2. **Validate fee precision:** Report on fees with unusual precision:
-   - Most fees end in .00 (e.g., 47250.00)
-   - Some end in .25, .50, .75 (currency rounding artifacts)
-   - Flag any fee with 3+ decimal places as suspicious
+    - Most fees end in .00 (e.g., 47250.00)
+    - Some end in .25, .50, .75 (currency rounding artifacts)
+    - Flag any fee with 3+ decimal places as suspicious
 
 3. **Reconciliation:** Post-import, compare total revenue Excel vs. app
-   - Target: ±0 SAR match
-   - If variance > ±2 SAR, flag for investigation before sign-off
+    - Target: ±0 SAR match
+    - If variance > ±2 SAR, flag for investigation before sign-off
 
 4. **Audit trail:** Log all fees imported with source and precision: "Fee 47250.25 imported from Excel cell B12, preserved precision"
 
@@ -1271,19 +1271,19 @@ Result:
 **Suggested Resolution**
 
 1. **Identify overrides in source Excel:**
-   - Scan Excel files for "override" sheets, columns, or comments indicating manual adjustments
-   - Document all overrides with student ID, amount, reason
+    - Scan Excel files for "override" sheets, columns, or comments indicating manual adjustments
+    - Document all overrides with student ID, amount, reason
 
 2. **Include override in application data model:**
-   - If application doesn't already support student-level fee overrides, add capability before migration
-   - OR document overrides separately and apply as manual adjustment in first month close
+    - If application doesn't already support student-level fee overrides, add capability before migration
+    - OR document overrides separately and apply as manual adjustment in first month close
 
 3. **Migration step:** Import override records with audit trail
-   - Create audit log: "Imported student override: ID 1234, fee 47250 → 35000, reason: scholarship"
-   - Apply overrides to enrollment detail records
+    - Create audit log: "Imported student override: ID 1234, fee 47250 → 35000, reason: scholarship"
+    - Apply overrides to enrollment detail records
 
 4. **Reconciliation:** Post-migration, calculate revenue with and without overrides
-   - Total revenue (with overrides) should match Excel actuals (within ±1 SAR)
+    - Total revenue (with overrides) should match Excel actuals (within ±1 SAR)
 
 **Severity:** Medium
 
@@ -1333,25 +1333,25 @@ Issues:
 
 1. **Batch audit concept:** Group related audit entries with batch_id
 
-   ```
-   INSERT INTO audit_log WITH RECURSIVE batch (
-       user, batch_id, operation, timestamp, details
-   ) VALUES (
-       'CFO', 'BULK_AUGMENT_20260303', 'Apply 3% salary augmentation', 2026-03-03 14:30:00, '168 employees updated'
-   );
+    ```
+    INSERT INTO audit_log WITH RECURSIVE batch (
+        user, batch_id, operation, timestamp, details
+    ) VALUES (
+        'CFO', 'BULK_AUGMENT_20260303', 'Apply 3% salary augmentation', 2026-03-03 14:30:00, '168 employees updated'
+    );
 
-   THEN INSERT 840 individual audit rows with same batch_id
-   ```
+    THEN INSERT 840 individual audit rows with same batch_id
+    ```
 
 2. **Audit query optimization:** Show batch summary by default, drill-down to details
-   - "3% salary augmentation (168 employees, 840 fields) applied by CFO on Mar 3, 2026"
-   - Expand to see individual employee changes
+    - "3% salary augmentation (168 employees, 840 fields) applied by CFO on Mar 3, 2026"
+    - Expand to see individual employee changes
 
 3. **Configuration:** For system-initiated bulk operations (e.g., nightly closing calculations), consider audit silence or summary logging
-   - Nightly P&L consolidation: single audit entry "Monthly P&L calculated" instead of 100+ line-item entries
+    - Nightly P&L consolidation: single audit entry "Monthly P&L calculated" instead of 100+ line-item entries
 
 4. **Audit retention trade-off:** Archive audit entries older than 1 year to separate table (still queryable, but separate)
-   - Reduces main audit table size
+    - Reduces main audit table size
 
 **Severity:** High
 
@@ -1392,28 +1392,28 @@ Audit log is flooded with auto-calculated changes; hard to find actual user edit
 **Suggested Resolution**
 
 1. **Separate audit streams:**
-   - **Manual audit log:** Only user-initiated edits (INSERT/UPDATE/DELETE)
-   - **Calculation audit log:** Auto-calculated field changes (reference only, not compliance-critical)
+    - **Manual audit log:** Only user-initiated edits (INSERT/UPDATE/DELETE)
+    - **Calculation audit log:** Auto-calculated field changes (reference only, not compliance-critical)
 
-   UI shows both, but search defaults to manual changes.
+    UI shows both, but search defaults to manual changes.
 
 2. **Audit entry classification:**
 
-   ```
-   audit_log: user, field, old_value, new_value, timestamp, audit_type
+    ```
+    audit_log: user, field, old_value, new_value, timestamp, audit_type
 
-   audit_type: "USER_CHANGE" | "AUTO_CALCULATED" | "SYSTEM_GENERATED"
+    audit_type: "USER_CHANGE" | "AUTO_CALCULATED" | "SYSTEM_GENERATED"
 
-   User filter: Show only "USER_CHANGE" entries
-   ```
+    User filter: Show only "USER_CHANGE" entries
+    ```
 
 3. **Summary logging for calculated fields:** Instead of logging 12 revenue rows per enrollment edit, log once:
-   - "Enrollment change triggered revenue recalculation (12 months, 50 combinations)"
-   - If user queries detail, join with calculation audit log
+    - "Enrollment change triggered revenue recalculation (12 months, 50 combinations)"
+    - If user queries detail, join with calculation audit log
 
 4. **Materialized view for audit summary:** Pre-aggregate audit entries by day/user/operation
-   - "CFO made 50 enrollment edits on Mar 3, 2026"
-   - Drill-down for details
+    - "CFO made 50 enrollment edits on Mar 3, 2026"
+    - Drill-down for details
 
 **Severity:** Medium
 
@@ -1459,31 +1459,31 @@ Issues:
 
 1. **Audit causation chain:**
 
-   ```
-   audit_log: parent_audit_id (links cascade edits to original change)
+    ```
+    audit_log: parent_audit_id (links cascade edits to original change)
 
-   User edits Enrollment:
-       audit_entry_1: id=1001, user='CFO', change='Enrollment 1500→1550', parent_id=NULL
+    User edits Enrollment:
+        audit_entry_1: id=1001, user='CFO', change='Enrollment 1500→1550', parent_id=NULL
 
-   System auto-calculates Revenue:
-       audit_entry_2: id=1002, user='SYSTEM', change='Revenue recalculated', parent_id=1001
-       audit_entry_3: id=1003, user='SYSTEM', change='Monthly revenue 50 combinations', parent_id=1001
-       ... (600 entries, all with parent_id=1001)
-   ```
+    System auto-calculates Revenue:
+        audit_entry_2: id=1002, user='SYSTEM', change='Revenue recalculated', parent_id=1001
+        audit_entry_3: id=1003, user='SYSTEM', change='Monthly revenue 50 combinations', parent_id=1001
+        ... (600 entries, all with parent_id=1001)
+    ```
 
-   User can query: "Show all changes caused by Enrollment edit #1001" and trace cascade.
+    User can query: "Show all changes caused by Enrollment edit #1001" and trace cascade.
 
 2. **Audit aggregation:**
-   - Instead of 600 revenue audit entries, single aggregated entry: "Revenue recalculated for 50 combinations × 12 months (600 cells)"
-   - If user needs detail, expand or export detail to CSV
+    - Instead of 600 revenue audit entries, single aggregated entry: "Revenue recalculated for 50 combinations × 12 months (600 cells)"
+    - If user needs detail, expand or export detail to CSV
 
 3. **Audit sampling for non-critical cascades:**
-   - User edits: log in full detail
-   - Auto-calculated recalculations: sample at 10% (log every 10th cell) or summary only
+    - User edits: log in full detail
+    - Auto-calculated recalculations: sample at 10% (log every 10th cell) or summary only
 
 4. **Audit query UI:**
-   - Search by root cause: "Show changes caused by enrollment edits"
-   - Timeline view: "Mar 3, 14:30 - CFO edited enrollment → triggered revenue, DHG, cost recalculation (completed in 2.3s)"
+    - Search by root cause: "Show changes caused by enrollment edits"
+    - Timeline view: "Mar 3, 14:30 - CFO edited enrollment → triggered revenue, DHG, cost recalculation (completed in 2.3s)"
 
 **Severity:** High
 
@@ -1521,23 +1521,23 @@ User opens exported file, sees `#DIV/0!` or `#REF!` errors, assumes data is corr
 **Suggested Resolution**
 
 1. **Export calculated values, not formulas:**
-   - Instead of exporting formulas, export cell values (static data)
-   - User can recalculate formulas in their own version if desired
-   - Eliminates formula errors in export
+    - Instead of exporting formulas, export cell values (static data)
+    - User can recalculate formulas in their own version if desired
+    - Eliminates formula errors in export
 
 2. **Validate export before delivery:**
-   - Generate Excel file
-   - Open file programmatically, check for formula errors
-   - If errors found, fall back to value-only export with warning: "Export contains errors. Falling back to values only."
+    - Generate Excel file
+    - Open file programmatically, check for formula errors
+    - If errors found, fall back to value-only export with warning: "Export contains errors. Falling back to values only."
 
 3. **Cell validation in export:**
-   - For any cell that should contain numeric value, validate type
-   - If cell contains error, replace with 0 or blank with comment: "Cell contained error in source data"
+    - For any cell that should contain numeric value, validate type
+    - If cell contains error, replace with 0 or blank with comment: "Cell contained error in source data"
 
 4. **Export metadata:** Include sheet with export info:
-   - "Exported from BudFin on Mar 3, 2026 by CFO"
-   - "Contains [number] error cells (replaced with 0)"
-   - "Formulas exported as values; recalculation in Excel may produce different results"
+    - "Exported from BudFin on Mar 3, 2026 by CFO"
+    - "Contains [number] error cells (replaced with 0)"
+    - "Formulas exported as values; recalculation in Excel may produce different results"
 
 **Severity:** High
 
@@ -1555,9 +1555,9 @@ In PDF:
 
 - If PDF uses standard Latin-1 encoding: SAR symbol not representable (outside encoding range)
 - Possible outputs:
-  - Symbol is omitted: "47250" instead of "﷼47250"
-  - Symbol is replaced with placeholder: "?47250" or "[?]47250"
-  - PDF generation fails with encoding error
+    - Symbol is omitted: "47250" instead of "﷼47250"
+    - Symbol is replaced with placeholder: "?47250" or "[?]47250"
+    - PDF generation fails with encoding error
 
 **Technical Risk**
 
@@ -1568,20 +1568,20 @@ In PDF:
 **Suggested Resolution**
 
 1. **Use UTF-8 encoding in PDF:**
-   - PDF libraries (pdfkit, iText) support UTF-8; ensure encoding is configured
-   - Test with Arabic text and currency symbol in PDF generation
+    - PDF libraries (pdfkit, iText) support UTF-8; ensure encoding is configured
+    - Test with Arabic text and currency symbol in PDF generation
 
 2. **Currency symbol handling:**
-   - Store currency separately from amount: amount=47250, currency='SAR'
-   - In PDF, display as "47,250 SAR" (text) instead of "﷼47,250" (symbol)
-   - Works across all encodings, more readable
+    - Store currency separately from amount: amount=47250, currency='SAR'
+    - In PDF, display as "47,250 SAR" (text) instead of "﷼47,250" (symbol)
+    - Works across all encodings, more readable
 
 3. **Font embedding:** Ensure PDF includes font that supports Arabic/SAR symbol
-   - Some fonts don't include currency symbols; fall back to standard fonts
+    - Some fonts don't include currency symbols; fall back to standard fonts
 
 4. **Test PDF generation with Arabic text and currency:**
-   - Export P&L with employee names (Arabic), amounts (SAR symbol)
-   - Verify in Acrobat Reader
+    - Export P&L with employee names (Arabic), amounts (SAR symbol)
+    - Verify in Acrobat Reader
 
 **Severity:** Medium
 
@@ -1630,18 +1630,18 @@ When user opens in Excel or import tool:
 **Suggested Resolution**
 
 1. **Use CSV library with proper escaping:**
-   - Use Python csv module (automatic escaping) or JavaScript papaparse
-   - Do NOT manually concatenate CSV rows; use library functions
+    - Use Python csv module (automatic escaping) or JavaScript papaparse
+    - Do NOT manually concatenate CSV rows; use library functions
 
 2. **Test with Arabic text:**
-   - Create fixture with Arabic names, commas in names, quotes in names
-   - Export to CSV, import back into Excel
-   - Verify names are preserved correctly
+    - Create fixture with Arabic names, commas in names, quotes in names
+    - Export to CSV, import back into Excel
+    - Verify names are preserved correctly
 
 3. **RFC 4180 compliance:** Validate CSV conforms to standard
-   - All fields quoted (safest approach)
-   - All quote characters escaped (doubling)
-   - Correct line endings (CRLF for Windows, LF for Unix)
+    - All fields quoted (safest approach)
+    - All quote characters escaped (doubling)
+    - Correct line endings (CRLF for Windows, LF for Unix)
 
 4. **Alternative export format:** Offer JSON or Excel as alternative to CSV (more robust for non-ASCII)
 
@@ -1670,9 +1670,9 @@ Edge case:
 1. Editor creates Budget draft, edits enrollment data
 2. Admin publishes Budget v1 (changes to Locked)
 3. Editor attempts to edit Budget v1 (now Locked)
-   - Does application block edit? (Correct behavior)
-   - Or allow edit with warning?
-   - Or allow edit but flag in audit?
+    - Does application block edit? (Correct behavior)
+    - Or allow edit with warning?
+    - Or allow edit but flag in audit?
 
 If application allows Editor to edit a Locked version (wrong behavior):
 
@@ -1694,33 +1694,33 @@ If application silently blocks edit without clear message:
 **Suggested Resolution**
 
 1. **Enforce version lock in backend:**
-   - Version.locked = True prevents all UPDATE/DELETE on that version
-   - Exception: Admin can UNLOCK version (with audit trail)
+    - Version.locked = True prevents all UPDATE/DELETE on that version
+    - Exception: Admin can UNLOCK version (with audit trail)
 
 2. **Check lock status before any edit:**
 
-   ```
-   IF version.locked AND user.role != "Admin":
-       RETURN ERROR 403 Forbidden: "Version is locked. Contact Admin to unlock."
-   ```
+    ```
+    IF version.locked AND user.role != "Admin":
+        RETURN ERROR 403 Forbidden: "Version is locked. Contact Admin to unlock."
+    ```
 
 3. **RBAC matrix for version operations:**
 
-   ```
-   | Operation | Admin | Editor | Viewer |
-   |-----------|-------|--------|--------|
-   | Create Draft | Y | Y | N |
-   | Edit Draft | Y | Y | N |
-   | Lock | Y | N | N |
-   | Publish | Y | N | N |
-   | Unlock | Y | N | N |
-   | View (Draft) | Y | Y | N |
-   | View (Locked) | Y | Y | Y |
-   ```
+    ```
+    | Operation | Admin | Editor | Viewer |
+    |-----------|-------|--------|--------|
+    | Create Draft | Y | Y | N |
+    | Edit Draft | Y | Y | N |
+    | Lock | Y | N | N |
+    | Publish | Y | N | N |
+    | Unlock | Y | N | N |
+    | View (Draft) | Y | Y | N |
+    | View (Locked) | Y | Y | Y |
+    ```
 
 4. **Audit trail per RBAC operation:**
-   - "Budget v1 locked by CFO at 14:30 (prevents Editor edits)"
-   - "Editor [user] attempted to edit Budget v1 at 14:35 (blocked by lock)"
+    - "Budget v1 locked by CFO at 14:30 (prevents Editor edits)"
+    - "Editor [user] attempted to edit Budget v1 at 14:35 (blocked by lock)"
 
 **Severity:** High
 
@@ -1751,25 +1751,25 @@ Example:
 **Suggested Resolution**
 
 1. **Immutable audit log:**
-   - Audit log records cannot be UPDATED or DELETED (only INSERT)
-   - Database constraint: REVOKE UPDATE/DELETE on audit_log from all roles except specific archival process
+    - Audit log records cannot be UPDATED or DELETED (only INSERT)
+    - Database constraint: REVOKE UPDATE/DELETE on audit_log from all roles except specific archival process
 
 2. **Audit log signature:**
-   - Each audit entry includes hash of previous entry: hash(entry_n) = SHA256(entry_n-1 || user || timestamp || field || old_value || new_value)
-   - If any entry is modified, hash chain breaks
-   - Weekly integrity check: compute hash chain from audit_log; alert if breaks found
+    - Each audit entry includes hash of previous entry: hash(entry_n) = SHA256(entry_n-1 || user || timestamp || field || old_value || new_value)
+    - If any entry is modified, hash chain breaks
+    - Weekly integrity check: compute hash chain from audit_log; alert if breaks found
 
 3. **Separate audit database:**
-   - Audit log stored in separate, append-only database (or external log service like CloudTrail, Datadog)
-   - Main application database is mutable; audit log is immutable
+    - Audit log stored in separate, append-only database (or external log service like CloudTrail, Datadog)
+    - Main application database is mutable; audit log is immutable
 
 4. **Audit retention guarantee:**
-   - Document audit log retention policy in employee handbook / SOX compliance docs
-   - External auditors verify audit log integrity annually
+    - Document audit log retention policy in employee handbook / SOX compliance docs
+    - External auditors verify audit log integrity annually
 
 5. **Change log auditing:**
-   - Separately log any audit table modifications (INSERT/UPDATE/DELETE on audit_log itself)
-   - Alert if audit table is modified outside normal append operation
+    - Separately log any audit table modifications (INSERT/UPDATE/DELETE on audit_log itself)
+    - Alert if audit table is modified outside normal append operation
 
 **Severity:** High
 
@@ -1814,35 +1814,35 @@ If application doesn't enforce export controls:
 
 1. **Export permission matrix:**
 
-   ```
-   | Data | Admin | Editor | Viewer |
-   |------|-------|--------|--------|
-   | Full P&L (with staff cost detail) | Y | Y | N |
-   | P&L summary (by department) | Y | Y | Y |
-   | Staff Costs (individual level) | Y | Y | N |
-   | Staff Costs (aggregated by dept) | Y | Y | Y |
-   | Enrollment (by nationality/tariff) | Y | Y | Y |
-   | Enrollment (student-level) | Y | Y | N |
-   ```
+    ```
+    | Data | Admin | Editor | Viewer |
+    |------|-------|--------|--------|
+    | Full P&L (with staff cost detail) | Y | Y | N |
+    | P&L summary (by department) | Y | Y | Y |
+    | Staff Costs (individual level) | Y | Y | N |
+    | Staff Costs (aggregated by dept) | Y | Y | Y |
+    | Enrollment (by nationality/tariff) | Y | Y | Y |
+    | Enrollment (student-level) | Y | Y | N |
+    ```
 
 2. **Export function filtering:**
 
-   ```
-   FUNCTION export_staff_costs_to_excel(version, user):
-       IF user.role == "Viewer":
-           FILTER staff_costs to department-level aggregation only
-           EXCLUDE individual employee records
-       ELSE:
-           Include full detail
-   ```
+    ```
+    FUNCTION export_staff_costs_to_excel(version, user):
+        IF user.role == "Viewer":
+            FILTER staff_costs to department-level aggregation only
+            EXCLUDE individual employee records
+        ELSE:
+            Include full detail
+    ```
 
 3. **Audit log for exports:**
-   - Log every export with: user, data_type, rows_exported, timestamp, file_hash
-   - Example: "Viewer [user] exported P&L summary (12 rows) at 14:30"
+    - Log every export with: user, data_type, rows_exported, timestamp, file_hash
+    - Example: "Viewer [user] exported P&L summary (12 rows) at 14:30"
 
 4. **Masking sensitive fields:**
-   - For Viewer exports, mask salary values if present: "XXXX" instead of "47,250"
-   - Keep structure intact (so Viewer sees columns but not values)
+    - For Viewer exports, mask salary values if present: "XXXX" instead of "47,250"
+    - Keep structure intact (so Viewer sees columns but not values)
 
 **Severity:** Medium
 
@@ -1876,23 +1876,23 @@ Timeline:
 **Suggested Resolution**
 
 1. **Token refresh during long operations:**
-   - Before starting long recalculation (>2s), check token expiration
-   - If token expires within next 10 seconds, proactively refresh token
-   - Example: `Token expires at 14:35. Calculation will finish at 14:34:58. Refresh token now.`
+    - Before starting long recalculation (>2s), check token expiration
+    - If token expires within next 10 seconds, proactively refresh token
+    - Example: `Token expires at 14:35. Calculation will finish at 14:34:58. Refresh token now.`
 
 2. **Background task tokens:**
-   - For long-running calculations, use service-account token (not user token) to write results
-   - User token is only needed for initiating calculation
-   - Service account completes calculation and saves results independently
+    - For long-running calculations, use service-account token (not user token) to write results
+    - User token is only needed for initiating calculation
+    - Service account completes calculation and saves results independently
 
 3. **Extend token during calculation:**
-   - Each time a recalculation step completes, check token expiration
-   - If expiration is within 5 minutes, request token refresh via silent refresh mechanism (OAuth2 refresh token)
-   - User sees no interruption
+    - Each time a recalculation step completes, check token expiration
+    - If expiration is within 5 minutes, request token refresh via silent refresh mechanism (OAuth2 refresh token)
+    - User sees no interruption
 
 4. **UI affordance:**
-   - Show token expiration countdown during long calculations: "Token expires in 2 min. Click to refresh." (preventive)
-   - If token expires during calculation, show: "Your session expired. Calculation completed but not saved. Refresh and try again?"
+    - Show token expiration countdown during long calculations: "Token expires in 2 min. Click to refresh." (preventive)
+    - If token expires during calculation, show: "Your session expired. Calculation completed but not saved. Refresh and try again?"
 
 **Severity:** Medium
 
@@ -1936,25 +1936,25 @@ Or:
 **Suggested Resolution**
 
 1. **Don't store full values in undo stack:**
-   - Instead of storing: `{ old_value: 47250, new_value: 48800 }`
-   - Store: `{ operation: "edit_field", field_id: 3, version: 5 }` (pointers to data, not data itself)
-   - On undo, re-fetch values from versioned database
+    - Instead of storing: `{ old_value: 47250, new_value: 48800 }`
+    - Store: `{ operation: "edit_field", field_id: 3, version: 5 }` (pointers to data, not data itself)
+    - On undo, re-fetch values from versioned database
 
 2. **Encrypt undo stack in memory:**
-   - Undo/redo entries encrypted with session key
-   - If memory is dumped, encrypted data is useless without session key
+    - Undo/redo entries encrypted with session key
+    - If memory is dumped, encrypted data is useless without session key
 
 3. **Clear undo stack on logout:**
-   - When user logs out, clear undo/redo stack
-   - Implement IdleTimeout: if session idle > 5 minutes, clear stack and force logout
+    - When user logs out, clear undo/redo stack
+    - Implement IdleTimeout: if session idle > 5 minutes, clear stack and force logout
 
 4. **Masking for undo preview:**
-   - When displaying undo action to user, mask sensitive values: "Salary changed to XXXX"
-   - Store full values only for actual undo execution
+    - When displaying undo action to user, mask sensitive values: "Salary changed to XXXX"
+    - Store full values only for actual undo execution
 
 5. **Audit trail for undo operations:**
-   - Log when undo/redo is used: "User [X] undid action [Y] at [time]"
-   - Helps detect suspicious undo activity
+    - Log when undo/redo is used: "User [X] undid action [Y] at [time]"
+    - Helps detect suspicious undo activity
 
 **Severity:** Medium
 

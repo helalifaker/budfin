@@ -90,10 +90,10 @@ that achieves it.
 ### Calculation Atomicity
 
 - PostgreSQL transaction wraps the entire calculation run:
-  - DELETE existing monthly_revenue/monthly_staff_costs for this version
-  - INSERT all new calculated rows
-  - UPDATE calculation_audit_log status = 'COMPLETED'
-  - COMMIT (or ROLLBACK on any error)
+    - DELETE existing monthly_revenue/monthly_staff_costs for this version
+    - INSERT all new calculated rows
+    - UPDATE calculation_audit_log status = 'COMPLETED'
+    - COMMIT (or ROLLBACK on any error)
 
 - If calculation fails mid-run, all changes roll back; previous results remain intact
 - Stale flag NOT cleared until transaction commits successfully

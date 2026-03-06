@@ -114,17 +114,17 @@ UI/UX spec 06 (P&L) references `GET /versions/:versionId/stale-flags` for the pr
 
 ```json
 {
-	"version_id": 42,
-	"stale_modules": {
-		"REVENUE": true,
-		"STAFFING": false,
-		"PNL": true
-	},
-	"last_calculated_at": {
-		"REVENUE": "2026-03-03T10:30:00Z",
-		"STAFFING": "2026-03-03T09:15:00Z",
-		"PNL": null
-	}
+    "version_id": 42,
+    "stale_modules": {
+        "REVENUE": true,
+        "STAFFING": false,
+        "PNL": true
+    },
+    "last_calculated_at": {
+        "REVENUE": "2026-03-03T10:30:00Z",
+        "STAFFING": "2026-03-03T09:15:00Z",
+        "PNL": null
+    }
 }
 ```
 

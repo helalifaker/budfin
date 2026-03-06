@@ -35,7 +35,7 @@
 | 4 | Staff Costs | 2 | Epic Created (#8) |
 | 5 | P&L Reporting | 2 | Epic Created (#11) |
 | 6 | Scenario Modeling | 2 | Epic Created (#12) |
-| 7 | Master Data Management | DONE | All 12 stories complete (12/12) -- 2026-03-06 |
+| 7 | Master Data Management | 7-REVIEW | PR #49 under review (12/12 stories complete) |
 | 8 | Audit Trail | 2 | Epic Created (#9) |
 | 9 | Dashboard | 2 | Epic Created (#13) |
 | 10 | Version Management | 4 | NEXT — spec + stories pending (#14) |

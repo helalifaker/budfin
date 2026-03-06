@@ -565,13 +565,13 @@ After success:
 
 ```typescript
 interface RevenueGridStore {
-	activeTab: 'fees' | 'discounts' | 'forecast';
-	academicPeriodFilter: 'AY1' | 'AY2' | 'both';
-	feeGridSort: SortingState;
-	feeGridColumnVisibility: VisibilityState;
-	feeGridExpandedGroups: Set<string>;
-	forecastExpandedCategories: Set<string>;
-	otherRevenueExpandedRows: Set<number>;
+    activeTab: 'fees' | 'discounts' | 'forecast';
+    academicPeriodFilter: 'AY1' | 'AY2' | 'both';
+    feeGridSort: SortingState;
+    feeGridColumnVisibility: VisibilityState;
+    feeGridExpandedGroups: Set<string>;
+    forecastExpandedCategories: Set<string>;
+    otherRevenueExpandedRows: Set<number>;
 }
 ```
 
