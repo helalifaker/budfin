@@ -4,11 +4,19 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 
 const departmentBandEnum = z.enum([
-	'MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE', 'NON_ACADEMIC',
+	'MATERNELLE',
+	'ELEMENTAIRE',
+	'COLLEGE',
+	'LYCEE',
+	'NON_ACADEMIC',
 ]);
 
 const createDepartmentSchema = z.object({
-	code: z.string().min(2).max(20).regex(/^[A-Z_]{2,20}$/),
+	code: z
+		.string()
+		.min(2)
+		.max(20)
+		.regex(/^[A-Z_]{2,20}$/),
 	label: z.string().min(1).max(100),
 	bandMapping: departmentBandEnum,
 });
@@ -66,10 +74,7 @@ export async function departmentRoutes(app: FastifyInstance) {
 
 				return reply.status(201).send(department);
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_CODE',
 						message: 'Department code already exists',
@@ -86,9 +91,7 @@ export async function departmentRoutes(app: FastifyInstance) {
 		preHandler: [app.authenticate, app.requirePermission('admin:config')],
 		handler: async (request, reply) => {
 			const { id } = request.params as z.infer<typeof idParamsSchema>;
-			const { version, ...data } = request.body as z.infer<
-				typeof updateDepartmentSchema
-			>;
+			const { version, ...data } = request.body as z.infer<typeof updateDepartmentSchema>;
 
 			const existing = await prisma.department.findUnique({
 				where: { id },
@@ -136,10 +139,7 @@ export async function departmentRoutes(app: FastifyInstance) {
 
 				return department;
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_CODE',
 						message: 'Department code already exists',
@@ -186,10 +186,7 @@ export async function departmentRoutes(app: FastifyInstance) {
 
 				return reply.status(204).send();
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2003'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
 					return reply.status(409).send({
 						code: 'REFERENCED_RECORD',
 						message: 'Cannot delete: record is referenced by other data',

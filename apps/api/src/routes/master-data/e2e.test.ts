@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { Prisma } from '@prisma/client';
 import type { AssumptionValueType } from '@prisma/client';
@@ -70,7 +67,7 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		$transaction: vi.fn().mockImplementation(
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(fn: (tx: Record<string, any>) => unknown) => fn(mockPrisma),
+			(fn: (tx: Record<string, any>) => unknown) => fn(mockPrisma)
 		),
 	};
 	return { prisma: mockPrisma };
@@ -80,9 +77,7 @@ import { prisma } from '../../lib/prisma.js';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -167,19 +162,43 @@ const _mockDepartment = {
 
 const mockAssumptions = [
 	{
-		id: 1, key: 'gosiPension', value: '9.75', unit: '%', section: 'GOSI',
-		valueType: 'PERCENTAGE' as AssumptionValueType, label: 'GOSI Pension', version: 1,
-		createdAt: now, updatedAt: now, updatedBy: 1 as number | null,
+		id: 1,
+		key: 'gosiPension',
+		value: '9.75',
+		unit: '%',
+		section: 'GOSI',
+		valueType: 'PERCENTAGE' as AssumptionValueType,
+		label: 'GOSI Pension',
+		version: 1,
+		createdAt: now,
+		updatedAt: now,
+		updatedBy: 1 as number | null,
 	},
 	{
-		id: 2, key: 'gosiSaned', value: '1.50', unit: '%', section: 'GOSI',
-		valueType: 'PERCENTAGE' as AssumptionValueType, label: 'GOSI SANED', version: 1,
-		createdAt: now, updatedAt: now, updatedBy: 1 as number | null,
+		id: 2,
+		key: 'gosiSaned',
+		value: '1.50',
+		unit: '%',
+		section: 'GOSI',
+		valueType: 'PERCENTAGE' as AssumptionValueType,
+		label: 'GOSI SANED',
+		version: 1,
+		createdAt: now,
+		updatedAt: now,
+		updatedBy: 1 as number | null,
 	},
 	{
-		id: 3, key: 'gosiOhi', value: '1.00', unit: '%', section: 'GOSI',
-		valueType: 'PERCENTAGE' as AssumptionValueType, label: 'GOSI OHI', version: 1,
-		createdAt: now, updatedAt: now, updatedBy: 1 as number | null,
+		id: 3,
+		key: 'gosiOhi',
+		value: '1.00',
+		unit: '%',
+		section: 'GOSI',
+		valueType: 'PERCENTAGE' as AssumptionValueType,
+		label: 'GOSI OHI',
+		version: 1,
+		createdAt: now,
+		updatedAt: now,
+		updatedBy: 1 as number | null,
 	},
 ];
 
@@ -244,8 +263,7 @@ describe('Full CRUD lifecycle — accounts', () => {
 		expect(createRes.json().accountCode).toBe('REV001');
 
 		// GET — returns the created account
-		vi.mocked(prisma.chartOfAccount.findMany)
-			.mockResolvedValue([mockAccount]);
+		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([mockAccount]);
 		const listRes = await app.inject({
 			method: 'GET',
 			url: '/api/v1/master-data/accounts',
@@ -256,10 +274,11 @@ describe('Full CRUD lifecycle — accounts', () => {
 
 		// UPDATE
 		const updated = {
-			...mockAccount, accountName: 'Updated Revenue', version: 2,
+			...mockAccount,
+			accountName: 'Updated Revenue',
+			version: 2,
 		};
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
 		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue(updated);
 		const updateRes = await app.inject({
 			method: 'PUT',
@@ -278,8 +297,7 @@ describe('Full CRUD lifecycle — accounts', () => {
 		expect(updateRes.json().accountName).toBe('Updated Revenue');
 
 		// GET after update
-		vi.mocked(prisma.chartOfAccount.findMany)
-			.mockResolvedValue([updated]);
+		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([updated]);
 		const listRes2 = await app.inject({
 			method: 'GET',
 			url: '/api/v1/master-data/accounts',
@@ -288,8 +306,7 @@ describe('Full CRUD lifecycle — accounts', () => {
 		expect(listRes2.json().accounts[0].accountName).toBe('Updated Revenue');
 
 		// DELETE
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(updated);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(updated);
 		vi.mocked(prisma.chartOfAccount.delete).mockResolvedValue(updated);
 		const deleteRes = await app.inject({
 			method: 'DELETE',
@@ -317,8 +334,7 @@ describe('Duplicate detection — nationalities', () => {
 		const headers = authHeader(token);
 
 		// First create succeeds
-		vi.mocked(prisma.nationality.create)
-			.mockResolvedValue(mockNationality);
+		vi.mocked(prisma.nationality.create).mockResolvedValue(mockNationality);
 		const res1 = await app.inject({
 			method: 'POST',
 			url: '/api/v1/master-data/nationalities',
@@ -329,10 +345,10 @@ describe('Duplicate detection — nationalities', () => {
 
 		// Second create with same code fails P2002
 		vi.mocked(prisma.nationality.create).mockRejectedValue(
-			new Prisma.PrismaClientKnownRequestError(
-				'Unique constraint',
-				{ code: 'P2002', clientVersion: '6.0.0' },
-			),
+			new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+				code: 'P2002',
+				clientVersion: '6.0.0',
+			})
 		);
 		const res2 = await app.inject({
 			method: 'POST',
@@ -390,7 +406,9 @@ describe('RBAC enforcement', () => {
 		const nationalityPayload = { code: 'FR', label: 'French' };
 		const tariffPayload = { code: 'STD', label: 'Standard' };
 		const departmentPayload = {
-			code: 'MATERNELLE', label: 'Test', bandMapping: 'MATERNELLE',
+			code: 'MATERNELLE',
+			label: 'Test',
+			bandMapping: 'MATERNELLE',
 		};
 
 		const mutations: Array<{
@@ -399,7 +417,11 @@ describe('RBAC enforcement', () => {
 			payload?: Record<string, unknown>;
 		}> = [
 			{ method: 'POST', url: '/api/v1/master-data/accounts', payload: accountPayload },
-			{ method: 'PUT', url: '/api/v1/master-data/accounts/1', payload: { ...accountPayload, version: 1 } },
+			{
+				method: 'PUT',
+				url: '/api/v1/master-data/accounts/1',
+				payload: { ...accountPayload, version: 1 },
+			},
 			{ method: 'DELETE', url: '/api/v1/master-data/accounts/1' },
 			{ method: 'POST', url: '/api/v1/master-data/nationalities', payload: nationalityPayload },
 			{ method: 'DELETE', url: '/api/v1/master-data/nationalities/1' },
@@ -411,7 +433,9 @@ describe('RBAC enforcement', () => {
 
 		for (const { method, url, payload } of mutations) {
 			const res = await app.inject({
-				method, url, headers,
+				method,
+				url,
+				headers,
 				...(payload ? { payload } : {}),
 			});
 			expect(res.statusCode).toBe(403);
@@ -438,8 +462,11 @@ describe('RBAC enforcement', () => {
 	it('BudgetOwner gets 200 on PATCH assumptions (data:edit)', async () => {
 		const token = await makeToken({ role: 'BudgetOwner' });
 
-		vi.mocked(prisma.assumption.update)
-			.mockResolvedValue({ ...mockAssumptions[0]!, value: '10.00', version: 2 });
+		vi.mocked(prisma.assumption.update).mockResolvedValue({
+			...mockAssumptions[0]!,
+			value: '10.00',
+			version: 2,
+		});
 		// First call: batch fetch; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([mockAssumptions[0]!])
@@ -450,9 +477,7 @@ describe('RBAC enforcement', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'gosiPension', value: '10.00', version: 1 },
-				],
+				updates: [{ key: 'gosiPension', value: '10.00', version: 1 }],
 			},
 		});
 		expect(res.statusCode).toBe(200);
@@ -464,10 +489,8 @@ describe('RBAC enforcement', () => {
 describe('Optimistic locking — accounts', () => {
 	it('succeeds with correct version', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.update)
-			.mockResolvedValue({ ...mockAccount, version: 2 });
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue({ ...mockAccount, version: 2 });
 
 		const res = await app.inject({
 			method: 'PUT',
@@ -487,8 +510,7 @@ describe('Optimistic locking — accounts', () => {
 
 	it('returns 409 OPTIMISTIC_LOCK with wrong version', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue({ ...mockAccount, version: 5 });
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue({ ...mockAccount, version: 5 });
 
 		const res = await app.inject({
 			method: 'PUT',
@@ -513,13 +535,12 @@ describe('Optimistic locking — accounts', () => {
 describe('Referential integrity — accounts', () => {
 	it('returns 409 REFERENCED_RECORD on FK violation', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
 		vi.mocked(prisma.chartOfAccount.delete).mockRejectedValue(
-			new Prisma.PrismaClientKnownRequestError(
-				'Foreign key constraint',
-				{ code: 'P2003', clientVersion: '6.0.0' },
-			),
+			new Prisma.PrismaClientKnownRequestError('Foreign key constraint', {
+				code: 'P2003',
+				clientVersion: '6.0.0',
+			})
 		);
 
 		const res = await app.inject({
@@ -625,8 +646,7 @@ describe('405 enforcement — grade levels', () => {
 describe('GOSI computation — assumptions', () => {
 	it('computes gosiRateTotal from pension + saned + ohi', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.assumption.findMany)
-			.mockResolvedValue(mockAssumptions);
+		vi.mocked(prisma.assumption.findMany).mockResolvedValue(mockAssumptions);
 
 		const res = await app.inject({
 			method: 'GET',
@@ -646,8 +666,7 @@ describe('GOSI computation — assumptions', () => {
 describe('Audit log verification — accounts', () => {
 	it('logs ACCOUNT_CREATED on create', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.create)
-			.mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.create).mockResolvedValue(mockAccount);
 
 		const res = await app.inject({
 			method: 'POST',
@@ -669,16 +688,18 @@ describe('Audit log verification — accounts', () => {
 					operation: 'ACCOUNT_CREATED',
 					tableName: 'chart_of_accounts',
 				}),
-			}),
+			})
 		);
 	});
 
 	it('logs ACCOUNT_UPDATED with oldValues and newValues', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.update)
-			.mockResolvedValue({ ...mockAccount, accountName: 'Updated', version: 2 });
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue({
+			...mockAccount,
+			accountName: 'Updated',
+			version: 2,
+		});
 
 		await app.inject({
 			method: 'PUT',
@@ -705,16 +726,14 @@ describe('Audit log verification — accounts', () => {
 						accountName: 'Updated',
 					}),
 				}),
-			}),
+			})
 		);
 	});
 
 	it('logs ACCOUNT_DELETED with oldValues', async () => {
 		const token = await makeToken();
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.delete)
-			.mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.delete).mockResolvedValue(mockAccount);
 
 		await app.inject({
 			method: 'DELETE',
@@ -730,7 +749,7 @@ describe('Audit log verification — accounts', () => {
 						accountCode: 'REV001',
 					}),
 				}),
-			}),
+			})
 		);
 	});
 });
@@ -784,9 +803,9 @@ describe('Grade level percentage validation', () => {
 			headers: authHeader(token),
 			payload: {
 				maxClassSize: 25,
-				plancherPct: 0.90, // > ciblePct
-				ciblePct: 0.80,
-				plafondPct: 1.00,
+				plancherPct: 0.9, // > ciblePct
+				ciblePct: 0.8,
+				plafondPct: 1.0,
 				displayOrder: 1,
 				version: 1,
 			},

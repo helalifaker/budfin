@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { setKeys, signAccessToken } from '../../services/token.js';
 import { auth } from '../../plugins/auth.js';
@@ -20,11 +17,11 @@ vi.mock('../../lib/prisma.js', () => {
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
-		$transaction: vi.fn().mockImplementation(
-			(fn: (tx: Record<string, unknown>) => unknown) => fn({
+		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
+			fn({
 				gradeLevel: mockPrisma.gradeLevel,
 				auditEntry: mockPrisma.auditEntry,
-			}),
+			})
 		),
 	};
 	return { prisma: mockPrisma };
@@ -36,9 +33,7 @@ const PREFIX = '/api/v1/master-data/grade-levels';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -98,9 +93,10 @@ beforeEach(() => {
 
 describe('GET /api/v1/master-data/grade-levels', () => {
 	it('returns all grade levels with serialized decimals', async () => {
-		vi.mocked(prisma.gradeLevel.findMany).mockResolvedValue(
-			[mockGradeLevel, mockGradeLevel2] as never,
-		);
+		vi.mocked(prisma.gradeLevel.findMany).mockResolvedValue([
+			mockGradeLevel,
+			mockGradeLevel2,
+		] as never);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -137,9 +133,7 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 	};
 
 	it('updates a grade level and returns 200', async () => {
-		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue(
-			mockGradeLevel as never,
-		);
+		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue(mockGradeLevel as never);
 		vi.mocked(prisma.gradeLevel.update).mockResolvedValue({
 			...mockGradeLevel,
 			maxClassSize: 30,
@@ -164,9 +158,7 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 	});
 
 	it('creates audit entry with old/new values', async () => {
-		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue(
-			mockGradeLevel as never,
-		);
+		vi.mocked(prisma.gradeLevel.findUnique).mockResolvedValue(mockGradeLevel as never);
 		vi.mocked(prisma.gradeLevel.update).mockResolvedValue({
 			...mockGradeLevel,
 			...validPayload,

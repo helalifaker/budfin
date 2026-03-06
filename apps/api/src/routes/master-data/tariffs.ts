@@ -4,7 +4,11 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 
 const createTariffSchema = z.object({
-	code: z.string().min(2).max(10).regex(/^[A-Z0-9+]{2,10}$/),
+	code: z
+		.string()
+		.min(2)
+		.max(10)
+		.regex(/^[A-Z0-9+]{2,10}$/),
 	label: z.string().min(1).max(100),
 	description: z.string().max(500).optional(),
 });
@@ -64,10 +68,7 @@ export async function tariffRoutes(app: FastifyInstance) {
 
 				return reply.status(201).send(tariff);
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_CODE',
 						message: 'Tariff code already exists',
@@ -84,9 +85,7 @@ export async function tariffRoutes(app: FastifyInstance) {
 		preHandler: [app.authenticate, app.requirePermission('admin:config')],
 		handler: async (request, reply) => {
 			const { id } = request.params as z.infer<typeof idParamsSchema>;
-			const { version, ...data } = request.body as z.infer<
-				typeof updateTariffSchema
-			>;
+			const { version, ...data } = request.body as z.infer<typeof updateTariffSchema>;
 
 			const existing = await prisma.tariff.findUnique({
 				where: { id },
@@ -136,10 +135,7 @@ export async function tariffRoutes(app: FastifyInstance) {
 
 				return tariff;
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_CODE',
 						message: 'Tariff code already exists',
@@ -186,10 +182,7 @@ export async function tariffRoutes(app: FastifyInstance) {
 
 				return reply.status(204).send();
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2003'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
 					return reply.status(409).send({
 						code: 'REFERENCED_RECORD',
 						message: 'Cannot delete: record is referenced by other data',

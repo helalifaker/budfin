@@ -17,6 +17,7 @@ The original TDD API contract (Section 6.3.10 in `04_api_contract.md`) designed 
 Replace the generic `system-config` approach for master data with 7 dedicated REST resource endpoints under `/api/v1/master-data/`, each backed by its own Prisma model and database table.
 
 The new endpoints are:
+
 - `/api/v1/master-data/accounts` -- Chart of Accounts (CRUD)
 - `/api/v1/master-data/academic-years` -- Academic Years (CRUD)
 - `/api/v1/master-data/grade-levels` -- Grade Levels (GET + PUT only)
@@ -49,10 +50,10 @@ Each entity has its own Zod validation schema, optimistic lock version column, S
 
 ## Alternatives Considered
 
-| Option | Why Rejected |
-|--------|-------------|
-| Keep generic system-config JSON blob | No per-entity validation, no optimistic locking, no referential integrity, no granular audit trail |
-| Single master-data endpoint with type discriminator | Overly complex request/response schemas; still cannot leverage SQL constraints per entity |
+| Option                                              | Why Rejected                                                                                       |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Keep generic system-config JSON blob                | No per-entity validation, no optimistic locking, no referential integrity, no granular audit trail |
+| Single master-data endpoint with type discriminator | Overly complex request/response schemas; still cannot leverage SQL constraints per entity          |
 
 ## References
 

@@ -2,17 +2,18 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma.js';
 
-const updateGradeLevelSchema = z.object({
-	maxClassSize: z.number().int().min(1).max(50),
-	plancherPct: z.number().min(0).max(1),
-	ciblePct: z.number().min(0).max(1),
-	plafondPct: z.number().min(0).max(1),
-	displayOrder: z.number().int().min(1),
-	version: z.number().int().positive(),
-}).refine(
-	(data) => data.plancherPct <= data.ciblePct && data.ciblePct <= data.plafondPct,
-	{ message: 'Must satisfy: plancher <= cible <= plafond' }
-);
+const updateGradeLevelSchema = z
+	.object({
+		maxClassSize: z.number().int().min(1).max(50),
+		plancherPct: z.number().min(0).max(1),
+		ciblePct: z.number().min(0).max(1),
+		plafondPct: z.number().min(0).max(1),
+		displayOrder: z.number().int().min(1),
+		version: z.number().int().positive(),
+	})
+	.refine((data) => data.plancherPct <= data.ciblePct && data.ciblePct <= data.plafondPct, {
+		message: 'Must satisfy: plancher <= cible <= plafond',
+	});
 
 function serializeGradeLevel(gl: Record<string, unknown>) {
 	return {

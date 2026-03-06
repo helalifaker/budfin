@@ -7,10 +7,9 @@ const idParamSchema = z.object({
 	id: z.coerce.number().int().positive(),
 });
 
-const dateString = z.string().regex(
-	/^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$/,
-	'Must be an ISO date string',
-);
+const dateString = z
+	.string()
+	.regex(/^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$/, 'Must be an ISO date string');
 
 const academicYearBodySchema = z.object({
 	fiscalYear: z.string().min(4).max(6),
@@ -41,15 +40,18 @@ function parseDates(body: AcademicYearBody) {
 }
 
 function validateDateOrdering(dates: ReturnType<typeof parseDates>): boolean {
-	return dates.ay1Start < dates.ay1End
-		&& dates.ay1End <= dates.summerStart
-		&& dates.summerStart < dates.summerEnd
-		&& dates.summerEnd <= dates.ay2Start
-		&& dates.ay2Start < dates.ay2End;
+	return (
+		dates.ay1Start < dates.ay1End &&
+		dates.ay1End <= dates.summerStart &&
+		dates.summerStart < dates.summerEnd &&
+		dates.summerEnd <= dates.ay2Start &&
+		dates.ay2Start < dates.ay2End
+	);
 }
 
-const DATE_ORDERING_ERROR = 'Dates must follow ordering: '
-	+ 'ay1Start < ay1End <= summerStart < summerEnd <= ay2Start < ay2End';
+const DATE_ORDERING_ERROR =
+	'Dates must follow ordering: ' +
+	'ay1Start < ay1End <= summerStart < summerEnd <= ay2Start < ay2End';
 
 function formatAcademicYear(ay: {
 	id: number;
@@ -154,10 +156,7 @@ export async function academicYearRoutes(app: FastifyInstance) {
 				});
 				return reply.status(201).send(formatAcademicYear(ay));
 			} catch (e) {
-				if (
-					e instanceof Prisma.PrismaClientKnownRequestError
-					&& e.code === 'P2002'
-				) {
+				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_CODE',
 						message: `Fiscal year '${body.fiscalYear}' already exists`,
@@ -261,10 +260,7 @@ export async function academicYearRoutes(app: FastifyInstance) {
 				});
 				return reply.status(204).send();
 			} catch (e) {
-				if (
-					e instanceof Prisma.PrismaClientKnownRequestError
-					&& e.code === 'P2003'
-				) {
+				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
 					return reply.status(409).send({
 						code: 'REFERENCED_RECORD',
 						message: 'Cannot delete: record is referenced by other data',

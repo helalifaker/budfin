@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { Prisma } from '@prisma/client';
 import { setKeys, signAccessToken } from '../../services/token.js';
@@ -23,11 +20,11 @@ vi.mock('../../lib/prisma.js', () => {
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
-		$transaction: vi.fn().mockImplementation(
-			(fn: (tx: Record<string, unknown>) => unknown) => fn({
+		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
+			fn({
 				chartOfAccount: mockPrisma.chartOfAccount,
 				auditEntry: mockPrisma.auditEntry,
-			}),
+			})
 		),
 	};
 	return { prisma: mockPrisma };
@@ -37,9 +34,7 @@ import { prisma } from '../../lib/prisma.js';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -99,8 +94,7 @@ beforeEach(() => {
 
 describe('GET /api/v1/master-data/accounts', () => {
 	it('returns all accounts', async () => {
-		vi.mocked(prisma.chartOfAccount.findMany)
-			.mockResolvedValue([mockAccount, mockAccount2]);
+		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([mockAccount, mockAccount2]);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -115,8 +109,7 @@ describe('GET /api/v1/master-data/accounts', () => {
 	});
 
 	it('filters by type', async () => {
-		vi.mocked(prisma.chartOfAccount.findMany)
-			.mockResolvedValue([mockAccount]);
+		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([mockAccount]);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -129,13 +122,12 @@ describe('GET /api/v1/master-data/accounts', () => {
 		expect(vi.mocked(prisma.chartOfAccount.findMany)).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: expect.objectContaining({ type: 'REVENUE' }),
-			}),
+			})
 		);
 	});
 
 	it('filters by search (case-insensitive)', async () => {
-		vi.mocked(prisma.chartOfAccount.findMany)
-			.mockResolvedValue([mockAccount]);
+		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([mockAccount]);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -153,8 +145,7 @@ describe('GET /api/v1/master-data/accounts', () => {
 	});
 
 	it('accessible by Viewer role', async () => {
-		vi.mocked(prisma.chartOfAccount.findMany)
-			.mockResolvedValue([]);
+		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([]);
 
 		const token = await makeToken({ role: 'Viewer' });
 		const res = await app.inject({
@@ -178,8 +169,7 @@ describe('GET /api/v1/master-data/accounts', () => {
 
 describe('GET /api/v1/master-data/accounts/:id', () => {
 	it('returns account by id', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -193,8 +183,7 @@ describe('GET /api/v1/master-data/accounts/:id', () => {
 	});
 
 	it('returns 404 for non-existent id', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(null);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(null);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -218,8 +207,7 @@ describe('POST /api/v1/master-data/accounts', () => {
 	};
 
 	it('creates account with 201', async () => {
-		vi.mocked(prisma.chartOfAccount.create)
-			.mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.create).mockResolvedValue(mockAccount);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -237,15 +225,15 @@ describe('POST /api/v1/master-data/accounts', () => {
 					operation: 'ACCOUNT_CREATED',
 					tableName: 'chart_of_accounts',
 				}),
-			}),
+			})
 		);
 	});
 
 	it('returns 409 for duplicate code', async () => {
-		const error = new Prisma.PrismaClientKnownRequestError(
-			'Unique constraint',
-			{ code: 'P2002', clientVersion: '6.0.0' },
-		);
+		const error = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+			code: 'P2002',
+			clientVersion: '6.0.0',
+		});
 		vi.mocked(prisma.chartOfAccount.create).mockRejectedValue(error);
 
 		const token = await makeToken();
@@ -296,10 +284,12 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 	};
 
 	it('updates account with optimistic lock', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.update)
-			.mockResolvedValue({ ...mockAccount, accountName: 'Updated Revenue', version: 2 });
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.update).mockResolvedValue({
+			...mockAccount,
+			accountName: 'Updated Revenue',
+			version: 2,
+		});
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -316,13 +306,12 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 				data: expect.objectContaining({
 					operation: 'ACCOUNT_UPDATED',
 				}),
-			}),
+			})
 		);
 	});
 
 	it('returns 404 for non-existent id', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(null);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(null);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -336,8 +325,7 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 	});
 
 	it('returns 409 for version mismatch', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue({ ...mockAccount, version: 2 });
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue({ ...mockAccount, version: 2 });
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -352,12 +340,11 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 	});
 
 	it('returns 409 for duplicate code on update', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
-		const error = new Prisma.PrismaClientKnownRequestError(
-			'Unique constraint',
-			{ code: 'P2002', clientVersion: '6.0.0' },
-		);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		const error = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+			code: 'P2002',
+			clientVersion: '6.0.0',
+		});
 		vi.mocked(prisma.chartOfAccount.update).mockRejectedValue(error);
 
 		const token = await makeToken();
@@ -387,10 +374,8 @@ describe('PUT /api/v1/master-data/accounts/:id', () => {
 
 describe('DELETE /api/v1/master-data/accounts/:id', () => {
 	it('deletes account with 204', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
-		vi.mocked(prisma.chartOfAccount.delete)
-			.mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		vi.mocked(prisma.chartOfAccount.delete).mockResolvedValue(mockAccount);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -405,13 +390,12 @@ describe('DELETE /api/v1/master-data/accounts/:id', () => {
 				data: expect.objectContaining({
 					operation: 'ACCOUNT_DELETED',
 				}),
-			}),
+			})
 		);
 	});
 
 	it('returns 404 for non-existent id', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(null);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(null);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -424,12 +408,11 @@ describe('DELETE /api/v1/master-data/accounts/:id', () => {
 	});
 
 	it('returns 409 for referenced record', async () => {
-		vi.mocked(prisma.chartOfAccount.findUnique)
-			.mockResolvedValue(mockAccount);
-		const error = new Prisma.PrismaClientKnownRequestError(
-			'Foreign key constraint',
-			{ code: 'P2003', clientVersion: '6.0.0' },
-		);
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(mockAccount);
+		const error = new Prisma.PrismaClientKnownRequestError('Foreign key constraint', {
+			code: 'P2003',
+			clientVersion: '6.0.0',
+		});
 		vi.mocked(prisma.chartOfAccount.delete).mockRejectedValue(error);
 
 		const token = await makeToken();

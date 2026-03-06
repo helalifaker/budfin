@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { setKeys, signAccessToken } from '../../services/token.js';
 import { auth } from '../../plugins/auth.js';
@@ -38,9 +35,9 @@ vi.mock('../../lib/prisma.js', () => {
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
-		$transaction: vi.fn().mockImplementation(
-			(fn: (tx: Record<string, unknown>) => unknown) => fn(mockPrisma),
-		),
+		$transaction: vi
+			.fn()
+			.mockImplementation((fn: (tx: Record<string, unknown>) => unknown) => fn(mockPrisma)),
 	};
 	return { prisma: mockPrisma };
 });
@@ -50,9 +47,7 @@ import { Prisma } from '@prisma/client';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -115,9 +110,7 @@ describe('Nationalities', () => {
 
 	describe('GET /', () => {
 		it('returns nationalities list', async () => {
-			vi.mocked(prisma.nationality.findMany).mockResolvedValue([
-				mockNationality,
-			]);
+			vi.mocked(prisma.nationality.findMany).mockResolvedValue([mockNationality]);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'GET',
@@ -131,9 +124,7 @@ describe('Nationalities', () => {
 
 	describe('POST /', () => {
 		it('creates nationality — 201', async () => {
-			vi.mocked(prisma.nationality.create).mockResolvedValue(
-				mockNationality,
-			);
+			vi.mocked(prisma.nationality.create).mockResolvedValue(mockNationality);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'POST',
@@ -145,9 +136,7 @@ describe('Nationalities', () => {
 		});
 
 		it('returns 409 on duplicate code', async () => {
-			vi.mocked(prisma.nationality.create).mockRejectedValue(
-				makePrismaError('P2002'),
-			);
+			vi.mocked(prisma.nationality.create).mockRejectedValue(makePrismaError('P2002'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'POST',
@@ -173,9 +162,7 @@ describe('Nationalities', () => {
 
 	describe('PUT /:id', () => {
 		it('updates with optimistic lock', async () => {
-			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(
-				mockNationality,
-			);
+			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(mockNationality);
 			vi.mocked(prisma.nationality.update).mockResolvedValue({
 				...mockNationality,
 				label: 'Updated',
@@ -204,9 +191,7 @@ describe('Nationalities', () => {
 		});
 
 		it('returns 409 on version mismatch', async () => {
-			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(
-				mockNationality,
-			);
+			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(mockNationality);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'PUT',
@@ -219,12 +204,8 @@ describe('Nationalities', () => {
 		});
 
 		it('returns 409 on duplicate code', async () => {
-			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(
-				mockNationality,
-			);
-			vi.mocked(prisma.nationality.update).mockRejectedValue(
-				makePrismaError('P2002'),
-			);
+			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(mockNationality);
+			vi.mocked(prisma.nationality.update).mockRejectedValue(makePrismaError('P2002'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'PUT',
@@ -239,12 +220,8 @@ describe('Nationalities', () => {
 
 	describe('DELETE /:id', () => {
 		it('deletes — 204', async () => {
-			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(
-				mockNationality,
-			);
-			vi.mocked(prisma.nationality.delete).mockResolvedValue(
-				mockNationality,
-			);
+			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(mockNationality);
+			vi.mocked(prisma.nationality.delete).mockResolvedValue(mockNationality);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'DELETE',
@@ -266,12 +243,8 @@ describe('Nationalities', () => {
 		});
 
 		it('returns 409 on referenced record', async () => {
-			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(
-				mockNationality,
-			);
-			vi.mocked(prisma.nationality.delete).mockRejectedValue(
-				makePrismaError('P2003'),
-			);
+			vi.mocked(prisma.nationality.findUnique).mockResolvedValue(mockNationality);
+			vi.mocked(prisma.nationality.delete).mockRejectedValue(makePrismaError('P2003'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'DELETE',
@@ -329,9 +302,7 @@ describe('Tariffs', () => {
 		});
 
 		it('returns 409 on duplicate code', async () => {
-			vi.mocked(prisma.tariff.create).mockRejectedValue(
-				makePrismaError('P2002'),
-			);
+			vi.mocked(prisma.tariff.create).mockRejectedValue(makePrismaError('P2002'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'POST',
@@ -401,9 +372,7 @@ describe('Tariffs', () => {
 
 		it('returns 409 on duplicate code', async () => {
 			vi.mocked(prisma.tariff.findUnique).mockResolvedValue(mockTariff);
-			vi.mocked(prisma.tariff.update).mockRejectedValue(
-				makePrismaError('P2002'),
-			);
+			vi.mocked(prisma.tariff.update).mockRejectedValue(makePrismaError('P2002'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'PUT',
@@ -443,9 +412,7 @@ describe('Tariffs', () => {
 
 		it('returns 409 on referenced record', async () => {
 			vi.mocked(prisma.tariff.findUnique).mockResolvedValue(mockTariff);
-			vi.mocked(prisma.tariff.delete).mockRejectedValue(
-				makePrismaError('P2003'),
-			);
+			vi.mocked(prisma.tariff.delete).mockRejectedValue(makePrismaError('P2003'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'DELETE',
@@ -477,9 +444,7 @@ describe('Departments', () => {
 
 	describe('GET /', () => {
 		it('returns departments list', async () => {
-			vi.mocked(prisma.department.findMany).mockResolvedValue([
-				mockDepartment,
-			]);
+			vi.mocked(prisma.department.findMany).mockResolvedValue([mockDepartment]);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'GET',
@@ -493,9 +458,7 @@ describe('Departments', () => {
 
 	describe('POST /', () => {
 		it('creates department — 201', async () => {
-			vi.mocked(prisma.department.create).mockResolvedValue(
-				mockDepartment,
-			);
+			vi.mocked(prisma.department.create).mockResolvedValue(mockDepartment);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'POST',
@@ -511,9 +474,7 @@ describe('Departments', () => {
 		});
 
 		it('returns 409 on duplicate code', async () => {
-			vi.mocked(prisma.department.create).mockRejectedValue(
-				makePrismaError('P2002'),
-			);
+			vi.mocked(prisma.department.create).mockRejectedValue(makePrismaError('P2002'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'POST',
@@ -547,9 +508,7 @@ describe('Departments', () => {
 
 	describe('PUT /:id', () => {
 		it('updates with optimistic lock', async () => {
-			vi.mocked(prisma.department.findUnique).mockResolvedValue(
-				mockDepartment,
-			);
+			vi.mocked(prisma.department.findUnique).mockResolvedValue(mockDepartment);
 			vi.mocked(prisma.department.update).mockResolvedValue({
 				...mockDepartment,
 				label: 'Updated',
@@ -571,9 +530,7 @@ describe('Departments', () => {
 		});
 
 		it('returns 409 on version mismatch', async () => {
-			vi.mocked(prisma.department.findUnique).mockResolvedValue(
-				mockDepartment,
-			);
+			vi.mocked(prisma.department.findUnique).mockResolvedValue(mockDepartment);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'PUT',
@@ -609,12 +566,8 @@ describe('Departments', () => {
 		});
 
 		it('returns 409 on duplicate code', async () => {
-			vi.mocked(prisma.department.findUnique).mockResolvedValue(
-				mockDepartment,
-			);
-			vi.mocked(prisma.department.update).mockRejectedValue(
-				makePrismaError('P2002'),
-			);
+			vi.mocked(prisma.department.findUnique).mockResolvedValue(mockDepartment);
+			vi.mocked(prisma.department.update).mockRejectedValue(makePrismaError('P2002'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'PUT',
@@ -634,12 +587,8 @@ describe('Departments', () => {
 
 	describe('DELETE /:id', () => {
 		it('deletes — 204', async () => {
-			vi.mocked(prisma.department.findUnique).mockResolvedValue(
-				mockDepartment,
-			);
-			vi.mocked(prisma.department.delete).mockResolvedValue(
-				mockDepartment,
-			);
+			vi.mocked(prisma.department.findUnique).mockResolvedValue(mockDepartment);
+			vi.mocked(prisma.department.delete).mockResolvedValue(mockDepartment);
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'DELETE',
@@ -662,12 +611,8 @@ describe('Departments', () => {
 		});
 
 		it('returns 409 on referenced record', async () => {
-			vi.mocked(prisma.department.findUnique).mockResolvedValue(
-				mockDepartment,
-			);
-			vi.mocked(prisma.department.delete).mockRejectedValue(
-				makePrismaError('P2003'),
-			);
+			vi.mocked(prisma.department.findUnique).mockResolvedValue(mockDepartment);
+			vi.mocked(prisma.department.delete).mockRejectedValue(makePrismaError('P2003'));
 			const token = await makeToken();
 			const res = await app.inject({
 				method: 'DELETE',

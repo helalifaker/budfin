@@ -8,7 +8,11 @@ const centerTypeEnum = z.enum(['PROFIT_CENTER', 'COST_CENTER']);
 const accountStatusEnum = z.enum(['ACTIVE', 'INACTIVE']);
 
 const createAccountSchema = z.object({
-	accountCode: z.string().min(3).max(10).regex(/^[A-Z0-9]{3,10}$/),
+	accountCode: z
+		.string()
+		.min(3)
+		.max(10)
+		.regex(/^[A-Z0-9]{3,10}$/),
 	accountName: z.string().min(1).max(100),
 	type: accountTypeEnum,
 	ifrsCategory: z.string().min(1).max(100),
@@ -38,9 +42,7 @@ export async function accountRoutes(app: FastifyInstance) {
 		schema: { querystring: listQuerySchema },
 		preHandler: [app.authenticate],
 		handler: async (request) => {
-			const { type, centerType, status, search } = request.query as z.infer<
-				typeof listQuerySchema
-			>;
+			const { type, centerType, status, search } = request.query as z.infer<typeof listQuerySchema>;
 
 			const where: Prisma.ChartOfAccountWhereInput = {};
 			if (type) where.type = type;
@@ -123,10 +125,7 @@ export async function accountRoutes(app: FastifyInstance) {
 
 				return reply.status(201).send(account);
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_CODE',
 						message: 'Account code already exists',
@@ -143,9 +142,7 @@ export async function accountRoutes(app: FastifyInstance) {
 		preHandler: [app.authenticate, app.requirePermission('admin:config')],
 		handler: async (request, reply) => {
 			const { id } = request.params as z.infer<typeof idParamsSchema>;
-			const { version, ...data } = request.body as z.infer<
-				typeof updateAccountSchema
-			>;
+			const { version, ...data } = request.body as z.infer<typeof updateAccountSchema>;
 
 			const existing = await prisma.chartOfAccount.findUnique({
 				where: { id },
@@ -199,10 +196,7 @@ export async function accountRoutes(app: FastifyInstance) {
 
 				return account;
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_CODE',
 						message: 'Account code already exists',
@@ -249,10 +243,7 @@ export async function accountRoutes(app: FastifyInstance) {
 
 				return reply.status(204).send();
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2003'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
 					return reply.status(409).send({
 						code: 'REFERENCED_RECORD',
 						message: 'Cannot delete: record is referenced by other data',

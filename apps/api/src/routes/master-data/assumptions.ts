@@ -5,11 +5,13 @@ import { Decimal } from 'decimal.js';
 import { prisma } from '../../lib/prisma.js';
 
 const patchAssumptionsSchema = z.object({
-	updates: z.array(z.object({
-		key: z.string(),
-		value: z.string(),
-		version: z.number().int().positive(),
-	})),
+	updates: z.array(
+		z.object({
+			key: z.string(),
+			value: z.string(),
+			version: z.number().int().positive(),
+		})
+	),
 });
 
 const GOSI_KEYS = ['gosiPension', 'gosiSaned', 'gosiOhi'];
@@ -40,14 +42,9 @@ function validateAssumptionValue(value: string, valueType: string): string | nul
 	}
 }
 
-function computeGosiTotal(
-	assumptions: Array<{ key: string; value: string }>,
-): string {
+function computeGosiTotal(assumptions: Array<{ key: string; value: string }>): string {
 	const gosiAssumptions = assumptions.filter((a) => GOSI_KEYS.includes(a.key));
-	const total = gosiAssumptions.reduce(
-		(sum, a) => sum.plus(new Decimal(a.value)),
-		new Decimal(0),
-	);
+	const total = gosiAssumptions.reduce((sum, a) => sum.plus(new Decimal(a.value)), new Decimal(0));
 	return total.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
 }
 
@@ -81,9 +78,7 @@ export async function assumptionRoutes(app: FastifyInstance) {
 			const existingAssumptions = await prisma.assumption.findMany({
 				where: { key: { in: updates.map((u) => u.key) } },
 			});
-			const existingMap = new Map(
-				existingAssumptions.map((a) => [a.key, a]),
-			);
+			const existingMap = new Map(existingAssumptions.map((a) => [a.key, a]));
 
 			for (const update of updates) {
 				const existing = existingMap.get(update.key);
@@ -96,10 +91,7 @@ export async function assumptionRoutes(app: FastifyInstance) {
 					});
 				}
 
-				const validationError = validateAssumptionValue(
-					update.value,
-					existing.valueType,
-				);
+				const validationError = validateAssumptionValue(update.value, existing.valueType);
 				if (validationError) {
 					fieldErrors.push({ field: update.key, message: validationError });
 				}

@@ -28,14 +28,12 @@ describe('seed data constants', () => {
 
 	it('GOSI sub-components sum to 12.25% using decimal.js', () => {
 		const gosiKeys = ['gosiPension', 'gosiSaned', 'gosiOhi'];
-		const gosiAssumptions = seedAssumptions.filter((a) =>
-			gosiKeys.includes(a.key)
-		);
+		const gosiAssumptions = seedAssumptions.filter((a) => gosiKeys.includes(a.key));
 		expect(gosiAssumptions).toHaveLength(3);
 
 		const total = gosiAssumptions.reduce(
 			(sum, a) => sum.plus(new Decimal(a.value)),
-			new Decimal(0),
+			new Decimal(0)
 		);
 		expect(total.toFixed(2)).toBe('12.25');
 	});

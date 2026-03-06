@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { setKeys, signAccessToken } from '../../services/token.js';
 import { auth } from '../../plugins/auth.js';
@@ -21,11 +18,11 @@ vi.mock('../../lib/prisma.js', () => {
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
-		$transaction: vi.fn().mockImplementation(
-			(fn: (tx: Record<string, unknown>) => unknown) => fn({
+		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
+			fn({
 				assumption: mockPrisma.assumption,
 				auditEntry: mockPrisma.auditEntry,
-			}),
+			})
 		),
 	};
 	return { prisma: mockPrisma };
@@ -35,9 +32,7 @@ import { prisma } from '../../lib/prisma.js';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -183,9 +178,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'gosiPension', value: '10.00', version: 1 },
-				],
+				updates: [{ key: 'gosiPension', value: '10.00', version: 1 }],
 			},
 		});
 
@@ -196,9 +189,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 	});
 
 	it('returns 409 on version mismatch', async () => {
-		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce(
-			[mockAssumptions[0]!],
-		);
+		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce([mockAssumptions[0]!]);
 
 		const token = await makeToken({ role: 'Editor' });
 		const res = await app.inject({
@@ -206,9 +197,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'gosiPension', value: '10.00', version: 99 },
-				],
+				updates: [{ key: 'gosiPension', value: '10.00', version: 99 }],
 			},
 		});
 
@@ -217,9 +206,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 	});
 
 	it('returns 422 for invalid PERCENTAGE value', async () => {
-		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce(
-			[mockAssumptions[0]!],
-		);
+		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce([mockAssumptions[0]!]);
 
 		const token = await makeToken({ role: 'Editor' });
 		const res = await app.inject({
@@ -227,9 +214,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'gosiPension', value: '150', version: 1 },
-				],
+				updates: [{ key: 'gosiPension', value: '150', version: 1 }],
 			},
 		});
 
@@ -247,9 +232,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'gosiPension', value: '10.00', version: 1 },
-				],
+				updates: [{ key: 'gosiPension', value: '10.00', version: 1 }],
 			},
 		});
 		expect(res.statusCode).toBe(403);
@@ -277,9 +260,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'gosiPension', value: '8.50', version: 1 },
-				],
+				updates: [{ key: 'gosiPension', value: '8.50', version: 1 }],
 			},
 		});
 		expect(res.statusCode).toBe(200);
@@ -292,9 +273,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			valueType: 'CURRENCY' as AssumptionValueType,
 			value: '5000',
 		};
-		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce(
-			[currencyAssumption],
-		);
+		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce([currencyAssumption]);
 
 		const token = await makeToken({ role: 'Editor' });
 		const res = await app.inject({
@@ -302,9 +281,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'transportFee', value: '-100', version: 1 },
-				],
+				updates: [{ key: 'transportFee', value: '-100', version: 1 }],
 			},
 		});
 
@@ -338,9 +315,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'transportFee', value: '6000', version: 1 },
-				],
+				updates: [{ key: 'transportFee', value: '6000', version: 1 }],
 			},
 		});
 
@@ -354,9 +329,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			valueType: 'INTEGER' as AssumptionValueType,
 			value: '36',
 		};
-		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce(
-			[integerAssumption],
-		);
+		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce([integerAssumption]);
 
 		const token = await makeToken({ role: 'Editor' });
 		const res = await app.inject({
@@ -364,9 +337,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'academicWeeks', value: '3.5', version: 1 },
-				],
+				updates: [{ key: 'academicWeeks', value: '3.5', version: 1 }],
 			},
 		});
 
@@ -400,9 +371,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'academicWeeks', value: '38', version: 1 },
-				],
+				updates: [{ key: 'academicWeeks', value: '38', version: 1 }],
 			},
 		});
 
@@ -416,9 +385,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			valueType: 'DECIMAL' as AssumptionValueType,
 			value: '3.75',
 		};
-		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce(
-			[decimalAssumption],
-		);
+		vi.mocked(prisma.assumption.findMany).mockResolvedValueOnce([decimalAssumption]);
 
 		const token = await makeToken({ role: 'Editor' });
 		const res = await app.inject({
@@ -426,9 +393,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'exchangeRate', value: 'abc', version: 1 },
-				],
+				updates: [{ key: 'exchangeRate', value: 'abc', version: 1 }],
 			},
 		});
 
@@ -462,9 +427,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'exchangeRate', value: '3.80', version: 1 },
-				],
+				updates: [{ key: 'exchangeRate', value: '3.80', version: 1 }],
 			},
 		});
 
@@ -494,9 +457,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'schoolYear', value: '2026-27', version: 1 },
-				],
+				updates: [{ key: 'schoolYear', value: '2026-27', version: 1 }],
 			},
 		});
 
@@ -520,9 +481,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'gosiPension', value: '10.00', version: 1 },
-				],
+				updates: [{ key: 'gosiPension', value: '10.00', version: 1 }],
 			},
 		});
 

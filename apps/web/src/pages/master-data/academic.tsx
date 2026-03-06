@@ -1,22 +1,22 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
-} from '@tanstack/react-table'
-import { useAcademicYears, type AcademicYear } from '../../hooks/use-academic-years'
-import { useGradeLevels, type GradeLevel, type GradeBand } from '../../hooks/use-grade-levels'
-import { useAuthStore } from '../../stores/auth-store'
-import { AcademicYearSidePanel } from '../../components/master-data/academic-year-side-panel'
-import { GradeLevelSidePanel } from '../../components/master-data/grade-level-side-panel'
-import { cn } from '../../lib/cn'
+} from '@tanstack/react-table';
+import { useAcademicYears, type AcademicYear } from '../../hooks/use-academic-years';
+import { useGradeLevels, type GradeLevel, type GradeBand } from '../../hooks/use-grade-levels';
+import { useAuthStore } from '../../stores/auth-store';
+import { AcademicYearSidePanel } from '../../components/master-data/academic-year-side-panel';
+import { GradeLevelSidePanel } from '../../components/master-data/grade-level-side-panel';
+import { cn } from '../../lib/cn';
 
 function formatDate(iso: string): string {
-	if (!iso) return '-'
-	const datePart = iso.split('T')[0] ?? iso
-	const [year, month, day] = datePart.split('-')
-	return `${day}/${month}/${year}`
+	if (!iso) return '-';
+	const datePart = iso.split('T')[0] ?? iso;
+	const [year, month, day] = datePart.split('-');
+	return `${day}/${month}/${year}`;
 }
 
 const BAND_STYLES: Record<GradeBand, string> = {
@@ -24,30 +24,28 @@ const BAND_STYLES: Record<GradeBand, string> = {
 	ELEMENTAIRE: 'bg-blue-100 text-blue-800',
 	COLLEGE: 'bg-green-100 text-green-800',
 	LYCEE: 'bg-purple-100 text-purple-800',
-}
+};
 
-const ayColumnHelper = createColumnHelper<AcademicYear>()
-const glColumnHelper = createColumnHelper<GradeLevel>()
+const ayColumnHelper = createColumnHelper<AcademicYear>();
+const glColumnHelper = createColumnHelper<GradeLevel>();
 
 export function AcademicPage() {
-	const currentUser = useAuthStore((s) => s.user)
-	const isAdmin = currentUser?.role === 'Admin'
+	const currentUser = useAuthStore((s) => s.user);
+	const isAdmin = currentUser?.role === 'Admin';
 
-	const { data: ayData, isLoading: ayLoading } = useAcademicYears()
-	const { data: glData, isLoading: glLoading } = useGradeLevels()
+	const { data: ayData, isLoading: ayLoading } = useAcademicYears();
+	const { data: glData, isLoading: glLoading } = useGradeLevels();
 
-	const [ayPanelOpen, setAyPanelOpen] = useState(false)
-	const [editingAy, setEditingAy] = useState<AcademicYear | null>(null)
-	const [glPanelOpen, setGlPanelOpen] = useState(false)
-	const [editingGl, setEditingGl] = useState<GradeLevel | null>(null)
+	const [ayPanelOpen, setAyPanelOpen] = useState(false);
+	const [editingAy, setEditingAy] = useState<AcademicYear | null>(null);
+	const [glPanelOpen, setGlPanelOpen] = useState(false);
+	const [editingGl, setEditingGl] = useState<GradeLevel | null>(null);
 
 	const ayColumns = useMemo(
 		() => [
 			ayColumnHelper.accessor('fiscalYear', {
 				header: 'Fiscal Year',
-				cell: (info) => (
-					<span className="font-medium">{info.getValue()}</span>
-				),
+				cell: (info) => <span className="font-medium">{info.getValue()}</span>,
 			}),
 			ayColumnHelper.accessor('ay1Start', {
 				header: 'AY1 Start',
@@ -85,9 +83,9 @@ export function AcademicPage() {
 						type="button"
 						className="text-xs text-blue-600 hover:underline"
 						onClick={(e) => {
-							e.stopPropagation()
-							setEditingAy(row.original)
-							setAyPanelOpen(true)
+							e.stopPropagation();
+							setEditingAy(row.original);
+							setAyPanelOpen(true);
 						}}
 					>
 						Edit
@@ -95,16 +93,14 @@ export function AcademicPage() {
 				),
 			}),
 		],
-		[],
-	)
+		[]
+	);
 
 	const glColumns = useMemo(
 		() => [
 			glColumnHelper.accessor('gradeCode', {
 				header: 'Code',
-				cell: (info) => (
-					<span className="font-medium">{info.getValue()}</span>
-				),
+				cell: (info) => <span className="font-medium">{info.getValue()}</span>,
 			}),
 			glColumnHelper.accessor('gradeName', {
 				header: 'Name',
@@ -113,18 +109,18 @@ export function AcademicPage() {
 			glColumnHelper.accessor('band', {
 				header: 'Band',
 				cell: (info) => {
-					const band = info.getValue()
+					const band = info.getValue();
 					return (
 						<span
 							className={cn(
 								'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
-								BAND_STYLES[band],
+								BAND_STYLES[band]
 							)}
 							aria-label={`Band: ${band}`}
 						>
 							{band}
 						</span>
-					)
+					);
 				},
 			}),
 			glColumnHelper.accessor('maxClassSize', {
@@ -155,9 +151,9 @@ export function AcademicPage() {
 						type="button"
 						className="text-xs text-blue-600 hover:underline"
 						onClick={(e) => {
-							e.stopPropagation()
-							setEditingGl(row.original)
-							setGlPanelOpen(true)
+							e.stopPropagation();
+							setEditingGl(row.original);
+							setGlPanelOpen(true);
 						}}
 					>
 						Edit
@@ -165,20 +161,20 @@ export function AcademicPage() {
 				),
 			}),
 		],
-		[],
-	)
+		[]
+	);
 
 	const ayTable = useReactTable({
 		data: ayData?.academicYears ?? [],
 		columns: ayColumns,
 		getCoreRowModel: getCoreRowModel(),
-	})
+	});
 
 	const glTable = useReactTable({
 		data: glData?.gradeLevels ?? [],
 		columns: glColumns,
 		getCoreRowModel: getCoreRowModel(),
-	})
+	});
 
 	return (
 		<div className="space-y-8 p-6">
@@ -191,11 +187,11 @@ export function AcademicPage() {
 							type="button"
 							className={cn(
 								'rounded-md bg-blue-600 px-4 py-2 text-sm',
-								'font-medium text-white hover:bg-blue-700',
+								'font-medium text-white hover:bg-blue-700'
 							)}
 							onClick={() => {
-								setEditingAy(null)
-								setAyPanelOpen(true)
+								setEditingAy(null);
+								setAyPanelOpen(true);
 							}}
 						>
 							+ Add New
@@ -212,14 +208,8 @@ export function AcademicPage() {
 								{ayTable.getHeaderGroups().map((hg) => (
 									<tr key={hg.id}>
 										{hg.headers.map((header) => (
-											<th
-												key={header.id}
-												className="px-4 py-3 font-medium text-slate-600"
-											>
-												{flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
+											<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+												{flexRender(header.column.columnDef.header, header.getContext())}
 											</th>
 										))}
 									</tr>
@@ -231,26 +221,20 @@ export function AcademicPage() {
 										key={row.id}
 										className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
 										onClick={() => {
-											setEditingAy(row.original)
-											setAyPanelOpen(true)
+											setEditingAy(row.original);
+											setAyPanelOpen(true);
 										}}
 									>
 										{row.getVisibleCells().map((cell) => (
 											<td key={cell.id} className="px-4 py-3">
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
 											</td>
 										))}
 									</tr>
 								))}
 								{ayTable.getRowModel().rows.length === 0 && (
 									<tr>
-										<td
-											colSpan={ayColumns.length}
-											className="px-4 py-6 text-center text-slate-500"
-										>
+										<td colSpan={ayColumns.length} className="px-4 py-6 text-center text-slate-500">
 											No academic years found
 										</td>
 									</tr>
@@ -276,14 +260,8 @@ export function AcademicPage() {
 								{glTable.getHeaderGroups().map((hg) => (
 									<tr key={hg.id}>
 										{hg.headers.map((header) => (
-											<th
-												key={header.id}
-												className="px-4 py-3 font-medium text-slate-600"
-											>
-												{flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
+											<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+												{flexRender(header.column.columnDef.header, header.getContext())}
 											</th>
 										))}
 									</tr>
@@ -295,26 +273,20 @@ export function AcademicPage() {
 										key={row.id}
 										className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
 										onClick={() => {
-											setEditingGl(row.original)
-											setGlPanelOpen(true)
+											setEditingGl(row.original);
+											setGlPanelOpen(true);
 										}}
 									>
 										{row.getVisibleCells().map((cell) => (
 											<td key={cell.id} className="px-4 py-3">
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
 											</td>
 										))}
 									</tr>
 								))}
 								{glTable.getRowModel().rows.length === 0 && (
 									<tr>
-										<td
-											colSpan={glColumns.length}
-											className="px-4 py-6 text-center text-slate-500"
-										>
+										<td colSpan={glColumns.length} className="px-4 py-6 text-center text-slate-500">
 											No grade levels found
 										</td>
 									</tr>
@@ -337,5 +309,5 @@ export function AcademicPage() {
 				gradeLevel={editingGl}
 			/>
 		</div>
-	)
+	);
 }

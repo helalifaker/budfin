@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { Prisma } from '@prisma/client';
 import { setKeys, signAccessToken } from '../../services/token.js';
@@ -23,7 +20,11 @@ vi.mock('../../lib/prisma.js', () => ({
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
-		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) => fn({ academicYear: prisma.academicYear, auditEntry: prisma.auditEntry })),
+		$transaction: vi
+			.fn()
+			.mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
+				fn({ academicYear: prisma.academicYear, auditEntry: prisma.auditEntry })
+			),
 	},
 }));
 
@@ -31,9 +32,7 @@ import { prisma } from '../../lib/prisma.js';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -91,9 +90,7 @@ beforeEach(() => {
 
 describe('GET /api/v1/master-data/academic-years', () => {
 	it('returns all academic years ordered by fiscalYear desc', async () => {
-		vi.mocked(prisma.academicYear.findMany).mockResolvedValue([
-			mockAcademicYear,
-		]);
+		vi.mocked(prisma.academicYear.findMany).mockResolvedValue([mockAcademicYear]);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -127,9 +124,7 @@ describe('GET /api/v1/master-data/academic-years', () => {
 
 describe('GET /api/v1/master-data/academic-years/:id', () => {
 	it('returns a single academic year', async () => {
-		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(
-			mockAcademicYear,
-		);
+		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(mockAcademicYear);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -170,7 +165,7 @@ describe('POST /api/v1/master-data/academic-years', () => {
 						create: vi.fn().mockResolvedValue({ id: 1 }),
 					},
 				});
-			},
+			}
 		);
 
 		const token = await makeToken();
@@ -217,18 +212,20 @@ describe('POST /api/v1/master-data/academic-years', () => {
 			async (fn: (tx: unknown) => Promise<unknown>) => {
 				return fn({
 					academicYear: {
-						create: vi.fn().mockRejectedValue(
-							new Prisma.PrismaClientKnownRequestError(
-								'Unique constraint failed',
-								{ code: 'P2002', clientVersion: '6.0.0' },
+						create: vi
+							.fn()
+							.mockRejectedValue(
+								new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+									code: 'P2002',
+									clientVersion: '6.0.0',
+								})
 							),
-						),
 					},
 					auditEntry: {
 						create: vi.fn().mockResolvedValue({ id: 1 }),
 					},
 				});
-			},
+			}
 		);
 
 		const token = await makeToken();
@@ -266,9 +263,7 @@ describe('POST /api/v1/master-data/academic-years', () => {
 
 describe('PUT /api/v1/master-data/academic-years/:id', () => {
 	it('updates with matching version', async () => {
-		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(
-			mockAcademicYear,
-		);
+		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(mockAcademicYear);
 		const updatedYear = { ...mockAcademicYear, version: 2, academicWeeks: 38 };
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		vi.mocked(prisma.$transaction as any).mockImplementation(
@@ -281,7 +276,7 @@ describe('PUT /api/v1/master-data/academic-years/:id', () => {
 						create: vi.fn().mockResolvedValue({ id: 2 }),
 					},
 				});
-			},
+			}
 		);
 
 		const token = await makeToken();
@@ -302,9 +297,10 @@ describe('PUT /api/v1/master-data/academic-years/:id', () => {
 	});
 
 	it('returns 409 for version mismatch (optimistic lock)', async () => {
-		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(
-			{ ...mockAcademicYear, version: 3 },
-		);
+		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue({
+			...mockAcademicYear,
+			version: 3,
+		});
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -345,9 +341,7 @@ describe('PUT /api/v1/master-data/academic-years/:id', () => {
 
 describe('DELETE /api/v1/master-data/academic-years/:id', () => {
 	it('deletes and returns 204', async () => {
-		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(
-			mockAcademicYear,
-		);
+		vi.mocked(prisma.academicYear.findUnique).mockResolvedValue(mockAcademicYear);
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		vi.mocked(prisma.$transaction as any).mockImplementation(
 			async (fn: (tx: unknown) => Promise<unknown>) => {
@@ -359,7 +353,7 @@ describe('DELETE /api/v1/master-data/academic-years/:id', () => {
 						create: vi.fn().mockResolvedValue({ id: 3 }),
 					},
 				});
-			},
+			}
 		);
 
 		const token = await makeToken();

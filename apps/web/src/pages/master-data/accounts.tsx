@@ -1,105 +1,102 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
-} from '@tanstack/react-table'
-import { cn } from '../../lib/cn'
-import { useAuthStore } from '../../stores/auth-store'
+} from '@tanstack/react-table';
+import { cn } from '../../lib/cn';
+import { useAuthStore } from '../../stores/auth-store';
 import {
 	useAccounts,
 	useCreateAccount,
 	useUpdateAccount,
 	useDeleteAccount,
-} from '../../hooks/use-accounts'
-import type { Account, AccountFilters } from '../../hooks/use-accounts'
-import { AccountsSidePanel } from '../../components/master-data/accounts-side-panel'
+} from '../../hooks/use-accounts';
+import type { Account, AccountFilters } from '../../hooks/use-accounts';
+import { AccountsSidePanel } from '../../components/master-data/accounts-side-panel';
 
-const columnHelper = createColumnHelper<Account>()
+const columnHelper = createColumnHelper<Account>();
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
 	REVENUE: 'bg-blue-100 text-blue-800',
 	EXPENSE: 'bg-red-100 text-red-800',
 	ASSET: 'bg-green-100 text-green-800',
 	LIABILITY: 'bg-yellow-100 text-yellow-800',
-}
+};
 
 const CENTER_TYPE_BADGE_COLORS: Record<string, string> = {
 	PROFIT_CENTER: 'bg-purple-100 text-purple-800',
 	COST_CENTER: 'bg-orange-100 text-orange-800',
-}
+};
 
 const TYPE_LABELS: Record<string, string> = {
 	REVENUE: 'Revenue',
 	EXPENSE: 'Expense',
 	ASSET: 'Asset',
 	LIABILITY: 'Liability',
-}
+};
 
 const CENTER_TYPE_LABELS: Record<string, string> = {
 	PROFIT_CENTER: 'Profit Center',
 	COST_CENTER: 'Cost Center',
-}
+};
 
 export function AccountsPage() {
-	const currentUser = useAuthStore((s) => s.user)
-	const isAdmin = currentUser?.role === 'Admin'
+	const currentUser = useAuthStore((s) => s.user);
+	const isAdmin = currentUser?.role === 'Admin';
 
 	// Filters
-	const [searchInput, setSearchInput] = useState('')
-	const [searchDebounced, setSearchDebounced] = useState('')
-	const [searchTimer, setSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
-	const [typeFilter, setTypeFilter] = useState('')
-	const [centerTypeFilter, setCenterTypeFilter] = useState('')
-	const [statusFilter, setStatusFilter] = useState('')
+	const [searchInput, setSearchInput] = useState('');
+	const [searchDebounced, setSearchDebounced] = useState('');
+	const [searchTimer, setSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+	const [typeFilter, setTypeFilter] = useState('');
+	const [centerTypeFilter, setCenterTypeFilter] = useState('');
+	const [statusFilter, setStatusFilter] = useState('');
 
 	const handleSearchChange = useCallback(
 		(value: string) => {
-			setSearchInput(value)
-			if (searchTimer) clearTimeout(searchTimer)
-			const timer = setTimeout(() => setSearchDebounced(value), 300)
-			setSearchTimer(timer)
+			setSearchInput(value);
+			if (searchTimer) clearTimeout(searchTimer);
+			const timer = setTimeout(() => setSearchDebounced(value), 300);
+			setSearchTimer(timer);
 		},
-		[searchTimer],
-	)
+		[searchTimer]
+	);
 
 	const filters: AccountFilters = useMemo(() => {
-		const f: AccountFilters = {}
-		if (searchDebounced) f.search = searchDebounced
-		if (typeFilter) f.type = typeFilter
-		if (centerTypeFilter) f.centerType = centerTypeFilter
-		if (statusFilter) f.status = statusFilter
-		return f
-	}, [searchDebounced, typeFilter, centerTypeFilter, statusFilter])
+		const f: AccountFilters = {};
+		if (searchDebounced) f.search = searchDebounced;
+		if (typeFilter) f.type = typeFilter;
+		if (centerTypeFilter) f.centerType = centerTypeFilter;
+		if (statusFilter) f.status = statusFilter;
+		return f;
+	}, [searchDebounced, typeFilter, centerTypeFilter, statusFilter]);
 
 	// Data hooks
-	const { data, isLoading } = useAccounts(filters)
-	const createMutation = useCreateAccount()
-	const updateMutation = useUpdateAccount()
-	const deleteMutation = useDeleteAccount()
+	const { data, isLoading } = useAccounts(filters);
+	const createMutation = useCreateAccount();
+	const updateMutation = useUpdateAccount();
+	const deleteMutation = useDeleteAccount();
 
 	// Panel state
-	const [panelOpen, setPanelOpen] = useState(false)
-	const [editingAccount, setEditingAccount] = useState<Account | null>(null)
+	const [panelOpen, setPanelOpen] = useState(false);
+	const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
 	// Delete confirmation state
-	const [deleteTarget, setDeleteTarget] = useState<Account | null>(null)
-	const [deleteConfirmCode, setDeleteConfirmCode] = useState('')
+	const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
+	const [deleteConfirmCode, setDeleteConfirmCode] = useState('');
 
 	// Status message
 	const [statusMessage, setStatusMessage] = useState<{
-		text: string
-		type: 'success' | 'error'
-	} | null>(null)
+		text: string;
+		type: 'success' | 'error';
+	} | null>(null);
 
-	const showStatus = useCallback(
-		(text: string, type: 'success' | 'error') => {
-			setStatusMessage({ text, type })
-			setTimeout(() => setStatusMessage(null), 4000)
-		},
-		[],
-	)
+	const showStatus = useCallback((text: string, type: 'success' | 'error') => {
+		setStatusMessage({ text, type });
+		setTimeout(() => setStatusMessage(null), 4000);
+	}, []);
 
 	const handleSave = useCallback(
 		(formData: Record<string, unknown>) => {
@@ -117,15 +114,15 @@ export function AccountsPage() {
 					},
 					{
 						onSuccess: () => {
-							setPanelOpen(false)
-							setEditingAccount(null)
-							showStatus('Account updated successfully', 'success')
+							setPanelOpen(false);
+							setEditingAccount(null);
+							showStatus('Account updated successfully', 'success');
 						},
 						onError: () => {
-							showStatus('Failed to update account', 'error')
+							showStatus('Failed to update account', 'error');
 						},
-					},
-				)
+					}
+				);
 			} else {
 				createMutation.mutate(
 					{
@@ -139,40 +136,38 @@ export function AccountsPage() {
 					},
 					{
 						onSuccess: () => {
-							setPanelOpen(false)
-							showStatus('Account created successfully', 'success')
+							setPanelOpen(false);
+							showStatus('Account created successfully', 'success');
 						},
 						onError: () => {
-							showStatus('Failed to create account', 'error')
+							showStatus('Failed to create account', 'error');
 						},
-					},
-				)
+					}
+				);
 			}
 		},
-		[editingAccount, updateMutation, createMutation, showStatus],
-	)
+		[editingAccount, updateMutation, createMutation, showStatus]
+	);
 
 	const handleDelete = useCallback(() => {
-		if (!deleteTarget || deleteConfirmCode !== deleteTarget.accountCode) return
+		if (!deleteTarget || deleteConfirmCode !== deleteTarget.accountCode) return;
 		deleteMutation.mutate(deleteTarget.id, {
 			onSuccess: () => {
-				setDeleteTarget(null)
-				setDeleteConfirmCode('')
-				showStatus('Account deleted successfully', 'success')
+				setDeleteTarget(null);
+				setDeleteConfirmCode('');
+				showStatus('Account deleted successfully', 'success');
 			},
 			onError: () => {
-				showStatus('Failed to delete account', 'error')
+				showStatus('Failed to delete account', 'error');
 			},
-		})
-	}, [deleteTarget, deleteConfirmCode, deleteMutation, showStatus])
+		});
+	}, [deleteTarget, deleteConfirmCode, deleteMutation, showStatus]);
 
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('accountCode', {
 				header: 'Account Code',
-				cell: (info) => (
-					<span className="font-medium">{info.getValue()}</span>
-				),
+				cell: (info) => <span className="font-medium">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('accountName', {
 				header: 'Account Name',
@@ -180,18 +175,18 @@ export function AccountsPage() {
 			columnHelper.accessor('type', {
 				header: 'Type',
 				cell: (info) => {
-					const value = info.getValue()
+					const value = info.getValue();
 					return (
 						<span
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-								TYPE_BADGE_COLORS[value],
+								TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Type: ${TYPE_LABELS[value]}`}
 						>
 							{TYPE_LABELS[value]}
 						</span>
-					)
+					);
 				},
 			}),
 			columnHelper.accessor('ifrsCategory', {
@@ -200,41 +195,36 @@ export function AccountsPage() {
 			columnHelper.accessor('centerType', {
 				header: 'Center Type',
 				cell: (info) => {
-					const value = info.getValue()
+					const value = info.getValue();
 					return (
 						<span
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-								CENTER_TYPE_BADGE_COLORS[value],
+								CENTER_TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Center type: ${CENTER_TYPE_LABELS[value]}`}
 						>
 							{CENTER_TYPE_LABELS[value]}
 						</span>
-					)
+					);
 				},
 			}),
 			columnHelper.accessor('status', {
 				header: 'Status',
 				cell: (info) => {
-					const value = info.getValue()
-					const isActive = value === 'ACTIVE'
+					const value = info.getValue();
+					const isActive = value === 'ACTIVE';
 					return (
 						<span
-							className={cn(
-								'inline-flex items-center gap-1.5 text-xs font-medium',
-							)}
+							className={cn('inline-flex items-center gap-1.5 text-xs font-medium')}
 							aria-label={`Status: ${isActive ? 'Active' : 'Inactive'}`}
 						>
 							<span
-								className={cn(
-									'h-2 w-2 rounded-full',
-									isActive ? 'bg-green-500' : 'bg-slate-400',
-								)}
+								className={cn('h-2 w-2 rounded-full', isActive ? 'bg-green-500' : 'bg-slate-400')}
 							/>
 							{isActive ? 'Active' : 'Inactive'}
 						</span>
-					)
+					);
 				},
 			}),
 			...(isAdmin
@@ -243,15 +233,15 @@ export function AccountsPage() {
 							id: 'actions',
 							header: 'Actions',
 							cell: ({ row }) => {
-								const account = row.original
+								const account = row.original;
 								return (
 									<div className="flex gap-2">
 										<button
 											type="button"
 											className="text-xs text-blue-600 hover:underline"
 											onClick={() => {
-												setEditingAccount(account)
-												setPanelOpen(true)
+												setEditingAccount(account);
+												setPanelOpen(true);
 											}}
 										>
 											Edit
@@ -264,20 +254,20 @@ export function AccountsPage() {
 											Delete
 										</button>
 									</div>
-								)
+								);
 							},
 						}),
 					]
 				: []),
 		],
-		[isAdmin],
-	)
+		[isAdmin]
+	);
 
 	const table = useReactTable({
 		data: data?.accounts ?? [],
 		columns,
 		getCoreRowModel: getCoreRowModel(),
-	})
+	});
 
 	return (
 		<div className="p-6">
@@ -289,7 +279,7 @@ export function AccountsPage() {
 						'mb-4 rounded-md px-4 py-3 text-sm font-medium',
 						statusMessage.type === 'success'
 							? 'bg-green-50 text-green-800'
-							: 'bg-red-50 text-red-800',
+							: 'bg-red-50 text-red-800'
 					)}
 				>
 					{statusMessage.text}
@@ -308,7 +298,7 @@ export function AccountsPage() {
 					className={cn(
 						'w-[280px] rounded-md border border-slate-300',
 						'px-3 py-2 text-sm',
-						'placeholder:text-slate-400',
+						'placeholder:text-slate-400'
 					)}
 					aria-label="Search accounts"
 				/>
@@ -316,10 +306,7 @@ export function AccountsPage() {
 				<select
 					value={typeFilter}
 					onChange={(e) => setTypeFilter(e.target.value)}
-					className={cn(
-						'rounded-md border border-slate-300',
-						'px-3 py-2 text-sm',
-					)}
+					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
 					aria-label="Filter by type"
 				>
 					<option value="">All Types</option>
@@ -332,10 +319,7 @@ export function AccountsPage() {
 				<select
 					value={centerTypeFilter}
 					onChange={(e) => setCenterTypeFilter(e.target.value)}
-					className={cn(
-						'rounded-md border border-slate-300',
-						'px-3 py-2 text-sm',
-					)}
+					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
 					aria-label="Filter by center type"
 				>
 					<option value="">All Center Types</option>
@@ -346,10 +330,7 @@ export function AccountsPage() {
 				<select
 					value={statusFilter}
 					onChange={(e) => setStatusFilter(e.target.value)}
-					className={cn(
-						'rounded-md border border-slate-300',
-						'px-3 py-2 text-sm',
-					)}
+					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
 					aria-label="Filter by status"
 				>
 					<option value="">All Statuses</option>
@@ -362,11 +343,11 @@ export function AccountsPage() {
 						type="button"
 						className={cn(
 							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white hover:bg-blue-700',
+							'font-medium text-white hover:bg-blue-700'
 						)}
 						onClick={() => {
-							setEditingAccount(null)
-							setPanelOpen(true)
+							setEditingAccount(null);
+							setPanelOpen(true);
 						}}
 					>
 						+ Add Account
@@ -389,10 +370,7 @@ export function AccountsPage() {
 											role="columnheader"
 											className="px-4 py-3 font-medium text-slate-600"
 										>
-											{flexRender(
-												header.column.columnDef.header,
-												header.getContext(),
-											)}
+											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
 								</tr>
@@ -410,22 +388,10 @@ export function AccountsPage() {
 								</tr>
 							) : (
 								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										role="row"
-										className="border-b last:border-0 hover:bg-slate-50"
-									>
+									<tr key={row.id} role="row" className="border-b last:border-0 hover:bg-slate-50">
 										{row.getVisibleCells().map((cell) => (
-											<td
-												key={cell.id}
-												role="gridcell"
-												aria-readonly="true"
-												className="px-4 py-3"
-											>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
+											<td key={cell.id} role="gridcell" aria-readonly="true" className="px-4 py-3">
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
 											</td>
 										))}
 									</tr>
@@ -441,8 +407,8 @@ export function AccountsPage() {
 				open={panelOpen}
 				account={editingAccount}
 				onClose={() => {
-					setPanelOpen(false)
-					setEditingAccount(null)
+					setPanelOpen(false);
+					setEditingAccount(null);
 				}}
 				onSave={handleSave}
 				loading={createMutation.isPending || updateMutation.isPending}
@@ -451,10 +417,7 @@ export function AccountsPage() {
 			{/* Delete confirmation dialog */}
 			{deleteTarget && (
 				<>
-					<div
-						className="fixed inset-0 z-40 bg-black/30"
-						aria-hidden="true"
-					/>
+					<div className="fixed inset-0 z-40 bg-black/30" aria-hidden="true" />
 					<div
 						role="alertdialog"
 						aria-modal="true"
@@ -463,24 +426,16 @@ export function AccountsPage() {
 						className={cn(
 							'fixed left-1/2 top-1/2 z-50 w-[420px]',
 							'-translate-x-1/2 -translate-y-1/2',
-							'rounded-lg bg-white p-6 shadow-xl',
+							'rounded-lg bg-white p-6 shadow-xl'
 						)}
 					>
-						<h3
-							id="delete-dialog-title"
-							className="text-lg font-semibold text-slate-900"
-						>
+						<h3 id="delete-dialog-title" className="text-lg font-semibold text-slate-900">
 							Delete Account
 						</h3>
-						<p
-							id="delete-dialog-desc"
-							className="mt-2 text-sm text-slate-600"
-						>
+						<p id="delete-dialog-desc" className="mt-2 text-sm text-slate-600">
 							This action cannot be undone. Type{' '}
-							<strong className="font-semibold">
-								{deleteTarget.accountCode}
-							</strong>{' '}
-							to confirm deletion.
+							<strong className="font-semibold">{deleteTarget.accountCode}</strong> to confirm
+							deletion.
 						</p>
 						<div className="mt-4">
 							<label htmlFor="delete-confirm" className="sr-only">
@@ -494,13 +449,13 @@ export function AccountsPage() {
 								placeholder={deleteTarget.accountCode}
 								className={cn(
 									'block w-full rounded-md border border-slate-300',
-									'px-3 py-2 text-sm',
+									'px-3 py-2 text-sm'
 								)}
 								autoFocus
 								onKeyDown={(e) => {
 									if (e.key === 'Escape') {
-										setDeleteTarget(null)
-										setDeleteConfirmCode('')
+										setDeleteTarget(null);
+										setDeleteConfirmCode('');
 									}
 								}}
 							/>
@@ -509,13 +464,13 @@ export function AccountsPage() {
 							<button
 								type="button"
 								onClick={() => {
-									setDeleteTarget(null)
-									setDeleteConfirmCode('')
+									setDeleteTarget(null);
+									setDeleteConfirmCode('');
 								}}
 								className={cn(
 									'rounded-md border border-slate-300',
 									'px-4 py-2 text-sm font-medium',
-									'hover:bg-slate-50',
+									'hover:bg-slate-50'
 								)}
 							>
 								Cancel
@@ -523,15 +478,14 @@ export function AccountsPage() {
 							<button
 								type="button"
 								disabled={
-									deleteConfirmCode !== deleteTarget.accountCode ||
-									deleteMutation.isPending
+									deleteConfirmCode !== deleteTarget.accountCode || deleteMutation.isPending
 								}
 								onClick={handleDelete}
 								className={cn(
 									'rounded-md bg-red-600 px-4 py-2 text-sm',
 									'font-medium text-white',
 									'hover:bg-red-700',
-									'disabled:opacity-50',
+									'disabled:opacity-50'
 								)}
 							>
 								{deleteMutation.isPending ? 'Deleting...' : 'Delete'}
@@ -541,5 +495,5 @@ export function AccountsPage() {
 				</>
 			)}
 		</div>
-	)
+	);
 }
