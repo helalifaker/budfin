@@ -1,6 +1,8 @@
 ---
 name: frontend-patterns
 description: React 19 + Vite 7 + Tailwind CSS 4 + shadcn/ui frontend patterns for BudFin. Use when building React components, hooks, pages, forms, data tables, routing, bundle configuration, or any UI-related work. Encodes Tailwind v4 CSS-first approach, shadcn/ui copy-paste pattern, TanStack Table v8, React Hook Form v7 with Zod 4, token storage rules, and WCAG AA requirements.
+invocations:
+  - agent: frontend-patterns
 ---
 
 # BudFin Frontend Patterns (React 19 + Vite 7 + Tailwind 4)

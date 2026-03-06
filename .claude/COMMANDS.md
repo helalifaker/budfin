@@ -16,7 +16,6 @@ are covered by the commands below — you should rarely need to type a custom pr
 | Create stories from a completed spec | `/plan:stories [epic-N]` |
 | Create a single story manually | `/plan:stories [epic-N] --single` |
 | Record an architectural decision | `/plan:adr "[decision title]"` |
-| Create a single Epic issue | `/plan:epic [N] "[name]" [priority] [tier]` |
 
 ### I want to implement
 
@@ -24,10 +23,15 @@ are covered by the commands below — you should rarely need to type a custom pr
 |------|---------|
 | Implement a single story end-to-end | `/impl:story [story-#]` |
 | Implement an entire Epic | `/impl:epic [epic-#]` |
-| Scaffold a Fastify route | `/impl:route "[resource]" "[method]"` |
-| Scaffold a Prisma model | `/impl:model "[ModelName]"` |
-| Scaffold a React component | `/impl:component "[ComponentName]"` |
 | Commit, push, and open draft PR linked to story + epic | `/impl:commit [story-#]` |
+
+### I want to review/merge
+
+| Goal | Command |
+|------|---------|
+| Review all PRs for current epic | `/review:run --all` |
+| Re-run review on a single story | `/review:run [story-#]` |
+| CI failed on a PR | `/ci:check [story-#]` |
 | Verify CI + reviews, squash-merge, roll up Epic status | `/pr:merge [story-#]` |
 
 ### Something is broken
@@ -71,9 +75,9 @@ are covered by the commands below — you should rarely need to type a custom pr
        ↓
 /impl:commit [#]  (Phase 6 — branch + commit + draft PR)
        ↓
-[Review agents run on PR — Phase 7]
+/review:run [#|--all]  (Phase 7 — CI check + review agents + merge)
        ↓
-/pr:merge [#]  (Phase 7 — squash-merge + close issue)
+/pr:merge [#]  (Phase 7 — manual squash-merge if needed)
        ↓
 /workflow:advance  (Phase 7 → next Epic, after ALL stories merged)
 ```
@@ -87,21 +91,19 @@ Or use `/workflow:run [epic-N]` to drive the full Epic lifecycle with one comman
 | Command | Phase 1 | Phase 2 | Phase 3 | Phase 4 | Phase 5 | Phase 6 | Phase 7 |
 |---------|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
 | `/plan:decompose` | — | ✓ | — | — | — | — | — |
-| `/plan:epic` | — | ✓ | — | — | — | — | — |
 | `/plan:spec` | — | — | — | ✓ | — | — | — |
 | `/plan:stories` | — | — | — | ✓ | — | — | — |
 | `/plan:adr` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `/impl:story` | — | — | — | — | ✓ | ✓ | — |
 | `/impl:epic` | — | — | — | — | ✓ | ✓ | — |
-| `/impl:route` | — | — | — | — | ✓ | ✓ | — |
-| `/impl:model` | — | — | — | — | ✓ | ✓ | — |
-| `/impl:component` | — | — | — | — | ✓ | ✓ | — |
 | `/impl:commit` | — | — | — | — | — | ✓ | ✓ |
+| `/review:run` | — | — | — | — | — | — | ✓ |
+| `/ci:check` | — | — | — | — | — | ✓ | ✓ |
 | `/pr:merge` | — | — | — | — | — | — | ✓ |
 | `/fix:*` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `/workflow:status` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `/workflow:advance` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `/workflow:run` | — | — | — | ✓ | ✓ | ✓ | — |
+| `/workflow:run` | — | — | — | ✓ | ✓ | ✓ | ✓ |
 
 ---
 
@@ -111,9 +113,6 @@ Or use `/workflow:run [epic-N]` to drive the full Epic lifecycle with one comman
 
 **`/plan:decompose`**
 Phase 2 only. Creates all 13 GitHub Epics, labels, and the Projects board. Run once.
-
-**`/plan:epic [N] "[name]" [priority] [tier]`**
-Creates a single Epic issue. Priority: must/should/could/wont. Tier: mvp/target/stretch.
 
 **`/plan:spec [epic-N]`**
 Phase 4. Walks through the feature spec template interactively, then launches the
@@ -137,22 +136,18 @@ reviewer + QA + documentor). Drives TDD RED → GREEN → parallel Review. Creat
 Implements all stories for an Epic in dependency order. Calls impl:story logic per story.
 Pauses on any blocker and waits for resolution before continuing.
 
-**`/impl:route "[resource]" "[method]"`**
-Invokes the `fastify-route` skill to scaffold a Fastify 5 route + Vitest test file.
-Example: `/impl:route "enrollment" "GET"`
-
-**`/impl:model "[ModelName]"`**
-Invokes the `prisma-model` skill to scaffold a Prisma 6 model block. Runs generate + migrate.
-Example: `/impl:model "Enrollment"`
-
-**`/impl:component "[ComponentName]"`**
-Scaffolds a React 19 component + test file. Applies Tailwind v4, shadcn/ui, WCAG AA rules.
-Example: `/impl:component "EnrollmentTable"`
-
 **`/impl:commit [story-#]`**
 Phase 6. Runs pre-flight gates (test/lint/typecheck), derives a conventional commit message
 from the story issue, stages and pushes the branch, then opens a draft PR with
 `Fixes #[story-#]` and `Part of Epic #[epic-#]` linkage. Moves story to "In Review".
+
+**`/review:run [story-#|--all]`**
+Phase 7. Review orchestrator: checks CI, runs review agents, merges approved PRs, performs
+epic rollup. Use `--all` to process all open PRs for the current Epic in dependency order.
+
+**`/ci:check [story-#]`**
+Phase 6-7. Diagnoses CI failures on a story PR and auto-fixes. Maps each failing job to the
+appropriate fix action, commits fixes, and re-checks until green.
 
 **`/pr:merge [story-#]`**
 Phase 7. Verifies CI checks green and PR is not a draft, then squash-merges with branch
@@ -194,7 +189,7 @@ Shows current phase, checklist, valid commands for this phase, and next recommen
 Gate-checks the current phase. Lists unmet criteria if FAIL. Advances STATUS.md if PASS.
 
 **`/workflow:run [epic-#]`**
-Full Epic driver. Runs spec → stories → impl:epic → advance. One command per Epic.
+Full Epic driver. Runs spec → stories → impl:epic → review:run → advance. One command per Epic.
 
 ---
 

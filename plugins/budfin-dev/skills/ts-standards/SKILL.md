@@ -1,6 +1,8 @@
 ---
 name: ts-standards
 description: TypeScript and project-wide coding standards for BudFin. Use when creating or editing any TypeScript file, doing code review, discussing linting, or working on project configuration. Encodes ESLint 9 flat config, TypeScript 5.9.3 pinned version rules, pnpm workspace commands, and monorepo module resolution settings.
+invocations:
+  - agent: ts-standards
 ---
 
 # BudFin TypeScript & Project Standards

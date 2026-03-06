@@ -103,6 +103,8 @@ Task: Write implementation code to make all failing tests pass
 - Final: run `pnpm test` — ALL tests PASS
 - Final: run `pnpm typecheck` — zero errors
 - Final: run `pnpm lint` — zero errors, zero warnings
+- If lint fails: run `pnpm eslint . --fix && pnpm prettier --write .` then re-check
+- Do NOT proceed to PR creation until `pnpm lint` returns clean
 ```
 
 Wait for implementer to report all tests GREEN before proceeding.

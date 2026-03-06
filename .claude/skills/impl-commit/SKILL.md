@@ -5,6 +5,9 @@ description: >
   story PR after CI + review approval (MERGE mode). Triggered by /impl:commit and
   /pr:merge commands. Enforces pre-flight gates (test/lint/typecheck) before any git
   operation and conventional commit format derived from the story issue.
+invocations:
+  - user: /impl-commit
+  - agent: impl-commit
 ---
 
 # Skill: impl-commit
@@ -53,6 +56,17 @@ If output is `main` or `master`, stop immediately:
 ERROR: Cannot commit on main. Create a feature branch first.
   git checkout -b story/[story-#]-<slug>
 ```
+
+### Step 1.5 — Quick Lint Pre-Fix
+
+Run auto-fixers on all changed files before the formal pre-flight gate:
+
+```bash
+pnpm eslint . --fix
+pnpm prettier --write .
+```
+
+This prevents the pre-flight gate from failing on auto-fixable issues.
 
 ### Step 2 — Run pre-flight gate
 
