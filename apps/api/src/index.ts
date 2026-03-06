@@ -15,6 +15,7 @@ import { auditRoutes } from './routes/audit.js';
 import { systemConfigRoutes } from './routes/system-config.js';
 import { versionRoutes } from './routes/versions.js';
 import { fiscalPeriodRoutes } from './routes/fiscal-periods.js';
+import { masterDataRoutes } from './routes/master-data/index.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -41,6 +42,9 @@ export async function buildApp() {
 	await app.register(auditRoutes, { prefix: '/api/v1/audit' });
 	await app.register(systemConfigRoutes, {
 		prefix: '/api/v1/system-config',
+	});
+	await app.register(masterDataRoutes, {
+		prefix: '/api/v1/master-data',
 	});
 	await app.register(versionRoutes, { prefix: '/api/v1/versions' });
 	await app.register(fiscalPeriodRoutes, { prefix: '/api/v1/fiscal-periods' });

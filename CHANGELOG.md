@@ -53,3 +53,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Authentication session enforcement now keeps the advisory lock, session eviction, token-family creation, last-login update, and audit writes inside a single database transaction so concurrent logins cannot exceed the configured session cap (#30)
 - Deactivating a user now revokes active refresh-token sessions automatically, and refresh requests for inactive users are rejected with cookie clearing plus audit logging (#30, #32)
+- Master Data API endpoints are now mounted through the real `buildApp()` bootstrap under `/api/v1/master-data`, with regression coverage to prevent route modules from being implemented without being shipped (#47)
+- Master Data pages are now reachable from the shipped router for all authenticated users, with role-based landing redirects and sidebar navigation that keeps Admin-only sections hidden from non-Admin roles (#42-#45)
+- The Master Data assumptions contract is now documented with the canonical optimistic-lock-safe payload shape `{ updates: [{ key, value, version }] }` to match the shipped API and UI (#41, #45)

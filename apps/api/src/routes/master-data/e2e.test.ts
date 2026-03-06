@@ -7,13 +7,7 @@ import { Prisma } from '@prisma/client';
 import type { AssumptionValueType } from '@prisma/client';
 import { setKeys, signAccessToken } from '../../services/token.js';
 import { auth } from '../../plugins/auth.js';
-import { accountRoutes } from './accounts.js';
-import { academicYearRoutes } from './academic-years.js';
-import { gradeLevelRoutes } from './grade-levels.js';
-import { nationalityRoutes } from './nationalities.js';
-import { tariffRoutes } from './tariffs.js';
-import { departmentRoutes } from './departments.js';
-import { assumptionRoutes } from './assumptions.js';
+import { masterDataRoutes } from './index.js';
 
 vi.mock('../../lib/prisma.js', () => {
 	const mockPrisma = {
@@ -211,26 +205,8 @@ beforeAll(async () => {
 	app.setValidatorCompiler(validatorCompiler);
 	app.setSerializerCompiler(serializerCompiler);
 	await app.register(auth);
-	await app.register(accountRoutes, {
-		prefix: '/api/v1/master-data/accounts',
-	});
-	await app.register(academicYearRoutes, {
-		prefix: '/api/v1/master-data/academic-years',
-	});
-	await app.register(gradeLevelRoutes, {
-		prefix: '/api/v1/master-data/grade-levels',
-	});
-	await app.register(nationalityRoutes, {
-		prefix: '/api/v1/master-data/nationalities',
-	});
-	await app.register(tariffRoutes, {
-		prefix: '/api/v1/master-data/tariffs',
-	});
-	await app.register(departmentRoutes, {
-		prefix: '/api/v1/master-data/departments',
-	});
-	await app.register(assumptionRoutes, {
-		prefix: '/api/v1/master-data/assumptions',
+	await app.register(masterDataRoutes, {
+		prefix: '/api/v1/master-data',
 	});
 	await app.ready();
 });

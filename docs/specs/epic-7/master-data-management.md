@@ -22,7 +22,7 @@ Each criterion must be testable and specific.
 - [ ] AC-10: Given an Admin user, when they POST `/api/v1/master-data/nationalities` with `{ code: "FR", label: "Francais", vatExempt: true }`, then a Nationality record is created and returned with HTTP 201.
 - [ ] AC-11: Given a Nationality with code "FR" exists, when a user POSTs a new nationality with code "FR", then the API returns HTTP 409 with code `DUPLICATE_CODE`.
 - [ ] AC-12: Given any mutation (create/update/delete) on a master data entity, then an audit log entry is written recording the userId, operation, entityType, entityId, and timestamp.
-- [ ] AC-13: Given a BudgetOwner user, when they PATCH `/api/v1/master-data/assumptions` with `{ vatRate: "18.0" }`, then the assumption is updated and HTTP 200 is returned.
+- [ ] AC-13: Given a BudgetOwner user, when they PATCH `/api/v1/master-data/assumptions` with `{ updates: [{ key: "vatRate", value: "18.0", version: 1 }] }`, then the assumption is updated and HTTP 200 is returned.
 - [ ] AC-14: Given an Editor user, when they PATCH `/api/v1/master-data/assumptions` with valid data, then the assumption is updated and HTTP 200 is returned.
 - [ ] AC-15: Given a Viewer user, when they PATCH `/api/v1/master-data/assumptions`, then the API returns HTTP 403.
 - [ ] AC-16: Given GOSI sub-components gosiPension=9.75, gosiSaned=1.50, gosiOhi=1.00, when assumptions are retrieved via GET, then gosiRateTotal is computed server-side as 12.25 (sum of sub-components).
@@ -328,10 +328,10 @@ All endpoints are under `/api/v1/master-data/`. All protected routes require `Au
 
 ### Assumptions
 
-| Method | Path           | Request                                         | Response                                                                   | Auth                                     |
-| ------ | -------------- | ----------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
-| GET    | `/assumptions` | --                                              | `{ assumptions: Assumption[], computed: { gosiRateTotal: string } }`       | Any authenticated role                   |
-| PATCH  | `/assumptions` | `{ [key]: value, ... }` (partial update by key) | `{ assumptions: Assumption[], computed: { gosiRateTotal: string } }` (200) | Admin, BudgetOwner, Editor (`data:edit`) |
+| Method | Path           | Request                                                          | Response                                                                   | Auth                                     |
+| ------ | -------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
+| GET    | `/assumptions` | --                                                               | `{ assumptions: Assumption[], computed: { gosiRateTotal: string } }`       | Any authenticated role                   |
+| PATCH  | `/assumptions` | `{ updates: [{ key: string, value: string, version: number }] }` | `{ assumptions: Assumption[], computed: { gosiRateTotal: string } }` (200) | Admin, BudgetOwner, Editor (`data:edit`) |
 
 ### Common Response Patterns
 
@@ -353,7 +353,7 @@ Optimistic locking: PUT/PATCH requests include a `version` field. If the server'
 
 ### Shell & Layout
 
-Master Data renders inside **ManagementShell** -- no context bar, no docked right panel. Master data is version-independent. Four routes:
+Master Data renders inside **ManagementShell** -- no context bar, no docked right panel. Master data is version-independent. The Master Data sidebar group is visible to every authenticated user, while Admin-only navigation remains hidden for non-Admin roles. The authenticated landing route is role-based: Admin users land on `/admin/users`; all other authenticated users land on `/master-data/accounts`. Four routes:
 
 | Route                      | Sidebar Label            |
 | -------------------------- | ------------------------ |
