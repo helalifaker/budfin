@@ -8,6 +8,60 @@ import { prisma } from '../lib/prisma.js';
 const versionTypeEnum = z.enum(['Budget', 'Forecast', 'Actual']);
 const versionStatusEnum = z.enum(['Draft', 'Published', 'Locked', 'Archived']);
 
+const patchStatusSchema = z.object({
+	new_status: versionStatusEnum,
+	audit_note: z.string().optional(),
+});
+
+// ── State machine ─────────────────────────────────────────────────────────────
+
+interface TransitionDef {
+	roles: string[];
+	isReverse: boolean;
+	timestampField?: string;
+	clearFields?: string[];
+	operation: string;
+}
+
+const TRANSITIONS: Record<string, Record<string, TransitionDef>> = {
+	Draft: {
+		Published: {
+			roles: ['Admin', 'BudgetOwner'],
+			isReverse: false,
+			timestampField: 'publishedAt',
+			operation: 'VERSION_PUBLISHED',
+		},
+	},
+	Published: {
+		Locked: {
+			roles: ['Admin', 'BudgetOwner'],
+			isReverse: false,
+			timestampField: 'lockedAt',
+			operation: 'VERSION_LOCKED',
+		},
+		Draft: {
+			roles: ['Admin'],
+			isReverse: true,
+			clearFields: ['publishedAt'],
+			operation: 'VERSION_REVERTED',
+		},
+	},
+	Locked: {
+		Archived: {
+			roles: ['Admin', 'BudgetOwner'],
+			isReverse: false,
+			timestampField: 'archivedAt',
+			operation: 'VERSION_ARCHIVED',
+		},
+		Draft: {
+			roles: ['Admin'],
+			isReverse: true,
+			clearFields: ['publishedAt', 'lockedAt'],
+			operation: 'VERSION_REVERTED',
+		},
+	},
+};
+
 const createVersionSchema = z.object({
 	name: z.string().min(1).max(100),
 	type: versionTypeEnum,
@@ -226,6 +280,95 @@ export async function versionRoutes(app: FastifyInstance) {
 			});
 
 			return reply.status(204).send();
+		},
+	});
+
+	// PATCH /:id/status — Lifecycle state machine (AC-04 to AC-08, AC-19)
+	app.patch('/:id/status', {
+		schema: { params: idParamsSchema, body: patchStatusSchema },
+		preHandler: [app.authenticate, app.requireRole('Admin', 'BudgetOwner')],
+		handler: async (request, reply) => {
+			const { id } = request.params as z.infer<typeof idParamsSchema>;
+			const { new_status, audit_note } = request.body as z.infer<typeof patchStatusSchema>;
+
+			const version = await prisma.budgetVersion.findUnique({
+				where: { id },
+				include: { createdBy: { select: { email: true } } },
+			});
+
+			if (!version) {
+				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+			}
+
+			const currentStatus = version.status;
+			const fromTransitions = TRANSITIONS[currentStatus];
+			const transition = fromTransitions?.[new_status];
+
+			if (!transition) {
+				return reply.status(409).send({
+					code: 'INVALID_TRANSITION',
+					message: `Cannot transition from ${currentStatus} to ${new_status}`,
+				});
+			}
+
+			// RBAC: only allowed roles for this specific transition
+			if (!transition.roles.includes(request.user.role)) {
+				return reply.status(403).send({ error: 'FORBIDDEN', message: 'Insufficient role' });
+			}
+
+			// AC-07/AC-08: reverse transitions require audit_note ≥ 10 chars
+			if (transition.isReverse) {
+				if (!audit_note || audit_note.length < 10) {
+					return reply.status(400).send({
+						code: 'AUDIT_NOTE_REQUIRED',
+						message: 'Reverse transitions require an audit note of at least 10 characters',
+					});
+				}
+			}
+
+			const now = new Date();
+			const updateData: Record<string, unknown> = { status: new_status };
+
+			if (transition.timestampField) {
+				updateData[transition.timestampField] = now;
+			}
+
+			if (transition.clearFields) {
+				for (const field of transition.clearFields) {
+					updateData[field] = null;
+				}
+			}
+
+			if (transition.isReverse) {
+				updateData.modificationCount = version.modificationCount + 1;
+			}
+
+			const updated = await prisma.$transaction(async (tx) => {
+				const result = await (tx as typeof prisma).budgetVersion.update({
+					where: { id },
+					data: updateData as Prisma.BudgetVersionUpdateInput,
+					include: { createdBy: { select: { email: true } } },
+				});
+
+				await (tx as typeof prisma).auditEntry.create({
+					data: {
+						userId: request.user.id,
+						operation: transition.operation,
+						tableName: 'budget_versions',
+						recordId: id,
+						ipAddress: request.ip,
+						oldValues: { status: currentStatus } as Prisma.InputJsonValue,
+						newValues: {
+							status: new_status,
+							...(audit_note ? { audit_note } : {}),
+						} as Prisma.InputJsonValue,
+					},
+				});
+
+				return result;
+			});
+
+			return formatVersion(updated as Parameters<typeof formatVersion>[0]);
 		},
 	});
 }
