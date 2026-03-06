@@ -294,8 +294,8 @@ On `200` response from `POST /versions/:versionId/calculate/pnl`:
 
 1. Calculate button shows green check flash (2 seconds)
 2. Toast notification (success variant):
-   - Title: "P&L Calculated"
-   - Description: "Total Revenue: [total_revenue_ht] SAR | Net Profit: [net_profit] SAR | EBITDA Margin: [ebitda_margin_pct]%"
+    - Title: "P&L Calculated"
+    - Description: "Total Revenue: [total_revenue_ht] SAR | Net Profit: [net_profit] SAR | EBITDA Margin: [ebitda_margin_pct]%"
 3. Grid data auto-refreshes via TanStack Query invalidation of key `['pnl', versionId]`
 4. KPI strip updates with new values
 5. Stale indicator in Context Bar clears for PNL module
@@ -451,23 +451,23 @@ PDF exports use `@react-pdf/renderer` v4.3 server-side rendering (ADR-014). The 
 
 ```typescript
 interface PnlGridStore {
-	// Format mode
-	format: 'summary' | 'detailed' | 'ifrs';
-	setFormat: (format: PnlGridStore['format']) => void;
+    // Format mode
+    format: 'summary' | 'detailed' | 'ifrs';
+    setFormat: (format: PnlGridStore['format']) => void;
 
-	// Row expansion state (keyed by row ID)
-	expandedRows: Record<string, boolean>;
-	toggleRow: (rowId: string) => void;
-	expandAll: () => void;
-	collapseAll: () => void;
+    // Row expansion state (keyed by row ID)
+    expandedRows: Record<string, boolean>;
+    toggleRow: (rowId: string) => void;
+    expandAll: () => void;
+    collapseAll: () => void;
 
-	// Column visibility (used when comparison mode changes layout)
-	showVarianceAbsolute: boolean;
-	showVariancePercent: boolean;
+    // Column visibility (used when comparison mode changes layout)
+    showVarianceAbsolute: boolean;
+    showVariancePercent: boolean;
 
-	// Sort (typically not used in P&L but available)
-	sortColumn: string | null;
-	sortDirection: 'asc' | 'desc' | null;
+    // Sort (typically not used in P&L but available)
+    sortColumn: string | null;
+    sortDirection: 'asc' | 'desc' | null;
 }
 ```
 

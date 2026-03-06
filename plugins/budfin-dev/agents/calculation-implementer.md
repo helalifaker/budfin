@@ -41,23 +41,23 @@ Any native arithmetic on monetary values is a bug. There are no edge cases, no e
 ```typescript
 // Pure function — inputs are domain objects, outputs are result arrays
 export function calculateStaffCost(
-	staff: StaffRecord[],
-	fiscalYear: FiscalYear,
-	rateCard: RateCard
+    staff: StaffRecord[],
+    fiscalYear: FiscalYear,
+    rateCard: RateCard
 ): StaffCostResult[] {
-	return staff.map((member) => {
-		const serviceFraction = yearFrac(member.startDate, fiscalYear.endDate);
-		const annualSalary = new Decimal(member.salaryAmount);
-		const cost = annualSalary.times(serviceFraction).times(rateCard.staffCostMultiplier);
-		return {
-			staffMemberId: member.id,
-			fiscalYearId: fiscalYear.id,
-			annualSalaryAmount: annualSalary,
-			serviceYears: serviceFraction,
-			totalCost: cost,
-			// NEVER round here — TC-004: round only at presentation layer
-		};
-	});
+    return staff.map((member) => {
+        const serviceFraction = yearFrac(member.startDate, fiscalYear.endDate);
+        const annualSalary = new Decimal(member.salaryAmount);
+        const cost = annualSalary.times(serviceFraction).times(rateCard.staffCostMultiplier);
+        return {
+            staffMemberId: member.id,
+            fiscalYearId: fiscalYear.id,
+            annualSalaryAmount: annualSalary,
+            serviceYears: serviceFraction,
+            totalCost: cost,
+            // NEVER round here — TC-004: round only at presentation layer
+        };
+    });
 }
 ```
 

@@ -33,8 +33,8 @@ ESLint `no-restricted-syntax` enforces this at the linter level. Any linter viol
 
 ```typescript
 function yearFrac(startDate: Date, endDate: Date): Decimal {
-	// US 30/360: each month treated as 30 days, year = 360 days
-	// Must match Excel YEARFRAC(start, end, 0) exactly
+    // US 30/360: each month treated as 30 days, year = 360 days
+    // Must match Excel YEARFRAC(start, end, 0) exactly
 }
 ```
 
@@ -94,12 +94,12 @@ Engine functions must be pure (no side effects):
 // Input: domain objects loaded from Prisma
 // Output: result arrays ready for createMany()
 function calculateStaffCost(
-	staff: StaffRecord[],
-	fiscalYear: FiscalYear,
-	rateCard: RateCard
+    staff: StaffRecord[],
+    fiscalYear: FiscalYear,
+    rateCard: RateCard
 ): StaffCostResult[] {
-	// Pure computation using Decimal.js throughout
-	// No DB calls, no logging, no mutations
+    // Pure computation using Decimal.js throughout
+    // No DB calls, no logging, no mutations
 }
 ```
 

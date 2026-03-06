@@ -258,10 +258,10 @@ BudFin uses two distinct shell layouts based on module category.
 
 1. **Logo area** (56px height): BudFin logo + wordmark (expanded) or icon only (collapsed)
 2. **Navigation groups** (scrollable):
-   - **Dashboard** — single item, no group header
-   - **Planning** — group header + items: Version Management, Enrollment & Capacity, Revenue, Staffing & Staff Costs, P&L & Reporting, Scenarios
-   - **Master Data** — group header + items: Chart of Accounts, Academic Years & Grades, Reference Data, Assumptions & Parameters
-   - **Admin** — group header + items: User Settings, Audit Trail, System Settings
+    - **Dashboard** — single item, no group header
+    - **Planning** — group header + items: Version Management, Enrollment & Capacity, Revenue, Staffing & Staff Costs, P&L & Reporting, Scenarios
+    - **Master Data** — group header + items: Chart of Accounts, Academic Years & Grades, Reference Data, Assumptions & Parameters
+    - **Admin** — group header + items: User Settings, Audit Trail, System Settings
 3. **Collapse toggle** (bottom, 48px): chevron icon, toggles expanded/collapsed
 4. **User avatar + role badge** (bottom, 56px): shows current user email (truncated) and role badge
 
@@ -999,20 +999,20 @@ UI-only state managed via Zustand stores:
 
 ```typescript
 interface RightPanelStore {
-	isOpen: boolean;
-	width: number;
-	activeTab: 'details' | 'activity' | 'audit' | 'help' | 'form';
-	mode: 'docked' | 'overlay'; // overlay for Scenarios
-	events: ActivityEvent[];
-	unreadCount: number;
-	toggle: () => void;
-	open: () => void;
-	close: () => void;
-	setWidth: (width: number) => void;
-	setActiveTab: (tab: RightPanelStore['activeTab']) => void;
-	setMode: (mode: 'docked' | 'overlay') => void;
-	addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void;
-	markAllRead: () => void;
+    isOpen: boolean;
+    width: number;
+    activeTab: 'details' | 'activity' | 'audit' | 'help' | 'form';
+    mode: 'docked' | 'overlay'; // overlay for Scenarios
+    events: ActivityEvent[];
+    unreadCount: number;
+    toggle: () => void;
+    open: () => void;
+    close: () => void;
+    setWidth: (width: number) => void;
+    setActiveTab: (tab: RightPanelStore['activeTab']) => void;
+    setMode: (mode: 'docked' | 'overlay') => void;
+    addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void;
+    markAllRead: () => void;
 }
 ```
 
@@ -1033,27 +1033,27 @@ Every planning module page follows this structure. The context bar, sidebar, and
 
 ```tsx
 <PlanningShell>
-	{/* Context bar, sidebar, right panel rendered by shell */}
+    {/* Context bar, sidebar, right panel rendered by shell */}
 
-	<ModuleToolbar>
-		<ModuleTitle />
-		<FilterControls /> {/* Module-specific */}
-		<ToolbarActions>
-			<CalculateButton /> {/* Planning modules only */}
-			<ExportButton />
-			<MoreMenu />
-		</ToolbarActions>
-	</ModuleToolbar>
+    <ModuleToolbar>
+        <ModuleTitle />
+        <FilterControls /> {/* Module-specific */}
+        <ToolbarActions>
+            <CalculateButton /> {/* Planning modules only */}
+            <ExportButton />
+            <MoreMenu />
+        </ToolbarActions>
+    </ModuleToolbar>
 
-	{/* Optional: Tab navigation for multi-view modules */}
-	<TabNavigation />
+    {/* Optional: Tab navigation for multi-view modules */}
+    <TabNavigation />
 
-	<ModuleContent>
-		{/* Loading: skeleton grid */}
-		{/* Empty: empty state with CTA */}
-		{/* Error: error state with retry */}
-		{/* Data: grid / charts / panels */}
-	</ModuleContent>
+    <ModuleContent>
+        {/* Loading: skeleton grid */}
+        {/* Empty: empty state with CTA */}
+        {/* Error: error state with retry */}
+        {/* Data: grid / charts / panels */}
+    </ModuleContent>
 </PlanningShell>
 ```
 
@@ -1063,26 +1063,26 @@ Management pages (Version Management, Master Data, Admin) use this simpler templ
 
 ```tsx
 <ManagementShell>
-	{/* Sidebar rendered by RootLayout */}
-	{/* NO context bar */}
-	{/* NO docked right panel */}
+    {/* Sidebar rendered by RootLayout */}
+    {/* NO context bar */}
+    {/* NO docked right panel */}
 
-	<ModuleToolbar>
-		<ModuleTitle />
-		<FilterControls /> {/* Module-specific filters, search */}
-		<ToolbarActions>
-			<ActionButtons /> {/* CRUD actions */}
-			<ExportButton />
-		</ToolbarActions>
-	</ModuleToolbar>
+    <ModuleToolbar>
+        <ModuleTitle />
+        <FilterControls /> {/* Module-specific filters, search */}
+        <ToolbarActions>
+            <ActionButtons /> {/* CRUD actions */}
+            <ExportButton />
+        </ToolbarActions>
+    </ModuleToolbar>
 
-	{/* Optional: Tab navigation */}
-	<TabNavigation />
+    {/* Optional: Tab navigation */}
+    <TabNavigation />
 
-	<ModuleContent>{/* CRUD tables, forms, settings */}</ModuleContent>
+    <ModuleContent>{/* CRUD tables, forms, settings */}</ModuleContent>
 
-	{/* Optional: Overlay side panel (480px, z-index:30) for CRUD forms */}
-	<OverlaySidePanel />
+    {/* Optional: Overlay side panel (480px, z-index:30) for CRUD forms */}
+    <OverlaySidePanel />
 </ManagementShell>
 ```
 

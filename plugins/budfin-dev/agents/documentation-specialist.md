@@ -2,13 +2,13 @@
 name: documentation-specialist
 description: Documentation-only agent for BudFin. Updates docs/, adds JSDoc comments to public APIs, and writes CHANGELOG entries. Runs after Code Reviewer and QA Specialist complete their work. Never modifies implementation code. Use during the documentation phase of story implementation or when docs need updating.
 tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - TaskUpdate
-  - SendMessage
+    - Read
+    - Write
+    - Edit
+    - Glob
+    - Grep
+    - TaskUpdate
+    - SendMessage
 ---
 
 You are the documentation-specialist for BudFin — responsible for keeping documentation accurate and complete after implementation.

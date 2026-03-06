@@ -499,8 +499,8 @@ The Dashboard responds to all context bar selections. Every change triggers a da
 
 ```typescript
 ['dashboard', versionId, { period, scenario }][('enrollment-historical', { years: 5 })][
-	// Comparison version (conditional):
-	('dashboard', comparisonVersionId, { period, scenario })
+    // Comparison version (conditional):
+    ('dashboard', comparisonVersionId, { period, scenario })
 ];
 ```
 
@@ -547,26 +547,26 @@ The Dashboard is the simplest module from an RBAC perspective. All roles have id
 
 ```json
 {
-	"total_revenue_ht": "string (decimal)",
-	"total_students_ay1": "number",
-	"total_students_ay2": "number",
-	"school_utilization_pct": "string (percentage)",
-	"discount_rate_pct": "string (percentage)",
-	"ebitda": "string (decimal)",
-	"net_profit": "string (decimal)",
-	"capacity_alerts": [
-		{
-			"grade_level": "string",
-			"status": "OVER | NEAR_CAP | OK | UNDER",
-			"utilization_pct": "string (percentage)"
-		}
-	],
-	"enrollment_trend": [
-		{
-			"academic_year": "string",
-			"total_students": "number"
-		}
-	]
+    "total_revenue_ht": "string (decimal)",
+    "total_students_ay1": "number",
+    "total_students_ay2": "number",
+    "school_utilization_pct": "string (percentage)",
+    "discount_rate_pct": "string (percentage)",
+    "ebitda": "string (decimal)",
+    "net_profit": "string (decimal)",
+    "capacity_alerts": [
+        {
+            "grade_level": "string",
+            "status": "OVER | NEAR_CAP | OK | UNDER",
+            "utilization_pct": "string (percentage)"
+        }
+    ],
+    "enrollment_trend": [
+        {
+            "academic_year": "string",
+            "total_students": "number"
+        }
+    ]
 }
 ```
 
@@ -594,25 +594,25 @@ Used by the Enrollment Trend Chart (Section 3.3).
 
 ```json
 {
-	"data": [
-		{
-			"academic_year": "string",
-			"grade_level": "string",
-			"student_count": "number"
-		}
-	],
-	"cagr_by_band": {
-		"Maternelle": "string (percentage)",
-		"Elementaire": "string (percentage)",
-		"College": "string (percentage)",
-		"Lycee": "string (percentage)"
-	},
-	"moving_avg_by_band": {
-		"Maternelle": "string",
-		"Elementaire": "string",
-		"College": "string",
-		"Lycee": "string"
-	}
+    "data": [
+        {
+            "academic_year": "string",
+            "grade_level": "string",
+            "student_count": "number"
+        }
+    ],
+    "cagr_by_band": {
+        "Maternelle": "string (percentage)",
+        "Elementaire": "string (percentage)",
+        "College": "string (percentage)",
+        "Lycee": "string (percentage)"
+    },
+    "moving_avg_by_band": {
+        "Maternelle": "string",
+        "Elementaire": "string",
+        "College": "string",
+        "Lycee": "string"
+    }
 }
 ```
 
@@ -635,18 +635,18 @@ The `Total` line sums all bands per academic year.
 
 ```html
 <main aria-label="Dashboard">
-	<section aria-label="Key Performance Indicators">
-		<!-- KPI cards -->
-	</section>
-	<section aria-label="Profit and Loss Summary">
-		<!-- P&L strip -->
-	</section>
-	<section aria-label="Charts and Alerts">
-		<!-- Charts + alerts panel -->
-	</section>
-	<section aria-label="Variance Analysis" aria-hidden="true|false">
-		<!-- Conditional: comparison gauges -->
-	</section>
+    <section aria-label="Key Performance Indicators">
+        <!-- KPI cards -->
+    </section>
+    <section aria-label="Profit and Loss Summary">
+        <!-- P&L strip -->
+    </section>
+    <section aria-label="Charts and Alerts">
+        <!-- Charts + alerts panel -->
+    </section>
+    <section aria-label="Variance Analysis" aria-hidden="true|false">
+        <!-- Conditional: comparison gauges -->
+    </section>
 </main>
 ```
 

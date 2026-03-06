@@ -45,24 +45,24 @@ The Planner must produce a task list in this format before any implementation be
 ### Tasks (dependency-ordered)
 
 1. [T1] Create Prisma migration for budget_allocations table
-   - Dependencies: none
-   - Owner: api-implementer
-   - Files: prisma/schema.prisma, prisma/migrations/...
+    - Dependencies: none
+    - Owner: api-implementer
+    - Files: prisma/schema.prisma, prisma/migrations/...
 
 2. [T2] Implement calculateAllocation() engine function
-   - Dependencies: T1
-   - Owner: calculation-implementer
-   - Files: apps/api/src/engines/allocation.engine.ts
+    - Dependencies: T1
+    - Owner: calculation-implementer
+    - Files: apps/api/src/engines/allocation.engine.ts
 
 3. [T3] Add POST /budget-versions/:id/allocations route
-   - Dependencies: T1
-   - Owner: api-implementer
-   - Files: apps/api/src/routes/allocation.route.ts
+    - Dependencies: T1
+    - Owner: api-implementer
+    - Files: apps/api/src/routes/allocation.route.ts
 
 4. [T4] Build AllocationGrid component
-   - Dependencies: none (mock data initially)
-   - Owner: frontend-implementer
-   - Files: apps/web/src/components/AllocationGrid.tsx
+    - Dependencies: none (mock data initially)
+    - Owner: frontend-implementer
+    - Files: apps/web/src/components/AllocationGrid.tsx
 ```
 
 ## Task Tracking

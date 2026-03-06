@@ -17,11 +17,11 @@ BudFin uses JWT-based stateless authentication with asymmetric signing to elimin
 
 ```json
 {
-	"sub": 42,
-	"email": "user@efir.edu.sa",
-	"role": "Editor",
-	"iat": 1709452200,
-	"exp": 1709454000
+    "sub": 42,
+    "email": "user@efir.edu.sa",
+    "role": "Editor",
+    "iat": 1709452200,
+    "exp": 1709454000
 }
 ```
 
@@ -69,8 +69,8 @@ Family tracking is stored in the `refresh_tokens` table (see Section 5 — Data 
 
 ```json
 {
-	"code": "ACCOUNT_LOCKED",
-	"locked_until": "2026-03-03T11:00:00.000Z"
+    "code": "ACCOUNT_LOCKED",
+    "locked_until": "2026-03-03T11:00:00.000Z"
 }
 ```
 
@@ -254,7 +254,7 @@ The following security validation activities are required before production depl
 2. **Dependency audit:** `npm audit --audit-level=high` runs in every CI pipeline execution. Any HIGH or CRITICAL CVE fails the build.
 3. **RBAC penetration test suite (Vitest):** Automated tests for every protected endpoint verifying that each unauthorized role receives HTTP 403. Test matrix covers all 16 permissions across all 4 roles.
 4. **Manual penetration testing by Tech Lead:**
-   - Replay attack with a revoked refresh token (must trigger family revocation).
-   - IDOR attempt with a mismatched `version_id` (must return 403).
-   - JWT with a tampered `role` claim (must fail RS256 signature verification).
-   - Attempt to access salary fields as Viewer role (must receive `null` values).
+    - Replay attack with a revoked refresh token (must trigger family revocation).
+    - IDOR attempt with a mismatched `version_id` (must return 403).
+    - JWT with a tampered `role` claim (must fail RS256 signature verification).
+    - Attempt to access salary fields as Viewer role (must receive `null` values).

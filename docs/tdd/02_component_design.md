@@ -25,43 +25,43 @@ The Auth Service owns the complete authentication lifecycle: credential verifica
 // --- Token types ---
 
 interface TokenPair {
-	accessToken: string; // JWT, 30-min TTL, payload: JwtPayload
-	refreshToken: string; // Opaque 256-bit random hex, 8-hr TTL, stored bcrypt-hashed in DB
+    accessToken: string; // JWT, 30-min TTL, payload: JwtPayload
+    refreshToken: string; // Opaque 256-bit random hex, 8-hr TTL, stored bcrypt-hashed in DB
 }
 
 interface JwtPayload {
-	userId: number;
-	role: 'Admin' | 'BudgetOwner' | 'Editor' | 'Viewer';
-	sessionId: string;
-	iat: number;
-	exp: number;
+    userId: number;
+    role: 'Admin' | 'BudgetOwner' | 'Editor' | 'Viewer';
+    sessionId: string;
+    iat: number;
+    exp: number;
 }
 
 // --- Service interface ---
 
 interface AuthService {
-	login(email: string, password: string, ipAddress: string): Promise<TokenPair>;
-	refresh(refreshToken: string): Promise<TokenPair>;
-	logout(refreshToken: string): Promise<void>;
-	validateAccessToken(token: string): Promise<JwtPayload>;
+    login(email: string, password: string, ipAddress: string): Promise<TokenPair>;
+    refresh(refreshToken: string): Promise<TokenPair>;
+    logout(refreshToken: string): Promise<void>;
+    validateAccessToken(token: string): Promise<JwtPayload>;
 }
 
 // --- Supporting types ---
 
 interface LoginAttemptRecord {
-	userId: number;
-	failedAttempts: number;
-	lockedUntil: Date | null;
+    userId: number;
+    failedAttempts: number;
+    lockedUntil: Date | null;
 }
 
 interface RefreshTokenRecord {
-	id: number;
-	userId: number;
-	tokenHash: string;
-	familyId: string; // Groups tokens in one refresh chain
-	isRevoked: boolean;
-	expiresAt: Date;
-	createdAt: Date;
+    id: number;
+    userId: number;
+    tokenHash: string;
+    familyId: string; // Groups tokens in one refresh chain
+    isRevoked: boolean;
+    expiresAt: Date;
+    createdAt: Date;
 }
 ```
 
@@ -109,54 +109,54 @@ The RBAC Middleware intercepts every inbound HTTP request after authentication, 
 type Role = 'Admin' | 'BudgetOwner' | 'Editor' | 'Viewer';
 
 type Permission =
-	| 'versions:create'
-	| 'versions:delete'
-	| 'data:edit'
-	| 'calculations:run'
-	| 'data:view'
-	| 'versions:publish'
-	| 'users:manage'
-	| 'audit:view'
-	| 'config:edit'
-	| 'data:import'
-	| 'data:export'
-	| 'salary:view';
+    | 'versions:create'
+    | 'versions:delete'
+    | 'data:edit'
+    | 'calculations:run'
+    | 'data:view'
+    | 'versions:publish'
+    | 'users:manage'
+    | 'audit:view'
+    | 'config:edit'
+    | 'data:import'
+    | 'data:export'
+    | 'salary:view';
 
 const PERMISSION_MAP: Record<Role, ReadonlySet<Permission>> = {
-	Admin: new Set([
-		'versions:create',
-		'versions:delete',
-		'data:edit',
-		'calculations:run',
-		'data:view',
-		'versions:publish',
-		'users:manage',
-		'audit:view',
-		'config:edit',
-		'data:import',
-		'data:export',
-		'salary:view',
-	]),
-	BudgetOwner: new Set([
-		'versions:create',
-		'versions:delete',
-		'data:edit',
-		'calculations:run',
-		'data:view',
-		'versions:publish',
-		'data:import',
-		'data:export',
-		'salary:view',
-	]),
-	Editor: new Set([
-		'data:edit',
-		'calculations:run',
-		'data:view',
-		'data:import',
-		'data:export',
-		'salary:view',
-	]),
-	Viewer: new Set(['data:view', 'data:export']),
+    Admin: new Set([
+        'versions:create',
+        'versions:delete',
+        'data:edit',
+        'calculations:run',
+        'data:view',
+        'versions:publish',
+        'users:manage',
+        'audit:view',
+        'config:edit',
+        'data:import',
+        'data:export',
+        'salary:view',
+    ]),
+    BudgetOwner: new Set([
+        'versions:create',
+        'versions:delete',
+        'data:edit',
+        'calculations:run',
+        'data:view',
+        'versions:publish',
+        'data:import',
+        'data:export',
+        'salary:view',
+    ]),
+    Editor: new Set([
+        'data:edit',
+        'calculations:run',
+        'data:view',
+        'data:import',
+        'data:export',
+        'salary:view',
+    ]),
+    Viewer: new Set(['data:view', 'data:export']),
 };
 
 function requireRole(roles: Role[]): RequestHandler;
@@ -224,19 +224,19 @@ The Context Bar State component maintains the user's working context — fiscal 
 
 ```typescript
 interface WorkspaceContext {
-	fiscalYear: number;
-	versionId: number;
-	comparisonVersionId: number | null;
-	academicPeriod: 'AY1' | 'AY2' | 'Summer' | 'FULL_YEAR';
-	scenario: 'Base' | 'Optimistic' | 'Pessimistic';
+    fiscalYear: number;
+    versionId: number;
+    comparisonVersionId: number | null;
+    academicPeriod: 'AY1' | 'AY2' | 'Summer' | 'FULL_YEAR';
+    scenario: 'Base' | 'Optimistic' | 'Pessimistic';
 }
 
 interface WorkspaceContextActions {
-	setFiscalYear(year: number): void;
-	setVersion(versionId: number): void;
-	setComparisonVersion(versionId: number | null): void;
-	setAcademicPeriod(period: WorkspaceContext['academicPeriod']): void;
-	setScenario(scenario: WorkspaceContext['scenario']): void;
+    setFiscalYear(year: number): void;
+    setVersion(versionId: number): void;
+    setComparisonVersion(versionId: number | null): void;
+    setAcademicPeriod(period: WorkspaceContext['academicPeriod']): void;
+    setScenario(scenario: WorkspaceContext['scenario']): void;
 }
 
 type WorkspaceContextValue = WorkspaceContext & WorkspaceContextActions;
@@ -292,61 +292,61 @@ Computes monthly gross and net revenue per grade/nationality/tariff combination 
 
 ```typescript
 interface EnrollmentDetailRow {
-	gradeLevel: string;
-	nationality: string;
-	tariff: string;
-	headcount: number;
+    gradeLevel: string;
+    nationality: string;
+    tariff: string;
+    headcount: number;
 }
 
 interface FeeGridRow {
-	gradeLevel: string;
-	nationality: string;
-	tariff: string;
-	academicPeriod: 'AY1' | 'AY2';
-	annualFeeTtc: Decimal;
+    gradeLevel: string;
+    nationality: string;
+    tariff: string;
+    academicPeriod: 'AY1' | 'AY2';
+    annualFeeTtc: Decimal;
 }
 
 interface DiscountPolicy {
-	id: number;
-	name: string;
-	discountPercent: Decimal;
-	eligibilityCriteria: Record<string, unknown>;
+    id: number;
+    name: string;
+    discountPercent: Decimal;
+    eligibilityCriteria: Record<string, unknown>;
 }
 
 interface OtherRevenueItem {
-	category: string;
-	month: number;
-	amount: Decimal;
-	description: string;
+    category: string;
+    month: number;
+    amount: Decimal;
+    description: string;
 }
 
 interface RevenueEngineInput {
-	enrollmentDetail: EnrollmentDetailRow[];
-	feeGrid: FeeGridRow[];
-	discountPolicies: DiscountPolicy[];
-	otherRevenueItems: OtherRevenueItem[];
-	academicWeeks: number; // 36 per TC-005
+    enrollmentDetail: EnrollmentDetailRow[];
+    feeGrid: FeeGridRow[];
+    discountPolicies: DiscountPolicy[];
+    otherRevenueItems: OtherRevenueItem[];
+    academicWeeks: number; // 36 per TC-005
 }
 
 interface MonthlyRevenueRow {
-	versionId: number;
-	academicPeriod: 'AY1' | 'AY2';
-	gradeLevel: string;
-	nationality: string;
-	tariff: string;
-	month: number;
-	grossRevenueHt: Decimal;
-	discountAmount: Decimal;
-	netRevenueHt: Decimal;
-	vatAmount: Decimal;
+    versionId: number;
+    academicPeriod: 'AY1' | 'AY2';
+    gradeLevel: string;
+    nationality: string;
+    tariff: string;
+    month: number;
+    grossRevenueHt: Decimal;
+    discountAmount: Decimal;
+    netRevenueHt: Decimal;
+    vatAmount: Decimal;
 }
 
 function calculateRevenue(input: RevenueEngineInput): MonthlyRevenueRow[];
 
 function distributeAcrossMonths(
-	annualAmount: Decimal,
-	method: DistributionMethod,
-	weights?: number[]
+    annualAmount: Decimal,
+    method: DistributionMethod,
+    weights?: number[]
 ): Map<number, Decimal>;
 
 type DistributionMethod = 'equal' | 'weighted' | 'academic_calendar';
@@ -384,40 +384,40 @@ Computes Full-Time Equivalent (FTE) teaching requirements by grade level based o
 
 ```typescript
 interface DHGGrilleRow {
-	gradeLevel: string;
-	subject: string;
-	hoursPerWeekPerSection: number;
+    gradeLevel: string;
+    subject: string;
+    hoursPerWeekPerSection: number;
 }
 
 interface DHGResult {
-	gradeLevel: string;
-	enrollment: number;
-	maxClassSize: number;
-	sectionsNeeded: number;
-	totalWeeklyHours: Decimal;
-	totalAnnualHours: Decimal;
-	fte: Decimal;
+    gradeLevel: string;
+    enrollment: number;
+    maxClassSize: number;
+    sectionsNeeded: number;
+    totalWeeklyHours: Decimal;
+    totalAnnualHours: Decimal;
+    fte: Decimal;
 }
 
 function calculateSectionsNeeded(enrollment: number, maxClassSize: number): number {
-	return Math.ceil(enrollment / maxClassSize);
+    return Math.ceil(enrollment / maxClassSize);
 }
 
 function calculateFTE(gradeLevel: string, sectionsNeeded: number, grille: DHGGrilleRow[]): Decimal {
-	const totalWeeklyHours = grille
-		.filter((g) => g.gradeLevel === gradeLevel)
-		.reduce(
-			(sum, g) => sum.plus(new Decimal(g.hoursPerWeekPerSection).mul(sectionsNeeded)),
-			new Decimal(0)
-		);
-	return totalWeeklyHours.div(new Decimal(18)); // standard ORS divisor
+    const totalWeeklyHours = grille
+        .filter((g) => g.gradeLevel === gradeLevel)
+        .reduce(
+            (sum, g) => sum.plus(new Decimal(g.hoursPerWeekPerSection).mul(sectionsNeeded)),
+            new Decimal(0)
+        );
+    return totalWeeklyHours.div(new Decimal(18)); // standard ORS divisor
 }
 
 function calculateDHG(
-	enrollment: EnrollmentDetailRow[],
-	grille: DHGGrilleRow[],
-	maxClassSizes: Record<string, number>,
-	academicWeeks: number
+    enrollment: EnrollmentDetailRow[],
+    grille: DHGGrilleRow[],
+    maxClassSizes: Record<string, number>,
+    academicWeeks: number
 ): DHGResult[];
 ```
 
@@ -435,30 +435,30 @@ Computes monthly staff costs for every employee including base gross, September 
 
 ```typescript
 interface Employee {
-	id: number;
-	isSaudi: boolean;
-	isTeaching: boolean;
-	isNewStaff: boolean;
-	baseSalary: Decimal;
-	housingAllowance: Decimal;
-	transportAllowance: Decimal;
-	responsibilityPremium: Decimal;
-	hsaAmount: Decimal;
-	augmentationPercent: Decimal;
-	hireDate: Date;
-	ajeerAnnualLevy: Decimal;
-	ajeerMonthlyFee: Decimal;
+    id: number;
+    isSaudi: boolean;
+    isTeaching: boolean;
+    isNewStaff: boolean;
+    baseSalary: Decimal;
+    housingAllowance: Decimal;
+    transportAllowance: Decimal;
+    responsibilityPremium: Decimal;
+    hsaAmount: Decimal;
+    augmentationPercent: Decimal;
+    hireDate: Date;
+    ajeerAnnualLevy: Decimal;
+    ajeerMonthlyFee: Decimal;
 }
 
 interface MonthlyStaffCostRow {
-	employeeId: number;
-	month: number;
-	baseGross: Decimal;
-	adjustedGross: Decimal;
-	gosiAmount: Decimal;
-	ajeerAmount: Decimal;
-	eosMonthlyAccrual: Decimal;
-	totalCost: Decimal;
+    employeeId: number;
+    month: number;
+    baseGross: Decimal;
+    adjustedGross: Decimal;
+    gosiAmount: Decimal;
+    ajeerAmount: Decimal;
+    eosMonthlyAccrual: Decimal;
+    totalCost: Decimal;
 }
 
 function calculateMonthlyGross(employee: Employee, month: number): Decimal;
@@ -474,18 +474,18 @@ This algorithm must be implemented exactly as specified to match Excel `YEARFRAC
 
 ```typescript
 function yearFrac(d1: Date, d2: Date): Decimal {
-	let day1 = d1.getDate();
-	let month1 = d1.getMonth() + 1;
-	let year1 = d1.getFullYear();
-	let day2 = d2.getDate();
-	let month2 = d2.getMonth() + 1;
-	let year2 = d2.getFullYear();
+    let day1 = d1.getDate();
+    let month1 = d1.getMonth() + 1;
+    let year1 = d1.getFullYear();
+    let day2 = d2.getDate();
+    let month2 = d2.getMonth() + 1;
+    let year2 = d2.getFullYear();
 
-	if (day1 === 31) day1 = 30;
-	if (day2 === 31 && day1 >= 30) day2 = 30;
+    if (day1 === 31) day1 = 30;
+    if (day2 === 31 && day1 >= 30) day2 = 30;
 
-	const days = (year2 - year1) * 360 + (month2 - month1) * 30 + (day2 - day1);
-	return new Decimal(days).div(360);
+    const days = (year2 - year1) * 360 + (month2 - month1) * 30 + (day2 - day1);
+    return new Decimal(days).div(360);
 }
 ```
 
@@ -527,32 +527,32 @@ Aggregates monthly revenue and cost outputs from the other sub-engines into a co
 
 ```typescript
 interface IFRSMapping {
-	sourceCategory: string;
-	targetLineItem: string;
-	sign: 'positive' | 'negative';
+    sourceCategory: string;
+    targetLineItem: string;
+    sign: 'positive' | 'negative';
 }
 
 interface MonthlyPnLRow {
-	month: number;
-	totalRevenueHt: Decimal;
-	totalStaffCosts: Decimal;
-	grossProfit: Decimal;
-	otherOperatingExpenses: Decimal;
-	ebitda: Decimal;
-	depreciationAmortization: Decimal;
-	operatingProfit: Decimal;
-	financeIncome: Decimal;
-	financeCosts: Decimal;
-	profitBeforeZakat: Decimal;
-	zakat: Decimal;
-	netProfit: Decimal;
+    month: number;
+    totalRevenueHt: Decimal;
+    totalStaffCosts: Decimal;
+    grossProfit: Decimal;
+    otherOperatingExpenses: Decimal;
+    ebitda: Decimal;
+    depreciationAmortization: Decimal;
+    operatingProfit: Decimal;
+    financeIncome: Decimal;
+    financeCosts: Decimal;
+    profitBeforeZakat: Decimal;
+    zakat: Decimal;
+    netProfit: Decimal;
 }
 
 function calculatePnL(
-	monthlyRevenue: MonthlyRevenueRow[],
-	monthlyStaffCosts: MonthlyStaffCostRow[],
-	otherItems: OtherRevenueItem[],
-	ifrsMapping: IFRSMapping[]
+    monthlyRevenue: MonthlyRevenueRow[],
+    monthlyStaffCosts: MonthlyStaffCostRow[],
+    otherItems: OtherRevenueItem[],
+    ifrsMapping: IFRSMapping[]
 ): MonthlyPnLRow[];
 ```
 
@@ -601,38 +601,38 @@ The Version Manager governs the full lifecycle of budget versions: creation, clo
 type VersionStatus = 'Draft' | 'Published' | 'Locked' | 'Archived';
 
 interface BudgetVersion {
-	id: number;
-	fiscalYear: number;
-	name: string;
-	status: VersionStatus;
-	createdBy: number;
-	createdAt: Date;
-	publishedAt: Date | null;
-	lockedAt: Date | null;
+    id: number;
+    fiscalYear: number;
+    name: string;
+    status: VersionStatus;
+    createdBy: number;
+    createdAt: Date;
+    publishedAt: Date | null;
+    lockedAt: Date | null;
 }
 
 interface VersionService {
-	create(fiscalYear: number, name: string, userId: number): Promise<BudgetVersion>;
-	clone(sourceVersionId: number, newName: string, userId: number): Promise<BudgetVersion>;
-	transition(
-		versionId: number,
-		targetStatus: VersionStatus,
-		userId: number,
-		auditNote?: string
-	): Promise<BudgetVersion>;
-	compare(
-		primaryVersionId: number,
-		comparisonVersionId: number
-	): Promise<VersionComparisonResult[]>;
+    create(fiscalYear: number, name: string, userId: number): Promise<BudgetVersion>;
+    clone(sourceVersionId: number, newName: string, userId: number): Promise<BudgetVersion>;
+    transition(
+        versionId: number,
+        targetStatus: VersionStatus,
+        userId: number,
+        auditNote?: string
+    ): Promise<BudgetVersion>;
+    compare(
+        primaryVersionId: number,
+        comparisonVersionId: number
+    ): Promise<VersionComparisonResult[]>;
 }
 
 interface VersionComparisonResult {
-	lineItem: string;
-	month: number;
-	primaryAmount: Decimal;
-	comparisonAmount: Decimal;
-	absoluteVariance: Decimal;
-	percentageVariance: Decimal | null; // null when comparison is zero (N/A)
+    lineItem: string;
+    month: number;
+    primaryAmount: Decimal;
+    comparisonAmount: Decimal;
+    absoluteVariance: Decimal;
+    percentageVariance: Decimal | null; // null when comparison is zero (N/A)
 }
 ```
 
@@ -702,43 +702,43 @@ The Audit Logger provides an automatic, append-only audit trail for every data m
 
 ```typescript
 interface AuditEntry {
-	id: number;
-	timestamp: Date; // TIMESTAMPTZ, set by DB default NOW()
-	userId: number;
-	tableName: string;
-	recordId: number;
-	operation: 'INSERT' | 'UPDATE' | 'DELETE';
-	oldValues: Record<string, unknown> | null; // null for INSERT
-	newValues: Record<string, unknown> | null; // null for DELETE
-	ipAddress: string;
-	sessionId: string;
+    id: number;
+    timestamp: Date; // TIMESTAMPTZ, set by DB default NOW()
+    userId: number;
+    tableName: string;
+    recordId: number;
+    operation: 'INSERT' | 'UPDATE' | 'DELETE';
+    oldValues: Record<string, unknown> | null; // null for INSERT
+    newValues: Record<string, unknown> | null; // null for DELETE
+    ipAddress: string;
+    sessionId: string;
 }
 
 // Prisma extension setup
 function createAuditedPrismaClient(basePrisma: PrismaClient): PrismaClient {
-	return basePrisma.$extends({
-		query: {
-			$allModels: {
-				async create({ args, query }) {
-					const result = await query(args);
-					await writeAuditEntry('INSERT', null, result);
-					return result;
-				},
-				async update({ args, query }) {
-					const before = await findExisting(args);
-					const result = await query(args);
-					await writeAuditEntry('UPDATE', before, result);
-					return result;
-				},
-				async delete({ args, query }) {
-					const before = await findExisting(args);
-					const result = await query(args);
-					await writeAuditEntry('DELETE', before, null);
-					return result;
-				},
-			},
-		},
-	});
+    return basePrisma.$extends({
+        query: {
+            $allModels: {
+                async create({ args, query }) {
+                    const result = await query(args);
+                    await writeAuditEntry('INSERT', null, result);
+                    return result;
+                },
+                async update({ args, query }) {
+                    const before = await findExisting(args);
+                    const result = await query(args);
+                    await writeAuditEntry('UPDATE', before, result);
+                    return result;
+                },
+                async delete({ args, query }) {
+                    const before = await findExisting(args);
+                    const result = await query(args);
+                    await writeAuditEntry('DELETE', before, null);
+                    return result;
+                },
+            },
+        },
+    });
 }
 ```
 
@@ -796,29 +796,29 @@ type ExportFormat = 'xlsx' | 'pdf' | 'csv';
 type ExportStatus = 'pending' | 'processing' | 'done' | 'failed';
 
 interface ExportJob {
-	id: number;
-	userId: number;
-	versionId: number;
-	format: ExportFormat;
-	reportType: string;
-	status: ExportStatus;
-	filePath: string | null;
-	fileSizeBytes: number | null;
-	expiresAt: Date | null;
-	errorMessage: string | null;
-	createdAt: Date;
-	completedAt: Date | null;
+    id: number;
+    userId: number;
+    versionId: number;
+    format: ExportFormat;
+    reportType: string;
+    status: ExportStatus;
+    filePath: string | null;
+    fileSizeBytes: number | null;
+    expiresAt: Date | null;
+    errorMessage: string | null;
+    createdAt: Date;
+    completedAt: Date | null;
 }
 
 interface ExportService {
-	createJob(
-		userId: number,
-		versionId: number,
-		format: ExportFormat,
-		reportType: string
-	): Promise<{ jobId: number }>;
-	getJobStatus(jobId: number): Promise<ExportJob>;
-	downloadFile(jobId: number): Promise<NodeJS.ReadableStream>;
+    createJob(
+        userId: number,
+        versionId: number,
+        format: ExportFormat,
+        reportType: string
+    ): Promise<{ jobId: number }>;
+    getJobStatus(jobId: number): Promise<ExportJob>;
+    downloadFile(jobId: number): Promise<NodeJS.ReadableStream>;
 }
 ```
 
@@ -893,24 +893,24 @@ During employee xlsx import, the `EmployeeValidator` applies fuzzy duplicate det
 
 ```typescript
 interface ImportError {
-	row: number;
-	field: string;
-	message: string;
+    row: number;
+    field: string;
+    message: string;
 }
 
 interface ImportResult {
-	totalRows: number;
-	validRows: number;
-	errorRows: number;
-	errors: ImportError[];
-	preview: Record<string, unknown>[]; // First 5 valid rows for UI preview
+    totalRows: number;
+    validRows: number;
+    errorRows: number;
+    errors: ImportError[];
+    preview: Record<string, unknown>[]; // First 5 valid rows for UI preview
 }
 
 interface ImportService {
-	validateEnrollmentCSV(file: Buffer): Promise<ImportResult>;
-	commitEnrollmentCSV(file: Buffer, versionId: number, userId: number): Promise<void>;
-	validateEmployeeXlsx(file: Buffer): Promise<ImportResult>;
-	commitEmployeeXlsx(file: Buffer, versionId: number, userId: number): Promise<void>;
+    validateEnrollmentCSV(file: Buffer): Promise<ImportResult>;
+    commitEnrollmentCSV(file: Buffer, versionId: number, userId: number): Promise<void>;
+    validateEmployeeXlsx(file: Buffer): Promise<ImportResult>;
+    commitEmployeeXlsx(file: Buffer, versionId: number, userId: number): Promise<void>;
 }
 ```
 

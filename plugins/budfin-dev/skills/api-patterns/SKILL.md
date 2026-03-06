@@ -24,25 +24,25 @@ import { z } from 'zod';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 const plugin: FastifyPluginAsyncZod = async (fastify) => {
-	fastify.post('/budget-versions', {
-		schema: {
-			body: z.object({
-				name: z.string().min(1).max(100),
-				fiscalYear: z.number().int().min(2020).max(2100),
-			}),
-			response: {
-				201: z.object({
-					id: z.string().uuid(),
-					name: z.string(),
-					status: z.enum(['Draft', 'Published', 'Locked', 'Archived']),
-				}),
-			},
-		},
-		preHandler: [requirePermission('budget:create')],
-		handler: async (request, reply) => {
-			// handler logic
-		},
-	});
+    fastify.post('/budget-versions', {
+        schema: {
+            body: z.object({
+                name: z.string().min(1).max(100),
+                fiscalYear: z.number().int().min(2020).max(2100),
+            }),
+            response: {
+                201: z.object({
+                    id: z.string().uuid(),
+                    name: z.string(),
+                    status: z.enum(['Draft', 'Published', 'Locked', 'Archived']),
+                }),
+            },
+        },
+        preHandler: [requirePermission('budget:create')],
+        handler: async (request, reply) => {
+            // handler logic
+        },
+    });
 };
 ```
 
@@ -120,13 +120,13 @@ Monetary values MUST be serialized as strings to preserve TC-001 precision.
 
 ```typescript
 fastify.post('/auth/login', {
-	config: {
-		rateLimit: {
-			max: 10,
-			timeWindow: '1 minute',
-		},
-	},
-	// ...
+    config: {
+        rateLimit: {
+            max: 10,
+            timeWindow: '1 minute',
+        },
+    },
+    // ...
 });
 ```
 
@@ -158,7 +158,7 @@ import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import fp from 'fastify-plugin';
 
 const myPlugin: FastifyPluginAsyncZod = async (fastify, opts) => {
-	// register routes or decorate fastify
+    // register routes or decorate fastify
 };
 
 // Export with fp() to share fastify scope (decorators, etc.)

@@ -648,31 +648,31 @@ Each month cell shows:
 
 ```typescript
 interface StaffingStore {
-	// Tab state
-	activeTab: 'dhg' | 'staff-costs' | 'monthly-budget';
-	activeBand: 'maternelle' | 'elementaire' | 'college' | 'lycee';
+    // Tab state
+    activeTab: 'dhg' | 'staff-costs' | 'monthly-budget';
+    activeBand: 'maternelle' | 'elementaire' | 'college' | 'lycee';
 
-	// DHG
-	effectiveOrs: number; // 18.0 to 20.0
-	hsaPreset: 'none' | 'conservative' | 'custom' | 'full';
-	hsaOptimizationExpanded: boolean;
+    // DHG
+    effectiveOrs: number; // 18.0 to 20.0
+    hsaPreset: 'none' | 'conservative' | 'custom' | 'full';
+    hsaOptimizationExpanded: boolean;
 
-	// Staff Costs grid
-	expandedDepartments: Set<string>;
-	employeeFilters: {
-		department: string | null;
-		status: string | null;
-		search: string;
-	};
-	sortState: { column: string; direction: 'asc' | 'desc' } | null;
-	columnVisibility: Record<string, boolean>;
+    // Staff Costs grid
+    expandedDepartments: Set<string>;
+    employeeFilters: {
+        department: string | null;
+        status: string | null;
+        search: string;
+    };
+    sortState: { column: string; direction: 'asc' | 'desc' } | null;
+    columnVisibility: Record<string, boolean>;
 
-	// Actions
-	setActiveTab: (tab: string) => void;
-	setActiveBand: (band: string) => void;
-	setEffectiveOrs: (hours: number) => void;
-	toggleDepartment: (department: string) => void;
-	setEmployeeFilters: (filters: Partial<EmployeeFilters>) => void;
+    // Actions
+    setActiveTab: (tab: string) => void;
+    setActiveBand: (band: string) => void;
+    setEffectiveOrs: (hours: number) => void;
+    toggleDepartment: (department: string) => void;
+    setEmployeeFilters: (filters: Partial<EmployeeFilters>) => void;
 }
 ```
 

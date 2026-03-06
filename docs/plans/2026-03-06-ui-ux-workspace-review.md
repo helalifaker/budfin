@@ -414,38 +414,38 @@ Active mode icon has `--color-info` left border (3px). The strip is 32px wide. T
 type RightPanelMode = 'details' | 'activity' | 'audit' | 'help' | 'form';
 
 interface RightPanelStore {
-	// Panel state
-	isOpen: boolean;
-	mode: RightPanelMode;
-	width: 320 | 480 | 560;
+    // Panel state
+    isOpen: boolean;
+    mode: RightPanelMode;
+    width: 320 | 480 | 560;
 
-	// Form mode (replaces current per-module SidePanel)
-	formContent: ReactNode | null;
-	formTitle: string | null;
+    // Form mode (replaces current per-module SidePanel)
+    formContent: ReactNode | null;
+    formTitle: string | null;
 
-	// Activity
-	events: ActivityEvent[];
-	unreadCount: number;
-	markAllRead: () => void;
+    // Activity
+    events: ActivityEvent[];
+    unreadCount: number;
+    markAllRead: () => void;
 
-	// Actions
-	open: (mode?: RightPanelMode) => void;
-	close: () => void;
-	toggle: () => void;
-	setMode: (mode: RightPanelMode) => void;
-	openForm: (title: string, content: ReactNode) => void;
-	closeForm: () => void;
-	addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void;
+    // Actions
+    open: (mode?: RightPanelMode) => void;
+    close: () => void;
+    toggle: () => void;
+    setMode: (mode: RightPanelMode) => void;
+    openForm: (title: string, content: ReactNode) => void;
+    closeForm: () => void;
+    addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void;
 }
 
 interface ActivityEvent {
-	id: string;
-	type: 'calculation' | 'export' | 'save_error' | 'lifecycle' | 'import';
-	message: string;
-	timestamp: Date;
-	moduleLink?: string;
-	downloadUrl?: string;
-	read: boolean;
+    id: string;
+    type: 'calculation' | 'export' | 'save_error' | 'lifecycle' | 'import';
+    message: string;
+    timestamp: Date;
+    moduleLink?: string;
+    downloadUrl?: string;
+    read: boolean;
 }
 ```
 

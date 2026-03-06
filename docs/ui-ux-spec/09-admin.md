@@ -175,10 +175,10 @@ Opens from the right side of the workspace per `00-global-framework.md` Section 
 
 - **Reset Password** button (`<Button variant="outline">`): Calls `PATCH /api/v1/users/:id` with `{ "force_password_reset": true }`. Generates a temporary password displayed in a read-only input with a copy button. The temporary password is shown once and cannot be retrieved again.
 - **Account Info** section (read-only):
-  - Last Login: date or "Never"
-  - Failed Attempts: count
-  - Locked Until: date or "Not locked"
-  - Created At: date
+    - Last Login: date or "Never"
+    - Failed Attempts: count
+    - Locked Until: date or "Not locked"
+    - Created At: date
 
 #### Panel Footer
 
@@ -521,28 +521,28 @@ Sections separated by `1px solid --workspace-border` with `--space-4` gap.
 
 ```typescript
 interface AdminStore {
-	// User Management
-	selectedUserId: number | null;
-	userSearchQuery: string;
-	showPermissionsPanel: boolean;
+    // User Management
+    selectedUserId: number | null;
+    userSearchQuery: string;
+    showPermissionsPanel: boolean;
 
-	// Audit Trail
-	auditFilters: {
-		from: string;
-		to: string;
-		userId: number | null;
-		operation: string | null;
-		tableName: string | null;
-	};
-	auditPage: number;
+    // Audit Trail
+    auditFilters: {
+        from: string;
+        to: string;
+        userId: number | null;
+        operation: string | null;
+        tableName: string | null;
+    };
+    auditPage: number;
 
-	// System Settings
-	pendingConfigChanges: Record<string, string>;
-	hasUnsavedSettings: boolean;
+    // System Settings
+    pendingConfigChanges: Record<string, string>;
+    hasUnsavedSettings: boolean;
 
-	// Side Panel
-	activeSidePanel: 'create-user' | 'edit-user' | null;
-	editingUserId: number | null;
+    // Side Panel
+    activeSidePanel: 'create-user' | 'edit-user' | null;
+    editingUserId: number | null;
 }
 ```
 

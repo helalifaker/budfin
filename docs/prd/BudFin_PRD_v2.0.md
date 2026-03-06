@@ -64,45 +64,45 @@ This PRD follows a semantic versioning scheme with three levels of change classi
 
 1. [Executive Summary](#1-executive-summary)
 2. [Problem Statement](#2-problem-statement)
-   - 2.1 Current Pain Points
-   - 2.2 Business Impact
+    - 2.1 Current Pain Points
+    - 2.2 Business Impact
 3. [Product Vision and Goals](#3-product-vision-and-goals)
-   - 3.1 Vision Statement
-   - 3.2 Strategic Goals
+    - 3.1 Vision Statement
+    - 3.2 Strategic Goals
 4. [Scope](#4-scope)
-   - 4.1 In Scope
-   - 4.2 Out of Scope
-   - 4.3 Scope Assumptions (SA-001 -- SA-009)
-   - 4.4 Change Control Process
-   - 4.5 Scope Freeze
+    - 4.1 In Scope
+    - 4.2 Out of Scope
+    - 4.3 Scope Assumptions (SA-001 -- SA-009)
+    - 4.4 Change Control Process
+    - 4.5 Scope Freeze
 5. [User Personas and Stories](#5-user-personas-and-stories)
-   - 5.1 Persona Registry (6 personas)
-   - 5.2 User Stories (US-001 -- US-025)
-   - 5.3 Persona-to-FR Traceability Matrix
-   - 5.4 User Journey Maps (4 workflows)
+    - 5.1 Persona Registry (6 personas)
+    - 5.2 User Stories (US-001 -- US-025)
+    - 5.3 Persona-to-FR Traceability Matrix
+    - 5.4 User Journey Maps (4 workflows)
 6. [Workspace Architecture](#6-workspace-architecture)
-   - 6.1 Context Bar (Persistent Header)
-   - 6.2 Navigation Modules (Dashboard | Planning | Master Data | Admin)
+    - 6.1 Context Bar (Persistent Header)
+    - 6.2 Navigation Modules (Dashboard | Planning | Master Data | Admin)
 7. [Version Management System](#7-version-management-system)
-   - 7.1 Version Types
-   - 7.2 Version Lifecycle
-   - 7.3 Comparison Engine
-   - 7.4 Version Management Functional Requirements (FR-VER-001 -- FR-VER-006)
+    - 7.1 Version Types
+    - 7.2 Version Lifecycle
+    - 7.3 Comparison Engine
+    - 7.4 Version Management Functional Requirements (FR-VER-001 -- FR-VER-006)
 8. [Functional Requirements](#8-functional-requirements) (68 FRs with MoSCoW priority)
-   - 8.1 Enrollment & Capacity Module (FR-ENR-_, FR-CAP-_)
-   - 8.2 Revenue Module (FR-REV-\*)
-   - 8.3 Staffing & Staff Costs Module (FR-DHG-_, FR-STC-_)
-   - 8.4 P&L and Financial Reporting Module (FR-PNL-\*)
-   - 8.5 Scenario Modeling (FR-SCN-\*)
-   - 8.6 Master Data Management (FR-MDM-\*)
-   - 8.7 Audit Trail and Change History (FR-AUD-\*)
-   - 8.8 Dashboard Module (FR-DSH-\*)
-   - 8.9 Input Management (FR-INP-\*)
+    - 8.1 Enrollment & Capacity Module (FR-ENR-_, FR-CAP-_)
+    - 8.2 Revenue Module (FR-REV-\*)
+    - 8.3 Staffing & Staff Costs Module (FR-DHG-_, FR-STC-_)
+    - 8.4 P&L and Financial Reporting Module (FR-PNL-\*)
+    - 8.5 Scenario Modeling (FR-SCN-\*)
+    - 8.6 Master Data Management (FR-MDM-\*)
+    - 8.7 Audit Trail and Change History (FR-AUD-\*)
+    - 8.8 Dashboard Module (FR-DSH-\*)
+    - 8.9 Input Management (FR-INP-\*)
 9. [Data Model Overview](#9-data-model-overview)
-   - 9.1 Technology Constraints (TC-001 -- TC-005)
-   - 9.2 Data Dictionary (5 entities)
-   - 9.3 API Contract Guidance
-   - 9.4 Data Flow Description
+    - 9.1 Technology Constraints (TC-001 -- TC-005)
+    - 9.2 Data Dictionary (5 entities)
+    - 9.3 API Contract Guidance
+    - 9.4 Data Flow Description
 10. [Calculation Engine Specifications](#10-calculation-engine-specifications)
 11. [Non-Functional Requirements](#11-non-functional-requirements) (97 NFRs across 12 categories)
     - 11.1 Performance | 11.2 Reliability | 11.3 Security & RBAC
@@ -876,12 +876,12 @@ The Version Management module (accessible from the Planning group in navigation)
 
 - FR-SCN-001 [SHOULD]: Three pre-defined scenarios: Base, Optimistic, Pessimistic.
 - FR-SCN-002 [SHOULD]: Configurable adjustment parameters (5 total):
-  - New Enrollment Factor (e.g., 1.0, 1.1, 0.9)
-  - Retention Adjustment (e.g., +0%, +3%, -5%)
-  - Attrition Rate (e.g., 2% Base, 1% Optimistic, 5% Pessimistic)
-  - Fee Collection Rate (e.g., 95% Base, 98% Optimistic, 90% Pessimistic)
-  - Scholarship Allocation (e.g., 2% Base, 1% Optimistic, 3% Pessimistic)
-    All five parameters must be individually configurable per scenario.
+    - New Enrollment Factor (e.g., 1.0, 1.1, 0.9)
+    - Retention Adjustment (e.g., +0%, +3%, -5%)
+    - Attrition Rate (e.g., 2% Base, 1% Optimistic, 5% Pessimistic)
+    - Fee Collection Rate (e.g., 95% Base, 98% Optimistic, 90% Pessimistic)
+    - Scholarship Allocation (e.g., 2% Base, 1% Optimistic, 3% Pessimistic)
+      All five parameters must be individually configurable per scenario.
 
 - FR-SCN-003 [SHOULD]: Scenario parameters propagate through enrollment, revenue, and staff cost calculations.
 - FR-SCN-004 [SHOULD]: Side-by-side scenario comparison table with absolute and percentage deltas.

@@ -186,7 +186,7 @@ blocker but it is the intended output of the current phase. Resolution path:
 
 1. Run `/plan:spec epic-N` for each epic to write the feature spec
 2. Run `/plan:stories epic-N` for each epic to create story issues from the spec
-3. Priority order: Epic 13 (Infra) -> 11 (Auth) -> 7 (Master Data) -> 1 (Enrollment) -> ...
+3. Priority order: Epic 13 (Infra) -> 11 (Auth) -> 7 (Master Data) -> 10 (Versions) -> 1 (Enrollment) -> ...
 
 ### 5.2 Missing UI Specs (Action #11)
 
@@ -246,6 +246,6 @@ blockers are all Phase 4 deliverables (specs, stories, AC) and stakeholder decis
 ## 8. Recommended Next Steps
 
 1. **Immediately:** Send stakeholder decision requests for items 4.1, 4.2, 4.3
-2. **Phase 4:** Begin `/plan:spec` in priority order: Epic 13 -> 11 -> 7 -> 1 -> 2 -> 3 -> 4 -> 10 -> 5 -> 6 -> 8 -> 9 -> 12
+2. **Phase 4:** Begin `/plan:spec` in priority order: Epic 13 -> 11 -> 7 -> 10 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 8 -> 9 -> 12 _(corrected 2026-03-06: Epic 10 moved before Epic 1 — budget_versions is required by 19 downstream tables)_
 3. **During spec work:** Address the 6 missing UI specs (Section 5.2) within each epic's spec
 4. **Before Phase 5:** Re-audit to confirm all 3 stakeholder decisions are resolved

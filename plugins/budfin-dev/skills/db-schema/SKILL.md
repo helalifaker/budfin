@@ -27,14 +27,14 @@ When adding a new database entity, invoke the `prisma-model` skill first:
 import { Prisma } from '@prisma/client';
 
 try {
-	const version = await prisma.budgetVersion.findUniqueOrThrow({
-		where: { id },
-	});
+    const version = await prisma.budgetVersion.findUniqueOrThrow({
+        where: { id },
+    });
 } catch (error) {
-	if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-		throw new NotFoundError('Budget version not found');
-	}
-	throw error;
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundError('Budget version not found');
+    }
+    throw error;
 }
 ```
 
@@ -57,26 +57,26 @@ NEVER use `Float` or `Double` for monetary fields.
 ```typescript
 // In prisma client setup
 prisma.$extends({
-	query: {
-		$allModels: {
-			async $allOperations({ model, operation, args, query }) {
-				const result = await query(args);
-				if (['create', 'update', 'delete'].includes(operation)) {
-					await prisma.auditEntry.create({
-						data: {
-							model,
-							operation,
-							recordId: result?.id,
-							changedBy: context.userId,
-							changedAt: new Date(),
-							payload: JSON.stringify(args),
-						},
-					});
-				}
-				return result;
-			},
-		},
-	},
+    query: {
+        $allModels: {
+            async $allOperations({ model, operation, args, query }) {
+                const result = await query(args);
+                if (['create', 'update', 'delete'].includes(operation)) {
+                    await prisma.auditEntry.create({
+                        data: {
+                            model,
+                            operation,
+                            recordId: result?.id,
+                            changedBy: context.userId,
+                            changedAt: new Date(),
+                            payload: JSON.stringify(args),
+                        },
+                    });
+                }
+                return result;
+            },
+        },
+    },
 });
 ```
 
@@ -140,8 +140,8 @@ model BudgetVersion {
 ```typescript
 // Use createMany() for batch inserts — never per-row inserts in loops
 await prisma.staffCostResult.createMany({
-	data: results, // Array of hundreds/thousands of records
-	skipDuplicates: false,
+    data: results, // Array of hundreds/thousands of records
+    skipDuplicates: false,
 });
 
 // Default connection pool: 10 connections

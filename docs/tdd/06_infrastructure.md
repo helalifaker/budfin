@@ -19,69 +19,69 @@ BudFin deploys as a three-service Docker Compose stack on a single host. This ar
 version: '3.9'
 
 services:
-  nginx:
-    image: nginx:1.25-alpine
-    ports:
-      - '443:443'
-      - '80:80'
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./frontend/dist:/usr/share/nginx/html:ro
-    depends_on:
-      - api
-    restart: unless-stopped
+    nginx:
+        image: nginx:1.25-alpine
+        ports:
+            - '443:443'
+            - '80:80'
+        volumes:
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+            - ./nginx/ssl:/etc/nginx/ssl:ro
+            - ./frontend/dist:/usr/share/nginx/html:ro
+        depends_on:
+            - api
+        restart: unless-stopped
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://app_user:${DB_PASSWORD}@db:5432/budfindb
-      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
-      SALARY_ENCRYPTION_KEY: /run/secrets/salary_encryption_key
-      LOG_LEVEL: info
-    secrets:
-      - jwt_private_key
-      - salary_encryption_key
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/v1/health']
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    api:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: production
+        environment:
+            NODE_ENV: production
+            DATABASE_URL: postgresql://app_user:${DB_PASSWORD}@db:5432/budfindb
+            JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
+            SALARY_ENCRYPTION_KEY: /run/secrets/salary_encryption_key
+            LOG_LEVEL: info
+        secrets:
+            - jwt_private_key
+            - salary_encryption_key
+        depends_on:
+            db:
+                condition: service_healthy
+        restart: unless-stopped
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/v1/health']
+            interval: 30s
+            timeout: 10s
+            retries: 3
 
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: budfindb
-      POSTGRES_USER: app_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d:ro
-    ports: []
-    restart: unless-stopped
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U app_user -d budfindb']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    db:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_DB: budfindb
+            POSTGRES_USER: app_user
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+            - ./db/init:/docker-entrypoint-initdb.d:ro
+        ports: []
+        restart: unless-stopped
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U app_user -d budfindb']
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
 volumes:
-  pgdata:
-    driver: local
+    pgdata:
+        driver: local
 
 secrets:
-  jwt_private_key:
-    file: ./secrets/jwt_private_key.pem
-  salary_encryption_key:
-    file: ./secrets/salary_encryption_key.txt
+    jwt_private_key:
+        file: ./secrets/jwt_private_key.pem
+    salary_encryption_key:
+        file: ./secrets/salary_encryption_key.txt
 ```
 
 **Design decisions:**
@@ -257,33 +257,33 @@ Estimated restore time for a 500MB database: approximately 20 minutes. Total rec
 # .github/workflows/ci.yml (reference)
 name: CI/CD Pipeline
 on:
-  push:
-    branches: [main, 'feature/**']
-  pull_request:
-    branches: [main]
+    push:
+        branches: [main, 'feature/**']
+    pull_request:
+        branches: [main]
 
 jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-      - run: pnpm run type-check
-      - run: pnpm run test:unit
-      - run: pnpm run test:integration
-      - run: pnpm run build
+    quality:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: 'pnpm'
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm run lint
+            - run: pnpm run type-check
+            - run: pnpm run test:unit
+            - run: pnpm run test:integration
+            - run: pnpm run build
 
-  deploy-staging:
-    needs: quality
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - run: docker compose -f docker-compose.staging.yml up -d --build
+    deploy-staging:
+        needs: quality
+        if: github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        steps:
+            - run: docker compose -f docker-compose.staging.yml up -d --build
 ```
 
 #### Build Gates
@@ -336,14 +336,14 @@ Every log entry is a JSON object written to stdout. This format enables log aggr
 
 ```json
 {
-	"timestamp": "2026-03-03T10:30:00.000Z",
-	"level": "info",
-	"requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-	"userId": 42,
-	"module": "RevenueEngine",
-	"message": "Revenue calculation completed",
-	"duration_ms": 1247,
-	"version_id": 3
+    "timestamp": "2026-03-03T10:30:00.000Z",
+    "level": "info",
+    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "userId": 42,
+    "module": "RevenueEngine",
+    "message": "Revenue calculation completed",
+    "duration_ms": 1247,
+    "version_id": 3
 }
 ```
 
@@ -386,10 +386,10 @@ The health endpoint returns:
 
 ```json
 {
-	"status": "ok",
-	"db": "connected",
-	"uptime_seconds": 86400,
-	"version": "1.0.0"
+    "status": "ok",
+    "db": "connected",
+    "uptime_seconds": 86400,
+    "version": "1.0.0"
 }
 ```
 

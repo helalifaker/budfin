@@ -414,25 +414,25 @@ When the active version is Locked or Archived:
 
 ```json
 {
-	"total_inputs": 342,
-	"locked_inputs": 48,
-	"guided_inputs": 15,
-	"modules": [
-		{
-			"module": "enrollment",
-			"label": "Enrollment & Capacity",
-			"total_inputs": 96,
-			"sections": [
-				{
-					"section_id": "enrollment_by_grade",
-					"label": "Enrollment by Grade",
-					"input_count": 72,
-					"locked_count": 0,
-					"is_locked": false
-				}
-			]
-		}
-	]
+    "total_inputs": 342,
+    "locked_inputs": 48,
+    "guided_inputs": 15,
+    "modules": [
+        {
+            "module": "enrollment",
+            "label": "Enrollment & Capacity",
+            "total_inputs": 96,
+            "sections": [
+                {
+                    "section_id": "enrollment_by_grade",
+                    "label": "Enrollment by Grade",
+                    "input_count": 72,
+                    "locked_count": 0,
+                    "is_locked": false
+                }
+            ]
+        }
+    ]
 }
 ```
 
@@ -471,24 +471,24 @@ When the active version is Locked or Archived:
 
 ```json
 {
-	"notes": [
-		{
-			"id": "string (UUID)",
-			"cell_reference": {
-				"module": "revenue",
-				"section_id": "fee_grids",
-				"row_id": "string",
-				"column_id": "string"
-			},
-			"content": "string (max 500 chars)",
-			"created_by": {
-				"id": "string",
-				"display_name": "string"
-			},
-			"created_at": "ISO 8601",
-			"updated_at": "ISO 8601"
-		}
-	]
+    "notes": [
+        {
+            "id": "string (UUID)",
+            "cell_reference": {
+                "module": "revenue",
+                "section_id": "fee_grids",
+                "row_id": "string",
+                "column_id": "string"
+            },
+            "content": "string (max 500 chars)",
+            "created_by": {
+                "id": "string",
+                "display_name": "string"
+            },
+            "created_at": "ISO 8601",
+            "updated_at": "ISO 8601"
+        }
+    ]
 }
 ```
 
@@ -537,12 +537,12 @@ Input management features are embedded within existing module pages. No separate
 
 ```html
 <aside aria-label="Input Map" role="complementary">
-	<section aria-label="Input Summary">
-		<!-- Summary cards -->
-	</section>
-	<section aria-label="Module Breakdown">
-		<!-- Accordion with module sections -->
-	</section>
+    <section aria-label="Input Summary">
+        <!-- Summary cards -->
+    </section>
+    <section aria-label="Module Breakdown">
+        <!-- Accordion with module sections -->
+    </section>
 </aside>
 ```
 
@@ -607,7 +607,7 @@ Input management features respond to context bar selections as follows:
 
 ```typescript
 ['input-map', versionId][('input-locks', versionId)][
-	('guidance-notes', versionId, { module, section_id })
+    ('guidance-notes', versionId, { module, section_id })
 ];
 ```
 

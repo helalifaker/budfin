@@ -22,13 +22,13 @@ This analysis consists of three comprehensive documents:
 - Executive Summary
 - 35 detailed edge case analyses (PO-001 through PO-035)
 - Each case includes:
-  - Category (Data Entry, Business Rules, Version Lifecycle, Academic Calendar, Reporting, Missing Requirements)
-  - Description of the scenario
-  - Why it matters (business impact)
-  - Current PRD language gaps
-  - Suggested resolution
-  - Severity (Critical, High, Medium, Low)
-  - Affected FRs (Functional Requirements)
+    - Category (Data Entry, Business Rules, Version Lifecycle, Academic Calendar, Reporting, Missing Requirements)
+    - Description of the scenario
+    - Why it matters (business impact)
+    - Current PRD language gaps
+    - Suggested resolution
+    - Severity (Critical, High, Medium, Low)
+    - Affected FRs (Functional Requirements)
 - Comprehensive summary table with all 35 cases
 - Critical & High-severity reference list
 - Implementation priorities by phase
@@ -238,10 +238,10 @@ Add 1 week for:
 
 1. **Review** EDGE_CASE_SUMMARY.txt for key technical risks
 2. **Design** architecture for:
-   - Rounding precision (DECIMAL type, final-step rule)
-   - Duplicate detection (employee import)
-   - Version-specific fee grids
-   - Audit trail lifecycle
+    - Rounding precision (DECIMAL type, final-step rule)
+    - Duplicate detection (employee import)
+    - Version-specific fee grids
+    - Audit trail lifecycle
 3. **Create** test suite for all 35 edge cases vs. Excel baseline
 4. **Reference** EDGE_CASE_QUICK_REFERENCE.csv for implementation tracking
 
@@ -275,29 +275,29 @@ Add 1 week for:
 **5 Missing Requirements** that need explicit business decision:
 
 1. **PO-030**: Revenue Recognition Policy
-   - Question: Cash basis (accrual at payment) or IFRS 15 (accrual at service delivery)?
-   - Impact: Monthly P&L structure and board reporting
-   - Decision Needed: Define policy before Phase 4
+    - Question: Cash basis (accrual at payment) or IFRS 15 (accrual at service delivery)?
+    - Impact: Monthly P&L structure and board reporting
+    - Decision Needed: Define policy before Phase 4
 
 2. **PO-022**: Currency Handling
-   - Question: SAR-only or support multi-currency (USD, EUR)?
-   - Impact: Data entry, reporting, FX reconciliation
-   - Decision Needed: Define policy before Phase 2
+    - Question: SAR-only or support multi-currency (USD, EUR)?
+    - Impact: Data entry, reporting, FX reconciliation
+    - Decision Needed: Define policy before Phase 2
 
 3. **PO-027**: Audit Trail Lifecycle
-   - Question: After 7 years, archive or delete audit records?
-   - Impact: Legal hold, forensic analysis, storage costs
-   - Decision Needed: Define policy before go-live
+    - Question: After 7 years, archive or delete audit records?
+    - Impact: Legal hold, forensic analysis, storage costs
+    - Decision Needed: Define policy before go-live
 
 4. **PO-029**: Master Data Versioning
-   - Question: Are grade levels, fee structures versioned or global?
-   - Impact: Future-proofing for multi-school or calendar changes
-   - Decision Needed: Define policy before Phase 1
+    - Question: Are grade levels, fee structures versioned or global?
+    - Impact: Future-proofing for multi-school or calendar changes
+    - Decision Needed: Define policy before Phase 1
 
 5. **PO-014**: Capacity Enforcement
-   - Question: Is Plafond a hard limit (reject) or soft target (warn)?
-   - Impact: Enrollment data entry and staffing workflow
-   - Decision Needed: Clarify with leadership before Phase 5
+    - Question: Is Plafond a hard limit (reject) or soft target (warn)?
+    - Impact: Enrollment data entry and staffing workflow
+    - Decision Needed: Clarify with leadership before Phase 5
 
 ---
 

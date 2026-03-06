@@ -2,18 +2,18 @@
 name: story-orchestrator
 description: Team lead agent that kicks off and coordinates the full swarm implementation workflow for a BudFin user story. Use when implementing a user story, feature, or ticket. Invokes the story-implementation skill, creates a team, assigns the Planner first, then coordinates implementers, Code Reviewer, QA Specialist, and Documentation Specialist. Triggers on "implement story", "build feature", "work on ticket", or any substantial development task.
 tools:
-  - Agent
-  - TaskCreate
-  - TaskUpdate
-  - TaskList
-  - TaskGet
-  - TeamCreate
-  - SendMessage
-  - Read
-  - Glob
-  - Grep
-  - Write
-  - Bash
+    - Agent
+    - TaskCreate
+    - TaskUpdate
+    - TaskList
+    - TaskGet
+    - TeamCreate
+    - SendMessage
+    - Read
+    - Glob
+    - Grep
+    - Write
+    - Bash
 ---
 
 You are the story-orchestrator for BudFin — the team lead responsible for coordinating the full swarm implementation workflow for user stories.
@@ -46,10 +46,10 @@ After Planner completes:
 
 1. Create implementation tasks from the Planner's breakdown
 2. Spawn relevant implementers in parallel:
-   - `frontend-implementer` for React/Vite/Tailwind work
-   - `api-implementer` for Fastify/Zod/Prisma work
-   - `calculation-implementer` for financial engine work
-     (Only spawn implementers needed for this story)
+    - `frontend-implementer` for React/Vite/Tailwind work
+    - `api-implementer` for Fastify/Zod/Prisma work
+    - `calculation-implementer` for financial engine work
+      (Only spawn implementers needed for this story)
 3. Assign each implementer their tasks
 
 ### Phase 4 — Review + QA (Parallel, after all implementation done)

@@ -127,17 +127,17 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Revise timeline to 30-32 weeks (7-8 months) with explicit buffers:
-  - Phase 1: 4 weeks (same)
-  - Phase 2: 6 weeks (+1 for fee grid complexity + regression testing)
-  - Phase 3: 6 weeks (+1 for statutory cost edge cases)
-  - Phase 4: 5 weeks (+1 for version locking/comparison logic)
-  - Phase 5: 3 weeks (same)
-  - Phase 6: 4 weeks (+1 for data migration edge cases + parallel-run discovery)
-  - **Reserve:** 2 weeks unallocated (for showstopper bugs or regulatory updates)
+    - Phase 1: 4 weeks (same)
+    - Phase 2: 6 weeks (+1 for fee grid complexity + regression testing)
+    - Phase 3: 6 weeks (+1 for statutory cost edge cases)
+    - Phase 4: 5 weeks (+1 for version locking/comparison logic)
+    - Phase 5: 3 weeks (same)
+    - Phase 6: 4 weeks (+1 for data migration edge cases + parallel-run discovery)
+    - **Reserve:** 2 weeks unallocated (for showstopper bugs or regulatory updates)
 - Identify the critical path: Phase 2 revenue engine is the bottleneck. Ensure sufficient design time before coding starts.
 - If 24 weeks is a hard constraint (e.g., board mandate, budget approval), clarify what gets deferred:
-  - Defer Scenarios module (FR-SCN-001 through FR-SCN-007) to v1.x? This saves ~2 weeks but removes what-if capability.
-  - Defer IFRS Income Statement detail (FR-PNL-016, FR-PNL-017) to v1.x? This saves ~1 week but removes external audit-ready reporting.
+    - Defer Scenarios module (FR-SCN-001 through FR-SCN-007) to v1.x? This saves ~2 weeks but removes what-if capability.
+    - Defer IFRS Income Statement detail (FR-PNL-016, FR-PNL-017) to v1.x? This saves ~1 week but removes external audit-ready reporting.
 
 **Risk Level:** Critical  
 **Likelihood:** Almost Certain (complex financial systems consistently overrun by 25-40%)
@@ -181,9 +181,9 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Define three go-live options explicitly:
-  - **MVP (Week 20):** Enrollment, Revenue (fee grid + basic monthly forecast), Staff Costs (payroll + statutory), Actual/Budget/Forecast versions (no comparison), basic P&L. No Scenarios, no full IFRS detail. Supports month-end close, not board reporting.
-  - **Target (Week 24):** MVP + Version comparison, full IFRS Income Statement, Scenarios module.
-  - **Stretch (Week 28):** Target + Advanced analytics, custom scenario builder, full audit log features.
+    - **MVP (Week 20):** Enrollment, Revenue (fee grid + basic monthly forecast), Staff Costs (payroll + statutory), Actual/Budget/Forecast versions (no comparison), basic P&L. No Scenarios, no full IFRS detail. Supports month-end close, not board reporting.
+    - **Target (Week 24):** MVP + Version comparison, full IFRS Income Statement, Scenarios module.
+    - **Stretch (Week 28):** Target + Advanced analytics, custom scenario builder, full audit log features.
 - Finance Director must sign off on which option is acceptable if delays occur.
 
 **Risk Level:** High  
@@ -213,10 +213,10 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 - Specify the exact YEARFRAC implementation: "Use Excel's YEARFRAC(Start, End, [Basis]) with Basis=0 (actual/actual), matching Excel's behavior exactly."
 - For legacy employees who may have a Feb 29 joining date in historical records, document the handling: Is Feb 29 treated as Feb 28 or Mar 1 in non-leap years?
 - Create a "YEARFRAC Test Suite": 10 test cases covering:
-  - Leap year join to leap year end
-  - Leap year join to non-leap year end
-  - Mid-month joins (does 15-day join affect annual EoS calculation?)
-  - Tenure boundaries (specifically the 5-year threshold where EoS formula changes)
+    - Leap year join to leap year end
+    - Leap year join to non-leap year end
+    - Mid-month joins (does 15-day join affect annual EoS calculation?)
+    - Tenure boundaries (specifically the 5-year threshold where EoS formula changes)
 - Acceptance test: For each of 168 employees, EoS provision in app matches Excel within +/- 0.50 SAR (tighter than the general +/- 1 SAR).
 
 **Risk Level:** Critical  
@@ -263,9 +263,9 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 
 - Document the calculation dependency graph: Revenue Engine → Total Revenue → DHG FTE (if enrollment-driven) → Staff Costs → P&L Consolidation.
 - Define tolerance rules per layer:
-  - Layer 1 (Revenue detail): +/- 1.00 SAR per line item per month
-  - Layer 2 (Staff Costs): +/- 1.00 SAR per employee per month
-  - Layer 3 (Consolidated P&L): +/- 50 SAR per subtotal per month (allows 2-3 SAR rounding propagation per line x 15+ lines)
+    - Layer 1 (Revenue detail): +/- 1.00 SAR per line item per month
+    - Layer 2 (Staff Costs): +/- 1.00 SAR per employee per month
+    - Layer 3 (Consolidated P&L): +/- 50 SAR per subtotal per month (allows 2-3 SAR rounding propagation per line x 15+ lines)
 - Implement a "Variance Reconciliation Report": monthly, identify which line items are contributing rounding error (>0.25 SAR), and investigate if errors are systematic (consistent rounding bias) or random (isolated issues).
 - In acceptance testing, validate that total variance across all 12 months is < 100 SAR (allows tolerance to accumulate, but not explode).
 
@@ -292,10 +292,10 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Define the monthly distribution algorithm:
-  1. Total Annual Amount / Number of Months = Monthly Base (may have fractional SAR)
-  2. Round Monthly Base to 2 decimals (fils)
-  3. Sum monthly amounts; if sum ≠ annual total, add/subtract remainder in final month or as rounding error (small, acceptable)
-  4. Example: 1,230,001 / 10 = 123,000.10 per month; months 1-10 = 123,000.10 each; sum = 1,230,001.00. OK.
+    1. Total Annual Amount / Number of Months = Monthly Base (may have fractional SAR)
+    2. Round Monthly Base to 2 decimals (fils)
+    3. Sum monthly amounts; if sum ≠ annual total, add/subtract remainder in final month or as rounding error (small, acceptable)
+    4. Example: 1,230,001 / 10 = 123,000.10 per month; months 1-10 = 123,000.10 each; sum = 1,230,001.00. OK.
 - For Excel compatibility, replicate Excel's ROUND behavior exactly. Specify: "Use SAR rounding to 2 decimals (nearest fils) using ROUND-HALF-UP."
 
 **Risk Level:** High  
@@ -322,10 +322,10 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Define the version lifecycle precisely:
-  - **Draft:** Editable, not locked. Visible only to author.
-  - **Published:** Submitted for review. Still editable; changes logged.
-  - **Board Approved:** Locked after Board sign-off. Full audit trail required for any unlock.
-  - **Amended:** If unlocked post-approval, create a new version state "Amended Budget" (not overwrite the approved budget).
+    - **Draft:** Editable, not locked. Visible only to author.
+    - **Published:** Submitted for review. Still editable; changes logged.
+    - **Board Approved:** Locked after Board sign-off. Full audit trail required for any unlock.
+    - **Amended:** If unlocked post-approval, create a new version state "Amended Budget" (not overwrite the approved budget).
 - Unlocking a locked version must create a new sub-version (Budget v1, Budget v1.1, Budget v1.2) or force creation of a new Forecast version instead.
 - Snapshot mechanism: When a Budget version is locked, create an immutable snapshot (read-only) for audit purposes. Unlocking creates a new mutable version.
 
@@ -389,22 +389,22 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **Why This Hurts:**
 
 - The analyst could drill down to see:
-  - Enrollment Detail for Maternelle Reduit (42 students)
-  - Fee grid for Maternelle Reduit for AY2 (8,000 SAR per student)
-  - Discount applied (RP = 25%, so net fee = 6,000)
-  - Distribution method (Academic/10, so 6 months: June should be 42 x 6,000 / 6 = 42,000... not 425,000)
-  - Wait, the numbers don't add up in this example; let me check the actual calculation...
+    - Enrollment Detail for Maternelle Reduit (42 students)
+    - Fee grid for Maternelle Reduit for AY2 (8,000 SAR per student)
+    - Discount applied (RP = 25%, so net fee = 6,000)
+    - Distribution method (Academic/10, so 6 months: June should be 42 x 6,000 / 6 = 42,000... not 425,000)
+    - Wait, the numbers don't add up in this example; let me check the actual calculation...
 - Without a "Show Calculation" or "Audit Trail" button that shows intermediate values, the analyst is stuck.
 
 **What the PRD Should Say:**
 
 - Add a "Show Calculation" feature per revenue line: clicking a revenue cell displays the formula and intermediate values used:
-  - Enrollment Headcount: 42
-  - Fee Grid Rate: 8,000 SAR
-  - Discount Rate: 25%
-  - Net Fee: 6,000 SAR
-  - Monthly Factor: 6 months (AY1 period)
-  - Monthly Revenue: 42 x 6,000 / 6 = 42,000 SAR
+    - Enrollment Headcount: 42
+    - Fee Grid Rate: 8,000 SAR
+    - Discount Rate: 25%
+    - Net Fee: 6,000 SAR
+    - Monthly Factor: 6 months (AY1 period)
+    - Monthly Revenue: 42 x 6,000 / 6 = 42,000 SAR
 - Include an "Excel Comparison" view: side-by-side with Excel formulas (exported from Excel or manually documented) to spot formula differences.
 - Create a "Variance Root Cause Report": when a line doesn't match Excel, the system suggests which input (enrollment, fee grid, distribution method) is most likely the cause.
 
@@ -521,11 +521,11 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Document the IFRS 15 revenue recognition policy explicitly:
-  1. **Performance Obligation:** Educational services rendered during each month of the academic calendar.
-  2. **Transaction Price:** Tuition fee per student per grade per tariff (as per fee grid), net of discounts and scholarships.
-  3. **Allocation:** Revenue allocated evenly across academic months (6 months AY1, 4 months AY2).
-  4. **Recognition:** Revenue recognized at the end of each month when the educational service is rendered.
-  5. **Adjustment:** If a student withdraws, revenue for remaining months is reversed and recorded as a reduction in the period of withdrawal.
+    1. **Performance Obligation:** Educational services rendered during each month of the academic calendar.
+    2. **Transaction Price:** Tuition fee per student per grade per tariff (as per fee grid), net of discounts and scholarships.
+    3. **Allocation:** Revenue allocated evenly across academic months (6 months AY1, 4 months AY2).
+    4. **Recognition:** Revenue recognized at the end of each month when the educational service is rendered.
+    5. **Adjustment:** If a student withdraws, revenue for remaining months is reversed and recorded as a reduction in the period of withdrawal.
 - Create a detailed "IFRS 15 Compliance Document" as a separate deliverable. Have external auditors review and sign off on the revenue recognition approach before Phase 2 coding starts.
 - In the app, add an "IFRS Compliance Audit" view: for each revenue line item, show which IFRS 15 step applies and the recognition policy. Allow auditors to adjust policies if needed.
 
@@ -551,8 +551,8 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 
 - Clarify the data model: All monetary amounts are keyed by (Fiscal Year, Month, Version, Scenario), not by absolute date.
 - AY2 FY2026 runs Sep--Dec. When FY2027 fiscal year data is created, AY1 FY2027 runs Jan--Jun 2027 (a different fiscal year). The systems must support parallel data:
-  - FY2026 Budget: Jan--Dec 2026 (with AY1 data for Jan--Jun and AY2 data for Sep--Dec)
-  - FY2027 Budget: Jan--Dec 2027 (with AY1 data for Jan--Jun and AY2 data for Sep--Dec)
+    - FY2026 Budget: Jan--Dec 2026 (with AY1 data for Jan--Jun and AY2 data for Sep--Dec)
+    - FY2027 Budget: Jan--Dec 2027 (with AY1 data for Jan--Jun and AY2 data for Sep--Dec)
 - Employee tenure dates: Always stored as absolute dates (YYYY-MM-DD), not as fiscal year ranges. EoS is calculated as-of the fiscal year end (Dec 31, 2026 or Dec 31, 2027), using absolute tenure.
 - Data archival: At year-end (Dec 31, 2026), FY2026 Actual data is locked and archived (read-only). FY2027 data is created in January 2027 with new AY1 and AY2 cycles.
 - Test scenario: Create FY2027 budget in late November 2026; verify that AY2 FY2026 actual data from Sep--Dec 2026 is read-only and separable from AY1 FY2027 budget projections for Jan--Jun 2027.
@@ -600,14 +600,14 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Extend the Employee Master Data to include status history: for each employee, record a timeline of status changes:
-  - Hired Sep 1, 2025
-  - On Sabbatical Oct 15, 2026 -- Nov 15, 2026
-  - Departed Mar 31, 2027
+    - Hired Sep 1, 2025
+    - On Sabbatical Oct 15, 2026 -- Nov 15, 2026
+    - Departed Mar 31, 2027
 - Monthly cost calculation: For each employee and each month, determine applicable status (Active, Sabbatical, Departed) and apply the appropriate cost:
-  - Active: Full salary + statutory costs
-  - Sabbatical (unpaid): Zero cost
-  - Departed: Salary up to departure date, pro-rated for partial months
-  - Departed + Final Settlement: Accrued EoS paid out in the month of departure
+    - Active: Full salary + statutory costs
+    - Sabbatical (unpaid): Zero cost
+    - Departed: Salary up to departure date, pro-rated for partial months
+    - Departed + Final Settlement: Accrued EoS paid out in the month of departure
 - Staff cost grid: Instead of a 12-month static grid, calculate month-by-month based on active status. If status changes, the app recalculates and shows the variance vs. the budget.
 - Test scenarios: Employee departs mid-year (e.g., June 30); verify salary cost is pro-rated to June and EoS settlement is accrued in June only.
 
@@ -631,8 +631,8 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 
 - Enrollment records must have effective dates: "Student X was classified as Francais from Jan 1 -- July 15, then as Nationaux from July 16 onwards."
 - Mid-year classification change handling:
-  - If change is detected in Actual period (past months): Create an "Enrollment Adjustment" entry documenting the change and reason. Optionally recalculate revenue for past months, but clearly label as "Actual Adjustment" in the audit trail.
-  - If change is detected in Budget/Forecast (future months): Apply the new classification prospectively.
+    - If change is detected in Actual period (past months): Create an "Enrollment Adjustment" entry documenting the change and reason. Optionally recalculate revenue for past months, but clearly label as "Actual Adjustment" in the audit trail.
+    - If change is detected in Budget/Forecast (future months): Apply the new classification prospectively.
 - Revenue impact: For the month of the change (July, in this example), split the tuition: Jan--Jun uses "Francais" rates (VAT-taxable), Jul--Aug uses new "Nationaux" rates (VAT-exempt), Sep--Dec uses "Nationaux" rates.
 - Audit trail: Log the classification change with effective date, old/new nationality, and reason (e.g., "Marriage certificate provided July 15").
 
@@ -702,8 +702,8 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Data import validation: Before importing, scan for duplicates (match by Employee ID, Name, Hiring Date, or combination). Report duplicates and require manual resolution:
-  - If it's a re-hire (same person, new contract), merge records with employment date history.
-  - If it's a true duplicate (data entry error), flag for manual review by HR.
+    - If it's a re-hire (same person, new contract), merge records with employment date history.
+    - If it's a true duplicate (data entry error), flag for manual review by HR.
 - Import error handling: If duplicates are found, the import is paused. HR/Finance must review and approve the merge/delete actions, then re-run the import.
 - Rollback mechanism: If import fails mid-way (e.g., 100 of 168 employees imported, then constraint violation on employee 101), provide a "Rollback" option to undo all changes and start over, or a "Skip & Continue" option to import the remaining 67 employees.
 - Audit trail: Log all import actions (rows imported, duplicates found, merged/deleted records) for post-migration review.
@@ -751,10 +751,10 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Create a "Regression Test Suite" before Phase 2 starts:
-  - **Revenue Tests:** 50 scenarios covering enrollment (1, 10, 100, 1,000 students per grade), fee grids (full/reduced tariffs, VAT-taxable/exempt), discounts (RP, R3+, none), distribution methods (Academic /10, /12, custom).
-  - **Staff Cost Tests:** 20 scenarios covering salary components, statutory costs (GOSI for 2 Saudi staff, Ajeer for 166 non-Saudi), EoS calculations for tenure (0, 2, 5, 10 years), part-time adjustments.
-  - **DHG Tests:** 10 scenarios covering FTE calculation at different enrollment levels (50, 100, 200 students per grade), HSA assumptions (no HSA, conservative, full HSA).
-  - **P&L Tests:** 5 scenarios covering revenue, staff costs, and consolidated subtotals to ensure no calculation errors in consolidation.
+    - **Revenue Tests:** 50 scenarios covering enrollment (1, 10, 100, 1,000 students per grade), fee grids (full/reduced tariffs, VAT-taxable/exempt), discounts (RP, R3+, none), distribution methods (Academic /10, /12, custom).
+    - **Staff Cost Tests:** 20 scenarios covering salary components, statutory costs (GOSI for 2 Saudi staff, Ajeer for 166 non-Saudi), EoS calculations for tenure (0, 2, 5, 10 years), part-time adjustments.
+    - **DHG Tests:** 10 scenarios covering FTE calculation at different enrollment levels (50, 100, 200 students per grade), HSA assumptions (no HSA, conservative, full HSA).
+    - **P&L Tests:** 5 scenarios covering revenue, staff costs, and consolidated subtotals to ensure no calculation errors in consolidation.
 - Acceptance criteria for each test: App output matches Excel within +/-0.05 SAR (tighter than the general tolerance, to catch systematic errors).
 - Regression execution: After every code change to a calculation module, re-run the relevant tests and confirm they pass. Document test results in the audit trail.
 
@@ -778,13 +778,13 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 
 - Performance strategy: Calculations are executed in the database (not the app server or browser) using efficient queries. Results are cached for 5 minutes unless inputs change (auto-invalidates cache on input updates).
 - Load testing plan: In Phase 5, simulate the app with 1,500 students + 168 employees loaded, and verify:
-  - Page load < 1 second (with cache)
-  - Recalculation < 3 seconds (full math, no cache)
-  - Version comparison < 5 seconds (cache + efficient diff algorithm)
+    - Page load < 1 second (with cache)
+    - Recalculation < 3 seconds (full math, no cache)
+    - Version comparison < 5 seconds (cache + efficient diff algorithm)
 - Optimization techniques:
-  - Database indexes on frequently-queried columns (Enrollment.Grade, FeeGrid.Nationality, Employees.Status)
-  - Materialized views for aggregated values (Total Revenue per month, Total Staff Cost per department)
-  - Caching layer (Redis or in-memory) for enrollment, fee grid, and cost assumptions
+    - Database indexes on frequently-queried columns (Enrollment.Grade, FeeGrid.Nationality, Employees.Status)
+    - Materialized views for aggregated values (Total Revenue per month, Total Staff Cost per department)
+    - Caching layer (Redis or in-memory) for enrollment, fee grid, and cost assumptions
 - Acceptance test: Run a full recalculation (change a fee grid value) and measure time. If it's > 3 seconds, optimize and re-measure until target is met.
 
 **Risk Level:** High  
@@ -809,17 +809,17 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Define "line item" precisely:
-  - Revenue "line item" = monthly revenue for one (Grade x Nationality x Tariff) combination.
-  - Staff Cost "line item" = monthly cost for one employee (salary + statutory costs).
-  - P&L "line item" = monthly subtotal (Total Revenue, Total Staff Cost, Operating Profit, Net Profit).
+    - Revenue "line item" = monthly revenue for one (Grade x Nationality x Tariff) combination.
+    - Staff Cost "line item" = monthly cost for one employee (salary + statutory costs).
+    - P&L "line item" = monthly subtotal (Total Revenue, Total Staff Cost, Operating Profit, Net Profit).
 - Tolerance hierarchy:
-  - Detail level (+/-1.00 SAR): Individual revenue or staff cost lines.
-  - Subtotal level (+/-10.00 SAR per subtotal): Monthly aggregates (Total Revenue, Total Staff Cost).
-  - P&L level (+/-50.00 SAR): Monthly P&L subtotals (Operating Profit, Net Profit).
+    - Detail level (+/-1.00 SAR): Individual revenue or staff cost lines.
+    - Subtotal level (+/-10.00 SAR per subtotal): Monthly aggregates (Total Revenue, Total Staff Cost).
+    - P&L level (+/-50.00 SAR): Monthly P&L subtotals (Operating Profit, Net Profit).
 - Acceptance process:
-  1. Compare app detail-level output against Excel for all 1,500 revenue lines x 12 months x 168 staff cost lines x 12 months.
-  2. If any detail line is > +/-1.00 SAR, investigate root cause (formula error, rounding, data input discrepancy).
-  3. If all detail lines are within tolerance, check P&L level. If subtotals match (within +/-50.00 SAR), accept.
+    1. Compare app detail-level output against Excel for all 1,500 revenue lines x 12 months x 168 staff cost lines x 12 months.
+    2. If any detail line is > +/-1.00 SAR, investigate root cause (formula error, rounding, data input discrepancy).
+    3. If all detail lines are within tolerance, check P&L level. If subtotals match (within +/-50.00 SAR), accept.
 
 **Risk Level:** High  
 **Likelihood:** Likely (acceptance criteria ambiguity causes 30%+ of UAT delays and rework)
@@ -845,10 +845,10 @@ This PRD attempts to digitize a complex financial planning ecosystem with aggres
 **What the PRD Should Say:**
 
 - Context persistence rules:
-  - **Fiscal Year, Version, Comparison:** Persist across all modules.
-  - **Academic Period:** Persists across all modules.
-  - **Scenario:** Persists only in modules that use scenarios (Revenue, Staff Costs, Scenarios, P&L). In other modules (Enrollment, Capacity, DHG), the Scenario dropdown is hidden.
-  - **Session persistence:** Context is stored in browser session storage. On logout, context is cleared. On login, context defaults to: FY = latest fiscal year, Version = Budget, Comparison = None, Academic Period = Full Year, Scenario = Base.
+    - **Fiscal Year, Version, Comparison:** Persist across all modules.
+    - **Academic Period:** Persists across all modules.
+    - **Scenario:** Persists only in modules that use scenarios (Revenue, Staff Costs, Scenarios, P&L). In other modules (Enrollment, Capacity, DHG), the Scenario dropdown is hidden.
+    - **Session persistence:** Context is stored in browser session storage. On logout, context is cleared. On login, context defaults to: FY = latest fiscal year, Version = Budget, Comparison = None, Academic Period = Full Year, Scenario = Base.
 - Acceptance test: User logs in, sets Context = {FY2026, Forecast, v2}, navigates through 5 modules. Each module shows the correct context. User logs out and logs back in. Context resets to defaults.
 
 **Risk Level:** Medium  
