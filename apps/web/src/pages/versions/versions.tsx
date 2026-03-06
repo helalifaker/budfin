@@ -47,7 +47,8 @@ const CURRENT_FISCAL_YEAR = new Date().getFullYear();
 
 export function VersionsPage() {
 	const currentUser = useAuthStore((s) => s.user);
-	const canCreate = currentUser?.role === 'Admin';
+	const canCreate =
+		currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
 
 	// Filters
 	const [fiscalYear, setFiscalYear] = useState<number>(CURRENT_FISCAL_YEAR);
@@ -464,12 +465,13 @@ function VersionActions({
 
 	const currentUser = useAuthStore((s) => s.user);
 	const isAdmin = currentUser?.role === 'Admin';
+	const isMutator = isAdmin || currentUser?.role === 'BudgetOwner';
 
-	const canPublish = isAdmin && version.status === 'Draft';
-	const canLock = isAdmin && version.status === 'Published';
-	const canArchive = isAdmin && (version.status === 'Published' || version.status === 'Locked');
-	const canRevert = isAdmin && version.status === 'Locked';
-	const canDelete = isAdmin && version.status === 'Draft';
+	const canPublish = isMutator && version.status === 'Draft';
+	const canLock = isMutator && version.status === 'Published';
+	const canArchive = isMutator && version.status === 'Locked';
+	const canRevert = isAdmin && (version.status === 'Published' || version.status === 'Locked');
+	const canDelete = isMutator && version.status === 'Draft';
 
 	return (
 		<div className="relative">
