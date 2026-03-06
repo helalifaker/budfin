@@ -20,30 +20,30 @@ Key constraints:
 
 Full-stack TypeScript monolith with the following stack:
 
-| Layer | Technology | Version |
-| --- | --- | --- |
-| Runtime | Node.js | 22 LTS |
-| Language | TypeScript | 5.9.3 (pinned) |
-| Backend framework | Fastify | 5.7.x |
-| ORM | Prisma | 6.x |
-| Database | PostgreSQL | 16 |
-| Validation | Zod | 4.x |
-| Authentication | jose (via @fastify/jwt) | 5.x |
-| Financial math | Decimal.js | 10.6.x |
-| Background jobs | pg-boss | 10.x (in-process workers) |
-| PDF export | @react-pdf/renderer | 4.3.x |
-| Frontend framework | React | 19 |
-| Build tool | Vite | 7 |
-| CSS | Tailwind CSS | 4.2 |
-| UI primitives | shadcn/ui + Radix UI | latest |
-| Data tables | TanStack Table | v8 |
-| Server state | TanStack Query | v5 |
-| Client state | Zustand | 5.x |
-| Forms | React Hook Form + @hookform/resolvers v5 | 7.x / 5.x |
-| Package manager | pnpm | 10.x |
-| Testing | Vitest | 4.x |
-| Linting | ESLint 9 (flat config) + Prettier 3.8 | 9.x / 3.8.x |
-| Infrastructure | Docker Compose (3 containers: nginx, api, db) | v2 |
+| Layer              | Technology                                    | Version                   |
+| ------------------ | --------------------------------------------- | ------------------------- |
+| Runtime            | Node.js                                       | 22 LTS                    |
+| Language           | TypeScript                                    | 5.9.3 (pinned)            |
+| Backend framework  | Fastify                                       | 5.7.x                     |
+| ORM                | Prisma                                        | 6.x                       |
+| Database           | PostgreSQL                                    | 16                        |
+| Validation         | Zod                                           | 4.x                       |
+| Authentication     | jose (via @fastify/jwt)                       | 5.x                       |
+| Financial math     | Decimal.js                                    | 10.6.x                    |
+| Background jobs    | pg-boss                                       | 10.x (in-process workers) |
+| PDF export         | @react-pdf/renderer                           | 4.3.x                     |
+| Frontend framework | React                                         | 19                        |
+| Build tool         | Vite                                          | 7                         |
+| CSS                | Tailwind CSS                                  | 4.2                       |
+| UI primitives      | shadcn/ui + Radix UI                          | latest                    |
+| Data tables        | TanStack Table                                | v8                        |
+| Server state       | TanStack Query                                | v5                        |
+| Client state       | Zustand                                       | 5.x                       |
+| Forms              | React Hook Form + @hookform/resolvers v5      | 7.x / 5.x                 |
+| Package manager    | pnpm                                          | 10.x                      |
+| Testing            | Vitest                                        | 4.x                       |
+| Linting            | ESLint 9 (flat config) + Prettier 3.8         | 9.x / 3.8.x               |
+| Infrastructure     | Docker Compose (3 containers: nginx, api, db) | v2                        |
 
 ## Rationale
 

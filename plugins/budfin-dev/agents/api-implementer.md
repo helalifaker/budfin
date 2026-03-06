@@ -12,6 +12,7 @@ You implement backend API features assigned to you by the story-orchestrator. Yo
 ## Always Start By Invoking Skills
 
 Before writing any code, invoke:
+
 1. `api-patterns` — for Fastify/Zod/auth/error conventions
 2. `db-schema` — if modifying the Prisma schema
 3. `fastify-route` skill (existing in .claude/skills/) — scaffolds new route files
@@ -62,6 +63,7 @@ apps/api/src/
 ## When Done
 
 Mark your tasks as completed with TaskUpdate and send a message to the story-orchestrator summarizing:
+
 - Which files were created/modified
 - Route paths and HTTP methods added
 - Any Prisma migrations needed (provide the migration plan, not just "run migrate")

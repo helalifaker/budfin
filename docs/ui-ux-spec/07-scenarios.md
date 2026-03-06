@@ -15,11 +15,11 @@ The Scenarios module provides a configurable parameter workspace where users mod
 
 **Persona access:**
 
-| Persona | Capabilities |
-| --- | --- |
-| Budget Analyst (Editor) | Create, edit, save scenario parameters; trigger recalculation |
-| Budget Owner | Review parameters and comparison output; cannot edit in Locked versions |
-| School Admin (Viewer) | View comparison output only; all controls read-only |
+| Persona                 | Capabilities                                                            |
+| ----------------------- | ----------------------------------------------------------------------- |
+| Budget Analyst (Editor) | Create, edit, save scenario parameters; trigger recalculation           |
+| Budget Owner            | Review parameters and comparison output; cannot edit in Locked versions |
+| School Admin (Viewer)   | View comparison output only; all controls read-only                     |
 
 ---
 
@@ -29,12 +29,12 @@ The Scenarios module provides a configurable parameter workspace where users mod
 /planning/scenarios?fy=2026&version=42&period=full&scenario=base
 ```
 
-| Param | Source | Notes |
-| --- | --- | --- |
-| `fy` | Context bar fiscal year selector | Inherited from shell |
-| `version` | Context bar version selector | Inherited from shell |
-| `period` | Context bar academic period toggle | Filters enrollment/revenue data |
-| `scenario` | Context bar scenario selector | Highlights the active scenario tab in left panel |
+| Param      | Source                             | Notes                                            |
+| ---------- | ---------------------------------- | ------------------------------------------------ |
+| `fy`       | Context bar fiscal year selector   | Inherited from shell                             |
+| `version`  | Context bar version selector       | Inherited from shell                             |
+| `period`   | Context bar academic period toggle | Filters enrollment/revenue data                  |
+| `scenario` | Context bar scenario selector      | Highlights the active scenario tab in left panel |
 
 The context bar scenario selector and the left-panel scenario tabs are synchronized. Selecting a scenario in either location updates both.
 
@@ -67,14 +67,14 @@ The Scenarios module uses a split-panel layout instead of a full-width data grid
 
 ### 3.1 Split Panel Container
 
-| Property | Value |
-| --- | --- |
-| Layout | Flexbox row, `gap: 0` |
-| Left panel width | `40%`, `min-width: 420px` |
-| Right panel width | `60%`, `flex: 1` |
-| Divider | 1px solid `--workspace-border`, draggable resize handle |
-| Divider drag range | Left panel 30%-50% of workspace width |
-| Background | Both panels `--workspace-bg` |
+| Property           | Value                                                   |
+| ------------------ | ------------------------------------------------------- |
+| Layout             | Flexbox row, `gap: 0`                                   |
+| Left panel width   | `40%`, `min-width: 420px`                               |
+| Right panel width  | `60%`, `flex: 1`                                        |
+| Divider            | 1px solid `--workspace-border`, draggable resize handle |
+| Divider drag range | Left panel 30%-50% of workspace width                   |
+| Background         | Both panels `--workspace-bg`                            |
 
 The divider is a vertical 1px line with a 4px invisible hit area. On hover, the cursor changes to `col-resize` and the divider line changes to `--workspace-border-strong`.
 
@@ -90,21 +90,21 @@ Follows the standard module toolbar from 00-global-framework.md Section 4.5.
 +-----------------------------------------------------------------------+
 ```
 
-| Element | Specification |
-| --- | --- |
-| Module title | "Scenarios", `--text-xl`, weight 600 |
+| Element          | Specification                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| Module title     | "Scenarios", `--text-xl`, weight 600                                                                           |
 | Calculate button | Standard Calculate button (see framework Section 4.5). Triggers scenario recalculation for all three scenarios |
-| Export button | Dropdown: XLSX, PDF, CSV. Exports the comparison tables |
-| More menu | Not applicable for this module (omit or show empty) |
+| Export button    | Dropdown: XLSX, PDF, CSV. Exports the comparison tables                                                        |
+| More menu        | Not applicable for this module (omit or show empty)                                                            |
 
 **RBAC modifications:**
 
-| Role | Calculate | Export | Parameter editing |
-| --- | --- | --- | --- |
-| Admin | Visible | Visible | Enabled |
-| BudgetOwner | Visible | Visible | Enabled |
-| Editor | Visible | Visible | Enabled |
-| Viewer | Hidden | Visible | Disabled (all read-only) |
+| Role        | Calculate | Export  | Parameter editing        |
+| ----------- | --------- | ------- | ------------------------ |
+| Admin       | Visible   | Visible | Enabled                  |
+| BudgetOwner | Visible   | Visible | Enabled                  |
+| Editor      | Visible   | Visible | Enabled                  |
+| Viewer      | Hidden    | Visible | Disabled (all read-only) |
 
 When the active version is Locked or Archived, the Calculate button is disabled and parameters are read-only regardless of role. The read-only banner from framework Section 4.10 is displayed.
 
@@ -114,42 +114,42 @@ When the active version is Locked or Archived, the Calculate button is disabled 
 
 ### 5.1 Panel Header
 
-| Property | Value |
-| --- | --- |
-| Text | "Scenario Parameters" |
-| Font | `--text-lg`, weight 600, `--text-primary` |
-| Padding | `--space-5` horizontal, `--space-4` vertical |
-| Border-bottom | 1px solid `--workspace-border` |
+| Property      | Value                                        |
+| ------------- | -------------------------------------------- |
+| Text          | "Scenario Parameters"                        |
+| Font          | `--text-lg`, weight 600, `--text-primary`    |
+| Padding       | `--space-5` horizontal, `--space-4` vertical |
+| Border-bottom | 1px solid `--workspace-border`               |
 
 ### 5.2 Scenario Tabs
 
 Three horizontal tabs below the panel header select which scenario's parameters are displayed.
 
-| Property | Value |
-| --- | --- |
-| Component | shadcn/ui `<Tabs>` with `<TabsList>` + `<TabsTrigger>` |
-| Layout | Horizontal, full width of left panel |
-| Tab labels | "Base", "Optimistic", "Pessimistic" |
-| Default active | Matches context bar scenario selector |
-| Margin | `--space-4` horizontal, `--space-3` vertical |
+| Property       | Value                                                  |
+| -------------- | ------------------------------------------------------ |
+| Component      | shadcn/ui `<Tabs>` with `<TabsList>` + `<TabsTrigger>` |
+| Layout         | Horizontal, full width of left panel                   |
+| Tab labels     | "Base", "Optimistic", "Pessimistic"                    |
+| Default active | Matches context bar scenario selector                  |
+| Margin         | `--space-4` horizontal, `--space-3` vertical           |
 
 **Tab trigger states:**
 
-| State | Background | Text | Border |
-| --- | --- | --- | --- |
-| Default | transparent | `--text-secondary` | none |
-| Hover | `--workspace-bg-muted` | `--text-primary` | none |
-| Active | `--workspace-bg` | `--text-primary` | 2px solid `--color-info` bottom |
+| State   | Background             | Text               | Border                          |
+| ------- | ---------------------- | ------------------ | ------------------------------- |
+| Default | transparent            | `--text-secondary` | none                            |
+| Hover   | `--workspace-bg-muted` | `--text-primary`   | none                            |
+| Active  | `--workspace-bg`       | `--text-primary`   | 2px solid `--color-info` bottom |
 
 **Tab color indicators:**
 
 Each tab label is prefixed with a colored dot to distinguish scenarios at a glance:
 
-| Scenario | Dot color | Token |
-| --- | --- | --- |
-| Base | `#2563EB` (blue-600) | `--version-budget` |
-| Optimistic | `#16A34A` (green-600) | `--color-success` |
-| Pessimistic | `#DC2626` (red-600) | `--color-error` |
+| Scenario    | Dot color             | Token              |
+| ----------- | --------------------- | ------------------ |
+| Base        | `#2563EB` (blue-600)  | `--version-budget` |
+| Optimistic  | `#16A34A` (green-600) | `--color-success`  |
+| Pessimistic | `#DC2626` (red-600)   | `--color-error`    |
 
 ### 5.3 Parameter Controls
 
@@ -164,31 +164,32 @@ Below the tabs, six parameter controls are displayed in a vertical stack for the
 +-------------------------------------------------------+
 ```
 
-| Property | Value |
-| --- | --- |
-| Container | Vertical stack, `gap: --space-4`, `padding: --space-4` |
-| Label | `--text-sm`, weight 500, `--text-primary` |
-| Tooltip icon | Lucide `Info` (14px), `--text-muted`, hover shows description |
-| Slider | shadcn/ui `<Slider>` |
-| Slider track height | 6px, `--workspace-border` background |
-| Slider fill | Scenario dot color (Base: blue, Optimistic: green, Pessimistic: red) |
-| Slider thumb | 16px circle, white fill, 1px `--workspace-border-strong` border, `--shadow-sm` |
-| Min/max labels | `--text-xs`, `--text-muted`, positioned at slider endpoints |
-| Numeric input | `<Input type="number">` (shadcn/ui), width 80px, right-aligned, `--font-mono` |
-| Input border | 1px solid `--workspace-border`, on focus `--cell-editable-focus` |
+| Property            | Value                                                                          |
+| ------------------- | ------------------------------------------------------------------------------ |
+| Container           | Vertical stack, `gap: --space-4`, `padding: --space-4`                         |
+| Label               | `--text-sm`, weight 500, `--text-primary`                                      |
+| Tooltip icon        | Lucide `Info` (14px), `--text-muted`, hover shows description                  |
+| Slider              | shadcn/ui `<Slider>`                                                           |
+| Slider track height | 6px, `--workspace-border` background                                           |
+| Slider fill         | Scenario dot color (Base: blue, Optimistic: green, Pessimistic: red)           |
+| Slider thumb        | 16px circle, white fill, 1px `--workspace-border-strong` border, `--shadow-sm` |
+| Min/max labels      | `--text-xs`, `--text-muted`, positioned at slider endpoints                    |
+| Numeric input       | `<Input type="number">` (shadcn/ui), width 80px, right-aligned, `--font-mono`  |
+| Input border        | 1px solid `--workspace-border`, on focus `--cell-editable-focus`               |
 
 **Parameter definitions (FR-SCN-002):**
 
-| Parameter | Key | Type | Base Default | Optimistic Default | Pessimistic Default | Slider Min | Slider Max | Step | Display Format | Tooltip |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| New Enrollment Factor | `new_enrollment_factor` | multiplier | 1.0 | 1.1 | 0.9 | 0.5 | 1.5 | 0.01 | `x.xx` | Multiplier applied to new student enrollment projections. 1.0 = no change. |
-| Retention Adjustment | `retention_adjustment` | percentage | +0% | +3% | -5% | -10% | +10% | 0.1% | `+x.x%` / `-x.x%` | Percentage adjustment to student retention rates. |
-| Attrition Rate | `attrition_rate` | percentage | 2% | 1% | 5% | 0% | 10% | 0.1% | `x.x%` | Expected student departure rate per academic period. |
-| Fee Collection Rate | `fee_collection_rate` | percentage | 95% | 98% | 90% | 80% | 100% | 0.1% | `x.x%` | Percentage of billed fees expected to be collected. |
-| Scholarship Allocation | `scholarship_allocation` | percentage | 2% | 1% | 3% | 0% | 5% | 0.1% | `x.x%` | Percentage of gross revenue allocated to scholarships. |
-| ORS Hours | `ors_hours` | hours | 18 | 18 | 18 | 15 | 21 | 0.5 | `x.x h` | Weekly teaching service obligation (Obligation Reglementaire de Service). Controls FTE requirement calculation in the DHG engine. Lower ORS = more FTE needed. |
+| Parameter              | Key                      | Type       | Base Default | Optimistic Default | Pessimistic Default | Slider Min | Slider Max | Step | Display Format    | Tooltip                                                                                                                                                        |
+| ---------------------- | ------------------------ | ---------- | ------------ | ------------------ | ------------------- | ---------- | ---------- | ---- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New Enrollment Factor  | `new_enrollment_factor`  | multiplier | 1.0          | 1.1                | 0.9                 | 0.5        | 1.5        | 0.01 | `x.xx`            | Multiplier applied to new student enrollment projections. 1.0 = no change.                                                                                     |
+| Retention Adjustment   | `retention_adjustment`   | percentage | +0%          | +3%                | -5%                 | -10%       | +10%       | 0.1% | `+x.x%` / `-x.x%` | Percentage adjustment to student retention rates.                                                                                                              |
+| Attrition Rate         | `attrition_rate`         | percentage | 2%           | 1%                 | 5%                  | 0%         | 10%        | 0.1% | `x.x%`            | Expected student departure rate per academic period.                                                                                                           |
+| Fee Collection Rate    | `fee_collection_rate`    | percentage | 95%          | 98%                | 90%                 | 80%        | 100%       | 0.1% | `x.x%`            | Percentage of billed fees expected to be collected.                                                                                                            |
+| Scholarship Allocation | `scholarship_allocation` | percentage | 2%           | 1%                 | 3%                  | 0%         | 5%         | 0.1% | `x.x%`            | Percentage of gross revenue allocated to scholarships.                                                                                                         |
+| ORS Hours              | `ors_hours`              | hours      | 18           | 18                 | 18                  | 15         | 21         | 0.5  | `x.x h`           | Weekly teaching service obligation (Obligation Reglementaire de Service). Controls FTE requirement calculation in the DHG engine. Lower ORS = more FTE needed. |
 
 **Slider-input synchronization:**
+
 - Moving the slider updates the numeric input in real-time.
 - Typing in the numeric input updates the slider thumb position on blur or Enter.
 - Values are clamped to [min, max]. If the user types a value outside the range, it is clamped on blur and a brief amber highlight (`--color-warning-bg`) flashes on the input for 1 second.
@@ -196,40 +197,40 @@ Below the tabs, six parameter controls are displayed in a vertical stack for the
 
 **Input validation:**
 
-| Condition | Behavior |
-| --- | --- |
-| Value below min | Clamp to min, amber flash |
-| Value above max | Clamp to max, amber flash |
-| Non-numeric input | Reject keystroke (input type="number" handles this) |
-| Empty field on blur | Revert to previous valid value |
+| Condition           | Behavior                                            |
+| ------------------- | --------------------------------------------------- |
+| Value below min     | Clamp to min, amber flash                           |
+| Value above max     | Clamp to max, amber flash                           |
+| Non-numeric input   | Reject keystroke (input type="number" handles this) |
+| Empty field on blur | Revert to previous valid value                      |
 
 ### 5.4 Panel Footer Actions
 
 Sticky footer at the bottom of the left panel.
 
-| Property | Value |
-| --- | --- |
-| Height | 56px |
-| Background | `--workspace-bg` |
-| Border-top | 1px solid `--workspace-border` |
-| Padding | `--space-3` horizontal |
-| Layout | Flexbox row, `justify-content: space-between` |
+| Property   | Value                                         |
+| ---------- | --------------------------------------------- |
+| Height     | 56px                                          |
+| Background | `--workspace-bg`                              |
+| Border-top | 1px solid `--workspace-border`                |
+| Padding    | `--space-3` horizontal                        |
+| Layout     | Flexbox row, `justify-content: space-between` |
 
 **Buttons:**
 
-| Button | Component | Variant | Behavior |
-| --- | --- | --- | --- |
-| Reset to Defaults | `<Button variant="outline">` | Outline, `--text-secondary` | Resets the active scenario's 5 parameters to their default values. Confirmation dialog: "Reset [Scenario] parameters to defaults?" |
-| Save Parameters | `<Button variant="default">` | Primary (blue) | PUTs parameters to `PUT /versions/:versionId/scenario-parameters`. On success: toast "Parameters saved". On error: field-level validation display. |
+| Button            | Component                    | Variant                     | Behavior                                                                                                                                           |
+| ----------------- | ---------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reset to Defaults | `<Button variant="outline">` | Outline, `--text-secondary` | Resets the active scenario's 5 parameters to their default values. Confirmation dialog: "Reset [Scenario] parameters to defaults?"                 |
+| Save Parameters   | `<Button variant="default">` | Primary (blue)              | PUTs parameters to `PUT /versions/:versionId/scenario-parameters`. On success: toast "Parameters saved". On error: field-level validation display. |
 
 **Save button states:**
 
-| State | Appearance |
-| --- | --- |
-| No changes | Disabled, muted text |
-| Unsaved changes | Enabled, primary blue |
-| Saving | Disabled, spinner icon |
-| Save error | Enabled, red outline, retry text |
+| State           | Appearance                       |
+| --------------- | -------------------------------- |
+| No changes      | Disabled, muted text             |
+| Unsaved changes | Enabled, primary blue            |
+| Saving          | Disabled, spinner icon           |
+| Save error      | Enabled, red outline, retry text |
 
 ---
 
@@ -237,20 +238,20 @@ Sticky footer at the bottom of the left panel.
 
 ### 6.1 Panel Header
 
-| Property | Value |
-| --- | --- |
-| Text | "Impact Preview" |
-| Font | `--text-lg`, weight 600, `--text-primary` |
-| Padding | `--space-5` horizontal, `--space-4` vertical |
-| Border-bottom | 1px solid `--workspace-border` |
+| Property      | Value                                        |
+| ------------- | -------------------------------------------- |
+| Text          | "Impact Preview"                             |
+| Font          | `--text-lg`, weight 600, `--text-primary`    |
+| Padding       | `--space-5` horizontal, `--space-4` vertical |
+| Border-bottom | 1px solid `--workspace-border`               |
 
 A `<Badge>` to the right of the header text indicates the data currency:
 
-| State | Badge text | Badge color |
-| --- | --- | --- |
-| Current | "Calculated" | `--color-success` text on `--color-success-bg` |
-| Stale | "Outdated -- Recalculate" | `--color-stale` text on `--color-warning-bg` |
-| Preview (unsaved changes) | "Preview (unsaved)" | `--color-info` text on `--color-info-bg` |
+| State                     | Badge text                | Badge color                                    |
+| ------------------------- | ------------------------- | ---------------------------------------------- |
+| Current                   | "Calculated"              | `--color-success` text on `--color-success-bg` |
+| Stale                     | "Outdated -- Recalculate" | `--color-stale` text on `--color-warning-bg`   |
+| Preview (unsaved changes) | "Preview (unsaved)"       | `--color-info` text on `--color-info-bg`       |
 
 ### 6.2 Key Metrics Comparison Table (FR-SCN-006)
 
@@ -271,30 +272,30 @@ A static table (not TanStack Table) comparing the three scenarios side-by-side.
 
 **Table styling:**
 
-| Property | Value |
-| --- | --- |
-| Component | Plain HTML `<table>` styled with Tailwind |
-| Border | 1px solid `--workspace-border` on outer, `--workspace-border` between rows |
-| Header row | `--workspace-bg-muted` background, `--text-sm` weight 600, `--text-secondary` |
-| Metric column | Left-aligned, `--text-sm`, `--text-primary`, width ~40% |
-| Value columns | Right-aligned, `--font-mono`, `--text-sm` |
-| Row height | 40px |
-| Alternating rows | `--workspace-bg` and `--workspace-bg-subtle` |
-| Padding | `--space-2` vertical, `--space-3` horizontal per cell |
-| Border-radius | `--radius-md` on table container |
+| Property         | Value                                                                         |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Component        | Plain HTML `<table>` styled with Tailwind                                     |
+| Border           | 1px solid `--workspace-border` on outer, `--workspace-border` between rows    |
+| Header row       | `--workspace-bg-muted` background, `--text-sm` weight 600, `--text-secondary` |
+| Metric column    | Left-aligned, `--text-sm`, `--text-primary`, width ~40%                       |
+| Value columns    | Right-aligned, `--font-mono`, `--text-sm`                                     |
+| Row height       | 40px                                                                          |
+| Alternating rows | `--workspace-bg` and `--workspace-bg-subtle`                                  |
+| Padding          | `--space-2` vertical, `--space-3` horizontal per cell                         |
+| Border-radius    | `--radius-md` on table container                                              |
 
 **Column header colors:** Each scenario column header has a colored left-border (3px) matching the scenario dot color (Base: blue, Optimistic: green, Pessimistic: red).
 
 **Metric rows (FR-SCN-006):**
 
-| Row | Metric | Format | Source |
-| --- | --- | --- | --- |
-| 1 | Adjusted Total Enrollment | Integer, thousands separator | Sum of adjusted enrollment headcount |
-| 2 | Total Tuition Revenue HT | Currency (SAR), 2 decimals | Sum of gross_revenue_ht from monthly_revenue |
-| 3 | Total All-Stream Revenue | Currency (SAR), 2 decimals | Tuition + other_revenue_items |
-| 4 | Scholarship Deductions | Currency (SAR), 2 decimals, parentheses (negative) | Sum of scholarship_deduction |
-| 5 | Net Revenue | Currency (SAR), 2 decimals | Sum of net_revenue_ht |
-| 6 | Revenue per Student | Currency (SAR), 2 decimals | Net Revenue / Adjusted Total Enrollment |
+| Row | Metric                    | Format                                             | Source                                       |
+| --- | ------------------------- | -------------------------------------------------- | -------------------------------------------- |
+| 1   | Adjusted Total Enrollment | Integer, thousands separator                       | Sum of adjusted enrollment headcount         |
+| 2   | Total Tuition Revenue HT  | Currency (SAR), 2 decimals                         | Sum of gross_revenue_ht from monthly_revenue |
+| 3   | Total All-Stream Revenue  | Currency (SAR), 2 decimals                         | Tuition + other_revenue_items                |
+| 4   | Scholarship Deductions    | Currency (SAR), 2 decimals, parentheses (negative) | Sum of scholarship_deduction                 |
+| 5   | Net Revenue               | Currency (SAR), 2 decimals                         | Sum of net_revenue_ht                        |
+| 6   | Revenue per Student       | Currency (SAR), 2 decimals                         | Net Revenue / Adjusted Total Enrollment      |
 
 **Numeric display rules:** Follow framework Section 1.2 numeric display rules. Monetary values use `--font-mono`, right-aligned, thousands separator, 2 decimal places. Negative values in parentheses with `--color-error`.
 
@@ -315,59 +316,60 @@ Positioned below the key metrics table with `--space-6` gap.
 
 **Table styling:** Same base styling as the key metrics table, with these differences:
 
-| Property | Value |
-| --- | --- |
-| Header row | Two columns: "Optimistic Delta" (green header text), "Pessimistic Delta" (red header text) |
-| Positive delta cells | `--color-success` text, `--color-success-bg` background |
-| Negative delta cells | `--color-error` text, `--color-error-bg` background |
-| Zero delta cells | `--text-muted` text, no background tint |
+| Property             | Value                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| Header row           | Two columns: "Optimistic Delta" (green header text), "Pessimistic Delta" (red header text) |
+| Positive delta cells | `--color-success` text, `--color-success-bg` background                                    |
+| Negative delta cells | `--color-error` text, `--color-error-bg` background                                        |
+| Zero delta cells     | `--text-muted` text, no background tint                                                    |
 
 **Delta format:** Each cell shows both absolute and percentage deltas:
+
 - Absolute: `+X` or `-X` with thousands separator and unit (SAR for currency, plain integer for enrollment)
 - Percentage: `(+Y.Y%)` or `(-Y.Y%)` in parentheses after the absolute value
 - Positive values prefixed with `+`, negative values prefixed with `-`
 
 **Delta metric rows (FR-SCN-007):**
 
-| Row | Metric | Calculation |
-| --- | --- | --- |
-| 1 | Enrollment Delta | Scenario Enrollment - Base Enrollment |
-| 2 | Tuition Delta | Scenario Tuition Revenue HT - Base Tuition Revenue HT |
-| 3 | Net Revenue Delta | Scenario Net Revenue - Base Net Revenue |
-| 4 | Rev/Student Delta | Scenario Rev/Student - Base Rev/Student |
+| Row | Metric            | Calculation                                           |
+| --- | ----------------- | ----------------------------------------------------- |
+| 1   | Enrollment Delta  | Scenario Enrollment - Base Enrollment                 |
+| 2   | Tuition Delta     | Scenario Tuition Revenue HT - Base Tuition Revenue HT |
+| 3   | Net Revenue Delta | Scenario Net Revenue - Base Net Revenue               |
+| 4   | Rev/Student Delta | Scenario Rev/Student - Base Rev/Student               |
 
 ### 6.4 Net Revenue Bar Chart
 
 Positioned below the delta table with `--space-6` gap.
 
-| Property | Value |
-| --- | --- |
-| Library | Recharts v3 `<BarChart>` |
-| Width | 100% of right panel, max 600px, centered |
-| Height | 240px |
-| Bars | 3 vertical bars, one per scenario |
-| Bar colors | Base: `#2563EB` (blue-600), Optimistic: `#16A34A` (green-600), Pessimistic: `#DC2626` (red-600) |
-| Bar width | 60px, `gap: 16px` between bars |
-| Bar radius | `--radius-sm` (4px) top corners only |
-| X-axis | Scenario names, `--text-xs`, `--text-secondary` |
-| Y-axis | Currency values (SAR), `--text-xs`, `--font-mono`, auto-scaled |
-| Y-axis format | Abbreviated: "40M", "42M", "44M" (millions) |
-| Grid lines | Horizontal only, `--workspace-border` at 0.3 opacity |
-| Tooltip | On hover: scenario name + formatted currency value |
-| Legend | Hidden (labels are on x-axis) |
-| Background | `--workspace-bg` |
-| Title | "Net Revenue by Scenario", `--text-sm`, weight 600, `--text-secondary`, centered above chart |
+| Property      | Value                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| Library       | Recharts v3 `<BarChart>`                                                                        |
+| Width         | 100% of right panel, max 600px, centered                                                        |
+| Height        | 240px                                                                                           |
+| Bars          | 3 vertical bars, one per scenario                                                               |
+| Bar colors    | Base: `#2563EB` (blue-600), Optimistic: `#16A34A` (green-600), Pessimistic: `#DC2626` (red-600) |
+| Bar width     | 60px, `gap: 16px` between bars                                                                  |
+| Bar radius    | `--radius-sm` (4px) top corners only                                                            |
+| X-axis        | Scenario names, `--text-xs`, `--text-secondary`                                                 |
+| Y-axis        | Currency values (SAR), `--text-xs`, `--font-mono`, auto-scaled                                  |
+| Y-axis format | Abbreviated: "40M", "42M", "44M" (millions)                                                     |
+| Grid lines    | Horizontal only, `--workspace-border` at 0.3 opacity                                            |
+| Tooltip       | On hover: scenario name + formatted currency value                                              |
+| Legend        | Hidden (labels are on x-axis)                                                                   |
+| Background    | `--workspace-bg`                                                                                |
+| Title         | "Net Revenue by Scenario", `--text-sm`, weight 600, `--text-secondary`, centered above chart    |
 
 **Tooltip styling:**
 
-| Property | Value |
-| --- | --- |
-| Background | `--workspace-bg` |
-| Border | 1px solid `--workspace-border` |
-| Shadow | `--shadow-md` |
-| Border-radius | `--radius-md` |
-| Padding | `--space-2` |
-| Text | `--text-xs`, `--font-mono` for value, `--text-sm` for label |
+| Property      | Value                                                       |
+| ------------- | ----------------------------------------------------------- |
+| Background    | `--workspace-bg`                                            |
+| Border        | 1px solid `--workspace-border`                              |
+| Shadow        | `--shadow-md`                                               |
+| Border-radius | `--radius-md`                                               |
+| Padding       | `--space-2`                                                 |
+| Text          | `--text-xs`, `--font-mono` for value, `--text-sm` for label |
 
 ---
 
@@ -375,20 +377,20 @@ Positioned below the delta table with `--space-6` gap.
 
 ### 7.1 API Endpoints
 
-| Endpoint | Method | Purpose | PRD Reference |
-| --- | --- | --- | --- |
-| `/api/v1/versions/:versionId/scenarios` | GET | Fetch comparison view with all 3 scenarios' computed metrics and deltas | FR-SCN-004, FR-SCN-006 |
-| `/api/v1/versions/:versionId/scenario-parameters` | GET | Fetch current parameter values for all 3 scenarios | FR-SCN-002 |
-| `/api/v1/versions/:versionId/scenario-parameters` | PUT | Save updated parameters for a single scenario | FR-SCN-002 |
+| Endpoint                                          | Method | Purpose                                                                 | PRD Reference          |
+| ------------------------------------------------- | ------ | ----------------------------------------------------------------------- | ---------------------- |
+| `/api/v1/versions/:versionId/scenarios`           | GET    | Fetch comparison view with all 3 scenarios' computed metrics and deltas | FR-SCN-004, FR-SCN-006 |
+| `/api/v1/versions/:versionId/scenario-parameters` | GET    | Fetch current parameter values for all 3 scenarios                      | FR-SCN-002             |
+| `/api/v1/versions/:versionId/scenario-parameters` | PUT    | Save updated parameters for a single scenario                           | FR-SCN-002             |
 
 ### 7.2 Query Keys (TanStack Query v5)
 
 ```typescript
 // Scenario comparison data (right panel)
-['scenarios', 'comparison', versionId, period]
-
-// Scenario parameters (left panel)
-['scenarios', 'parameters', versionId]
+['scenarios', 'comparison', versionId, period][
+	// Scenario parameters (left panel)
+	('scenarios', 'parameters', versionId)
+];
 ```
 
 ### 7.3 GET /versions/:versionId/scenarios Response Shape
@@ -406,7 +408,7 @@ interface ScenarioComparison {
 
 interface ScenarioMetrics {
 	adjusted_total_enrollment: number;
-	total_tuition_revenue_ht: string;   // decimal string
+	total_tuition_revenue_ht: string; // decimal string
 	total_all_stream_revenue: string;
 	scholarship_deductions: string;
 	net_revenue: string;
@@ -434,13 +436,13 @@ interface ScenarioParametersResponse {
 
 interface ScenarioParameterSet {
 	scenario_name: 'Base' | 'Optimistic' | 'Pessimistic';
-	new_enrollment_factor: string;     // decimal string, e.g., "1.000000"
-	retention_adjustment: string;      // decimal string
+	new_enrollment_factor: string; // decimal string, e.g., "1.000000"
+	retention_adjustment: string; // decimal string
 	attrition_rate: string;
 	fee_collection_rate: string;
 	scholarship_allocation: string;
-	updated_at: string;                // ISO 8601 timestamp
-	updated_by: string | null;         // user email
+	updated_at: string; // ISO 8601 timestamp
+	updated_by: string | null; // user email
 }
 ```
 
@@ -491,13 +493,13 @@ interface ScenariosStore {
 
 ### 8.2 State Synchronization
 
-| Source | Target | Trigger |
-| --- | --- | --- |
-| Context bar scenario selector | Left panel active tab | `useContextBarStore` subscription |
-| Left panel tab change | Context bar scenario selector | `useContextBarStore.setScenario()` |
-| Server parameters (GET) | Draft parameters | Query `onSuccess` callback |
-| Draft parameter change | Right panel preview | Debounced 300ms recalc |
-| Save success | Draft parameters reset | Invalidation + refetch |
+| Source                        | Target                        | Trigger                            |
+| ----------------------------- | ----------------------------- | ---------------------------------- |
+| Context bar scenario selector | Left panel active tab         | `useContextBarStore` subscription  |
+| Left panel tab change         | Context bar scenario selector | `useContextBarStore.setScenario()` |
+| Server parameters (GET)       | Draft parameters              | Query `onSuccess` callback         |
+| Draft parameter change        | Right panel preview           | Debounced 300ms recalc             |
+| Save success                  | Draft parameters reset        | Invalidation + refetch             |
 
 ---
 
@@ -505,35 +507,35 @@ interface ScenariosStore {
 
 ### 9.1 Loading State
 
-| Area | Skeleton |
-| --- | --- |
-| Left panel | 3 tab skeletons + 5 slider row skeletons (label + track + input) |
-| Right panel | Table skeleton (7 rows x 4 columns) + chart skeleton rectangle |
-| Duration before showing | 200ms delay per framework |
+| Area                    | Skeleton                                                         |
+| ----------------------- | ---------------------------------------------------------------- |
+| Left panel              | 3 tab skeletons + 5 slider row skeletons (label + track + input) |
+| Right panel             | Table skeleton (7 rows x 4 columns) + chart skeleton rectangle   |
+| Duration before showing | 200ms delay per framework                                        |
 
 ### 9.2 Empty State
 
 Shown when no scenario parameters exist for the version (first-time setup).
 
-| Property | Value |
-| --- | --- |
-| Icon | Lucide `GitBranchPlus`, 48px, `--text-muted` |
-| Heading | "No scenario parameters configured" |
+| Property    | Value                                                                              |
+| ----------- | ---------------------------------------------------------------------------------- |
+| Icon        | Lucide `GitBranchPlus`, 48px, `--text-muted`                                       |
+| Heading     | "No scenario parameters configured"                                                |
 | Description | "Set up Base, Optimistic, and Pessimistic parameters to model financial outcomes." |
-| Action | `<Button variant="default">` "Initialize Defaults" |
+| Action      | `<Button variant="default">` "Initialize Defaults"                                 |
 
 "Initialize Defaults" sends a PUT request creating all three scenarios with their default parameter values.
 
 ### 9.3 Error States
 
-| Error | Display |
-| --- | --- |
-| Parameters fetch failed | Left panel shows inline error with retry: "Failed to load parameters. [Retry]" |
+| Error                   | Display                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| Parameters fetch failed | Left panel shows inline error with retry: "Failed to load parameters. [Retry]"       |
 | Comparison fetch failed | Right panel shows inline error with retry: "Failed to load comparison data. [Retry]" |
-| Save failed (400/422) | Field-level validation: amber border on affected slider + tooltip with error message |
-| Save failed (409) | Conflict resolution dialog per framework Section 6.3 |
-| Save failed (500) | Toast: "Save failed -- please try again" with retry |
-| Calculate failed | Error panel per framework Calculate button spec (Section 4.5) |
+| Save failed (400/422)   | Field-level validation: amber border on affected slider + tooltip with error message |
+| Save failed (409)       | Conflict resolution dialog per framework Section 6.3                                 |
+| Save failed (500)       | Toast: "Save failed -- please try again" with retry                                  |
+| Calculate failed        | Error panel per framework Calculate button spec (Section 4.5)                        |
 
 ---
 
@@ -541,32 +543,32 @@ Shown when no scenario parameters exist for the version (first-time setup).
 
 ### 10.1 ARIA Attributes
 
-| Element | ARIA | Value |
-| --- | --- | --- |
-| Left panel | `role="region"`, `aria-label` | "Scenario Parameters" |
-| Right panel | `role="region"`, `aria-label` | "Impact Preview" |
-| Scenario tabs | `role="tablist"` | Standard shadcn/ui Tabs ARIA |
-| Each tab | `role="tab"`, `aria-selected` | `true` / `false` |
-| Tab panel | `role="tabpanel"`, `aria-labelledby` | ID of active tab |
-| Each slider | `role="slider"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-label` | Parameter name as label |
-| Numeric input | `aria-label` | "[Parameter name] value" |
-| Key metrics table | `role="table"`, `aria-label` | "Key metrics comparison" |
-| Delta table | `role="table"`, `aria-label` | "Delta vs Base comparison" |
-| Bar chart | `role="img"`, `aria-label` | "Net revenue comparison bar chart: Base [X] SAR, Optimistic [Y] SAR, Pessimistic [Z] SAR" |
-| Data currency badge | `aria-live="polite"` | Announces state changes |
+| Element             | ARIA                                                                             | Value                                                                                     |
+| ------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Left panel          | `role="region"`, `aria-label`                                                    | "Scenario Parameters"                                                                     |
+| Right panel         | `role="region"`, `aria-label`                                                    | "Impact Preview"                                                                          |
+| Scenario tabs       | `role="tablist"`                                                                 | Standard shadcn/ui Tabs ARIA                                                              |
+| Each tab            | `role="tab"`, `aria-selected`                                                    | `true` / `false`                                                                          |
+| Tab panel           | `role="tabpanel"`, `aria-labelledby`                                             | ID of active tab                                                                          |
+| Each slider         | `role="slider"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-label` | Parameter name as label                                                                   |
+| Numeric input       | `aria-label`                                                                     | "[Parameter name] value"                                                                  |
+| Key metrics table   | `role="table"`, `aria-label`                                                     | "Key metrics comparison"                                                                  |
+| Delta table         | `role="table"`, `aria-label`                                                     | "Delta vs Base comparison"                                                                |
+| Bar chart           | `role="img"`, `aria-label`                                                       | "Net revenue comparison bar chart: Base [X] SAR, Optimistic [Y] SAR, Pessimistic [Z] SAR" |
+| Data currency badge | `aria-live="polite"`                                                             | Announces state changes                                                                   |
 
 ### 10.2 Keyboard Navigation
 
-| Key | Context | Action |
-| --- | --- | --- |
-| `Tab` | Global | Moves focus through: scenario tabs, parameter sliders, parameter inputs, action buttons, then right panel tables |
-| `Arrow Left/Right` | Scenario tabs | Switch between Base, Optimistic, Pessimistic |
-| `Arrow Left/Right` | Slider focused | Decrease/increase by step |
-| `Home` | Slider focused | Set to minimum |
-| `End` | Slider focused | Set to maximum |
-| `Enter` | Save button focused | Save parameters |
-| `Enter` | Reset button focused | Open reset confirmation dialog |
-| `Escape` | Any input focused | Cancel edit, revert to saved value |
+| Key                | Context              | Action                                                                                                           |
+| ------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Tab`              | Global               | Moves focus through: scenario tabs, parameter sliders, parameter inputs, action buttons, then right panel tables |
+| `Arrow Left/Right` | Scenario tabs        | Switch between Base, Optimistic, Pessimistic                                                                     |
+| `Arrow Left/Right` | Slider focused       | Decrease/increase by step                                                                                        |
+| `Home`             | Slider focused       | Set to minimum                                                                                                   |
+| `End`              | Slider focused       | Set to maximum                                                                                                   |
+| `Enter`            | Save button focused  | Save parameters                                                                                                  |
+| `Enter`            | Reset button focused | Open reset confirmation dialog                                                                                   |
+| `Escape`           | Any input focused    | Cancel edit, revert to saved value                                                                               |
 
 ### 10.3 Color Independence
 
@@ -584,22 +586,23 @@ If implemented, a "New Scenario" button appears after the three default tabs.
 
 **Button:**
 
-| Property | Value |
-| --- | --- |
-| Component | `<Button variant="outline" size="sm">` |
-| Icon | Lucide `Plus`, 14px |
-| Label | "New Scenario" |
-| Position | Right of the Pessimistic tab, or below the tab row if no space |
+| Property  | Value                                                          |
+| --------- | -------------------------------------------------------------- |
+| Component | `<Button variant="outline" size="sm">`                         |
+| Icon      | Lucide `Plus`, 14px                                            |
+| Label     | "New Scenario"                                                 |
+| Position  | Right of the Pessimistic tab, or below the tab row if no space |
 
 **Side panel form (480px, per framework Section 4.4):**
 
-| Field | Component | Validation |
-| --- | --- | --- |
-| Scenario Name | `<Input>` | Required, 2-50 chars, unique within version |
-| Copy From | `<Select>` | Options: Base, Optimistic, Pessimistic, or "Blank" |
-| Parameters (5x) | Same slider + input controls as left panel | Same min/max/step rules |
+| Field           | Component                                  | Validation                                         |
+| --------------- | ------------------------------------------ | -------------------------------------------------- |
+| Scenario Name   | `<Input>`                                  | Required, 2-50 chars, unique within version        |
+| Copy From       | `<Select>`                                 | Options: Base, Optimistic, Pessimistic, or "Blank" |
+| Parameters (5x) | Same slider + input controls as left panel | Same min/max/step rules                            |
 
 **Behavior:**
+
 - On save, a new tab is added to the scenario tab list.
 - The key metrics and delta tables gain additional columns.
 - The bar chart adds a new bar with an auto-assigned color from a palette: `#8B5CF6` (violet-500), `#EC4899` (pink-500), `#F59E0B` (amber-500).

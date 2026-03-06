@@ -8,20 +8,20 @@ BudFin uses JWT-based stateless authentication with asymmetric signing to elimin
 
 **Token pair:**
 
-| Token | Format | TTL | Signing | Storage |
-| ------- | -------- | ----- | --------- | --------- |
-| Access token | JWT (RFC 7519) | 30 minutes | RS256 (asymmetric) | JavaScript memory (never localStorage, never sessionStorage) |
-| Refresh token | Cryptographically random 32-byte string | 8 hours | N/A (opaque) | HTTP-only, Secure, SameSite=Strict cookie (path: `/api/v1/auth`) |
+| Token         | Format                                  | TTL        | Signing            | Storage                                                          |
+| ------------- | --------------------------------------- | ---------- | ------------------ | ---------------------------------------------------------------- |
+| Access token  | JWT (RFC 7519)                          | 30 minutes | RS256 (asymmetric) | JavaScript memory (never localStorage, never sessionStorage)     |
+| Refresh token | Cryptographically random 32-byte string | 8 hours    | N/A (opaque)       | HTTP-only, Secure, SameSite=Strict cookie (path: `/api/v1/auth`) |
 
 **Access token payload:**
 
 ```json
 {
-  "sub": 42,
-  "email": "user@efir.edu.sa",
-  "role": "Editor",
-  "iat": 1709452200,
-  "exp": 1709454000
+	"sub": 42,
+	"email": "user@efir.edu.sa",
+	"role": "Editor",
+	"iat": 1709452200,
+	"exp": 1709454000
 }
 ```
 
@@ -53,12 +53,12 @@ Family tracking is stored in the `refresh_tokens` table (see Section 5 — Data 
 
 ### 7.2 Account Lockout Policy
 
-| Parameter | Value |
-| ----------- | ------- |
-| Max consecutive failures | 5 |
-| Lockout duration | 30 minutes |
-| Tracking scope | Per email address |
-| Reset on success | `failed_attempts = 0`, `locked_until = NULL` |
+| Parameter                | Value                                        |
+| ------------------------ | -------------------------------------------- |
+| Max consecutive failures | 5                                            |
+| Lockout duration         | 30 minutes                                   |
+| Tracking scope           | Per email address                            |
+| Reset on success         | `failed_attempts = 0`, `locked_until = NULL` |
 
 **Lockout flow:**
 
@@ -69,8 +69,8 @@ Family tracking is stored in the `refresh_tokens` table (see Section 5 — Data 
 
 ```json
 {
-  "code": "ACCOUNT_LOCKED",
-  "locked_until": "2026-03-03T11:00:00.000Z"
+	"code": "ACCOUNT_LOCKED",
+	"locked_until": "2026-03-03T11:00:00.000Z"
 }
 ```
 
@@ -81,37 +81,37 @@ Family tracking is stored in the `refresh_tokens` table (see Section 5 — Data 
 
 BudFin defines four roles with progressively increasing privileges. The role hierarchy is: Viewer < Editor < BudgetOwner < Admin.
 
-| Permission | Admin | BudgetOwner | Editor | Viewer |
-| --- | --- | --- | --- | --- |
-| View all planning data (read-only) | Y | Y | Y | Y |
-| Export reports (xlsx/pdf/csv) | Y | Y | Y | Y |
-| Enter/edit planning data | Y | Y | Y | -- |
-| Run calculations | Y | Y | Y | -- |
-| Import CSV/xlsx data | Y | Y | Y | -- |
-| View salary fields | Y | Y | Y | -- |
-| Create budget versions | Y | Y | -- | -- |
-| Delete draft versions | Y | Y | -- | -- |
-| Publish versions (Draft -> Published) | Y | Y | -- | -- |
-| Lock versions (Published -> Locked) | Y | Y | -- | -- |
-| Archive versions | Y | -- | -- | -- |
-| Reverse lifecycle (revert to Draft) | Y | -- | -- | -- |
-| Manage users | Y | -- | -- | -- |
-| View audit trail | Y | -- | -- | -- |
-| Edit system config | Y | -- | -- | -- |
-| Force unlock accounts | Y | -- | -- | -- |
+| Permission                            | Admin | BudgetOwner | Editor | Viewer |
+| ------------------------------------- | ----- | ----------- | ------ | ------ |
+| View all planning data (read-only)    | Y     | Y           | Y      | Y      |
+| Export reports (xlsx/pdf/csv)         | Y     | Y           | Y      | Y      |
+| Enter/edit planning data              | Y     | Y           | Y      | --     |
+| Run calculations                      | Y     | Y           | Y      | --     |
+| Import CSV/xlsx data                  | Y     | Y           | Y      | --     |
+| View salary fields                    | Y     | Y           | Y      | --     |
+| Create budget versions                | Y     | Y           | --     | --     |
+| Delete draft versions                 | Y     | Y           | --     | --     |
+| Publish versions (Draft -> Published) | Y     | Y           | --     | --     |
+| Lock versions (Published -> Locked)   | Y     | Y           | --     | --     |
+| Archive versions                      | Y     | --          | --     | --     |
+| Reverse lifecycle (revert to Draft)   | Y     | --          | --     | --     |
+| Manage users                          | Y     | --          | --     | --     |
+| View audit trail                      | Y     | --          | --     | --     |
+| Edit system config                    | Y     | --          | --     | --     |
+| Force unlock accounts                 | Y     | --          | --     | --     |
 
 #### Persona-to-Role Mapping
 
 BudFin's PRD defines six user personas. Each persona maps to one of the four RBAC roles above:
 
-| PRD Persona | RBAC Role | Rationale |
-| --- | --- | --- |
-| System Administrator | Admin | Full system access including user management, audit trail, and system configuration |
-| Budget Owner (CAO / Finance Director) | BudgetOwner | Version lifecycle control (create, publish, lock); cannot archive or manage users |
-| Budget Analyst (Finance Manager / Controller) | Editor | Data entry and calculation across all planning modules; no version lifecycle control |
-| HR/Payroll Coordinator | Editor | Same permissions as Budget Analyst; focused on employee master data and salary entry |
-| School Administrator (Proviseur / Principal) | Viewer | Read-only access to all planning data and exports; no data entry or calculations |
-| External Auditor | Viewer | Read-only access per PRD §11.3; receives exported reports; no direct audit trail access (audit data provided via exports) |
+| PRD Persona                                   | RBAC Role   | Rationale                                                                                                                 |
+| --------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| System Administrator                          | Admin       | Full system access including user management, audit trail, and system configuration                                       |
+| Budget Owner (CAO / Finance Director)         | BudgetOwner | Version lifecycle control (create, publish, lock); cannot archive or manage users                                         |
+| Budget Analyst (Finance Manager / Controller) | Editor      | Data entry and calculation across all planning modules; no version lifecycle control                                      |
+| HR/Payroll Coordinator                        | Editor      | Same permissions as Budget Analyst; focused on employee master data and salary entry                                      |
+| School Administrator (Proviseur / Principal)  | Viewer      | Read-only access to all planning data and exports; no data entry or calculations                                          |
+| External Auditor                              | Viewer      | Read-only access per PRD §11.3; receives exported reports; no direct audit trail access (audit data provided via exports) |
 
 This mapping is authoritative. Any future persona that requires capabilities not covered by these four roles requires a new role definition and CAO approval.
 
@@ -125,17 +125,17 @@ This mapping is authoritative. Any future persona that requires capabilities not
 
 #### Classified Data Fields
 
-| Field | Classification | Protection Measure |
-| --- | --- | --- |
-| `employees.base_salary_encrypted` | Confidential | pgcrypto AES-256 field encryption |
-| `employees.housing_allowance_encrypted` | Confidential | pgcrypto AES-256 field encryption |
-| `employees.transport_allowance_encrypted` | Confidential | pgcrypto AES-256 field encryption |
-| `employees.responsibility_premium_encrypted` | Confidential | pgcrypto AES-256 field encryption |
-| `employees.hsa_amount_encrypted` | Confidential | pgcrypto AES-256 field encryption |
-| `users.password_hash` | Confidential | bcrypt cost 12 |
-| `refresh_tokens.token_hash` | Confidential | bcrypt hashed; HTTP-only cookie transport |
-| `employees.name`, `joining_date` | Personal | Access control (authenticated users only) |
-| `audit_entries.ip_address` | Personal | Retained 7 years; access restricted to Admin role |
+| Field                                        | Classification | Protection Measure                                |
+| -------------------------------------------- | -------------- | ------------------------------------------------- |
+| `employees.base_salary_encrypted`            | Confidential   | pgcrypto AES-256 field encryption                 |
+| `employees.housing_allowance_encrypted`      | Confidential   | pgcrypto AES-256 field encryption                 |
+| `employees.transport_allowance_encrypted`    | Confidential   | pgcrypto AES-256 field encryption                 |
+| `employees.responsibility_premium_encrypted` | Confidential   | pgcrypto AES-256 field encryption                 |
+| `employees.hsa_amount_encrypted`             | Confidential   | pgcrypto AES-256 field encryption                 |
+| `users.password_hash`                        | Confidential   | bcrypt cost 12                                    |
+| `refresh_tokens.token_hash`                  | Confidential   | bcrypt hashed; HTTP-only cookie transport         |
+| `employees.name`, `joining_date`             | Personal       | Access control (authenticated users only)         |
+| `audit_entries.ip_address`                   | Personal       | Retained 7 years; access restricted to Admin role |
 
 #### Field-Level Encryption Implementation
 
@@ -164,24 +164,24 @@ Salary field visibility is enforced via the `salary:view` permission (see 02_com
 
 #### PDPL Principles Mapping
 
-| PDPL Principle | BudFin Implementation |
-| --- | --- |
-| Data minimization | Only fields required for budget calculations are stored; no extraneous PII collected |
-| Purpose limitation | Salary data used exclusively for budget calculation; not exported to external systems or shared with third parties |
-| Data residency (Art. 29) | Database hosted within KSA per constraint SA-008; no cross-border data transfer |
-| Right to erasure | Employee records anonymized (name replaced, salary fields zeroed and re-encrypted) when departed; financial records retained for audit compliance |
-| Consent | HR/Payroll Coordinator role responsible for obtaining employee consent before salary data entry |
-| Security measures | Field-level AES-256 encryption + TLS 1.3 in transit + role-based access control + append-only audit trail |
+| PDPL Principle           | BudFin Implementation                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data minimization        | Only fields required for budget calculations are stored; no extraneous PII collected                                                              |
+| Purpose limitation       | Salary data used exclusively for budget calculation; not exported to external systems or shared with third parties                                |
+| Data residency (Art. 29) | Database hosted within KSA per constraint SA-008; no cross-border data transfer                                                                   |
+| Right to erasure         | Employee records anonymized (name replaced, salary fields zeroed and re-encrypted) when departed; financial records retained for audit compliance |
+| Consent                  | HR/Payroll Coordinator role responsible for obtaining employee consent before salary data entry                                                   |
+| Security measures        | Field-level AES-256 encryption + TLS 1.3 in transit + role-based access control + append-only audit trail                                         |
 
 ### 7.5 Encryption in Transit
 
-| Control | Configuration |
-| --------- | --------------- |
-| Minimum TLS version | TLS 1.3 (TLS 1.2 permitted for legacy clients, configurable in Nginx) |
-| TLS termination | Nginx reverse proxy; internal Docker network traffic is unencrypted (trusted network) |
-| HSTS | `Strict-Transport-Security: max-age=31536000; includeSubDomains` |
-| HTTP redirect | All HTTP requests receive 308 Permanent Redirect to HTTPS |
-| CORS | Single-origin allowlist: `Access-Control-Allow-Origin: https://<frontend-host>` |
+| Control             | Configuration                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| Minimum TLS version | TLS 1.3 (TLS 1.2 permitted for legacy clients, configurable in Nginx)                 |
+| TLS termination     | Nginx reverse proxy; internal Docker network traffic is unencrypted (trusted network) |
+| HSTS                | `Strict-Transport-Security: max-age=31536000; includeSubDomains`                      |
+| HTTP redirect       | All HTTP requests receive 308 Permanent Redirect to HTTPS                             |
+| CORS                | Single-origin allowlist: `Access-Control-Allow-Origin: https://<frontend-host>`       |
 
 ### 7.6 API Security Controls
 
@@ -191,20 +191,20 @@ Salary field visibility is enforced via the `salary:view` permission (see 02_com
 
 **Security headers** (via Helmet.js middleware):
 
-| Header | Value |
-| -------- | ------- |
-| `X-Content-Type-Options` | `nosniff` |
-| `X-Frame-Options` | `DENY` |
-| `X-XSS-Protection` | `1; mode=block` |
+| Header                    | Value                |
+| ------------------------- | -------------------- |
+| `X-Content-Type-Options`  | `nosniff`            |
+| `X-Frame-Options`         | `DENY`               |
+| `X-XSS-Protection`        | `1; mode=block`      |
 | `Content-Security-Policy` | `default-src 'self'` |
-| `Referrer-Policy` | `no-referrer` |
+| `Referrer-Policy`         | `no-referrer`        |
 
 **Rate limiting** (via `@fastify/rate-limit`):
 
-| Scope | Limit | Window | Key |
-| ------- | ------- | -------- | ----- |
-| Authenticated API | 100 requests | 1 minute | JWT `userId` |
-| Login endpoint | 10 attempts | 15 minutes | Client IP |
+| Scope             | Limit        | Window     | Key          |
+| ----------------- | ------------ | ---------- | ------------ |
+| Authenticated API | 100 requests | 1 minute   | JWT `userId` |
+| Login endpoint    | 10 attempts  | 15 minutes | Client IP    |
 
 **Request size limit:** 10MB maximum, enforced by Fastify's native `bodyLimit` option. This ceiling accommodates xlsx file imports while preventing abuse.
 
@@ -238,13 +238,13 @@ At the application level, the audit logger writes within the same database trans
 
 ### 7.8 Threat Model (Top 5 — STRIDE)
 
-| # | Threat | STRIDE Category | Likelihood | Impact | Mitigation |
-| --- | --- | --- | --- | --- | --- |
-| T-001 | SQL injection via malformed fee grid input | Tampering | Low | Critical | Prisma parameterized queries; Zod input validation on all endpoints |
-| T-002 | Broken authentication (stolen or forged JWT) | Spoofing | Medium | High | RS256 asymmetric signing; 30-minute TTL; token family rotation with theft detection |
-| T-003 | IDOR — accessing another budget version's data | Information Disclosure | Medium | High | Version ownership check in every repository query; fiscal year scope enforcement |
-| T-004 | Privilege escalation (Viewer modifying data) | Elevation of Privilege | Low | High | RBAC middleware on every protected route; 403 on violation; all attempts audit-logged |
-| T-005 | Salary PII exposure in database breach | Information Disclosure | Low | Critical | pgcrypto field-level AES-256 encryption; encryption key stored outside database (Docker secret) |
+| #     | Threat                                         | STRIDE Category        | Likelihood | Impact   | Mitigation                                                                                      |
+| ----- | ---------------------------------------------- | ---------------------- | ---------- | -------- | ----------------------------------------------------------------------------------------------- |
+| T-001 | SQL injection via malformed fee grid input     | Tampering              | Low        | Critical | Prisma parameterized queries; Zod input validation on all endpoints                             |
+| T-002 | Broken authentication (stolen or forged JWT)   | Spoofing               | Medium     | High     | RS256 asymmetric signing; 30-minute TTL; token family rotation with theft detection             |
+| T-003 | IDOR — accessing another budget version's data | Information Disclosure | Medium     | High     | Version ownership check in every repository query; fiscal year scope enforcement                |
+| T-004 | Privilege escalation (Viewer modifying data)   | Elevation of Privilege | Low        | High     | RBAC middleware on every protected route; 403 on violation; all attempts audit-logged           |
+| T-005 | Salary PII exposure in database breach         | Information Disclosure | Low        | Critical | pgcrypto field-level AES-256 encryption; encryption key stored outside database (Docker secret) |
 
 ### 7.9 Pre-Go-Live Security Testing
 

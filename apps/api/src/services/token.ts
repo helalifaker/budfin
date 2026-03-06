@@ -1,10 +1,4 @@
-import {
-	SignJWT,
-	jwtVerify,
-	importPKCS8,
-	importSPKI,
-	type KeyLike,
-} from 'jose';
+import { SignJWT, jwtVerify, importPKCS8, importSPKI, type KeyLike } from 'jose';
 import { readFileSync } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
 
@@ -26,9 +20,7 @@ export async function loadKeys(): Promise<{
 	const publicPath = process.env.JWT_PUBLIC_KEY_PATH;
 
 	if (!privatePath || !publicPath) {
-		throw new Error(
-			'JWT_PRIVATE_KEY_PATH and JWT_PUBLIC_KEY_PATH must be set'
-		);
+		throw new Error('JWT_PRIVATE_KEY_PATH and JWT_PUBLIC_KEY_PATH must be set');
 	}
 
 	const privatePem = readFileSync(privatePath, 'utf-8');
@@ -41,16 +33,11 @@ export async function loadKeys(): Promise<{
 	return cachedKeys!;
 }
 
-export function setKeys(
-	privateKey: KeyLike,
-	publicKey: KeyLike,
-): void {
+export function setKeys(privateKey: KeyLike, publicKey: KeyLike): void {
 	cachedKeys = { privateKey, publicKey };
 }
 
-export async function signAccessToken(
-	payload: TokenPayload
-): Promise<string> {
+export async function signAccessToken(payload: TokenPayload): Promise<string> {
 	const { privateKey } = await loadKeys();
 
 	return new SignJWT({
@@ -66,9 +53,7 @@ export async function signAccessToken(
 		.sign(privateKey);
 }
 
-export async function verifyAccessToken(
-	token: string
-): Promise<TokenPayload> {
+export async function verifyAccessToken(token: string): Promise<TokenPayload> {
 	const { publicKey } = await loadKeys();
 
 	const { payload } = await jwtVerify(token, publicKey, {

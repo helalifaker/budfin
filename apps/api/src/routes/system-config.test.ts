@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { setKeys, signAccessToken } from '../services/token.js';
 import { auth } from '../plugins/auth.js';
@@ -27,9 +24,7 @@ import { prisma } from '../lib/prisma.js';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -80,8 +75,7 @@ beforeEach(() => {
 
 describe('GET /api/v1/system-config', () => {
 	it('returns all config for Admin', async () => {
-		vi.mocked(prisma.systemConfig.findMany)
-			.mockResolvedValue(mockConfigs);
+		vi.mocked(prisma.systemConfig.findMany).mockResolvedValue(mockConfigs);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -109,9 +103,7 @@ describe('GET /api/v1/system-config', () => {
 
 describe('PUT /api/v1/system-config', () => {
 	it('updates values', async () => {
-		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue(
-			mockConfigs[0]!,
-		);
+		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue(mockConfigs[0]!);
 		vi.mocked(prisma.systemConfig.update).mockResolvedValue({
 			...mockConfigs[0]!,
 			value: '10',
@@ -123,9 +115,7 @@ describe('PUT /api/v1/system-config', () => {
 			url: '/api/v1/system-config',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'lockout_threshold', value: '10' },
-				],
+				updates: [{ key: 'lockout_threshold', value: '10' }],
 			},
 		});
 		expect(res.statusCode).toBe(200);
@@ -133,9 +123,7 @@ describe('PUT /api/v1/system-config', () => {
 	});
 
 	it('creates audit entries with old/new values', async () => {
-		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue(
-			mockConfigs[0]!,
-		);
+		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue(mockConfigs[0]!);
 		vi.mocked(prisma.systemConfig.update).mockResolvedValue({
 			...mockConfigs[0]!,
 			value: '10',
@@ -147,15 +135,12 @@ describe('PUT /api/v1/system-config', () => {
 			url: '/api/v1/system-config',
 			headers: authHeader(token),
 			payload: {
-				updates: [
-					{ key: 'lockout_threshold', value: '10' },
-				],
+				updates: [{ key: 'lockout_threshold', value: '10' }],
 			},
 		});
 
 		expect(prisma.auditEntry.create).toHaveBeenCalledOnce();
-		const call = vi.mocked(prisma.auditEntry.create)
-			.mock.calls[0]![0];
+		const call = vi.mocked(prisma.auditEntry.create).mock.calls[0]![0];
 		expect(call.data.operation).toBe('CONFIG_UPDATED');
 		expect(call.data.oldValues).toMatchObject({
 			key: 'lockout_threshold',

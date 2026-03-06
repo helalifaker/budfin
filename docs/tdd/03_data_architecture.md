@@ -1,10 +1,10 @@
 # BudFin Technical Design Document v1.0 — Section 5: Data Architecture
 
-| Field | Value |
-| -------------------- | ------------------------------------------------- |
-| Section | 5 — Data Architecture |
-| Status | Draft |
-| Date | March 3, 2026 |
+| Field            | Value                                                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Section          | 5 — Data Architecture                                                                                                    |
+| Status           | Draft                                                                                                                    |
+| Date             | March 3, 2026                                                                                                            |
 | Related Sections | 01_overview.md (TC-001 through TC-005), 02_component_design.md (engine interfaces), 05_security.md (RBAC and encryption) |
 
 ---
@@ -1879,26 +1879,26 @@ This section documents the five critical calculation flows that transform input 
 3. **Per-employee monthly computation.** For each employee in the version, for each month 1-12:
 
    a. **Monthly gross:**
-      - Months 1-8: `base_salary + housing_allowance + transport_allowance + responsibility_premium + (hsa_amount if month NOT IN (7,8))`.
-      - Months 9-12: `(base_salary + augmentation) + housing_allowance + transport_allowance + responsibility_premium + hsa_amount`.
-      - `adjusted_gross = monthly_gross * hourly_percentage`.
+   - Months 1-8: `base_salary + housing_allowance + transport_allowance + responsibility_premium + (hsa_amount if month NOT IN (7,8))`.
+   - Months 9-12: `(base_salary + augmentation) + housing_allowance + transport_allowance + responsibility_premium + hsa_amount`.
+   - `adjusted_gross = monthly_gross * hourly_percentage`.
 
    b. **GOSI (employer contribution):**
-      - If `is_saudi = TRUE`: `gosi_amount = adjusted_gross * gosi_rate_saudi` (11.75% from `system_config`).
-      - If `is_saudi = FALSE`: `gosi_amount = 0` (non-Saudi GOSI is employee-only, not employer-funded in this model).
+   - If `is_saudi = TRUE`: `gosi_amount = adjusted_gross * gosi_rate_saudi` (11.75% from `system_config`).
+   - If `is_saudi = FALSE`: `gosi_amount = 0` (non-Saudi GOSI is employee-only, not employer-funded in this model).
 
    c. **Ajeer:**
-      - If `is_saudi = TRUE`: `ajeer_amount = 0`.
-      - If `is_ajeer = TRUE` and status = `Existing`: `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` per month.
-      - If `is_ajeer = TRUE` and status = `New`: Ajeer applies from Sep-Dec only (4 months). `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` for months 9-12; 0 for months 1-8.
-      - `ajeer_levy_nitaqat`, `ajeer_monthly_fee` from `system_config`.
+   - If `is_saudi = TRUE`: `ajeer_amount = 0`.
+   - If `is_ajeer = TRUE` and status = `Existing`: `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` per month.
+   - If `is_ajeer = TRUE` and status = `New`: Ajeer applies from Sep-Dec only (4 months). `ajeer_amount = (ajeer_levy_nitaqat / 12) + ajeer_monthly_fee` for months 9-12; 0 for months 1-8.
+   - `ajeer_levy_nitaqat`, `ajeer_monthly_fee` from `system_config`.
 
    d. **EoS provision:**
-      - `years_of_service = YEARFRAC(joining_date, fiscal_year_dec_31)` using US 30/360 (TC-002).
-      - If `years_of_service <= 5`: `annual_provision = years_of_service * eos_base * 0.5`.
-      - If `years_of_service > 5`: `annual_provision = (5 * eos_base * 0.5) + ((years_of_service - 5) * eos_base * 1.0)`.
-      - `eos_base = base_salary + housing + transport + responsibility_premium` (excludes HSA).
-      - `monthly_accrual = annual_provision / 12`.
+   - `years_of_service = YEARFRAC(joining_date, fiscal_year_dec_31)` using US 30/360 (TC-002).
+   - If `years_of_service <= 5`: `annual_provision = years_of_service * eos_base * 0.5`.
+   - If `years_of_service > 5`: `annual_provision = (5 * eos_base * 0.5) + ((years_of_service - 5) * eos_base * 1.0)`.
+   - `eos_base = base_salary + housing + transport + responsibility_premium` (excludes HSA).
+   - `monthly_accrual = annual_provision / 12`.
 
    e. **Total cost:** `total_cost = adjusted_gross + gosi_amount + ajeer_amount + eos_monthly_accrual`.
 
@@ -1963,13 +1963,13 @@ This section documents the five critical calculation flows that transform input 
 
 ### Retention
 
-| Data | Active Retention | Archive | Total Retention |
-| ------ | ----------------- | --------- | ----------------- |
-| `audit_entries` | 3 years in primary database | Cold storage (pg_dump archive) | 7 years (NFR 11.5) |
-| `budget_versions` + all version-scoped data | 3 years active access | Archived status, read-only | 10 years (NFR 11.7) |
-| `export_jobs` (files) | 1 hour (download expiry) | N/A | Files deleted after 24 hours |
-| `export_jobs` (records) | 30 days | N/A | Records purged after 30 days |
-| `calculation_audit_log` | 2 years | Cold storage | 5 years |
+| Data                                        | Active Retention            | Archive                        | Total Retention              |
+| ------------------------------------------- | --------------------------- | ------------------------------ | ---------------------------- |
+| `audit_entries`                             | 3 years in primary database | Cold storage (pg_dump archive) | 7 years (NFR 11.5)           |
+| `budget_versions` + all version-scoped data | 3 years active access       | Archived status, read-only     | 10 years (NFR 11.7)          |
+| `export_jobs` (files)                       | 1 hour (download expiry)    | N/A                            | Files deleted after 24 hours |
+| `export_jobs` (records)                     | 30 days                     | N/A                            | Records purged after 30 days |
+| `calculation_audit_log`                     | 2 years                     | Cold storage                   | 5 years                      |
 
 ### Delete Policy
 
@@ -1995,10 +1995,10 @@ Enrollment data crosses academic year boundaries. Academic years at EFIR span tw
 
 | Fiscal Year | Period | Academic Year Source | Calendar Months |
 | ----------- | ------ | -------------------- | --------------- |
-| FY2025 | AY1 | "2024-25" CSV | Jan–Jun 2025 |
-| FY2025 | AY2 | "2025-26" CSV | Sep–Dec 2025 |
-| FY2026 | AY1 | "2025-26" CSV | Jan–Jun 2026 |
-| FY2026 | AY2 | "2026-27" CSV | Sep–Dec 2026 |
+| FY2025      | AY1    | "2024-25" CSV        | Jan–Jun 2025    |
+| FY2025      | AY2    | "2025-26" CSV        | Sep–Dec 2025    |
+| FY2026      | AY1    | "2025-26" CSV        | Jan–Jun 2026    |
+| FY2026      | AY2    | "2026-27" CSV        | Sep–Dec 2026    |
 
 **General rule:**
 
@@ -2024,12 +2024,12 @@ Period locking is the mechanism by which an authorized user permanently marks a 
 
 **Locking actions and permissions:**
 
-| Action | Who | Effect |
-| ------ | --- | ------ |
-| Import actuals into version | Editor+ | Writes to output tables; version stays 'Draft' |
-| Publish version | BudgetOwner | `status = 'Published'`; visible to all roles |
-| Lock version | BudgetOwner | `status = 'Locked'`; version immutable |
-| Lock fiscal period | Admin/BudgetOwner | `fiscal_periods.status = 'Locked'`; `actual_version_id` set |
+| Action                      | Who               | Effect                                                      |
+| --------------------------- | ----------------- | ----------------------------------------------------------- |
+| Import actuals into version | Editor+           | Writes to output tables; version stays 'Draft'              |
+| Publish version             | BudgetOwner       | `status = 'Published'`; visible to all roles                |
+| Lock version                | BudgetOwner       | `status = 'Locked'`; version immutable                      |
+| Lock fiscal period          | Admin/BudgetOwner | `fiscal_periods.status = 'Locked'`; `actual_version_id` set |
 
 Period locking is one-way (`Draft → Locked`). A locked period cannot be reopened. If actuals need to be revised after locking, a new superseding Actual version must be created, imported, locked, and its `id` written to `fiscal_periods.actual_version_id` via an admin override. This preserves the full audit trail of the previous version.
 
@@ -2076,38 +2076,38 @@ This merge is performed at the API layer. No additional database tables are requ
 
 ### Source Files
 
-| # | File | Description |
-| --- | ------ | ------------- |
-| 1 | `01_EFIR_Revenue_FY2026_v3.xlsx` | Fee grids, enrollment assumptions, revenue calculation |
-| 2 | `02_EFIR_DHG_FY2026_v1.xlsx` | DHG grilles, FTE calculations |
-| 3 | `EFIR_Staff_Costs_Budget_FY2026_V3.xlsx` | Employee records, salary components, statutory costs |
-| 4 | `EFIR_Consolidated_Monthly_Budget_FY2026.xlsx` | P&L consolidation, IFRS mapping |
-| 5 | `enrollment_2021-22.csv` through `enrollment_2025-26.csv` | 5 years historical enrollment — imported as Actual budget_versions (type='Actual', data_source='IMPORTED') |
+| #   | File                                                      | Description                                                                                                |
+| --- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1   | `01_EFIR_Revenue_FY2026_v3.xlsx`                          | Fee grids, enrollment assumptions, revenue calculation                                                     |
+| 2   | `02_EFIR_DHG_FY2026_v1.xlsx`                              | DHG grilles, FTE calculations                                                                              |
+| 3   | `EFIR_Staff_Costs_Budget_FY2026_V3.xlsx`                  | Employee records, salary components, statutory costs                                                       |
+| 4   | `EFIR_Consolidated_Monthly_Budget_FY2026.xlsx`            | P&L consolidation, IFRS mapping                                                                            |
+| 5   | `enrollment_2021-22.csv` through `enrollment_2025-26.csv` | 5 years historical enrollment — imported as Actual budget_versions (type='Actual', data_source='IMPORTED') |
 
 ### Source -> Target Mapping
 
-| Source File | Source Sheet/Column | Target Table | Target Column | Transformation |
-| --- | --- | --- | --- | --- |
-| Staff_Costs | Staff Master / Name | `employees` | `name` | Direct copy, trim whitespace |
-| Staff_Costs | Staff Master / Function | `employees` | `function_role` | Direct copy |
-| Staff_Costs | Staff Master / Department | `employees` | `department` | Map to CHECK constraint values |
-| Staff_Costs | Staff Master / Base Salary | `employees` | `base_salary_encrypted` | `pgp_sym_encrypt(value::text, $key)` |
-| Staff_Costs | Staff Master / Housing | `employees` | `housing_allowance_encrypted` | `pgp_sym_encrypt(value::text, $key)` |
-| Staff_Costs | Staff Master / Transport | `employees` | `transport_allowance_encrypted` | `pgp_sym_encrypt(value::text, $key)` |
-| Staff_Costs | Staff Master / Premium | `employees` | `responsibility_premium_encrypted` | `pgp_sym_encrypt(value::text, $key)` |
-| Staff_Costs | Staff Master / HSA | `employees` | `hsa_amount_encrypted` | `pgp_sym_encrypt(value::text, $key)` |
-| Staff_Costs | Staff Master / Start Date | `employees` | `joining_date` | Parse date string, validate format |
-| Staff_Costs | Staff Master / Saudi Flag | `employees` | `is_saudi` | Boolean mapping (Y/N -> TRUE/FALSE) |
-| Staff_Costs | Staff Master / Hourly % | `employees` | `hourly_percentage` | Divide by 100 if percentage; validate range |
-| Revenue | Fee Grid AY1 | `fee_grids` | `tuition_ttc`, `tuition_ht` | Validate HT = TTC / (1 + VAT); cast to DECIMAL(15,4) |
-| Revenue | Fee Grid AY1 / DAI | `fee_grids` | `dai` | Cast to DECIMAL(15,4) |
-| Revenue | Enrollment AY1 | `enrollment_headcount` | `headcount` | Integer; validate >= 0 |
-| Revenue | Enrollment Detail | `enrollment_detail` | `headcount` | Integer per nationality/tariff; validate sums |
-| DHG | Grille | `dhg_grille_config` | `hours_per_week_per_section` | Cast to DECIMAL(7,4) |
-| DHG | Grille / Subject | `dhg_grille_config` | `subject` | Direct copy, normalize case |
-| Consolidated | P&L Line Items | `other_revenue_items` | `annual_amount`, `ifrs_category` | Map Excel line items to IFRS categories |
-| Enrollment CSVs | level_code | `enrollment_headcount` (via Actual budget_version) | `grade_level` | Map level codes to standard grade identifiers; one enrollment_headcount row per grade per AY period under the Actual version |
-| Enrollment CSVs | student_count | `enrollment_headcount` (via Actual budget_version) | `headcount` | Integer; validate >= 0; academic year label resolved to fiscal_year + academic_period per the AY→FY mapping rule (section 5.3) |
+| Source File     | Source Sheet/Column        | Target Table                                       | Target Column                      | Transformation                                                                                                                 |
+| --------------- | -------------------------- | -------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Staff_Costs     | Staff Master / Name        | `employees`                                        | `name`                             | Direct copy, trim whitespace                                                                                                   |
+| Staff_Costs     | Staff Master / Function    | `employees`                                        | `function_role`                    | Direct copy                                                                                                                    |
+| Staff_Costs     | Staff Master / Department  | `employees`                                        | `department`                       | Map to CHECK constraint values                                                                                                 |
+| Staff_Costs     | Staff Master / Base Salary | `employees`                                        | `base_salary_encrypted`            | `pgp_sym_encrypt(value::text, $key)`                                                                                           |
+| Staff_Costs     | Staff Master / Housing     | `employees`                                        | `housing_allowance_encrypted`      | `pgp_sym_encrypt(value::text, $key)`                                                                                           |
+| Staff_Costs     | Staff Master / Transport   | `employees`                                        | `transport_allowance_encrypted`    | `pgp_sym_encrypt(value::text, $key)`                                                                                           |
+| Staff_Costs     | Staff Master / Premium     | `employees`                                        | `responsibility_premium_encrypted` | `pgp_sym_encrypt(value::text, $key)`                                                                                           |
+| Staff_Costs     | Staff Master / HSA         | `employees`                                        | `hsa_amount_encrypted`             | `pgp_sym_encrypt(value::text, $key)`                                                                                           |
+| Staff_Costs     | Staff Master / Start Date  | `employees`                                        | `joining_date`                     | Parse date string, validate format                                                                                             |
+| Staff_Costs     | Staff Master / Saudi Flag  | `employees`                                        | `is_saudi`                         | Boolean mapping (Y/N -> TRUE/FALSE)                                                                                            |
+| Staff_Costs     | Staff Master / Hourly %    | `employees`                                        | `hourly_percentage`                | Divide by 100 if percentage; validate range                                                                                    |
+| Revenue         | Fee Grid AY1               | `fee_grids`                                        | `tuition_ttc`, `tuition_ht`        | Validate HT = TTC / (1 + VAT); cast to DECIMAL(15,4)                                                                           |
+| Revenue         | Fee Grid AY1 / DAI         | `fee_grids`                                        | `dai`                              | Cast to DECIMAL(15,4)                                                                                                          |
+| Revenue         | Enrollment AY1             | `enrollment_headcount`                             | `headcount`                        | Integer; validate >= 0                                                                                                         |
+| Revenue         | Enrollment Detail          | `enrollment_detail`                                | `headcount`                        | Integer per nationality/tariff; validate sums                                                                                  |
+| DHG             | Grille                     | `dhg_grille_config`                                | `hours_per_week_per_section`       | Cast to DECIMAL(7,4)                                                                                                           |
+| DHG             | Grille / Subject           | `dhg_grille_config`                                | `subject`                          | Direct copy, normalize case                                                                                                    |
+| Consolidated    | P&L Line Items             | `other_revenue_items`                              | `annual_amount`, `ifrs_category`   | Map Excel line items to IFRS categories                                                                                        |
+| Enrollment CSVs | level_code                 | `enrollment_headcount` (via Actual budget_version) | `grade_level`                      | Map level codes to standard grade identifiers; one enrollment_headcount row per grade per AY period under the Actual version   |
+| Enrollment CSVs | student_count              | `enrollment_headcount` (via Actual budget_version) | `headcount`                        | Integer; validate >= 0; academic year label resolved to fiscal_year + academic_period per the AY→FY mapping rule (section 5.3) |
 
 ### 6-Step Validation Protocol
 

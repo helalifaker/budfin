@@ -4,24 +4,24 @@
 
 ### École Française Internationale de Riyad (EFIR)
 
-| Field | Value |
-| --- | --- |
-| Document Version | 2.0 |
-| Date | March 3, 2026 |
-| Status | Frozen Baseline -- Comprehensive Audit Remediation Applied |
-| Confidentiality | Internal -- Restricted |
-| Author | Office of the Chief Accounting Officer |
-| Fiscal Year Scope | FY2026 (Jan--Dec 2026) |
+| Field             | Value                                                      |
+| ----------------- | ---------------------------------------------------------- |
+| Document Version  | 2.0                                                        |
+| Date              | March 3, 2026                                              |
+| Status            | Frozen Baseline -- Comprehensive Audit Remediation Applied |
+| Confidentiality   | Internal -- Restricted                                     |
+| Author            | Office of the Chief Accounting Officer                     |
+| Fiscal Year Scope | FY2026 (Jan--Dec 2026)                                     |
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Description of Changes |
-| --- | --- | --- | --- |
-| 1.0 | 2026-02-15 | Office of the Chief Accounting Officer | Initial draft. Established product vision, scope, functional requirements (Enrollment, Revenue, Staffing & Staff Costs, P&L, Scenarios, Master Data, Audit Trail, Dashboard, Input Management), data model overview, calculation engine specifications, non-functional requirements, UI/UX design principles, data migration strategy, implementation roadmap, risks and mitigations, acceptance criteria, and appendices A through I. |
-| 1.1 | 2026-03-03 | Office of the Chief Accounting Officer | Phase 1 Stakeholder Review applied. Incorporated 6 decisions from CAO review: (D-001) reorganized navigation into 4 groups (Dashboard, Planning, Master Data, Admin); (D-002) merged Enrollment and Capacity Planning into unified "Enrollment & Capacity" module; (D-003) merged Staffing (DHG) and Staff Costs into unified "Staffing & Staff Costs" module; (D-004) added explicit Calculate button per planning module with stale-state indicator; (D-005) simplified Audit Trail scope for v1 (basic logging, deferred CSV export to v2); (D-006) added Version Management as dedicated Planning module with FRs VER-001 through VER-006. Added Decision Log (Section 19). Added Addendum with 32 additional FRs from Excel workbook analysis (FR-ADD-001 through FR-ADD-032). |
-| 2.0 | 2026-03-03 | Office of the Chief Accounting Officer | Comprehensive audit remediation -- 72 gaps addressed across 10 dimensions. Added: Revision History, Glossary, Intended Audience, Document Versioning Policy, Approvers & Sign-Off, RACI matrix, Communication Plan. Added Scope Assumptions (SA-001 through SA-009), Change Control Process, Scope Freeze. Added 2 personas (System Administrator, External Auditor), 25 user stories (US-001 through US-025), 4 user journey maps, persona-to-FR traceability matrix. Added Technology Constraints (TC-001 through TC-005), Data Dictionary (5 entities), API Contract Guidance, Data Flow description. Replaced NFR table with 97 expanded NFRs across 12 categories including RBAC matrix. Added Acceptance Criteria for top 30 FRs with Given/When/Then format. Enhanced Data Migration Strategy with cleansing, rollback, transformation rules, parallel-run specification, and error handling. Replaced timeline (30 weeks with buffers), expanded risk register (15 risks with owners), added Resource Plan, MVP/Target/Stretch tiers, integrated testing strategy. Merged Addendum (32 FR-ADD items) into main body, applied MoSCoW priority tags to all 68 FRs, deleted Section 18 (Addendum). |
+| Version | Date       | Author                                 | Description of Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------- | ---------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-15 | Office of the Chief Accounting Officer | Initial draft. Established product vision, scope, functional requirements (Enrollment, Revenue, Staffing & Staff Costs, P&L, Scenarios, Master Data, Audit Trail, Dashboard, Input Management), data model overview, calculation engine specifications, non-functional requirements, UI/UX design principles, data migration strategy, implementation roadmap, risks and mitigations, acceptance criteria, and appendices A through I.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 1.1     | 2026-03-03 | Office of the Chief Accounting Officer | Phase 1 Stakeholder Review applied. Incorporated 6 decisions from CAO review: (D-001) reorganized navigation into 4 groups (Dashboard, Planning, Master Data, Admin); (D-002) merged Enrollment and Capacity Planning into unified "Enrollment & Capacity" module; (D-003) merged Staffing (DHG) and Staff Costs into unified "Staffing & Staff Costs" module; (D-004) added explicit Calculate button per planning module with stale-state indicator; (D-005) simplified Audit Trail scope for v1 (basic logging, deferred CSV export to v2); (D-006) added Version Management as dedicated Planning module with FRs VER-001 through VER-006. Added Decision Log (Section 19). Added Addendum with 32 additional FRs from Excel workbook analysis (FR-ADD-001 through FR-ADD-032).                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 2.0     | 2026-03-03 | Office of the Chief Accounting Officer | Comprehensive audit remediation -- 72 gaps addressed across 10 dimensions. Added: Revision History, Glossary, Intended Audience, Document Versioning Policy, Approvers & Sign-Off, RACI matrix, Communication Plan. Added Scope Assumptions (SA-001 through SA-009), Change Control Process, Scope Freeze. Added 2 personas (System Administrator, External Auditor), 25 user stories (US-001 through US-025), 4 user journey maps, persona-to-FR traceability matrix. Added Technology Constraints (TC-001 through TC-005), Data Dictionary (5 entities), API Contract Guidance, Data Flow description. Replaced NFR table with 97 expanded NFRs across 12 categories including RBAC matrix. Added Acceptance Criteria for top 30 FRs with Given/When/Then format. Enhanced Data Migration Strategy with cleansing, rollback, transformation rules, parallel-run specification, and error handling. Replaced timeline (30 weeks with buffers), expanded risk register (15 risks with owners), added Resource Plan, MVP/Target/Stretch tiers, integrated testing strategy. Merged Addendum (32 FR-ADD items) into main body, applied MoSCoW priority tags to all 68 FRs, deleted Section 18 (Addendum). |
 
 ---
 
@@ -50,6 +50,7 @@ This PRD follows a semantic versioning scheme with three levels of change classi
 **Patch Version (X.Y.Z)** -- Typographical fixes, formatting corrections, broken link repairs, and minor wording adjustments that do not alter the meaning or intent of any requirement. Patch versions can be applied by the document author without formal review, though they must be recorded in the Revision History. Examples: fixing a typo in a table header, correcting a markdown formatting issue, updating a broken cross-reference.
 
 **Version Numbering Rules:**
+
 - The document version appears in the header metadata table (Field: Document Version).
 - Each version increment is recorded in the Revision History with date, author, and description.
 - Only the latest version of the PRD is considered authoritative. Prior versions are retained in Git history for reference.
@@ -88,15 +89,15 @@ This PRD follows a semantic versioning scheme with three levels of change classi
    - 7.3 Comparison Engine
    - 7.4 Version Management Functional Requirements (FR-VER-001 -- FR-VER-006)
 8. [Functional Requirements](#8-functional-requirements) (68 FRs with MoSCoW priority)
-   - 8.1 Enrollment & Capacity Module (FR-ENR-*, FR-CAP-*)
-   - 8.2 Revenue Module (FR-REV-*)
-   - 8.3 Staffing & Staff Costs Module (FR-DHG-*, FR-STC-*)
-   - 8.4 P&L and Financial Reporting Module (FR-PNL-*)
-   - 8.5 Scenario Modeling (FR-SCN-*)
-   - 8.6 Master Data Management (FR-MDM-*)
-   - 8.7 Audit Trail and Change History (FR-AUD-*)
-   - 8.8 Dashboard Module (FR-DSH-*)
-   - 8.9 Input Management (FR-INP-*)
+   - 8.1 Enrollment & Capacity Module (FR-ENR-_, FR-CAP-_)
+   - 8.2 Revenue Module (FR-REV-\*)
+   - 8.3 Staffing & Staff Costs Module (FR-DHG-_, FR-STC-_)
+   - 8.4 P&L and Financial Reporting Module (FR-PNL-\*)
+   - 8.5 Scenario Modeling (FR-SCN-\*)
+   - 8.6 Master Data Management (FR-MDM-\*)
+   - 8.7 Audit Trail and Change History (FR-AUD-\*)
+   - 8.8 Dashboard Module (FR-DSH-\*)
+   - 8.9 Input Management (FR-INP-\*)
 9. [Data Model Overview](#9-data-model-overview)
    - 9.1 Technology Constraints (TC-001 -- TC-005)
    - 9.2 Data Dictionary (5 entities)
@@ -178,14 +179,14 @@ BudFin will be a fast, reliable financial planning workspace that enables EFIR's
 
 ### 3.2 Strategic Goals
 
-| Goal | Success Metric | Target |
-| --- | --- | --- |
-| Eliminate spreadsheet fragmentation | Number of external files needed for budget cycle | Zero |
-| Enable real-time version comparison | Time to generate Budget vs. Actual variance report | < 5 seconds |
-| Provide full audit trail | Percentage of data changes with attribution | 100% |
-| Accelerate budget cycle | Elapsed days for annual budget preparation | Reduce by 60% |
-| Ensure calculation reliability | Number of broken references or formula errors | Zero |
-| Support IFRS-compliant reporting | Manual adjustments needed for IFRS Income Statement | Zero |
+| Goal                                | Success Metric                                      | Target        |
+| ----------------------------------- | --------------------------------------------------- | ------------- |
+| Eliminate spreadsheet fragmentation | Number of external files needed for budget cycle    | Zero          |
+| Enable real-time version comparison | Time to generate Budget vs. Actual variance report  | < 5 seconds   |
+| Provide full audit trail            | Percentage of data changes with attribution         | 100%          |
+| Accelerate budget cycle             | Elapsed days for annual budget preparation          | Reduce by 60% |
+| Ensure calculation reliability      | Number of broken references or formula errors       | Zero          |
+| Support IFRS-compliant reporting    | Manual adjustments needed for IFRS Income Statement | Zero          |
 
 ---
 
@@ -219,36 +220,36 @@ BudFin will be a fast, reliable financial planning workspace that enables EFIR's
 
 The following assumptions constrain the design and implementation of BudFin v1. Any deviation from these assumptions triggers the Change Control Process (Section 4.4).
 
-| ID | Assumption | Value | Rationale |
-| --- | --- | --- | --- |
-| SA-001 | Currency | SAR (Saudi Riyal) only. Multi-currency support is out of scope for v1. All monetary values are denominated in SAR. No exchange rate tables, currency conversion logic, or multi-currency ledger entries are required. | EFIR operates exclusively in Saudi Arabia with SAR-denominated tuition, salaries, and statutory obligations. |
-| SA-002 | UI Language | English only for v1. French and Arabic localization (including RTL layout support) are deferred to v2. All UI labels, validation messages, error text, report headers, and help content are in English. Domain-specific French terms (e.g., grade names like "Terminale", cost lines like "Contrats Locaux Remplacements") are preserved as-is since they are proper nouns within the EFIR context. | Reduces v1 scope while preserving domain terminology that the finance team already uses in English/French. |
-| SA-003 | Timezone | Arabia Standard Time (AST, UTC+3) for all timestamps, date calculations, and date display. No daylight saving time adjustments (Saudi Arabia does not observe DST). All server-side timestamps stored in UTC and converted to AST for display. YEARFRAC and date arithmetic use AST-anchored dates. | EFIR is located in Riyadh, Saudi Arabia. Single-timezone simplifies date logic. |
-| SA-004 | Concurrent Users | Maximum ~20 concurrent users (single school finance team). No requirement for horizontal scaling, connection pooling beyond default limits, or real-time collaborative editing. Optimistic locking is sufficient for conflict resolution. | PRD Section 5 defines six personas within a single school's finance and administrative staff. |
-| SA-005 | Fiscal Years Supported | Maximum 10 fiscal years of active data (current year + 9 historical years). Fiscal years beyond the 10-year window must be archived per the version archival policy. Archived data remains queryable for read-only access but is excluded from active calculations and version comparison. | 10 years provides sufficient historical depth for trend analysis (FR-ENR-001 requires 5+ years) while keeping database size manageable. |
-| SA-006 | Deployment Model | Single-school, single-tenant deployment. No multi-entity consolidation, no shared infrastructure between schools, no tenant isolation logic. One database instance serves one EFIR installation. | PRD Section 4.1 explicitly scopes to "single-school deployment for EFIR." Section 4.2 defers multi-school consolidation to a future version. |
-| SA-007 | Browser Support | Modern evergreen browsers: Chrome, Edge, Firefox, and Safari (latest 2 major versions at time of release). No support for Internet Explorer, legacy Edge (EdgeHTML), or mobile browsers. Progressive Web App (PWA) capabilities are not required. | Standard office environment with managed workstations. Evergreen browsers ensure access to modern JavaScript APIs (ES2022+), CSS Grid/Flexbox, and Web APIs required for keyboard-driven data grids. |
-| SA-008 | Network Requirements | Standard office LAN/WiFi connectivity assumed. No offline mode, no service worker caching for offline use, no conflict resolution for offline-to-online sync. Application requires active network connection for all operations. Minimum expected bandwidth: 10 Mbps. | EFIR operates from a single physical campus with reliable office network infrastructure. Offline scenarios are not part of the daily finance workflow. |
-| SA-009 | Data Volume | Approximately 1,500 students, 168 employees, 31 sheets across 4 Excel workbooks, 5 enrollment CSV files. Fee grid contains ~45+ combinations (15 grades x 3 nationalities x 3 tariffs, for 2 academic periods). Monthly budget grid produces 12 x 168 = ~2,016 employee-month records per fiscal year. Total active data fits comfortably within a single PostgreSQL/MySQL instance without partitioning or sharding. | Derived from actual EFIR data: enrollment CSVs (2021-22 through 2025-26), Revenue workbook (12 sheets), DHG workbook (9 sheets), Staff Costs workbook (8 sheets), Consolidated workbook (2 sheets). |
+| ID     | Assumption             | Value                                                                                                                                                                                                                                                                                                                                                                                                                 | Rationale                                                                                                                                                                                            |
+| ------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SA-001 | Currency               | SAR (Saudi Riyal) only. Multi-currency support is out of scope for v1. All monetary values are denominated in SAR. No exchange rate tables, currency conversion logic, or multi-currency ledger entries are required.                                                                                                                                                                                                 | EFIR operates exclusively in Saudi Arabia with SAR-denominated tuition, salaries, and statutory obligations.                                                                                         |
+| SA-002 | UI Language            | English only for v1. French and Arabic localization (including RTL layout support) are deferred to v2. All UI labels, validation messages, error text, report headers, and help content are in English. Domain-specific French terms (e.g., grade names like "Terminale", cost lines like "Contrats Locaux Remplacements") are preserved as-is since they are proper nouns within the EFIR context.                   | Reduces v1 scope while preserving domain terminology that the finance team already uses in English/French.                                                                                           |
+| SA-003 | Timezone               | Arabia Standard Time (AST, UTC+3) for all timestamps, date calculations, and date display. No daylight saving time adjustments (Saudi Arabia does not observe DST). All server-side timestamps stored in UTC and converted to AST for display. YEARFRAC and date arithmetic use AST-anchored dates.                                                                                                                   | EFIR is located in Riyadh, Saudi Arabia. Single-timezone simplifies date logic.                                                                                                                      |
+| SA-004 | Concurrent Users       | Maximum ~20 concurrent users (single school finance team). No requirement for horizontal scaling, connection pooling beyond default limits, or real-time collaborative editing. Optimistic locking is sufficient for conflict resolution.                                                                                                                                                                             | PRD Section 5 defines six personas within a single school's finance and administrative staff.                                                                                                        |
+| SA-005 | Fiscal Years Supported | Maximum 10 fiscal years of active data (current year + 9 historical years). Fiscal years beyond the 10-year window must be archived per the version archival policy. Archived data remains queryable for read-only access but is excluded from active calculations and version comparison.                                                                                                                            | 10 years provides sufficient historical depth for trend analysis (FR-ENR-001 requires 5+ years) while keeping database size manageable.                                                              |
+| SA-006 | Deployment Model       | Single-school, single-tenant deployment. No multi-entity consolidation, no shared infrastructure between schools, no tenant isolation logic. One database instance serves one EFIR installation.                                                                                                                                                                                                                      | PRD Section 4.1 explicitly scopes to "single-school deployment for EFIR." Section 4.2 defers multi-school consolidation to a future version.                                                         |
+| SA-007 | Browser Support        | Modern evergreen browsers: Chrome, Edge, Firefox, and Safari (latest 2 major versions at time of release). No support for Internet Explorer, legacy Edge (EdgeHTML), or mobile browsers. Progressive Web App (PWA) capabilities are not required.                                                                                                                                                                     | Standard office environment with managed workstations. Evergreen browsers ensure access to modern JavaScript APIs (ES2022+), CSS Grid/Flexbox, and Web APIs required for keyboard-driven data grids. |
+| SA-008 | Network Requirements   | Standard office LAN/WiFi connectivity assumed. No offline mode, no service worker caching for offline use, no conflict resolution for offline-to-online sync. Application requires active network connection for all operations. Minimum expected bandwidth: 10 Mbps.                                                                                                                                                 | EFIR operates from a single physical campus with reliable office network infrastructure. Offline scenarios are not part of the daily finance workflow.                                               |
+| SA-009 | Data Volume            | Approximately 1,500 students, 168 employees, 31 sheets across 4 Excel workbooks, 5 enrollment CSV files. Fee grid contains ~45+ combinations (15 grades x 3 nationalities x 3 tariffs, for 2 academic periods). Monthly budget grid produces 12 x 168 = ~2,016 employee-month records per fiscal year. Total active data fits comfortably within a single PostgreSQL/MySQL instance without partitioning or sharding. | Derived from actual EFIR data: enrollment CSVs (2021-22 through 2025-26), Revenue workbook (12 sheets), DHG workbook (9 sheets), Staff Costs workbook (8 sheets), Consolidated workbook (2 sheets).  |
 
 ### 4.4 Change Control Process
 
-All changes to requirements after the scope freeze date (Section 4.5) must follow this five-step process. The process applies to functional requirements (FR-*), non-functional requirements (NFR), scope assumptions (SA-*), and technology constraints (TC-*).
+All changes to requirements after the scope freeze date (Section 4.5) must follow this five-step process. The process applies to functional requirements (FR-_), non-functional requirements (NFR), scope assumptions (SA-_), and technology constraints (TC-\*).
 
 **Step 1: Change Request Submission**
 
 The requester submits a formal change request using the following template:
 
-| Field | Description |
-| --- | --- |
-| CR Number | Auto-assigned sequential identifier (CR-001, CR-002, ...) |
-| Requester | Name and role of the person requesting the change |
-| Date Submitted | Date the change request was filed |
-| Description | Clear description of what needs to change |
-| Justification | Business or technical reason for the change |
-| Affected FRs | List of functional requirement IDs impacted (e.g., FR-REV-011, FR-STC-009) |
-| Affected Sections | PRD sections that would need revision |
-| Estimated Impact | Requester's initial assessment: Low / Medium / High |
+| Field             | Description                                                                |
+| ----------------- | -------------------------------------------------------------------------- |
+| CR Number         | Auto-assigned sequential identifier (CR-001, CR-002, ...)                  |
+| Requester         | Name and role of the person requesting the change                          |
+| Date Submitted    | Date the change request was filed                                          |
+| Description       | Clear description of what needs to change                                  |
+| Justification     | Business or technical reason for the change                                |
+| Affected FRs      | List of functional requirement IDs impacted (e.g., FR-REV-011, FR-STC-009) |
+| Affected Sections | PRD sections that would need revision                                      |
+| Estimated Impact  | Requester's initial assessment: Low / Medium / High                        |
 
 **Step 2: Impact Assessment (Tech Lead)**
 
@@ -264,12 +265,12 @@ The Tech Lead performs a formal impact assessment within 3 business days of subm
 
 Approval authority depends on the MoSCoW priority of the affected requirements:
 
-| Affected Priority | Approval Authority | SLA |
-| --- | --- | --- |
-| [MUST] requirements | CAO (Chief Accounting Officer) approval required | 5 business days |
-| [SHOULD] requirements | Project Manager approval sufficient | 3 business days |
-| [COULD] requirements | Project Manager approval sufficient | 3 business days |
-| New requirements (not in PRD) | CAO approval required | 5 business days |
+| Affected Priority             | Approval Authority                               | SLA             |
+| ----------------------------- | ------------------------------------------------ | --------------- |
+| [MUST] requirements           | CAO (Chief Accounting Officer) approval required | 5 business days |
+| [SHOULD] requirements         | Project Manager approval sufficient              | 3 business days |
+| [COULD] requirements          | Project Manager approval sufficient              | 3 business days |
+| New requirements (not in PRD) | CAO approval required                            | 5 business days |
 
 **Step 4: Implementation**
 
@@ -302,14 +303,14 @@ Changes submitted after the scope freeze are evaluated against the current sprin
 
 ### 5.1 Persona Registry
 
-| Persona | Role | Primary Needs | Key Activities |
-| --- | --- | --- | --- |
-| Budget Owner | Chief Accounting Officer / Finance Director | Full control over budget versions, assumptions, and approvals; variance analysis | Create/lock budget versions; approve forecasts; review P&L variance; present to board |
-| Budget Analyst | Finance Manager / Controller | Efficient data entry, scenario modeling, detailed drill-down | Enter enrollment projections; adjust fee grids; run scenarios; prepare monthly close reports |
-| HR/Payroll Coordinator | HR Manager | Staff roster accuracy, cost projections for new hires | Maintain employee master data; validate salary components; review EoS provisions |
-| School Administrator | Proviseur / Principal | Enrollment visibility, capacity planning, staffing adequacy | Review enrollment trends; check class capacity; validate DHG staffing requirements |
-| System Administrator | IT Manager / Technical Lead | System reliability, user access management, data backup integrity | Manage user accounts and RBAC roles; monitor system health; perform database backups; configure system parameters; troubleshoot technical issues |
-| External Auditor | IFRS Auditor / Compliance Reviewer | Read-only access to financial data, audit trail, and version history for compliance verification | Review IFRS Income Statement outputs; verify audit trail completeness; validate calculation methodology; inspect version lifecycle compliance; confirm data integrity against source documents |
+| Persona                | Role                                        | Primary Needs                                                                                    | Key Activities                                                                                                                                                                                 |
+| ---------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Budget Owner           | Chief Accounting Officer / Finance Director | Full control over budget versions, assumptions, and approvals; variance analysis                 | Create/lock budget versions; approve forecasts; review P&L variance; present to board                                                                                                          |
+| Budget Analyst         | Finance Manager / Controller                | Efficient data entry, scenario modeling, detailed drill-down                                     | Enter enrollment projections; adjust fee grids; run scenarios; prepare monthly close reports                                                                                                   |
+| HR/Payroll Coordinator | HR Manager                                  | Staff roster accuracy, cost projections for new hires                                            | Maintain employee master data; validate salary components; review EoS provisions                                                                                                               |
+| School Administrator   | Proviseur / Principal                       | Enrollment visibility, capacity planning, staffing adequacy                                      | Review enrollment trends; check class capacity; validate DHG staffing requirements                                                                                                             |
+| System Administrator   | IT Manager / Technical Lead                 | System reliability, user access management, data backup integrity                                | Manage user accounts and RBAC roles; monitor system health; perform database backups; configure system parameters; troubleshoot technical issues                                               |
+| External Auditor       | IFRS Auditor / Compliance Reviewer          | Read-only access to financial data, audit trail, and version history for compliance verification | Review IFRS Income Statement outputs; verify audit trail completeness; validate calculation methodology; inspect version lifecycle compliance; confirm data integrity against source documents |
 
 ### 5.2 User Stories
 
@@ -317,26 +318,31 @@ Changes submitted after the scope freeze are evaluated against the current sprin
 
 **US-001: Create Annual Budget Version**
 As a Budget Owner, I want to create a new Budget version for FY2026, so that the finance team has a workspace to build the annual plan.
+
 - **Acceptance Criteria:** New version created in Draft status; appears in context bar; audit event logged.
 - **Related FRs:** FR-VER-001, FR-VER-006
 
 **US-002: Lock Approved Budget**
 As a Budget Owner, I want to lock a Budget version after board approval, so that approved figures cannot be accidentally modified.
+
 - **Acceptance Criteria:** Version transitions to Locked status; all data fields become read-only; audit entry with timestamp and user; version badge changes to "Locked."
 - **Related FRs:** FR-VER-003, FR-AUD-002
 
 **US-003: Compare Budget vs. Forecast**
 As a Budget Owner, I want to compare the approved Budget against the latest Forecast, so that I can quantify variance and explain drivers to the board.
+
 - **Acceptance Criteria:** Selecting two versions activates variance columns; absolute and percentage variance displayed; color-coded favorable/unfavorable.
 - **Related FRs:** FR-VER-004, FR-PNL-006
 
 **US-004: Review P&L Variance**
 As a Budget Owner, I want to see the consolidated P&L with variance against prior period or budget, so that I can identify areas needing attention during monthly review.
+
 - **Acceptance Criteria:** P&L displays 12 monthly columns + annual total; variance columns appear when comparison version active; drill-down to line-item level.
 - **Related FRs:** FR-PNL-001, FR-PNL-004, FR-PNL-006
 
 **US-005: Approve Forecast Revision**
 As a Budget Owner, I want to review and publish a forecast revision prepared by the Budget Analyst, so that the latest projections become the official working numbers.
+
 - **Acceptance Criteria:** Forecast version transitions from Draft to Published; all stakeholders can view published version; audit trail records publication event.
 - **Related FRs:** FR-VER-003, FR-AUD-002
 
@@ -344,26 +350,31 @@ As a Budget Owner, I want to review and publish a forecast revision prepared by 
 
 **US-006: Enter Enrollment Projections**
 As a Budget Analyst, I want to enter AY2 enrollment projections by grade, nationality, and tariff, so that the revenue engine can calculate updated forecasts.
+
 - **Acceptance Criteria:** Two-stage entry (total headcount then breakdown); validation that Stage 2 sums match Stage 1; stale indicator appears on Revenue module after save.
 - **Related FRs:** FR-ENR-005, FR-ENR-006, FR-ENR-007
 
 **US-007: Adjust Fee Grid for New Academic Year**
 As a Budget Analyst, I want to update tuition fees for AY2 in the current forecast version, so that revenue projections reflect the latest approved fee schedule.
+
 - **Acceptance Criteria:** Fee grid editable in Draft/Published versions; changes scoped to selected version only; HT auto-calculated from TTC; audit trail logs each fee change.
 - **Related FRs:** FR-REV-001, FR-REV-003, FR-REV-004
 
 **US-008: Run Scenario Comparison**
 As a Budget Analyst, I want to compare Base, Optimistic, and Pessimistic scenarios side-by-side, so that I can prepare a range of outcomes for the finance committee.
+
 - **Acceptance Criteria:** All three scenarios display simultaneously with delta columns; enrollment, revenue, and net revenue metrics shown per scenario.
 - **Related FRs:** FR-SCN-001, FR-SCN-004, FR-SCN-006, FR-SCN-007
 
 **US-009: Prepare Monthly Close Reports**
 As a Budget Analyst, I want to generate the monthly P&L close report with IFRS classification, so that the Finance Director can review it before board submission.
+
 - **Acceptance Criteria:** P&L generated with IFRS line items; export to Excel and PDF available; report includes current month and YTD figures.
 - **Related FRs:** FR-PNL-001, FR-PNL-016, FR-PNL-018
 
 **US-010: Calculate Revenue After Data Changes**
 As a Budget Analyst, I want to click the Calculate button after updating enrollment and fee data, so that the revenue engine recalculates all monthly figures.
+
 - **Acceptance Criteria:** Calculate button triggers full revenue recalculation; visual feedback within 200ms; results displayed within 3 seconds; stale indicator clears; success/error message shown.
 - **Related FRs:** FR-REV-011, FR-REV-012, Section 12 (Calculate button behavior)
 
@@ -371,21 +382,25 @@ As a Budget Analyst, I want to click the Calculate button after updating enrollm
 
 **US-011: Maintain Employee Master Data**
 As an HR/Payroll Coordinator, I want to add, edit, and review employee records with all salary components, so that staff cost calculations are based on accurate data.
+
 - **Acceptance Criteria:** All 18+ fields editable; validation on required fields; duplicate detection on import; audit trail for every change.
 - **Related FRs:** FR-STC-001, FR-STC-002, FR-STC-003, FR-AUD-001
 
 **US-012: Review EoS Provisions**
 As an HR/Payroll Coordinator, I want to review the End of Service provision for each employee, so that I can verify the calculation against our internal records and Saudi Labor Law requirements.
+
 - **Acceptance Criteria:** EoS provision displayed per employee with opening balance, annual charge, and closing balance; YEARFRAC-based years of service visible; drill-down to formula components.
 - **Related FRs:** FR-STC-011
 
 **US-013: Model New Hire Impact**
 As an HR/Payroll Coordinator, I want to add planned new positions starting September and see their impact on total staff costs, so that I can advise on hiring budget adequacy.
+
 - **Acceptance Criteria:** New positions contribute zero cost Jan-Aug, full cost Sep-Dec; step-change visible in monthly budget grid; total headcount and cost updated.
 - **Related FRs:** FR-STC-012, FR-STC-013
 
 **US-014: Validate GOSI and Ajeer Calculations**
 As an HR/Payroll Coordinator, I want to verify that GOSI applies only to Saudi nationals and Ajeer costs are correctly calculated for non-Saudi staff, so that statutory obligations are accurately budgeted.
+
 - **Acceptance Criteria:** GOSI = 11.75% applied to 2 Saudi employees only; Ajeer levy + platform fee applied to 166 non-Saudi employees; prorated for new hires.
 - **Related FRs:** FR-STC-009, FR-STC-010
 
@@ -393,16 +408,19 @@ As an HR/Payroll Coordinator, I want to verify that GOSI applies only to Saudi n
 
 **US-015: Review Enrollment Trends**
 As a School Administrator, I want to see 5-year enrollment trends by grade level, so that I can plan for facility and staffing needs.
+
 - **Acceptance Criteria:** Line chart showing 5 years of enrollment per grade; CAGR and moving averages displayed; filterable by band (Maternelle, Elementaire, College, Lycee).
 - **Related FRs:** FR-ENR-001, FR-ENR-003, FR-ENR-004
 
 **US-016: Check Class Capacity**
 As a School Administrator, I want to see capacity utilization per grade with traffic-light alerts, so that I can identify grades approaching maximum capacity.
+
 - **Acceptance Criteria:** Utilization percentage displayed per grade; traffic-light (green/amber/red) based on Plancher/Cible/Plafond thresholds; recruitment slots calculated.
 - **Related FRs:** FR-CAP-001 through FR-CAP-007
 
 **US-017: Validate DHG Staffing**
 As a School Administrator, I want to review FTE requirements per curriculum band and compare against current staffing, so that I can ensure adequate teaching coverage.
+
 - **Acceptance Criteria:** FTE requirements by level displayed; comparison against available staff; HSA scenario impact visible; ASEM assistant requirements for Maternelle shown.
 - **Related FRs:** FR-DHG-009 through FR-DHG-015
 
@@ -410,21 +428,25 @@ As a School Administrator, I want to review FTE requirements per curriculum band
 
 **US-018: Manage User Accounts**
 As a System Administrator, I want to create, edit, deactivate user accounts and assign RBAC roles, so that only authorized personnel access the system with appropriate permissions.
+
 - **Acceptance Criteria:** CRUD operations on user accounts; four roles assignable (Admin, Budget Owner, Editor, Viewer); role changes logged in audit trail.
 - **Related FRs:** NFR Security (RBAC matrix)
 
 **US-019: Monitor System Health**
 As a System Administrator, I want to view application health status, error logs, and backup status, so that I can ensure the system is running reliably.
+
 - **Acceptance Criteria:** Health endpoint accessible; error logs filterable by severity; last backup timestamp visible; alerts for FATAL errors.
 - **Related FRs:** NFR Monitoring, NFR Reliability
 
 **US-020: Configure System Parameters**
 As a System Administrator, I want to configure fiscal year settings, academic year boundaries, and system-wide parameters, so that the application reflects the correct operational context.
+
 - **Acceptance Criteria:** System settings editable by Admin role only; changes logged in audit trail; validation prevents invalid configurations.
 - **Related FRs:** FR-MDM-005, FR-MDM-008
 
 **US-021: Perform Database Backup and Restore**
 As a System Administrator, I want to verify that daily backups are running and test restore procedures, so that data can be recovered within the RTO if needed.
+
 - **Acceptance Criteria:** Backup status visible with last run time and checksum; test restore can be initiated; RPO < 24 hours confirmed; RTO < 4 hours achievable.
 - **Related FRs:** NFR Reliability (RTO, RPO, Backup)
 
@@ -432,40 +454,44 @@ As a System Administrator, I want to verify that daily backups are running and t
 
 **US-022: Review IFRS Income Statement**
 As an External Auditor, I want to view the IFRS Income Statement with full line-item detail and reclassification notes, so that I can verify compliance with IAS 1 and IFRS 15.
+
 - **Acceptance Criteria:** P&L displayed with IFRS classifications; all values in SAR HT; reclassification mapping visible; read-only access (no edit capability).
 - **Related FRs:** FR-PNL-001, FR-PNL-016, FR-PNL-018
 
 **US-023: Inspect Audit Trail**
 As an External Auditor, I want to review the complete audit trail for a given fiscal year and version, so that I can confirm all data changes are properly attributed and timestamped.
+
 - **Acceptance Criteria:** Audit log filterable by date range and version; entries show user, timestamp, field, old/new values; 7-year retention confirmed.
 - **Related FRs:** FR-AUD-001, FR-AUD-002, FR-AUD-003
 
 **US-024: Validate Calculation Methodology**
 As an External Auditor, I want to trace how revenue and staff cost figures are calculated from source inputs, so that I can verify the methodology conforms to IFRS and Saudi regulatory requirements.
+
 - **Acceptance Criteria:** Calculation audit log shows input hash, output hash, duration, and success/failure per calculation run; formula documentation accessible; results traceable to source data.
 - **Related FRs:** Section 10 (Calculation Engine), NFR Monitoring (Calculation audit log)
 
 **US-025: Compare Budget Versions**
 As an External Auditor, I want to compare the approved Budget against Actual results with variance analysis, so that I can assess budget accuracy and identify material variances.
+
 - **Acceptance Criteria:** Version comparison available in read-only mode; absolute and percentage variance displayed; drill-down to line-item level; export to Excel for working papers.
 - **Related FRs:** FR-VER-004, FR-PNL-006
 
 ### 5.3 Persona-to-FR Traceability Matrix
 
-| FR Family | Budget Owner | Budget Analyst | HR/Payroll | School Admin | System Admin | Ext. Auditor |
-| --- | --- | --- | --- | --- | --- | --- |
-| FR-ENR (Enrollment) | View | Edit | -- | View | -- | View |
-| FR-CAP (Capacity) | View | Edit | -- | View | -- | -- |
-| FR-REV (Revenue) | View | Edit | -- | -- | -- | View |
-| FR-DHG (Staffing) | View | View | View | View | -- | -- |
-| FR-STC (Staff Costs) | View | View | Edit | -- | -- | View |
-| FR-PNL (P&L) | View | Edit | -- | -- | -- | View |
-| FR-SCN (Scenarios) | View | Edit | -- | View | -- | -- |
-| FR-MDM (Master Data) | View | Edit | Edit | -- | Configure | -- |
-| FR-AUD (Audit) | View | View | View | -- | View | View |
-| FR-DSH (Dashboard) | View | View | View | View | View | View |
-| FR-INP (Input Mgmt) | View | Edit | Edit | -- | -- | -- |
-| FR-VER (Versions) | Full | Create/Clone | -- | -- | -- | View |
+| FR Family            | Budget Owner | Budget Analyst | HR/Payroll | School Admin | System Admin | Ext. Auditor |
+| -------------------- | ------------ | -------------- | ---------- | ------------ | ------------ | ------------ |
+| FR-ENR (Enrollment)  | View         | Edit           | --         | View         | --           | View         |
+| FR-CAP (Capacity)    | View         | Edit           | --         | View         | --           | --           |
+| FR-REV (Revenue)     | View         | Edit           | --         | --           | --           | View         |
+| FR-DHG (Staffing)    | View         | View           | View       | View         | --           | --           |
+| FR-STC (Staff Costs) | View         | View           | Edit       | --           | --           | View         |
+| FR-PNL (P&L)         | View         | Edit           | --         | --           | --           | View         |
+| FR-SCN (Scenarios)   | View         | Edit           | --         | View         | --           | --           |
+| FR-MDM (Master Data) | View         | Edit           | Edit       | --           | Configure    | --           |
+| FR-AUD (Audit)       | View         | View           | View       | --           | View         | View         |
+| FR-DSH (Dashboard)   | View         | View           | View       | View         | View         | View         |
+| FR-INP (Input Mgmt)  | View         | Edit           | Edit       | --           | --           | --           |
+| FR-VER (Versions)    | Full         | Create/Clone   | --         | --           | --           | View         |
 
 **Legend:** Edit = can create/modify data; View = read-only access; Full = all lifecycle operations; Configure = system-level settings; -- = no access to this module.
 
@@ -473,53 +499,53 @@ As an External Auditor, I want to compare the approved Budget against Actual res
 
 #### 5.4.1 Annual Budget Preparation
 
-| Step | Actor | Action | System Response | Duration |
-| --- | --- | --- | --- | --- |
-| 1 | Budget Owner | Creates new Budget version "Budget FY2026" | Version created in Draft status; appears in context bar | Day 1 |
-| 2 | Budget Analyst | Imports AY1 enrollment from historical data; enters AY2 projections | Two-stage enrollment entry validated; stale indicators appear on Revenue and Staffing modules | Days 1-3 |
-| 3 | Budget Analyst | Updates fee grid for AY2 with approved tuition rates | Fee grid snapshot created for this version; HT auto-calculated | Days 2-3 |
-| 4 | HR/Payroll | Enters new hire positions for September; updates salary augmentations | Employee records updated; step-change visible in preview | Days 3-5 |
-| 5 | Budget Analyst | Clicks Calculate on Enrollment & Capacity module | Sections calculated; capacity utilization alerts shown; stale indicator clears | Day 5 |
-| 6 | Budget Analyst | Clicks Calculate on Revenue module | Monthly revenue calculated; IFRS categories assigned; total displayed | Day 5 |
-| 7 | Budget Analyst | Clicks Calculate on Staffing & Staff Costs module | Monthly cost budget generated with Sep step-change; EoS/GOSI/Ajeer calculated | Day 6 |
-| 8 | Budget Analyst | Clicks Calculate on P&L module | Consolidated P&L generated; IFRS Income Statement populated | Day 6 |
-| 9 | Budget Analyst | Runs scenario comparisons (Base, Optimistic, Pessimistic) | Side-by-side scenario output with delta metrics | Day 7 |
-| 10 | Budget Owner | Reviews P&L, scenarios, and KPIs on Dashboard | Dashboard displays all KPIs; variance indicators if comparison version active | Days 7-8 |
-| 11 | Budget Owner | Publishes Budget version for broader review | Version status changes to Published; visible to all users | Day 8 |
-| 12 | Budget Owner | After board approval, locks Budget version | Version locked; all fields read-only; audit entry created | Day 10 |
+| Step | Actor          | Action                                                                | System Response                                                                               | Duration |
+| ---- | -------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
+| 1    | Budget Owner   | Creates new Budget version "Budget FY2026"                            | Version created in Draft status; appears in context bar                                       | Day 1    |
+| 2    | Budget Analyst | Imports AY1 enrollment from historical data; enters AY2 projections   | Two-stage enrollment entry validated; stale indicators appear on Revenue and Staffing modules | Days 1-3 |
+| 3    | Budget Analyst | Updates fee grid for AY2 with approved tuition rates                  | Fee grid snapshot created for this version; HT auto-calculated                                | Days 2-3 |
+| 4    | HR/Payroll     | Enters new hire positions for September; updates salary augmentations | Employee records updated; step-change visible in preview                                      | Days 3-5 |
+| 5    | Budget Analyst | Clicks Calculate on Enrollment & Capacity module                      | Sections calculated; capacity utilization alerts shown; stale indicator clears                | Day 5    |
+| 6    | Budget Analyst | Clicks Calculate on Revenue module                                    | Monthly revenue calculated; IFRS categories assigned; total displayed                         | Day 5    |
+| 7    | Budget Analyst | Clicks Calculate on Staffing & Staff Costs module                     | Monthly cost budget generated with Sep step-change; EoS/GOSI/Ajeer calculated                 | Day 6    |
+| 8    | Budget Analyst | Clicks Calculate on P&L module                                        | Consolidated P&L generated; IFRS Income Statement populated                                   | Day 6    |
+| 9    | Budget Analyst | Runs scenario comparisons (Base, Optimistic, Pessimistic)             | Side-by-side scenario output with delta metrics                                               | Day 7    |
+| 10   | Budget Owner   | Reviews P&L, scenarios, and KPIs on Dashboard                         | Dashboard displays all KPIs; variance indicators if comparison version active                 | Days 7-8 |
+| 11   | Budget Owner   | Publishes Budget version for broader review                           | Version status changes to Published; visible to all users                                     | Day 8    |
+| 12   | Budget Owner   | After board approval, locks Budget version                            | Version locked; all fields read-only; audit entry created                                     | Day 10   |
 
 #### 5.4.2 Monthly Close
 
-| Step | Actor | Action | System Response | Duration |
-| --- | --- | --- | --- | --- |
-| 1 | Budget Analyst | Selects current month in context bar; verifies actuals data (if entered) | Context bar filters to selected month; data displays for active version | Start of close |
-| 2 | Budget Analyst | Reviews Revenue module for any adjustments | Revenue figures displayed by IFRS category | Hour 1 |
-| 3 | HR/Payroll | Confirms staff roster is current; validates any mid-month changes | Employee records verified; changes logged in audit trail | Hour 1-2 |
-| 4 | Budget Analyst | Clicks Calculate on all planning modules | All modules recalculated; P&L consolidated; stale indicators cleared | Hour 2 |
-| 5 | Budget Analyst | Generates monthly P&L report with IFRS classification | P&L report generated; export to Excel/PDF available | Hour 2-3 |
-| 6 | Budget Owner | Reviews monthly P&L and variance against Budget | Variance columns displayed; favorable/unfavorable color-coded | Hour 3-4 |
-| 7 | Budget Owner | Approves close; signs off on monthly figures | Monthly figures finalized in current version | End of close |
+| Step | Actor          | Action                                                                   | System Response                                                         | Duration       |
+| ---- | -------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------- | -------------- |
+| 1    | Budget Analyst | Selects current month in context bar; verifies actuals data (if entered) | Context bar filters to selected month; data displays for active version | Start of close |
+| 2    | Budget Analyst | Reviews Revenue module for any adjustments                               | Revenue figures displayed by IFRS category                              | Hour 1         |
+| 3    | HR/Payroll     | Confirms staff roster is current; validates any mid-month changes        | Employee records verified; changes logged in audit trail                | Hour 1-2       |
+| 4    | Budget Analyst | Clicks Calculate on all planning modules                                 | All modules recalculated; P&L consolidated; stale indicators cleared    | Hour 2         |
+| 5    | Budget Analyst | Generates monthly P&L report with IFRS classification                    | P&L report generated; export to Excel/PDF available                     | Hour 2-3       |
+| 6    | Budget Owner   | Reviews monthly P&L and variance against Budget                          | Variance columns displayed; favorable/unfavorable color-coded           | Hour 3-4       |
+| 7    | Budget Owner   | Approves close; signs off on monthly figures                             | Monthly figures finalized in current version                            | End of close   |
 
 #### 5.4.3 Forecast Revision
 
-| Step | Actor | Action | System Response | Duration |
-| --- | --- | --- | --- | --- |
-| 1 | Budget Owner | Creates new Forecast version (e.g., "FC2 March") by cloning current forecast | All data copied to new Draft version; independent of source | Day 1 |
-| 2 | Budget Analyst | Updates enrollment assumptions based on latest actuals | Enrollment modified; stale indicators appear on downstream modules | Days 1-2 |
-| 3 | Budget Analyst | Adjusts scenario parameters if assumptions have changed | Scenario parameters updated for new forecast | Day 2 |
-| 4 | Budget Analyst | Recalculates all modules | Revenue, costs, P&L updated with new assumptions | Day 2-3 |
-| 5 | Budget Analyst | Compares FC2 against approved Budget | Variance columns show forecast-to-budget deviation | Day 3 |
-| 6 | Budget Owner | Reviews variance and approves forecast | Forecast published after review | Day 3-4 |
+| Step | Actor          | Action                                                                       | System Response                                                    | Duration |
+| ---- | -------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
+| 1    | Budget Owner   | Creates new Forecast version (e.g., "FC2 March") by cloning current forecast | All data copied to new Draft version; independent of source        | Day 1    |
+| 2    | Budget Analyst | Updates enrollment assumptions based on latest actuals                       | Enrollment modified; stale indicators appear on downstream modules | Days 1-2 |
+| 3    | Budget Analyst | Adjusts scenario parameters if assumptions have changed                      | Scenario parameters updated for new forecast                       | Day 2    |
+| 4    | Budget Analyst | Recalculates all modules                                                     | Revenue, costs, P&L updated with new assumptions                   | Day 2-3  |
+| 5    | Budget Analyst | Compares FC2 against approved Budget                                         | Variance columns show forecast-to-budget deviation                 | Day 3    |
+| 6    | Budget Owner   | Reviews variance and approves forecast                                       | Forecast published after review                                    | Day 3-4  |
 
 #### 5.4.4 Version Comparison
 
-| Step | Actor | Action | System Response | Duration |
-| --- | --- | --- | --- | --- |
-| 1 | Any user | Selects primary version in context bar (e.g., "FC2 March") | Data loads for selected version | Immediate |
-| 2 | Any user | Selects comparison version (e.g., "Budget FY2026") | Variance columns appear across all modules | < 5 seconds |
-| 3 | Any user | Reviews variance at summary level (Dashboard or P&L) | Color-coded variance indicators; key metrics highlighted | Immediate |
-| 4 | Any user | Drills into specific line item (e.g., Maternelle revenue variance) | Waterfall breakdown showing contributing drivers | < 3 seconds |
-| 5 | Any user | Exports comparison report | Excel/PDF export with variance data | < 10 seconds |
+| Step | Actor    | Action                                                             | System Response                                          | Duration     |
+| ---- | -------- | ------------------------------------------------------------------ | -------------------------------------------------------- | ------------ |
+| 1    | Any user | Selects primary version in context bar (e.g., "FC2 March")         | Data loads for selected version                          | Immediate    |
+| 2    | Any user | Selects comparison version (e.g., "Budget FY2026")                 | Variance columns appear across all modules               | < 5 seconds  |
+| 3    | Any user | Reviews variance at summary level (Dashboard or P&L)               | Color-coded variance indicators; key metrics highlighted | Immediate    |
+| 4    | Any user | Drills into specific line item (e.g., Maternelle revenue variance) | Waterfall breakdown showing contributing drivers         | < 3 seconds  |
+| 5    | Any user | Exports comparison report                                          | Excel/PDF export with variance data                      | < 10 seconds |
 
 ---
 
@@ -531,14 +557,14 @@ The context bar is a fixed horizontal bar at the top of the workspace that maint
 
 **Context Bar Elements:**
 
-| Element | Type | Behavior |
-| --- | --- | --- |
-| Fiscal Year | Dropdown | Selects the active fiscal year (e.g., FY2026). Filters all data across modules. |
-| Version | Dropdown + Badge | Selects the active version: Actual (green badge), Budget (blue badge), Forecast (orange badge). Determines whether data is read-only (locked Actual/Budget) or editable. |
-| Comparison Version | Optional Dropdown | Enables side-by-side comparison. Selecting a second version activates variance columns throughout the workspace. |
-| Academic Period | Toggle | Switches between AY1 (Jan--Jun), AY2 (Sep--Dec), Summer, or Full Year view. |
-| Scenario | Dropdown | Selects the active scenario: Base, Optimistic, Pessimistic. Only applicable to Budget/Forecast versions. |
-| Last Saved | Timestamp | Shows the last auto-save timestamp for the current session. |
+| Element            | Type              | Behavior                                                                                                                                                                 |
+| ------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Fiscal Year        | Dropdown          | Selects the active fiscal year (e.g., FY2026). Filters all data across modules.                                                                                          |
+| Version            | Dropdown + Badge  | Selects the active version: Actual (green badge), Budget (blue badge), Forecast (orange badge). Determines whether data is read-only (locked Actual/Budget) or editable. |
+| Comparison Version | Optional Dropdown | Enables side-by-side comparison. Selecting a second version activates variance columns throughout the workspace.                                                         |
+| Academic Period    | Toggle            | Switches between AY1 (Jan--Jun), AY2 (Sep--Dec), Summer, or Full Year view.                                                                                              |
+| Scenario           | Dropdown          | Selects the active scenario: Base, Optimistic, Pessimistic. Only applicable to Budget/Forecast versions.                                                                 |
+| Last Saved         | Timestamp         | Shows the last auto-save timestamp for the current session.                                                                                                              |
 
 ### 6.2 Navigation Modules
 
@@ -546,37 +572,37 @@ The workspace provides a left-side navigation panel organized into four groups w
 
 #### Dashboard (Standalone)
 
-| Module | Purpose | Key Data Sources |
-| --- | --- | --- |
+| Module    | Purpose                                                                               | Key Data Sources                    |
+| --------- | ------------------------------------------------------------------------------------- | ----------------------------------- |
 | Dashboard | Executive KPIs, P&L summary, alerts, enrollment trends. Read-only cross-cutting view. | All modules (read-only aggregation) |
 
 #### Planning
 
-| Module | Purpose | Key Data Sources |
-| --- | --- | --- |
-| Version Management | Create, edit, delete, lock, unlock, archive, and compare budget versions. Full CRUD lifecycle management. | budget_versions, audit trail |
-| Enrollment & Capacity | Student headcount by grade, nationality, tariff; historical trends; cohort progression; class sections, utilization thresholds, recruitment slots. Deals ONLY with students, headcount, cohorts, sections, and utilization -- fee grids, tariff categories, and discount policies remain under Revenue. | enrollment CSVs, ENROLLMENT_HEADCOUNT, ENROLLMENT_DETAIL, CLASS_CAPACITY |
-| Revenue | Fee grids, discount policies, revenue engine, monthly revenue forecast | FEE_GRID, DISCOUNTS, OTHER_REVENUES, REVENUE_ENGINE |
-| Staffing & Staff Costs | Curriculum grilles, teaching hours, FTE requirements, subject-level staffing, employee roster, salary components, GOSI, Ajeer, EoS provisions, monthly cost budget. FTE requirements from DHG directly feed staff cost calculations. | DHG grilles, Staff_Summary, Staffing_By_Subject, Staff Master Data, salary components, statutory costs |
-| P&L & Reporting | IFRS Income Statement, monthly P&L, consolidated budget | IFRS Mapping, IFRS Income Statement |
-| Scenarios | Scenario parameters, side-by-side comparison, sensitivity analysis | SCENARIOS sheet, all calculation engines |
+| Module                 | Purpose                                                                                                                                                                                                                                                                                                 | Key Data Sources                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Version Management     | Create, edit, delete, lock, unlock, archive, and compare budget versions. Full CRUD lifecycle management.                                                                                                                                                                                               | budget_versions, audit trail                                                                           |
+| Enrollment & Capacity  | Student headcount by grade, nationality, tariff; historical trends; cohort progression; class sections, utilization thresholds, recruitment slots. Deals ONLY with students, headcount, cohorts, sections, and utilization -- fee grids, tariff categories, and discount policies remain under Revenue. | enrollment CSVs, ENROLLMENT_HEADCOUNT, ENROLLMENT_DETAIL, CLASS_CAPACITY                               |
+| Revenue                | Fee grids, discount policies, revenue engine, monthly revenue forecast                                                                                                                                                                                                                                  | FEE_GRID, DISCOUNTS, OTHER_REVENUES, REVENUE_ENGINE                                                    |
+| Staffing & Staff Costs | Curriculum grilles, teaching hours, FTE requirements, subject-level staffing, employee roster, salary components, GOSI, Ajeer, EoS provisions, monthly cost budget. FTE requirements from DHG directly feed staff cost calculations.                                                                    | DHG grilles, Staff_Summary, Staffing_By_Subject, Staff Master Data, salary components, statutory costs |
+| P&L & Reporting        | IFRS Income Statement, monthly P&L, consolidated budget                                                                                                                                                                                                                                                 | IFRS Mapping, IFRS Income Statement                                                                    |
+| Scenarios              | Scenario parameters, side-by-side comparison, sensitivity analysis                                                                                                                                                                                                                                      | SCENARIOS sheet, all calculation engines                                                               |
 
 #### Master Data
 
-| Module | Purpose | Key Data Sources |
-| --- | --- | --- |
-| Chart of Accounts & Centers | IFRS-compliant account structure, profit centers, cost centers | Configuration tables |
-| Academic Years & Grades | Calendar configuration with AY1/AY2 periods, fiscal year mapping, grade levels with band grouping and capacity parameters | Configuration tables |
-| Reference Data | Nationality, tariff, and department reference data | Configuration tables |
-| Assumptions & Parameters | VAT rate, discount rates, GOSI rates, Ajeer levies, and other configurable parameters | Configuration tables |
+| Module                      | Purpose                                                                                                                   | Key Data Sources     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| Chart of Accounts & Centers | IFRS-compliant account structure, profit centers, cost centers                                                            | Configuration tables |
+| Academic Years & Grades     | Calendar configuration with AY1/AY2 periods, fiscal year mapping, grade levels with band grouping and capacity parameters | Configuration tables |
+| Reference Data              | Nationality, tariff, and department reference data                                                                        | Configuration tables |
+| Assumptions & Parameters    | VAT rate, discount rates, GOSI rates, Ajeer levies, and other configurable parameters                                     | Configuration tables |
 
 #### Admin
 
-| Module | Purpose | Key Data Sources |
-| --- | --- | --- |
-| User Settings | User preferences, RBAC, user management | User configuration, role assignments |
-| Audit Trail | Simple audit log list view with basic date filtering (v1) | Audit log entries |
-| System Settings | System parameters, import/export | System configuration |
+| Module          | Purpose                                                   | Key Data Sources                     |
+| --------------- | --------------------------------------------------------- | ------------------------------------ |
+| User Settings   | User preferences, RBAC, user management                   | User configuration, role assignments |
+| Audit Trail     | Simple audit log list view with basic date filtering (v1) | Audit log entries                    |
+| System Settings | System parameters, import/export                          | System configuration                 |
 
 **Context bar vs. Version Management clarification:** The context bar version dropdown (Section 6.1) selects the active working version for data display and editing across all modules. The Version Management module (under Planning) manages the version lifecycle -- creating, deleting, locking, comparing, and archiving versions.
 
@@ -586,11 +612,11 @@ The workspace provides a left-side navigation panel organized into four groups w
 
 ### 7.1 Version Types
 
-| Version Type | Purpose | Editability | Color Badge |
-| --- | --- | --- | --- |
-| Actual | Recorded financial results from closed periods | Read-only after period close; import or manual entry during open period | Green |
-| Budget | Approved annual plan locked after board approval | Editable during preparation; locked after approval; requires unlock with audit note | Blue |
-| Forecast | Rolling re-forecast based on actuals + forward projections | Always editable; supports multiple iterations (FC1, FC2, FC3...) | Orange |
+| Version Type | Purpose                                                    | Editability                                                                         | Color Badge |
+| ------------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------- |
+| Actual       | Recorded financial results from closed periods             | Read-only after period close; import or manual entry during open period             | Green       |
+| Budget       | Approved annual plan locked after board approval           | Editable during preparation; locked after approval; requires unlock with audit note | Blue        |
+| Forecast     | Rolling re-forecast based on actuals + forward projections | Always editable; supports multiple iterations (FC1, FC2, FC3...)                    | Orange      |
 
 ### 7.1.1 Version Data Source
 
@@ -855,7 +881,7 @@ The Version Management module (accessible from the Planning group in navigation)
   - Attrition Rate (e.g., 2% Base, 1% Optimistic, 5% Pessimistic)
   - Fee Collection Rate (e.g., 95% Base, 98% Optimistic, 90% Pessimistic)
   - Scholarship Allocation (e.g., 2% Base, 1% Optimistic, 3% Pessimistic)
-  All five parameters must be individually configurable per scenario.
+    All five parameters must be individually configurable per scenario.
 
 - FR-SCN-003 [SHOULD]: Scenario parameters propagate through enrollment, revenue, and staff cost calculations.
 - FR-SCN-004 [SHOULD]: Side-by-side scenario comparison table with absolute and percentage deltas.
@@ -902,33 +928,33 @@ The Version Management module (accessible from the Planning group in navigation)
 These FRs are generated by the TDD to provide traceability for system-level functions not
 explicitly enumerated in the original PRD scope sections but derived from the requirements.
 
-| ID | MoSCoW | Description |
-|----|---------|-------------|
-| FR-SEC-01 | MUST | Authenticate users via local username/password with bcrypt hashing |
-| FR-SEC-02 | MUST | Issue RS256-signed JWT access tokens (30 min TTL) and refresh tokens (8 hr TTL) |
-| FR-SEC-03 | MUST | Rotate refresh tokens on use; revoke on logout |
-| FR-SEC-04 | MUST | Enforce role-based access control per §11.3.2 on every API endpoint |
-| FR-SEC-05 | MUST | Return HTTP 403 on authorization failure without revealing missing permission |
-| FR-CTX-01 | MUST | Persist workspace context (fiscal year, version, scenario, period) in URL state |
-| FR-CTX-02 | MUST | Restore workspace context correctly after page refresh |
-| FR-CTX-03 | MUST | Context bar updates must not reset state of any active planning module |
-| FR-EXP-01 | MUST | Export P&L and module data to xlsx format with column formatting preserved |
-| FR-EXP-02 | MUST | Export P&L reports to PDF (A3 landscape) via @react-pdf/renderer |
-| FR-EXP-03 | SHOULD | Export module data to CSV with UTF-8 BOM for Excel compatibility |
-| FR-EXP-04 | MUST | Generate exports asynchronously; return job ID for polling |
-| FR-IMP-01 | MUST | Import employee data from Excel/CSV into a Draft version |
-| FR-IMP-02 | MUST | Import confirmed actuals from Excel/CSV into an Actual version |
-| FR-IMP-03 | MUST | Validate import data against schema before committing; return row-level errors |
-| FR-IMP-04 | MUST | Reject imports that would overwrite a Published or Locked version |
-| FR-IMP-05 | SHOULD | Preview import diff before commit; allow partial row acceptance |
+| ID        | MoSCoW | Description                                                                     |
+| --------- | ------ | ------------------------------------------------------------------------------- |
+| FR-SEC-01 | MUST   | Authenticate users via local username/password with bcrypt hashing              |
+| FR-SEC-02 | MUST   | Issue RS256-signed JWT access tokens (30 min TTL) and refresh tokens (8 hr TTL) |
+| FR-SEC-03 | MUST   | Rotate refresh tokens on use; revoke on logout                                  |
+| FR-SEC-04 | MUST   | Enforce role-based access control per §11.3.2 on every API endpoint             |
+| FR-SEC-05 | MUST   | Return HTTP 403 on authorization failure without revealing missing permission   |
+| FR-CTX-01 | MUST   | Persist workspace context (fiscal year, version, scenario, period) in URL state |
+| FR-CTX-02 | MUST   | Restore workspace context correctly after page refresh                          |
+| FR-CTX-03 | MUST   | Context bar updates must not reset state of any active planning module          |
+| FR-EXP-01 | MUST   | Export P&L and module data to xlsx format with column formatting preserved      |
+| FR-EXP-02 | MUST   | Export P&L reports to PDF (A3 landscape) via @react-pdf/renderer                |
+| FR-EXP-03 | SHOULD | Export module data to CSV with UTF-8 BOM for Excel compatibility                |
+| FR-EXP-04 | MUST   | Generate exports asynchronously; return job ID for polling                      |
+| FR-IMP-01 | MUST   | Import employee data from Excel/CSV into a Draft version                        |
+| FR-IMP-02 | MUST   | Import confirmed actuals from Excel/CSV into an Actual version                  |
+| FR-IMP-03 | MUST   | Validate import data against schema before committing; return row-level errors  |
+| FR-IMP-04 | MUST   | Reject imports that would overwrite a Published or Locked version               |
+| FR-IMP-05 | SHOULD | Preview import diff before commit; allow partial row acceptance                 |
 
 ### Actuals Management
 
-| ID | MoSCoW | Description |
-|----|---------|-------------|
-| FR-ACT-001 | MUST | Import confirmed actuals into an Actual version via Excel/CSV |
-| FR-ACT-002 | MUST | Block calculation engines for IMPORTED Actual versions (409 response) |
-| FR-ACT-003 | MUST | Allow Admin/BudgetOwner to lock a fiscal period (one-way Draft→Locked) |
+| ID         | MoSCoW | Description                                                                |
+| ---------- | ------ | -------------------------------------------------------------------------- |
+| FR-ACT-001 | MUST   | Import confirmed actuals into an Actual version via Excel/CSV              |
+| FR-ACT-002 | MUST   | Block calculation engines for IMPORTED Actual versions (409 response)      |
+| FR-ACT-003 | MUST   | Allow Admin/BudgetOwner to lock a fiscal period (one-way Draft→Locked)     |
 | FR-ACT-004 | SHOULD | Latest Estimate: merge Locked period actuals with Draft period budget data |
 
 ---
@@ -937,13 +963,13 @@ explicitly enumerated in the original PRD scope sections but derived from the re
 
 The application database follows a normalized relational schema organized into five domains.
 
-| Domain | Core Tables | Key Relationships |
-| --- | --- | --- |
-| Enrollment & Students | academic_years, enrollments, enrollment_detail | Enrollment links to fee_grids via grade+nationality+tariff; links to academic_years via fiscal year |
-| Revenue | fee_grids, discount_policies, monthly_revenue, other_revenue_items | Revenue calculated from enrollment x fee grid; discount applied per tariff; monthly allocation per calendar rules |
-| Staffing | dhg_requirements, curriculum_grilles, staffing_by_subject | DHG hours driven by enrollment sections; FTE drives staff cost positions |
-| Staff Costs | employees, salary_components, monthly_staff_costs, eos_provisions, gosi, ajeer_costs | Employee -> salary components -> monthly costs; statutory costs calculated per employee type |
-| Budget & Reporting | budget_versions, monthly_budget_summary, ifrs_line_items | Versions aggregate revenue + costs into P&L; IFRS mapping classifies line items per IAS 1 |
+| Domain                | Core Tables                                                                          | Key Relationships                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Enrollment & Students | academic_years, enrollments, enrollment_detail                                       | Enrollment links to fee_grids via grade+nationality+tariff; links to academic_years via fiscal year               |
+| Revenue               | fee_grids, discount_policies, monthly_revenue, other_revenue_items                   | Revenue calculated from enrollment x fee grid; discount applied per tariff; monthly allocation per calendar rules |
+| Staffing              | dhg_requirements, curriculum_grilles, staffing_by_subject                            | DHG hours driven by enrollment sections; FTE drives staff cost positions                                          |
+| Staff Costs           | employees, salary_components, monthly_staff_costs, eos_provisions, gosi, ajeer_costs | Employee -> salary components -> monthly costs; statutory costs calculated per employee type                      |
+| Budget & Reporting    | budget_versions, monthly_budget_summary, ifrs_line_items                             | Versions aggregate revenue + costs into P&L; IFRS mapping classifies line items per IAS 1                         |
 
 The complete entity-relationship diagram and database schema specification are provided in the Technical Design Document (separate deliverable).
 
@@ -985,13 +1011,13 @@ Given start_date (d1/m1/y1) and end_date (d2/m2/y2):
 
 **Constraint:** The database must support `DECIMAL` (or equivalent fixed-point) column types with the following minimum precision:
 
-| Data Category | Column Type | Example Fields |
-| --- | --- | --- |
-| Monetary values (SAR) | `DECIMAL(15,4)` | `base_salary`, `tuition_ttc`, `revenue_amount`, `eos_provision` |
-| Percentage rates | `DECIMAL(7,6)` | `discount_rate`, `vat_rate`, `gosi_rate` |
-| Headcount / counts | `INT` or `DECIMAL(10,0)` | `student_count`, `sections_needed`, `headcount` |
-| Years of service | `DECIMAL(7,4)` | `years_of_service` (computed via YEARFRAC) |
-| Hourly percentage | `DECIMAL(5,4)` | `hourly_percentage` (part-time factor, e.g., 0.5000 for half-time) |
+| Data Category         | Column Type              | Example Fields                                                     |
+| --------------------- | ------------------------ | ------------------------------------------------------------------ |
+| Monetary values (SAR) | `DECIMAL(15,4)`          | `base_salary`, `tuition_ttc`, `revenue_amount`, `eos_provision`    |
+| Percentage rates      | `DECIMAL(7,6)`           | `discount_rate`, `vat_rate`, `gosi_rate`                           |
+| Headcount / counts    | `INT` or `DECIMAL(10,0)` | `student_count`, `sections_needed`, `headcount`                    |
+| Years of service      | `DECIMAL(7,4)`           | `years_of_service` (computed via YEARFRAC)                         |
+| Hourly percentage     | `DECIMAL(5,4)`           | `hourly_percentage` (part-time factor, e.g., 0.5000 for half-time) |
 
 #### TC-004: Rounding Rules
 
@@ -1026,20 +1052,20 @@ The following data dictionary defines the five most critical entities in the Bud
 
 Represents a staff member (teaching or non-teaching) at EFIR. Source: Staff Master Data sheet (168 records in FY2026).
 
-| Field | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| `employee_id` | `INT` | `PRIMARY KEY, AUTO_INCREMENT` | Unique employee identifier. |
-| `version_id` | `BIGINT` | `FOREIGN KEY -> budget_versions.id, NOT NULL` | Budget version this employee record belongs to. Each version carries its own snapshot of employee data. |
-| `name` | `VARCHAR(200)` | `NOT NULL` | Full name of the employee. |
-| `function_role` | `VARCHAR(100)` | `NOT NULL` | Job title or function (e.g., "Professeur des ecoles", "Directeur adjoint", "ASEM"). |
-| `department` | `ENUM(...)` | `NOT NULL` | Organizational department: Maternelle, Elementaire, College, Lycee, Administration, Vie Scolaire & Support. |
-| `status` | `ENUM('Existing', 'New', 'Departed')` | `NOT NULL, DEFAULT 'Existing'` | Employment status for the fiscal year. |
-| `joining_date` | `DATE` | `NOT NULL` | Date the employee joined EFIR. Used in YEARFRAC calculation for EoS provision (TC-002). |
-| `years_of_service` | `DECIMAL(7,4)` | `COMPUTED` | Fractional years of service = YEARFRAC(joining_date, as_of_date). Computed at query/calculation time. |
-| `payment_method` | `VARCHAR(50)` | `NOT NULL` | Payment method (e.g., "Bank Transfer", "Cash"). |
-| `is_saudi` | `BOOLEAN` | `NOT NULL, DEFAULT FALSE` | Whether the employee is a Saudi national. Determines GOSI applicability (FR-STC-009). |
-| `is_ajeer` | `BOOLEAN` | `NOT NULL, DEFAULT TRUE` | Whether the employee is registered under the Ajeer program. All non-Saudi employees are Ajeer (FR-STC-010). |
-| `hourly_percentage` | `DECIMAL(5,4)` | `NOT NULL, DEFAULT 1.0000, CHECK (> 0 AND <= 1)` | Part-time adjustment factor. 1.0000 = full-time. |
+| Field               | Type                                  | Constraints                                      | Description                                                                                                 |
+| ------------------- | ------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `employee_id`       | `INT`                                 | `PRIMARY KEY, AUTO_INCREMENT`                    | Unique employee identifier.                                                                                 |
+| `version_id`        | `BIGINT`                              | `FOREIGN KEY -> budget_versions.id, NOT NULL`    | Budget version this employee record belongs to. Each version carries its own snapshot of employee data.     |
+| `name`              | `VARCHAR(200)`                        | `NOT NULL`                                       | Full name of the employee.                                                                                  |
+| `function_role`     | `VARCHAR(100)`                        | `NOT NULL`                                       | Job title or function (e.g., "Professeur des ecoles", "Directeur adjoint", "ASEM").                         |
+| `department`        | `ENUM(...)`                           | `NOT NULL`                                       | Organizational department: Maternelle, Elementaire, College, Lycee, Administration, Vie Scolaire & Support. |
+| `status`            | `ENUM('Existing', 'New', 'Departed')` | `NOT NULL, DEFAULT 'Existing'`                   | Employment status for the fiscal year.                                                                      |
+| `joining_date`      | `DATE`                                | `NOT NULL`                                       | Date the employee joined EFIR. Used in YEARFRAC calculation for EoS provision (TC-002).                     |
+| `years_of_service`  | `DECIMAL(7,4)`                        | `COMPUTED`                                       | Fractional years of service = YEARFRAC(joining_date, as_of_date). Computed at query/calculation time.       |
+| `payment_method`    | `VARCHAR(50)`                         | `NOT NULL`                                       | Payment method (e.g., "Bank Transfer", "Cash").                                                             |
+| `is_saudi`          | `BOOLEAN`                             | `NOT NULL, DEFAULT FALSE`                        | Whether the employee is a Saudi national. Determines GOSI applicability (FR-STC-009).                       |
+| `is_ajeer`          | `BOOLEAN`                             | `NOT NULL, DEFAULT TRUE`                         | Whether the employee is registered under the Ajeer program. All non-Saudi employees are Ajeer (FR-STC-010). |
+| `hourly_percentage` | `DECIMAL(5,4)`                        | `NOT NULL, DEFAULT 1.0000, CHECK (> 0 AND <= 1)` | Part-time adjustment factor. 1.0000 = full-time.                                                            |
 
 > _Salary fields are stored AES-256 encrypted (pgcrypto) per §11.3.1 and PDPL field-level encryption. See TDD `05_security.md §7.4` for the full encryption schema._
 
@@ -1055,42 +1081,42 @@ Represents a staff member (teaching or non-teaching) at EFIR. Source: Staff Mast
 
 Represents a single fee combination in the tuition fee grid. Source: FEE_GRID sheet (~45+ combinations per academic period).
 
-| Field | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| `fee_grid_id` | `INT` | `PRIMARY KEY, AUTO_INCREMENT` | Unique fee grid entry identifier. |
-| `version_id` | `BIGINT` | `FOREIGN KEY -> budget_versions.id, NOT NULL` | Budget version this fee grid belongs to (FR-REV-004). |
-| `academic_period` | `ENUM('AY1', 'AY2')` | `NOT NULL` | Academic period: AY1 (Jan-Jun) or AY2 (Sep-Dec). |
-| `grade_level` | `ENUM('PS'..'Terminale')` | `NOT NULL` | Grade level per Appendix A. |
-| `nationality` | `ENUM('Francais', 'Nationaux', 'Autres')` | `NOT NULL` | Nationality segment. "Nationaux" are VAT-exempt (FR-REV-006). |
-| `tariff` | `ENUM('RP', 'R3+', 'Plein')` | `NOT NULL` | Tariff category per FR-REV-007. |
-| `tuition_ttc` | `DECIMAL(15,4)` | `NOT NULL, CHECK (>= 0)` | Annual tuition fee including VAT (TTC) in SAR. |
-| `tuition_ht` | `DECIMAL(15,4)` | `COMPUTED` | Annual tuition fee excluding VAT: `tuition_ttc / (1 + vat_rate)`. |
-| `dai` | `DECIMAL(15,4)` | `NOT NULL, DEFAULT 0, CHECK (>= 0)` | Annual registration fee (DAI) in SAR. |
-| `t1` | `DECIMAL(15,4)` | `NOT NULL, DEFAULT 0` | Term 1 installment amount in SAR. |
-| `t2` | `DECIMAL(15,4)` | `NOT NULL, DEFAULT 0` | Term 2 installment amount in SAR. |
-| `t3` | `DECIMAL(15,4)` | `NOT NULL, DEFAULT 0` | Term 3 installment amount in SAR. |
-| | | `UNIQUE (version_id, academic_period, grade_level, nationality, tariff)` | Composite unique constraint. |
+| Field             | Type                                      | Constraints                                                              | Description                                                       |
+| ----------------- | ----------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `fee_grid_id`     | `INT`                                     | `PRIMARY KEY, AUTO_INCREMENT`                                            | Unique fee grid entry identifier.                                 |
+| `version_id`      | `BIGINT`                                  | `FOREIGN KEY -> budget_versions.id, NOT NULL`                            | Budget version this fee grid belongs to (FR-REV-004).             |
+| `academic_period` | `ENUM('AY1', 'AY2')`                      | `NOT NULL`                                                               | Academic period: AY1 (Jan-Jun) or AY2 (Sep-Dec).                  |
+| `grade_level`     | `ENUM('PS'..'Terminale')`                 | `NOT NULL`                                                               | Grade level per Appendix A.                                       |
+| `nationality`     | `ENUM('Francais', 'Nationaux', 'Autres')` | `NOT NULL`                                                               | Nationality segment. "Nationaux" are VAT-exempt (FR-REV-006).     |
+| `tariff`          | `ENUM('RP', 'R3+', 'Plein')`              | `NOT NULL`                                                               | Tariff category per FR-REV-007.                                   |
+| `tuition_ttc`     | `DECIMAL(15,4)`                           | `NOT NULL, CHECK (>= 0)`                                                 | Annual tuition fee including VAT (TTC) in SAR.                    |
+| `tuition_ht`      | `DECIMAL(15,4)`                           | `COMPUTED`                                                               | Annual tuition fee excluding VAT: `tuition_ttc / (1 + vat_rate)`. |
+| `dai`             | `DECIMAL(15,4)`                           | `NOT NULL, DEFAULT 0, CHECK (>= 0)`                                      | Annual registration fee (DAI) in SAR.                             |
+| `t1`              | `DECIMAL(15,4)`                           | `NOT NULL, DEFAULT 0`                                                    | Term 1 installment amount in SAR.                                 |
+| `t2`              | `DECIMAL(15,4)`                           | `NOT NULL, DEFAULT 0`                                                    | Term 2 installment amount in SAR.                                 |
+| `t3`              | `DECIMAL(15,4)`                           | `NOT NULL, DEFAULT 0`                                                    | Term 3 installment amount in SAR.                                 |
+|                   |                                           | `UNIQUE (version_id, academic_period, grade_level, nationality, tariff)` | Composite unique constraint.                                      |
 
 #### 9.2.3 Budget Version
 
 Represents a named budget version with lifecycle state. Source: Version Management System (Section 7).
 
-| Field | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| `id` | `BIGSERIAL` | `PRIMARY KEY` | Unique version identifier. |
-| `name` | `VARCHAR(100)` | `NOT NULL` | User-assigned version name. |
-| `type` | `ENUM('Actual', 'Budget', 'Forecast')` | `NOT NULL` | Version type per Section 7.1. |
-| `status` | `ENUM('Draft', 'Published', 'Locked', 'Archived')` | `NOT NULL, DEFAULT 'Draft'` | Lifecycle status per Section 7.2. |
-| `fiscal_year` | `INT` | `NOT NULL, CHECK (>= 2020 AND <= 2040)` | Fiscal year this version covers. |
-| `created_by` | `INT` | `FOREIGN KEY -> users.user_id, NOT NULL` | User who created this version. |
-| `created_at` | `TIMESTAMPTZ` | `NOT NULL, DEFAULT CURRENT_TIMESTAMP` | Creation timestamp in UTC. Displayed in AST per SA-003. |
-| `updated_at` | `TIMESTAMPTZ` | `NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE` | Last modification timestamp. |
-| `locked_at` | `TIMESTAMPTZ` | `NULL` | Timestamp when locked. NULL if not yet locked. |
-| `locked_by` | `INT` | `FOREIGN KEY -> users.user_id, NULL` | User who locked this version. |
-| `data_source` | `ENUM('MANUAL', 'IMPORTED')` | `NOT NULL, DEFAULT 'MANUAL'` | How data was entered. IMPORTED versions block calculation engines (FR-ACT-002). |
-| `modification_count` | `INT` | `NOT NULL, DEFAULT 0` | Increments on each data modification. Used for optimistic concurrency control. |
-| `description` | `TEXT` | `NULL` | Optional description or notes (FR-VER-006). |
-| `source_version_id` | `BIGINT` | `FOREIGN KEY -> budget_versions.id, NULL` | If cloned from another version (FR-VER-005). NULL for originals. |
+| Field                | Type                                               | Constraints                                     | Description                                                                     |
+| -------------------- | -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| `id`                 | `BIGSERIAL`                                        | `PRIMARY KEY`                                   | Unique version identifier.                                                      |
+| `name`               | `VARCHAR(100)`                                     | `NOT NULL`                                      | User-assigned version name.                                                     |
+| `type`               | `ENUM('Actual', 'Budget', 'Forecast')`             | `NOT NULL`                                      | Version type per Section 7.1.                                                   |
+| `status`             | `ENUM('Draft', 'Published', 'Locked', 'Archived')` | `NOT NULL, DEFAULT 'Draft'`                     | Lifecycle status per Section 7.2.                                               |
+| `fiscal_year`        | `INT`                                              | `NOT NULL, CHECK (>= 2020 AND <= 2040)`         | Fiscal year this version covers.                                                |
+| `created_by`         | `INT`                                              | `FOREIGN KEY -> users.user_id, NOT NULL`        | User who created this version.                                                  |
+| `created_at`         | `TIMESTAMPTZ`                                      | `NOT NULL, DEFAULT CURRENT_TIMESTAMP`           | Creation timestamp in UTC. Displayed in AST per SA-003.                         |
+| `updated_at`         | `TIMESTAMPTZ`                                      | `NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE` | Last modification timestamp.                                                    |
+| `locked_at`          | `TIMESTAMPTZ`                                      | `NULL`                                          | Timestamp when locked. NULL if not yet locked.                                  |
+| `locked_by`          | `INT`                                              | `FOREIGN KEY -> users.user_id, NULL`            | User who locked this version.                                                   |
+| `data_source`        | `ENUM('MANUAL', 'IMPORTED')`                       | `NOT NULL, DEFAULT 'MANUAL'`                    | How data was entered. IMPORTED versions block calculation engines (FR-ACT-002). |
+| `modification_count` | `INT`                                              | `NOT NULL, DEFAULT 0`                           | Increments on each data modification. Used for optimistic concurrency control.  |
+| `description`        | `TEXT`                                             | `NULL`                                          | Optional description or notes (FR-VER-006).                                     |
+| `source_version_id`  | `BIGINT`                                           | `FOREIGN KEY -> budget_versions.id, NULL`       | If cloned from another version (FR-VER-005). NULL for originals.                |
 
 > _All timestamps use `TIMESTAMPTZ` (UTC+3 / AST). See TC-005 and SA-003._
 
@@ -1100,50 +1126,50 @@ Represents a named budget version with lifecycle state. Source: Version Manageme
 
 Represents calculated monthly revenue for a specific enrollment cohort. Source: REVENUE_ENGINE sheet output.
 
-| Field | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| `revenue_id` | `INT` | `PRIMARY KEY, AUTO_INCREMENT` | Unique revenue record identifier. |
-| `version_id` | `BIGINT` | `FOREIGN KEY -> budget_versions.id, NOT NULL` | Budget version. |
-| `month` | `INT` | `NOT NULL, CHECK (>= 1 AND <= 12)` | Calendar month. Jul/Aug have zero tuition revenue. |
-| `academic_period` | `ENUM('AY1', 'AY2', 'Summer')` | `NOT NULL` | Academic period. |
-| `grade_level` | `ENUM('PS'..'Terminale')` | `NOT NULL` | Grade level. |
-| `nationality` | `ENUM('Francais', 'Nationaux', 'Autres')` | `NOT NULL` | Nationality segment. |
-| `tariff` | `ENUM('RP', 'R3+', 'Plein')` | `NOT NULL` | Tariff category. |
-| `headcount` | `INT` | `NOT NULL, CHECK (>= 0)` | Number of students in this cohort for this month. |
-| `gross_fee` | `DECIMAL(15,4)` | `NOT NULL, CHECK (>= 0)` | Gross annual fee from the fee grid in SAR. |
-| `discount_rate` | `DECIMAL(7,6)` | `NOT NULL, DEFAULT 0, CHECK (>= 0 AND <= 1)` | Applicable discount rate as a decimal. |
-| `net_fee` | `DECIMAL(15,4)` | `NOT NULL, CHECK (>= 0)` | Net annual fee after discount. |
-| `revenue_amount` | `DECIMAL(15,4)` | `NOT NULL` | Monthly revenue: `headcount * net_fee / period_months`. |
-| `ifrs_category` | `VARCHAR(50)` | `NOT NULL` | IFRS 15 revenue classification per FR-REV-013. |
-| | | `UNIQUE (version_id, month, grade_level, nationality, tariff)` | Composite unique constraint. |
+| Field             | Type                                      | Constraints                                                    | Description                                             |
+| ----------------- | ----------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------- |
+| `revenue_id`      | `INT`                                     | `PRIMARY KEY, AUTO_INCREMENT`                                  | Unique revenue record identifier.                       |
+| `version_id`      | `BIGINT`                                  | `FOREIGN KEY -> budget_versions.id, NOT NULL`                  | Budget version.                                         |
+| `month`           | `INT`                                     | `NOT NULL, CHECK (>= 1 AND <= 12)`                             | Calendar month. Jul/Aug have zero tuition revenue.      |
+| `academic_period` | `ENUM('AY1', 'AY2', 'Summer')`            | `NOT NULL`                                                     | Academic period.                                        |
+| `grade_level`     | `ENUM('PS'..'Terminale')`                 | `NOT NULL`                                                     | Grade level.                                            |
+| `nationality`     | `ENUM('Francais', 'Nationaux', 'Autres')` | `NOT NULL`                                                     | Nationality segment.                                    |
+| `tariff`          | `ENUM('RP', 'R3+', 'Plein')`              | `NOT NULL`                                                     | Tariff category.                                        |
+| `headcount`       | `INT`                                     | `NOT NULL, CHECK (>= 0)`                                       | Number of students in this cohort for this month.       |
+| `gross_fee`       | `DECIMAL(15,4)`                           | `NOT NULL, CHECK (>= 0)`                                       | Gross annual fee from the fee grid in SAR.              |
+| `discount_rate`   | `DECIMAL(7,6)`                            | `NOT NULL, DEFAULT 0, CHECK (>= 0 AND <= 1)`                   | Applicable discount rate as a decimal.                  |
+| `net_fee`         | `DECIMAL(15,4)`                           | `NOT NULL, CHECK (>= 0)`                                       | Net annual fee after discount.                          |
+| `revenue_amount`  | `DECIMAL(15,4)`                           | `NOT NULL`                                                     | Monthly revenue: `headcount * net_fee / period_months`. |
+| `ifrs_category`   | `VARCHAR(50)`                             | `NOT NULL`                                                     | IFRS 15 revenue classification per FR-REV-013.          |
+|                   |                                           | `UNIQUE (version_id, month, grade_level, nationality, tariff)` | Composite unique constraint.                            |
 
 #### 9.2.5 Audit Entry
 
 Records every data modification in the system. Source: Section 8.7 (FR-AUD-001, FR-AUD-002).
 
-| Field | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| `audit_id` | `BIGINT` | `PRIMARY KEY, AUTO_INCREMENT` | Unique audit entry identifier. BIGINT for high-volume logging. |
-| `timestamp` | `TIMESTAMPTZ` | `NOT NULL, DEFAULT CURRENT_TIMESTAMP` | When the change occurred, stored in UTC. Displayed in AST. |
-| `user_id` | `INT` | `FOREIGN KEY -> users.user_id, NOT NULL` | User who made the change. |
-| `action_type` | `ENUM('INSERT', 'UPDATE', 'DELETE', 'STATUS_CHANGE', 'IMPORT', 'CALCULATE')` | `NOT NULL` | Type of action performed. |
-| `entity_type` | `VARCHAR(50)` | `NOT NULL` | Name of the entity/table affected. |
-| `entity_id` | `INT` | `NOT NULL` | Primary key of the affected record. |
-| `version_id` | `BIGINT` | `FOREIGN KEY -> budget_versions.id, NULL` | Budget version context. NULL for system-level changes. |
-| `field_name` | `VARCHAR(100)` | `NULL` | Specific field changed. NULL for INSERT/DELETE. |
-| `old_value` | `TEXT` | `NULL` | Previous value. NULL for INSERT. |
-| `new_value` | `TEXT` | `NULL` | New value. NULL for DELETE. |
-| `comment` | `TEXT` | `NULL` | Optional comment. Required for version lifecycle transitions. |
+| Field         | Type                                                                         | Constraints                               | Description                                                    |
+| ------------- | ---------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------- |
+| `audit_id`    | `BIGINT`                                                                     | `PRIMARY KEY, AUTO_INCREMENT`             | Unique audit entry identifier. BIGINT for high-volume logging. |
+| `timestamp`   | `TIMESTAMPTZ`                                                                | `NOT NULL, DEFAULT CURRENT_TIMESTAMP`     | When the change occurred, stored in UTC. Displayed in AST.     |
+| `user_id`     | `INT`                                                                        | `FOREIGN KEY -> users.user_id, NOT NULL`  | User who made the change.                                      |
+| `action_type` | `ENUM('INSERT', 'UPDATE', 'DELETE', 'STATUS_CHANGE', 'IMPORT', 'CALCULATE')` | `NOT NULL`                                | Type of action performed.                                      |
+| `entity_type` | `VARCHAR(50)`                                                                | `NOT NULL`                                | Name of the entity/table affected.                             |
+| `entity_id`   | `INT`                                                                        | `NOT NULL`                                | Primary key of the affected record.                            |
+| `version_id`  | `BIGINT`                                                                     | `FOREIGN KEY -> budget_versions.id, NULL` | Budget version context. NULL for system-level changes.         |
+| `field_name`  | `VARCHAR(100)`                                                               | `NULL`                                    | Specific field changed. NULL for INSERT/DELETE.                |
+| `old_value`   | `TEXT`                                                                       | `NULL`                                    | Previous value. NULL for INSERT.                               |
+| `new_value`   | `TEXT`                                                                       | `NULL`                                    | New value. NULL for DELETE.                                    |
+| `comment`     | `TEXT`                                                                       | `NULL`                                    | Optional comment. Required for version lifecycle transitions.  |
 
 **Indexing guidance:** Index on `(entity_type, entity_id)`, `(timestamp)`, `(user_id, timestamp)`, and `(version_id)`. Retention: minimum 7 years. Consider table partitioning by year.
 
 #### 9.2.6 New Schema Elements (v2.0 Architectural Update)
 
-| Field | Table | Type | Description |
-| --- | --- | --- | --- |
-| `data_source` | `budget_versions` | TEXT | `CALCULATED` (calc engines) or `IMPORTED` (import service). Determines valid operations on the version. |
-| `fiscal_periods` | — (table) | — | Month-level period status. One row per fiscal_year + month. `status` is Draft or Locked. When Locked, `actual_version_id` points to the authoritative Actual version. |
-| `actuals_import_log` | — (table) | — | Audit trail for Excel/CSV imports into Actual versions. One row per import run per module with source file, validation status, and row counts. |
+| Field                | Table             | Type | Description                                                                                                                                                           |
+| -------------------- | ----------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data_source`        | `budget_versions` | TEXT | `CALCULATED` (calc engines) or `IMPORTED` (import service). Determines valid operations on the version.                                                               |
+| `fiscal_periods`     | — (table)         | —    | Month-level period status. One row per fiscal_year + month. `status` is Draft or Locked. When Locked, `actual_version_id` points to the authoritative Actual version. |
+| `actuals_import_log` | — (table)         | —    | Audit trail for Excel/CSV imports into Actual versions. One row per import run per module with source file, validation status, and row counts.                        |
 
 ### 9.3 API Contract Guidance
 
@@ -1297,7 +1323,7 @@ For each employee per month:
 
 ### 10.3 End of Service Formula
 
-```text
+````text
 Years of Service (YoS) = YEARFRAC(Joining Date, As-of Date)
 EoS Base = Base Salary + Housing + Transport + Premium (excludes HSA)
 
@@ -1793,18 +1819,20 @@ Each phase has an entry checkpoint, mid-phase review, and exit gate:
 
 ### 14.3 Phase Dependencies
 
-```
+````
+
 Phase 1 (Foundation)
-    |
-    +---> Phase 2 (Enrollment & Revenue)
-    |         |
-    |         +---> Phase 3 (Staffing & Staff Costs)
-    |         |         |
-    |         |         +---> Phase 4 (Reporting & Versions)
-    |         |                   |
-    +-------- +-------- +--------+---> Phase 5 (Dashboard & Analytics)
-                                          |
-                                          +---> Phase 6 (Migration & UAT)
+|
++---> Phase 2 (Enrollment & Revenue)
+| |
+| +---> Phase 3 (Staffing & Staff Costs)
+| | |
+| | +---> Phase 4 (Reporting & Versions)
+| | |
++-------- +-------- +--------+---> Phase 5 (Dashboard & Analytics)
+|
++---> Phase 6 (Migration & UAT)
+
 ```
 
 Phase 2 requires Phase 1 (database schema, auth). Phase 3 requires Phase 2 (enrollment data feeds DHG). Phase 4 requires both Phase 2 and Phase 3 (P&L consolidates revenue + costs). Phase 5 requires Phase 4 (dashboard aggregates from all modules). Phase 6 requires Phase 5 (full system must be functional for UAT).
@@ -1896,12 +1924,14 @@ Testing is not deferred to Phase 6. Each phase includes its own testing activiti
 ### 15.3 Risk Heat Map
 
 ```
-Impact ->   1-Negligible   2-Low   3-Medium   4-High      5-Critical
+
+Impact -> 1-Negligible 2-Low 3-Medium 4-High 5-Critical
 Prob 5
-Prob 4                              R-008     R-002       R-001
-Prob 3                     R-013    R-012     R-006,7,9   R-003,4
-Prob 2                              R-015     R-011,14    R-005,10
+Prob 4 R-008 R-002 R-001
+Prob 3 R-013 R-012 R-006,7,9 R-003,4
+Prob 2 R-015 R-011,14 R-005,10
 Prob 1
+
 ```
 
 ### 15.4 Risk Review Cadence
@@ -2466,3 +2496,4 @@ The following decisions were made during the Phase 1 stakeholder review (Chief A
 ---
 
 --- End of Document ---
+```

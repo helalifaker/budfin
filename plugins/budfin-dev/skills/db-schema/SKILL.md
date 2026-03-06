@@ -8,32 +8,33 @@ description: Prisma 6 + PostgreSQL 16 database schema patterns for BudFin. Use w
 ## New Models — Use the prisma-model Skill
 
 When adding a new database entity, invoke the `prisma-model` skill first:
+
 - It generates the correct Prisma 6 model block with fields, relations, and breaking-change patterns
 - It handles `Bytes`/`Uint8Array` binary fields correctly
 - It applies named constraints and audit trigger patterns
 
 ## Prisma 6 Breaking Changes (Must Know)
 
-| Old (Prisma 5) | New (Prisma 6) |
-|---------------|----------------|
-| `Buffer` for binary fields | `Uint8Array` (`@db.Bytea` maps to `Bytes` type) |
-| `prisma.x.findUnique({ rejectOnNotFound: true })` | Use `findUniqueOrThrow()` |
-| `NotFoundError` import | Use `PrismaClientKnownRequestError` + check `error.code === 'P2025'` |
-| Implicit m-n `_PostToTag` ID field | Renamed — check traceability matrix |
+| Old (Prisma 5)                                    | New (Prisma 6)                                                       |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `Buffer` for binary fields                        | `Uint8Array` (`@db.Bytea` maps to `Bytes` type)                      |
+| `prisma.x.findUnique({ rejectOnNotFound: true })` | Use `findUniqueOrThrow()`                                            |
+| `NotFoundError` import                            | Use `PrismaClientKnownRequestError` + check `error.code === 'P2025'` |
+| Implicit m-n `_PostToTag` ID field                | Renamed — check traceability matrix                                  |
 
 ```typescript
 // Prisma 6: handle not found
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client';
 
 try {
-  const version = await prisma.budgetVersion.findUniqueOrThrow({
-    where: { id },
-  })
+	const version = await prisma.budgetVersion.findUniqueOrThrow({
+		where: { id },
+	});
 } catch (error) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-    throw new NotFoundError('Budget version not found')
-  }
-  throw error
+	if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+		throw new NotFoundError('Budget version not found');
+	}
+	throw error;
 }
 ```
 
@@ -56,27 +57,27 @@ NEVER use `Float` or `Double` for monetary fields.
 ```typescript
 // In prisma client setup
 prisma.$extends({
-  query: {
-    $allModels: {
-      async $allOperations({ model, operation, args, query }) {
-        const result = await query(args)
-        if (['create', 'update', 'delete'].includes(operation)) {
-          await prisma.auditEntry.create({
-            data: {
-              model,
-              operation,
-              recordId: result?.id,
-              changedBy: context.userId,
-              changedAt: new Date(),
-              payload: JSON.stringify(args),
-            },
-          })
-        }
-        return result
-      },
-    },
-  },
-})
+	query: {
+		$allModels: {
+			async $allOperations({ model, operation, args, query }) {
+				const result = await query(args);
+				if (['create', 'update', 'delete'].includes(operation)) {
+					await prisma.auditEntry.create({
+						data: {
+							model,
+							operation,
+							recordId: result?.id,
+							changedBy: context.userId,
+							changedAt: new Date(),
+							payload: JSON.stringify(args),
+						},
+					});
+				}
+				return result;
+			},
+		},
+	},
+});
 ```
 
 **Never write manual audit log inserts** — the middleware handles all audit logging automatically.
@@ -84,6 +85,7 @@ prisma.$extends({
 ## audit_entries Table — APPEND ONLY
 
 The `audit_entries` table is immutable:
+
 - Application role has `INSERT` only — no `UPDATE` or `DELETE`
 - Enforced by PostgreSQL `REVOKE` statement AND trigger
 - Never bypass this for any reason (PDPL compliance requirement)
@@ -104,12 +106,12 @@ model StaffMember {
 // Encrypt before write
 const encrypted = await prisma.$queryRaw`
   SELECT pgp_sym_encrypt(${salary}::text, ${key}) as encrypted
-`
+`;
 
 // Decrypt on read
 const decrypted = await prisma.$queryRaw`
   SELECT pgp_sym_decrypt(${encryptedValue}, ${key}) as salary
-`
+`;
 ```
 
 ## Schema Conventions
@@ -138,9 +140,9 @@ model BudgetVersion {
 ```typescript
 // Use createMany() for batch inserts — never per-row inserts in loops
 await prisma.staffCostResult.createMany({
-  data: results,   // Array of hundreds/thousands of records
-  skipDuplicates: false,
-})
+	data: results, // Array of hundreds/thousands of records
+	skipDuplicates: false,
+});
 
 // Default connection pool: 10 connections
 // Adjust in DATABASE_URL: ?connection_limit=10

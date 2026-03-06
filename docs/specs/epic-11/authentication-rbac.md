@@ -28,18 +28,18 @@ Each criterion must be testable and specific. Use "Given / When / Then" or plain
 
 ## Stories
 
-| # | Story | Depends On | GitHub Issue |
-| --- | --- | --- | --- |
-| 1 | Prisma schema: users, refresh_tokens, system_config, audit_entries tables + Role enum + indexes + seed admin user | -- | #25 |
-| 2 | Password hashing service (bcrypt cost 12, hash + compare) | Story 1 | #26 |
-| 3 | JWT token service (RS256 sign/verify via jose, access + refresh pair generation) | Story 1 | #27 |
-| 4 | Token family rotation + replay detection (family_id tracking, revoke-on-reuse) | Story 3 | #28 |
-| 5 | Login endpoint + account lockout (POST /auth/login, failed_attempts, locked_until) | Stories 2, 3, 4 | #29 |
-| 6 | Refresh, logout endpoints + session concurrency enforcement (max 2 sessions, oldest eviction) | Stories 4, 5 | #30 |
-| 7 | RBAC middleware (requireRole, requirePermission) + permission map + 403 logging | Story 3 | #31 |
-| 8 | User management endpoints (GET/POST/PATCH /users, Admin-only CRUD, unlock, force-logout) | Stories 5, 7 | #32 |
-| 9 | Audit trail endpoint + system config endpoints (GET /audit, GET/PUT /system-config) | Stories 7, 8 | #33 |
-| 10 | Admin UI: User Management, Audit Trail, System Settings pages (ManagementShell, TanStack Table v8, side panel CRUD) | Stories 8, 9 | #34 |
+| #   | Story                                                                                                               | Depends On      | GitHub Issue |
+| --- | ------------------------------------------------------------------------------------------------------------------- | --------------- | ------------ |
+| 1   | Prisma schema: users, refresh_tokens, system_config, audit_entries tables + Role enum + indexes + seed admin user   | --              | #25          |
+| 2   | Password hashing service (bcrypt cost 12, hash + compare)                                                           | Story 1         | #26          |
+| 3   | JWT token service (RS256 sign/verify via jose, access + refresh pair generation)                                    | Story 1         | #27          |
+| 4   | Token family rotation + replay detection (family_id tracking, revoke-on-reuse)                                      | Story 3         | #28          |
+| 5   | Login endpoint + account lockout (POST /auth/login, failed_attempts, locked_until)                                  | Stories 2, 3, 4 | #29          |
+| 6   | Refresh, logout endpoints + session concurrency enforcement (max 2 sessions, oldest eviction)                       | Stories 4, 5    | #30          |
+| 7   | RBAC middleware (requireRole, requirePermission) + permission map + 403 logging                                     | Story 3         | #31          |
+| 8   | User management endpoints (GET/POST/PATCH /users, Admin-only CRUD, unlock, force-logout)                            | Stories 5, 7    | #32          |
+| 9   | Audit trail endpoint + system config endpoints (GET /audit, GET/PUT /system-config)                                 | Stories 7, 8    | #33          |
+| 10  | Admin UI: User Management, Audit Trail, System Settings pages (ManagementShell, TanStack Table v8, side panel CRUD) | Stories 8, 9    | #34          |
 
 ## Data Model Changes
 
@@ -124,18 +124,18 @@ GRANT INSERT, SELECT ON audit_entries TO app_user;
 
 ## API Endpoints
 
-| Method | Path | Request | Response | Auth |
-| --- | --- | --- | --- | --- |
-| POST | /api/v1/auth/login | `{ email: string, password: string }` | `{ access_token: string, expires_in: 1800, user: { id, email, role } }` + Set-Cookie | Public |
-| POST | /api/v1/auth/refresh | No body (reads refresh_token cookie) | Same shape as login + new Set-Cookie | Public (cookie) |
-| POST | /api/v1/auth/logout | No body (reads refresh_token cookie) | 204 No Content + clear cookie | Authenticated |
-| GET | /api/v1/context | -- | `{ user: { id, email, role }, schoolYear: {...}, permissions: string[] }` | Authenticated |
-| GET | /api/v1/users | -- | `{ users: [{ id, email, role, is_active, last_login, failed_attempts, locked_until, created_at }] }` | Admin |
-| POST | /api/v1/users | `{ email: string, password: string, role: string }` | `{ id, email, role }` (201) | Admin |
-| PATCH | /api/v1/users/:id | `{ role?, is_active?, force_password_reset?, unlock_account?, force_session_revoke? }` | Updated user object | Admin |
-| GET | /api/v1/audit | Query: from, to, user_id, table_name, operation, page, page_size | `{ entries: [...], total, page, page_size }` | Admin |
-| GET | /api/v1/system-config | -- | `{ config: [{ key, value, description, data_type }] }` | Admin |
-| PUT | /api/v1/system-config | `{ updates: [{ key: string, value: string }] }` | `{ updated: number }` | Admin |
+| Method | Path                  | Request                                                                                | Response                                                                                             | Auth            |
+| ------ | --------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------- |
+| POST   | /api/v1/auth/login    | `{ email: string, password: string }`                                                  | `{ access_token: string, expires_in: 1800, user: { id, email, role } }` + Set-Cookie                 | Public          |
+| POST   | /api/v1/auth/refresh  | No body (reads refresh_token cookie)                                                   | Same shape as login + new Set-Cookie                                                                 | Public (cookie) |
+| POST   | /api/v1/auth/logout   | No body (reads refresh_token cookie)                                                   | 204 No Content + clear cookie                                                                        | Authenticated   |
+| GET    | /api/v1/context       | --                                                                                     | `{ user: { id, email, role }, schoolYear: {...}, permissions: string[] }`                            | Authenticated   |
+| GET    | /api/v1/users         | --                                                                                     | `{ users: [{ id, email, role, is_active, last_login, failed_attempts, locked_until, created_at }] }` | Admin           |
+| POST   | /api/v1/users         | `{ email: string, password: string, role: string }`                                    | `{ id, email, role }` (201)                                                                          | Admin           |
+| PATCH  | /api/v1/users/:id     | `{ role?, is_active?, force_password_reset?, unlock_account?, force_session_revoke? }` | Updated user object                                                                                  | Admin           |
+| GET    | /api/v1/audit         | Query: from, to, user_id, table_name, operation, page, page_size                       | `{ entries: [...], total, page, page_size }`                                                         | Admin           |
+| GET    | /api/v1/system-config | --                                                                                     | `{ config: [{ key, value, description, data_type }] }`                                               | Admin           |
+| PUT    | /api/v1/system-config | `{ updates: [{ key: string, value: string }] }`                                        | `{ updated: number }`                                                                                | Admin           |
 
 ## UI/UX Specification
 
@@ -147,18 +147,18 @@ ManagementShell -- no context bar, no docked right panel. The Admin module is ve
 
 ### Key Components
 
-| Component | Type | Source | Notes |
-| --- | --- | --- | --- |
-| User table | TanStack Table v8 | 09-admin.md Section 3.2 | 8 columns (email, role, status, last_login, failed_attempts, locked_until, created_at, actions). Client-side sort/filter. Email left-pinned. 44px row height. |
-| Role badges | shadcn/ui Badge (custom) | 09-admin.md Section 3.3 | Color-coded per role: Admin=red, BudgetOwner=blue, Editor=green, Viewer=slate. |
-| Status badges | shadcn/ui Badge (custom) | 09-admin.md Section 3.3 | Active=green, Inactive=slate. |
-| Add/Edit user side panel | Overlay side panel (480px) | 09-admin.md Section 3.6 | Slide-in from right. Create: email+password+role. Edit: role+active toggle+reset password. Focus trap. |
-| Confirmation dialogs | shadcn/ui AlertDialog | 09-admin.md Section 3.7 | Deactivate, activate, force logout. Destructive variant for deactivate/force-logout. |
-| Permissions matrix panel | Collapsible panel | 09-admin.md Section 3.8 | Shows on row click. Read-only RBAC matrix with selected role column highlighted. |
-| Audit trail table | TanStack Table v8 | 09-admin.md Section 4.2 | 6 columns (timestamp, user, action, entity, record_id, audit_note). Server-side pagination (50/page). Reverse chronological. |
-| Audit toolbar filters | shadcn/ui DatePicker + Select | 09-admin.md Section 4.1 | Date range, user, action type, entity. Debounced 300ms. |
-| System settings cards | shadcn/ui Card | 09-admin.md Section 5.2 | 3 groups: Session, Security, Application. Number inputs + select. Left-border highlight on change. |
-| Save button | shadcn/ui Button | 09-admin.md Section 5.1 | Disabled when no pending changes. Unsaved changes warning on navigation. |
+| Component                | Type                          | Source                  | Notes                                                                                                                                                         |
+| ------------------------ | ----------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User table               | TanStack Table v8             | 09-admin.md Section 3.2 | 8 columns (email, role, status, last_login, failed_attempts, locked_until, created_at, actions). Client-side sort/filter. Email left-pinned. 44px row height. |
+| Role badges              | shadcn/ui Badge (custom)      | 09-admin.md Section 3.3 | Color-coded per role: Admin=red, BudgetOwner=blue, Editor=green, Viewer=slate.                                                                                |
+| Status badges            | shadcn/ui Badge (custom)      | 09-admin.md Section 3.3 | Active=green, Inactive=slate.                                                                                                                                 |
+| Add/Edit user side panel | Overlay side panel (480px)    | 09-admin.md Section 3.6 | Slide-in from right. Create: email+password+role. Edit: role+active toggle+reset password. Focus trap.                                                        |
+| Confirmation dialogs     | shadcn/ui AlertDialog         | 09-admin.md Section 3.7 | Deactivate, activate, force logout. Destructive variant for deactivate/force-logout.                                                                          |
+| Permissions matrix panel | Collapsible panel             | 09-admin.md Section 3.8 | Shows on row click. Read-only RBAC matrix with selected role column highlighted.                                                                              |
+| Audit trail table        | TanStack Table v8             | 09-admin.md Section 4.2 | 6 columns (timestamp, user, action, entity, record_id, audit_note). Server-side pagination (50/page). Reverse chronological.                                  |
+| Audit toolbar filters    | shadcn/ui DatePicker + Select | 09-admin.md Section 4.1 | Date range, user, action type, entity. Debounced 300ms.                                                                                                       |
+| System settings cards    | shadcn/ui Card                | 09-admin.md Section 5.2 | 3 groups: Session, Security, Application. Number inputs + select. Left-border highlight on change.                                                            |
+| Save button              | shadcn/ui Button              | 09-admin.md Section 5.1 | Disabled when no pending changes. Unsaved changes warning on navigation.                                                                                      |
 
 ### User Flows
 
@@ -196,15 +196,15 @@ ManagementShell -- no context bar, no docked right panel. The Admin module is ve
 
 From `docs/edge-cases/` -- list all relevant cases for this feature.
 
-| Case ID | Description | Handling |
-| --- | --- | --- |
-| PO-027 | Audit trail retention lifecycle -- after 7 years, archive or delete? | 7-year retention guaranteed. Archive policy TBD before go-live (decision point -- does not block v1 implementation). Audit entries are append-only at DB level. |
-| EC-AUTH-01 | Token replay attack (revoked refresh token reused) | Family-based revocation: all tokens in the family are revoked, all user sessions invalidated, logged as TOKEN_FAMILY_REVOKED. |
-| EC-AUTH-02 | Concurrent login race condition (two logins at exact same time for same user at session limit) | Use database advisory lock on user_id during session enforcement to serialize concurrent login attempts. |
-| EC-AUTH-03 | Clock skew on JWT expiration (server clocks slightly out of sync) | jose library supports clockTolerance option. Set 5-second leeway for JWT verification. |
-| EC-AUTH-04 | Role change impact on active sessions | Active sessions inherit the new role on next token refresh. The access token retains the old role until it expires (max 30 minutes). No immediate session invalidation on role change -- acceptable given short TTL. |
-| EC-AUTH-05 | Admin deactivates their own account | Self-protection rule: Deactivate button hidden on own row. API also rejects self-deactivation with 400. |
-| EC-AUTH-06 | Last Admin account deactivation | API prevents deactivating the last active Admin user (400 with code LAST_ADMIN). |
+| Case ID    | Description                                                                                    | Handling                                                                                                                                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PO-027     | Audit trail retention lifecycle -- after 7 years, archive or delete?                           | 7-year retention guaranteed. Archive policy TBD before go-live (decision point -- does not block v1 implementation). Audit entries are append-only at DB level.                                                      |
+| EC-AUTH-01 | Token replay attack (revoked refresh token reused)                                             | Family-based revocation: all tokens in the family are revoked, all user sessions invalidated, logged as TOKEN_FAMILY_REVOKED.                                                                                        |
+| EC-AUTH-02 | Concurrent login race condition (two logins at exact same time for same user at session limit) | Use database advisory lock on user_id during session enforcement to serialize concurrent login attempts.                                                                                                             |
+| EC-AUTH-03 | Clock skew on JWT expiration (server clocks slightly out of sync)                              | jose library supports clockTolerance option. Set 5-second leeway for JWT verification.                                                                                                                               |
+| EC-AUTH-04 | Role change impact on active sessions                                                          | Active sessions inherit the new role on next token refresh. The access token retains the old role until it expires (max 30 minutes). No immediate session invalidation on role change -- acceptable given short TTL. |
+| EC-AUTH-05 | Admin deactivates their own account                                                            | Self-protection rule: Deactivate button hidden on own row. API also rejects self-deactivation with 400.                                                                                                              |
+| EC-AUTH-06 | Last Admin account deactivation                                                                | API prevents deactivating the last active Admin user (400 with code LAST_ADMIN).                                                                                                                                     |
 
 ## Out of Scope
 

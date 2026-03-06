@@ -8,11 +8,11 @@ BudFin deploys as a three-service Docker Compose stack on a single host. This ar
 
 **Services:**
 
-| Service | Image | Role | Port Exposure |
-| --------- | ------- | ------ | --------------- |
-| `nginx` | `nginx:1.25-alpine` | TLS termination, static file serving, reverse proxy | 443 (HTTPS), 80 (HTTP redirect) |
-| `api` | Custom (Node.js 22 LTS) | Fastify REST API server + pg-boss in-process workers | Internal only (3001) |
-| `db` | `postgres:16-alpine` | PostgreSQL database | Internal only (not exposed to host) |
+| Service | Image                   | Role                                                 | Port Exposure                       |
+| ------- | ----------------------- | ---------------------------------------------------- | ----------------------------------- |
+| `nginx` | `nginx:1.25-alpine`     | TLS termination, static file serving, reverse proxy  | 443 (HTTPS), 80 (HTTP redirect)     |
+| `api`   | Custom (Node.js 22 LTS) | Fastify REST API server + pg-boss in-process workers | Internal only (3001)                |
+| `db`    | `postgres:16-alpine`    | PostgreSQL database                                  | Internal only (not exposed to host) |
 
 ```yaml
 # docker-compose.yml (production reference)
@@ -22,8 +22,8 @@ services:
   nginx:
     image: nginx:1.25-alpine
     ports:
-      - "443:443"
-      - "80:80"
+      - '443:443'
+      - '80:80'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
@@ -51,7 +51,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/v1/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -68,7 +68,7 @@ services:
     ports: []
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app_user -d budfindb"]
+      test: ['CMD-SHELL', 'pg_isready -U app_user -d budfindb']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -183,27 +183,27 @@ server {
 
 ### 8.3 Environment Matrix
 
-| Component | Development | Staging | Production |
-| --- | --- | --- | --- |
-| Database | Docker PostgreSQL (local) | Docker PostgreSQL | Docker PostgreSQL + daily pg_dump |
-| API replicas | 1 (no restart policy) | 1 (unless-stopped) | 1-2 (manual scale) |
-| Backup | None | Daily to local disk | Daily pg_dump + encrypted offsite copy |
-| Log level | DEBUG | INFO | INFO (ERROR to email alert) |
-| TLS | Self-signed (mkcert) | Self-signed | Valid certificate (Let's Encrypt or CA) |
-| Monitoring | None | UptimeRobot | UptimeRobot + Winston email alerts (Grafana deferred to v2; see ADR-017) |
-| DB port exposure | 5432 (host-accessible) | Internal only | Internal only |
-| JWT TTL | 30 minutes | 30 minutes | 30 minutes |
-| Rate limiting | Disabled | Enabled | Enabled |
-| Swagger UI | Enabled | Enabled | Disabled |
+| Component        | Development               | Staging             | Production                                                               |
+| ---------------- | ------------------------- | ------------------- | ------------------------------------------------------------------------ |
+| Database         | Docker PostgreSQL (local) | Docker PostgreSQL   | Docker PostgreSQL + daily pg_dump                                        |
+| API replicas     | 1 (no restart policy)     | 1 (unless-stopped)  | 1-2 (manual scale)                                                       |
+| Backup           | None                      | Daily to local disk | Daily pg_dump + encrypted offsite copy                                   |
+| Log level        | DEBUG                     | INFO                | INFO (ERROR to email alert)                                              |
+| TLS              | Self-signed (mkcert)      | Self-signed         | Valid certificate (Let's Encrypt or CA)                                  |
+| Monitoring       | None                      | UptimeRobot         | UptimeRobot + Winston email alerts (Grafana deferred to v2; see ADR-017) |
+| DB port exposure | 5432 (host-accessible)    | Internal only       | Internal only                                                            |
+| JWT TTL          | 30 minutes                | 30 minutes          | 30 minutes                                                               |
+| Rate limiting    | Disabled                  | Enabled             | Enabled                                                                  |
+| Swagger UI       | Enabled                   | Enabled             | Disabled                                                                 |
 
 ### 8.4 HA/DR Strategy
 
 #### Recovery Objectives
 
-| Metric | Target | Justification |
-| -------- | -------- | --------------- |
-| RTO (Recovery Time Objective) | < 4 hours | Acceptable for an internal tool with < 20 users; documented restore procedure tested quarterly |
-| RPO (Recovery Point Objective) | < 24 hours | Daily automated backups; worst-case data loss is one business day |
+| Metric                         | Target     | Justification                                                                                  |
+| ------------------------------ | ---------- | ---------------------------------------------------------------------------------------------- |
+| RTO (Recovery Time Objective)  | < 4 hours  | Acceptable for an internal tool with < 20 users; documented restore procedure tested quarterly |
+| RPO (Recovery Point Objective) | < 24 hours | Daily automated backups; worst-case data loss is one business day                              |
 
 #### Backup Procedure
 
@@ -224,11 +224,11 @@ Offsite copy: the encrypted dump file is copied to secondary storage (USB drive 
 
 #### Backup Retention Policy
 
-| Tier | Retention | Selection Rule |
-| ------ | ----------- | ---------------- |
-| Daily backups | 30 days rolling | Every daily backup |
-| Monthly snapshots | 12 months | 1st-of-month backup preserved |
-| Annual snapshots | 10 years | January 1 backup preserved (per NFR 11.7 audit retention) |
+| Tier              | Retention       | Selection Rule                                            |
+| ----------------- | --------------- | --------------------------------------------------------- |
+| Daily backups     | 30 days rolling | Every daily backup                                        |
+| Monthly snapshots | 12 months       | 1st-of-month backup preserved                             |
+| Annual snapshots  | 10 years        | January 1 backup preserved (per NFR 11.7 audit retention) |
 
 #### Restore Procedure
 
@@ -290,16 +290,16 @@ jobs:
 
 Every PR and push to `main` must pass all of the following gates before merge:
 
-| Gate | Tool | Threshold | Behavior on Failure |
-| ------ | ------ | ----------- | --------------------- |
-| Linting | ESLint + Prettier | Zero errors, zero warnings | Build fails |
-| Type checking | `tsc --noEmit` | Zero type errors | Build fails |
-| Unit test coverage (overall) | Vitest | >= 60% | Build fails |
-| Unit test coverage (calculation engine) | Vitest | >= 80% | Build fails |
-| Unit test coverage (RBAC) | Vitest | >= 80% | Build fails |
-| Integration tests | Vitest | All pass | Build fails |
-| Excel regression suite (Phase 2+) | Custom Vitest suite | All results within +/- 1 SAR tolerance | Build fails |
-| Dependency audit | `npm audit --audit-level=high` | No HIGH or CRITICAL CVEs | Build fails |
+| Gate                                    | Tool                           | Threshold                              | Behavior on Failure |
+| --------------------------------------- | ------------------------------ | -------------------------------------- | ------------------- |
+| Linting                                 | ESLint + Prettier              | Zero errors, zero warnings             | Build fails         |
+| Type checking                           | `tsc --noEmit`                 | Zero type errors                       | Build fails         |
+| Unit test coverage (overall)            | Vitest                         | >= 60%                                 | Build fails         |
+| Unit test coverage (calculation engine) | Vitest                         | >= 80%                                 | Build fails         |
+| Unit test coverage (RBAC)               | Vitest                         | >= 80%                                 | Build fails         |
+| Integration tests                       | Vitest                         | All pass                               | Build fails         |
+| Excel regression suite (Phase 2+)       | Custom Vitest suite            | All results within +/- 1 SAR tolerance | Build fails         |
+| Dependency audit                        | `npm audit --audit-level=high` | No HIGH or CRITICAL CVEs               | Build fails         |
 
 #### Branching Strategy
 
@@ -336,47 +336,47 @@ Every log entry is a JSON object written to stdout. This format enables log aggr
 
 ```json
 {
-  "timestamp": "2026-03-03T10:30:00.000Z",
-  "level": "info",
-  "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "userId": 42,
-  "module": "RevenueEngine",
-  "message": "Revenue calculation completed",
-  "duration_ms": 1247,
-  "version_id": 3
+	"timestamp": "2026-03-03T10:30:00.000Z",
+	"level": "info",
+	"requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+	"userId": 42,
+	"module": "RevenueEngine",
+	"message": "Revenue calculation completed",
+	"duration_ms": 1247,
+	"version_id": 3
 }
 ```
 
 **Log levels and routing:**
 
-| Level | Description | Production Routing |
-| ------- | ------------- | -------------------- |
-| ERROR | Application errors, unhandled exceptions | stdout + file + email alert |
-| WARN | Recoverable issues, deprecation notices | stdout + file |
-| INFO | Request lifecycle, business operations, audit events | stdout + file |
-| DEBUG | Detailed diagnostic data (query parameters, intermediate values) | Disabled in production |
+| Level | Description                                                      | Production Routing          |
+| ----- | ---------------------------------------------------------------- | --------------------------- |
+| ERROR | Application errors, unhandled exceptions                         | stdout + file + email alert |
+| WARN  | Recoverable issues, deprecation notices                          | stdout + file               |
+| INFO  | Request lifecycle, business operations, audit events             | stdout + file               |
+| DEBUG | Detailed diagnostic data (query parameters, intermediate values) | Disabled in production      |
 
 #### Metrics (prom-client)
 
 Application metrics are exposed at the `/metrics` endpoint in Prometheus exposition format. Nginx restricts access to this endpoint to the monitoring subnet only.
 
-| Metric | Type | Labels | Purpose |
-| -------- | ------ | -------- | --------- |
-| `http_request_duration_ms` | Histogram (p50, p95, p99) | endpoint, status_code | API latency tracking |
-| `calculation_duration_ms` | Histogram | module | Calculation engine performance |
-| `export_job_duration_ms` | Histogram | format | Export pipeline performance |
-| `db_pool_connections_active` | Gauge | -- | Connection pool saturation monitoring |
-| `auth_failures_total` | Counter | reason | Security event monitoring |
+| Metric                       | Type                      | Labels                | Purpose                               |
+| ---------------------------- | ------------------------- | --------------------- | ------------------------------------- |
+| `http_request_duration_ms`   | Histogram (p50, p95, p99) | endpoint, status_code | API latency tracking                  |
+| `calculation_duration_ms`    | Histogram                 | module                | Calculation engine performance        |
+| `export_job_duration_ms`     | Histogram                 | format                | Export pipeline performance           |
+| `db_pool_connections_active` | Gauge                     | --                    | Connection pool saturation monitoring |
+| `auth_failures_total`        | Counter                   | reason                | Security event monitoring             |
 
 #### Alerting
 
-| Condition | Alert Name | Channel | Response SLA |
-| ----------- | ------------ | --------- | -------------- |
-| ERROR or FATAL log emitted | BudFin API error | Email to sysadmin | Within 5 minutes (NFR 11.12) |
-| Disk usage > 80% | Disk space warning | Email | Within 15 minutes |
-| API health check fails | BudFin down | Email + SMS (optional) | Within 5 minutes |
-| DB connection refused | Database unreachable | Email | Within 5 minutes |
-| Daily backup failed | Backup failure | Email | Within 1 hour |
+| Condition                  | Alert Name           | Channel                | Response SLA                 |
+| -------------------------- | -------------------- | ---------------------- | ---------------------------- |
+| ERROR or FATAL log emitted | BudFin API error     | Email to sysadmin      | Within 5 minutes (NFR 11.12) |
+| Disk usage > 80%           | Disk space warning   | Email                  | Within 15 minutes            |
+| API health check fails     | BudFin down          | Email + SMS (optional) | Within 5 minutes             |
+| DB connection refused      | Database unreachable | Email                  | Within 5 minutes             |
+| Daily backup failed        | Backup failure       | Email                  | Within 1 hour                |
 
 #### Uptime Monitoring
 
@@ -386,10 +386,10 @@ The health endpoint returns:
 
 ```json
 {
-  "status": "ok",
-  "db": "connected",
-  "uptime_seconds": 86400,
-  "version": "1.0.0"
+	"status": "ok",
+	"db": "connected",
+	"uptime_seconds": 86400,
+	"version": "1.0.0"
 }
 ```
 

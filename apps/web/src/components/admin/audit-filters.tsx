@@ -28,11 +28,7 @@ const OPERATIONS = [
 	'ALL_SESSIONS_REVOKED',
 ];
 
-const ENTITIES = [
-	'users',
-	'refresh_tokens',
-	'system_config',
-];
+const ENTITIES = ['users', 'refresh_tokens', 'system_config'];
 
 export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 	const [filters, setFilters] = useState<AuditFilterValues>({});
@@ -58,10 +54,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 	return (
 		<div className="flex flex-wrap items-end gap-3 pb-4">
 			<div>
-				<label
-					htmlFor="filter-from"
-					className="block text-xs font-medium text-slate-600"
-				>
+				<label htmlFor="filter-from" className="block text-xs font-medium text-slate-600">
 					From
 				</label>
 				<input
@@ -72,10 +65,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label
-					htmlFor="filter-to"
-					className="block text-xs font-medium text-slate-600"
-				>
+				<label htmlFor="filter-to" className="block text-xs font-medium text-slate-600">
 					To
 				</label>
 				<input
@@ -86,10 +76,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label
-					htmlFor="filter-user"
-					className="block text-xs font-medium text-slate-600"
-				>
+				<label htmlFor="filter-user" className="block text-xs font-medium text-slate-600">
 					User ID
 				</label>
 				<input
@@ -101,10 +88,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label
-					htmlFor="filter-action"
-					className="block text-xs font-medium text-slate-600"
-				>
+				<label htmlFor="filter-action" className="block text-xs font-medium text-slate-600">
 					Action
 				</label>
 				<select
@@ -121,18 +105,13 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				</select>
 			</div>
 			<div>
-				<label
-					htmlFor="filter-entity"
-					className="block text-xs font-medium text-slate-600"
-				>
+				<label htmlFor="filter-entity" className="block text-xs font-medium text-slate-600">
 					Entity
 				</label>
 				<select
 					id="filter-entity"
 					className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-					onChange={(e) =>
-						update('table_name', e.target.value)
-					}
+					onChange={(e) => update('table_name', e.target.value)}
 				>
 					<option value="">All</option>
 					{ENTITIES.map((e) => (

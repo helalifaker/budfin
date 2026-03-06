@@ -1,5 +1,5 @@
 {
-  "name": "budfin-dev",
-  "version": "1.0.0",
-  "description": "BudFin development conventions, ADRs, and domain patterns encoded as auto-activating skills, specialized agents, and workflow commands"
+	"name": "budfin-dev",
+	"version": "1.0.0",
+	"description": "BudFin development conventions, ADRs, and domain patterns encoded as auto-activating skills, specialized agents, and workflow commands"
 }

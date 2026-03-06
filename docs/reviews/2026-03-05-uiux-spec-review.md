@@ -12,6 +12,7 @@
 The UI/UX specification is a high-quality, detailed body of work that covers the vast majority of BudFin's functional requirements. However, the cross-referencing analysis has uncovered **7 critical discrepancies**, **9 moderate inconsistencies**, and **6 coverage gaps** where the UI/UX spec either contradicts the TDD/API contract or fails to address functionality that developers will need to implement. These must be resolved before the spec is used as an implementation baseline.
 
 **Risk rating legend:**
+
 - **CRITICAL** — Will cause incorrect implementation if left unresolved; contradicts the TDD or API contract on a material point
 - **MODERATE** — Inconsistent wording or minor mismatch that could confuse developers or lead to rework
 - **GAP** — Functionality defined in the TDD/PRD but not covered (or under-covered) in the UI/UX spec
@@ -22,10 +23,10 @@ The UI/UX specification is a high-quality, detailed body of work that covers the
 
 ### 1.1 JWT Payload Field Names (Security ↔ API Contract)
 
-| Source | Fields |
-| --- | --- |
-| TDD §7.1 (05_security.md) | `userId`, `role`, `sessionId`, `iat`, `exp` |
-| API Contract §4 (04_api_contract.md) | `sub`, `email`, `role` |
+| Source                               | Fields                                      |
+| ------------------------------------ | ------------------------------------------- |
+| TDD §7.1 (05_security.md)            | `userId`, `role`, `sessionId`, `iat`, `exp` |
+| API Contract §4 (04_api_contract.md) | `sub`, `email`, `role`                      |
 
 **Impact:** The frontend authentication module needs to know which field names to read from the decoded JWT. If the UI/UX spec references JWT fields (e.g., for RBAC logic or displaying current user), the field names must be consistent. The TDD and API contract must be reconciled first; then the UI/UX spec should reference the canonical payload shape.
 
@@ -35,10 +36,10 @@ The UI/UX specification is a high-quality, detailed body of work that covers the
 
 ### 1.2 Auto-Save Mechanism (NFR ↔ Global Framework)
 
-| Source | Mechanism |
-| --- | --- |
-| TDD §9.3 (07_nfr_and_testing.md) | Debounced PATCH **500ms after last keystroke** + background PATCH every 30 seconds |
-| UI/UX Spec §00 (00-global-framework.md) | Save on **field blur** + background PATCH every 30 seconds |
+| Source                                  | Mechanism                                                                          |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| TDD §9.3 (07_nfr_and_testing.md)        | Debounced PATCH **500ms after last keystroke** + background PATCH every 30 seconds |
+| UI/UX Spec §00 (00-global-framework.md) | Save on **field blur** + background PATCH every 30 seconds                         |
 
 **Impact:** These are fundamentally different UX behaviors. "500ms debounce after keystroke" means the user sees saves happening as they type (with a short delay). "Save on blur" means saves only happen when the user tabs out of a field. This affects perceived responsiveness, conflict detection timing, and the "Last Saved" indicator in the context bar.
 
@@ -48,10 +49,10 @@ The UI/UX specification is a high-quality, detailed body of work that covers the
 
 ### 1.3 Health Endpoint Response Shape (Infrastructure ↔ API Contract)
 
-| Source | Response Body |
-| --- | --- |
-| TDD §8.6 (06_infrastructure.md) | `{ "status": "healthy", "version": "1.0.0", "uptime_seconds": 86400, "database": "connected" }` |
-| API Contract §4 (04_api_contract.md) | `{ "status": "ok", "db": "connected", "uptime_seconds": 86400, "version": "1.0.0" }` |
+| Source                               | Response Body                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| TDD §8.6 (06_infrastructure.md)      | `{ "status": "healthy", "version": "1.0.0", "uptime_seconds": 86400, "database": "connected" }` |
+| API Contract §4 (04_api_contract.md) | `{ "status": "ok", "db": "connected", "uptime_seconds": 86400, "version": "1.0.0" }`            |
 
 **Impact:** Field names differ (`healthy` vs `ok`, `database` vs `db`). While this does not directly affect end-user UI, the Admin module's system health display (spec 09) and any frontend health-check logic need a single source of truth.
 
@@ -61,10 +62,10 @@ The UI/UX specification is a high-quality, detailed body of work that covers the
 
 ### 1.4 RBAC for Version Lock/Archive (Security ↔ API Contract ↔ UI/UX Spec)
 
-| Action | TDD §7.3 (05_security.md) | API Contract RBAC Matrix | UI/UX Spec 02 (Version Mgmt) |
-| --- | --- | --- | --- |
-| Lock (Published → Locked) | Admin **and** BudgetOwner | Admin only | Admin **and** BudgetOwner |
-| Archive (Locked → Archived) | Admin only (implied by omission) | Admin only | Admin only |
+| Action                      | TDD §7.3 (05_security.md)        | API Contract RBAC Matrix | UI/UX Spec 02 (Version Mgmt) |
+| --------------------------- | -------------------------------- | ------------------------ | ---------------------------- |
+| Lock (Published → Locked)   | Admin **and** BudgetOwner        | Admin only               | Admin **and** BudgetOwner    |
+| Archive (Locked → Archived) | Admin only (implied by omission) | Admin only               | Admin only                   |
 
 **Impact:** The API contract's RBAC summary matrix says only Admin can lock versions, but both the TDD security chapter and the UI/UX spec allow BudgetOwner to lock. If the API is built per the API contract's matrix, BudgetOwner users will get 403 errors when trying to lock versions — contradicting the UI/UX spec which shows them the Lock button.
 
@@ -74,10 +75,10 @@ The UI/UX specification is a high-quality, detailed body of work that covers the
 
 ### 1.5 Scenario Parameters: Missing `ors_hours` in UI (Data Architecture ↔ UI/UX Spec 07)
 
-| Source | Parameters |
-| --- | --- |
+| Source                                                 | Parameters                                                                                                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | TDD §3 Data Architecture (`scenario_parameters` table) | `new_enrollment_factor`, `retention_adjustment`, `attrition_rate`, `fee_collection_rate`, `scholarship_allocation`, **`ors_hours`** (6 total) |
-| UI/UX Spec 07 (Scenarios, §3.1) | 5 slider controls: new_enrollment_factor, retention_adjustment, attrition_rate, fee_collection_rate, scholarship_allocation |
+| UI/UX Spec 07 (Scenarios, §3.1)                        | 5 slider controls: new_enrollment_factor, retention_adjustment, attrition_rate, fee_collection_rate, scholarship_allocation                   |
 
 **Impact:** The database stores 6 scenario parameters, but the UI only exposes 5 sliders. The `ors_hours` parameter (Obligatory Regulatory Service hours — controls teacher workload and therefore FTE requirements) has no UI control. Developers will either leave it uneditable (defeating its purpose) or improvise a UI that doesn't match the spec.
 
@@ -89,11 +90,11 @@ The UI/UX specification is a high-quality, detailed body of work that covers the
 
 In UI/UX spec 02, the permissions table (Section 2) and the row actions dropdown (Section 5.5) define different revert capabilities:
 
-| Section | Revert from Published | Revert from Locked |
-| --- | --- | --- |
-| Section 2 (Permissions table) | Admin only ("Revert to Draft") | Admin only |
-| Section 5.5 (Row Actions) | Admin only (Status in Published/Locked AND role is Admin) | Admin only |
-| Section 8.3 (Panel Footer) | Published row shows "Revert to Draft" for Admin | Locked row shows "Revert to Draft" for Admin |
+| Section                       | Revert from Published                                     | Revert from Locked                           |
+| ----------------------------- | --------------------------------------------------------- | -------------------------------------------- |
+| Section 2 (Permissions table) | Admin only ("Revert to Draft")                            | Admin only                                   |
+| Section 5.5 (Row Actions)     | Admin only (Status in Published/Locked AND role is Admin) | Admin only                                   |
+| Section 8.3 (Panel Footer)    | Published row shows "Revert to Draft" for Admin           | Locked row shows "Revert to Draft" for Admin |
 
 This is internally consistent — Admin only can revert. However, the TDD §7.3 RBAC matrix lists "Reverse lifecycle (Locked → Published)" as Admin only, which is a **different transition direction** (Locked → Published vs. Locked → Draft). The UI/UX spec reverts everything to Draft, while the TDD implies reverting to the previous state.
 
@@ -110,19 +111,20 @@ UI/UX spec 06 (P&L) references `GET /versions/:versionId/stale-flags` for the pr
 **Impact:** Without a defined API contract, developers will have to invent the endpoint shape, request/response schema, and query key structure — leading to potential inconsistency with the UI/UX spec's expectations.
 
 **Recommendation:** Add `GET /api/v1/versions/:versionId/stale-flags` to the API contract with a response schema like:
+
 ```json
 {
-  "version_id": 42,
-  "stale_modules": {
-    "REVENUE": true,
-    "STAFFING": false,
-    "PNL": true
-  },
-  "last_calculated_at": {
-    "REVENUE": "2026-03-03T10:30:00Z",
-    "STAFFING": "2026-03-03T09:15:00Z",
-    "PNL": null
-  }
+	"version_id": 42,
+	"stale_modules": {
+		"REVENUE": true,
+		"STAFFING": false,
+		"PNL": true
+	},
+	"last_calculated_at": {
+		"REVENUE": "2026-03-03T10:30:00Z",
+		"STAFFING": "2026-03-03T09:15:00Z",
+		"PNL": null
+	}
 }
 ```
 
@@ -181,17 +183,20 @@ The API contract RBAC matrix shows `employee:delete` granted to Admin and Budget
 ### 3.1 Fiscal Period Management UI — NOT COVERED
 
 The TDD defines fiscal period endpoints:
+
 - `GET /api/v1/fiscal-periods/:fiscalYear` — returns 12 period records with lock status
 - `PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock` — locks a period (Admin/BudgetOwner only)
 
 The PRD §7.2.1 describes period management and the "Latest Estimate" view. The API contract includes a `GET /api/v1/versions/:id/latest-estimate` endpoint.
 
 **No UI/UX spec covers fiscal period management.** There is no screen, dialog, or panel defined for:
+
 - Viewing the 12 months of a fiscal year with their lock status
 - Locking a fiscal period
 - Viewing the "Latest Estimate" (hybrid actuals + budget)
 
 **Recommendation:** Create a new section in UI/UX spec 02 (Version Management) or spec 09 (Admin) that defines:
+
 1. A fiscal period status grid (12 months, showing Draft/Locked status per month)
 2. Lock period dialog with confirmation
 3. Latest Estimate toggle or view mode
@@ -199,15 +204,18 @@ The PRD §7.2.1 describes period management and the "Latest Estimate" view. The 
 ### 3.2 Two-Phase Import Flow UI — UNDER-COVERED
 
 The API contract defines a two-phase import pattern:
+
 1. `POST /versions/:id/import/:module/validate` — validates data, returns preview + error summary
 2. `POST /versions/:id/import/:module/commit` — commits validated data
 
 UI/UX spec 03 (Enrollment) mentions "Import Historical CSV" in the toolbar's More menu, and spec 05 (Staffing) mentions employee xlsx import. However, neither spec details the two-phase validate-then-commit flow with:
+
 - Validation preview showing row counts, errors, warnings
 - User confirmation step before commit
 - Error summary display for failed validations
 
 **Recommendation:** Add an "Import Flow" section to specs 03 and 05 detailing:
+
 1. File upload dialog
 2. Validation progress indicator
 3. Validation results preview (success rows, error rows, warning rows)
@@ -217,6 +225,7 @@ UI/UX spec 03 (Enrollment) mentions "Import Historical CSV" in the toolbar's Mor
 ### 3.3 Actuals Import Flow — NOT COVERED
 
 The API contract defines `POST /versions/:id/import/:module` for Actual versions (distinct from the two-phase validate/commit for Draft versions). The TDD roadmap (Week 19) describes an "Actual Version Import Flow" with:
+
 - Pre-flight guards for version type and data source
 - `actuals_import_log` creation
 - Calculation engine 409 guards for IMPORTED versions
@@ -224,6 +233,7 @@ The API contract defines `POST /versions/:id/import/:module` for Actual versions
 **No UI/UX spec covers the Actual version import workflow.** This is a distinct workflow from budget version data entry (Actual versions cannot use the calculation engine; they receive imported data only).
 
 **Recommendation:** Create a new section (possibly in spec 02 or as a separate spec) covering:
+
 1. How users trigger an Actual version import
 2. Module selection (which data to import: enrollment, revenue, staff costs)
 3. File upload and validation feedback
@@ -241,12 +251,14 @@ UI/UX spec 09 (Admin) covers the general audit trail but does not describe a sep
 ### 3.5 System Health Monitoring UI — MINIMAL COVERAGE
 
 PRD user story US-019 requires: "Health endpoint accessible; error logs filterable by severity; last backup timestamp visible; alerts for FATAL errors." UI/UX spec 09 covers System Settings but does not detail a system health dashboard showing:
+
 - Application health status (from `GET /api/v1/health`)
 - Last backup timestamp
 - Error log viewer
 - Alert configuration
 
 **Recommendation:** Add a "System Health" section to spec 09 with at minimum:
+
 1. Health status card (green/red indicator)
 2. Database connection status
 3. Last backup timestamp (if available via system_config)
@@ -259,6 +271,7 @@ TDD §9.3 describes optimistic locking with `updated_at` comparison and a 409 `O
 **No UI/UX spec defines this conflict dialog.** This is a cross-cutting concern that affects every editable module (enrollment, revenue, staffing, master data).
 
 **Recommendation:** Add an "Optimistic Lock Conflict" section to spec 00 (Global Framework) defining:
+
 1. Conflict dialog design (who changed, when, what values)
 2. "Refresh" vs. "Overwrite" action buttons
 3. Whether the dialog shows a diff of conflicting values
@@ -275,11 +288,11 @@ UI/UX spec 06 (P&L, §10.2) notes: "`Ctrl+Shift+C` — Collapse all groups (note
 
 ### 4.2 Version Type Badge Colors vs. PRD
 
-| Badge | UI/UX Spec 02 | PRD §7.1 |
-| --- | --- | --- |
-| Actual | `#16A34A` (green) | Green |
-| Budget | `#2563EB` (blue) | Blue |
-| Forecast | `#EA580C` (orange) | Orange |
+| Badge    | UI/UX Spec 02      | PRD §7.1 |
+| -------- | ------------------ | -------- |
+| Actual   | `#16A34A` (green)  | Green    |
+| Budget   | `#2563EB` (blue)   | Blue     |
+| Forecast | `#EA580C` (orange) | Orange   |
 
 These are consistent. No issue.
 
@@ -308,24 +321,24 @@ The following areas are well-aligned and correctly specified:
 
 ## 6. Recommended Action Items
 
-| # | Priority | Action | Owner | Affected Documents |
-| --- | --- | --- | --- | --- |
-| 1 | CRITICAL | Reconcile JWT payload fields between TDD §7.1 and API contract | Tech Lead | 05_security.md, 04_api_contract.md |
-| 2 | CRITICAL | Align auto-save mechanism (blur vs. debounce) | Tech Lead + UX | 07_nfr_and_testing.md, 00-global-framework.md |
-| 3 | CRITICAL | Align health endpoint response shape | Tech Lead | 06_infrastructure.md, 04_api_contract.md |
-| 4 | CRITICAL | Fix RBAC for version lock in API contract (allow BudgetOwner) | Tech Lead | 04_api_contract.md |
-| 5 | CRITICAL | Add `ors_hours` control to Scenario UI | UX Designer | 07-scenarios.md |
-| 6 | CRITICAL | Clarify revert target state (always Draft vs. prior state) | CAO + Tech Lead | 05_security.md, 02-version-management.md |
-| 7 | CRITICAL | Define `stale-flags` endpoint in API contract | Tech Lead | 04_api_contract.md |
-| 8 | GAP | Create fiscal period management UI spec | UX Designer | New section in 02 or 09 |
-| 9 | GAP | Detail two-phase import flow in enrollment and staffing specs | UX Designer | 03-enrollment-capacity.md, 05-staffing-costs.md |
-| 10 | GAP | Create Actual version import workflow spec | UX Designer | New section |
-| 11 | GAP | Add calculation audit view | UX Designer | 09-admin.md |
-| 12 | GAP | Add system health monitoring UI | UX Designer | 09-admin.md |
-| 13 | GAP | Define optimistic lock conflict dialog | UX Designer | 00-global-framework.md |
-| 14 | MODERATE | Align PDF paper size (A3 vs A4) | CAO | 06-pnl-reporting.md or ADR-014 |
-| 15 | MODERATE | Rename export toast "Cancel" to "Dismiss" | UX Designer | 06-pnl-reporting.md |
-| 16 | MODERATE | Clarify employee delete vs. soft-delete | Tech Lead | 04_api_contract.md, 05-staffing-costs.md |
+| #   | Priority | Action                                                         | Owner           | Affected Documents                              |
+| --- | -------- | -------------------------------------------------------------- | --------------- | ----------------------------------------------- |
+| 1   | CRITICAL | Reconcile JWT payload fields between TDD §7.1 and API contract | Tech Lead       | 05_security.md, 04_api_contract.md              |
+| 2   | CRITICAL | Align auto-save mechanism (blur vs. debounce)                  | Tech Lead + UX  | 07_nfr_and_testing.md, 00-global-framework.md   |
+| 3   | CRITICAL | Align health endpoint response shape                           | Tech Lead       | 06_infrastructure.md, 04_api_contract.md        |
+| 4   | CRITICAL | Fix RBAC for version lock in API contract (allow BudgetOwner)  | Tech Lead       | 04_api_contract.md                              |
+| 5   | CRITICAL | Add `ors_hours` control to Scenario UI                         | UX Designer     | 07-scenarios.md                                 |
+| 6   | CRITICAL | Clarify revert target state (always Draft vs. prior state)     | CAO + Tech Lead | 05_security.md, 02-version-management.md        |
+| 7   | CRITICAL | Define `stale-flags` endpoint in API contract                  | Tech Lead       | 04_api_contract.md                              |
+| 8   | GAP      | Create fiscal period management UI spec                        | UX Designer     | New section in 02 or 09                         |
+| 9   | GAP      | Detail two-phase import flow in enrollment and staffing specs  | UX Designer     | 03-enrollment-capacity.md, 05-staffing-costs.md |
+| 10  | GAP      | Create Actual version import workflow spec                     | UX Designer     | New section                                     |
+| 11  | GAP      | Add calculation audit view                                     | UX Designer     | 09-admin.md                                     |
+| 12  | GAP      | Add system health monitoring UI                                | UX Designer     | 09-admin.md                                     |
+| 13  | GAP      | Define optimistic lock conflict dialog                         | UX Designer     | 00-global-framework.md                          |
+| 14  | MODERATE | Align PDF paper size (A3 vs A4)                                | CAO             | 06-pnl-reporting.md or ADR-014                  |
+| 15  | MODERATE | Rename export toast "Cancel" to "Dismiss"                      | UX Designer     | 06-pnl-reporting.md                             |
+| 16  | MODERATE | Clarify employee delete vs. soft-delete                        | Tech Lead       | 04_api_contract.md, 05-staffing-costs.md        |
 
 ---
 
@@ -337,4 +350,4 @@ I recommend a focused review session between the Tech Lead, UX Designer, and CAO
 
 ---
 
-*Report generated by cross-referencing 11 UI/UX spec documents against TDD v1.0 (9 sections), API Contract, PRD v2.0, and 17 ADRs.*
+_Report generated by cross-referencing 11 UI/UX spec documents against TDD v1.0 (9 sections), API Contract, PRD v2.0, and 17 ADRs._

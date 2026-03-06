@@ -20,30 +20,30 @@ Use `fastify-type-provider-zod` (NOT `@fastify/type-provider-zod`).
 ## Route Schemas — Every Route Must Have One
 
 ```typescript
-import { z } from 'zod'
-import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod';
+import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 const plugin: FastifyPluginAsyncZod = async (fastify) => {
-  fastify.post('/budget-versions', {
-    schema: {
-      body: z.object({
-        name: z.string().min(1).max(100),
-        fiscalYear: z.number().int().min(2020).max(2100),
-      }),
-      response: {
-        201: z.object({
-          id: z.string().uuid(),
-          name: z.string(),
-          status: z.enum(['Draft', 'Published', 'Locked', 'Archived']),
-        }),
-      },
-    },
-    preHandler: [requirePermission('budget:create')],
-    handler: async (request, reply) => {
-      // handler logic
-    },
-  })
-}
+	fastify.post('/budget-versions', {
+		schema: {
+			body: z.object({
+				name: z.string().min(1).max(100),
+				fiscalYear: z.number().int().min(2020).max(2100),
+			}),
+			response: {
+				201: z.object({
+					id: z.string().uuid(),
+					name: z.string(),
+					status: z.enum(['Draft', 'Published', 'Locked', 'Archived']),
+				}),
+			},
+		},
+		preHandler: [requirePermission('budget:create')],
+		handler: async (request, reply) => {
+			// handler logic
+		},
+	});
+};
 ```
 
 ## Middleware Order (Must Follow Exactly)
@@ -58,17 +58,17 @@ Never reorder these. RBAC check must come after auth.
 
 ```typescript
 // ALL POST, PUT, PATCH, DELETE routes must have this preHandler
-preHandler: [requirePermission('resource:action')]
+preHandler: [requirePermission('resource:action')];
 
 // Common permissions
-'budget:read'      // GET budget data
-'budget:create'    // POST new budget
-'budget:edit'      // PUT/PATCH budget
-'budget:publish'   // Transition to Published
-'budget:lock'      // Transition to Locked
-'calculation:run'  // Trigger calculation engine
-'user:manage'      // User administration
-'audit:read'       // Read audit logs
+('budget:read'); // GET budget data
+('budget:create'); // POST new budget
+('budget:edit'); // PUT/PATCH budget
+('budget:publish'); // Transition to Published
+('budget:lock'); // Transition to Locked
+('calculation:run'); // Trigger calculation engine
+('user:manage'); // User administration
+('audit:read'); // Read audit logs
 ```
 
 ## Error Response Format
@@ -120,24 +120,24 @@ Monetary values MUST be serialized as strings to preserve TC-001 precision.
 
 ```typescript
 fastify.post('/auth/login', {
-  config: {
-    rateLimit: {
-      max: 10,
-      timeWindow: '1 minute',
-    },
-  },
-  // ...
-})
+	config: {
+		rateLimit: {
+			max: 10,
+			timeWindow: '1 minute',
+		},
+	},
+	// ...
+});
 ```
 
 ## Logging — Always Include requestId
 
 ```typescript
 // Correct — structured log with requestId
-fastify.log.info({ requestId: request.id, userId, action }, 'Budget version created')
+fastify.log.info({ requestId: request.id, userId, action }, 'Budget version created');
 
 // Wrong — no context
-console.log('Budget version created')
+console.log('Budget version created');
 ```
 
 - Use `fastify.log` (Winston-backed) — never `console.log` in production code
@@ -154,13 +154,13 @@ console.log('Budget version created')
 ## Fastify Plugin Structure
 
 ```typescript
-import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import fp from 'fastify-plugin'
+import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import fp from 'fastify-plugin';
 
 const myPlugin: FastifyPluginAsyncZod = async (fastify, opts) => {
-  // register routes or decorate fastify
-}
+	// register routes or decorate fastify
+};
 
 // Export with fp() to share fastify scope (decorators, etc.)
-export default fp(myPlugin, { name: 'my-plugin' })
+export default fp(myPlugin, { name: 'my-plugin' });
 ```

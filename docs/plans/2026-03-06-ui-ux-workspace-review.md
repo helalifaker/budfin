@@ -21,12 +21,14 @@ The existing specs are solid in breadth — all 11 modules are documented with t
 ### GAP-001 — Right Panel is an Overlay, Not a Docked Shell Component [BLOCKING]
 
 **Current spec:** `00-global-framework.md §4.4` defines `<SidePanel>` as:
+
 - Width: 480px fixed
 - Position: "overlays content" (implied by z-index:30)
 - Animation: slides in from right but does NOT shift the workspace
 - Defined per-module — each module manages its own panel independently
 
 **Required:** A shell-level docked right panel that:
+
 - Is managed at the `<AppShell>` level, not per-module
 - **Shifts** the workspace width when open (workspace `flex: 1` narrows; panel appears beside it)
 - Has a persistent toggle button accessible at all times
@@ -40,6 +42,7 @@ The existing specs are solid in breadth — all 11 modules are documented with t
 ### GAP-002 — No Right Panel Toggle in the Shell Layout [BLOCKING]
 
 **Current spec:** The application shell ASCII diagram shows:
+
 ```
 Context Bar (56px)
 Sidebar (240/64px) | Main Workspace (flex:1)
@@ -48,12 +51,14 @@ Sidebar (240/64px) | Main Workspace (flex:1)
 There is no right panel slot, no toggle button, and no right rail.
 
 **Required:** Update the shell to:
+
 ```
 Context Bar (56px) — includes right panel toggle button (far right)
 Sidebar (240/64px) | Main Workspace (flex:1) | Right Panel (0/320/480px)
 ```
 
 The toggle button must be:
+
 - Always visible in the context bar (far right, before the user avatar)
 - Icon: `PanelRightOpen` / `PanelRightClose` (Lucide)
 - Keyboard shortcut: `Ctrl+Shift+P`
@@ -67,13 +72,13 @@ The toggle button must be:
 
 **Required:** The right panel has 4 modes, switchable via icon tabs on its left edge:
 
-| Mode | Icon | Content | Available In |
-| --- | --- | --- | --- |
-| Details | `Info` | Version metadata, stale modules, last calculated timestamps | All planning modules |
-| Activity | `Activity` | Recent changes, calculation history, export status | All modules |
-| Audit | `ClipboardList` | Audit trail entries for the current record or module | All modules |
-| Help | `HelpCircle` | Contextual documentation for the active module | All modules |
-| Form | `FilePen` | Create/edit CRUD forms (replaces the current overlay side panel) | Per module |
+| Mode     | Icon            | Content                                                          | Available In         |
+| -------- | --------------- | ---------------------------------------------------------------- | -------------------- |
+| Details  | `Info`          | Version metadata, stale modules, last calculated timestamps      | All planning modules |
+| Activity | `Activity`      | Recent changes, calculation history, export status               | All modules          |
+| Audit    | `ClipboardList` | Audit trail entries for the current record or module             | All modules          |
+| Help     | `HelpCircle`    | Contextual documentation for the active module                   | All modules          |
+| Form     | `FilePen`       | Create/edit CRUD forms (replaces the current overlay side panel) | Per module           |
 
 Mode tabs appear as a vertical icon strip on the left edge of the right panel. The active mode is highlighted with `--color-info` left border.
 
@@ -84,6 +89,7 @@ Mode tabs appear as a vertical icon strip on the left edge of the right panel. T
 **Current spec:** The side panel has `z-index: 30` and "overlays content." In financial planning tools (Pigment, Anaplan, Adaptive Insights), panels dock alongside the workspace — the workspace narrows but remains fully accessible.
 
 **Required:**
+
 - When the right panel opens, `<MainWorkspace>` gets `transition: width 200ms ease-in-out`
 - Right panel appears to the right of the workspace, not on top of it
 - If viewport < 1440px AND right panel is open: overlay mode is acceptable (fallback), with a semi-transparent backdrop
@@ -98,6 +104,7 @@ Mode tabs appear as a vertical icon strip on the left edge of the right panel. T
 **Current spec:** Toasts auto-dismiss in 5 seconds. There is no way to review past notifications (completed exports, calculation results, save errors that were dismissed).
 
 **Required:** "Activity" mode in the right panel (see GAP-003) shows:
+
 - Last 20 events in reverse-chronological order
 - Event types: calculation complete, export ready, auto-save, error, version lifecycle change
 - Each event: icon + description + timestamp (relative: "2 min ago")
@@ -113,15 +120,16 @@ Mode tabs appear as a vertical icon strip on the left edge of the right panel. T
 **Current spec:** The module toolbar has a title (`<h1>` with module name). The context bar shows FY + Version. But there is no persistent, unambiguous location indicator.
 
 **Required:** The context bar left side should show a location indicator:
+
 ```
 [BudFin logo] > FY2026 / Budget v2 > Staffing & Staff Costs
 ```
 
-| Segment | Component | Behavior |
-| --- | --- | --- |
-| App | Logo | Always visible; click → Dashboard |
+| Segment      | Component                            | Behavior                                           |
+| ------------ | ------------------------------------ | -------------------------------------------------- |
+| App          | Logo                                 | Always visible; click → Dashboard                  |
 | FY + Version | Same as current FY/Version selectors | Combined into "FY2026 / Budget v2" compact display |
-| Module | Current module name | Non-interactive, text only |
+| Module       | Current module name                  | Non-interactive, text only                         |
 
 This gives users an immediate sense of their context without requiring them to look at both the sidebar (active item) and the context bar separately. In comparison mode, a colored bar below the breadcrumb uses the comparison version's type color (this already exists in the spec).
 
@@ -140,8 +148,8 @@ Adding a right panel toggle (GAP-002) and breadcrumb (GAP-006) makes this 9+ ele
 Left zone: Navigation                   Center zone: Context                Right zone: Shell actions
 ```
 
-| Left Zone | Center Zone | Right Zone |
-| --- | --- | --- |
+| Left Zone                  | Center Zone                                                                     | Right Zone                                                       |
+| -------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Logo, breadcrumb (GAP-006) | FY selector, Version selector, Compare toggle, Period toggle, Scenario selector | Save indicator, Stale indicator, Right panel toggle, User avatar |
 
 This reduces cognitive load by grouping navigation vs. data context vs. shell controls.
@@ -153,6 +161,7 @@ This reduces cognitive load by grouping navigation vs. data context vs. shell co
 **Current spec:** The sidebar can be collapsed to 64px. But there is no way to collapse the context bar for maximum workspace vertical space.
 
 **Required:** A "Focus mode" toggle that:
+
 - Hides the context bar (collapses to 0px height with 200ms transition)
 - Sidebar stays visible in collapsed (64px) mode
 - The module toolbar becomes the topmost element
@@ -165,11 +174,13 @@ This reduces cognitive load by grouping navigation vs. data context vs. shell co
 ### GAP-009 — Right Panel Width Inconsistency Across Modules [MINOR]
 
 **Current spec:**
+
 - Most side panels: 480px (fixed)
 - Scenarios module: 40/60% split layout (completely different pattern)
 - Master Data: 65/35% split
 
 **Required:** A unified right panel width system:
+
 - Default: 480px
 - Compact: 320px (for Details/Activity/Help modes)
 - Expanded: 560px (for form-heavy CRUD side panels)
@@ -183,6 +194,7 @@ This reduces cognitive load by grouping navigation vs. data context vs. shell co
 **Current spec:** Some interactions navigate to a new module (e.g., clicking "Go to Revenue" in P&L's stale prerequisites dialog). Others open a side panel. The decision rule is implicit.
 
 **Required:** A documented rule in the global framework:
+
 - **Navigate to module:** When the user needs to perform multi-step data entry or calculation
 - **Open in right panel (Details mode):** When the user needs to view metadata, audit trail, or read-only detail without leaving their current context
 - **Open in right panel (Form mode):** When the user is creating/editing a single record (< 10 fields)
@@ -224,6 +236,7 @@ This reduces cognitive load by grouping navigation vs. data context vs. shell co
 ### Phase 1: Shell Architecture (Blocks everything else)
 
 **Task 1.1** — Update `00-global-framework.md §2` (Layout Shell)
+
 - Add Section 2.4: Right Panel Architecture
 - Update ASCII shell diagram to include right panel slot
 - Specify right panel states: hidden (0px), compact (320px), expanded (480px), form (480px or 560px)
@@ -232,45 +245,53 @@ This reduces cognitive load by grouping navigation vs. data context vs. shell co
 - Define `useRightPanelStore` Zustand store: `{ isOpen, mode, width, unreadActivityCount }`
 
 **Task 1.2** — Update `00-global-framework.md §3` (Context Bar)
+
 - Reorganize into 3 zones (left/center/right) per GAP-007
 - Add breadcrumb to left zone (GAP-006)
 - Add right panel toggle button to right zone (GAP-002)
 - Define `Ctrl+Shift+P` shortcut
 
 **Task 1.3** — Update `00-global-framework.md §4.4` (Side Panel)
+
 - Rename to "Right Panel — Form Mode"
 - Remove per-module management — all CRUD forms use the shell right panel in Form mode
 - Remove the z-index:30 overlay specification
 - Define how modules register their form content with the shell: `useRightPanelStore.openForm(content)`
 
 **Task 1.4** — Update `00-global-framework.md §12` (Module Page Template)
+
 - Remove `<SidePanel />` from the module page template
 - Add right panel content registration to the `<ModulePage>` contract
 - Define `RightPanelDetails`, `RightPanelActivity` as module-level exports consumed by the shell
 
 **Task 1.5** — Update `00-global-framework.md §5.2` (Application Shortcuts)
+
 - Add `Ctrl+Shift+P`: Toggle right panel
 - Add `Ctrl+Shift+F`: Toggle focus mode (GAP-008)
 
 ### Phase 2: Activity & Details Panel Content
 
 **Task 2.1** — Define Right Panel: Details Mode
+
 - Version metadata display (version name, type, status, last calculated, stale flags)
 - Available in all planning modules
 - Source: `GET /versions/:versionId` + `GET /versions/:versionId/stale-flags`
 
 **Task 2.2** — Define Right Panel: Activity Mode
+
 - Event schema: `{ id, type, message, timestamp, moduleLink?, downloadUrl? }`
 - Client-side event store (Zustand, session-only)
 - Sources: calculation completions, export completions, save errors, version lifecycle changes
 - Unread count badge on right panel toggle button
 
 **Task 2.3** — Define Right Panel: Audit Mode
+
 - Module-level audit entries for the current context (version + module)
 - Source: `GET /api/v1/audit?versionId=&module=&limit=50`
 - Complements the full Audit Trail module (read-only, contextual)
 
 **Task 2.4** — Define Right Panel: Help Mode
+
 - Static markdown content per module
 - Module key actions, formula references, common errors
 - Links to full documentation (external, future)
@@ -278,38 +299,47 @@ This reduces cognitive load by grouping navigation vs. data context vs. shell co
 ### Phase 3: Per-Module Updates (Reference Shell Panel)
 
 **Task 3.1** — Update `02-version-management.md`
+
 - Replace "Version Detail Side Panel (§8)" with "Version Details in Right Panel — Details mode"
 - The CRUD side panels (Create, Clone) become "Right Panel — Form mode"
 
 **Task 3.2** — Update `03-enrollment-capacity.md`
+
 - CSV import side panel → Right Panel Form mode
 - No new detail panel needed (no record-level drill-down in this module)
 
 **Task 3.3** — Update `04-revenue.md` (not yet reviewed)
+
 - Apply same pattern: CRUD side panels → Right Panel Form mode
 
 **Task 3.4** — Update `05-staffing-costs.md`
+
 - New/Edit Employee panel → Right Panel Form mode
 - Bulk Import panel → Right Panel Form mode
 
 **Task 3.5** — Update `06-pnl-reporting.md`
+
 - No side panels in this module; add Details mode content (last calculation timestamp, prerequisite status)
 
 **Task 3.6** — Update `07-scenarios.md`
+
 - The split-panel layout (40% params + 60% preview) is a workspace variant — document it explicitly as such
 - Add a note: this module uses an inline split instead of the right panel; the right panel is still available in Details/Activity/Help modes
 
 **Task 3.7** — Update `08-master-data.md`
+
 - Per-page side panel (§2.1 layout diagram) → Right Panel Form mode
 - Remove the separate side panel layout from Section 2.1
 
 **Task 3.8** — Review `09-admin.md` and `10-input-management.md` (not yet read)
+
 - Apply same right panel pattern
 
 ### Phase 4: Supplementary Specs
 
 **Task 4.1** — Add `00b-workspace-philosophy.md` (new document)
 Content:
+
 1. Workspace-first principle: zero full page reloads, all routing is SPA client-side transitions
 2. Everything happens in the workspace — no app-external navigation
 3. Progressive disclosure: toolbar action → inline edit in grid → right panel form → full dialog (destructive only)
@@ -322,20 +352,20 @@ Content:
 
 ## 5. File Change Summary
 
-| File | Change Type | Priority |
-| --- | --- | --- |
-| `00-global-framework.md` | Major update (§2, §3, §4.4, §5.2, §11.2, §12) | P0 |
-| `00b-workspace-philosophy.md` | New document | P0 |
-| `02-version-management.md` | Update §6, §7, §8 (side panel → right panel) | P1 |
-| `03-enrollment-capacity.md` | Update §9 (import panel → right panel) | P1 |
-| `05-staffing-costs.md` | Update §6, §8 (employee/import panels → right panel) | P1 |
-| `06-pnl-reporting.md` | Add Details mode content registration | P1 |
-| `07-scenarios.md` | Add workspace variant note; add right panel modes | P2 |
-| `08-master-data.md` | Update §2.1 layout, replace side panel with right panel | P1 |
-| `04-revenue.md` | Review then update (not yet read) | P1 |
-| `09-admin.md` | Review then update | P2 |
-| `10-input-management.md` | Review then update | P2 |
-| `01-dashboard.md` | Minor: add Details/Activity right panel content spec | P2 |
+| File                          | Change Type                                             | Priority |
+| ----------------------------- | ------------------------------------------------------- | -------- |
+| `00-global-framework.md`      | Major update (§2, §3, §4.4, §5.2, §11.2, §12)           | P0       |
+| `00b-workspace-philosophy.md` | New document                                            | P0       |
+| `02-version-management.md`    | Update §6, §7, §8 (side panel → right panel)            | P1       |
+| `03-enrollment-capacity.md`   | Update §9 (import panel → right panel)                  | P1       |
+| `05-staffing-costs.md`        | Update §6, §8 (employee/import panels → right panel)    | P1       |
+| `06-pnl-reporting.md`         | Add Details mode content registration                   | P1       |
+| `07-scenarios.md`             | Add workspace variant note; add right panel modes       | P2       |
+| `08-master-data.md`           | Update §2.1 layout, replace side panel with right panel | P1       |
+| `04-revenue.md`               | Review then update (not yet read)                       | P1       |
+| `09-admin.md`                 | Review then update                                      | P2       |
+| `10-input-management.md`      | Review then update                                      | P2       |
+| `01-dashboard.md`             | Minor: add Details/Activity right panel content spec    | P2       |
 
 ---
 
@@ -366,6 +396,7 @@ Content:
 ```
 
 **Right panel left-edge mode strip (top to bottom):**
+
 ```
 [Info]       — Details mode
 [Activity]   — Activity/notifications
@@ -383,38 +414,38 @@ Active mode icon has `--color-info` left border (3px). The strip is 32px wide. T
 type RightPanelMode = 'details' | 'activity' | 'audit' | 'help' | 'form';
 
 interface RightPanelStore {
-  // Panel state
-  isOpen: boolean;
-  mode: RightPanelMode;
-  width: 320 | 480 | 560;
+	// Panel state
+	isOpen: boolean;
+	mode: RightPanelMode;
+	width: 320 | 480 | 560;
 
-  // Form mode (replaces current per-module SidePanel)
-  formContent: ReactNode | null;
-  formTitle: string | null;
+	// Form mode (replaces current per-module SidePanel)
+	formContent: ReactNode | null;
+	formTitle: string | null;
 
-  // Activity
-  events: ActivityEvent[];
-  unreadCount: number;
-  markAllRead: () => void;
+	// Activity
+	events: ActivityEvent[];
+	unreadCount: number;
+	markAllRead: () => void;
 
-  // Actions
-  open: (mode?: RightPanelMode) => void;
-  close: () => void;
-  toggle: () => void;
-  setMode: (mode: RightPanelMode) => void;
-  openForm: (title: string, content: ReactNode) => void;
-  closeForm: () => void;
-  addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void;
+	// Actions
+	open: (mode?: RightPanelMode) => void;
+	close: () => void;
+	toggle: () => void;
+	setMode: (mode: RightPanelMode) => void;
+	openForm: (title: string, content: ReactNode) => void;
+	closeForm: () => void;
+	addEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void;
 }
 
 interface ActivityEvent {
-  id: string;
-  type: 'calculation' | 'export' | 'save_error' | 'lifecycle' | 'import';
-  message: string;
-  timestamp: Date;
-  moduleLink?: string;
-  downloadUrl?: string;
-  read: boolean;
+	id: string;
+	type: 'calculation' | 'export' | 'save_error' | 'lifecycle' | 'import';
+	message: string;
+	timestamp: Date;
+	moduleLink?: string;
+	downloadUrl?: string;
+	read: boolean;
 }
 ```
 
@@ -442,17 +473,17 @@ All questions from the original review have been resolved:
 
 All spec files updated on 2026-03-06:
 
-| File | Change |
-| --- | --- |
-| `00-global-framework.md` | Two-shell architecture, right panel spec, context bar 3-zone layout, two module templates |
-| `00b-workspace-philosophy.md` | New document: workspace-first principles, progressive disclosure, decision tree |
-| `02-version-management.md` | ManagementShell, FY in toolbar, simplified URL state |
-| `08-master-data.md` | ManagementShell, removed muted context bar |
-| `09-admin.md` | ManagementShell, removed de-emphasized context bar |
-| `01-dashboard.md` | PlanningShell note, removed per-module context bar |
-| `03-enrollment-capacity.md` | PlanningShell note |
-| `04-revenue.md` | PlanningShell note |
-| `05-staffing-costs.md` | PlanningShell note |
-| `06-pnl-reporting.md` | PlanningShell note, auto-close panel on comparison |
-| `07-scenarios.md` | PlanningShell note, overlay mode for right panel |
-| `10-input-management.md` | Overlay side panel within PlanningShell |
+| File                          | Change                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------- |
+| `00-global-framework.md`      | Two-shell architecture, right panel spec, context bar 3-zone layout, two module templates |
+| `00b-workspace-philosophy.md` | New document: workspace-first principles, progressive disclosure, decision tree           |
+| `02-version-management.md`    | ManagementShell, FY in toolbar, simplified URL state                                      |
+| `08-master-data.md`           | ManagementShell, removed muted context bar                                                |
+| `09-admin.md`                 | ManagementShell, removed de-emphasized context bar                                        |
+| `01-dashboard.md`             | PlanningShell note, removed per-module context bar                                        |
+| `03-enrollment-capacity.md`   | PlanningShell note                                                                        |
+| `04-revenue.md`               | PlanningShell note                                                                        |
+| `05-staffing-costs.md`        | PlanningShell note                                                                        |
+| `06-pnl-reporting.md`         | PlanningShell note, auto-close panel on comparison                                        |
+| `07-scenarios.md`             | PlanningShell note, overlay mode for right panel                                          |
+| `10-input-management.md`      | Overlay side panel within PlanningShell                                                   |

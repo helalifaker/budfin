@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "tsc",
+		"lint": "eslint src",
 		"typecheck": "tsc --noEmit"
 	},
 	"exports": {

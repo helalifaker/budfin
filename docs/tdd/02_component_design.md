@@ -12,12 +12,12 @@ The Auth Service owns the complete authentication lifecycle: credential verifica
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `TokenService` | JWT generation (access + refresh pair), access token validation, refresh token rotation with family-based replay detection |
-| `PasswordService` | bcrypt hashing and comparison with cost factor 12 |
-| `SessionService` | Tracks active sessions per user, enforces a maximum of 2 concurrent sessions, and invalidates the oldest session when the limit is exceeded |
-| `LockoutService` | Counts consecutive failed login attempts per user, triggers a 30-minute lockout after 5 failures, and resets the counter on successful authentication |
+| Module            | Responsibility                                                                                                                                        |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TokenService`    | JWT generation (access + refresh pair), access token validation, refresh token rotation with family-based replay detection                            |
+| `PasswordService` | bcrypt hashing and comparison with cost factor 12                                                                                                     |
+| `SessionService`  | Tracks active sessions per user, enforces a maximum of 2 concurrent sessions, and invalidates the oldest session when the limit is exceeded           |
+| `LockoutService`  | Counts consecutive failed login attempts per user, triggers a 30-minute lockout after 5 failures, and resets the counter on successful authentication |
 
 ### Key TypeScript Interfaces
 
@@ -25,43 +25,43 @@ The Auth Service owns the complete authentication lifecycle: credential verifica
 // --- Token types ---
 
 interface TokenPair {
- accessToken: string;   // JWT, 30-min TTL, payload: JwtPayload
- refreshToken: string;  // Opaque 256-bit random hex, 8-hr TTL, stored bcrypt-hashed in DB
+	accessToken: string; // JWT, 30-min TTL, payload: JwtPayload
+	refreshToken: string; // Opaque 256-bit random hex, 8-hr TTL, stored bcrypt-hashed in DB
 }
 
 interface JwtPayload {
- userId: number;
- role: 'Admin' | 'BudgetOwner' | 'Editor' | 'Viewer';
- sessionId: string;
- iat: number;
- exp: number;
+	userId: number;
+	role: 'Admin' | 'BudgetOwner' | 'Editor' | 'Viewer';
+	sessionId: string;
+	iat: number;
+	exp: number;
 }
 
 // --- Service interface ---
 
 interface AuthService {
- login(email: string, password: string, ipAddress: string): Promise<TokenPair>;
- refresh(refreshToken: string): Promise<TokenPair>;
- logout(refreshToken: string): Promise<void>;
- validateAccessToken(token: string): Promise<JwtPayload>;
+	login(email: string, password: string, ipAddress: string): Promise<TokenPair>;
+	refresh(refreshToken: string): Promise<TokenPair>;
+	logout(refreshToken: string): Promise<void>;
+	validateAccessToken(token: string): Promise<JwtPayload>;
 }
 
 // --- Supporting types ---
 
 interface LoginAttemptRecord {
- userId: number;
- failedAttempts: number;
- lockedUntil: Date | null;
+	userId: number;
+	failedAttempts: number;
+	lockedUntil: Date | null;
 }
 
 interface RefreshTokenRecord {
- id: number;
- userId: number;
- tokenHash: string;
- familyId: string;     // Groups tokens in one refresh chain
- isRevoked: boolean;
- expiresAt: Date;
- createdAt: Date;
+	id: number;
+	userId: number;
+	tokenHash: string;
+	familyId: string; // Groups tokens in one refresh chain
+	isRevoked: boolean;
+	expiresAt: Date;
+	createdAt: Date;
 }
 ```
 
@@ -75,12 +75,12 @@ The `users` table carries `failed_attempts INTEGER DEFAULT 0` and `locked_until 
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Called by | API router (login, refresh, logout endpoints) | Direct function call |
-| Calls | Prisma client (users, refresh_tokens tables) | Prisma query API |
-| Calls | Audit Logger | Prisma middleware (automatic) |
-| Consumed by | RBAC Middleware | `validateAccessToken()` on every request |
+| Direction   | Partner                                       | Mechanism                                |
+| ----------- | --------------------------------------------- | ---------------------------------------- |
+| Called by   | API router (login, refresh, logout endpoints) | Direct function call                     |
+| Calls       | Prisma client (users, refresh_tokens tables)  | Prisma query API                         |
+| Calls       | Audit Logger                                  | Prisma middleware (automatic)            |
+| Consumed by | RBAC Middleware                               | `validateAccessToken()` on every request |
 
 ### Traceability
 
@@ -97,11 +97,11 @@ The RBAC Middleware intercepts every inbound HTTP request after authentication, 
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `PermissionMap` | Static lookup table mapping each `Role` to its granted `Permission` set |
-| `requireRole` | Middleware factory that accepts an allow-list of roles and rejects requests whose JWT role is not in the list |
-| `requirePermission` | Middleware factory that accepts a single permission key and checks whether the caller's role grants it |
+| Module              | Responsibility                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `PermissionMap`     | Static lookup table mapping each `Role` to its granted `Permission` set                                       |
+| `requireRole`       | Middleware factory that accepts an allow-list of roles and rejects requests whose JWT role is not in the list |
+| `requirePermission` | Middleware factory that accepts a single permission key and checks whether the caller's role grants it        |
 
 ### Key TypeScript Interfaces
 
@@ -109,35 +109,54 @@ The RBAC Middleware intercepts every inbound HTTP request after authentication, 
 type Role = 'Admin' | 'BudgetOwner' | 'Editor' | 'Viewer';
 
 type Permission =
- | 'versions:create'
- | 'versions:delete'
- | 'data:edit'
- | 'calculations:run'
- | 'data:view'
- | 'versions:publish'
- | 'users:manage'
- | 'audit:view'
- | 'config:edit'
- | 'data:import'
- | 'data:export'
- | 'salary:view';
+	| 'versions:create'
+	| 'versions:delete'
+	| 'data:edit'
+	| 'calculations:run'
+	| 'data:view'
+	| 'versions:publish'
+	| 'users:manage'
+	| 'audit:view'
+	| 'config:edit'
+	| 'data:import'
+	| 'data:export'
+	| 'salary:view';
 
 const PERMISSION_MAP: Record<Role, ReadonlySet<Permission>> = {
- Admin: new Set([
-  'versions:create', 'versions:delete', 'data:edit', 'calculations:run',
-  'data:view', 'versions:publish', 'users:manage', 'audit:view',
-  'config:edit', 'data:import', 'data:export', 'salary:view',
- ]),
- BudgetOwner: new Set([
-  'versions:create', 'versions:delete', 'data:edit', 'calculations:run',
-  'data:view', 'versions:publish', 'data:import', 'data:export', 'salary:view',
- ]),
- Editor: new Set([
-  'data:edit', 'calculations:run', 'data:view', 'data:import', 'data:export', 'salary:view',
- ]),
- Viewer: new Set([
-  'data:view', 'data:export',
- ]),
+	Admin: new Set([
+		'versions:create',
+		'versions:delete',
+		'data:edit',
+		'calculations:run',
+		'data:view',
+		'versions:publish',
+		'users:manage',
+		'audit:view',
+		'config:edit',
+		'data:import',
+		'data:export',
+		'salary:view',
+	]),
+	BudgetOwner: new Set([
+		'versions:create',
+		'versions:delete',
+		'data:edit',
+		'calculations:run',
+		'data:view',
+		'versions:publish',
+		'data:import',
+		'data:export',
+		'salary:view',
+	]),
+	Editor: new Set([
+		'data:edit',
+		'calculations:run',
+		'data:view',
+		'data:import',
+		'data:export',
+		'salary:view',
+	]),
+	Viewer: new Set(['data:view', 'data:export']),
 };
 
 function requireRole(roles: Role[]): RequestHandler;
@@ -146,20 +165,20 @@ function requirePermission(permission: Permission): RequestHandler;
 
 ### Permission Matrix
 
-| Permission | Admin | BudgetOwner | Editor | Viewer |
-| --- | --- | --- | --- | --- |
-| `versions:create` | Yes | Yes | No | No |
-| `versions:delete` | Yes | Yes | No | No |
-| `data:edit` | Yes | Yes | Yes | No |
-| `calculations:run` | Yes | Yes | Yes | No |
-| `data:view` | Yes | Yes | Yes | Yes |
-| `versions:publish` | Yes | Yes | No | No |
-| `users:manage` | Yes | No | No | No |
-| `audit:view` | Yes | No | No | No |
-| `config:edit` | Yes | No | No | No |
-| `data:import` | Yes | Yes | Yes | No |
-| `data:export` | Yes | Yes | Yes | Yes |
-| `salary:view` | Yes | Yes | Yes | No |
+| Permission         | Admin | BudgetOwner | Editor | Viewer |
+| ------------------ | ----- | ----------- | ------ | ------ |
+| `versions:create`  | Yes   | Yes         | No     | No     |
+| `versions:delete`  | Yes   | Yes         | No     | No     |
+| `data:edit`        | Yes   | Yes         | Yes    | No     |
+| `calculations:run` | Yes   | Yes         | Yes    | No     |
+| `data:view`        | Yes   | Yes         | Yes    | Yes    |
+| `versions:publish` | Yes   | Yes         | No     | No     |
+| `users:manage`     | Yes   | No          | No     | No     |
+| `audit:view`       | Yes   | No          | No     | No     |
+| `config:edit`      | Yes   | No          | No     | No     |
+| `data:import`      | Yes   | Yes         | Yes    | No     |
+| `data:export`      | Yes   | Yes         | Yes    | Yes    |
+| `salary:view`      | Yes   | Yes         | Yes    | No     |
 
 ### Rejection Response
 
@@ -173,11 +192,11 @@ The response intentionally omits details about which permission was missing to a
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Called by | Fastify router (registered as an `onRequest` hook before route handlers) | Middleware chain |
-| Calls | Auth Service | `validateAccessToken()` to extract `JwtPayload` |
-| Guards | All API route handlers | Blocks execution before handler runs |
+| Direction | Partner                                                                  | Mechanism                                       |
+| --------- | ------------------------------------------------------------------------ | ----------------------------------------------- |
+| Called by | Fastify router (registered as an `onRequest` hook before route handlers) | Middleware chain                                |
+| Calls     | Auth Service                                                             | `validateAccessToken()` to extract `JwtPayload` |
+| Guards    | All API route handlers                                                   | Blocks execution before handler runs            |
 
 ### Traceability
 
@@ -194,30 +213,30 @@ The Context Bar State component maintains the user's working context — fiscal 
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `WorkspaceContextProvider` | React Context provider wrapping the application shell; holds canonical state and exposes update functions |
-| `useWorkspaceContext` | Custom hook consumed by every module page to read and modify the active context |
-| `ContextBarUI` | Persistent header component rendering dropdowns for fiscal year, version, comparison version, period, and scenario |
-| `ContextSyncService` | Server-side persistence of context per session and bidirectional URL query-parameter synchronization |
+| Module                     | Responsibility                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `WorkspaceContextProvider` | React Context provider wrapping the application shell; holds canonical state and exposes update functions          |
+| `useWorkspaceContext`      | Custom hook consumed by every module page to read and modify the active context                                    |
+| `ContextBarUI`             | Persistent header component rendering dropdowns for fiscal year, version, comparison version, period, and scenario |
+| `ContextSyncService`       | Server-side persistence of context per session and bidirectional URL query-parameter synchronization               |
 
 ### Key TypeScript Interfaces
 
 ```typescript
 interface WorkspaceContext {
- fiscalYear: number;
- versionId: number;
- comparisonVersionId: number | null;
- academicPeriod: 'AY1' | 'AY2' | 'Summer' | 'FULL_YEAR';
- scenario: 'Base' | 'Optimistic' | 'Pessimistic';
+	fiscalYear: number;
+	versionId: number;
+	comparisonVersionId: number | null;
+	academicPeriod: 'AY1' | 'AY2' | 'Summer' | 'FULL_YEAR';
+	scenario: 'Base' | 'Optimistic' | 'Pessimistic';
 }
 
 interface WorkspaceContextActions {
- setFiscalYear(year: number): void;
- setVersion(versionId: number): void;
- setComparisonVersion(versionId: number | null): void;
- setAcademicPeriod(period: WorkspaceContext['academicPeriod']): void;
- setScenario(scenario: WorkspaceContext['scenario']): void;
+	setFiscalYear(year: number): void;
+	setVersion(versionId: number): void;
+	setComparisonVersion(versionId: number | null): void;
+	setAcademicPeriod(period: WorkspaceContext['academicPeriod']): void;
+	setScenario(scenario: WorkspaceContext['scenario']): void;
 }
 
 type WorkspaceContextValue = WorkspaceContext & WorkspaceContextActions;
@@ -225,9 +244,9 @@ type WorkspaceContextValue = WorkspaceContext & WorkspaceContextActions;
 
 ### Server Endpoints
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/api/v1/context` | Returns the stored `WorkspaceContext` for the current session |
+| Method  | Path              | Description                                                     |
+| ------- | ----------------- | --------------------------------------------------------------- |
+| `GET`   | `/api/v1/context` | Returns the stored `WorkspaceContext` for the current session   |
 | `PATCH` | `/api/v1/context` | Partial update of any context fields; returns the merged result |
 
 ### URL Synchronization
@@ -236,12 +255,12 @@ The `ContextSyncService` keeps URL query parameters (`?fiscalYear=2026&versionId
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Provides context to | Every module page (Revenue, DHG, Staff Costs, P&L) | React Context (`useWorkspaceContext`) |
-| Calls | Version Manager API | Fetches version list for dropdowns |
-| Calls | Context API | `GET`/`PATCH /api/v1/context` for persistence |
-| Consumed by | Calculation Engine triggers | Reads `versionId` and `scenario` to scope computation |
+| Direction           | Partner                                            | Mechanism                                             |
+| ------------------- | -------------------------------------------------- | ----------------------------------------------------- |
+| Provides context to | Every module page (Revenue, DHG, Staff Costs, P&L) | React Context (`useWorkspaceContext`)                 |
+| Calls               | Version Manager API                                | Fetches version list for dropdowns                    |
+| Calls               | Context API                                        | `GET`/`PATCH /api/v1/context` for persistence         |
+| Consumed by         | Calculation Engine triggers                        | Reads `versionId` and `scenario` to scope computation |
 
 ### Traceability
 
@@ -273,61 +292,61 @@ Computes monthly gross and net revenue per grade/nationality/tariff combination 
 
 ```typescript
 interface EnrollmentDetailRow {
- gradeLevel: string;
- nationality: string;
- tariff: string;
- headcount: number;
+	gradeLevel: string;
+	nationality: string;
+	tariff: string;
+	headcount: number;
 }
 
 interface FeeGridRow {
- gradeLevel: string;
- nationality: string;
- tariff: string;
- academicPeriod: 'AY1' | 'AY2';
- annualFeeTtc: Decimal;
+	gradeLevel: string;
+	nationality: string;
+	tariff: string;
+	academicPeriod: 'AY1' | 'AY2';
+	annualFeeTtc: Decimal;
 }
 
 interface DiscountPolicy {
- id: number;
- name: string;
- discountPercent: Decimal;
- eligibilityCriteria: Record<string, unknown>;
+	id: number;
+	name: string;
+	discountPercent: Decimal;
+	eligibilityCriteria: Record<string, unknown>;
 }
 
 interface OtherRevenueItem {
- category: string;
- month: number;
- amount: Decimal;
- description: string;
+	category: string;
+	month: number;
+	amount: Decimal;
+	description: string;
 }
 
 interface RevenueEngineInput {
- enrollmentDetail: EnrollmentDetailRow[];
- feeGrid: FeeGridRow[];
- discountPolicies: DiscountPolicy[];
- otherRevenueItems: OtherRevenueItem[];
- academicWeeks: number;  // 36 per TC-005
+	enrollmentDetail: EnrollmentDetailRow[];
+	feeGrid: FeeGridRow[];
+	discountPolicies: DiscountPolicy[];
+	otherRevenueItems: OtherRevenueItem[];
+	academicWeeks: number; // 36 per TC-005
 }
 
 interface MonthlyRevenueRow {
- versionId: number;
- academicPeriod: 'AY1' | 'AY2';
- gradeLevel: string;
- nationality: string;
- tariff: string;
- month: number;
- grossRevenueHt: Decimal;
- discountAmount: Decimal;
- netRevenueHt: Decimal;
- vatAmount: Decimal;
+	versionId: number;
+	academicPeriod: 'AY1' | 'AY2';
+	gradeLevel: string;
+	nationality: string;
+	tariff: string;
+	month: number;
+	grossRevenueHt: Decimal;
+	discountAmount: Decimal;
+	netRevenueHt: Decimal;
+	vatAmount: Decimal;
 }
 
 function calculateRevenue(input: RevenueEngineInput): MonthlyRevenueRow[];
 
 function distributeAcrossMonths(
- annualAmount: Decimal,
- method: DistributionMethod,
- weights?: number[],
+	annualAmount: Decimal,
+	method: DistributionMethod,
+	weights?: number[]
 ): Map<number, Decimal>;
 
 type DistributionMethod = 'equal' | 'weighted' | 'academic_calendar';
@@ -365,44 +384,40 @@ Computes Full-Time Equivalent (FTE) teaching requirements by grade level based o
 
 ```typescript
 interface DHGGrilleRow {
- gradeLevel: string;
- subject: string;
- hoursPerWeekPerSection: number;
+	gradeLevel: string;
+	subject: string;
+	hoursPerWeekPerSection: number;
 }
 
 interface DHGResult {
- gradeLevel: string;
- enrollment: number;
- maxClassSize: number;
- sectionsNeeded: number;
- totalWeeklyHours: Decimal;
- totalAnnualHours: Decimal;
- fte: Decimal;
+	gradeLevel: string;
+	enrollment: number;
+	maxClassSize: number;
+	sectionsNeeded: number;
+	totalWeeklyHours: Decimal;
+	totalAnnualHours: Decimal;
+	fte: Decimal;
 }
 
 function calculateSectionsNeeded(enrollment: number, maxClassSize: number): number {
- return Math.ceil(enrollment / maxClassSize);
+	return Math.ceil(enrollment / maxClassSize);
 }
 
-function calculateFTE(
- gradeLevel: string,
- sectionsNeeded: number,
- grille: DHGGrilleRow[],
-): Decimal {
- const totalWeeklyHours = grille
-  .filter(g => g.gradeLevel === gradeLevel)
-  .reduce(
-   (sum, g) => sum.plus(new Decimal(g.hoursPerWeekPerSection).mul(sectionsNeeded)),
-   new Decimal(0),
-  );
- return totalWeeklyHours.div(new Decimal(18)); // standard ORS divisor
+function calculateFTE(gradeLevel: string, sectionsNeeded: number, grille: DHGGrilleRow[]): Decimal {
+	const totalWeeklyHours = grille
+		.filter((g) => g.gradeLevel === gradeLevel)
+		.reduce(
+			(sum, g) => sum.plus(new Decimal(g.hoursPerWeekPerSection).mul(sectionsNeeded)),
+			new Decimal(0)
+		);
+	return totalWeeklyHours.div(new Decimal(18)); // standard ORS divisor
 }
 
 function calculateDHG(
- enrollment: EnrollmentDetailRow[],
- grille: DHGGrilleRow[],
- maxClassSizes: Record<string, number>,
- academicWeeks: number,
+	enrollment: EnrollmentDetailRow[],
+	grille: DHGGrilleRow[],
+	maxClassSizes: Record<string, number>,
+	academicWeeks: number
 ): DHGResult[];
 ```
 
@@ -420,30 +435,30 @@ Computes monthly staff costs for every employee including base gross, September 
 
 ```typescript
 interface Employee {
- id: number;
- isSaudi: boolean;
- isTeaching: boolean;
- isNewStaff: boolean;
- baseSalary: Decimal;
- housingAllowance: Decimal;
- transportAllowance: Decimal;
- responsibilityPremium: Decimal;
- hsaAmount: Decimal;
- augmentationPercent: Decimal;
- hireDate: Date;
- ajeerAnnualLevy: Decimal;
- ajeerMonthlyFee: Decimal;
+	id: number;
+	isSaudi: boolean;
+	isTeaching: boolean;
+	isNewStaff: boolean;
+	baseSalary: Decimal;
+	housingAllowance: Decimal;
+	transportAllowance: Decimal;
+	responsibilityPremium: Decimal;
+	hsaAmount: Decimal;
+	augmentationPercent: Decimal;
+	hireDate: Date;
+	ajeerAnnualLevy: Decimal;
+	ajeerMonthlyFee: Decimal;
 }
 
 interface MonthlyStaffCostRow {
- employeeId: number;
- month: number;
- baseGross: Decimal;
- adjustedGross: Decimal;
- gosiAmount: Decimal;
- ajeerAmount: Decimal;
- eosMonthlyAccrual: Decimal;
- totalCost: Decimal;
+	employeeId: number;
+	month: number;
+	baseGross: Decimal;
+	adjustedGross: Decimal;
+	gosiAmount: Decimal;
+	ajeerAmount: Decimal;
+	eosMonthlyAccrual: Decimal;
+	totalCost: Decimal;
 }
 
 function calculateMonthlyGross(employee: Employee, month: number): Decimal;
@@ -459,18 +474,18 @@ This algorithm must be implemented exactly as specified to match Excel `YEARFRAC
 
 ```typescript
 function yearFrac(d1: Date, d2: Date): Decimal {
- let day1 = d1.getDate();
- let month1 = d1.getMonth() + 1;
- let year1 = d1.getFullYear();
- let day2 = d2.getDate();
- let month2 = d2.getMonth() + 1;
- let year2 = d2.getFullYear();
+	let day1 = d1.getDate();
+	let month1 = d1.getMonth() + 1;
+	let year1 = d1.getFullYear();
+	let day2 = d2.getDate();
+	let month2 = d2.getMonth() + 1;
+	let year2 = d2.getFullYear();
 
- if (day1 === 31) day1 = 30;
- if (day2 === 31 && day1 >= 30) day2 = 30;
+	if (day1 === 31) day1 = 30;
+	if (day2 === 31 && day1 >= 30) day2 = 30;
 
- const days = (year2 - year1) * 360 + (month2 - month1) * 30 + (day2 - day1);
- return new Decimal(days).div(360);
+	const days = (year2 - year1) * 360 + (month2 - month1) * 30 + (day2 - day1);
+	return new Decimal(days).div(360);
 }
 ```
 
@@ -512,32 +527,32 @@ Aggregates monthly revenue and cost outputs from the other sub-engines into a co
 
 ```typescript
 interface IFRSMapping {
- sourceCategory: string;
- targetLineItem: string;
- sign: 'positive' | 'negative';
+	sourceCategory: string;
+	targetLineItem: string;
+	sign: 'positive' | 'negative';
 }
 
 interface MonthlyPnLRow {
- month: number;
- totalRevenueHt: Decimal;
- totalStaffCosts: Decimal;
- grossProfit: Decimal;
- otherOperatingExpenses: Decimal;
- ebitda: Decimal;
- depreciationAmortization: Decimal;
- operatingProfit: Decimal;
- financeIncome: Decimal;
- financeCosts: Decimal;
- profitBeforeZakat: Decimal;
- zakat: Decimal;
- netProfit: Decimal;
+	month: number;
+	totalRevenueHt: Decimal;
+	totalStaffCosts: Decimal;
+	grossProfit: Decimal;
+	otherOperatingExpenses: Decimal;
+	ebitda: Decimal;
+	depreciationAmortization: Decimal;
+	operatingProfit: Decimal;
+	financeIncome: Decimal;
+	financeCosts: Decimal;
+	profitBeforeZakat: Decimal;
+	zakat: Decimal;
+	netProfit: Decimal;
 }
 
 function calculatePnL(
- monthlyRevenue: MonthlyRevenueRow[],
- monthlyStaffCosts: MonthlyStaffCostRow[],
- otherItems: OtherRevenueItem[],
- ifrsMapping: IFRSMapping[],
+	monthlyRevenue: MonthlyRevenueRow[],
+	monthlyStaffCosts: MonthlyStaffCostRow[],
+	otherItems: OtherRevenueItem[],
+	ifrsMapping: IFRSMapping[]
 ): MonthlyPnLRow[];
 ```
 
@@ -551,12 +566,12 @@ Zakat = IF(profitBeforeZakat > 0, profitBeforeZakat × 0.025, 0)
 
 ### Calculation Engine — Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Called by | API route handlers (POST /api/v1/calculations/run) | Direct function call with loaded input data |
-| Reads from | Prisma client (via caller) | Callers load enrollment, fees, employees, config |
-| Writes to | Prisma client (via caller) | Callers persist monthly output rows |
-| Depends on | Decimal.js | All monetary arithmetic |
+| Direction  | Partner                                            | Mechanism                                        |
+| ---------- | -------------------------------------------------- | ------------------------------------------------ |
+| Called by  | API route handlers (POST /api/v1/calculations/run) | Direct function call with loaded input data      |
+| Reads from | Prisma client (via caller)                         | Callers load enrollment, fees, employees, config |
+| Writes to  | Prisma client (via caller)                         | Callers persist monthly output rows              |
+| Depends on | Decimal.js                                         | All monetary arithmetic                          |
 
 ### Calculation Engine — Traceability
 
@@ -573,11 +588,11 @@ The Version Manager governs the full lifecycle of budget versions: creation, clo
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `VersionCRUD` | Create, read, update, and delete operations on the `budget_versions` table |
-| `VersionLifecycle` | State machine enforcement (Draft → Published → Locked → Archived) with role-gated transitions |
-| `VersionCloner` | Deep-copy of all version-scoped data into a new Draft version within a single database transaction |
+| Module              | Responsibility                                                                                     |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| `VersionCRUD`       | Create, read, update, and delete operations on the `budget_versions` table                         |
+| `VersionLifecycle`  | State machine enforcement (Draft → Published → Locked → Archived) with role-gated transitions      |
+| `VersionCloner`     | Deep-copy of all version-scoped data into a new Draft version within a single database transaction |
 | `VersionComparator` | Joins two versions' `monthly_budget_summary` tables and computes absolute and percentage variances |
 
 ### Key TypeScript Interfaces
@@ -586,38 +601,38 @@ The Version Manager governs the full lifecycle of budget versions: creation, clo
 type VersionStatus = 'Draft' | 'Published' | 'Locked' | 'Archived';
 
 interface BudgetVersion {
- id: number;
- fiscalYear: number;
- name: string;
- status: VersionStatus;
- createdBy: number;
- createdAt: Date;
- publishedAt: Date | null;
- lockedAt: Date | null;
+	id: number;
+	fiscalYear: number;
+	name: string;
+	status: VersionStatus;
+	createdBy: number;
+	createdAt: Date;
+	publishedAt: Date | null;
+	lockedAt: Date | null;
 }
 
 interface VersionService {
- create(fiscalYear: number, name: string, userId: number): Promise<BudgetVersion>;
- clone(sourceVersionId: number, newName: string, userId: number): Promise<BudgetVersion>;
- transition(
-  versionId: number,
-  targetStatus: VersionStatus,
-  userId: number,
-  auditNote?: string,
- ): Promise<BudgetVersion>;
- compare(
-  primaryVersionId: number,
-  comparisonVersionId: number,
- ): Promise<VersionComparisonResult[]>;
+	create(fiscalYear: number, name: string, userId: number): Promise<BudgetVersion>;
+	clone(sourceVersionId: number, newName: string, userId: number): Promise<BudgetVersion>;
+	transition(
+		versionId: number,
+		targetStatus: VersionStatus,
+		userId: number,
+		auditNote?: string
+	): Promise<BudgetVersion>;
+	compare(
+		primaryVersionId: number,
+		comparisonVersionId: number
+	): Promise<VersionComparisonResult[]>;
 }
 
 interface VersionComparisonResult {
- lineItem: string;
- month: number;
- primaryAmount: Decimal;
- comparisonAmount: Decimal;
- absoluteVariance: Decimal;
- percentageVariance: Decimal | null; // null when comparison is zero (N/A)
+	lineItem: string;
+	month: number;
+	primaryAmount: Decimal;
+	comparisonAmount: Decimal;
+	absoluteVariance: Decimal;
+	percentageVariance: Decimal | null; // null when comparison is zero (N/A)
 }
 ```
 
@@ -655,12 +670,12 @@ When `comparison_amount` is zero, percentage variance is set to `null` and rende
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Called by | API route handlers (version CRUD and comparison endpoints) | Direct function call |
-| Calls | Prisma client | Interactive transactions for clone; standard queries for CRUD |
-| Calls | Audit Logger | Prisma middleware (automatic on all mutations) |
-| Consumed by | Context Bar State | Version list populates dropdown selections |
+| Direction   | Partner                                                    | Mechanism                                                     |
+| ----------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
+| Called by   | API route handlers (version CRUD and comparison endpoints) | Direct function call                                          |
+| Calls       | Prisma client                                              | Interactive transactions for clone; standard queries for CRUD |
+| Calls       | Audit Logger                                               | Prisma middleware (automatic on all mutations)                |
+| Consumed by | Context Bar State                                          | Version list populates dropdown selections                    |
 
 ### Traceability
 
@@ -677,53 +692,53 @@ The Audit Logger provides an automatic, append-only audit trail for every data m
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
+| Module                 | Responsibility                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
 | `PrismaAuditExtension` | Prisma `$extends` middleware that intercepts `create`, `update`, and `delete` operations on all models |
-| `AuditEntryWriter` | Low-level INSERT-only writer to the `audit_entries` table |
+| `AuditEntryWriter`     | Low-level INSERT-only writer to the `audit_entries` table                                              |
 | `AuditContextProvider` | Extracts `userId`, `ipAddress`, and `sessionId` from the current request context via AsyncLocalStorage |
 
 ### Key TypeScript Interfaces
 
 ```typescript
 interface AuditEntry {
- id: number;
- timestamp: Date;          // TIMESTAMPTZ, set by DB default NOW()
- userId: number;
- tableName: string;
- recordId: number;
- operation: 'INSERT' | 'UPDATE' | 'DELETE';
- oldValues: Record<string, unknown> | null;  // null for INSERT
- newValues: Record<string, unknown> | null;  // null for DELETE
- ipAddress: string;
- sessionId: string;
+	id: number;
+	timestamp: Date; // TIMESTAMPTZ, set by DB default NOW()
+	userId: number;
+	tableName: string;
+	recordId: number;
+	operation: 'INSERT' | 'UPDATE' | 'DELETE';
+	oldValues: Record<string, unknown> | null; // null for INSERT
+	newValues: Record<string, unknown> | null; // null for DELETE
+	ipAddress: string;
+	sessionId: string;
 }
 
 // Prisma extension setup
 function createAuditedPrismaClient(basePrisma: PrismaClient): PrismaClient {
- return basePrisma.$extends({
-  query: {
-   $allModels: {
-    async create({ args, query }) {
-     const result = await query(args);
-     await writeAuditEntry('INSERT', null, result);
-     return result;
-    },
-    async update({ args, query }) {
-     const before = await findExisting(args);
-     const result = await query(args);
-     await writeAuditEntry('UPDATE', before, result);
-     return result;
-    },
-    async delete({ args, query }) {
-     const before = await findExisting(args);
-     const result = await query(args);
-     await writeAuditEntry('DELETE', before, null);
-     return result;
-    },
-   },
-  },
- });
+	return basePrisma.$extends({
+		query: {
+			$allModels: {
+				async create({ args, query }) {
+					const result = await query(args);
+					await writeAuditEntry('INSERT', null, result);
+					return result;
+				},
+				async update({ args, query }) {
+					const before = await findExisting(args);
+					const result = await query(args);
+					await writeAuditEntry('UPDATE', before, result);
+					return result;
+				},
+				async delete({ args, query }) {
+					const before = await findExisting(args);
+					const result = await query(args);
+					await writeAuditEntry('DELETE', before, null);
+					return result;
+				},
+			},
+		},
+	});
 }
 ```
 
@@ -744,12 +759,12 @@ When logging changes to the `employees` table, salary-related fields (`base_sala
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Called by | Prisma client (automatic via `$extends` middleware) | Transparent interception |
-| Calls | PostgreSQL `audit_entries` table | Direct INSERT via Prisma raw or model |
-| Reads from | AsyncLocalStorage | Retrieves `userId`, `ipAddress`, `sessionId` from request context |
-| Consumed by | Admin audit trail UI | Read-only query endpoint for Admin role |
+| Direction   | Partner                                             | Mechanism                                                         |
+| ----------- | --------------------------------------------------- | ----------------------------------------------------------------- |
+| Called by   | Prisma client (automatic via `$extends` middleware) | Transparent interception                                          |
+| Calls       | PostgreSQL `audit_entries` table                    | Direct INSERT via Prisma raw or model                             |
+| Reads from  | AsyncLocalStorage                                   | Retrieves `userId`, `ipAddress`, `sessionId` from request context |
+| Consumed by | Admin audit trail UI                                | Read-only query endpoint for Admin role                           |
 
 ### Traceability
 
@@ -766,13 +781,13 @@ The Export Service generates downloadable files in xlsx, PDF, and CSV formats fr
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `ExportJobManager` | Creates job records, polls for pending jobs, updates status on completion |
-| `ExcelExporter` | Generates xlsx files using ExcelJS with stream-based writing for memory efficiency |
-| `PdfExporter` | Generates PDF files using `@react-pdf/renderer` v4.3. Renders a React-PDF document component to a Node.js stream. Produces A3 landscape for P&L, A4 portrait for other reports. No Chromium dependency (ADR-014). |
-| `CsvExporter` | Generates CSV files using fast-csv with UTF-8 BOM for Excel compatibility |
-| `FileCleanupWorker` | Periodic job that deletes expired export files from local storage |
+| Module              | Responsibility                                                                                                                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ExportJobManager`  | Creates job records, polls for pending jobs, updates status on completion                                                                                                                                         |
+| `ExcelExporter`     | Generates xlsx files using ExcelJS with stream-based writing for memory efficiency                                                                                                                                |
+| `PdfExporter`       | Generates PDF files using `@react-pdf/renderer` v4.3. Renders a React-PDF document component to a Node.js stream. Produces A3 landscape for P&L, A4 portrait for other reports. No Chromium dependency (ADR-014). |
+| `CsvExporter`       | Generates CSV files using fast-csv with UTF-8 BOM for Excel compatibility                                                                                                                                         |
+| `FileCleanupWorker` | Periodic job that deletes expired export files from local storage                                                                                                                                                 |
 
 ### Key TypeScript Interfaces
 
@@ -781,29 +796,29 @@ type ExportFormat = 'xlsx' | 'pdf' | 'csv';
 type ExportStatus = 'pending' | 'processing' | 'done' | 'failed';
 
 interface ExportJob {
- id: number;
- userId: number;
- versionId: number;
- format: ExportFormat;
- reportType: string;
- status: ExportStatus;
- filePath: string | null;
- fileSizeBytes: number | null;
- expiresAt: Date | null;
- errorMessage: string | null;
- createdAt: Date;
- completedAt: Date | null;
+	id: number;
+	userId: number;
+	versionId: number;
+	format: ExportFormat;
+	reportType: string;
+	status: ExportStatus;
+	filePath: string | null;
+	fileSizeBytes: number | null;
+	expiresAt: Date | null;
+	errorMessage: string | null;
+	createdAt: Date;
+	completedAt: Date | null;
 }
 
 interface ExportService {
- createJob(
-  userId: number,
-  versionId: number,
-  format: ExportFormat,
-  reportType: string,
- ): Promise<{ jobId: number }>;
- getJobStatus(jobId: number): Promise<ExportJob>;
- downloadFile(jobId: number): Promise<NodeJS.ReadableStream>;
+	createJob(
+		userId: number,
+		versionId: number,
+		format: ExportFormat,
+		reportType: string
+	): Promise<{ jobId: number }>;
+	getJobStatus(jobId: number): Promise<ExportJob>;
+	downloadFile(jobId: number): Promise<NodeJS.ReadableStream>;
 }
 ```
 
@@ -823,12 +838,12 @@ interface ExportService {
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Called by | API route handlers (export endpoints) | Direct function call (job creation); worker picks up asynchronously |
-| Calls | Prisma client | Reads version data for report generation |
-| Calls | ExcelJS, @react-pdf/renderer, fast-csv | File generation libraries |
-| Calls | Local filesystem | File storage (write on generation, read on download, delete on expiry) |
+| Direction | Partner                                | Mechanism                                                              |
+| --------- | -------------------------------------- | ---------------------------------------------------------------------- |
+| Called by | API route handlers (export endpoints)  | Direct function call (job creation); worker picks up asynchronously    |
+| Calls     | Prisma client                          | Reads version data for report generation                               |
+| Calls     | ExcelJS, @react-pdf/renderer, fast-csv | File generation libraries                                              |
+| Calls     | Local filesystem                       | File storage (write on generation, read on download, delete on expiry) |
 
 ### Traceability
 
@@ -845,12 +860,12 @@ The Data Import Service handles ingestion of external data files (CSV for enroll
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `FileParser` | Detects file type and delegates to the appropriate parser (csv-parse for CSV, ExcelJS for xlsx) |
-| `EnrollmentValidator` | Validates enrollment CSV rows: grade code existence, non-negative headcount, academic year format |
-| `EmployeeValidator` | Validates employee xlsx rows: required fields present, salary fields non-negative, date format validation, duplicate employee detection |
-| `ImportCommitter` | Writes validated data to the database within a Prisma interactive transaction; rolls back entirely on any failure |
+| Module                | Responsibility                                                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `FileParser`          | Detects file type and delegates to the appropriate parser (csv-parse for CSV, ExcelJS for xlsx)                                         |
+| `EnrollmentValidator` | Validates enrollment CSV rows: grade code existence, non-negative headcount, academic year format                                       |
+| `EmployeeValidator`   | Validates employee xlsx rows: required fields present, salary fields non-negative, date format validation, duplicate employee detection |
+| `ImportCommitter`     | Writes validated data to the database within a Prisma interactive transaction; rolls back entirely on any failure                       |
 
 #### Duplicate Employee Detection Rules
 
@@ -858,13 +873,14 @@ During employee xlsx import, the `EmployeeValidator` applies fuzzy duplicate det
 
 **Match criteria:** A candidate row is flagged as a potential duplicate when **2 or more** of the following conditions are met against existing employees in the same budget version:
 
-| Field | Match Rule |
-| --- | --- |
-| Full name | Case-insensitive exact match (`LOWER(name) = LOWER(candidate_name)`) |
-| Department | Exact match on `department_id` |
+| Field        | Match Rule                                                                                |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| Full name    | Case-insensitive exact match (`LOWER(name) = LOWER(candidate_name)`)                      |
+| Department   | Exact match on `department_id`                                                            |
 | Joining date | Within +/- 30 calendar days (`ABS(existing.joining_date - candidate.joining_date) <= 30`) |
 
 **Behavior on match:**
+
 - The import validation response includes a `duplicates` array listing each flagged row with the matching existing employee(s).
 - The UI presents a confirmation dialog per flagged row: "This employee may already exist as [existing name] in [department]. Confirm import or skip?"
 - User choice is recorded in `audit_entries` with operation `EMPLOYEE_IMPORT_DUPLICATE_RESOLVED` and the resolution (`CONFIRMED` or `SKIPPED`).
@@ -877,32 +893,24 @@ During employee xlsx import, the `EmployeeValidator` applies fuzzy duplicate det
 
 ```typescript
 interface ImportError {
- row: number;
- field: string;
- message: string;
+	row: number;
+	field: string;
+	message: string;
 }
 
 interface ImportResult {
- totalRows: number;
- validRows: number;
- errorRows: number;
- errors: ImportError[];
- preview: Record<string, unknown>[];  // First 5 valid rows for UI preview
+	totalRows: number;
+	validRows: number;
+	errorRows: number;
+	errors: ImportError[];
+	preview: Record<string, unknown>[]; // First 5 valid rows for UI preview
 }
 
 interface ImportService {
- validateEnrollmentCSV(file: Buffer): Promise<ImportResult>;
- commitEnrollmentCSV(
-  file: Buffer,
-  versionId: number,
-  userId: number,
- ): Promise<void>;
- validateEmployeeXlsx(file: Buffer): Promise<ImportResult>;
- commitEmployeeXlsx(
-  file: Buffer,
-  versionId: number,
-  userId: number,
- ): Promise<void>;
+	validateEnrollmentCSV(file: Buffer): Promise<ImportResult>;
+	commitEnrollmentCSV(file: Buffer, versionId: number, userId: number): Promise<void>;
+	validateEmployeeXlsx(file: Buffer): Promise<ImportResult>;
+	commitEmployeeXlsx(file: Buffer, versionId: number, userId: number): Promise<void>;
 }
 ```
 
@@ -920,25 +928,25 @@ interface ImportService {
 
 ### Validation Rules
 
-| Rule | Applies To | Description |
-| --- | --- | --- |
-| Unknown grade code | Enrollment CSV | `level_code` not found in `grade_levels` table |
-| Negative headcount | Enrollment CSV | `student_count < 0` |
-| Invalid year format | Enrollment CSV | `academic_year` does not match `YYYY-YY` |
-| Duplicate employee | Employee xlsx | Same `employee_id` appears multiple times in file |
-| Missing required field | Employee xlsx | Any required column is empty or missing |
-| Negative salary | Employee xlsx | Any salary/allowance field is negative |
-| Invalid date | Employee xlsx | `hire_date` is not a valid ISO 8601 date |
+| Rule                   | Applies To     | Description                                       |
+| ---------------------- | -------------- | ------------------------------------------------- |
+| Unknown grade code     | Enrollment CSV | `level_code` not found in `grade_levels` table    |
+| Negative headcount     | Enrollment CSV | `student_count < 0`                               |
+| Invalid year format    | Enrollment CSV | `academic_year` does not match `YYYY-YY`          |
+| Duplicate employee     | Employee xlsx  | Same `employee_id` appears multiple times in file |
+| Missing required field | Employee xlsx  | Any required column is empty or missing           |
+| Negative salary        | Employee xlsx  | Any salary/allowance field is negative            |
+| Invalid date           | Employee xlsx  | `hire_date` is not a valid ISO 8601 date          |
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Called by | API route handlers (import endpoints) | Direct function call |
-| Calls | Prisma client | Interactive transaction for commit phase; read-only queries for validation (grade lookup) |
-| Calls | csv-parse, ExcelJS | File parsing libraries |
-| Calls | Audit Logger | Prisma middleware (automatic on all INSERTs during commit) |
-| Guarded by | Version Manager | Import is rejected if target version is not in `Draft` status |
+| Direction  | Partner                               | Mechanism                                                                                 |
+| ---------- | ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Called by  | API route handlers (import endpoints) | Direct function call                                                                      |
+| Calls      | Prisma client                         | Interactive transaction for commit phase; read-only queries for validation (grade lookup) |
+| Calls      | csv-parse, ExcelJS                    | File parsing libraries                                                                    |
+| Calls      | Audit Logger                          | Prisma middleware (automatic on all INSERTs during commit)                                |
+| Guarded by | Version Manager                       | Import is rejected if target version is not in `Draft` status                             |
 
 ### Traceability
 
@@ -959,19 +967,19 @@ The Data Grid component renders financial data tables across all module pages: e
 
 > **Note (ADR-016):** Virtual scrolling (`@tanstack/react-virtual`) is excluded from v1. All EFIR datasets fit within 500 rows. The audit log (>500 rows) uses server-side pagination via `manualPagination: true` with TanStack Query — not virtualization.
 
-| Responsibility | Library |
-| --- | --- |
-| Table logic (sorting, filtering, pagination, row selection) | `@tanstack/react-table` v8 |
-| Table rendering (HTML structure, accessibility) | shadcn/ui `<Table>`, `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableCell>` |
-| Styling | Tailwind CSS v4 |
+| Responsibility                                              | Library                                                                          |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Table logic (sorting, filtering, pagination, row selection) | `@tanstack/react-table` v8                                                       |
+| Table rendering (HTML structure, accessibility)             | shadcn/ui `<Table>`, `<TableHeader>`, `<TableBody>`, `<TableRow>`, `<TableCell>` |
+| Styling                                                     | Tailwind CSS v4                                                                  |
 
 ### Internal Modules
 
-| Module | Responsibility |
-| --- | --- |
+| Module              | Responsibility                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `useFinancialTable` | Custom hook wrapping `useReactTable`; configures sort, filter, pagination; memoizes column definitions |
-| `TablePagination` | shadcn/ui-based pagination controls; wired to TanStack Table `manualPagination` for server-side paging |
-| `ColumnHeader` | Sortable column header component with sort direction indicator |
+| `TablePagination`   | shadcn/ui-based pagination controls; wired to TanStack Table `manualPagination` for server-side paging |
+| `ColumnHeader`      | Sortable column header component with sort direction indicator                                         |
 
 ### Key Patterns
 
@@ -981,11 +989,11 @@ The Data Grid component renders financial data tables across all module pages: e
 
 ### Component Interactions
 
-| Direction | Partner | Mechanism |
-| --- | --- | --- |
-| Receives data from | TanStack Query (`useQuery` / `useSuspenseQuery`) | Server state passed as `data` prop |
-| Reads context from | `useWorkspaceContext` | Scopes queries to active `versionId` and `academicPeriod` |
-| Consumes | shadcn/ui `<Table>` primitives | Copy-paste components in `src/components/ui/table.tsx` |
+| Direction          | Partner                                          | Mechanism                                                 |
+| ------------------ | ------------------------------------------------ | --------------------------------------------------------- |
+| Receives data from | TanStack Query (`useQuery` / `useSuspenseQuery`) | Server state passed as `data` prop                        |
+| Reads context from | `useWorkspaceContext`                            | Scopes queries to active `versionId` and `academicPeriod` |
+| Consumes           | shadcn/ui `<Table>` primitives                   | Copy-paste components in `src/components/ui/table.tsx`    |
 
 ### Traceability
 

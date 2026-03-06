@@ -2,10 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { logging } from './plugins/logging.js';
 import { metrics } from './plugins/metrics.js';
 import { auth } from './plugins/auth.js';

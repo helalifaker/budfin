@@ -1,23 +1,23 @@
-import { randomUUID } from 'node:crypto'
-import type { Prisma } from '@prisma/client'
-import { prisma } from '../lib/prisma.js'
-import { generateRefreshToken, hashRefreshToken } from './token.js'
+import { randomUUID } from 'node:crypto';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../lib/prisma.js';
+import { generateRefreshToken, hashRefreshToken } from './token.js';
 
-type TxClient = Prisma.TransactionClient
+type TxClient = Prisma.TransactionClient;
 
-const REFRESH_TOKEN_TTL_MS = 8 * 60 * 60 * 1000 // 8 hours
+const REFRESH_TOKEN_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 
 export interface CreateFamilyResult {
-	token: string
-	tokenHash: string
-	familyId: string
-	expiresAt: Date
+	token: string;
+	tokenHash: string;
+	familyId: string;
+	expiresAt: Date;
 }
 
 export interface RotateTokenResult {
-	token: string
-	tokenHash: string
-	expiresAt: Date
+	token: string;
+	tokenHash: string;
+	expiresAt: Date;
 }
 
 /**
@@ -26,12 +26,12 @@ export interface RotateTokenResult {
  */
 export async function createFamily(
 	userId: number,
-	ipAddress?: string,
+	ipAddress?: string
 ): Promise<CreateFamilyResult> {
-	const familyId = randomUUID()
-	const token = generateRefreshToken()
-	const tokenHash = hashRefreshToken(token)
-	const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS)
+	const familyId = randomUUID();
+	const token = generateRefreshToken();
+	const tokenHash = hashRefreshToken(token);
+	const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 
 	await prisma.refreshToken.create({
 		data: {
@@ -40,7 +40,7 @@ export async function createFamily(
 			familyId,
 			expiresAt,
 		},
-	})
+	});
 
 	await prisma.auditEntry.create({
 		data: {
@@ -49,9 +49,9 @@ export async function createFamily(
 			tableName: 'refresh_tokens',
 			ipAddress: ipAddress ?? null,
 		},
-	})
+	});
 
-	return { token, tokenHash, familyId, expiresAt }
+	return { token, tokenHash, familyId, expiresAt };
 }
 
 /**
@@ -61,25 +61,25 @@ export async function createFamily(
 export async function rotateToken(
 	oldTokenHash: string,
 	familyId: string,
-	ipAddress?: string,
+	ipAddress?: string
 ): Promise<RotateTokenResult> {
 	return prisma.$transaction(async (tx: TxClient) => {
 		// Revoke old token
 		await tx.refreshToken.updateMany({
 			where: { tokenHash: oldTokenHash, familyId },
 			data: { isRevoked: true },
-		})
+		});
 
 		// Find userId from family
 		const familyToken = await tx.refreshToken.findFirst({
 			where: { familyId },
 			select: { userId: true },
-		})
+		});
 
 		// Issue new token in same family
-		const token = generateRefreshToken()
-		const tokenHash = hashRefreshToken(token)
-		const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS)
+		const token = generateRefreshToken();
+		const tokenHash = hashRefreshToken(token);
+		const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 
 		await tx.refreshToken.create({
 			data: {
@@ -88,7 +88,7 @@ export async function rotateToken(
 				familyId,
 				expiresAt,
 			},
-		})
+		});
 
 		await tx.auditEntry.create({
 			data: {
@@ -96,10 +96,10 @@ export async function rotateToken(
 				tableName: 'refresh_tokens',
 				ipAddress: ipAddress ?? null,
 			},
-		})
+		});
 
-		return { token, tokenHash, expiresAt }
-	})
+		return { token, tokenHash, expiresAt };
+	});
 }
 
 /**
@@ -110,24 +110,24 @@ export async function rotateToken(
 export async function detectReplay(
 	tokenHash: string,
 	userId: number,
-	ipAddress?: string,
+	ipAddress?: string
 ): Promise<'VALID' | 'TOKEN_FAMILY_REVOKED'> {
 	const existing = await prisma.refreshToken.findFirst({
 		where: { tokenHash },
-	})
+	});
 
 	// Unknown token — treat as replay
-	if (!existing) return 'TOKEN_FAMILY_REVOKED'
+	if (!existing) return 'TOKEN_FAMILY_REVOKED';
 
 	// Valid, non-revoked token
-	if (!existing.isRevoked) return 'VALID'
+	if (!existing.isRevoked) return 'VALID';
 
 	// Revoked token replayed — revoke entire family
 	await prisma.$transaction(async (tx: TxClient) => {
 		await tx.refreshToken.updateMany({
 			where: { familyId: existing.familyId, isRevoked: false },
 			data: { isRevoked: true },
-		})
+		});
 
 		await tx.auditEntry.create({
 			data: {
@@ -140,24 +140,21 @@ export async function detectReplay(
 					reason: 'replay_detected',
 				},
 			},
-		})
-	})
+		});
+	});
 
-	return 'TOKEN_FAMILY_REVOKED'
+	return 'TOKEN_FAMILY_REVOKED';
 }
 
 /**
  * Revoke all active refresh tokens for a user.
  * Returns the count of revoked tokens.
  */
-export async function revokeAllUserTokens(
-	userId: number,
-	ipAddress?: string,
-): Promise<number> {
+export async function revokeAllUserTokens(userId: number, ipAddress?: string): Promise<number> {
 	const result = await prisma.refreshToken.updateMany({
 		where: { userId, isRevoked: false },
 		data: { isRevoked: true },
-	})
+	});
 
 	await prisma.auditEntry.create({
 		data: {
@@ -166,7 +163,7 @@ export async function revokeAllUserTokens(
 			tableName: 'refresh_tokens',
 			ipAddress: ipAddress ?? null,
 		},
-	})
+	});
 
-	return result.count
+	return result.count;
 }

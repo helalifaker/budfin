@@ -1,9 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import {
-	useQuery,
-	useMutation,
-	useQueryClient,
-} from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { SettingsCard } from '../../components/admin/settings-card';
 import { cn } from '../../lib/cn';
@@ -76,26 +72,26 @@ const GROUPS: SettingGroup[] = [
 
 export function SettingsPage() {
 	const queryClient = useQueryClient();
-	const [values, setValues] = useState<Record<string, string>>({});
-	const [original, setOriginal] = useState<Record<string, string>>(
-		{},
-	);
-
 	const { data, isLoading } = useQuery({
 		queryKey: ['system-config'],
-		queryFn: () =>
-			apiClient<ConfigResponse>('/system-config'),
+		queryFn: () => apiClient<ConfigResponse>('/system-config'),
 	});
 
-	useEffect(() => {
-		if (!data) return;
+	const original = useMemo(() => {
+		if (!data) return {};
 		const map: Record<string, string> = {};
 		for (const item of data.config) {
 			map[item.key] = item.value;
 		}
-		setValues(map);
-		setOriginal(map);
+		return map;
 	}, [data]);
+
+	const [values, setValues] = useState<Record<string, string>>({});
+	const [lastData, setLastData] = useState(data);
+	if (data !== lastData) {
+		setLastData(data);
+		setValues(original);
+	}
 
 	const saveMutation = useMutation({
 		mutationFn: (updates: { key: string; value: string }[]) =>
@@ -110,17 +106,12 @@ export function SettingsPage() {
 		},
 	});
 
-	const changedKeys = Object.keys(values).filter(
-		(k) => values[k] !== original[k],
-	);
+	const changedKeys = Object.keys(values).filter((k) => values[k] !== original[k]);
 	const hasChanges = changedKeys.length > 0;
 
-	const handleChange = useCallback(
-		(key: string, value: string) => {
-			setValues((prev) => ({ ...prev, [key]: value }));
-		},
-		[],
-	);
+	const handleChange = useCallback((key: string, value: string) => {
+		setValues((prev) => ({ ...prev, [key]: value }));
+	}, []);
 
 	const handleSave = useCallback(() => {
 		const updates = changedKeys.map((key) => ({
@@ -141,25 +132,19 @@ export function SettingsPage() {
 	return (
 		<div className="p-6">
 			<div className="flex items-center justify-between pb-6">
-				<h1 className="text-xl font-semibold">
-					System Settings
-				</h1>
+				<h1 className="text-xl font-semibold">System Settings</h1>
 				<button
 					type="button"
-					disabled={
-						!hasChanges || saveMutation.isPending
-					}
+					disabled={!hasChanges || saveMutation.isPending}
 					onClick={handleSave}
 					className={cn(
 						'rounded-md bg-blue-600 px-4 py-2',
 						'text-sm font-medium text-white',
 						'hover:bg-blue-700',
-						'disabled:opacity-50',
+						'disabled:opacity-50'
 					)}
 				>
-					{saveMutation.isPending
-						? 'Saving...'
-						: 'Save Changes'}
+					{saveMutation.isPending ? 'Saving...' : 'Save Changes'}
 				</button>
 			</div>
 
@@ -169,17 +154,13 @@ export function SettingsPage() {
 						key={group.title}
 						title={group.title}
 						description={group.description}
-						fields={group.keys.map(
-							({ key, label }) => ({
-								key,
-								label,
-								value: values[key] ?? '',
-								onChange: (v: string) =>
-									handleChange(key, v),
-								changed:
-									values[key] !== original[key],
-							}),
-						)}
+						fields={group.keys.map(({ key, label }) => ({
+							key,
+							label,
+							value: values[key] ?? '',
+							onChange: (v: string) => handleChange(key, v),
+							changed: values[key] !== original[key],
+						}))}
 					/>
 				))}
 			</div>

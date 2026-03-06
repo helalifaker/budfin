@@ -1,4 +1,5 @@
 # BudFin PRD Edge Case Analysis
+
 ## Complete Product Owner Review & Risk Assessment
 
 **Date**: March 3, 2026  
@@ -12,10 +13,12 @@
 This analysis consists of three comprehensive documents:
 
 ### 1. **budfin_edge_case_analysis.md** (Main Document)
+
 **Size**: 75 KB | **Length**: 1,357 lines  
 **Purpose**: Detailed edge case analysis from Product Owner perspective
 
 **Contents**:
+
 - Executive Summary
 - 35 detailed edge case analyses (PO-001 through PO-035)
 - Each case includes:
@@ -31,7 +34,8 @@ This analysis consists of three comprehensive documents:
 - Implementation priorities by phase
 - Conclusion and recommendations
 
-**When to Use**: 
+**When to Use**:
+
 - For detailed technical analysis
 - For specification writing and FR refinement
 - For technical design review
@@ -40,10 +44,12 @@ This analysis consists of three comprehensive documents:
 ---
 
 ### 2. **EDGE_CASE_SUMMARY.txt** (Executive Summary)
+
 **Size**: 9.8 KB | **Length**: 234 lines  
 **Purpose**: High-level overview for stakeholders and decision-makers
 
 **Contents**:
+
 - Severity breakdown (Critical/High/Medium/Low)
 - Category distribution
 - Key findings (6 areas of concern)
@@ -54,6 +60,7 @@ This analysis consists of three comprehensive documents:
 - Recommended actions for Product Owner, Technical Lead, Project Manager
 
 **When to Use**:
+
 - For executive presentations
 - For risk assessment meetings
 - For project planning and schedule estimation
@@ -63,10 +70,12 @@ This analysis consists of three comprehensive documents:
 ---
 
 ### 3. **EDGE_CASE_QUICK_REFERENCE.csv** (Tracking Table)
+
 **Size**: 4.6 KB | **Length**: 36 rows (header + 35 cases)  
 **Purpose**: Machine-readable reference for tracking and filtering
 
 **Columns**:
+
 - ID (PO-001 through PO-035)
 - Category (7 types)
 - Edge Case (brief description)
@@ -76,6 +85,7 @@ This analysis consists of three comprehensive documents:
 - Status (Pending, Critical_Path)
 
 **When to Use**:
+
 - For creating issue tracking in Jira/Azure DevOps
 - For filtering by severity or phase
 - For building test matrices
@@ -86,15 +96,16 @@ This analysis consists of three comprehensive documents:
 
 ## Quick Statistics
 
-| Metric | Count |
-|--------|-------|
-| **Total Edge Cases** | 35 |
-| **Critical Issues** | 5 |
-| **High Issues** | 14 |
-| **Medium Issues** | 12 |
-| **Low Issues** | 4 |
+| Metric               | Count |
+| -------------------- | ----- |
+| **Total Edge Cases** | 35    |
+| **Critical Issues**  | 5     |
+| **High Issues**      | 14    |
+| **Medium Issues**    | 12    |
+| **Low Issues**       | 4     |
 
 **By Category**:
+
 - Data Entry Edge Cases: 7
 - Business Rule Conflicts: 9
 - Version & Lifecycle Edge Cases: 9
@@ -103,6 +114,7 @@ This analysis consists of three comprehensive documents:
 - Missing Requirements: 3
 
 **By Phase**:
+
 - Phase 2 (Enrollment & Revenue): 7 cases
 - Phase 3 (Staffing & Costs): 8 cases
 - Phase 4 (Reporting & Versions): 10 cases
@@ -124,16 +136,19 @@ This analysis consists of three comprehensive documents:
 ## Key Risk Areas
 
 ### 1. Data Integrity (3 Critical Issues)
+
 - Duplicate employee detection missing
 - Rounding precision logic not specified
 - Revenue recognition policy undefined
 
 ### 2. Version Management (2 Critical Issues)
+
 - Fee grid retroactivity not addressed
 - Version unlock workflow not specified
 - Variance attribution (enrollment vs. assumptions) not defined
 
 ### 3. Business Rules (9 High/Critical Issues)
+
 - Mid-year staff joining not covered
 - Nationality transitions for GOSI/Ajeer not handled
 - Scenario parameter sequencing ambiguous
@@ -141,18 +156,21 @@ This analysis consists of three comprehensive documents:
 - Capacity over-enrollment not enforced
 
 ### 4. Academic Calendar (4 High Issues)
+
 - AY1/AY2 fee grid application unclear
 - Zero-enrollment grades not handled
 - Mid-year enrollment changes trigger no workflow
 - HSA Jul-Aug exclusion logic ambiguous
 
 ### 5. Reporting (4-5 Medium/Low Issues)
+
 - Monthly revenue reconciliation to annual not specified
 - Zero-revenue scenarios allowed but not flagged
 - Deleted employees not soft-deleted
 - Rounding in capacity calculations documented
 
 ### 6. Missing Requirements (3 Medium/Low Issues)
+
 - Currency handling (SAR-only vs. multi-currency) not specified
 - Audit trail retention lifecycle not defined
 - Role change permission impact not specified
@@ -163,14 +181,18 @@ This analysis consists of three comprehensive documents:
 ## Implementation Roadmap Impact
 
 ### Phase 2 (Enrollment & Revenue) - 5 weeks
+
 Add 1-2 days for:
+
 - Input validation (discount rates, enrollment, grade codes)
 - Zero-enrollment handling
 - AY1/AY2 fee grid separation
 - Monthly-to-annual reconciliation
 
 ### Phase 3 (Staffing & Costs) - 5 weeks
+
 Add 2+ weeks for:
+
 - Duplicate employee detection
 - Mid-year joining date support
 - Nationality history & transitions
@@ -179,7 +201,9 @@ Add 2+ weeks for:
 - Soft-delete employee status
 
 ### Phase 4 (Reporting & Versions) - 4 weeks
+
 Add 2+ weeks for:
+
 - Version-specific fee grids
 - Variance bridge analysis
 - Scenario parameter sequencing
@@ -189,7 +213,9 @@ Add 2+ weeks for:
 - EoS retroactive adjustments
 
 ### Phase 5 (Dashboard & Analytics) - 3 weeks
+
 Add 1 week for:
+
 - Capacity over-enrollment workflow
 - Zero-revenue scenario flagging
 - Zero-enrollment grade labeling
@@ -201,6 +227,7 @@ Add 1 week for:
 ## How to Use This Analysis
 
 ### For Product Owner
+
 1. **Review** budfin_edge_case_analysis.md (full document)
 2. **Prioritize** the 5 Critical issues for Phase 4 + UAT
 3. **Schedule** decision meetings for missing requirements (PO-022, 027, 028, 029, 030)
@@ -208,6 +235,7 @@ Add 1 week for:
 5. **Update** PRD with resolved edge cases
 
 ### For Technical Lead
+
 1. **Review** EDGE_CASE_SUMMARY.txt for key technical risks
 2. **Design** architecture for:
    - Rounding precision (DECIMAL type, final-step rule)
@@ -218,6 +246,7 @@ Add 1 week for:
 4. **Reference** EDGE_CASE_QUICK_REFERENCE.csv for implementation tracking
 
 ### For Project Manager
+
 1. **Review** EDGE_CASE_SUMMARY.txt for impact on schedule
 2. **Add** 6-8 weeks to project timeline for edge case implementation
 3. **Schedule** decision meetings for missing requirements
@@ -225,6 +254,7 @@ Add 1 week for:
 5. **Track** Critical issues on critical path
 
 ### For QA/Testing
+
 1. **Create** test cases from budfin_edge_case_analysis.md (detailed scenarios)
 2. **Reference** EDGE_CASE_QUICK_REFERENCE.csv for test matrix
 3. **Prioritize** Critical and High-severity cases
@@ -232,6 +262,7 @@ Add 1 week for:
 5. **Define** acceptance criteria based on suggested resolutions
 
 ### For Finance/Business Stakeholders
+
 1. **Review** EDGE_CASE_SUMMARY.txt for business impact section
 2. **Understand** workflow blockers (e.g., version unlock, mid-year hiring)
 3. **Participate** in decision meetings for missing requirements
@@ -293,6 +324,7 @@ Add 1 week for:
 ---
 
 **All three documents are located in**: `/budfin/` directory
+
 - `budfin_edge_case_analysis.md` (detailed analysis)
 - `EDGE_CASE_SUMMARY.txt` (executive summary)
 - `EDGE_CASE_QUICK_REFERENCE.csv` (tracking table)

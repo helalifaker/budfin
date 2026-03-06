@@ -8,14 +8,14 @@ This section documents all open questions raised during TDD authoring, the assum
 
 All questions originally logged in the PRD RAID register have been investigated and resolved during TDD authoring. The table below records the original question, the resolution reached, the responsible owner, and the phase in which the resolution is validated.
 
-| ID | Question | Resolution | Owner | Target Date |
-| --- | --- | --- | --- | --- |
-| I-001 | Executive Summary sheet has `#REF!` error in Excel source | Identified as cross-file reference to DHG workbook columns that were restructured. Resolve in Phase 1 Week 2 source data audit; does not block BudFin implementation as BudFin calculates P&L from scratch. | Finance SME + DBA | Phase 1 Week 2 |
-| I-002 | Tech stack PoC must validate Decimal.js + PostgreSQL DECIMAL precision | Phase 1 Week 1 PoC: 50+ unit tests for Decimal.js; PostgreSQL DECIMAL(15,4) round-trip tests. TC-001 satisfied by Decimal.js; TC-003 satisfied by schema. | Tech Lead | Phase 1 Week 1 |
-| I-003 | YEARFRAC US 30/360 implementation correctness | Custom TypeScript implementation documented in Section 4 (Component 4c). Validated against known Excel values in unit tests. Further validated against all 168 employee joining dates in Phase 3 Week 15. | Tech Lead | Phase 3 Week 15 |
-| I-004 | Rounding rules — round-half-up vs. banker's rounding | TC-004 confirmed: round-half-up at presentation only; full DECIMAL(15,4) precision maintained throughout calculation chain. Implemented in Decimal.js with `Decimal.ROUND_HALF_UP`. | Tech Lead | Phase 1 Week 1 |
-| I-005 | PDPL compliance assessment | Completed during TDD authoring. Field-level encryption using pgcrypto pgp_sym_encrypt/decrypt for 5 salary fields. Key management via Docker secret. Data residency: KSA only per SA-008. Full mapping in Section 7.4. | Tech Lead + DBA | Phase 1 Week 3 |
-| I-006 | MVP/Target/Stretch tier sign-off required from CAO | All MUST-tagged FRs = MVP. SHOULD-tagged = Target. COULD-tagged = Stretch. Sign-off from CAO at project kickoff meeting prior to Phase 1 start. | CAO + PM | Pre-Phase 1 |
+| ID    | Question                                                               | Resolution                                                                                                                                                                                                             | Owner             | Target Date     |
+| ----- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | --------------- |
+| I-001 | Executive Summary sheet has `#REF!` error in Excel source              | Identified as cross-file reference to DHG workbook columns that were restructured. Resolve in Phase 1 Week 2 source data audit; does not block BudFin implementation as BudFin calculates P&L from scratch.            | Finance SME + DBA | Phase 1 Week 2  |
+| I-002 | Tech stack PoC must validate Decimal.js + PostgreSQL DECIMAL precision | Phase 1 Week 1 PoC: 50+ unit tests for Decimal.js; PostgreSQL DECIMAL(15,4) round-trip tests. TC-001 satisfied by Decimal.js; TC-003 satisfied by schema.                                                              | Tech Lead         | Phase 1 Week 1  |
+| I-003 | YEARFRAC US 30/360 implementation correctness                          | Custom TypeScript implementation documented in Section 4 (Component 4c). Validated against known Excel values in unit tests. Further validated against all 168 employee joining dates in Phase 3 Week 15.              | Tech Lead         | Phase 3 Week 15 |
+| I-004 | Rounding rules — round-half-up vs. banker's rounding                   | TC-004 confirmed: round-half-up at presentation only; full DECIMAL(15,4) precision maintained throughout calculation chain. Implemented in Decimal.js with `Decimal.ROUND_HALF_UP`.                                    | Tech Lead         | Phase 1 Week 1  |
+| I-005 | PDPL compliance assessment                                             | Completed during TDD authoring. Field-level encryption using pgcrypto pgp_sym_encrypt/decrypt for 5 salary fields. Key management via Docker secret. Data residency: KSA only per SA-008. Full mapping in Section 7.4. | Tech Lead + DBA   | Phase 1 Week 3  |
+| I-006 | MVP/Target/Stretch tier sign-off required from CAO                     | All MUST-tagged FRs = MVP. SHOULD-tagged = Target. COULD-tagged = Stretch. Sign-off from CAO at project kickoff meeting prior to Phase 1 start.                                                                        | CAO + PM          | Pre-Phase 1     |
 
 ---
 
@@ -263,6 +263,7 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 **Consequences:** Prisma generates a client that must be regenerated after schema changes (`prisma generate`). Prisma 6 migrations are forward-only by design — rollback requires a `pg_dump` restore, which is acceptable per the disaster recovery plan in Section 8 (`06_infrastructure.md`).
 
 **Prisma 6 Breaking Changes (relevant to BudFin):**
+
 1. `Buffer` → `Uint8Array`: All binary columns (e.g., `*_encrypted BYTEA`) use `Uint8Array` in the generated client, not `Buffer`.
 2. `NotFoundError` removed: Use `PrismaClientKnownRequestError` with code `P2025` instead.
 3. Implicit many-to-many `_id` fields renamed: Check generated schema if m-n relations added.
@@ -360,16 +361,16 @@ Each ADR follows a consistent format: title, status, context, decision, rational
 
 **Feature mapping:**
 
-| AG Grid Feature | TanStack Replacement |
-| --- | --- |
-| Client-side row model | `getCoreRowModel()` |
-| Server-side row model | `manualPagination: true` + TanStack Query |
-| Row virtualization | Server-side pagination (`manualPagination: true`) for v1; `@tanstack/react-virtual` available in v2 per ADR-016 |
-| Column sorting | `getSortedRowModel()` |
-| Column filtering | `getFilteredRowModel()` |
-| Pagination | `getPaginationRowModel()` |
-| Row selection | `getSelectedRowModel()` |
-| Column pinning | `columnPinning` state |
+| AG Grid Feature       | TanStack Replacement                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Client-side row model | `getCoreRowModel()`                                                                                             |
+| Server-side row model | `manualPagination: true` + TanStack Query                                                                       |
+| Row virtualization    | Server-side pagination (`manualPagination: true`) for v1; `@tanstack/react-virtual` available in v2 per ADR-016 |
+| Column sorting        | `getSortedRowModel()`                                                                                           |
+| Column filtering      | `getFilteredRowModel()`                                                                                         |
+| Pagination            | `getPaginationRowModel()`                                                                                       |
+| Row selection         | `getSelectedRowModel()`                                                                                         |
+| Column pinning        | `columnPinning` state                                                                                           |
 
 **Alternatives Rejected:**
 

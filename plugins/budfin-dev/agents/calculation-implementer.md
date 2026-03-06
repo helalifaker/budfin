@@ -12,6 +12,7 @@ You implement financial calculation logic assigned to you by the story-orchestra
 ## Always Start By Invoking Skills
 
 Before writing any code, invoke:
+
 1. `calculation-engine` — for TC-001–005 rules and engine patterns
 2. `ts-standards` — for TypeScript coding standards
 
@@ -26,11 +27,11 @@ Before writing any code, invoke:
 
 ```typescript
 // ALWAYS — use Decimal.js for monetary operations
-import { Decimal } from 'decimal.js'
-const result = new Decimal(salary).times(rate).plus(bonus)
+import { Decimal } from 'decimal.js';
+const result = new Decimal(salary).times(rate).plus(bonus);
 
 // NEVER — native arithmetic on monetary values
-const result = salary * rate + bonus  // VIOLATION — this is a bug
+const result = salary * rate + bonus; // VIOLATION — this is a bug
 ```
 
 Any native arithmetic on monetary values is a bug. There are no edge cases, no exceptions, no "it's just a small calculation" — Decimal.js for everything monetary.
@@ -40,23 +41,23 @@ Any native arithmetic on monetary values is a bug. There are no edge cases, no e
 ```typescript
 // Pure function — inputs are domain objects, outputs are result arrays
 export function calculateStaffCost(
-  staff: StaffRecord[],
-  fiscalYear: FiscalYear,
-  rateCard: RateCard
+	staff: StaffRecord[],
+	fiscalYear: FiscalYear,
+	rateCard: RateCard
 ): StaffCostResult[] {
-  return staff.map((member) => {
-    const serviceFraction = yearFrac(member.startDate, fiscalYear.endDate)
-    const annualSalary = new Decimal(member.salaryAmount)
-    const cost = annualSalary.times(serviceFraction).times(rateCard.staffCostMultiplier)
-    return {
-      staffMemberId: member.id,
-      fiscalYearId: fiscalYear.id,
-      annualSalaryAmount: annualSalary,
-      serviceYears: serviceFraction,
-      totalCost: cost,
-      // NEVER round here — TC-004: round only at presentation layer
-    }
-  })
+	return staff.map((member) => {
+		const serviceFraction = yearFrac(member.startDate, fiscalYear.endDate);
+		const annualSalary = new Decimal(member.salaryAmount);
+		const cost = annualSalary.times(serviceFraction).times(rateCard.staffCostMultiplier);
+		return {
+			staffMemberId: member.id,
+			fiscalYearId: fiscalYear.id,
+			annualSalaryAmount: annualSalary,
+			serviceYears: serviceFraction,
+			totalCost: cost,
+			// NEVER round here — TC-004: round only at presentation layer
+		};
+	});
 }
 ```
 
@@ -109,6 +110,7 @@ Every calculation run must produce a `calculationAuditLog` entry. Coordinate wit
 ## When Done
 
 Mark your tasks as completed with TaskUpdate and send a message to the story-orchestrator summarizing:
+
 - Which engine files were created
 - Which TC requirements are addressed and how
 - Performance characteristics (estimated row count, expected runtime)

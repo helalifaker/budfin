@@ -30,37 +30,25 @@ async function buildTestApp() {
 
 	// Route requiring Admin role
 	instance.get('/admin-only', {
-		preHandler: [
-			instance.authenticate,
-			instance.requireRole('Admin'),
-		],
+		preHandler: [instance.authenticate, instance.requireRole('Admin')],
 		handler: async () => ({ ok: true }),
 	});
 
 	// Route requiring Admin or BudgetOwner role
 	instance.get('/budget', {
-		preHandler: [
-			instance.authenticate,
-			instance.requireRole('Admin', 'BudgetOwner'),
-		],
+		preHandler: [instance.authenticate, instance.requireRole('Admin', 'BudgetOwner')],
 		handler: async () => ({ ok: true }),
 	});
 
 	// Route requiring salary:view permission
 	instance.get('/salary', {
-		preHandler: [
-			instance.authenticate,
-			instance.requirePermission('salary:view'),
-		],
+		preHandler: [instance.authenticate, instance.requirePermission('salary:view')],
 		handler: async () => ({ ok: true }),
 	});
 
 	// Route requiring admin:users permission
 	instance.get('/users', {
-		preHandler: [
-			instance.authenticate,
-			instance.requirePermission('admin:users'),
-		],
+		preHandler: [instance.authenticate, instance.requirePermission('admin:users')],
 		handler: async () => ({ ok: true }),
 	});
 
@@ -68,9 +56,7 @@ async function buildTestApp() {
 	return instance;
 }
 
-async function makeToken(
-	overrides: { sub?: number; email?: string; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; email?: string; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: overrides.email ?? 'test@budfin.app',

@@ -1,10 +1,10 @@
-import { Navigate, createBrowserRouter } from 'react-router'
-import { ProtectedRoute } from './components/protected-route'
-import { LoginPage } from './pages/login'
-import { ManagementShell } from './layouts/management-shell'
-import { UsersPage } from './pages/admin/users'
-import { AuditPage } from './pages/admin/audit'
-import { SettingsPage } from './pages/admin/settings'
+import { Navigate, createBrowserRouter } from 'react-router';
+import { ProtectedRoute } from './components/protected-route';
+import { LoginPage } from './pages/login';
+import { ManagementShell } from './layouts/management-shell';
+import { UsersPage } from './pages/admin/users';
+import { AuditPage } from './pages/admin/audit';
+import { SettingsPage } from './pages/admin/settings';
 
 export const router = createBrowserRouter([
 	{ path: '/login', element: <LoginPage /> },
@@ -39,4 +39,4 @@ export const router = createBrowserRouter([
 			},
 		],
 	},
-])
+]);

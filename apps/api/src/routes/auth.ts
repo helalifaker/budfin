@@ -1,30 +1,20 @@
-import type { FastifyInstance } from 'fastify'
-import { z } from 'zod'
-import { prisma } from '../lib/prisma.js'
-import { verifyPassword } from '../services/password.js'
-import {
-	signAccessToken,
-	hashRefreshToken,
-} from '../services/token.js'
-import {
-	createFamily,
-	rotateToken,
-	detectReplay,
-} from '../services/token-family.js'
+import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { prisma } from '../lib/prisma.js';
+import { verifyPassword } from '../services/password.js';
+import { signAccessToken, hashRefreshToken } from '../services/token.js';
+import { createFamily, rotateToken, detectReplay } from '../services/token-family.js';
 
 const loginBodySchema = z.object({
 	email: z.string().email(),
 	password: z.string(),
-})
+});
 
-async function getConfigValue(
-	key: string,
-	defaultValue: number,
-): Promise<number> {
+async function getConfigValue(key: string, defaultValue: number): Promise<number> {
 	const config = await prisma.systemConfig.findUnique({
 		where: { key },
-	})
-	return config ? Number(config.value) : defaultValue
+	});
+	return config ? Number(config.value) : defaultValue;
 }
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -39,21 +29,19 @@ export async function authRoutes(fastify: FastifyInstance) {
 			},
 		},
 		handler: async (request, reply) => {
-			const { email, password } = request.body as z.infer<
-				typeof loginBodySchema
-			>
-			const ip = request.ip
+			const { email, password } = request.body as z.infer<typeof loginBodySchema>;
+			const ip = request.ip;
 
 			// 1. Find user
 			const user = await prisma.user.findUnique({
 				where: { email },
-			})
+			});
 
 			if (!user) {
 				return reply.status(401).send({
 					error: 'INVALID_CREDENTIALS',
 					message: 'Invalid email or password',
-				})
+				});
 			}
 
 			// 2. Check active
@@ -61,7 +49,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				return reply.status(401).send({
 					error: 'ACCOUNT_DISABLED',
 					message: 'Account is disabled',
-				})
+				});
 			}
 
 			// 3. Check lockout
@@ -71,37 +59,29 @@ export async function authRoutes(fastify: FastifyInstance) {
 						error: 'ACCOUNT_LOCKED',
 						message: 'Account is locked',
 						locked_until: user.lockedUntil.toISOString(),
-					})
+					});
 				}
 				// Expired lockout — clear it
 				await prisma.user.update({
 					where: { id: user.id },
 					data: { lockedUntil: null, failedAttempts: 0 },
-				})
+				});
 			}
 
 			// 4. Verify password
-			const valid = await verifyPassword(password, user.passwordHash)
+			const valid = await verifyPassword(password, user.passwordHash);
 
 			if (!valid) {
-				const threshold = await getConfigValue(
-					'lockout_threshold',
-					5,
-				)
-				const durationMinutes = await getConfigValue(
-					'lockout_duration_minutes',
-					30,
-				)
-				const newAttempts = user.failedAttempts + 1
+				const threshold = await getConfigValue('lockout_threshold', 5);
+				const durationMinutes = await getConfigValue('lockout_duration_minutes', 30);
+				const newAttempts = user.failedAttempts + 1;
 
 				const updateData: Record<string, unknown> = {
 					failedAttempts: newAttempts,
-				}
+				};
 
 				if (newAttempts >= threshold) {
-					updateData.lockedUntil = new Date(
-						Date.now() + durationMinutes * 60 * 1000,
-					)
+					updateData.lockedUntil = new Date(Date.now() + durationMinutes * 60 * 1000);
 
 					await prisma.auditEntry.create({
 						data: {
@@ -110,13 +90,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 							tableName: 'users',
 							ipAddress: ip,
 						},
-					})
+					});
 				}
 
 				await prisma.user.update({
 					where: { id: user.id },
 					data: updateData,
-				})
+				});
 
 				await prisma.auditEntry.create({
 					data: {
@@ -125,22 +105,19 @@ export async function authRoutes(fastify: FastifyInstance) {
 						tableName: 'users',
 						ipAddress: ip,
 					},
-				})
+				});
 
 				return reply.status(401).send({
 					error: 'INVALID_CREDENTIALS',
 					message: 'Invalid email or password',
-				})
+				});
 			}
 
 			// 5. Successful login — use advisory lock for concurrency
-			await prisma.$executeRaw`SELECT pg_advisory_xact_lock(${user.id})`
+			await prisma.$executeRaw`SELECT pg_advisory_xact_lock(${user.id})`;
 
 			// 6. Session concurrency
-			const maxSessions = await getConfigValue(
-				'max_sessions_per_user',
-				2,
-			)
+			const maxSessions = await getConfigValue('max_sessions_per_user', 2);
 
 			const activeSessions = await prisma.refreshToken.count({
 				where: {
@@ -148,7 +125,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 					isRevoked: false,
 					expiresAt: { gt: new Date() },
 				},
-			})
+			});
 
 			if (activeSessions >= maxSessions) {
 				const oldest = await prisma.refreshToken.findFirst({
@@ -158,13 +135,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 						expiresAt: { gt: new Date() },
 					},
 					orderBy: { createdAt: 'asc' },
-				})
+				});
 
 				if (oldest) {
 					await prisma.refreshToken.update({
 						where: { id: oldest.id },
 						data: { isRevoked: true },
-					})
+					});
 
 					await prisma.auditEntry.create({
 						data: {
@@ -177,7 +154,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 								reason: 'max_sessions_exceeded',
 							},
 						},
-					})
+					});
 				}
 			}
 
@@ -189,17 +166,17 @@ export async function authRoutes(fastify: FastifyInstance) {
 					lockedUntil: null,
 					lastLoginAt: new Date(),
 				},
-			})
+			});
 
 			// 8. Create token family
-			const family = await createFamily(user.id, ip)
+			const family = await createFamily(user.id, ip);
 
 			// 9. Sign access token
 			const accessToken = await signAccessToken({
 				sub: user.id,
 				email: user.email,
 				role: user.role,
-			})
+			});
 
 			// 10. Set refresh token cookie
 			reply.setCookie('refresh_token', family.token, {
@@ -208,7 +185,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				sameSite: 'strict',
 				path: '/api/v1/auth',
 				maxAge: 8 * 60 * 60,
-			})
+			});
 
 			// 11. Audit
 			await prisma.auditEntry.create({
@@ -218,7 +195,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 					tableName: 'users',
 					ipAddress: ip,
 				},
-			})
+			});
 
 			return {
 				access_token: accessToken,
@@ -228,50 +205,49 @@ export async function authRoutes(fastify: FastifyInstance) {
 					email: user.email,
 					role: user.role,
 				},
-			}
+			};
 		},
-	})
+	});
 
 	// ── POST /refresh ────────────────────────────────────────────────────
 
 	fastify.post('/refresh', {
 		handler: async (request, reply) => {
-			const rawToken =
-				(request.cookies as Record<string, string>)?.refresh_token
-			const ip = request.ip
+			const rawToken = (request.cookies as Record<string, string>)?.refresh_token;
+			const ip = request.ip;
 
 			if (!rawToken) {
 				return reply.status(401).send({
 					error: 'MISSING_TOKEN',
 					message: 'No refresh token provided',
-				})
+				});
 			}
 
-			const tokenHash = hashRefreshToken(rawToken)
+			const tokenHash = hashRefreshToken(rawToken);
 
 			// Look up the token record
 			const existing = await prisma.refreshToken.findFirst({
 				where: { tokenHash },
 				include: { user: { select: { id: true, email: true, role: true } } },
-			})
+			});
 
 			if (!existing) {
 				return reply.status(401).send({
 					error: 'INVALID_TOKEN',
 					message: 'Invalid refresh token',
-				})
+				});
 			}
 
 			// Check for replay (revoked token reuse)
 			if (existing.isRevoked) {
-				await detectReplay(tokenHash, existing.userId, ip)
+				await detectReplay(tokenHash, existing.userId, ip);
 				reply.clearCookie('refresh_token', {
 					path: '/api/v1/auth',
-				})
+				});
 				return reply.status(401).send({
 					error: 'REFRESH_TOKEN_REUSE',
 					message: 'Token reuse detected',
-				})
+				});
 			}
 
 			// Check expiry
@@ -279,22 +255,18 @@ export async function authRoutes(fastify: FastifyInstance) {
 				return reply.status(401).send({
 					error: 'TOKEN_EXPIRED',
 					message: 'Refresh token expired',
-				})
+				});
 			}
 
 			// Rotate token within same family
-			const rotated = await rotateToken(
-				tokenHash,
-				existing.familyId,
-				ip,
-			)
+			const rotated = await rotateToken(tokenHash, existing.familyId, ip);
 
 			// Sign new access token
 			const accessToken = await signAccessToken({
 				sub: existing.user.id,
 				email: existing.user.email,
 				role: existing.user.role,
-			})
+			});
 
 			// Set new refresh cookie
 			reply.setCookie('refresh_token', rotated.token, {
@@ -303,7 +275,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				sameSite: 'strict',
 				path: '/api/v1/auth',
 				maxAge: 8 * 60 * 60,
-			})
+			});
 
 			return {
 				access_token: accessToken,
@@ -313,32 +285,30 @@ export async function authRoutes(fastify: FastifyInstance) {
 					email: existing.user.email,
 					role: existing.user.role,
 				},
-			}
+			};
 		},
-	})
+	});
 
 	// ── POST /logout ─────────────────────────────────────────────────────
 
 	fastify.post('/logout', {
 		preHandler: [fastify.authenticate],
 		handler: async (request, reply) => {
-			const rawToken =
-				(request.cookies as Record<string, string>)
-					?.refresh_token
-			const ip = request.ip
+			const rawToken = (request.cookies as Record<string, string>)?.refresh_token;
+			const ip = request.ip;
 
 			if (rawToken) {
-				const tokenHash = hashRefreshToken(rawToken)
+				const tokenHash = hashRefreshToken(rawToken);
 
 				const existing = await prisma.refreshToken.findFirst({
 					where: { tokenHash },
-				})
+				});
 
 				if (existing && !existing.isRevoked) {
 					await prisma.refreshToken.update({
 						where: { id: existing.id },
 						data: { isRevoked: true },
-					})
+					});
 				}
 			}
 
@@ -349,13 +319,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 					tableName: 'users',
 					ipAddress: ip,
 				},
-			})
+			});
 
 			reply.clearCookie('refresh_token', {
 				path: '/api/v1/auth',
-			})
+			});
 
-			return reply.status(204).send()
+			return reply.status(204).send();
 		},
-	})
+	});
 }

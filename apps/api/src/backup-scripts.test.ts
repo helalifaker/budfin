@@ -26,8 +26,8 @@ describe('Backup & restore scripts', () => {
 
 		it('implements retention policy', () => {
 			const content = readFileSync(backupPath, 'utf-8');
-			expect(content).toContain('-mtime +30');   // 30 days daily
-			expect(content).toContain('-mtime +365');  // 12 months monthly
+			expect(content).toContain('-mtime +30'); // 30 days daily
+			expect(content).toContain('-mtime +365'); // 12 months monthly
 			expect(content).toContain('-mtime +3650'); // 10 years annual
 		});
 

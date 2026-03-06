@@ -84,7 +84,7 @@ export function UserSidePanel({
 		if (!panel) return;
 
 		const focusable = panel.querySelectorAll<HTMLElement>(
-			'input, select, button, [tabindex]:not([tabindex="-1"])',
+			'input, select, button, [tabindex]:not([tabindex="-1"])'
 		);
 		const first = focusable[0];
 		const last = focusable[focusable.length - 1];
@@ -119,29 +119,21 @@ export function UserSidePanel({
 
 	return (
 		<>
-			<div
-				className="fixed inset-0 z-40 bg-black/30"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
 			<div
 				ref={panelRef}
 				role="dialog"
 				aria-modal="true"
-				aria-label={
-					mode === 'create' ? 'Add User' : 'Edit User'
-				}
+				aria-label={mode === 'create' ? 'Add User' : 'Edit User'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
 					'bg-white shadow-xl',
-					'flex flex-col',
+					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
 					<h2 className="text-lg font-semibold">
-						{mode === 'create'
-							? 'Add User'
-							: `Edit ${user?.email ?? 'User'}`}
+						{mode === 'create' ? 'Add User' : `Edit ${user?.email ?? 'User'}`}
 					</h2>
 				</div>
 
@@ -153,10 +145,7 @@ export function UserSidePanel({
 							className="space-y-4"
 						>
 							<div>
-								<label
-									htmlFor="email"
-									className="block text-sm font-medium"
-								>
+								<label htmlFor="email" className="block text-sm font-medium">
 									Email
 								</label>
 								<input
@@ -165,24 +154,18 @@ export function UserSidePanel({
 									className={cn(
 										'mt-1 block w-full rounded-md border',
 										'px-3 py-2 text-sm',
-										createForm.formState.errors.email
-											? 'border-red-500'
-											: 'border-slate-300',
+										createForm.formState.errors.email ? 'border-red-500' : 'border-slate-300'
 									)}
 									{...createForm.register('email')}
 								/>
 								{createForm.formState.errors.email && (
 									<p className="mt-1 text-xs text-red-600">
-										{createForm.formState.errors.email
-											.message}
+										{createForm.formState.errors.email.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label
-									htmlFor="password"
-									className="block text-sm font-medium"
-								>
+								<label htmlFor="password" className="block text-sm font-medium">
 									Password
 								</label>
 								<input
@@ -191,31 +174,25 @@ export function UserSidePanel({
 									className={cn(
 										'mt-1 block w-full rounded-md border',
 										'px-3 py-2 text-sm',
-										createForm.formState.errors.password
-											? 'border-red-500'
-											: 'border-slate-300',
+										createForm.formState.errors.password ? 'border-red-500' : 'border-slate-300'
 									)}
 									{...createForm.register('password')}
 								/>
 								{createForm.formState.errors.password && (
 									<p className="mt-1 text-xs text-red-600">
-										{createForm.formState.errors.password
-											.message}
+										{createForm.formState.errors.password.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label
-									htmlFor="role"
-									className="block text-sm font-medium"
-								>
+								<label htmlFor="role" className="block text-sm font-medium">
 									Role
 								</label>
 								<select
 									id="role"
 									className={cn(
 										'mt-1 block w-full rounded-md border',
-										'border-slate-300 px-3 py-2 text-sm',
+										'border-slate-300 px-3 py-2 text-sm'
 									)}
 									{...createForm.register('role')}
 								>
@@ -234,17 +211,14 @@ export function UserSidePanel({
 							className="space-y-4"
 						>
 							<div>
-								<label
-									htmlFor="edit-role"
-									className="block text-sm font-medium"
-								>
+								<label htmlFor="edit-role" className="block text-sm font-medium">
 									Role
 								</label>
 								<select
 									id="edit-role"
 									className={cn(
 										'mt-1 block w-full rounded-md border',
-										'border-slate-300 px-3 py-2 text-sm',
+										'border-slate-300 px-3 py-2 text-sm'
 									)}
 									{...editForm.register('role')}
 								>
@@ -262,10 +236,7 @@ export function UserSidePanel({
 									className="h-4 w-4 rounded"
 									{...editForm.register('is_active')}
 								/>
-								<label
-									htmlFor="is-active"
-									className="text-sm font-medium"
-								>
+								<label htmlFor="is-active" className="text-sm font-medium">
 									Active
 								</label>
 							</div>
@@ -274,14 +245,9 @@ export function UserSidePanel({
 									id="force-reset"
 									type="checkbox"
 									className="h-4 w-4 rounded"
-									{...editForm.register(
-										'force_password_reset',
-									)}
+									{...editForm.register('force_password_reset')}
 								/>
-								<label
-									htmlFor="force-reset"
-									className="text-sm font-medium"
-								>
+								<label htmlFor="force-reset" className="text-sm font-medium">
 									Force Password Reset
 								</label>
 							</div>
@@ -296,7 +262,7 @@ export function UserSidePanel({
 						className={cn(
 							'rounded-md border border-slate-300',
 							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50',
+							'hover:bg-slate-50'
 						)}
 					>
 						Cancel
@@ -309,7 +275,7 @@ export function UserSidePanel({
 							'rounded-md bg-blue-600 px-4 py-2 text-sm',
 							'font-medium text-white',
 							'hover:bg-blue-700',
-							'disabled:opacity-50',
+							'disabled:opacity-50'
 						)}
 					>
 						{loading ? 'Saving...' : 'Save'}

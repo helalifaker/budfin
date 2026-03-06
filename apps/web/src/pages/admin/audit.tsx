@@ -7,10 +7,7 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import { apiClient } from '../../lib/api-client';
-import {
-	AuditFilters,
-	type AuditFilterValues,
-} from '../../components/admin/audit-filters';
+import { AuditFilters, type AuditFilterValues } from '../../components/admin/audit-filters';
 
 interface AuditEntry {
 	id: number;
@@ -41,11 +38,7 @@ function formatTimestamp(iso: string): string {
 	});
 }
 
-function buildQueryString(
-	page: number,
-	pageSize: number,
-	filters: AuditFilterValues,
-): string {
+function buildQueryString(page: number, pageSize: number, filters: AuditFilterValues): string {
 	const params = new URLSearchParams();
 	params.set('page', String(page));
 	params.set('page_size', String(pageSize));
@@ -76,17 +69,13 @@ export function AuditPage() {
 
 	const { data, isLoading } = useQuery({
 		queryKey: ['audit', queryString],
-		queryFn: () =>
-			apiClient<AuditResponse>(`/audit?${queryString}`),
+		queryFn: () => apiClient<AuditResponse>(`/audit?${queryString}`),
 	});
 
-	const handleFilterChange = useCallback(
-		(newFilters: AuditFilterValues) => {
-			setFilters(newFilters);
-			setPage(1);
-		},
-		[],
-	);
+	const handleFilterChange = useCallback((newFilters: AuditFilterValues) => {
+		setFilters(newFilters);
+		setPage(1);
+	}, []);
 
 	const columns = useMemo(
 		() => [
@@ -121,14 +110,12 @@ export function AuditPage() {
 					const nv = row.original.new_values;
 					if (!nv) return '-';
 					return (
-						<pre className="max-w-xs truncate text-xs text-slate-500">
-							{JSON.stringify(nv)}
-						</pre>
+						<pre className="max-w-xs truncate text-xs text-slate-500">{JSON.stringify(nv)}</pre>
 					);
 				},
 			}),
 		],
-		[],
+		[]
 	);
 
 	const table = useReactTable({
@@ -137,15 +124,11 @@ export function AuditPage() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
-	const totalPages = data
-		? Math.ceil(data.total / data.page_size)
-		: 0;
+	const totalPages = data ? Math.ceil(data.total / data.page_size) : 0;
 
 	return (
 		<div className="p-6">
-			<h1 className="pb-4 text-xl font-semibold">
-				Audit Trail
-			</h1>
+			<h1 className="pb-4 text-xl font-semibold">Audit Trail</h1>
 
 			<AuditFilters onFilterChange={handleFilterChange} />
 
@@ -154,87 +137,50 @@ export function AuditPage() {
 			) : (
 				<>
 					<div className="overflow-x-auto rounded-lg border">
-						<table
-							role="grid"
-							className="w-full text-left text-sm"
-						>
+						<table role="grid" className="w-full text-left text-sm">
 							<thead className="border-b bg-slate-50">
-								{table
-									.getHeaderGroups()
-									.map((hg) => (
-										<tr key={hg.id}>
-											{hg.headers.map(
-												(header) => (
-													<th
-														key={header.id}
-														className="px-4 py-3 font-medium text-slate-600"
-													>
-														{flexRender(
-															header.column
-																.columnDef
-																.header,
-															header.getContext(),
-														)}
-													</th>
-												),
-											)}
-										</tr>
-									))}
+								{table.getHeaderGroups().map((hg) => (
+									<tr key={hg.id}>
+										{hg.headers.map((header) => (
+											<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+												{flexRender(header.column.columnDef.header, header.getContext())}
+											</th>
+										))}
+									</tr>
+								))}
 							</thead>
 							<tbody>
-								{table
-									.getRowModel()
-									.rows.map((row) => (
-										<tr
-											key={row.id}
-											className="border-b last:border-0 hover:bg-slate-50"
-										>
-											{row
-												.getVisibleCells()
-												.map((cell) => (
-													<td
-														key={cell.id}
-														className="px-4 py-3"
-													>
-														{flexRender(
-															cell.column
-																.columnDef
-																.cell,
-															cell.getContext(),
-														)}
-													</td>
-												))}
-										</tr>
-									))}
+								{table.getRowModel().rows.map((row) => (
+									<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+										{row.getVisibleCells().map((cell) => (
+											<td key={cell.id} className="px-4 py-3">
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+											</td>
+										))}
+									</tr>
+								))}
 							</tbody>
 						</table>
 					</div>
 
 					<div className="flex items-center justify-between pt-4 text-sm">
-						<span className="text-slate-500">
-							{data?.total ?? 0} total entries
-						</span>
+						<span className="text-slate-500">{data?.total ?? 0} total entries</span>
 						<div className="flex gap-2">
 							<button
 								type="button"
 								disabled={page <= 1}
-								onClick={() =>
-									setPage((p) => p - 1)
-								}
+								onClick={() => setPage((p) => p - 1)}
 								className="rounded border px-3 py-1 disabled:opacity-50"
 							>
 								Previous
 							</button>
 							<span className="px-2 py-1">
-								Page {page} of{' '}
-								{totalPages || 1}
+								Page {page} of {totalPages || 1}
 							</span>
 							<button
 								type="button"
 								disabled={page >= totalPages}
-								onClick={() =>
-									setPage((p) => p + 1)
-								}
+								onClick={() => setPage((p) => p + 1)}
 								className="rounded border px-3 py-1 disabled:opacity-50"
 							>
 								Next

@@ -31,7 +31,7 @@ cp .env.example apps/api/.env
 # Generate Prisma client
 pnpm --filter @budfin/api exec prisma generate
 
-# Start development servers (API on :3001, web on :5173)
+# Start development servers (API on :3001, web on :3000)
 pnpm dev
 ```
 
@@ -48,14 +48,14 @@ pnpm lint:md      # Lint Markdown documentation
 
 ## Documentation
 
-| Document | Location |
-| --- | --- |
-| Technical Design Document | `docs/tdd/` |
-| Product Requirements | `docs/prd/` |
-| Edge Case Analysis | `docs/edge-cases/` |
+| Document                      | Location                       |
+| ----------------------------- | ------------------------------ |
+| Technical Design Document     | `docs/tdd/`                    |
+| Product Requirements          | `docs/prd/`                    |
+| Edge Case Analysis            | `docs/edge-cases/`             |
 | Architecture Decision Records | `docs/tdd/09_decisions_log.md` |
-| Stack version manifest | `docs/tdd/stack-versions.md` |
-| Implementation plans | `plans/` |
+| Stack version manifest        | `docs/tdd/stack-versions.md`   |
+| Implementation plans          | `plans/`                       |
 
 ## Project Layout
 
