@@ -99,6 +99,7 @@ beforeAll(async () => {
 		sub: 1,
 		email: 'test@efir.edu.sa',
 		role: 'Editor',
+		sessionId: 'test-session-id',
 	});
 });
 

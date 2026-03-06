@@ -1,16 +1,24 @@
 ---
 name: fix:lint
 description: >
-  Fix all ESLint, Prettier, and markdownlint errors in the BudFin project. Runs auto-fixers
-  first, then applies targeted manual fixes for any remaining errors. Final run confirms zero
-  errors across all linters. Available in any phase.
+  Fix all ESLint, Prettier, and markdownlint errors in the BudFin project. Verifies first — if
+  already clean, exits immediately. Only runs auto-fixers if Step 1 finds issues. Final run
+  confirms zero errors across all linters. Available in any phase.
 allowed-tools: Bash, Read, Edit
 ---
 
-Fix all linting errors across the BudFin monorepo. Always run to completion — do not stop
-until all three linters report zero errors.
+Fix all linting errors across the BudFin monorepo. Verify first — only fix if dirty.
 
-## Step 1 — Run Auto-Fixers (First Pass)
+## Step 1 — Verify (read-only, no mutations)
+
+```bash
+pnpm lint:all 2>&1
+```
+
+- If exits 0 → print "All linters: CLEAN" and **stop here**.
+- If fails → report what was found and proceed to Step 2.
+
+## Step 2 — Auto-Fix (only reached if Step 1 found issues)
 
 ```bash
 pnpm eslint . --fix 2>&1 | tee /tmp/eslint-output.txt
@@ -18,18 +26,15 @@ pnpm prettier --write . 2>&1 | tee /tmp/prettier-output.txt
 pnpm markdownlint --fix "**/*.md" --ignore node_modules --ignore .git 2>&1 | tee /tmp/markdown-output.txt
 ```
 
-## Step 2 — Run Again to Catch Remaining Errors
-
-Auto-fixers sometimes miss errors that become fixable after the first pass:
+## Step 3 — Re-Verify (confirm zero remaining after auto-fix)
 
 ```bash
-pnpm eslint . 2>&1 | tee /tmp/eslint-remaining.txt
-pnpm markdownlint "**/*.md" --ignore node_modules --ignore .git 2>&1 | tee /tmp/markdown-remaining.txt
+pnpm lint:all 2>&1
 ```
 
-## Step 3 — Manual Fix for Remaining Errors
+If this fails, proceed to Step 4 for manual fixes.
 
-For each remaining unfixable error, read the file and apply a targeted fix:
+## Step 4 — Manual Fix for Unfixable Residual Errors
 
 **ESLint 9 flat config (eslint.config.ts)**:
 - Rule `@typescript-eslint/no-explicit-any`: Replace `any` with proper type or `unknown`
@@ -46,19 +51,14 @@ For each remaining unfixable error, read the file and apply a targeted fix:
 - MD022 (heading surrounded by blank lines): Add blank line before and after heading
 - Do NOT auto-fix `.markdownlintignore`d files (check `docs/edge-cases/` — pre-existing issues)
 
-## Step 4 — Final Verification Run
-
-```bash
-pnpm eslint . && echo "ESLint: CLEAN"
-pnpm prettier --check . && echo "Prettier: CLEAN"
-pnpm markdownlint "**/*.md" --ignore node_modules --ignore .git && echo "Markdown: CLEAN"
-```
-
-All three must show their CLEAN message before this command is complete.
-
 ## Step 5 — Summary
 
-Output:
+If Step 1 passed:
+```
+All linters: CLEAN
+```
+
+If fixes were needed:
 ```
 Lint fix complete.
 

@@ -28,6 +28,7 @@ describe('signAccessToken', () => {
 			sub: 1,
 			email: 'test@budfin.app',
 			role: 'Admin',
+			sessionId: 'test-session-id',
 		});
 
 		expect(typeof token).toBe('string');
@@ -43,12 +44,14 @@ describe('verifyAccessToken', () => {
 			sub: 42,
 			email: 'admin@budfin.app',
 			role: 'Editor',
+			sessionId: 'session-abc',
 		});
 
 		const payload = await verifyAccessToken(token);
 		expect(payload.sub).toBe(42);
 		expect(payload.email).toBe('admin@budfin.app');
 		expect(payload.role).toBe('Editor');
+		expect(payload.sessionId).toBe('session-abc');
 	});
 
 	it('rejects expired tokens', async () => {
@@ -73,6 +76,7 @@ describe('verifyAccessToken', () => {
 			sub: 1,
 			email: 'test@budfin.app',
 			role: 'Admin',
+			sessionId: 'test-session-id',
 		});
 
 		const parts = token.split('.');
@@ -207,6 +211,7 @@ describe('loadKeys', () => {
 			sub: 1,
 			email: 'test@budfin.app',
 			role: 'Admin',
+			sessionId: 'test-session-id',
 		});
 		expect(token.split('.')).toHaveLength(3);
 	});

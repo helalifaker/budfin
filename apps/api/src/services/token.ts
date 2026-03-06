@@ -6,6 +6,7 @@ interface TokenPayload {
 	sub: number;
 	email: string;
 	role: string;
+	sessionId: string;
 }
 
 let cachedKeys: { privateKey: KeyLike; publicKey: KeyLike } | null = null;
@@ -43,6 +44,7 @@ export async function signAccessToken(payload: TokenPayload): Promise<string> {
 	return new SignJWT({
 		email: payload.email,
 		role: payload.role,
+		sessionId: payload.sessionId,
 	})
 		.setProtectedHeader({ alg: 'RS256' })
 		.setSubject(String(payload.sub))
@@ -66,6 +68,7 @@ export async function verifyAccessToken(token: string): Promise<TokenPayload> {
 		sub: Number(payload.sub),
 		email: payload.email as string,
 		role: payload.role as string,
+		sessionId: payload.sessionId as string,
 	};
 }
 

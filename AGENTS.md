@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## BudFin Project Instructions
 
@@ -99,9 +99,9 @@ Flat config only (`eslint.config.ts`). No `.eslintrc` files. All plugins must su
 
 ## Workflow
 
-All development follows the 7-phase BudFin workflow defined in `.claude/workflow/WORKFLOW.md`. Current phase is tracked in `.claude/workflow/STATUS.md`.
+All development follows the 7-phase BudFin workflow defined in `.Codex/workflow/WORKFLOW.md`. Current phase is tracked in `.Codex/workflow/STATUS.md`.
 
-See `.claude/COMMANDS.md` for the full command reference. Key commands:
+See `.Codex/COMMANDS.md` for the full command reference. Key commands:
 
 - `/workflow:status` — show current phase and checklist
 - `/workflow:advance` — gate-check and move to next phase
@@ -123,7 +123,7 @@ See `.claude/COMMANDS.md` for the full command reference. Key commands:
 
 | Purpose                                         | Location                          |
 | ----------------------------------------------- | --------------------------------- |
-| Full command reference (plan/impl/fix/workflow) | `.claude/COMMANDS.md`             |
+| Full command reference (plan/impl/fix/workflow) | `.Codex/COMMANDS.md`              |
 | Canonical pinned versions                       | `docs/tdd/stack-versions.md`      |
 | Architecture overview                           | `docs/tdd/01_overview.md`         |
 | ADRs (ADR-008 to ADR-017)                       | `docs/tdd/09_decisions_log.md`    |

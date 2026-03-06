@@ -37,6 +37,7 @@ async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
 		role: overrides.role ?? 'Admin',
+		sessionId: 'test-session-id',
 	});
 }
 
@@ -159,14 +160,14 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 	it('updates assumption value and returns refreshed list', async () => {
 		vi.mocked(prisma.assumption.update).mockResolvedValue({
 			...mockAssumptions[0]!,
-			value: '10.00',
+			value: '10.0000',
 			version: 2,
 		});
 		// First call: batch fetch for validation; second call: refreshed list in transaction
 		vi.mocked(prisma.assumption.findMany)
 			.mockResolvedValueOnce([mockAssumptions[0]!])
 			.mockResolvedValueOnce([
-				{ ...mockAssumptions[0]!, value: '10.00', version: 2 },
+				{ ...mockAssumptions[0]!, value: '10.0000', version: 2 },
 				mockAssumptions[1]!,
 				mockAssumptions[2]!,
 				mockAssumptions[3]!,
@@ -178,7 +179,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [{ key: 'gosiPension', value: '10.00', version: 1 }],
+				updates: [{ key: 'gosiPension', value: '10.0000', version: 1 }],
 			},
 		});
 
@@ -197,7 +198,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [{ key: 'gosiPension', value: '10.00', version: 99 }],
+				updates: [{ key: 'gosiPension', value: '10.0000', version: 99 }],
 			},
 		});
 
@@ -232,7 +233,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [{ key: 'gosiPension', value: '10.00', version: 1 }],
+				updates: [{ key: 'gosiPension', value: '10.0000', version: 1 }],
 			},
 		});
 		expect(res.statusCode).toBe(403);
@@ -467,7 +468,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 	it('creates audit entry on update', async () => {
 		vi.mocked(prisma.assumption.update).mockResolvedValue({
 			...mockAssumptions[0]!,
-			value: '10.00',
+			value: '10.0000',
 			version: 2,
 		});
 		// First call: batch fetch; second call: refreshed list in transaction
@@ -481,7 +482,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 			url: '/api/v1/master-data/assumptions',
 			headers: authHeader(token),
 			payload: {
-				updates: [{ key: 'gosiPension', value: '10.00', version: 1 }],
+				updates: [{ key: 'gosiPension', value: '10.0000', version: 1 }],
 			},
 		});
 
@@ -495,7 +496,7 @@ describe('PATCH /api/v1/master-data/assumptions', () => {
 		});
 		expect(call.data.newValues).toMatchObject({
 			key: 'gosiPension',
-			value: '10.00',
+			value: '10.0000',
 		});
 	});
 });

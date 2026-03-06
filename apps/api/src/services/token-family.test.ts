@@ -119,6 +119,7 @@ describe('token-family service', () => {
 
 			expect(mockAuditEntryCreate).toHaveBeenCalledWith({
 				data: {
+					userId: 5,
 					operation: 'TOKEN_ROTATION',
 					tableName: 'refresh_tokens',
 					ipAddress: '10.0.0.1',

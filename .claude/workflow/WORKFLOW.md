@@ -77,7 +77,7 @@ Never skip a phase. Never skip a checklist item.
 
 ## PROJECT WORKFLOW (run once)
 
-These three phases set up the whole project. You are currently in Phase 2.
+These three phases run once at project start.
 
 ---
 
@@ -238,7 +238,7 @@ Use scaffolding shortcuts when needed:
 - [ ] All **blocker**-severity issues resolved (no exceptions)
 - [ ] Warning-severity issues resolved or explicitly accepted with justification
 - [ ] Tests still green after review changes applied
-- [ ] PR created as draft: `gh pr create --title "feat(epic-N): [story title]"`
+- [ ] Draft PR exists and is linked to story issue
 - [ ] PR approved (all three agents: PASS)
 - [ ] PR squash-merged and branch deleted
 - [ ] Story issue auto-closed (or manually closed with PR reference)

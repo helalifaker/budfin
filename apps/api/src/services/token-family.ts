@@ -92,6 +92,7 @@ export async function rotateToken(
 
 		await tx.auditEntry.create({
 			data: {
+				userId: familyToken!.userId,
 				operation: 'TOKEN_ROTATION',
 				tableName: 'refresh_tokens',
 				ipAddress: ipAddress ?? null,
