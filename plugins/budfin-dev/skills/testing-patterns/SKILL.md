@@ -2,7 +2,7 @@
 name: testing-patterns
 description: Vitest 4 testing patterns and QA agent boundary rules for BudFin. Use when creating or editing test files, discussing code coverage, setting up test infrastructure, or working on QA tasks. Encodes the critical QA boundary (test files only), Decimal.js precision testing, Prisma mocking, and test naming conventions.
 invocations:
-    - agent: testing-patterns
+  - agent: testing-patterns
 ---
 
 # BudFin Testing Patterns (Vitest 4)

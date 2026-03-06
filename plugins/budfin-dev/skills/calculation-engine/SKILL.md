@@ -2,7 +2,7 @@
 name: calculation-engine
 description: Financial calculation patterns for BudFin. Use when writing or reviewing calculation engine code, Revenue/DHG/StaffCost/P&L engines, YEARFRAC computation, salary calculations, or any code that performs arithmetic on monetary values. Enforces TC-001 through TC-005 financial precision requirements.
 invocations:
-    - agent: calculation-engine
+  - agent: calculation-engine
 ---
 
 # BudFin Calculation Engine Patterns

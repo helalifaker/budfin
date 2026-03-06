@@ -2,7 +2,7 @@
 name: api-patterns
 description: Fastify 5 API patterns for BudFin. Use when writing route handlers, Fastify plugins, Zod schemas, middleware, authentication, RBAC, error handling, logging, or any backend API work. Encodes correct package names, middleware order, error format, security requirements, and rate limiting conventions.
 invocations:
-    - agent: api-patterns
+  - agent: api-patterns
 ---
 
 # BudFin API Patterns (Fastify 5 + Zod 4)

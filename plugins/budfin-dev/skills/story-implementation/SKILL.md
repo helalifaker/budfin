@@ -2,7 +2,7 @@
 name: story-implementation
 description: Swarm agent workflow for implementing BudFin user stories. Use when asked to implement a story, build a feature, work on a ticket, or start any substantial development task. Defines the 5+ agent minimum, sequencing, role boundaries, and coordination patterns for parallel implementation.
 invocations:
-    - agent: story-implementation
+  - agent: story-implementation
 ---
 
 # BudFin Story Implementation Workflow

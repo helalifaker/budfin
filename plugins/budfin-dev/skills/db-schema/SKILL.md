@@ -2,7 +2,7 @@
 name: db-schema
 description: Prisma 6 + PostgreSQL 16 database schema patterns for BudFin. Use when modifying the Prisma schema, writing migrations, implementing repository patterns, or working with audit logging, encryption, or database constraints. References the existing prisma-model skill for scaffolding new models.
 invocations:
-    - agent: db-schema
+  - agent: db-schema
 ---
 
 # BudFin Database Schema Patterns (Prisma 6 + PostgreSQL 16)
