@@ -66,9 +66,9 @@ references: FR-ENR-001 through FR-ENR-009, FR-CAP-001 through FR-CAP-007, US-006
 
 - [ ] AC-10: Given a version with Stage 1 headcount entered, when POST
       `/api/v1/versions/:versionId/calculate/enrollment` is called, then for each grade,
-      sections_needed is computed as CEILING(headcount / max_class_size) using the GradeLevel
+      sections*needed is computed as CEILING(headcount / max_class_size) using the GradeLevel
       model's maxClassSize, utilization is computed as
-      (headcount / (sections_needed _ max_class_size)) _ 100, and a traffic-light status is assigned.
+      (headcount / (sections_needed * max*class_size)) * 100, and a traffic-light status is assigned.
 
 - [ ] AC-11: Given headcount = 0 for a grade, then sections_needed = 0, utilization = 0%, and no
       alert status is assigned (PO-001).
@@ -87,7 +87,7 @@ references: FR-ENR-001 through FR-ENR-009, FR-CAP-001 through FR-CAP-007, US-006
 **Recruitment Slots (FR-CAP-005)**
 
 - [ ] AC-15: Given calculated capacity data, the recruitment slot for each grade is computed as
-      (sections_needed _ max_class_size _ plafond_pct) - headcount and is included in the capacity
+      (sections*needed * max*class_size * plafond_pct) - headcount and is included in the capacity
       calculation response.
 
 **Historical Enrollment (FR-ENR-001, FR-ENR-002, FR-ENR-003, FR-ENR-004)**
