@@ -51,3 +51,10 @@ nginx/ssl/
 # Claude session artifacts — tracked as GitHub Issues instead
 /plans/
 /tasks/
+
+# macOS Finder duplicate files
+* 2.*
+* 3.*
+
+# Claude worktrees (transient working directories)
+.claude/worktrees/

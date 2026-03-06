@@ -1,7 +1,7 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 7 -- Master Data Management
+**Phase**: 4 — SPECIFY
+**Current Epic**: (pending selection)
 **Last updated**: 2026-03-06
 
 ## Phase History
