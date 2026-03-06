@@ -12,7 +12,7 @@ School financial planning app for EFIR (École Française Internationale de Riya
 # Install dependencies
 pnpm install
 
-# Start all apps in parallel watch mode (API :3001, web :5173)
+# Start all apps in parallel watch mode (API :3001, web :3000)
 pnpm dev
 
 # Run across all workspaces

@@ -31,7 +31,7 @@ cp .env.example apps/api/.env
 # Generate Prisma client
 pnpm --filter @budfin/api exec prisma generate
 
-# Start development servers (API on :3001, web on :5173)
+# Start development servers (API on :3001, web on :3000)
 pnpm dev
 ```
 

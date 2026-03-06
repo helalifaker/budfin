@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feat/**', 'feature/**']
+    branches: [main, 'feat/**', 'feature/**', 'story/**']
   pull_request:
     branches: [main]
 
@@ -113,8 +113,48 @@ jobs:
           key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm audit --audit-level high
 
+  format:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm format:check
+
+  lint-md:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm lint:md
+
   build:
-    needs: [lint, typecheck, test, audit]
+    needs: [lint, lint-md, typecheck, test, audit, format]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
