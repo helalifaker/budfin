@@ -82,11 +82,11 @@ export const routes: RouteObject[] = [
 				],
 			},
 			{
+				path: '/planning',
 				element: <PlanningShell />,
 				children: [
 					{
 						index: true,
-						path: '/planning',
 						element: <PlanningLandingPage />,
 					},
 				],
