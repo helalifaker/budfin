@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Enrollment & Capacity module for student headcount planning across 15 grade levels and dual academic periods (AY1 Jan-Jun, AY2 Sep-Dec) (#3)
+- Two-stage enrollment workflow: Stage 1 captures total headcount per grade, Stage 2 breaks down by nationality (Francais, Nationaux, Autres) and tariff (RP, R3+, Plein) with server-validated sum constraints (#80-#82)
+- Capacity calculation engine computing sections needed, classroom utilization percentages, and traffic-light alerts (OVER, NEAR_CAP, OK, UNDER) per grade level (#83)
+- Recruitment slot calculation showing available places per grade based on plafond capacity thresholds (#83)
+- Historical enrollment analytics with 5-year data, CAGR by band, and 3-year moving averages (#84)
+- Two-phase CSV import for historical enrollment data with validation preview before committing (#84)
+- Three enrollment grids (By Grade, By Nationality, By Tariff) with inline cell editing and auto-save (#85-#88)
+- Capacity columns with colour-coded traffic-light badges in the By Grade grid (#88)
+- Historical enrollment trend chart (collapsible Recharts line chart with CAGR annotations) (#89)
+- CSV import side panel with year selection, file upload, validation preview, and commit workflow (#90)
+- Calculate workflow with stale module integration marking downstream modules (Revenue, DHG, Staffing, P&L) for recalculation (#91)
+- 2 new database tables: enrollment_headcount and enrollment_detail with composite unique constraints and FK cascades (#80)
+- 7 new API endpoints under /api/v1/versions/:versionId/enrollment and /api/v1/enrollment/historical (#81-#84)
 - Version Management system: create, list, and delete budget versions with cursor pagination and fiscal year filtering (#14)
 - Version lifecycle state machine with four states (Draft, Published, Locked, Archived) and role-gated transitions; reverse transitions require a mandatory audit note (#14)
 - Version cloning with deep copy of monthly budget summaries; Actual versions are protected from manual creation and cloning (#14)

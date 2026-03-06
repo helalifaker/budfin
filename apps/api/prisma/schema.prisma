@@ -67,6 +67,12 @@ model User {
   lockedFiscalPeriods FiscalPeriod[]   @relation("FiscalPeriodLocker")
   importedActuals    ActualsImportLog[] @relation("ActualsImporter")
 
+  // Enrollment & Capacity relations (Epic 1)
+  createdHeadcounts  EnrollmentHeadcount[] @relation("HeadcountCreator")
+  updatedHeadcounts  EnrollmentHeadcount[] @relation("HeadcountUpdater")
+  createdDetails     EnrollmentDetail[]    @relation("DetailCreator")
+  updatedDetails     EnrollmentDetail[]    @relation("DetailUpdater")
+
   @@map("users")
 }
 
@@ -328,6 +334,10 @@ model BudgetVersion {
   monthlySummaries  MonthlyBudgetSummary[]
   actualsImportLogs ActualsImportLog[]
 
+  // Enrollment & Capacity (Epic 1)
+  enrollmentHeadcounts EnrollmentHeadcount[]
+  enrollmentDetails    EnrollmentDetail[]
+
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
   @@index([status], map: "idx_budget_versions_status")
@@ -382,4 +392,50 @@ model ActualsImportLog {
   importedBy User          @relation("ActualsImporter", fields: [importedById], references: [id])
 
   @@map("actuals_import_log")
+}
+
+// ── Enrollment & Capacity (Epic 1) ───────────────────────────────────────────
+
+model EnrollmentHeadcount {
+  id             Int      @id @default(autoincrement())
+  versionId      Int      @map("version_id")
+  academicPeriod String   @map("academic_period") @db.VarChar(3)
+  gradeLevel     String   @map("grade_level") @db.VarChar(10)
+  headcount      Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy      Int      @map("created_by")
+  updatedBy      Int?     @map("updated_by")
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  creator    User          @relation("HeadcountCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  updater    User?         @relation("HeadcountUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  details    EnrollmentDetail[]
+
+  @@unique([versionId, academicPeriod, gradeLevel], map: "uq_enrollment_headcount")
+  @@index([versionId, academicPeriod], map: "idx_enrollment_headcount_version_period")
+  @@map("enrollment_headcount")
+}
+
+model EnrollmentDetail {
+  id             Int      @id @default(autoincrement())
+  versionId      Int      @map("version_id")
+  academicPeriod String   @map("academic_period") @db.VarChar(3)
+  gradeLevel     String   @map("grade_level") @db.VarChar(10)
+  nationality    String   @db.VarChar(10)
+  tariff         String   @db.VarChar(10)
+  headcount      Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy      Int      @map("created_by")
+  updatedBy      Int?     @map("updated_by")
+
+  version        BudgetVersion       @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  headcountEntry EnrollmentHeadcount @relation(fields: [versionId, academicPeriod, gradeLevel], references: [versionId, academicPeriod, gradeLevel], onDelete: Cascade)
+  creator        User                @relation("DetailCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  updater        User?               @relation("DetailUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([versionId, academicPeriod, gradeLevel, nationality, tariff], map: "uq_enrollment_detail")
+  @@index([versionId, academicPeriod, gradeLevel], map: "idx_enrollment_detail_version_period_grade")
+  @@map("enrollment_detail")
 }

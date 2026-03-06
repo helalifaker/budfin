@@ -379,6 +379,32 @@ This section maps each Epic 7 story to its implementation files, test files, and
 
 ---
 
+## Enrollment & Capacity (Epic 1) — Implementation Traceability
+
+This section maps each Epic 1 story to its implementation files, test files, and verification status. Epic 1 implements FR-ENR-001 through FR-ENR-009 and FR-CAP-001 through FR-CAP-007.
+
+| AC-ID    | Story # | Description                                                                 | Spec File              | Implementation File(s)                                                                                       | Test File                                         | Status |
+| -------- | ------- | --------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | ------ |
+| AC-80-01 | #80     | Prisma schema: EnrollmentHeadcount + EnrollmentDetail models                | enrollment-capacity.md | apps/api/prisma/schema.prisma, apps/api/prisma/migrations/20260307120000_add_enrollment_tables/migration.sql | —                                                 | PASS   |
+| AC-81-01 | #81     | GET /versions/:versionId/enrollment/headcount with period filter            | enrollment-capacity.md | apps/api/src/routes/enrollment/headcount.ts                                                                  | apps/api/src/routes/enrollment/headcount.test.ts  | PASS   |
+| AC-81-02 | #81     | PUT /versions/:versionId/enrollment/headcount with stale module propagation | enrollment-capacity.md | apps/api/src/routes/enrollment/headcount.ts                                                                  | apps/api/src/routes/enrollment/headcount.test.ts  | PASS   |
+| AC-82-01 | #82     | GET /versions/:versionId/enrollment/detail with period filter               | enrollment-capacity.md | apps/api/src/routes/enrollment/detail.ts                                                                     | apps/api/src/routes/enrollment/detail.test.ts     | PASS   |
+| AC-82-02 | #82     | PUT /versions/:versionId/enrollment/detail with Stage 2 sum validation      | enrollment-capacity.md | apps/api/src/routes/enrollment/detail.ts                                                                     | apps/api/src/routes/enrollment/detail.test.ts     | PASS   |
+| AC-83-01 | #83     | Capacity engine: sections, utilization, traffic-light, recruitment slots    | enrollment-capacity.md | apps/api/src/services/capacity-engine.ts                                                                     | apps/api/src/services/capacity-engine.test.ts     | PASS   |
+| AC-83-02 | #83     | POST /versions/:versionId/calculate/enrollment endpoint                     | enrollment-capacity.md | apps/api/src/routes/enrollment/calculate.ts                                                                  | apps/api/src/routes/enrollment/calculate.test.ts  | PASS   |
+| AC-84-01 | #84     | GET /enrollment/historical with CAGR and moving average analytics           | enrollment-capacity.md | apps/api/src/routes/enrollment/historical.ts                                                                 | apps/api/src/routes/enrollment/historical.test.ts | PASS   |
+| AC-84-02 | #84     | POST /enrollment/historical/import two-phase CSV validate/commit            | enrollment-capacity.md | apps/api/src/routes/enrollment/historical.ts                                                                 | apps/api/src/routes/enrollment/historical.test.ts | PASS   |
+| AC-85-01 | #85     | Enrollment page shell + By Grade grid with inline editing                   | enrollment-capacity.md | apps/web/src/pages/planning/enrollment.tsx, apps/web/src/components/enrollment/by-grade-grid.tsx             | —                                                 | PASS   |
+| AC-86-01 | #86     | By Nationality grid with match validation UI                                | enrollment-capacity.md | apps/web/src/components/enrollment/by-nationality-grid.tsx                                                   | —                                                 | PASS   |
+| AC-87-01 | #87     | By Tariff grid with two-level validation UI                                 | enrollment-capacity.md | apps/web/src/components/enrollment/by-tariff-grid.tsx                                                        | —                                                 | PASS   |
+| AC-88-01 | #88     | Capacity columns + traffic-light alert badges                               | enrollment-capacity.md | apps/web/src/components/enrollment/capacity-columns.tsx                                                      | —                                                 | PASS   |
+| AC-89-01 | #89     | Historical enrollment Recharts trend chart                                  | enrollment-capacity.md | apps/web/src/components/enrollment/historical-chart.tsx                                                      | —                                                 | PASS   |
+| AC-90-01 | #90     | CSV import side panel with two-phase workflow                               | enrollment-capacity.md | apps/web/src/components/enrollment/csv-import-panel.tsx                                                      | —                                                 | PASS   |
+| AC-91-01 | #91     | Calculate workflow + stale module integration                               | enrollment-capacity.md | apps/web/src/components/enrollment/calculate-button.tsx, apps/web/src/hooks/use-enrollment.ts                | —                                                 | PASS   |
+| AC-92-01 | #92     | Integration tests (E2E API + UI smoke)                                      | enrollment-capacity.md | apps/api/src/routes/enrollment/\*.ts                                                                         | apps/api/src/routes/enrollment/\*.test.ts         | PASS   |
+
+---
+
 ## Coverage Summary
 
 | Domain                           | MUST       | SHOULD | COULD    | Total             |
@@ -400,6 +426,7 @@ This section maps each Epic 7 story to its implementation files, test files, and
 | Authentication & RBAC (Epic 11)  | 10 stories | 19 ACs | All PASS | 19                |
 | Master Data Management (Epic 7)  | 12 stories | 20 ACs | All PASS | 20                |
 | Version Management (Epic 10)     | 13 stories | 20 ACs | All PASS | 20                |
-| **Total**                        | **111**    | **20** | **10**   | **141 + 77 impl** |
+| Enrollment & Capacity (Epic 1)   | 13 stories | 18 ACs | All PASS | 18                |
+| **Total**                        | **111**    | **20** | **10**   | **141 + 95 impl** |
 
-All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), and Epic 10 (Version Management) implementation traceability sections confirm all acceptance criteria passing.
+All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), and Epic 1 (Enrollment & Capacity) implementation traceability sections confirm all acceptance criteria passing.

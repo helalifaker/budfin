@@ -15,6 +15,7 @@ import { AcademicPage } from './pages/master-data/academic';
 import { ReferencePage } from './pages/master-data/reference';
 import { AssumptionsPage } from './pages/master-data/assumptions';
 import { PlanningLandingPage } from './pages/planning/index';
+import { EnrollmentPage } from './pages/planning/enrollment';
 
 export const routes: RouteObject[] = [
 	{ path: '/login', element: <LoginPage /> },
@@ -88,6 +89,10 @@ export const routes: RouteObject[] = [
 					{
 						index: true,
 						element: <PlanningLandingPage />,
+					},
+					{
+						path: 'enrollment',
+						element: <EnrollmentPage />,
 					},
 				],
 			},

@@ -1,4 +1,23 @@
 // Shared TypeScript types for @budfin/types
-// Types will be added as the application is implemented
 
-export {};
+export {
+	ACADEMIC_PERIODS,
+	NATIONALITIES,
+	TARIFFS,
+	CAPACITY_ALERTS,
+	GRADE_CODES,
+	STALE_MODULES,
+} from './enrollment.js';
+
+export type {
+	AcademicPeriod,
+	NationalityType,
+	TariffType,
+	CapacityAlert,
+	GradeCode,
+	StaleModule,
+	HeadcountEntry,
+	DetailEntry,
+	CapacityResult,
+	CapacitySummary,
+} from './enrollment.js';
