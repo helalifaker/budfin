@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
@@ -180,73 +181,79 @@ export async function userRoutes(app: FastifyInstance) {
 				updateData.forcePasswordReset = body.force_password_reset;
 			}
 
-			// Unlock account
 			if (body.unlock_account === true) {
 				oldValues.lockedUntil = target.lockedUntil?.toISOString() ?? null;
 				oldValues.failedAttempts = target.failedAttempts;
 				updateData.lockedUntil = null;
 				updateData.failedAttempts = 0;
+			}
 
-				await prisma.auditEntry.create({
-					data: {
-						userId: request.user.id,
-						operation: 'ACCOUNT_UNLOCKED',
-						tableName: 'users',
-						recordId: id,
-						ipAddress: request.ip,
-						oldValues: {
-							lockedUntil: target.lockedUntil?.toISOString() ?? null,
-							failedAttempts: target.failedAttempts,
+			const shouldRevokeSessions = body.force_session_revoke === true || body.is_active === false;
+
+			const updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+				if (body.unlock_account === true) {
+					await tx.auditEntry.create({
+						data: {
+							userId: request.user.id,
+							operation: 'ACCOUNT_UNLOCKED',
+							tableName: 'users',
+							recordId: id,
+							ipAddress: request.ip,
+							oldValues: {
+								lockedUntil: target.lockedUntil?.toISOString() ?? null,
+								failedAttempts: target.failedAttempts,
+							},
 						},
+					});
+				}
+
+				if (shouldRevokeSessions) {
+					await revokeAllUserTokens(id, request.ip, tx);
+				}
+
+				if (body.force_session_revoke === true) {
+					await tx.auditEntry.create({
+						data: {
+							userId: request.user.id,
+							operation: 'SESSION_FORCE_REVOKED',
+							tableName: 'refresh_tokens',
+							recordId: id,
+							ipAddress: request.ip,
+						},
+					});
+				}
+
+				const nextUser = await tx.user.update({
+					where: { id },
+					data: updateData,
+					select: {
+						id: true,
+						email: true,
+						role: true,
+						isActive: true,
+						lastLoginAt: true,
+						failedAttempts: true,
+						lockedUntil: true,
+						createdAt: true,
 					},
 				});
-			}
 
-			// Force session revoke
-			if (body.force_session_revoke === true) {
-				await revokeAllUserTokens(id, request.ip);
+				if (Object.keys(newValues).length > 0) {
+					await tx.auditEntry.create({
+						data: {
+							userId: request.user.id,
+							operation: 'USER_UPDATED',
+							tableName: 'users',
+							recordId: id,
+							ipAddress: request.ip,
+							oldValues: oldValues as Record<string, string | number | boolean | null>,
+							newValues: newValues as Record<string, string | number | boolean | null>,
+						},
+					});
+				}
 
-				await prisma.auditEntry.create({
-					data: {
-						userId: request.user.id,
-						operation: 'SESSION_FORCE_REVOKED',
-						tableName: 'refresh_tokens',
-						recordId: id,
-						ipAddress: request.ip,
-					},
-				});
-			}
-
-			// Apply updates
-			const updated = await prisma.user.update({
-				where: { id },
-				data: updateData,
-				select: {
-					id: true,
-					email: true,
-					role: true,
-					isActive: true,
-					lastLoginAt: true,
-					failedAttempts: true,
-					lockedUntil: true,
-					createdAt: true,
-				},
+				return nextUser;
 			});
-
-			// Audit for field changes
-			if (Object.keys(newValues).length > 0) {
-				await prisma.auditEntry.create({
-					data: {
-						userId: request.user.id,
-						operation: 'USER_UPDATED',
-						tableName: 'users',
-						recordId: id,
-						ipAddress: request.ip,
-						oldValues: oldValues as Record<string, string | number | boolean | null>,
-						newValues: newValues as Record<string, string | number | boolean | null>,
-					},
-				});
-			}
 
 			return formatUser(updated);
 		},

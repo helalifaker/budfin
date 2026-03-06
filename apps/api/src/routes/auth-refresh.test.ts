@@ -54,10 +54,12 @@ vi.mock('../services/password.js', () => ({
 const mockCreateFamily = vi.fn();
 const mockRotateToken = vi.fn();
 const mockDetectReplay = vi.fn();
+const mockRevokeAllUserTokens = vi.fn();
 vi.mock('../services/token-family.js', () => ({
 	createFamily: (...args: unknown[]) => mockCreateFamily(...args),
 	rotateToken: (...args: unknown[]) => mockRotateToken(...args),
 	detectReplay: (...args: unknown[]) => mockDetectReplay(...args),
+	revokeAllUserTokens: (...args: unknown[]) => mockRevokeAllUserTokens(...args),
 }));
 
 // ── Test setup ───────────────────────────────────────────────────────────
@@ -114,6 +116,7 @@ beforeEach(() => {
 	mockSystemConfigFindUnique.mockResolvedValue(null);
 	mockRefreshTokenCount.mockResolvedValue(0);
 	mockRefreshTokenFindFirst.mockResolvedValue(null);
+	mockRevokeAllUserTokens.mockResolvedValue(0);
 	mockCreateFamily.mockResolvedValue({
 		token: 'raw-token',
 		tokenHash: 'hashed',
@@ -233,6 +236,72 @@ describe('POST /api/v1/auth/refresh', () => {
 		expect(res.statusCode).toBe(401);
 		expect(res.json().error).toBe('REFRESH_TOKEN_REUSE');
 		expect(mockDetectReplay).toHaveBeenCalledWith(expect.any(String), 1, expect.any(String));
+	});
+
+	it('rejects refresh for inactive users, clears cookie, and revokes sessions', async () => {
+		const app = await buildTestApp();
+		mockRefreshTokenFindFirst.mockResolvedValue({
+			id: 10,
+			userId: 1,
+			tokenHash: 'hash',
+			familyId: 'fam-1',
+			isRevoked: false,
+			expiresAt: new Date(Date.now() + 3600000),
+			user: { ...baseUser, isActive: false },
+		});
+
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/auth/refresh',
+			cookies: { refresh_token: 'inactive-user-token' },
+		});
+
+		expect(res.statusCode).toBe(401);
+		expect(res.json().error).toBe('ACCOUNT_DISABLED');
+		expect(mockRevokeAllUserTokens).toHaveBeenCalledWith(1, expect.any(String));
+		expect(mockRotateToken).not.toHaveBeenCalled();
+
+		const inactiveAudit = mockAuditEntryCreate.mock.calls.find(
+			(c: unknown[]) =>
+				(c[0] as { data: { operation: string } }).data.operation === 'REFRESH_REJECTED_INACTIVE'
+		);
+		expect(inactiveAudit).toBeTruthy();
+
+		const cookies = res.cookies as {
+			name: string;
+			value: string;
+		}[];
+		const rc = cookies.find((c) => c.name === 'refresh_token');
+		expect(rc).toBeTruthy();
+		expect(rc!.value).toBe('');
+	});
+
+	it('revokes sessions for inactive user even with an expired token', async () => {
+		const app = await buildTestApp();
+		mockRefreshTokenFindFirst.mockResolvedValue({
+			id: 10,
+			userId: 1,
+			tokenHash: 'hash',
+			familyId: 'fam-1',
+			isRevoked: false,
+			expiresAt: new Date(Date.now() - 1000), // expired
+			user: { ...baseUser, isActive: false },
+		});
+
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/auth/refresh',
+			cookies: { refresh_token: 'inactive-expired-token' },
+		});
+
+		expect(res.statusCode).toBe(401);
+		expect(res.json().error).toBe('ACCOUNT_DISABLED');
+		expect(mockRevokeAllUserTokens).toHaveBeenCalledWith(1, expect.any(String));
+
+		const cookies = res.cookies as { name: string; value: string }[];
+		const rc = cookies.find((c) => c.name === 'refresh_token');
+		expect(rc).toBeTruthy();
+		expect(rc!.value).toBe('');
 	});
 });
 

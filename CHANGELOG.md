@@ -48,3 +48,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Health check endpoint now reports database connectivity status and application uptime, enabling monitoring tools to detect outages faster (#22)
 - Application performance metrics (request durations, error rates, calculation times) are collected and exposed for future Grafana dashboards (#23)
 - Docker containers are hardened for production with non-root users, read-only filesystems, resource limits, and automatic restart policies (#24)
+
+### Fixed
+
+- Authentication session enforcement now keeps the advisory lock, session eviction, token-family creation, last-login update, and audit writes inside a single database transaction so concurrent logins cannot exceed the configured session cap (#30)
+- Deactivating a user now revokes active refresh-token sessions automatically, and refresh requests for inactive users are rejected with cookie clearing plus audit logging (#30, #32)
