@@ -131,4 +131,5 @@ jobs:
             apps/*/node_modules
             packages/*/node_modules
           key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm --filter @budfin/api exec prisma generate
       - run: pnpm build
