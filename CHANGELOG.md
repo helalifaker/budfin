@@ -72,3 +72,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Master Data API endpoints are now mounted through the real `buildApp()` bootstrap under `/api/v1/master-data`, with regression coverage to prevent route modules from being implemented without being shipped (#47)
 - Master Data pages are now reachable from the shipped router for all authenticated users, with role-based landing redirects and sidebar navigation that keeps Admin-only sections hidden from non-Admin roles (#42-#45)
 - The Master Data assumptions contract is now documented with the canonical optimistic-lock-safe payload shape `{ updates: [{ key, value, version }] }` to match the shipped API and UI (#41, #45)
+- Secret generation script now produces RSA-2048 JWT keys matching the RS256 signing algorithm; previously generated EC P-256 keys were incompatible with RS256 (#78)
+- All shell scripts converted from CRLF to LF line endings; added .gitattributes to prevent recurrence (#78)
