@@ -13,6 +13,8 @@ import { userRoutes } from './routes/users.js';
 import { contextRoutes } from './routes/context.js';
 import { auditRoutes } from './routes/audit.js';
 import { systemConfigRoutes } from './routes/system-config.js';
+import { versionRoutes } from './routes/versions.js';
+import { fiscalPeriodRoutes } from './routes/fiscal-periods.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -40,6 +42,8 @@ export async function buildApp() {
 	await app.register(systemConfigRoutes, {
 		prefix: '/api/v1/system-config',
 	});
+	await app.register(versionRoutes, { prefix: '/api/v1/versions' });
+	await app.register(fiscalPeriodRoutes, { prefix: '/api/v1/fiscal-periods' });
 
 	return app;
 }
