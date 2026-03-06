@@ -14,7 +14,7 @@ for arg in "$@"; do
 			echo "Usage: $(basename "$0") [--force]"
 			echo ""
 			echo "Generates secrets for BudFin deployment:"
-			echo "  - EC P-256 JWT key pair (PEM)"
+			echo "  - RSA-2048 JWT key pair (PEM)"
 			echo "  - AES-256 salary encryption key (base64)"
 			echo ""
 			echo "Options:"
@@ -46,12 +46,12 @@ fi
 
 mkdir -p "$SECRETS_DIR"
 
-echo "Generating EC P-256 JWT private key (PKCS#8)..."
-openssl ecparam -name prime256v1 -genkey -noout 2>/dev/null \
-	| openssl pkcs8 -topk8 -nocrypt -out "$SECRETS_DIR/jwt_private_key.pem"
+echo "Generating RSA-2048 JWT private key (PKCS#8)..."
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
+	-out "$SECRETS_DIR/jwt_private_key.pem" 2>/dev/null
 
 echo "Extracting JWT public key (SPKI)..."
-openssl ec -in "$SECRETS_DIR/jwt_private_key.pem" -pubout \
+openssl pkey -in "$SECRETS_DIR/jwt_private_key.pem" -pubout \
 	-out "$SECRETS_DIR/jwt_public_key.pem" 2>/dev/null
 
 echo "Generating AES-256 salary encryption key (base64)..."
@@ -63,8 +63,8 @@ chmod 600 "$SECRETS_DIR/salary_encryption_key.txt"
 
 echo ""
 echo "Secrets generated successfully in $SECRETS_DIR/"
-echo "  - jwt_private_key.pem      (EC P-256 private key, PKCS#8 PEM)"
-echo "  - jwt_public_key.pem       (EC P-256 public key, SPKI PEM)"
+echo "  - jwt_private_key.pem      (RSA-2048 private key, PKCS#8 PEM)"
+echo "  - jwt_public_key.pem       (RSA-2048 public key, SPKI PEM)"
 echo "  - salary_encryption_key.txt (AES-256 key, base64-encoded)"
 echo ""
 echo "WARNING: Keep these files secure. They are excluded from git via .gitignore."
