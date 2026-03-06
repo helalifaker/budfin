@@ -14,7 +14,8 @@
 		"lint:md": "markdownlint --config .markdownlint.json '**/*.md' --ignore-path .markdownlintignore",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"lint:all": "pnpm lint && pnpm lint:md && pnpm format:check"
+		"lint:all": "pnpm lint && pnpm lint:md && pnpm format:check",
+		"prepare": "husky"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
@@ -30,9 +31,24 @@
 		"eslint-plugin-react-hooks": "^7.0.1",
 		"eslint-plugin-react-refresh": "^0.5.2",
 		"globals": "^17.4.0",
+		"husky": "^9.1.0",
+		"lint-staged": "^15.5.0",
 		"markdownlint-cli": "^0.48.0",
 		"prettier": "^3.8.0",
 		"typescript": "5.9.3",
 		"typescript-eslint": "^8.56.1"
+	},
+	"lint-staged": {
+		"*.{ts,tsx,js,jsx,mjs,cjs}": [
+			"prettier --write",
+			"eslint --fix"
+		],
+		"*.{json,css}": [
+			"prettier --write"
+		],
+		"*.md": [
+			"prettier --write",
+			"markdownlint --fix --config .markdownlint.json --ignore-path .markdownlintignore"
+		]
 	}
 }

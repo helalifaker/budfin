@@ -19,13 +19,21 @@ const GOSI_KEYS = ['gosiPension', 'gosiSaned', 'gosiOhi'];
 function validateAssumptionValue(value: string, valueType: string): string | null {
 	switch (valueType) {
 		case 'PERCENTAGE': {
-			const num = Number(value);
-			if (isNaN(num) || num < 0 || num > 100) return 'Must be a number between 0 and 100';
+			try {
+				const d = new Decimal(value);
+				if (d.isNaN() || d.isNegative() || d.gt(100)) return 'Must be a number between 0 and 100';
+			} catch {
+				return 'Must be a number between 0 and 100';
+			}
 			return null;
 		}
 		case 'CURRENCY': {
-			const num = Number(value);
-			if (isNaN(num) || num < 0) return 'Must be a non-negative number';
+			try {
+				const d = new Decimal(value);
+				if (d.isNaN() || d.isNegative()) return 'Must be a non-negative number';
+			} catch {
+				return 'Must be a non-negative number';
+			}
 			return null;
 		}
 		case 'INTEGER': {
@@ -34,12 +42,23 @@ function validateAssumptionValue(value: string, valueType: string): string | nul
 			return null;
 		}
 		case 'DECIMAL': {
-			if (isNaN(Number(value))) return 'Must be a valid number';
+			try {
+				new Decimal(value);
+			} catch {
+				return 'Must be a valid number';
+			}
 			return null;
 		}
 		default:
 			return null;
 	}
+}
+
+function canonicalizeValue(value: string, valueType: string): string {
+	if (valueType === 'CURRENCY' || valueType === 'PERCENTAGE') {
+		return new Decimal(value).toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
+	}
+	return value;
 }
 
 function computeGosiTotal(assumptions: Array<{ key: string; value: string }>): string {
@@ -111,10 +130,12 @@ export async function assumptionRoutes(app: FastifyInstance) {
 					const existing = existingMap.get(update.key);
 					if (!existing) continue;
 
+					const canonicalValue = canonicalizeValue(update.value, existing.valueType);
+
 					await tx.assumption.update({
 						where: { key: update.key },
 						data: {
-							value: update.value,
+							value: canonicalValue,
 							updatedBy: request.user.id,
 							version: { increment: 1 },
 						},
@@ -133,7 +154,7 @@ export async function assumptionRoutes(app: FastifyInstance) {
 							} as unknown as Prisma.InputJsonValue,
 							newValues: {
 								key: update.key,
-								value: update.value,
+								value: canonicalValue,
 							} as unknown as Prisma.InputJsonValue,
 						},
 					});

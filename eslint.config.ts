@@ -24,11 +24,17 @@ export default tseslint.config(
 			},
 		},
 		rules: {
-			'no-console': 'warn',
+			'no-console': 'error',
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
 			],
+		},
+	},
+	{
+		files: ['**/prisma/seed.ts', '**/prisma/seed.*.ts'],
+		rules: {
+			'no-console': 'off',
 		},
 	},
 	{

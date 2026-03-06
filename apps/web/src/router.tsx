@@ -37,6 +37,16 @@ export const router = createBrowserRouter([
 						path: '/admin/settings',
 						element: <SettingsPage />,
 					},
+				],
+			},
+		],
+	},
+	{
+		element: <ProtectedRoute />,
+		children: [
+			{
+				element: <ManagementShell />,
+				children: [
 					{
 						path: '/versions',
 						element: <VersionsPage />,

@@ -146,10 +146,12 @@ export async function versionRoutes(app: FastifyInstance) {
 				typeof listQuerySchema
 			>;
 
-			const where: Prisma.BudgetVersionWhereInput = {};
-			if (fiscalYear) where.fiscalYear = fiscalYear;
-			if (status) where.status = status;
-			if (cursor) where.id = { gt: cursor };
+			const countWhere: Prisma.BudgetVersionWhereInput = {};
+			if (fiscalYear) countWhere.fiscalYear = fiscalYear;
+			if (status) countWhere.status = status;
+
+			const where: Prisma.BudgetVersionWhereInput = { ...countWhere };
+			if (cursor) where.id = { lt: cursor };
 
 			const [data, total] = await Promise.all([
 				prisma.budgetVersion.findMany({
@@ -158,7 +160,7 @@ export async function versionRoutes(app: FastifyInstance) {
 					take: limit,
 					include: { createdBy: { select: { email: true } } },
 				}),
-				prisma.budgetVersion.count({ where }),
+				prisma.budgetVersion.count({ where: countWhere }),
 			]);
 
 			const nextCursor = data.length === limit ? data[data.length - 1]?.id : null;
@@ -596,7 +598,7 @@ export async function versionRoutes(app: FastifyInstance) {
 			}
 
 			if (transition.isReverse) {
-				updateData.modificationCount = version.modificationCount + 1;
+				updateData.modificationCount = { increment: 1 };
 			}
 
 			const updated = await prisma.$transaction(async (tx) => {

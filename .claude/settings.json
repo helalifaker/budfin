@@ -32,15 +32,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[[ \"$CLAUDE_FILE_PATH\" =~ \\.(ts|tsx|js|jsx|mjs|cjs|json|css)$ ]] && pnpm prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+            "command": "[[ \"$CLAUDE_FILE_PATH\" =~ \\.(ts|tsx|js|jsx|mjs|cjs|json|css)$ ]] && pnpm prettier --write \"$CLAUDE_FILE_PATH\" || true"
           },
           {
             "type": "command",
-            "command": "pnpm markdownlint --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+            "command": "[[ \"$CLAUDE_FILE_PATH\" =~ \\.md$ ]] && pnpm markdownlint --fix \"$CLAUDE_FILE_PATH\" || true"
           },
           {
             "type": "command",
-            "command": "[[ \"$CLAUDE_FILE_PATH\" =~ \\.(ts|tsx|js|jsx|mjs|cjs)$ ]] && pnpm eslint --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+            "command": "[[ \"$CLAUDE_FILE_PATH\" =~ \\.(ts|tsx|js|jsx|mjs|cjs)$ ]] && pnpm eslint --fix \"$CLAUDE_FILE_PATH\" || true"
           }
         ]
       }

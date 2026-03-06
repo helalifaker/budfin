@@ -55,7 +55,7 @@ pnpm lint:md      # Lint Markdown documentation
 | Edge Case Analysis            | `docs/edge-cases/`             |
 | Architecture Decision Records | `docs/tdd/09_decisions_log.md` |
 | Stack version manifest        | `docs/tdd/stack-versions.md`   |
-| Implementation plans          | `plans/`                       |
+| Implementation plans          | `docs/plans/`                  |
 
 ## Project Layout
 

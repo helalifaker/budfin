@@ -47,6 +47,7 @@ async function makeToken(overrides: { sub?: number; email?: string; role?: strin
 		sub: overrides.sub ?? 1,
 		email: overrides.email ?? 'admin@budfin.app',
 		role: overrides.role ?? 'Admin',
+		sessionId: 'test-session-id',
 	});
 }
 

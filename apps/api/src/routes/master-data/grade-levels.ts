@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { Decimal } from 'decimal.js';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma.js';
 
@@ -11,16 +12,21 @@ const updateGradeLevelSchema = z
 		displayOrder: z.number().int().min(1),
 		version: z.number().int().positive(),
 	})
-	.refine((data) => data.plancherPct <= data.ciblePct && data.ciblePct <= data.plafondPct, {
-		message: 'Must satisfy: plancher <= cible <= plafond',
-	});
+	.refine(
+		(data) =>
+			new Decimal(data.plancherPct).lte(new Decimal(data.ciblePct)) &&
+			new Decimal(data.ciblePct).lte(new Decimal(data.plafondPct)),
+		{
+			message: 'Must satisfy: plancher <= cible <= plafond',
+		}
+	);
 
 function serializeGradeLevel(gl: Record<string, unknown>) {
 	return {
 		...gl,
-		plancherPct: String(gl.plancherPct),
-		ciblePct: String(gl.ciblePct),
-		plafondPct: String(gl.plafondPct),
+		plancherPct: new Decimal(String(gl.plancherPct)).toFixed(4),
+		ciblePct: new Decimal(String(gl.ciblePct)).toFixed(4),
+		plafondPct: new Decimal(String(gl.plafondPct)).toFixed(4),
 	};
 }
 
@@ -79,9 +85,15 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 					where: { id },
 					data: {
 						maxClassSize: body.maxClassSize,
-						plancherPct: body.plancherPct,
-						ciblePct: body.ciblePct,
-						plafondPct: body.plafondPct,
+						plancherPct: new Decimal(body.plancherPct)
+							.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+							.toFixed(4),
+						ciblePct: new Decimal(body.ciblePct)
+							.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+							.toFixed(4),
+						plafondPct: new Decimal(body.plafondPct)
+							.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+							.toFixed(4),
 						displayOrder: body.displayOrder,
 						version: { increment: 1 },
 					},

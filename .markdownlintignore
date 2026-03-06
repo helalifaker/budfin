@@ -2,8 +2,11 @@ node_modules/
 **/node_modules/
 archive/
 plugins/
+.agents/
+.claude/
 docs/edge-cases/
 docs/plans/
+docs/specs/
 docs/prd/
 docs/reviews/
 docs/ui-ux-spec/

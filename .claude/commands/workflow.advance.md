@@ -9,9 +9,9 @@ Read `.claude/workflow/WORKFLOW.md` to get the checklist and gate requirement fo
 
 ## Gate Check
 
-Count every checklist item for the current phase in WORKFLOW.md.
+Verify each criterion for the current phase (listed in WORKFLOW.md) is met by checking actual project state — run commands, read files, or query GitHub as needed. The checklist items in WORKFLOW.md are definitions, not live state.
 
-If any item is `[ ]` (unchecked):
+If any criterion is not yet satisfied:
 
 - List all unchecked items
 - Say: "Gate check FAILED. The following items must be completed before advancing:"

@@ -108,7 +108,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				await prisma.auditEntry.create({
 					data: {
 						userId: user.id,
-						operation: 'LOGIN_FAILURE',
+						operation: 'LOGIN_FAILED',
 						tableName: 'users',
 						ipAddress: ip,
 					},
@@ -190,12 +190,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 				sub: user.id,
 				email: user.email,
 				role: user.role,
+				sessionId: family.familyId,
 			});
 
 			// 7. Set refresh token cookie
 			reply.setCookie('refresh_token', family.token, {
 				httpOnly: true,
-				secure: process.env.NODE_ENV === 'production',
+				secure: true,
 				sameSite: 'strict',
 				path: '/api/v1/auth',
 				maxAge: 8 * 60 * 60,
@@ -289,12 +290,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 				sub: existing.user.id,
 				email: existing.user.email,
 				role: existing.user.role,
+				sessionId: existing.familyId,
 			});
 
 			// Set new refresh cookie
 			reply.setCookie('refresh_token', rotated.token, {
 				httpOnly: true,
-				secure: process.env.NODE_ENV === 'production',
+				secure: true,
 				sameSite: 'strict',
 				path: '/api/v1/auth',
 				maxAge: 8 * 60 * 60,
