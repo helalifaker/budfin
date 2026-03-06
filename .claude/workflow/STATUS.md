@@ -1,9 +1,9 @@
 # BudFin — Current Status
 
-**Phase**: 4 — SPECIFY
+**Phase**: 6 — IMPLEMENT
 **Current Epic**: Epic 1 — Enrollment & Capacity (#3)
-**Current Story**: none
-**Last updated**: 2026-03-06
+**Current Story**: Layer 0 — Story 1 (#80)
+**Last updated**: 2026-03-07
 
 ## Phase History
 
@@ -28,13 +28,15 @@
 | 5 — TDD RED (Epic 10) | ✅ Complete | 2026-03-06 |
 | 6 — IMPLEMENT (Epic 10) | ✅ Complete | 2026-03-06 |
 | 7 — REVIEW (Epic 10) | ✅ Complete | 2026-03-06 |
-| 4 — SPECIFY (Epic 1) | 🔄 In Progress | |
+| 4 — SPECIFY (Epic 1) | ✅ Complete | 2026-03-07 |
+| 5 — TDD RED (Epic 1) | ✅ Complete | 2026-03-07 |
+| 6 — IMPLEMENT (Epic 1) | 🔄 In Progress | |
 
 ## Feature Progress
 
 | Epic # | Feature | Phase | Status |
 | -------- | --------- | ------- | -------- |
-| 1 | Enrollment & Capacity | 4 | SPECIFY in progress (#3) |
+| 1 | Enrollment & Capacity | 6 | IMPLEMENT — 13 stories (#80-#92) |
 | 2 | Revenue | 2 | Epic Created (#6) |
 | 3 | Staffing (DHG) | 2 | Epic Created (#7) |
 | 4 | Staff Costs | 2 | Epic Created (#8) |

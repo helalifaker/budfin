@@ -279,24 +279,30 @@ export function VersionsPage() {
 					</SelectContent>
 				</Select>
 
-				<Select value={typeFilter} onValueChange={setTypeFilter}>
+				<Select
+					value={typeFilter || 'all'}
+					onValueChange={(v) => setTypeFilter(v === 'all' ? '' : v)}
+				>
 					<SelectTrigger className="w-[140px]" aria-label="Filter by type">
 						<SelectValue placeholder="All Types" />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="">All Types</SelectItem>
+						<SelectItem value="all">All Types</SelectItem>
 						<SelectItem value="Budget">Budget</SelectItem>
 						<SelectItem value="Forecast">Forecast</SelectItem>
 						<SelectItem value="Actual">Actual</SelectItem>
 					</SelectContent>
 				</Select>
 
-				<Select value={statusFilter} onValueChange={setStatusFilter}>
+				<Select
+					value={statusFilter || 'all'}
+					onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}
+				>
 					<SelectTrigger className="w-[150px]" aria-label="Filter by status">
 						<SelectValue placeholder="All Statuses" />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="">All Statuses</SelectItem>
+						<SelectItem value="all">All Statuses</SelectItem>
 						<SelectItem value="Draft">Draft</SelectItem>
 						<SelectItem value="Published">Published</SelectItem>
 						<SelectItem value="Locked">Locked</SelectItem>
