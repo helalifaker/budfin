@@ -61,7 +61,6 @@ function CompareDialogContent({ fiscalYear, onClose }: Omit<CompareDialogProps, 
 			version: primaryId,
 			compare: comparisonId,
 			period: 'FULL',
-			scenario: 'BASE',
 		});
 		navigate(`/planning?${params.toString()}`);
 		onClose();
