@@ -29,6 +29,6 @@ describe('CI/CD pipeline configuration', () => {
 
 	it('build job depends on all quality gates', () => {
 		const content = readFileSync(ciPath, 'utf-8');
-		expect(content).toContain('needs: [lint, typecheck, test, audit]');
+		expect(content).toContain('needs: [lint, lint-md, typecheck, test, audit, format]');
 	});
 });
