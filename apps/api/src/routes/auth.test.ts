@@ -124,7 +124,9 @@ beforeEach(() => {
 	mockRefreshTokenUpdateMany.mockResolvedValue({ count: 0 });
 	mockAuditEntryCreate.mockResolvedValue({});
 	mockExecuteRaw.mockResolvedValue(undefined);
-	mockTransaction.mockImplementation(async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx));
+	mockTransaction.mockImplementation(async (fn: (tx: typeof mockTx) => Promise<unknown>) =>
+		fn(mockTx)
+	);
 	mockSystemConfigFindUnique.mockResolvedValue(null);
 	mockRefreshTokenCount.mockResolvedValue(0);
 	mockRefreshTokenFindFirst.mockResolvedValue(null);

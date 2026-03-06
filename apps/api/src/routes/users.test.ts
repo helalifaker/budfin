@@ -86,7 +86,10 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	mockTransaction.mockImplementation(
 		async (
-			fn: (tx: { user: typeof prisma.user; auditEntry: typeof prisma.auditEntry }) => Promise<unknown>
+			fn: (tx: {
+				user: typeof prisma.user;
+				auditEntry: typeof prisma.auditEntry;
+			}) => Promise<unknown>
 		) =>
 			fn({
 				user: prisma.user,
@@ -272,8 +275,7 @@ describe('PATCH /api/v1/users/:id', () => {
 
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
 		const revokeAudit = auditCalls.find(
-			(c: [{ data: { operation: string } }]) =>
-				c[0].data.operation === 'SESSION_FORCE_REVOKED'
+			(c: [{ data: { operation: string } }]) => c[0].data.operation === 'SESSION_FORCE_REVOKED'
 		);
 		expect(revokeAudit).toBeDefined();
 	});

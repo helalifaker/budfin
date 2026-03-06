@@ -4,7 +4,12 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { verifyPassword } from '../services/password.js';
 import { signAccessToken, hashRefreshToken } from '../services/token.js';
-import { createFamily, rotateToken, detectReplay, revokeAllUserTokens } from '../services/token-family.js';
+import {
+	createFamily,
+	rotateToken,
+	detectReplay,
+	revokeAllUserTokens,
+} from '../services/token-family.js';
 
 const loginBodySchema = z.object({
 	email: z.string().email(),
