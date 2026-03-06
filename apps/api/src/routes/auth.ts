@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { verifyPassword } from '../services/password.js';
-import { signAccessToken, hashRefreshToken } from '../services/token.js';
+import { signAccessToken, hashRefreshToken, verifyAccessToken } from '../services/token.js';
 import {
 	createFamily,
 	rotateToken,
@@ -357,7 +357,6 @@ export async function authRoutes(fastify: FastifyInstance) {
 	// ── POST /logout ─────────────────────────────────────────────────────
 
 	fastify.post('/logout', {
-		preHandler: [fastify.authenticate],
 		handler: async (request, reply) => {
 			const rawToken = (request.cookies as Record<string, string>)?.refresh_token;
 			const ip = request.ip;
@@ -377,9 +376,21 @@ export async function authRoutes(fastify: FastifyInstance) {
 				}
 			}
 
+			// Best-effort: extract userId from access token if present and valid
+			let userId: number | null = null;
+			const authHeader = request.headers.authorization;
+			if (authHeader?.startsWith('Bearer ')) {
+				try {
+					const payload = await verifyAccessToken(authHeader.slice(7));
+					userId = payload.sub;
+				} catch {
+					// Token expired or invalid — still allow logout
+				}
+			}
+
 			await prisma.auditEntry.create({
 				data: {
-					userId: request.user.id,
+					userId,
 					operation: 'LOGOUT',
 					tableName: 'users',
 					ipAddress: ip,

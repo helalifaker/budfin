@@ -344,7 +344,7 @@ describe('POST /api/v1/auth/logout', () => {
 		expect(rc!.value).toBe('');
 	});
 
-	it('returns 401 without auth header', async () => {
+	it('returns 204 without auth header (no cookie)', async () => {
 		const app = await buildTestApp();
 
 		const res = await app.inject({
@@ -352,7 +352,38 @@ describe('POST /api/v1/auth/logout', () => {
 			url: '/api/v1/auth/logout',
 		});
 
-		expect(res.statusCode).toBe(401);
+		expect(res.statusCode).toBe(204);
+		expect(mockRefreshTokenFindFirst).not.toHaveBeenCalled();
+	});
+
+	it('returns 204 and clears cookie without access token', async () => {
+		const app = await buildTestApp();
+		mockRefreshTokenFindFirst.mockResolvedValue({
+			id: 20,
+			userId: 1,
+			familyId: 'fam-1',
+			isRevoked: false,
+		});
+
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/auth/logout',
+			cookies: { refresh_token: 'my-token' },
+		});
+
+		expect(res.statusCode).toBe(204);
+
+		// Token still revoked
+		expect(mockRefreshTokenUpdate).toHaveBeenCalledWith({
+			where: { id: 20 },
+			data: { isRevoked: true },
+		});
+
+		// Cookie cleared
+		const cookies = res.cookies as { name: string; value: string }[];
+		const rc = cookies.find((c) => c.name === 'refresh_token');
+		expect(rc).toBeTruthy();
+		expect(rc!.value).toBe('');
 	});
 
 	it('creates LOGOUT audit entry', async () => {
