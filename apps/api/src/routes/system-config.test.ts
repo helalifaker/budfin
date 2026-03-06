@@ -153,6 +153,65 @@ describe('PUT /api/v1/system-config', () => {
 		});
 	});
 
+	it('rejects non-numeric value for number-type config', async () => {
+		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue(mockConfigs[0]!);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: '/api/v1/system-config',
+			headers: authHeader(token),
+			payload: {
+				updates: [{ key: 'lockout_threshold', value: 'foo' }],
+			},
+		});
+		expect(res.statusCode).toBe(400);
+		expect(res.json().error).toContain('expected a number');
+	});
+
+	it('rejects non-boolean value for boolean-type config', async () => {
+		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue({
+			key: 'maintenance_mode',
+			value: 'false',
+			description: 'Maintenance mode toggle',
+			dataType: 'boolean',
+			updatedAt: new Date(),
+			updatedBy: null,
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: '/api/v1/system-config',
+			headers: authHeader(token),
+			payload: {
+				updates: [{ key: 'maintenance_mode', value: 'notabool' }],
+			},
+		});
+		expect(res.statusCode).toBe(400);
+		expect(res.json().error).toContain('expected "true" or "false"');
+	});
+
+	it('accepts valid numeric string for number-type config', async () => {
+		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue(mockConfigs[0]!);
+		vi.mocked(prisma.systemConfig.update).mockResolvedValue({
+			...mockConfigs[0]!,
+			value: '10',
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: '/api/v1/system-config',
+			headers: authHeader(token),
+			payload: {
+				updates: [{ key: 'lockout_threshold', value: '10' }],
+			},
+		});
+		expect(res.statusCode).toBe(200);
+		expect(res.json().updated).toBe(1);
+	});
+
 	it('returns updated count (skips unknown keys)', async () => {
 		vi.mocked(prisma.systemConfig.findUnique)
 			.mockResolvedValueOnce(mockConfigs[0]!)

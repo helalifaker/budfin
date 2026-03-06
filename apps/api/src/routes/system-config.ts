@@ -34,7 +34,7 @@ export async function systemConfigRoutes(app: FastifyInstance) {
 	app.put('/', {
 		schema: { body: updateBodySchema },
 		preHandler: [app.authenticate, app.requireRole('Admin')],
-		handler: async (request) => {
+		handler: async (request, reply) => {
 			const { updates } = request.body as z.infer<typeof updateBodySchema>;
 			let updated = 0;
 
@@ -43,6 +43,22 @@ export async function systemConfigRoutes(app: FastifyInstance) {
 					where: { key },
 				});
 				if (!existing) continue;
+
+				// Validate value against declared dataType
+				if (existing.dataType === 'number') {
+					const num = Number(value);
+					if (Number.isNaN(num)) {
+						return reply.status(400).send({
+							error: `Invalid value for "${key}": expected a number`,
+						});
+					}
+				} else if (existing.dataType === 'boolean') {
+					if (!['true', 'false'].includes(value.toLowerCase())) {
+						return reply.status(400).send({
+							error: `Invalid value for "${key}": expected "true" or "false"`,
+						});
+					}
+				}
 
 				const oldValue = existing.value;
 				await prisma.systemConfig.update({
