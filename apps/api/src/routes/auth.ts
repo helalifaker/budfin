@@ -1,17 +1,24 @@
+import type { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { verifyPassword } from '../services/password.js';
 import { signAccessToken, hashRefreshToken } from '../services/token.js';
-import { createFamily, rotateToken, detectReplay } from '../services/token-family.js';
+import { createFamily, rotateToken, detectReplay, revokeAllUserTokens } from '../services/token-family.js';
 
 const loginBodySchema = z.object({
 	email: z.string().email(),
 	password: z.string(),
 });
 
-async function getConfigValue(key: string, defaultValue: number): Promise<number> {
-	const config = await prisma.systemConfig.findUnique({
+type ConfigClient = Pick<typeof prisma, 'systemConfig'>;
+
+async function getConfigValue(
+	key: string,
+	defaultValue: number,
+	client: ConfigClient = prisma
+): Promise<number> {
+	const config = await client.systemConfig.findUnique({
 		where: { key },
 	});
 	return config ? Number(config.value) : defaultValue;
@@ -113,88 +120,85 @@ export async function authRoutes(fastify: FastifyInstance) {
 				});
 			}
 
-			// 5. Successful login — use advisory lock for concurrency
-			await prisma.$executeRaw`SELECT pg_advisory_xact_lock(${user.id})`;
+			const family = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+				// Keep the lock and all session mutations in the same transaction.
+				await tx.$executeRaw`SELECT pg_advisory_xact_lock(${user.id})`;
 
-			// 6. Session concurrency
-			const maxSessions = await getConfigValue('max_sessions_per_user', 2);
-
-			const activeSessions = await prisma.refreshToken.count({
-				where: {
+				const now = new Date();
+				const activeSessionWhere = {
 					userId: user.id,
 					isRevoked: false,
-					expiresAt: { gt: new Date() },
-				},
-			});
-
-			if (activeSessions >= maxSessions) {
-				const oldest = await prisma.refreshToken.findFirst({
-					where: {
-						userId: user.id,
-						isRevoked: false,
-						expiresAt: { gt: new Date() },
-					},
-					orderBy: { createdAt: 'asc' },
+					expiresAt: { gt: now },
+				};
+				const maxSessions = await getConfigValue('max_sessions_per_user', 2, tx);
+				const activeSessions = await tx.refreshToken.count({
+					where: activeSessionWhere,
 				});
 
-				if (oldest) {
-					await prisma.refreshToken.update({
-						where: { id: oldest.id },
-						data: { isRevoked: true },
+				if (activeSessions >= maxSessions) {
+					const oldest = await tx.refreshToken.findFirst({
+						where: activeSessionWhere,
+						orderBy: { createdAt: 'asc' },
 					});
 
-					await prisma.auditEntry.create({
-						data: {
-							userId: user.id,
-							operation: 'SESSION_FORCE_REVOKED',
-							tableName: 'refresh_tokens',
-							ipAddress: ip,
-							newValues: {
-								familyId: oldest.familyId,
-								reason: 'max_sessions_exceeded',
+					if (oldest) {
+						await tx.refreshToken.update({
+							where: { id: oldest.id },
+							data: { isRevoked: true },
+						});
+
+						await tx.auditEntry.create({
+							data: {
+								userId: user.id,
+								operation: 'SESSION_FORCE_REVOKED',
+								tableName: 'refresh_tokens',
+								ipAddress: ip,
+								newValues: {
+									familyId: oldest.familyId,
+									reason: 'max_sessions_exceeded',
+								},
 							},
-						},
-					});
+						});
+					}
 				}
-			}
 
-			// 7. Reset failed attempts, update last login
-			await prisma.user.update({
-				where: { id: user.id },
-				data: {
-					failedAttempts: 0,
-					lockedUntil: null,
-					lastLoginAt: new Date(),
-				},
+				await tx.user.update({
+					where: { id: user.id },
+					data: {
+						failedAttempts: 0,
+						lockedUntil: null,
+						lastLoginAt: now,
+					},
+				});
+
+				const createdFamily = await createFamily(user.id, ip, tx);
+
+				await tx.auditEntry.create({
+					data: {
+						userId: user.id,
+						operation: 'LOGIN_SUCCESS',
+						tableName: 'users',
+						ipAddress: ip,
+					},
+				});
+
+				return createdFamily;
 			});
 
-			// 8. Create token family
-			const family = await createFamily(user.id, ip);
-
-			// 9. Sign access token
+			// 6. Sign access token
 			const accessToken = await signAccessToken({
 				sub: user.id,
 				email: user.email,
 				role: user.role,
 			});
 
-			// 10. Set refresh token cookie
+			// 7. Set refresh token cookie
 			reply.setCookie('refresh_token', family.token, {
 				httpOnly: true,
 				secure: process.env.NODE_ENV === 'production',
 				sameSite: 'strict',
 				path: '/api/v1/auth',
 				maxAge: 8 * 60 * 60,
-			});
-
-			// 11. Audit
-			await prisma.auditEntry.create({
-				data: {
-					userId: user.id,
-					operation: 'LOGIN_SUCCESS',
-					tableName: 'users',
-					ipAddress: ip,
-				},
 			});
 
 			return {
@@ -228,7 +232,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			// Look up the token record
 			const existing = await prisma.refreshToken.findFirst({
 				where: { tokenHash },
-				include: { user: { select: { id: true, email: true, role: true } } },
+				include: { user: { select: { id: true, email: true, role: true, isActive: true } } },
 			});
 
 			if (!existing) {
@@ -255,6 +259,25 @@ export async function authRoutes(fastify: FastifyInstance) {
 				return reply.status(401).send({
 					error: 'TOKEN_EXPIRED',
 					message: 'Refresh token expired',
+				});
+			}
+
+			if (!existing.user.isActive) {
+				await revokeAllUserTokens(existing.userId, ip);
+				await prisma.auditEntry.create({
+					data: {
+						userId: existing.userId,
+						operation: 'REFRESH_REJECTED_INACTIVE',
+						tableName: 'refresh_tokens',
+						ipAddress: ip,
+					},
+				});
+				reply.clearCookie('refresh_token', {
+					path: '/api/v1/auth',
+				});
+				return reply.status(401).send({
+					error: 'ACCOUNT_DISABLED',
+					message: 'Account is disabled',
 				});
 			}
 

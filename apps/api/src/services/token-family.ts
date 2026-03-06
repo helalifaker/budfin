@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js';
 import { generateRefreshToken, hashRefreshToken } from './token.js';
 
 type TxClient = Prisma.TransactionClient;
+type TokenFamilyClient = Pick<TxClient, 'refreshToken' | 'auditEntry'>;
 
 const REFRESH_TOKEN_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 
@@ -26,14 +27,15 @@ export interface RotateTokenResult {
  */
 export async function createFamily(
 	userId: number,
-	ipAddress?: string
+	ipAddress?: string,
+	client: TokenFamilyClient = prisma
 ): Promise<CreateFamilyResult> {
 	const familyId = randomUUID();
 	const token = generateRefreshToken();
 	const tokenHash = hashRefreshToken(token);
 	const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 
-	await prisma.refreshToken.create({
+	await client.refreshToken.create({
 		data: {
 			userId,
 			tokenHash,
@@ -42,7 +44,7 @@ export async function createFamily(
 		},
 	});
 
-	await prisma.auditEntry.create({
+	await client.auditEntry.create({
 		data: {
 			userId,
 			operation: 'TOKEN_FAMILY_CREATED',
@@ -150,13 +152,17 @@ export async function detectReplay(
  * Revoke all active refresh tokens for a user.
  * Returns the count of revoked tokens.
  */
-export async function revokeAllUserTokens(userId: number, ipAddress?: string): Promise<number> {
-	const result = await prisma.refreshToken.updateMany({
+export async function revokeAllUserTokens(
+	userId: number,
+	ipAddress?: string,
+	client: TokenFamilyClient = prisma
+): Promise<number> {
+	const result = await client.refreshToken.updateMany({
 		where: { userId, isRevoked: false },
 		data: { isRevoked: true },
 	});
 
-	await prisma.auditEntry.create({
+	await client.auditEntry.create({
 		data: {
 			userId,
 			operation: 'ALL_SESSIONS_REVOKED',

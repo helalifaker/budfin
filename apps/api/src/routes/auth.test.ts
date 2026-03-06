@@ -20,6 +20,27 @@ const mockRefreshTokenUpdate = vi.fn();
 const mockRefreshTokenUpdateMany = vi.fn();
 const mockAuditEntryCreate = vi.fn();
 const mockExecuteRaw = vi.fn();
+const mockTransaction = vi.fn();
+
+const mockTx = {
+	user: {
+		update: (...args: unknown[]) => mockUserUpdate(...args),
+	},
+	systemConfig: {
+		findUnique: (...args: unknown[]) => mockSystemConfigFindUnique(...args),
+	},
+	refreshToken: {
+		count: (...args: unknown[]) => mockRefreshTokenCount(...args),
+		create: (...args: unknown[]) => mockRefreshTokenCreate(...args),
+		findFirst: (...args: unknown[]) => mockRefreshTokenFindFirst(...args),
+		update: (...args: unknown[]) => mockRefreshTokenUpdate(...args),
+		updateMany: (...args: unknown[]) => mockRefreshTokenUpdateMany(...args),
+	},
+	auditEntry: {
+		create: (...args: unknown[]) => mockAuditEntryCreate(...args),
+	},
+	$executeRaw: (...args: unknown[]) => mockExecuteRaw(...args),
+};
 
 vi.mock('../lib/prisma.js', () => ({
 	prisma: {
@@ -41,6 +62,7 @@ vi.mock('../lib/prisma.js', () => ({
 			create: (...args: unknown[]) => mockAuditEntryCreate(...args),
 		},
 		$executeRaw: (...args: unknown[]) => mockExecuteRaw(...args),
+		$transaction: (...args: unknown[]) => mockTransaction(...args),
 	},
 }));
 
@@ -56,6 +78,7 @@ vi.mock('../services/token-family.js', () => ({
 	createFamily: (...args: unknown[]) => mockCreateFamily(...args),
 	rotateToken: vi.fn(),
 	detectReplay: vi.fn(),
+	revokeAllUserTokens: vi.fn(),
 }));
 
 // ── Test setup ───────────────────────────────────────────────────────────
@@ -101,6 +124,7 @@ beforeEach(() => {
 	mockRefreshTokenUpdateMany.mockResolvedValue({ count: 0 });
 	mockAuditEntryCreate.mockResolvedValue({});
 	mockExecuteRaw.mockResolvedValue(undefined);
+	mockTransaction.mockImplementation(async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx));
 	mockSystemConfigFindUnique.mockResolvedValue(null);
 	mockRefreshTokenCount.mockResolvedValue(0);
 	mockRefreshTokenFindFirst.mockResolvedValue(null);
@@ -280,10 +304,13 @@ describe('POST /api/v1/auth/login', () => {
 		});
 
 		expect(res.statusCode).toBe(200);
+		expect(mockTransaction).toHaveBeenCalledOnce();
+		expect(mockExecuteRaw).toHaveBeenCalledOnce();
 		expect(mockRefreshTokenUpdate).toHaveBeenCalledWith({
 			where: { id: 99 },
 			data: { isRevoked: true },
 		});
+		expect(mockCreateFamily).toHaveBeenCalledWith(1, expect.any(String), mockTx);
 
 		const revokeAudit = mockAuditEntryCreate.mock.calls.find(
 			(c: unknown[]) =>

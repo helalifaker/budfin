@@ -8,6 +8,8 @@ import { auth } from '../plugins/auth.js';
 import { userRoutes } from './users.js';
 import { contextRoutes } from './context.js';
 
+const mockTransaction = vi.fn();
+
 // Mock prisma
 vi.mock('../lib/prisma.js', () => ({
 	prisma: {
@@ -21,6 +23,7 @@ vi.mock('../lib/prisma.js', () => ({
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
+		$transaction: (...args: unknown[]) => mockTransaction(...args),
 	},
 }));
 
@@ -80,6 +83,15 @@ beforeAll(async () => {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	mockTransaction.mockImplementation(
+		async (
+			fn: (tx: { user: typeof prisma.user; auditEntry: typeof prisma.auditEntry }) => Promise<unknown>
+		) =>
+			fn({
+				user: prisma.user,
+				auditEntry: prisma.auditEntry,
+			})
+	);
 });
 
 describe('GET /api/v1/users', () => {
@@ -174,7 +186,9 @@ describe('PATCH /api/v1/users/:id', () => {
 		expect(res.json().role).toBe('BudgetOwner');
 		// USER_UPDATED audit entry
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const updateAudit = auditCalls.find((c) => c[0].data.operation === 'USER_UPDATED');
+		const updateAudit = auditCalls.find(
+			(c: [{ data: { operation: string } }]) => c[0].data.operation === 'USER_UPDATED'
+		);
 		expect(updateAudit).toBeDefined();
 	});
 
@@ -235,7 +249,9 @@ describe('PATCH /api/v1/users/:id', () => {
 		expect(res.json().failed_attempts).toBe(0);
 
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const unlockAudit = auditCalls.find((c) => c[0].data.operation === 'ACCOUNT_UNLOCKED');
+		const unlockAudit = auditCalls.find(
+			(c: [{ data: { operation: string } }]) => c[0].data.operation === 'ACCOUNT_UNLOCKED'
+		);
 		expect(unlockAudit).toBeDefined();
 	});
 
@@ -251,11 +267,39 @@ describe('PATCH /api/v1/users/:id', () => {
 			payload: { force_session_revoke: true },
 		});
 		expect(res.statusCode).toBe(200);
-		expect(revokeAllUserTokens).toHaveBeenCalledWith(2, expect.any(String));
+		expect(revokeAllUserTokens).toHaveBeenCalledWith(2, expect.any(String), expect.any(Object));
 
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const revokeAudit = auditCalls.find((c) => c[0].data.operation === 'SESSION_FORCE_REVOKED');
+		const revokeAudit = auditCalls.find(
+			(c: [{ data: { operation: string } }]) =>
+				c[0].data.operation === 'SESSION_FORCE_REVOKED'
+		);
 		expect(revokeAudit).toBeDefined();
+	});
+
+	it('deactivation revokes active sessions automatically', async () => {
+		vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+		vi.mocked(prisma.user.update).mockResolvedValue({
+			...mockUser,
+			isActive: false,
+		});
+
+		const token = await makeToken({ sub: 1, role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/users/2',
+			headers: authHeader(token),
+			payload: { is_active: false },
+		});
+		expect(res.statusCode).toBe(200);
+		expect(res.json().is_active).toBe(false);
+		expect(revokeAllUserTokens).toHaveBeenCalledWith(2, expect.any(String), expect.any(Object));
+
+		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
+		const updateAudit = auditCalls.find(
+			(c: [{ data: { operation: string } }]) => c[0].data.operation === 'USER_UPDATED'
+		);
+		expect(updateAudit).toBeDefined();
 	});
 });
 
@@ -336,7 +380,9 @@ describe('PATCH /api/v1/users/:id — force_password_reset', () => {
 		expect(res.statusCode).toBe(200);
 
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const updateAudit = auditCalls.find((c) => c[0].data.operation === 'USER_UPDATED');
+		const updateAudit = auditCalls.find(
+			(c: [{ data: { operation: string } }]) => c[0].data.operation === 'USER_UPDATED'
+		);
 		expect(updateAudit).toBeDefined();
 		expect(updateAudit![0].data.newValues).toMatchObject({
 			forcePasswordReset: true,

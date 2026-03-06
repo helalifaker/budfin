@@ -48,7 +48,10 @@ Family tracking is stored in the `refresh_tokens` table (see Section 5 — Data 
 
 - Maximum **2** concurrent active sessions per user (configurable via `system_config` table, key `max_sessions_per_user`).
 - A third login attempt automatically revokes the oldest active session (by `created_at`).
+- Login concurrency is serialized with `pg_advisory_xact_lock(user_id)`, and the lock is held for the same transaction that counts sessions, revokes the oldest session, updates `last_login_at`, creates the new token family, and writes the audit trail.
 - Admin can force-revoke all sessions for any user via `PATCH /api/v1/users/:id` with body `{ "force_session_revoke": true }`.
+- Deactivating a user via `PATCH /api/v1/users/:id` with `{ "is_active": false }` automatically revokes that user's active refresh-token sessions in the same transaction as the user update.
+- Refresh attempts for inactive users are rejected with `ACCOUNT_DISABLED`, clear the refresh cookie, revoke any remaining active refresh tokens, and log `REFRESH_REJECTED_INACTIVE`.
 - Session revocation logged to `audit_entries` with operation `SESSION_FORCE_REVOKED`.
 
 ### 7.2 Account Lockout Policy
@@ -62,7 +65,7 @@ Family tracking is stored in the `refresh_tokens` table (see Section 5 — Data 
 
 **Lockout flow:**
 
-1. Each failed login increments `users.failed_attempts` and logs to `audit_entries` with operation `LOGIN_FAILED`.
+1. Each failed login increments `users.failed_attempts` and logs to `audit_entries` with operation `LOGIN_FAILURE`.
 2. When `failed_attempts` reaches 5, the server sets `locked_until = NOW() + INTERVAL '30 minutes'`.
 3. Lock event logged to `audit_entries` with operation `ACCOUNT_LOCKED`.
 4. During lockout, any login attempt for that email returns HTTP 401 with body:
