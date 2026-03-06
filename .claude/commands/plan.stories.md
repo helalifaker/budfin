@@ -37,6 +37,19 @@ No spec found at docs/specs/epic-$EPIC_NUMBER/. Run /plan:spec $EPIC_NUMBER firs
 ```
 Then stop.
 
+## Step 2.5: Extract UI/UX Context from Spec
+
+Read the spec's `## UI/UX Specification` section. Extract:
+
+1. **Primary UI/UX spec path**: from the `> Source:` line (e.g., `docs/ui-ux-spec/08-master-data.md`)
+2. **Shell type**: PlanningShell or ManagementShell (from `### Shell & Layout`)
+3. **Key Components table**: component name, type, and source reference (from `### Key Components`)
+
+If the UI/UX section says "N/A — backend-only epic", set UI/UX context to null and use 'N/A'
+for all UI/UX fields in the story template below.
+
+Store these values for use in Step 4.
+
 ## Step 3: Derive Story Breakdown (if not --single)
 
 Use the Agent tool to launch `workflow-orchestrator` with the spec file and this instruction:
@@ -46,6 +59,7 @@ Analyze the feature spec at [spec-path]. Return:
 1. A numbered list of stories in dependency order
 2. For each story: title, dependency (which story it depends on, if any), and the AC numbers from the spec it covers
 3. Flag any AC that does not map to a story (these need to be assigned)
+4. For each story: which UI/UX components (from the spec's Key Components table) it involves
 ```
 
 Wait for orchestrator to return the story breakdown before proceeding.
@@ -88,6 +102,13 @@ gh issue create \
 ## Notes
 
 [Any implementation constraints or technical notes from the spec relevant to this story]
+
+## UI/UX Context
+
+**Primary UI/UX Spec**: [path from Step 2.5, or 'N/A']
+**Shell Type**: [PlanningShell / ManagementShell / N/A]
+**Key Components**: [comma-separated list of component names relevant to THIS story, or 'N/A']
+**Interaction Patterns**: [relevant patterns from spec for THIS story, or 'N/A']
 "
 ```
 

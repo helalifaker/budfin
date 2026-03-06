@@ -58,6 +58,21 @@ Pay special attention to:
 - Are auth failure cases tested (missing token, wrong role, wrong tenant)?
 - Are 4xx responses tested with the correct status codes?
 
+### UI/UX Interaction Verification (Frontend Stories Only)
+
+If the story involves frontend components:
+
+1. Read the feature spec's `## UI/UX Specification` section — note user flows and interaction patterns
+2. Read the primary UI/UX spec file for component-specific behaviors
+
+Verify these interaction tests exist:
+- **User Flows**: For each flow in the spec, is there a test exercising it?
+- **Keyboard Navigation**: Tab, Enter/Space, Escape, Arrow keys tested where applicable
+- **Cell States** (if data grids): editable/read-only/focus states tested
+- **Accessibility**: ARIA roles and `aria-live` announcements tested
+
+Flag any applicable interaction pattern with no test as **Missing UI/UX Coverage**.
+
 ## Output Format
 
 ```
@@ -76,12 +91,18 @@ Pay special attention to:
 ### Regression Risk
 - [Feature/module] — [risk level: LOW/MEDIUM/HIGH] — [reason]
 
+### UI/UX Interaction Coverage
+| Pattern | Spec Reference | Test Exists | Notes |
+|---------|---------------|------------|-------|
+| [flow / keyboard / cell state] | [spec section] | YES/NO | |
+
 ### Missing Coverage
 1. [Specific gap] — [Suggested test]
 
 ### Summary
 - AC coverage: N/N criteria covered
 - Edge cases: N/N applicable cases covered
+- UI/UX interaction coverage: N/N applicable patterns covered (or 'N/A — backend story')
 - Regression risk: LOW / MEDIUM / HIGH
 
 Status: APPROVED / CHANGES REQUESTED

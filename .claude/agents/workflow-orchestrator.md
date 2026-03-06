@@ -26,6 +26,14 @@ When given a feature spec at `docs/specs/epic-N/<feature-name>.md`:
 - [ ] Every API endpoint has: method, path, request schema, response schema, auth requirement
 - [ ] Open Questions section is empty — every question has an answer
 - [ ] Stories are ordered with no unresolvable dependency cycles
+- [ ] UI/UX section is populated from the actual UI/UX spec file (not fabricated):
+  - Shell type explicitly stated (PlanningShell or ManagementShell)
+  - Key Components table has at least one entry with type and source reference
+  - User Flows section describes at least one complete flow
+  - Accessibility Requirements references specific ARIA roles
+  - OR section says "N/A — backend-only epic" for epics 12-13
+- [ ] Shell type is consistent with `00-global-framework.md` Section 2.1 module categorization
+- [ ] Component names in Key Components table match names from the primary UI/UX spec file
 
 ### Story Breakdown
 
@@ -50,6 +58,7 @@ After spec is approved, help break the epic into GitHub Stories:
 | Data model | PASS/FAIL | [missing fields if FAIL] |
 | API contract | PASS/FAIL | [missing endpoints if FAIL] |
 | Open questions | PASS/FAIL | [unanswered questions if FAIL] |
+| UI/UX spec       | PASS/FAIL | [missing sections, wrong shell, fabricated content if FAIL] |
 
 ### Required Changes
 [Numbered list of specific changes needed. Empty if all PASS.]

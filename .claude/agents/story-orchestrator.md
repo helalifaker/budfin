@@ -47,6 +47,16 @@ Before spawning any agent:
    - React component involved → spawn `frontend-implementer`
    - Financial calculation involved → spawn `calculation-implementer`
    - Multiple types → spawn multiple implementers
+7. Extract UI/UX context from the story issue body's `## UI/UX Context` section:
+   - Primary UI/UX Spec path
+   - Shell type (PlanningShell / ManagementShell)
+   - Key components list
+   - If the story body lacks this section, read the feature spec's `## UI/UX Specification`
+     section and derive applicable components from the story's AC.
+8. If the story involves frontend work (frontend-implementer will be spawned):
+   - Read the primary UI/UX spec file at the extracted path
+   - Read `docs/ui-ux-spec/00-global-framework.md` (design tokens, shell structure)
+   - If epic uses planning grids (epics 1-6, 9), also read `docs/ui-ux-spec/10-input-management.md`
 
 ---
 
@@ -57,7 +67,14 @@ Before spawning any agent:
    - `api-implementer` for Fastify/Prisma/backend work
    - `frontend-implementer` for React/Vite/Tailwind work
    - `calculation-implementer` for financial engine work
-3. Do NOT spawn reviewer/QA/documentor yet — they come after GREEN.
+3. When spawning `frontend-implementer`, include in the initial task:
+   - Primary UI/UX spec file path
+   - Shell type
+   - Key components this story must implement
+   - Relevant interaction patterns from the feature spec's UI/UX section
+   - Cross-cutting files to read: `00-global-framework.md`, `00b-workspace-philosophy.md`,
+     and `10-input-management.md` (if applicable)
+4. Do NOT spawn reviewer/QA/documentor yet — they come after GREEN.
 
 ---
 
@@ -111,6 +128,10 @@ Wait for implementer to report all tests GREEN before proceeding.
 
 **Phase 6 gate**: `pnpm test` all GREEN, `pnpm typecheck` clean, `pnpm lint` clean.
 
+- If frontend story: components match the Key Components list from UI/UX context
+- If frontend story: shell type matches (PlanningShell vs ManagementShell)
+- If frontend story: design tokens from `00-global-framework.md` used (not hardcoded colors)
+
 ---
 
 ## Step 4.5 — Branch + PR Gate (MANDATORY)
@@ -150,6 +171,8 @@ Provide each agent with:
 - The feature spec path
 - The list of files changed by the implementer
 - The PR diff (create draft PR first: `gh pr create --draft`)
+- The UI/UX spec file path (for workflow-reviewer to verify visual conformance)
+- The shell type and key components list (for workflow-qa to verify interaction patterns)
 
 Wait for ALL THREE agents to return results.
 

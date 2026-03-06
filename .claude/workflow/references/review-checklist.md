@@ -56,6 +56,22 @@
 - **Blocker** — HTTP status codes are semantically correct (201 for create, 409 for conflict, etc.)
 - **Warning** — Pagination implemented for any list endpoint that could return > 50 rows
 
+## UI/UX Conformance (Frontend Stories Only)
+
+> Skip this section entirely if the story has no frontend files in `apps/web/src/`.
+
+- **Blocker** — Shell type matches UI/UX spec: PlanningShell modules render inside PlanningShell, ManagementShell modules inside ManagementShell
+- **Blocker** — All components listed in the feature spec's Key Components table are implemented
+- **Blocker** — ARIA roles match the feature spec's Accessibility Requirements subsection exactly
+- **Warning** — Design tokens from `00-global-framework.md` used for colors — no hardcoded hex values
+- **Warning** — Typography tokens applied correctly (`--text-xs` for grid cells, `--font-mono` for monetary values)
+- **Warning** — Editable cells use `--cell-editable-bg` background, read-only cells use `--cell-readonly-bg`
+- **Warning** — Keyboard navigation implemented per `00-global-framework.md` Section 8
+- **Warning** — Interaction patterns match spec (inline editing, panel behavior, form validation flow)
+- **Warning** — Monetary display: 2 decimals, thousands separator, right-aligned, `--font-mono`
+- **Nit** — Component names match UI/UX spec exactly
+- **Nit** — Layout structure matches the description in the feature spec
+
 ## Tests
 
 - **Blocker** — Unit tests cover every acceptance criterion

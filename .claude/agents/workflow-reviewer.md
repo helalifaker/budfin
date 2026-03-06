@@ -16,6 +16,8 @@ Run in parallel with `workflow-qa` and `workflow-documentor`. Do not wait for th
 
 1. Read the PR diff — examine every changed file
 2. Read `.claude/workflow/references/review-checklist.md` — apply every criterion
+2.5. If the PR includes frontend files: read the primary UI/UX spec file referenced in the story
+     issue body and `docs/ui-ux-spec/00-global-framework.md` — apply UI/UX conformance criteria
 3. Read the feature spec for this story — verify implementation matches the contract
 4. Output a structured review report using the sign-off template
 
@@ -51,6 +53,28 @@ Run in parallel with `workflow-qa` and `workflow-documentor`. Do not wait for th
 - Migrations are reversible or explicitly justified
 - No N+1 patterns
 - Large-table queries have appropriate indexes
+
+### UI/UX Conformance (Frontend Stories Only)
+
+If the story involves frontend files (`apps/web/src/`):
+
+1. Read the primary UI/UX spec file referenced in the story issue's `## UI/UX Context` section
+2. Read `docs/ui-ux-spec/00-global-framework.md` for design tokens and shell structure
+3. Read the feature spec's `## UI/UX Specification` section
+
+Verify:
+- **Blocker** — Shell type matches: PlanningShell modules inside PlanningShell, ManagementShell inside ManagementShell
+- **Blocker** — Each component in the spec's Key Components table is implemented
+- **Blocker** — ARIA roles match the spec's Accessibility Requirements exactly
+- **Warning** — Design tokens used instead of hardcoded colors
+- **Warning** — Typography tokens applied correctly
+- **Warning** — Editable/read-only cell backgrounds match spec
+- **Warning** — Keyboard navigation matches `00-global-framework.md` Section 8
+- **Warning** — Interaction patterns match spec (inline editing, panel behavior, form validation)
+- **Nit** — Component names match UI/UX spec exactly
+- **Nit** — Layout structure matches spec description
+
+If the story has no frontend files, skip this section entirely.
 
 ## Output Format
 

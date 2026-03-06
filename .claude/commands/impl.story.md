@@ -45,7 +45,15 @@ Read all context before spawning any agent:
    - "Epic N: Feature Name" → `docs/specs/epic-N/<feature-slug>.md`
    - Read the spec file entirely
 
-5. Determine story type from acceptance criteria:
+5. Extract UI/UX context from the story issue body:
+   - `**Primary UI/UX Spec**:` line -> the UI/UX spec file path
+   - `**Shell Type**:` line -> PlanningShell or ManagementShell
+   - `**Key Components**:` line -> list of component names for this story
+   - If any say 'N/A', this is a backend-only story — skip UI/UX context passing
+   - If the story body lacks a `## UI/UX Context` section, fall back to reading the
+     feature spec's `## UI/UX Specification` section directly
+
+6. Determine story type from acceptance criteria:
    - API endpoint (GET, POST, PUT, DELETE) → `api-implementer`
    - React component, page, form, or table → `frontend-implementer`
    - Revenue, DHG, Staff Cost, P&L, YEARFRAC calculation → `calculation-implementer`
@@ -73,6 +81,9 @@ Feature spec path: docs/specs/epic-N/<slug>.md
 Story type: [api|frontend|calculation]
 Story title: [title]
 Acceptance criteria: [list all AC from the issue]
+UI/UX spec file: [path or 'N/A — backend only']
+Shell type: [PlanningShell / ManagementShell / N/A]
+Key components for this story: [list or 'N/A']
 
 Your task:
 1. Set up team with the correct implementer type

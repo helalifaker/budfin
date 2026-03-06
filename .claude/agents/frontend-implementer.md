@@ -24,6 +24,14 @@ React components following all BudFin conventions. Never write implementation co
 2. Read `docs/tdd/09_decisions_log.md` for relevant ADRs (ADR-002, ADR-004, ADR-016).
 3. Read the story issue: `gh issue view [number]` — understand all AC.
 4. Check existing components in `apps/web/src/components/ui/` before creating new ones.
+5. Read the primary UI/UX spec file for this epic (path provided by story-orchestrator).
+   Extract: layout structure, component specs, interaction patterns, accessibility requirements.
+6. Read `docs/ui-ux-spec/00-global-framework.md` — extract design tokens (colors, typography,
+   spacing), shell structure (Section 2), component patterns (Section 4), keyboard shortcuts (Section 8).
+7. Read `docs/ui-ux-spec/00b-workspace-philosophy.md` — understand the two-shell architecture
+   and progressive disclosure levels.
+8. If this story involves planning grids (epics 1-6, 9), read `docs/ui-ux-spec/10-input-management.md`
+   — extract cell highlighting states, input control patterns, guidance note behavior.
 
 ---
 
@@ -198,6 +206,38 @@ const EnrollmentPage = lazy(() => import('./pages/enrollment/EnrollmentPage'))
 
 ---
 
+## UI/UX Conformance Checklist
+
+Before marking implementation complete, verify every item:
+
+### Shell & Layout
+- [ ] Component renders inside the correct shell (PlanningShell or ManagementShell)
+- [ ] Layout matches the structure from the UI/UX spec
+- [ ] Route paths match the routes defined in the UI/UX spec
+
+### Design Tokens
+- [ ] Colors use CSS custom properties from `00-global-framework.md` — no hardcoded hex values
+- [ ] Typography uses the correct token (`--text-xs` for grid cells, `--text-sm` for labels, etc.)
+- [ ] Spacing follows the 4px grid from `00-global-framework.md` Section 1.3
+- [ ] Monetary values use `--font-mono` with right-alignment and 2 decimal places
+
+### Components
+- [ ] Each component from the Key Components table is implemented with the correct type
+- [ ] Editable cells use `--cell-editable-bg` (yellow-50) background
+- [ ] Read-only cells use `--cell-readonly-bg` (slate-50) background
+
+### Interaction Patterns
+- [ ] Inline editing follows the spec pattern (click/Enter to edit, Tab/Enter to confirm, Escape to cancel)
+- [ ] Keyboard navigation matches `00-global-framework.md` Section 8 shortcuts
+- [ ] Side panel behavior matches the shell type (overlay for ManagementShell, docked for PlanningShell)
+
+### Accessibility
+- [ ] ARIA roles match the spec's Accessibility Requirements subsection
+- [ ] Focus management follows the patterns defined in the UI/UX spec
+- [ ] Screen reader announcements use `aria-live` as specified
+
+---
+
 ## When Done
 
 Mark tasks completed via TaskUpdate. Send message to story-orchestrator with:
@@ -206,3 +246,5 @@ Mark tasks completed via TaskUpdate. Send message to story-orchestrator with:
 - Any ADR decisions made (and why)
 - Accessibility measures applied
 - Any implementation gaps or questions
+- UI/UX conformance: [checklist results — any deviations with justification]
+- Shell type used: [PlanningShell / ManagementShell]

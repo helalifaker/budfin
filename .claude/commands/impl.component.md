@@ -38,6 +38,29 @@ If a spec exists for the component's feature, read it to understand:
 - What interactions are required
 - Relevant acceptance criteria
 
+## Step 2.5 — Read UI/UX Spec
+
+Determine the epic from the feature spec header (`> Epic: #N`). Look up the primary UI/UX spec:
+
+| Epic | Primary UI/UX Spec |
+|------|-------------------|
+| 1 | docs/ui-ux-spec/03-enrollment-capacity.md |
+| 2 | docs/ui-ux-spec/04-revenue.md |
+| 3-4 | docs/ui-ux-spec/05-staffing-costs.md |
+| 5 | docs/ui-ux-spec/06-pnl-reporting.md |
+| 6 | docs/ui-ux-spec/07-scenarios.md |
+| 7 | docs/ui-ux-spec/08-master-data.md |
+| 8,11 | docs/ui-ux-spec/09-admin.md |
+| 9 | docs/ui-ux-spec/01-dashboard.md |
+| 10 | docs/ui-ux-spec/02-version-management.md |
+| 12-13 | N/A (backend only — skip) |
+
+For epics 1-11:
+1. Read the primary UI/UX spec file
+2. Read `docs/ui-ux-spec/00-global-framework.md`
+3. Find the component in the spec — extract its type, source section, and notes
+4. Extract shell type and relevant interaction patterns
+
 ## Step 3 — Determine Component Type
 
 Based on the ComponentName and spec:
@@ -56,6 +79,9 @@ Patterns to apply:
 - TypeScript props interface
 - Tailwind v4 utility classes (no inline styles)
 - shadcn/ui components from `src/components/ui/` where applicable
+- Shell type: PlanningShell components may use context bar; ManagementShell uses overlay panels
+- Design tokens: use CSS custom properties from `00-global-framework.md` — never hardcode colors
+- Cell highlighting: editable cells get `--cell-editable-bg`, read-only get `--cell-readonly-bg`
 - If data table: TanStack Table v8 + useMemo for column definitions + manualPagination: true
 - If form: React Hook Form v7 + zodResolver from @hookform/resolvers v5 + Zod 4 schema
 - Decimal.js for any monetary display: `new Decimal(value).toFixed(2)` (TC-001 display layer)
@@ -105,6 +131,9 @@ Applied patterns:
   [✓] Decimal.js for monetary display (TC-001)
 
 Tests: [N] tests written, currently RED (expected at TDD RED phase)
+  [check] UI/UX spec: matches spec component type
+  [check] Shell type: [PlanningShell / ManagementShell]
+  [check] Design tokens applied (no hardcoded colors)
 
 Next: Implement the component logic to make tests pass,
       or use /impl:story [story-number] to drive the full TDD swarm.
