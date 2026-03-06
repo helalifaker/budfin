@@ -41,7 +41,7 @@ export function CreateVersionPanel({
 
 	const form = useForm<CreateForm>({
 		resolver: zodResolver(createSchema),
-		defaultValues: { name: '', type: 'Budget', description: '' },
+		defaultValues: { name: '', type: 'Budget', description: '', sourceVersionId: '' },
 	});
 
 	// Focus trap + Escape
@@ -82,18 +82,6 @@ export function CreateVersionPanel({
 
 	if (!open) return null;
 
-	const handleSubmit = form.handleSubmit(async (data) => {
-		const sourceVersionId = data.sourceVersionId ? Number(data.sourceVersionId) : undefined;
-		await mutateAsync({
-			name: data.name,
-			type: data.type,
-			fiscalYear,
-			...(data.description ? { description: data.description } : {}),
-			...(sourceVersionId ? { sourceVersionId } : {}),
-		});
-		onSuccess(data.name);
-	});
-
 	return (
 		<>
 			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
@@ -116,7 +104,23 @@ export function CreateVersionPanel({
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-6 py-4">
-					<form id="create-version-form" onSubmit={handleSubmit} className="space-y-4">
+					<form
+						id="create-version-form"
+						onSubmit={form.handleSubmit(async (data) => {
+							const parsedSourceId = data.sourceVersionId
+								? Number(data.sourceVersionId)
+								: undefined;
+							await mutateAsync({
+								name: data.name,
+								type: data.type,
+								fiscalYear,
+								...(data.description ? { description: data.description } : {}),
+								...(parsedSourceId ? { sourceVersionId: parsedSourceId } : {}),
+							});
+							onSuccess(data.name);
+						})}
+						className="space-y-4"
+					>
 						<div>
 							<label htmlFor="cv-name" className="block text-sm font-medium">
 								Name{' '}
@@ -189,7 +193,6 @@ export function CreateVersionPanel({
 								id="cv-source"
 								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
 								{...form.register('sourceVersionId')}
-								defaultValue=""
 							>
 								<option value="">None (start empty)</option>
 								{sourceVersionOptions.map((v) => (
