@@ -13,7 +13,6 @@ const navGroups = [
 	},
 	{
 		label: 'Planning',
-		adminOnly: true,
 		items: [
 			{ to: '/versions', label: 'Version Management' },
 			{ to: '/fiscal-periods', label: 'Fiscal Periods' },

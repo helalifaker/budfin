@@ -7,7 +7,7 @@ export interface WorkspaceContext {
 	versionId: number | null;
 	comparisonVersionId: number | null;
 	academicPeriod: string | null;
-	scenarioId: number | null;
+	scenarioId: string | null;
 }
 
 export function useWorkspaceContext() {
@@ -20,7 +20,7 @@ export function useWorkspaceContext() {
 		? Number(searchParams.get('compare'))
 		: null;
 	const academicPeriod = searchParams.get('period');
-	const scenarioId = searchParams.get('scenario') ? Number(searchParams.get('scenario')) : null;
+	const scenarioId = searchParams.get('scenario') ?? null;
 
 	const setVersion = useCallback(
 		(id: number | null) => {
@@ -81,11 +81,11 @@ export function useWorkspaceContext() {
 	);
 
 	const setScenario = useCallback(
-		(id: number | null) => {
+		(id: string | null) => {
 			setSearchParams((prev) => {
 				const next = new URLSearchParams(prev);
 				if (id !== null) {
-					next.set('scenario', String(id));
+					next.set('scenario', id);
 				} else {
 					next.delete('scenario');
 				}

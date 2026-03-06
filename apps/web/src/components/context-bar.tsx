@@ -189,14 +189,9 @@ export function ContextBar() {
 					Scenario
 				</label>
 				<Select
-					value={scenarioId !== null ? String(scenarioId) : 'BASE'}
-					onValueChange={(_value) => {
-						// Stub: scenario is a UI-only control in v1 — no backend for scenario IDs yet.
-						// The setScenario setter is wired and ready; the SCENARIOS list above uses
-						// string keys (BASE / OPTIMISTIC / PESSIMISTIC) rather than numeric IDs.
-						// When the backend ships scenario endpoints, replace this with:
-						//   setScenario(Number(_value))
-						void setScenario;
+					value={scenarioId ?? 'BASE'}
+					onValueChange={(value) => {
+						setScenario(value);
 					}}
 				>
 					<SelectTrigger
