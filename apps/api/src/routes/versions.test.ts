@@ -32,12 +32,17 @@ vi.mock('../lib/prisma.js', () => {
 			delete: vi.fn().mockResolvedValue({}),
 			count: vi.fn(),
 		},
+		monthlyBudgetSummary: {
+			findMany: vi.fn(),
+			createMany: vi.fn(),
+		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
 				budgetVersion: mockPrisma.budgetVersion,
+				monthlyBudgetSummary: mockPrisma.monthlyBudgetSummary,
 				auditEntry: mockPrisma.auditEntry,
 			})
 		),
@@ -54,6 +59,10 @@ const mockPrisma = prisma as unknown as {
 		create: ReturnType<typeof vi.fn>;
 		delete: ReturnType<typeof vi.fn>;
 		count: ReturnType<typeof vi.fn>;
+	};
+	monthlyBudgetSummary: {
+		findMany: ReturnType<typeof vi.fn>;
+		createMany: ReturnType<typeof vi.fn>;
 	};
 	auditEntry: { create: ReturnType<typeof vi.fn> };
 	$transaction: ReturnType<typeof vi.fn>;
@@ -330,6 +339,60 @@ describe('POST /api/v1/versions', () => {
 		});
 
 		expect(res.statusCode).toBe(400);
+	});
+
+	it('creates version with sourceVersionId and clones data', async () => {
+		const sourceVersion = { ...mockVersion, id: 5, type: 'Budget', status: 'Published' };
+		mockPrisma.budgetVersion.create.mockResolvedValue(mockVersion);
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(sourceVersion);
+		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValue([
+			{ month: 1, revenueHt: '1000', staffCosts: '500', netProfit: '500', calculatedAt: now },
+		]);
+		mockPrisma.monthlyBudgetSummary.createMany.mockResolvedValue({ count: 1 });
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions',
+			headers: authHeader(token),
+			payload: { name: 'Budget v1', type: 'Budget', fiscalYear: 2026, sourceVersionId: 5 },
+		});
+
+		expect(res.statusCode).toBe(201);
+		expect(mockPrisma.monthlyBudgetSummary.createMany).toHaveBeenCalled();
+	});
+
+	it('returns 404 for invalid sourceVersionId', async () => {
+		mockPrisma.budgetVersion.create.mockResolvedValue(mockVersion);
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions',
+			headers: authHeader(token),
+			payload: { name: 'Budget v1', type: 'Budget', fiscalYear: 2026, sourceVersionId: 999 },
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('SOURCE_NOT_FOUND');
+	});
+
+	it('returns 409 for Actual sourceVersionId', async () => {
+		const actualVersion = { ...mockVersion, id: 5, type: 'Actual' };
+		mockPrisma.budgetVersion.create.mockResolvedValue(mockVersion);
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(actualVersion);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions',
+			headers: authHeader(token),
+			payload: { name: 'Budget v1', type: 'Budget', fiscalYear: 2026, sourceVersionId: 5 },
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('ACTUAL_COPY_PROHIBITED');
 	});
 });
 
