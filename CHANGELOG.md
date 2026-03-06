@@ -63,6 +63,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Logout no longer fails when the user's session token has expired; users can always sign out regardless of token state (#4)
+- Application context now returns the configured school year (e.g., "2025-26") instead of blank; the value is read from system settings (#4)
 - API client now parses structured error responses (code + message) from the server, providing meaningful error text (#14)
 - Workspace context version change correctly invalidates the versions query key (#14)
 - Authentication session enforcement now keeps the advisory lock, session eviction, token-family creation, last-login update, and audit writes inside a single database transaction so concurrent logins cannot exceed the configured session cap (#30)

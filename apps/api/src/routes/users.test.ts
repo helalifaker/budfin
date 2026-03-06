@@ -20,6 +20,9 @@ vi.mock('../lib/prisma.js', () => ({
 			update: vi.fn(),
 			count: vi.fn(),
 		},
+		systemConfig: {
+			findUnique: vi.fn(),
+		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
@@ -308,6 +311,15 @@ describe('PATCH /api/v1/users/:id', () => {
 
 describe('GET /api/v1/context', () => {
 	it('returns user + permissions array', async () => {
+		vi.mocked(prisma.systemConfig.findUnique).mockResolvedValue({
+			key: 'schoolYear',
+			value: '2025-26',
+			description: 'Current school year',
+			dataType: 'string',
+			updatedAt: new Date(),
+			updatedBy: null,
+		});
+
 		const token = await makeToken({
 			sub: 5,
 			email: 'viewer@budfin.app',
@@ -327,7 +339,7 @@ describe('GET /api/v1/context', () => {
 		});
 		expect(body.permissions).toContain('data:view');
 		expect(body.permissions).not.toContain('salary:view');
-		expect(body).toHaveProperty('schoolYear', null);
+		expect(body).toHaveProperty('schoolYear', '2025-26');
 	});
 });
 
