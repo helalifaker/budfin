@@ -204,6 +204,8 @@ Use scaffolding shortcuts when needed:
 - [ ] YEARFRAC algorithm used for date calculations (TC-002)
 - [ ] Linter passes — 0 errors, 0 warnings
 - [ ] `pnpm test` — all tests **GREEN**, coverage ≥ 80%
+- [ ] Feature branch created (not on main)
+- [ ] Draft PR opened with `Fixes #[story-#]` in body
 - [ ] PR created on GitHub, linked to the Story Issue
 
 **Gate**: All tests green, coverage met, PR open. No review yet.
@@ -230,7 +232,9 @@ Use scaffolding shortcuts when needed:
 - [ ] Tests still green after review changes applied
 - [ ] PR created as draft: `gh pr create --title "feat(epic-N): [story title]"`
 - [ ] PR approved (all three agents: PASS)
-- [ ] PR merged → Story Issue auto-closes → Epic progress updated
+- [ ] PR squash-merged and branch deleted
+- [ ] Story issue auto-closed (or manually closed with PR reference)
+- [ ] Epic issue updated with story completion count
 
 **Gate**: PR merged, issue closed, CHANGELOG updated, traceability matrix updated.
 

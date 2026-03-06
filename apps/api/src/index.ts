@@ -1,13 +1,21 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import cookie from '@fastify/cookie';
+import rateLimit from '@fastify/rate-limit';
 import {
 	serializerCompiler,
 	validatorCompiler,
 } from 'fastify-type-provider-zod';
 import { logging } from './plugins/logging.js';
 import { metrics } from './plugins/metrics.js';
+import { auth } from './plugins/auth.js';
 import { healthRoutes } from './routes/health.js';
 import { metricsRoutes } from './routes/metrics.js';
+import { authRoutes } from './routes/auth.js';
+import { userRoutes } from './routes/users.js';
+import { contextRoutes } from './routes/context.js';
+import { auditRoutes } from './routes/audit.js';
+import { systemConfigRoutes } from './routes/system-config.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -20,8 +28,21 @@ export async function buildApp() {
 	await app.register(logging);
 	await app.register(metrics);
 	await app.register(cors);
+	await app.register(cookie);
+	await app.register(rateLimit, {
+		max: 100,
+		timeWindow: '1 minute',
+	});
+	await app.register(auth);
 	await app.register(healthRoutes, { prefix: '/api/v1' });
 	await app.register(metricsRoutes);
+	await app.register(authRoutes, { prefix: '/api/v1/auth' });
+	await app.register(userRoutes, { prefix: '/api/v1/users' });
+	await app.register(contextRoutes, { prefix: '/api/v1' });
+	await app.register(auditRoutes, { prefix: '/api/v1/audit' });
+	await app.register(systemConfigRoutes, {
+		prefix: '/api/v1/system-config',
+	});
 
 	return app;
 }

@@ -14,7 +14,7 @@ describe('logging plugin', () => {
 		const app = Fastify({ logger: false });
 		await app.register(logging);
 
-		let capturedContext: any;
+		let capturedContext: { requestId: string; userId: number | null } | undefined;
 		app.get('/test', async (request) => {
 			capturedContext = request.logContext;
 			return { ok: true };
@@ -24,8 +24,8 @@ describe('logging plugin', () => {
 		await app.inject({ method: 'GET', url: '/test' });
 
 		expect(capturedContext).toBeDefined();
-		expect(capturedContext.requestId).toBeDefined();
-		expect(capturedContext.userId).toBeNull();
+		expect(capturedContext!.requestId).toBeDefined();
+		expect(capturedContext!.userId).toBeNull();
 		await app.close();
 	});
 });
