@@ -5,6 +5,7 @@ import { useHeadcount, usePutHeadcount, useCalculateEnrollment } from '../../hoo
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 import { ByGradeGrid } from '../../components/enrollment/by-grade-grid';
 import { ByNationalityGrid } from '../../components/enrollment/by-nationality-grid';
 import { ByTariffGrid } from '../../components/enrollment/by-tariff-grid';
@@ -68,27 +69,20 @@ export function EnrollmentPage() {
 				<h1 className="text-xl font-semibold text-slate-900">Enrollment & Capacity</h1>
 				<div className="flex items-center gap-2">
 					{/* Band filter toggle */}
-					<div
-						className="flex rounded-md border border-slate-200"
-						role="group"
+					<ToggleGroup
+						type="single"
+						value={bandFilter}
+						onValueChange={(val) => {
+							if (val) setBandFilter(val);
+						}}
 						aria-label="Grade band filter"
 					>
 						{BAND_FILTERS.map((f) => (
-							<button
-								key={f.value}
-								type="button"
-								className={`px-3 py-1.5 text-xs font-medium transition-colors first:rounded-l-md last:rounded-r-md ${
-									bandFilter === f.value
-										? 'bg-slate-900 text-white'
-										: 'bg-white text-slate-600 hover:bg-slate-50'
-								}`}
-								onClick={() => setBandFilter(f.value)}
-								aria-pressed={bandFilter === f.value}
-							>
+							<ToggleGroupItem key={f.value} value={f.value}>
 								{f.label}
-							</button>
+							</ToggleGroupItem>
 						))}
-					</div>
+					</ToggleGroup>
 
 					{!isViewer && (
 						<>

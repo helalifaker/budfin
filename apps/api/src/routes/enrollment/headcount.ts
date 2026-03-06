@@ -45,7 +45,7 @@ const putBodySchema = z.object({
 		.min(1),
 });
 
-const HEADCOUNT_STALE_MODULES = ['REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+const HEADCOUNT_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
@@ -333,9 +333,9 @@ export function ByGradeGrid({
 					) : (
 						<>
 							{[...bands.entries()].map(([band, bandRows]) => (
-								<>
+								<React.Fragment key={`band-${band}`}>
 									{/* Band group header */}
-									<tr key={`band-${band}`} className="bg-slate-50/50">
+									<tr className="bg-slate-50/50">
 										<td
 											colSpan={columns.length}
 											className="px-4 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider"
@@ -359,7 +359,7 @@ export function ByGradeGrid({
 											</tr>
 										);
 									})}
-								</>
+								</React.Fragment>
 							))}
 							{/* Grand total row */}
 							<tr className="sticky bottom-0 border-t-2 bg-slate-100 font-semibold">
