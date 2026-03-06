@@ -13,6 +13,11 @@ const patchStatusSchema = z.object({
 	audit_note: z.string().optional(),
 });
 
+const cloneVersionSchema = z.object({
+	name: z.string().min(1).max(100),
+	fiscalYear: z.number().int().min(2000).max(2100).optional(),
+});
+
 // ── State machine ─────────────────────────────────────────────────────────────
 
 interface TransitionDef {
@@ -280,6 +285,97 @@ export async function versionRoutes(app: FastifyInstance) {
 			});
 
 			return reply.status(204).send();
+		},
+	});
+
+	// POST /:id/clone — Clone a version (AC-11, AC-12, AC-19)
+	app.post('/:id/clone', {
+		schema: { params: idParamsSchema, body: cloneVersionSchema },
+		preHandler: [app.authenticate, app.requireRole('Admin', 'BudgetOwner')],
+		handler: async (request, reply) => {
+			const { id } = request.params as z.infer<typeof idParamsSchema>;
+			const body = request.body as z.infer<typeof cloneVersionSchema>;
+
+			const source = await prisma.budgetVersion.findUnique({
+				where: { id },
+				include: { createdBy: { select: { email: true } } },
+			});
+
+			if (!source) {
+				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+			}
+
+			// AC-12: Actual versions cannot be cloned
+			if (source.type === 'Actual') {
+				return reply.status(409).send({
+					code: 'ACTUAL_VERSION_CLONE_PROHIBITED',
+					message: 'Actual versions cannot be cloned',
+				});
+			}
+
+			// Fetch existing monthly summaries to deep-copy
+			const summaries = await prisma.monthlyBudgetSummary.findMany({
+				where: { versionId: id },
+			});
+
+			try {
+				const cloned = await prisma.$transaction(async (tx) => {
+					const newVersion = await (tx as typeof prisma).budgetVersion.create({
+						data: {
+							name: body.name,
+							type: source.type,
+							fiscalYear: body.fiscalYear ?? source.fiscalYear,
+							description: source.description,
+							sourceVersionId: id,
+							createdById: request.user.id,
+							modificationCount: 0,
+							staleModules: [],
+							status: 'Draft',
+							dataSource: source.dataSource,
+						},
+						include: { createdBy: { select: { email: true } } },
+					});
+
+					if (summaries.length > 0) {
+						await (tx as typeof prisma).monthlyBudgetSummary.createMany({
+							data: summaries.map((s) => ({
+								versionId: newVersion.id,
+								month: s.month,
+								revenueHt: s.revenueHt,
+								staffCosts: s.staffCosts,
+								netProfit: s.netProfit,
+								calculatedAt: s.calculatedAt,
+							})),
+						});
+					}
+
+					await (tx as typeof prisma).auditEntry.create({
+						data: {
+							userId: request.user.id,
+							operation: 'VERSION_CLONED',
+							tableName: 'budget_versions',
+							recordId: newVersion.id,
+							ipAddress: request.ip,
+							newValues: { sourceVersionId: id, name: body.name } as Prisma.InputJsonValue,
+						},
+					});
+
+					return newVersion;
+				});
+
+				return reply.status(201).send(formatVersion(cloned as Parameters<typeof formatVersion>[0]));
+			} catch (error) {
+				if (
+					error instanceof Prisma.PrismaClientKnownRequestError &&
+					error.code === 'P2002'
+				) {
+					return reply.status(409).send({
+						code: 'DUPLICATE_VERSION_NAME',
+						message: 'A version with this name already exists for this fiscal year',
+					});
+				}
+				throw error;
+			}
 		},
 	});
 
