@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Version Management system: create, list, and delete budget versions with cursor pagination and fiscal year filtering (#14)
+- Version lifecycle state machine with four states (Draft, Published, Locked, Archived) and role-gated transitions; reverse transitions require a mandatory audit note (#14)
+- Version cloning with deep copy of monthly budget summaries; Actual versions are protected from manual creation and cloning (#14)
+- Version comparison engine computing absolute and percentage variance across revenue, staff costs, and net profit by month (#14)
+- Latest Estimate blending: merges locked-period actuals with forecast-period budget data for a unified 12-month view (#14)
+- Fiscal Period Management with automatic 12-month seeding on first access and month-level locking bound to a confirmed Actual version (#14)
+- Version Detail side panel showing full metadata, lifecycle timestamps, and source version lineage (#14)
+- Context Bar component for PlanningShell with fiscal year, version, comparison, and period selectors (#14)
+- Versions and Fiscal Periods pages under a new Planning section in the sidebar navigation (#14)
+- 4 new database models: BudgetVersion, FiscalPeriod, MonthlyBudgetSummary, ActualsImportLog (#14)
+- 10 new API endpoints under /api/v1/versions and /api/v1/fiscal-periods (#14)
 - Chart of Accounts management for defining IFRS-compliant account codes, types (Revenue/Expense/Asset/Liability), and profit/cost center mappings (#37, #42)
 - Academic Years management for configuring fiscal year calendar periods (AY1, Summer, AY2) with date ordering validation (#38, #43)
 - Grade Levels configuration for the 15-grade structure with plancher/cible/plafond capacity thresholds (edit-only; grades cannot be added or removed) (#39, #43)
