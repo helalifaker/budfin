@@ -1,9 +1,8 @@
 # BudFin — Current Status
 
-**Phase**: 4 — SPECIFY
-**Current Epic**: Epic 10 -- Version Management
+**Phase**: 7 — REVIEW
+**Current Epic**: Epic 7 -- Master Data Management
 **Last updated**: 2026-03-06
-**Note**: Epic order corrected — Epic 10 moved before Epic 1 (version dependency)
 
 ## Phase History
 
@@ -35,22 +34,13 @@
 | 4 | Staff Costs | 2 | Epic Created (#8) |
 | 5 | P&L Reporting | 2 | Epic Created (#11) |
 | 6 | Scenario Modeling | 2 | Epic Created (#12) |
-| 7 | Master Data Management | 7-REVIEW | PR #49 under review (12/12 stories complete) |
+| 7 | Master Data Management | DONE | All 12 stories complete (12/12), merged PR #49 — 2026-03-06 |
 | 8 | Audit Trail | 2 | Epic Created (#9) |
 | 9 | Dashboard | 2 | Epic Created (#13) |
-| 10 | Version Management | 4 | NEXT — spec + stories pending (#14) |
+| 10 | Version Management | 2 | Epic Created (#14) |
 | 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) -- 2026-03-06 |
 | 12 | Data Migration | 2 | Epic Created (#10) |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
-
-## Implementation Order (corrected 2026-03-06)
-
-```
-13 (DONE) -> 11 (DONE) -> 7 (DONE) -> 10 (NEXT) -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 8 -> 9 -> 12
-```
-
-Rationale: budget_versions is the central entity — 19 tables have version_id FK.
-Without Epic 10, Epics 1-6 cannot be tested because data has no version to scope to.
 
 ## Update Instructions
 
