@@ -99,7 +99,11 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 			{
 				id: gradeLevel.id,
 				version: gradeLevel.version,
-				...data,
+				maxClassSize: data.maxClassSize,
+				plancherPct: String(data.plancherPct),
+				ciblePct: String(data.ciblePct),
+				plafondPct: String(data.plafondPct),
+				displayOrder: data.displayOrder,
 			},
 			{ onSuccess: onClose }
 		);
