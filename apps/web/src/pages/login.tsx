@@ -17,7 +17,7 @@ export function LoginPage() {
 
 		try {
 			await login(email, password);
-			navigate('/admin/users', { replace: true });
+			navigate('/', { replace: true });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Login failed');
 		} finally {

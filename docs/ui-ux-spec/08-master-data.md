@@ -12,7 +12,7 @@
 
 ## 1. Module Overview
 
-The Master Data module manages all reference data that feeds into BudFin planning calculations. It contains four sub-modules, each accessible from the sidebar under the "Master Data" navigation group:
+The Master Data module manages all reference data that feeds into BudFin planning calculations. It contains four sub-modules, each accessible from the sidebar under the "Master Data" navigation group for every authenticated user:
 
 | Sub-module                  | Route                      | Sidebar Label            | PRD Reference                      |
 | --------------------------- | -------------------------- | ------------------------ | ---------------------------------- |
@@ -23,7 +23,7 @@ The Master Data module manages all reference data that feeds into BudFin plannin
 
 **Interaction pattern:** All four sub-modules follow a consistent CRUD table + side panel pattern. The left area (~65% width) holds a searchable, filterable data table. The right area hosts a 480px slide-in side panel for create/edit forms.
 
-**Shell:** Master Data renders inside ManagementShell -- no context bar, no docked right panel. Master data is version-independent. Side panels use the overlay pattern (480px, z-index:30) per Global Framework Section 4.4.1.
+**Shell:** Master Data renders inside ManagementShell -- no context bar, no docked right panel. Master data is version-independent. The Master Data navigation group is visible to all authenticated roles, while Admin-only navigation remains hidden for non-Admin users. Admin users land on `/admin/users`; non-Admin authenticated users land on `/master-data/accounts`. Side panels use the overlay pattern (480px, z-index:30) per Global Framework Section 4.4.1.
 
 ---
 
@@ -620,7 +620,7 @@ All endpoints follow the standard REST pattern. Base path: `/api/v1/master-data`
 | Method | Endpoint       | Description        | Request Body                             |
 | ------ | -------------- | ------------------ | ---------------------------------------- |
 | GET    | `/assumptions` | Get all parameters | —                                        |
-| PATCH  | `/assumptions` | Update parameters  | `{ [key]: value, ... }` (partial update) |
+| PATCH  | `/assumptions` | Update parameters  | `{ updates: [{ key, value, version }] }` |
 
 ### 8.2 TanStack Query Configuration
 
