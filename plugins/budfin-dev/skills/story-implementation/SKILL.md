@@ -81,6 +81,7 @@ The Planner must produce a task list in this format before any implementation be
 ## QA Agent Boundary (CRITICAL)
 
 QA specialist writes `*.test.ts` and `*.spec.ts` files ONLY.
+
 - Never modifies implementation files
 - If implementation must change for tests to pass → message orchestrator → wait for implementer
 - This boundary is enforced by the `hooks.json` PreToolUse hook
@@ -88,6 +89,7 @@ QA specialist writes `*.test.ts` and `*.spec.ts` files ONLY.
 ## Story Completion Criteria
 
 A story is NOT complete until ALL of the following are true:
+
 1. All tests pass (`pnpm test`)
 2. Linters clean (`pnpm lint` — zero errors, zero warnings)
 3. Type checking passes (`pnpm typecheck`)
@@ -102,6 +104,7 @@ A story is NOT complete until ALL of the following are true:
 ```
 
 This invokes `story-orchestrator` which:
+
 1. Creates the team with TeamCreate
 2. Assigns Planner to decompose the story
 3. Assigns implementers in parallel after plan is ready

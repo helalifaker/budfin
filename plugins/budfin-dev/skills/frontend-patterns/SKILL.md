@@ -14,10 +14,10 @@ Tailwind v4 is fundamentally different from v3 — no `tailwind.config.js`:
 @import 'tailwindcss';
 
 @theme {
-  --color-primary: oklch(55% 0.2 250);
-  --color-primary-foreground: oklch(98% 0 0);
-  --font-sans: 'Inter', sans-serif;
-  --radius: 0.5rem;
+	--color-primary: oklch(55% 0.2 250);
+	--color-primary-foreground: oklch(98% 0 0);
+	--font-sans: 'Inter', sans-serif;
+	--radius: 0.5rem;
 }
 ```
 
@@ -46,56 +46,66 @@ src/components/ui/
 ## TanStack Table v8 — Headless + shadcn/ui Pairing
 
 ```typescript
-import { useReactTable, getCoreRowModel, type ColumnDef } from '@tanstack/react-table'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useReactTable, getCoreRowModel, type ColumnDef } from '@tanstack/react-table';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 
 // Column definitions MUST be wrapped in useMemo — never recreate on render
-const columns = useMemo<ColumnDef<BudgetRow>[]>(() => [
-  {
-    accessorKey: 'staffName',
-    header: 'Staff Name',
-    cell: ({ getValue }) => getValue<string>(),
-  },
-  {
-    accessorKey: 'amount',
-    header: 'Amount (SAR)',
-    // TC-004: format at presentation layer only
-    cell: ({ getValue }) => new Decimal(getValue<string>()).toFixed(2),
-  },
-], []) // dependencies array — add only stable references
+const columns = useMemo<ColumnDef<BudgetRow>[]>(
+	() => [
+		{
+			accessorKey: 'staffName',
+			header: 'Staff Name',
+			cell: ({ getValue }) => getValue<string>(),
+		},
+		{
+			accessorKey: 'amount',
+			header: 'Amount (SAR)',
+			// TC-004: format at presentation layer only
+			cell: ({ getValue }) => new Decimal(getValue<string>()).toFixed(2),
+		},
+	],
+	[]
+); // dependencies array — add only stable references
 
 // Server-side pagination for all financial grids
 const table = useReactTable({
-  data,
-  columns,
-  manualPagination: true,   // Always true for financial grids
-  pageCount,
-  state: { pagination },
-  onPaginationChange: setPagination,
-  getCoreRowModel: getCoreRowModel(),
-})
+	data,
+	columns,
+	manualPagination: true, // Always true for financial grids
+	pageCount,
+	state: { pagination },
+	onPaginationChange: setPagination,
+	getCoreRowModel: getCoreRowModel(),
+});
 ```
 
 ## React Hook Form v7 + Zod 4
 
 ```typescript
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  fiscalYear: z.number().int().min(2020),
-})
+	name: z.string().min(1, 'Name is required'),
+	fiscalYear: z.number().int().min(2020),
+});
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 function MyForm() {
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: '', fiscalYear: 2026 },
-  })
-  // ...
+	const form = useForm<FormData>({
+		resolver: zodResolver(schema),
+		defaultValues: { name: '', fiscalYear: 2026 },
+	});
+	// ...
 }
 ```
 
@@ -103,25 +113,25 @@ function MyForm() {
 
 ## State Management
 
-| State type | Solution |
-|-----------|----------|
-| Server state (API data) | TanStack Query v5 |
-| UI-only client state | Zustand v5 |
-| Workspace state (fiscal year, version) | React Context |
-| Form state | React Hook Form v7 |
+| State type                             | Solution           |
+| -------------------------------------- | ------------------ |
+| Server state (API data)                | TanStack Query v5  |
+| UI-only client state                   | Zustand v5         |
+| Workspace state (fiscal year, version) | React Context      |
+| Form state                             | React Hook Form v7 |
 
 ```typescript
 // TanStack Query v5 — server state
 const { data, isLoading } = useQuery({
-  queryKey: ['budget-versions', fiscalYear],
-  queryFn: () => api.getBudgetVersions(fiscalYear),
-})
+	queryKey: ['budget-versions', fiscalYear],
+	queryFn: () => api.getBudgetVersions(fiscalYear),
+});
 
 // Zustand v5 — UI state only
 const useSidebarStore = create<SidebarState>()((set) => ({
-  isOpen: false,
-  toggle: () => set((state) => ({ isOpen: !state.isOpen })),
-}))
+	isOpen: false,
+	toggle: () => set((state) => ({ isOpen: !state.isOpen })),
+}));
 ```
 
 ## Token Storage Rule
@@ -132,24 +142,30 @@ const useSidebarStore = create<SidebarState>()((set) => ({
 
 ```typescript
 // Correct — token in closure
-let accessToken: string | null = null
+let accessToken: string | null = null;
 
-function setToken(token: string) { accessToken = token }
-function getToken() { return accessToken }
-function clearToken() { accessToken = null }
+function setToken(token: string) {
+	accessToken = token;
+}
+function getToken() {
+	return accessToken;
+}
+function clearToken() {
+	accessToken = null;
+}
 
 // Wrong — NEVER do this
-localStorage.setItem('accessToken', token)
-sessionStorage.setItem('accessToken', token)
+localStorage.setItem('accessToken', token);
+sessionStorage.setItem('accessToken', token);
 ```
 
 ## Monetary Display (TC-004)
 
 ```typescript
-import { Decimal } from 'decimal.js'
+import { Decimal } from 'decimal.js';
 
 // In table cells and display components only
-const display = new Decimal(amount).toFixed(2)  // '12345.67'
+const display = new Decimal(amount).toFixed(2); // '12345.67'
 
 // Never compute in browser — values come pre-computed from API as strings
 // TC-004: round only at presentation, ROUND_HALF_UP
@@ -169,7 +185,7 @@ File exports (PDF, Excel) use a job polling pattern:
 - Target: < 150 KB gzipped initial bundle
 - Code-split by route using Vite lazy imports:
   ```typescript
-  const BudgetPage = lazy(() => import('./pages/BudgetPage'))
+  const BudgetPage = lazy(() => import('./pages/BudgetPage'));
   ```
 - No barrel files (`index.ts` that re-export everything) — they prevent tree-shaking
 

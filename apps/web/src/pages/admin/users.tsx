@@ -1,9 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import {
-	useQuery,
-	useMutation,
-	useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
 	createColumnHelper,
 	flexRender,
@@ -45,23 +41,16 @@ export function UsersPage() {
 	const queryClient = useQueryClient();
 	const currentUser = useAuthStore((s) => s.user);
 	const [panelOpen, setPanelOpen] = useState(false);
-	const [panelMode, setPanelMode] = useState<'create' | 'edit'>(
-		'create',
-	);
+	const [panelMode, setPanelMode] = useState<'create' | 'edit'>('create');
 	const [editingUser, setEditingUser] = useState<User | null>(null);
 
 	const { data, isLoading } = useQuery({
 		queryKey: ['users'],
-		queryFn: () =>
-			apiClient<{ users: User[] }>('/users'),
+		queryFn: () => apiClient<{ users: User[] }>('/users'),
 	});
 
 	const createMutation = useMutation({
-		mutationFn: (body: {
-			email: string;
-			password: string;
-			role: string;
-		}) =>
+		mutationFn: (body: { email: string; password: string; role: string }) =>
 			apiClient('/users', {
 				method: 'POST',
 				body: JSON.stringify(body),
@@ -73,10 +62,7 @@ export function UsersPage() {
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: ({
-			id,
-			...body
-		}: Record<string, unknown> & { id: number }) =>
+		mutationFn: ({ id, ...body }: Record<string, unknown> & { id: number }) =>
 			apiClient(`/users/${id}`, {
 				method: 'PATCH',
 				body: JSON.stringify(body),
@@ -95,7 +81,7 @@ export function UsersPage() {
 						email: string;
 						password: string;
 						role: string;
-					},
+					}
 				);
 			} else if (editingUser) {
 				updateMutation.mutate({
@@ -104,7 +90,7 @@ export function UsersPage() {
 				});
 			}
 		},
-		[panelMode, editingUser, createMutation, updateMutation],
+		[panelMode, editingUser, createMutation, updateMutation]
 	);
 
 	const handleUnlock = useCallback(
@@ -114,7 +100,7 @@ export function UsersPage() {
 				unlock_account: true,
 			});
 		},
-		[updateMutation],
+		[updateMutation]
 	);
 
 	const handleForceLogout = useCallback(
@@ -124,32 +110,22 @@ export function UsersPage() {
 				force_session_revoke: true,
 			});
 		},
-		[updateMutation],
+		[updateMutation]
 	);
 
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('email', {
 				header: 'Email',
-				cell: (info) => (
-					<span className="font-medium">
-						{info.getValue()}
-					</span>
-				),
+				cell: (info) => <span className="font-medium">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('role', {
 				header: 'Role',
-				cell: (info) => (
-					<RoleBadge
-						role={info.getValue() as RoleVariant}
-					/>
-				),
+				cell: (info) => <RoleBadge role={info.getValue() as RoleVariant} />,
 			}),
 			columnHelper.accessor('is_active', {
 				header: 'Status',
-				cell: (info) => (
-					<StatusBadge isActive={info.getValue()} />
-				),
+				cell: (info) => <StatusBadge isActive={info.getValue()} />,
 			}),
 			columnHelper.accessor('last_login_at', {
 				header: 'Last Login',
@@ -201,9 +177,7 @@ export function UsersPage() {
 								<button
 									type="button"
 									className="text-xs text-red-600 hover:underline"
-									onClick={() =>
-										handleForceLogout(user)
-									}
+									onClick={() => handleForceLogout(user)}
 								>
 									Force Logout
 								</button>
@@ -213,7 +187,7 @@ export function UsersPage() {
 				},
 			}),
 		],
-		[currentUser?.id, handleUnlock, handleForceLogout],
+		[currentUser?.id, handleUnlock, handleForceLogout]
 	);
 
 	const table = useReactTable({
@@ -225,14 +199,12 @@ export function UsersPage() {
 	return (
 		<div className="p-6">
 			<div className="flex items-center justify-between pb-4">
-				<h1 className="text-xl font-semibold">
-					User Management
-				</h1>
+				<h1 className="text-xl font-semibold">User Management</h1>
 				<button
 					type="button"
 					className={cn(
 						'rounded-md bg-blue-600 px-4 py-2 text-sm',
-						'font-medium text-white hover:bg-blue-700',
+						'font-medium text-white hover:bg-blue-700'
 					)}
 					onClick={() => {
 						setEditingUser(null);
@@ -248,23 +220,13 @@ export function UsersPage() {
 				<p className="text-sm text-slate-500">Loading...</p>
 			) : (
 				<div className="overflow-x-auto rounded-lg border">
-					<table
-						role="grid"
-						className="w-full text-left text-sm"
-					>
+					<table role="grid" className="w-full text-left text-sm">
 						<thead className="border-b bg-slate-50">
 							{table.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											className="px-4 py-3 font-medium text-slate-600"
-										>
-											{flexRender(
-												header.column.columnDef
-													.header,
-												header.getContext(),
-											)}
+										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
 								</tr>
@@ -272,24 +234,12 @@ export function UsersPage() {
 						</thead>
 						<tbody>
 							{table.getRowModel().rows.map((row) => (
-								<tr
-									key={row.id}
-									className="border-b last:border-0 hover:bg-slate-50"
-								>
-									{row
-										.getVisibleCells()
-										.map((cell) => (
-											<td
-												key={cell.id}
-												className="px-4 py-3"
-											>
-												{flexRender(
-													cell.column.columnDef
-														.cell,
-													cell.getContext(),
-												)}
-											</td>
-										))}
+								<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+									{row.getVisibleCells().map((cell) => (
+										<td key={cell.id} className="px-4 py-3">
+											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										</td>
+									))}
 								</tr>
 							))}
 						</tbody>
@@ -303,10 +253,7 @@ export function UsersPage() {
 				user={editingUser}
 				onClose={() => setPanelOpen(false)}
 				onSave={handleSave}
-				loading={
-					createMutation.isPending ||
-					updateMutation.isPending
-				}
+				loading={createMutation.isPending || updateMutation.isPending}
 			/>
 		</div>
 	);

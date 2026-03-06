@@ -4,9 +4,7 @@ import { prisma } from '../lib/prisma.js';
 import { hashPassword } from '../services/password.js';
 import { revokeAllUserTokens } from '../services/token-family.js';
 
-const userRoleEnum = z.enum([
-	'Admin', 'BudgetOwner', 'Editor', 'Viewer',
-]);
+const userRoleEnum = z.enum(['Admin', 'BudgetOwner', 'Editor', 'Viewer']);
 
 const createBodySchema = z.object({
 	email: z.string().email().max(255),
@@ -75,9 +73,7 @@ export async function userRoutes(app: FastifyInstance) {
 		schema: { body: createBodySchema },
 		preHandler: [app.authenticate, app.requireRole('Admin')],
 		handler: async (request, reply) => {
-			const { email, password, role } = request.body as z.infer<
-				typeof createBodySchema
-			>;
+			const { email, password, role } = request.body as z.infer<typeof createBodySchema>;
 
 			const existing = await prisma.user.findUnique({
 				where: { email },
@@ -131,9 +127,7 @@ export async function userRoutes(app: FastifyInstance) {
 			// Self-protection (EC-AUTH-05)
 			if (id === request.user.id) {
 				const isSelfDangerous =
-					body.is_active === false ||
-					body.role !== undefined ||
-					body.force_session_revoke === true;
+					body.is_active === false || body.role !== undefined || body.force_session_revoke === true;
 				if (isSelfDangerous) {
 					return reply.status(400).send({
 						error: 'SELF_MODIFICATION',
@@ -153,18 +147,14 @@ export async function userRoutes(app: FastifyInstance) {
 			}
 
 			// Last Admin protection (EC-AUTH-06)
-			if (
-				body.is_active === false &&
-				target.role === 'Admin'
-			) {
+			if (body.is_active === false && target.role === 'Admin') {
 				const adminCount = await prisma.user.count({
 					where: { role: 'Admin', isActive: true },
 				});
 				if (adminCount <= 1) {
 					return reply.status(400).send({
 						error: 'LAST_ADMIN',
-						message:
-							'Cannot deactivate the last active admin',
+						message: 'Cannot deactivate the last active admin',
 					});
 				}
 			}
@@ -192,8 +182,7 @@ export async function userRoutes(app: FastifyInstance) {
 
 			// Unlock account
 			if (body.unlock_account === true) {
-				oldValues.lockedUntil =
-					target.lockedUntil?.toISOString() ?? null;
+				oldValues.lockedUntil = target.lockedUntil?.toISOString() ?? null;
 				oldValues.failedAttempts = target.failedAttempts;
 				updateData.lockedUntil = null;
 				updateData.failedAttempts = 0;
@@ -206,8 +195,7 @@ export async function userRoutes(app: FastifyInstance) {
 						recordId: id,
 						ipAddress: request.ip,
 						oldValues: {
-							lockedUntil:
-								target.lockedUntil?.toISOString() ?? null,
+							lockedUntil: target.lockedUntil?.toISOString() ?? null,
 							failedAttempts: target.failedAttempts,
 						},
 					},

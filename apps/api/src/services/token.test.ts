@@ -133,8 +133,16 @@ describe('loadKeys', () => {
 	afterEach(() => {
 		process.env.JWT_PRIVATE_KEY_PATH = origPrivate;
 		process.env.JWT_PUBLIC_KEY_PATH = origPublic;
-		try { unlinkSync(privatePath); } catch { /* ignore */ }
-		try { unlinkSync(publicPath); } catch { /* ignore */ }
+		try {
+			unlinkSync(privatePath);
+		} catch {
+			/* ignore */
+		}
+		try {
+			unlinkSync(publicPath);
+		} catch {
+			/* ignore */
+		}
 		// Restore test keys so subsequent tests work
 		setKeys(testPrivateKey, testPublicKey);
 	});

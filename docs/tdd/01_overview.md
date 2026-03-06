@@ -2,27 +2,27 @@
 
 ## Section 0 — Document Control
 
-| Field | Value |
-| -------------------- | ------------------------------------------------- |
-| Title | BudFin Technical Design Document v1.0 |
-| Status | Draft |
-| Author | [Tech Lead — to be assigned] |
-| Date | March 3, 2026 |
+| Field             | Value                                                    |
+| ----------------- | -------------------------------------------------------- |
+| Title             | BudFin Technical Design Document v1.0                    |
+| Status            | Draft                                                    |
+| Author            | [Tech Lead — to be assigned]                             |
+| Date              | March 3, 2026                                            |
 | Related Documents | PRD v2.0 (`BudFin_PRD_v2.0.md`), Edge Case Analysis v1.0 |
 
 ### Revision History
 
-| Version | Date | Author | Description |
-| --------- | ---------------- | ---------------------------- | ---------------------- |
-| 1.0 | March 3, 2026 | [Tech Lead — to be assigned] | Initial draft |
+| Version | Date          | Author                       | Description   |
+| ------- | ------------- | ---------------------------- | ------------- |
+| 1.0     | March 3, 2026 | [Tech Lead — to be assigned] | Initial draft |
 
 ### Approvers
 
-| Role | Name | Status |
-| ------------ | ------------------------------ | --------- |
+| Role      | Name             | Status  |
+| --------- | ---------------- | ------- |
 | Tech Lead | [To be assigned] | Pending |
-| CAO | [To be assigned] | Pending |
-| DBA | [To be assigned] | Pending |
+| CAO       | [To be assigned] | Pending |
+| DBA       | [To be assigned] | Pending |
 
 ---
 
@@ -41,20 +41,20 @@ BudFin adopts a **monolithic SPA + REST API** architecture. The system is not de
 
 ### 1.2 Key Technical Decisions
 
-| Decision | Choice | Alternatives Rejected | Rationale |
-| --- | --- | --- | --- |
-| Backend runtime | Node.js 22 LTS + TypeScript 5.9.3 (pinned — ADR-013) | Python/FastAPI, Java/Spring Boot | Decimal.js ecosystem for TC-001; Prisma ORM native Decimal type; full-stack TypeScript consistency; Node 20 EOL April 2026 |
-| Database | PostgreSQL 16 | MySQL 8, SQLite | pgcrypto for PDPL field encryption; native DECIMAL(15,4) per TC-003; JSONB audit log; row-level security primitives; superior Prisma integration |
-| Decimal library | Decimal.js 10.6.x | big.js, native Number | TC-001 compliance; arbitrary precision; actively maintained; works in Node.js; Prisma Decimal compatibility |
-| ORM | Prisma 6 | TypeORM, Drizzle, raw SQL | Native Decimal type; type-safe migrations; typed client generation; audit middleware via $extends |
-| Frontend | React 19 + Vite 7 + TypeScript | Next.js, Vue.js | Modern SSR not needed (internal tool, no SEO); Vite fast dev cycle; TypeScript safety on financial data |
-| UI component library | shadcn/ui + Tailwind CSS 4 | MUI, Chakra UI | WCAG AA compliant; copy-paste components on Radix UI; CSS-first Tailwind v4 with Oxide engine |
-| Data grid | TanStack Table v8 (no virtual scrolling — ADR-016) | AG Grid Community | Headless table logic paired with shadcn/ui Table components; server-side pagination for audit log; integrates with Tailwind v4 |
-| Excel export | ExcelJS | SheetJS (xlsx) | Server-side xlsx generation; formula preservation; column width/formatting per NFR 11.10; active maintenance |
-| PDF export | @react-pdf/renderer v4.3 (ADR-014) | Puppeteer, PDFKit, jsPDF | React-PDF document components; A3 landscape for P&L; no Chromium dependency; < 50 MB RAM per job |
-| Authentication | JWT + bcrypt cost 12 | Server-side sessions, OAuth | Stateless tokens; bcrypt cost 12 per NFR 11.3.1; refresh token rotation; horizontal scale-ready |
-| Deployment | Single Docker Compose stack | Kubernetes, bare metal | Single-school; on-premise/private cloud KSA per PDPL SA-008; no orchestration overhead |
-| YEARFRAC | Custom server-side function | Excel-compatible library | TC-002 US 30/360 algorithm exactly; validated against 168 employee records |
+| Decision             | Choice                                               | Alternatives Rejected            | Rationale                                                                                                                                        |
+| -------------------- | ---------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Backend runtime      | Node.js 22 LTS + TypeScript 5.9.3 (pinned — ADR-013) | Python/FastAPI, Java/Spring Boot | Decimal.js ecosystem for TC-001; Prisma ORM native Decimal type; full-stack TypeScript consistency; Node 20 EOL April 2026                       |
+| Database             | PostgreSQL 16                                        | MySQL 8, SQLite                  | pgcrypto for PDPL field encryption; native DECIMAL(15,4) per TC-003; JSONB audit log; row-level security primitives; superior Prisma integration |
+| Decimal library      | Decimal.js 10.6.x                                    | big.js, native Number            | TC-001 compliance; arbitrary precision; actively maintained; works in Node.js; Prisma Decimal compatibility                                      |
+| ORM                  | Prisma 6                                             | TypeORM, Drizzle, raw SQL        | Native Decimal type; type-safe migrations; typed client generation; audit middleware via $extends                                                |
+| Frontend             | React 19 + Vite 7 + TypeScript                       | Next.js, Vue.js                  | Modern SSR not needed (internal tool, no SEO); Vite fast dev cycle; TypeScript safety on financial data                                          |
+| UI component library | shadcn/ui + Tailwind CSS 4                           | MUI, Chakra UI                   | WCAG AA compliant; copy-paste components on Radix UI; CSS-first Tailwind v4 with Oxide engine                                                    |
+| Data grid            | TanStack Table v8 (no virtual scrolling — ADR-016)   | AG Grid Community                | Headless table logic paired with shadcn/ui Table components; server-side pagination for audit log; integrates with Tailwind v4                   |
+| Excel export         | ExcelJS                                              | SheetJS (xlsx)                   | Server-side xlsx generation; formula preservation; column width/formatting per NFR 11.10; active maintenance                                     |
+| PDF export           | @react-pdf/renderer v4.3 (ADR-014)                   | Puppeteer, PDFKit, jsPDF         | React-PDF document components; A3 landscape for P&L; no Chromium dependency; < 50 MB RAM per job                                                 |
+| Authentication       | JWT + bcrypt cost 12                                 | Server-side sessions, OAuth      | Stateless tokens; bcrypt cost 12 per NFR 11.3.1; refresh token rotation; horizontal scale-ready                                                  |
+| Deployment           | Single Docker Compose stack                          | Kubernetes, bare metal           | Single-school; on-premise/private cloud KSA per PDPL SA-008; no orchestration overhead                                                           |
+| YEARFRAC             | Custom server-side function                          | Excel-compatible library         | TC-002 US 30/360 algorithm exactly; validated against 168 employee records                                                                       |
 
 ### 1.3 Technology Constraints Acknowledgment
 
@@ -77,13 +77,13 @@ Each technical constraint from the PRD is addressed by a specific design decisio
 
 ### 1.4 Top 5 Technical Risks
 
-| Risk ID | Description | Probability | Impact | Mitigation |
-| --- | --- | --- | --- | --- |
-| R-001 | Calculation discrepancies vs. Excel | 4 | 5 | Automated regression suite with ±1 SAR tolerance gate; Decimal.js per TC-001; parallel run in Phase 6 |
-| R-004 | IEEE 754 precision failures | 3 | 5 | TC-001 mandates Decimal.js for all financial math; CI pipeline includes precision validation checks |
-| R-003 | Source data quality issues | 3 | 4 | 6-step validation protocol on data import; two-phase commit (validate then persist); parallel run Phase 6 |
-| R-006 | YEARFRAC mismatch with Excel | 3 | 4 | TC-002 exact algorithm implementation; 168-employee validation suite built in Phase 1 |
-| R-009 | Key personnel dependency | 2 | 4 | Documentation-first approach; knowledge transfer sessions; this TDD as institutional knowledge |
+| Risk ID | Description                         | Probability | Impact | Mitigation                                                                                                |
+| ------- | ----------------------------------- | ----------- | ------ | --------------------------------------------------------------------------------------------------------- |
+| R-001   | Calculation discrepancies vs. Excel | 4           | 5      | Automated regression suite with ±1 SAR tolerance gate; Decimal.js per TC-001; parallel run in Phase 6     |
+| R-004   | IEEE 754 precision failures         | 3           | 5      | TC-001 mandates Decimal.js for all financial math; CI pipeline includes precision validation checks       |
+| R-003   | Source data quality issues          | 3           | 4      | 6-step validation protocol on data import; two-phase commit (validate then persist); parallel run Phase 6 |
+| R-006   | YEARFRAC mismatch with Excel        | 3           | 4      | TC-002 exact algorithm implementation; 168-employee validation suite built in Phase 1                     |
+| R-009   | Key personnel dependency            | 2           | 4      | Documentation-first approach; knowledge transfer sessions; this TDD as institutional knowledge            |
 
 ### 1.5 Complexity and Debt Assessment
 
@@ -138,14 +138,14 @@ BudFin v1 is a fully self-contained system. There are no inbound or outbound int
 
 ### 2.2 Actor Catalog
 
-| Actor | Role | Key Interactions |
-| --- | --- | --- |
-| Budget Owner (CAO) | Approves budget versions; publishes final budgets; reads all reports and dashboards | Approve/reject version submissions; publish budget to "published" status; view P&L, revenue, staff cost reports; export PDF/Excel summaries |
-| Budget Analyst | Primary data entry operator; creates and manages budget versions | Create new budget versions; clone existing versions; enter/edit fee grids, enrollment, discount policies; trigger calculation runs; export detailed reports; compare version variances |
-| HR/Payroll Coordinator | Manages employee master data; reviews staff cost outputs | Import/edit employee records (contracts, salaries, allowances); review staff cost calculations; verify YEARFRAC computations; export staff cost reports |
-| School Administrator | Reads dashboards and summary reports; reviews enrollment capacity | View enrollment summaries by grade/section; read revenue dashboards; review high-level P&L; no data entry permissions |
-| System Administrator | Manages users, roles, and system configuration | Create/deactivate user accounts; assign roles; review audit trail; manage system settings; monitor application health |
-| External Auditor | Read-only access to published versions and audit trail | View published budget versions; read audit log entries; export reports from published versions only; no access to draft versions |
+| Actor                  | Role                                                                                | Key Interactions                                                                                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Budget Owner (CAO)     | Approves budget versions; publishes final budgets; reads all reports and dashboards | Approve/reject version submissions; publish budget to "published" status; view P&L, revenue, staff cost reports; export PDF/Excel summaries                                            |
+| Budget Analyst         | Primary data entry operator; creates and manages budget versions                    | Create new budget versions; clone existing versions; enter/edit fee grids, enrollment, discount policies; trigger calculation runs; export detailed reports; compare version variances |
+| HR/Payroll Coordinator | Manages employee master data; reviews staff cost outputs                            | Import/edit employee records (contracts, salaries, allowances); review staff cost calculations; verify YEARFRAC computations; export staff cost reports                                |
+| School Administrator   | Reads dashboards and summary reports; reviews enrollment capacity                   | View enrollment summaries by grade/section; read revenue dashboards; review high-level P&L; no data entry permissions                                                                  |
+| System Administrator   | Manages users, roles, and system configuration                                      | Create/deactivate user accounts; assign roles; review audit trail; manage system settings; monitor application health                                                                  |
+| External Auditor       | Read-only access to published versions and audit trail                              | View published budget versions; read audit log entries; export reports from published versions only; no access to draft versions                                                       |
 
 ### 2.3 External Systems
 
@@ -171,12 +171,12 @@ BudFin is deployed on-premise or within a private cloud environment located with
 
 The system defines four trust levels in descending order of privilege. The full RBAC matrix with per-endpoint permissions is detailed in Section 7 (Security Architecture).
 
-| Trust Level | Role | Access Scope |
-| --- | --- | --- |
-| 1 (Highest) | System Administrator | Full system access: user management, configuration, audit trail, all data |
-| 2 | Budget Owner (CAO) | All budget data read/write; version approval and publishing; all reports |
-| 3 | Editor (Budget Analyst, HR/Payroll Coordinator) | Version-scoped data entry and calculation; own-module reports; no approval authority |
-| 4 (Lowest) | Viewer (School Administrator, External Auditor) | Read-only access; published versions only (Auditor) or all versions (School Admin) |
+| Trust Level | Role                                            | Access Scope                                                                         |
+| ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 1 (Highest) | System Administrator                            | Full system access: user management, configuration, audit trail, all data            |
+| 2           | Budget Owner (CAO)                              | All budget data read/write; version approval and publishing; all reports             |
+| 3           | Editor (Budget Analyst, HR/Payroll Coordinator) | Version-scoped data entry and calculation; own-module reports; no approval authority |
+| 4 (Lowest)  | Viewer (School Administrator, External Auditor) | Read-only access; published versions only (Auditor) or all versions (School Admin)   |
 
 ---
 

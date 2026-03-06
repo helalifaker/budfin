@@ -43,13 +43,13 @@ that achieves it.
 
 ### API Response Targets
 
-| Endpoint Category | p50 Target | p95 Target |
-| -------------------- | ---------- | ---------- |
-| Read endpoints (GET) | < 100ms | < 500ms |
-| Write endpoints (PUT/PATCH) | < 200ms | < 1s |
-| Calculation endpoints | < 1.5s | < 3s |
-| Export job creation | < 200ms | < 500ms |
-| Version comparison | < 1s | < 5s |
+| Endpoint Category           | p50 Target | p95 Target |
+| --------------------------- | ---------- | ---------- |
+| Read endpoints (GET)        | < 100ms    | < 500ms    |
+| Write endpoints (PUT/PATCH) | < 200ms    | < 1s       |
+| Calculation endpoints       | < 1.5s     | < 3s       |
+| Export job creation         | < 200ms    | < 500ms    |
+| Version comparison          | < 1s       | < 5s       |
 
 ## 9.2 Scalability Design
 
@@ -117,12 +117,12 @@ that achieves it.
 
 ### Code Coverage Targets (Vitest)
 
-| Module | Line Coverage | Branch Coverage |
-| ------------------- | ------------- | --------------- |
-| Calculation engine | >= 80% | >= 90% |
-| RBAC middleware | >= 80% | >= 90% |
-| API routes | >= 60% | N/A |
-| Overall codebase | >= 60% | N/A |
+| Module             | Line Coverage | Branch Coverage |
+| ------------------ | ------------- | --------------- |
+| Calculation engine | >= 80%        | >= 90%          |
+| RBAC middleware    | >= 80%        | >= 90%          |
+| API routes         | >= 60%        | N/A             |
+| Overall codebase   | >= 60%        | N/A             |
 
 ### API Documentation
 

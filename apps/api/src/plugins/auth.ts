@@ -1,8 +1,4 @@
-import type {
-	FastifyInstance,
-	FastifyRequest,
-	FastifyReply,
-} from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import { UserRole } from '@prisma/client';
 import { verifyAccessToken } from '../services/token.js';
@@ -11,10 +7,7 @@ import { prisma } from '../lib/prisma.js';
 
 declare module 'fastify' {
 	interface FastifyInstance {
-		authenticate: (
-			request: FastifyRequest,
-			reply: FastifyReply,
-		) => Promise<void>;
+		authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
 		requireRole: (
 			...roles: UserRole[]
 		) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
@@ -34,10 +27,7 @@ declare module 'fastify' {
 async function authPlugin(app: FastifyInstance) {
 	app.decorate(
 		'authenticate',
-		async function authenticate(
-			request: FastifyRequest,
-			reply: FastifyReply,
-		) {
+		async function authenticate(request: FastifyRequest, reply: FastifyReply) {
 			const header = request.headers.authorization;
 			if (!header?.startsWith('Bearer ')) {
 				return reply.status(401).send({
@@ -60,16 +50,11 @@ async function authPlugin(app: FastifyInstance) {
 					message: 'Token is invalid or expired',
 				});
 			}
-		},
+		}
 	);
 
-	app.decorate('requireRole', function requireRole(
-		...roles: UserRole[]
-	) {
-		return async function checkRole(
-			request: FastifyRequest,
-			reply: FastifyReply,
-		) {
+	app.decorate('requireRole', function requireRole(...roles: UserRole[]) {
+		return async function checkRole(request: FastifyRequest, reply: FastifyReply) {
 			if (!roles.includes(request.user.role)) {
 				await prisma.auditEntry.create({
 					data: {
@@ -92,13 +77,8 @@ async function authPlugin(app: FastifyInstance) {
 		};
 	});
 
-	app.decorate('requirePermission', function requirePermission(
-		...perms: Permission[]
-	) {
-		return async function checkPermission(
-			request: FastifyRequest,
-			reply: FastifyReply,
-		) {
+	app.decorate('requirePermission', function requirePermission(...perms: Permission[]) {
+		return async function checkPermission(request: FastifyRequest, reply: FastifyReply) {
 			const userPerms = ROLE_PERMISSIONS[request.user.role];
 			const missing = perms.some((p) => !userPerms?.has(p));
 			if (missing) {

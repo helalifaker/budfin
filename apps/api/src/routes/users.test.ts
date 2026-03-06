@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { setKeys, signAccessToken } from '../services/token.js';
 import { auth } from '../plugins/auth.js';
@@ -42,9 +39,7 @@ import { revokeAllUserTokens } from '../services/token-family.js';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; email?: string; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; email?: string; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: overrides.email ?? 'admin@budfin.app',
@@ -179,9 +174,7 @@ describe('PATCH /api/v1/users/:id', () => {
 		expect(res.json().role).toBe('BudgetOwner');
 		// USER_UPDATED audit entry
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const updateAudit = auditCalls.find(
-			(c) => c[0].data.operation === 'USER_UPDATED',
-		);
+		const updateAudit = auditCalls.find((c) => c[0].data.operation === 'USER_UPDATED');
 		expect(updateAudit).toBeDefined();
 	});
 
@@ -242,9 +235,7 @@ describe('PATCH /api/v1/users/:id', () => {
 		expect(res.json().failed_attempts).toBe(0);
 
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const unlockAudit = auditCalls.find(
-			(c) => c[0].data.operation === 'ACCOUNT_UNLOCKED',
-		);
+		const unlockAudit = auditCalls.find((c) => c[0].data.operation === 'ACCOUNT_UNLOCKED');
 		expect(unlockAudit).toBeDefined();
 	});
 
@@ -260,15 +251,10 @@ describe('PATCH /api/v1/users/:id', () => {
 			payload: { force_session_revoke: true },
 		});
 		expect(res.statusCode).toBe(200);
-		expect(revokeAllUserTokens).toHaveBeenCalledWith(
-			2,
-			expect.any(String),
-		);
+		expect(revokeAllUserTokens).toHaveBeenCalledWith(2, expect.any(String));
 
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const revokeAudit = auditCalls.find(
-			(c) => c[0].data.operation === 'SESSION_FORCE_REVOKED',
-		);
+		const revokeAudit = auditCalls.find((c) => c[0].data.operation === 'SESSION_FORCE_REVOKED');
 		expect(revokeAudit).toBeDefined();
 	});
 });
@@ -350,9 +336,7 @@ describe('PATCH /api/v1/users/:id — force_password_reset', () => {
 		expect(res.statusCode).toBe(200);
 
 		const auditCalls = vi.mocked(prisma.auditEntry.create).mock.calls;
-		const updateAudit = auditCalls.find(
-			(c) => c[0].data.operation === 'USER_UPDATED',
-		);
+		const updateAudit = auditCalls.find((c) => c[0].data.operation === 'USER_UPDATED');
 		expect(updateAudit).toBeDefined();
 		expect(updateAudit![0].data.newValues).toMatchObject({
 			forcePasswordReset: true,

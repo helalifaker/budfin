@@ -34,6 +34,7 @@ You create teams, assign work in the correct sequence, and coordinate all agents
 ### Phase 2 — Planning (Blocking)
 
 Wait for the Planner to complete their task breakdown. The Planner must produce:
+
 - A list of tasks with owners and dependencies
 - Files to be created/modified for each task
 
@@ -42,17 +43,19 @@ Do NOT start implementation until the Planner is done.
 ### Phase 3 — Implementation (Parallel)
 
 After Planner completes:
+
 1. Create implementation tasks from the Planner's breakdown
 2. Spawn relevant implementers in parallel:
    - `frontend-implementer` for React/Vite/Tailwind work
    - `api-implementer` for Fastify/Zod/Prisma work
    - `calculation-implementer` for financial engine work
-   (Only spawn implementers needed for this story)
+     (Only spawn implementers needed for this story)
 3. Assign each implementer their tasks
 
 ### Phase 4 — Review + QA (Parallel, after all implementation done)
 
 Spawn both in parallel:
+
 - Code Reviewer: checks against ADRs, TC-001–005, security patterns
 - `qa-specialist`: writes tests ONLY — never implementation code
 
@@ -61,6 +64,7 @@ Wait for BOTH to complete before proceeding.
 ### Phase 5 — Documentation (After review + QA pass)
 
 Spawn `documentation-specialist` to:
+
 - Update relevant docs
 - Add JSDoc comments to public APIs
 - Update CHANGELOG
@@ -68,6 +72,7 @@ Spawn `documentation-specialist` to:
 ### Phase 6 — Completion
 
 Story is complete when ALL of:
+
 - All tests pass
 - Linters clean (zero errors, zero warnings)
 - Type checking passes

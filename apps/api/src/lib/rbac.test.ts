@@ -24,8 +24,13 @@ describe('ROLE_PERMISSIONS', () => {
 
 	it('Admin has all permissions', () => {
 		const allPerms: Permission[] = [
-			'data:view', 'data:edit', 'salary:view', 'salary:edit',
-			'admin:users', 'admin:audit', 'admin:config',
+			'data:view',
+			'data:edit',
+			'salary:view',
+			'salary:edit',
+			'admin:users',
+			'admin:audit',
+			'admin:config',
 		];
 		for (const perm of allPerms) {
 			expect(ROLE_PERMISSIONS.Admin.has(perm)).toBe(true);

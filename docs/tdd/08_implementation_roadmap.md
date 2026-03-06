@@ -5,16 +5,16 @@ Follows PRD Section 14 exactly. 30 working weeks + 5-week buffer total = 35 week
 
 ## 11.1 Team Structure
 
-| Role | FTE | Phases Active |
-| ---------------------- | ---- | ------------------ |
-| Tech Lead | 1.0 | All phases |
-| Full-Stack Developer 1 | 1.0 | Phases 1-5 |
-| Full-Stack Developer 2 | 1.0 | Phases 1-5 |
-| QA Engineer | 1.0 | Phases 2-6 |
-| DBA | 0.5 | Phase 1 + Phase 6 |
-| UX Designer | 0.5 | Phase 1 + Phase 5 |
-| Project Manager | 1.0 | All phases |
-| Finance SME (EFIR) | 0.25 | Advisory, all phases |
+| Role                   | FTE  | Phases Active        |
+| ---------------------- | ---- | -------------------- |
+| Tech Lead              | 1.0  | All phases           |
+| Full-Stack Developer 1 | 1.0  | Phases 1-5           |
+| Full-Stack Developer 2 | 1.0  | Phases 1-5           |
+| QA Engineer            | 1.0  | Phases 2-6           |
+| DBA                    | 0.5  | Phase 1 + Phase 6    |
+| UX Designer            | 0.5  | Phase 1 + Phase 5    |
+| Project Manager        | 1.0  | All phases           |
+| Finance SME (EFIR)     | 0.25 | Advisory, all phases |
 
 ## 11.2 Phase 1: Foundation (Weeks 1-4.5)
 

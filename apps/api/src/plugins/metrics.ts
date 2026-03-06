@@ -44,7 +44,7 @@ async function metricsPlugin(app: FastifyInstance) {
 				endpoint: request.routeOptions?.url ?? request.url,
 				status_code: reply.statusCode.toString(),
 			},
-			duration,
+			duration
 		);
 	});
 }

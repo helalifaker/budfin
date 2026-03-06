@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import {
-	serializerCompiler,
-	validatorCompiler,
-} from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { generateKeyPair } from 'jose';
 import { setKeys, signAccessToken } from '../services/token.js';
 import { auth } from '../plugins/auth.js';
@@ -24,9 +21,7 @@ import { prisma } from '../lib/prisma.js';
 
 let app: FastifyInstance;
 
-async function makeToken(
-	overrides: { sub?: number; role?: string } = {},
-) {
+async function makeToken(overrides: { sub?: number; role?: string } = {}) {
 	return signAccessToken({
 		sub: overrides.sub ?? 1,
 		email: 'admin@budfin.app',
@@ -68,9 +63,7 @@ beforeEach(() => {
 
 describe('GET /api/v1/audit', () => {
 	it('returns paginated entries for Admin', async () => {
-		vi.mocked(prisma.auditEntry.findMany).mockResolvedValue([
-			mockEntry,
-		]);
+		vi.mocked(prisma.auditEntry.findMany).mockResolvedValue([mockEntry]);
 		vi.mocked(prisma.auditEntry.count).mockResolvedValue(1);
 
 		const token = await makeToken();
@@ -110,8 +103,7 @@ describe('GET /api/v1/audit', () => {
 			headers: authHeader(token),
 		});
 
-		const call = vi.mocked(prisma.auditEntry.findMany)
-			.mock.calls[0]![0];
+		const call = vi.mocked(prisma.auditEntry.findMany).mock.calls[0]![0];
 		expect(call?.where?.createdAt).toMatchObject({
 			gte: new Date(from),
 			lte: new Date(to),
@@ -129,8 +121,7 @@ describe('GET /api/v1/audit', () => {
 			headers: authHeader(token),
 		});
 
-		const call = vi.mocked(prisma.auditEntry.findMany)
-			.mock.calls[0]![0];
+		const call = vi.mocked(prisma.auditEntry.findMany).mock.calls[0]![0];
 		expect(call?.where?.userId).toBe(5);
 	});
 
@@ -145,8 +136,7 @@ describe('GET /api/v1/audit', () => {
 			headers: authHeader(token),
 		});
 
-		const call = vi.mocked(prisma.auditEntry.findMany)
-			.mock.calls[0]![0];
+		const call = vi.mocked(prisma.auditEntry.findMany).mock.calls[0]![0];
 		expect(call?.where?.operation).toBe('ACCOUNT_LOCKED');
 	});
 
@@ -164,8 +154,7 @@ describe('GET /api/v1/audit', () => {
 		});
 		expect(res1.json().page_size).toBe(50);
 
-		const call = vi.mocked(prisma.auditEntry.findMany)
-			.mock.calls[0]![0];
+		const call = vi.mocked(prisma.auditEntry.findMany).mock.calls[0]![0];
 		expect(call?.take).toBe(50);
 
 		// Exceeding max returns 400
@@ -178,9 +167,7 @@ describe('GET /api/v1/audit', () => {
 	});
 
 	it('returns total count', async () => {
-		vi.mocked(prisma.auditEntry.findMany).mockResolvedValue([
-			mockEntry,
-		]);
+		vi.mocked(prisma.auditEntry.findMany).mockResolvedValue([mockEntry]);
 		vi.mocked(prisma.auditEntry.count).mockResolvedValue(150);
 
 		const token = await makeToken();

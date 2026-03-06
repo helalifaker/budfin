@@ -19,10 +19,10 @@ BudFin is a single-page application. Every interaction happens within a persiste
 
 BudFin separates modules into two shells based on their relationship to planning context:
 
-| Shell | Purpose | Context Bar | Right Panel | Modules |
-| --- | --- | --- | --- | --- |
-| PlanningShell | Financial planning with version/FY context | Yes | Yes (docked, resizable) | Dashboard, Enrollment, Revenue, Staffing, P&L, Scenarios |
-| ManagementShell | CRUD administration and configuration | No | No (overlay panels only) | Version Management, Master Data (4), Admin (3) |
+| Shell           | Purpose                                    | Context Bar | Right Panel              | Modules                                                  |
+| --------------- | ------------------------------------------ | ----------- | ------------------------ | -------------------------------------------------------- |
+| PlanningShell   | Financial planning with version/FY context | Yes         | Yes (docked, resizable)  | Dashboard, Enrollment, Revenue, Staffing, P&L, Scenarios |
+| ManagementShell | CRUD administration and configuration      | No          | No (overlay panels only) | Version Management, Master Data (4), Admin (3)           |
 
 **Why two shells?** Planning modules require persistent fiscal year, version, period, and scenario context. Management modules (reference data, user admin) are version-independent and do not benefit from -- and are visually cluttered by -- the context bar.
 
@@ -130,11 +130,11 @@ Financial planners iterate rapidly. Opening a form panel to change a single head
 
 All module navigation is client-side. No full page reloads.
 
-| Navigation | Behavior |
-| --- | --- |
-| Sidebar click | React Router navigation. Pending changes auto-save before transition. |
-| Context bar change (FY, version) | Data refresh via TanStack Query. No route change. |
-| Panel open/close | CSS transition (200ms ease-in-out). No route change. |
-| Shell switch (Planning -> Management) | React Router navigation. Context bar unmounts. Sidebar persists. |
+| Navigation                            | Behavior                                                              |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| Sidebar click                         | React Router navigation. Pending changes auto-save before transition. |
+| Context bar change (FY, version)      | Data refresh via TanStack Query. No route change.                     |
+| Panel open/close                      | CSS transition (200ms ease-in-out). No route change.                  |
+| Shell switch (Planning -> Management) | React Router navigation. Context bar unmounts. Sidebar persists.      |
 
 **Transition guarantee:** No user data is lost during navigation. Auto-save fires before every route change. If save fails, a confirmation dialog appears: "You have unsaved changes. Discard?"

@@ -12,6 +12,7 @@ You implement frontend features assigned to you by the story-orchestrator. You w
 ## Always Start By Invoking Skills
 
 Before writing any code, invoke these skills:
+
 1. `frontend-patterns` — for React/Vite/Tailwind/shadcn/ui conventions
 2. `ts-standards` — for TypeScript coding standards
 
@@ -63,6 +64,7 @@ All files: kebab-case, named exports, tabs for indentation, 100-char max.
 ## When Done
 
 Mark your task(s) as completed with TaskUpdate and send a message to the story-orchestrator summarizing:
+
 - Which files were created/modified
 - Any decisions made (and why)
 - Any implementation gaps or questions

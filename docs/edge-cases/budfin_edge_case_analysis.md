@@ -19,43 +19,43 @@ This analysis identifies 35+ critical edge cases across the BudFin architecture 
 
 ## Edge Cases Summary Table
 
-| ID | Category | Title | Severity | Components |
-|---|---|---|---|---|
-| SA-001 | Calculation | IEEE 754 Precision Loss in Revenue Chain | Critical | Revenue, Staff Costs, P&L |
-| SA-002 | Calculation | YEARFRAC Implementation & EoS Rounding | High | Staff Costs, EoS Accrual |
-| SA-003 | Calculation | Division-by-Zero in FTE with Zero Enrollment | High | DHG, Scenario Modeling |
-| SA-004 | Calculation | YEARFRAC Leap Year Boundary | High | Staff Costs, EoS |
-| SA-005 | Calculation | CEILING Rounding at Section Boundary | Medium | Capacity Planning |
-| SA-006 | Calculation | Multi-Stage Rounding in Discount Cascade | High | Revenue Engine |
-| SA-007 | Calculation | HSA Seasonal Exclusion Edge Case | Medium | Staff Costs |
-| SA-008 | Calculation | Scenario Parameter Propagation Order | High | Scenario Modeling |
-| SA-009 | Calculation | Non-Tuition Revenue Distribution Weights | High | Revenue Engine |
-| SA-010 | Data Consistency | Orphan Revenue Records on Enrollment Deletion | High | Enrollment, Revenue |
-| SA-011 | Data Consistency | Circular Dependencies: FTE ↔ Staff Cost | Medium | DHG, Staff Costs |
-| SA-012 | Data Consistency | Negative Enrollment in Pessimistic Scenario | High | Enrollment, Scenario |
-| SA-013 | Data Consistency | Fee Grid Cascade on Grade Deletion | High | Revenue, Fee Grid |
-| SA-014 | Data Consistency | Version Locking Race Condition | High | Version Management |
-| SA-015 | Concurrency | Auto-Save Conflict During User Edit | High | Auto-Save, Data Integrity |
-| SA-016 | Concurrency | Context Bar State Loss Across Modules | Medium | Context Persistence |
-| SA-017 | Concurrency | Simultaneous Version Comparison & Edit | Medium | Version Comparison |
-| SA-018 | Performance | Recalculation Cascade on Enrollment Change | High | Calculation Engine |
-| SA-019 | Performance | Large Scenario Comparison (3 versions × 1,500 students) | Medium | Performance |
-| SA-020 | Performance | Audit Trail Query Timeout with 5+ Years Data | High | Audit Trail |
-| SA-021 | Migration | Dirty Excel Data: Formula Errors & Missing Values | Critical | Data Migration |
-| SA-022 | Migration | Encoding Issues in CSV Import | Medium | Migration |
-| SA-023 | Migration | Decimal vs. Integer Discrepancies in Fee Grid | High | Migration, Revenue |
-| SA-024 | Migration | Manual Override Records Not Migrated | Medium | Migration |
-| SA-025 | Audit Trail | Bulk Operations — 168 Employees Updated at Once | High | Audit Trail Logging |
-| SA-026 | Audit Trail | Auto-Calculated Field Changes & Audit Noise | Medium | Audit Trail |
-| SA-027 | Audit Trail | Cascade Change Logging (Enrollment → Revenue) | High | Audit Trail |
-| SA-028 | Integration/Export | Excel Export with Formula Errors | High | Export |
-| SA-029 | Integration/Export | PDF Export Encoding for SAR Currency Symbol | Medium | Export |
-| SA-030 | Integration/Export | CSV Export: Quote Handling for Arabic Text | Medium | Export |
-| SA-031 | Security | RBAC for Version Locking | High | Security, Version Mgmt |
-| SA-032 | Security | Audit Trail Tampering Detection | High | Security, Audit Trail |
-| SA-033 | Security | Data Export Controls by Role | Medium | Security, Export |
-| SA-034 | Security | SSO Token Expiration During Long Recalculation | Medium | Security, Auth | DEFERRED — SSO is out of scope for v1 per API contract. |
-| SA-035 | Security | Sensitive Data in Undo/Redo Stack | Medium | Security, Undo/Redo |
+| ID     | Category           | Title                                                   | Severity | Components                |
+| ------ | ------------------ | ------------------------------------------------------- | -------- | ------------------------- | ------------------------------------------------------- |
+| SA-001 | Calculation        | IEEE 754 Precision Loss in Revenue Chain                | Critical | Revenue, Staff Costs, P&L |
+| SA-002 | Calculation        | YEARFRAC Implementation & EoS Rounding                  | High     | Staff Costs, EoS Accrual  |
+| SA-003 | Calculation        | Division-by-Zero in FTE with Zero Enrollment            | High     | DHG, Scenario Modeling    |
+| SA-004 | Calculation        | YEARFRAC Leap Year Boundary                             | High     | Staff Costs, EoS          |
+| SA-005 | Calculation        | CEILING Rounding at Section Boundary                    | Medium   | Capacity Planning         |
+| SA-006 | Calculation        | Multi-Stage Rounding in Discount Cascade                | High     | Revenue Engine            |
+| SA-007 | Calculation        | HSA Seasonal Exclusion Edge Case                        | Medium   | Staff Costs               |
+| SA-008 | Calculation        | Scenario Parameter Propagation Order                    | High     | Scenario Modeling         |
+| SA-009 | Calculation        | Non-Tuition Revenue Distribution Weights                | High     | Revenue Engine            |
+| SA-010 | Data Consistency   | Orphan Revenue Records on Enrollment Deletion           | High     | Enrollment, Revenue       |
+| SA-011 | Data Consistency   | Circular Dependencies: FTE ↔ Staff Cost                 | Medium   | DHG, Staff Costs          |
+| SA-012 | Data Consistency   | Negative Enrollment in Pessimistic Scenario             | High     | Enrollment, Scenario      |
+| SA-013 | Data Consistency   | Fee Grid Cascade on Grade Deletion                      | High     | Revenue, Fee Grid         |
+| SA-014 | Data Consistency   | Version Locking Race Condition                          | High     | Version Management        |
+| SA-015 | Concurrency        | Auto-Save Conflict During User Edit                     | High     | Auto-Save, Data Integrity |
+| SA-016 | Concurrency        | Context Bar State Loss Across Modules                   | Medium   | Context Persistence       |
+| SA-017 | Concurrency        | Simultaneous Version Comparison & Edit                  | Medium   | Version Comparison        |
+| SA-018 | Performance        | Recalculation Cascade on Enrollment Change              | High     | Calculation Engine        |
+| SA-019 | Performance        | Large Scenario Comparison (3 versions × 1,500 students) | Medium   | Performance               |
+| SA-020 | Performance        | Audit Trail Query Timeout with 5+ Years Data            | High     | Audit Trail               |
+| SA-021 | Migration          | Dirty Excel Data: Formula Errors & Missing Values       | Critical | Data Migration            |
+| SA-022 | Migration          | Encoding Issues in CSV Import                           | Medium   | Migration                 |
+| SA-023 | Migration          | Decimal vs. Integer Discrepancies in Fee Grid           | High     | Migration, Revenue        |
+| SA-024 | Migration          | Manual Override Records Not Migrated                    | Medium   | Migration                 |
+| SA-025 | Audit Trail        | Bulk Operations — 168 Employees Updated at Once         | High     | Audit Trail Logging       |
+| SA-026 | Audit Trail        | Auto-Calculated Field Changes & Audit Noise             | Medium   | Audit Trail               |
+| SA-027 | Audit Trail        | Cascade Change Logging (Enrollment → Revenue)           | High     | Audit Trail               |
+| SA-028 | Integration/Export | Excel Export with Formula Errors                        | High     | Export                    |
+| SA-029 | Integration/Export | PDF Export Encoding for SAR Currency Symbol             | Medium   | Export                    |
+| SA-030 | Integration/Export | CSV Export: Quote Handling for Arabic Text              | Medium   | Export                    |
+| SA-031 | Security           | RBAC for Version Locking                                | High     | Security, Version Mgmt    |
+| SA-032 | Security           | Audit Trail Tampering Detection                         | High     | Security, Audit Trail     |
+| SA-033 | Security           | Data Export Controls by Role                            | Medium   | Security, Export          |
+| SA-034 | Security           | SSO Token Expiration During Long Recalculation          | Medium   | Security, Auth            | DEFERRED — SSO is out of scope for v1 per API contract. |
+| SA-035 | Security           | Sensitive Data in Undo/Redo Stack                       | Medium   | Security, Undo/Redo       |
 
 ---
 
@@ -112,6 +112,7 @@ If YoS > 5: Provision = (EoS Base / 2 × 5) + EoS Base × (YoS - 5)
 Rounding order: Does division-by-2 round before multiplication? Or maintain full precision?
 
 Example:
+
 - EoS Base = 123,456.78 SAR, YoS = 3.642
 - Rounded approach: round(123,456.78 / 2) = round(61,728.39) = 61,728.39 → × 3.642 = 224,893.51 SAR
 - Unrounded: (123,456.78 / 2) × 3.642 = 224,893.51 SAR (minimal difference here, but)
@@ -143,9 +144,11 @@ Example:
 FTE = Total Weekly Teaching Hours / Effective ORS (18 + HSA hours)
 
 Zero enrollment scenarios:
+
 - Grade with 0 enrollment → 0 sections → 0 DHG hours → FTE = 0 / 18 = 0 ✓
 
 But misconfigured Effective ORS:
+
 - If ORS is set to 0 (configuration error): FTE = Hours / 0 = **#DIV/0!** (crashes)
 - Fractional enrollment (0.4 students from rounding): FTE = 7.2 / 18 = 0.4 FTE (nonsensical — "need 1 teacher for 0.4 students")
 
@@ -187,6 +190,7 @@ Difference: 0.0023 years
 ```
 
 For 30,000 SAR base salary:
+
 - YoS = 0.8361: EoS = (30,000 / 2) × 0.8361 = 12,541.50 SAR
 - YoS = 0.8384: EoS = (30,000 / 2) × 0.8384 = 12,576.00 SAR
 - **Difference: ±34.50 SAR per employee** × 168 = ±5,796 SAR aggregate variance
@@ -219,12 +223,14 @@ For 30,000 SAR base salary:
 Capacity: `Sections = CEILING(Enrollment / Max Class Size)`
 
 Boundary case:
+
 - Enrollment = 103.9 students, Max = 26
 - CEILING(103.9 / 26) = CEILING(3.996) = 4 sections ✓
 - Enrollment = 104.1 students (due to rounding noise)
 - CEILING(104.1 / 26) = CEILING(4.004) = 5 sections (unexpected jump!)
 
 Utilization oscillates:
+
 - 4 sections, 103.9 students: 103.9 / (4 × 26) = 99.9% utilization ("OK")
 - 5 sections, 104.1 students: 104.1 / (5 × 26) = 80% utilization ("OVER" → "OK")
 
@@ -296,6 +302,7 @@ Aggregate monthly revenue variance: ±6 SAR
 HSA (overtime) is zero during Jul--Aug per labor agreement.
 
 Edge cases:
+
 1. Employee joins Jul 15 (mid-summer):
    - Jul: No HSA (summer month) ✓
    - Aug: No HSA (summer month) ✓
@@ -352,6 +359,7 @@ C) (1,500 × 1.1) - (1,500 × 0.01) + (1,500 × 0.03) = 1,650 - 15 + 45 = 1,680 
 ```
 
 Order of operations: Multiplication before addition/subtraction. But parameter semantics?
+
 - New Enrollment Factor: assumes fresh intake minus some attrition
 - Retention Adjustment: additive percentage of base
 - Attrition Rate: subtractive percentage of base
@@ -367,11 +375,13 @@ Excel model has specific formula. If app implements different order, results div
 **Suggested Resolution**
 
 1. Document formula explicitly in code and PRD addendum:
+
    ```
    Adjusted Enrollment = Base × New Enrollment Factor
                        × (1 + Retention Adjustment)
                        - (Base × Attrition Rate)
    ```
+
    (Match Excel SCENARIOS sheet exactly)
 
 2. Scenario parameter test matrix: test all 3 scenarios with documented expected outputs
@@ -392,6 +402,7 @@ Excel model has specific formula. If app implements different order, results div
 Non-tuition items (e.g., Class Photos) use custom month weights: [0,0,0,0,0,0,0,0,0,0,1,1] for Nov--Dec allocation.
 
 Edge cases:
+
 1. **Weights don't sum to 1.0:**
    - Weights: [0.4, 0.4, 0, ...] sum to 0.8 (20% of revenue lost)
    - Weights: [0.6, 0.6, 0, ...] sum to 1.2 (20% double-counted)
@@ -436,17 +447,20 @@ Edge cases:
 **Edge Case Description**
 
 Data model:
+
 ```
 enrollment_detail (grade_id, nationality, tariff) → links to monthly_revenue
 ```
 
 If a grade is deleted (e.g., remove Terminale from planning):
+
 1. Enrollment records for Terminale are deleted
 2. But monthly_revenue rows referencing deleted enrollments remain (orphaned)
 3. P&L consolidation includes orphan revenue rows
 4. Total revenue differs from enrollment-derived calculation
 
 Example:
+
 - Terminale deleted, but monthly_revenue still has 50,000 SAR for "Terminale Tarif Plein"
 - P&L shows total revenue = deleted_orphan_revenue + new_enrollments
 - Variance report shows discrepancy (orphan is spurious)
@@ -476,6 +490,7 @@ Example:
 **Edge Case Description**
 
 Data dependency:
+
 ```
 Enrollment → DHG Sections → FTE → Staff Count
 ↓
@@ -485,6 +500,7 @@ But: FTE drives positions, which changes headcount assumption
 ```
 
 Circular logic:
+
 1. Enrollment → FTE calculated (e.g., 150 FTE)
 2. Finance team enters staff cost based on FTE (168 positions)
 3. User updates enrollment (e.g., -20 students)
@@ -553,6 +569,7 @@ Adjusted = (100 × 0.5) × (1 - 0.50) - (100 × 0.50)
 ```
 
 Negative enrollment produces:
+
 - Negative revenue
 - Negative DHG hours
 - FTE = negative / 18 = negative FTE (nonsensical)
@@ -567,6 +584,7 @@ Negative enrollment produces:
 **Suggested Resolution**
 
 1. **Floor constraint:** MIN(Adjusted Enrollment, 0) → if negative, set to 0
+
    ```
    Adjusted = max(0, (Base × Factor) × (1 + Retention) - (Base × Attrition))
    ```
@@ -577,7 +595,7 @@ Negative enrollment produces:
    - Factor: 0.5 to 1.5 (50%-150% of base)
    - Retention: -10% to +10%
    - Attrition: 0% to 20%
-   
+
    Warn if outside ranges.
 
 4. **Scenario output display:** Show calculated intermediate: "Adjusted = (1,503 × 0.9) × (1 - 0.05) - (1,503 × 0.05) = [result]"
@@ -593,18 +611,21 @@ Negative enrollment produces:
 **Edge Case Description**
 
 Data model:
+
 ```
 grade_levels (id, code, name)  ← referenced by fee_grids
 fee_grids (grade_id, nationality, tariff, amount, period)
 ```
 
 If a grade is deleted from the system (e.g., remove Terminale):
+
 1. Grade record deleted (hard delete or soft delete?)
 2. Fee grid rows for Terminale still exist (orphaned)
 3. On next fee grid import/export, orphan rows are unclear
 4. Revenue calculation references deleted grade (error)
 
 Example:
+
 - 45 fee combinations exist (3 nationalities × 15 grades × 1 tariff variant)
 - Terminale deleted (3 fee rows orphaned)
 - New import adds Terminale back (duplicates?)
@@ -622,7 +643,7 @@ Example:
 1. **Cascade delete with constraints:** If grade deleted, either:
    - **Option A (Hard delete):** Also delete all fee grid rows for that grade (with audit trail)
    - **Option B (Soft delete):** Mark grade as inactive; keep fee grid for historical reference
-   
+
    Recommend Option B for EFIR (maintain audit trail, allow "undo")
 
 2. **Foreign key enforcement:** Database constraint ensures fee_grid.grade_id references active grade_levels
@@ -631,7 +652,7 @@ Example:
    - Active enrollments
    - Active fee grid definitions
    - Recent audit trail entries
-   
+
    UI message: "Cannot delete Terminale: 3 students enrolled, 3 fee definitions active"
 
 4. **Fee grid validation report:** Quarterly check for orphaned fee rows or missing fees for active grades
@@ -647,6 +668,7 @@ Example:
 **Edge Case Description**
 
 Version management:
+
 ```
 Version states: Draft → Locked → Published
 Budget version is locked when finance team approves
@@ -654,18 +676,21 @@ Forecast version remains editable for scenario modeling
 ```
 
 Race condition:
+
 1. User A is editing Budget version (still Draft)
 2. User B publishes Budget version (changes to Locked)
 3. User A continues editing (now editing a Locked version)
 4. User A attempts to save → Does app allow edit on Locked version? Block with error? Or warn?
 
 If app allows edit:
+
 - User A changes 50 enrollment records
 - User A saves
 - Locked version is now modified (violates publishing intent)
 - Audit trail shows edits to Locked version (confusing)
 
 If app blocks edit:
+
 - User A's edits are lost
 - User confusion: "Where did my edits go?"
 - Version is locked but User A wasn't notified
@@ -720,6 +745,7 @@ PRD specifies auto-save every 30 seconds or on field blur. Concurrency issue:
 6. User A's field B value is overwritten by User B's field C change (lost update)
 
 Example:
+
 - User A editing "Total Enrollment for Maternelle"
 - Auto-save at 30s: Enrollment = 265
 - User A continues typing, enters "266" (but not yet blurred)
@@ -768,12 +794,14 @@ Example:
 PRD requires: "Context bar persists state across all modules" (Fiscal Year, Version, Scenario, Academic Period).
 
 State variables:
+
 - fiscal_year: 2026
 - version: "Budget v1" (Actual, Budget, or Forecast)
 - scenario: "Base" (user-defined scenarios include Base, Optimistic, Pessimistic, Custom)
 - academic_period: "AY1" or "AY2"
 
 Race condition:
+
 1. User selects context: FY 2026, Budget v1, Optimistic, AY1
 2. User navigates Enrollment → Revenue → Staffing modules (context persists ✓)
 3. User clicks "Refresh" button in one module
@@ -817,6 +845,7 @@ Race condition:
 Version comparison feature: "Comparison version is active; show variance columns inline" (SA-8.6).
 
 Race condition:
+
 1. User activates Version Comparison: "Budget v1" vs. "Actual v1"
 2. System displays Budget and Actual side-by-side with variance columns
 3. User starts editing Actual enrollment (single-user edit, not the comparison baseline)
@@ -825,6 +854,7 @@ Race condition:
 6. BUT: If comparison version (Budget) is also modified concurrently by another user, variances become stale or inconsistent
 
 Example:
+
 - Budget v1: Maternelle enrollment = 250
 - Actual v1: Maternelle enrollment = 265 (initial)
 - Variance displayed: +15 students
@@ -868,6 +898,7 @@ Example:
 **Edge Case Description**
 
 Calculation dependency chain:
+
 ```
 Enrollment Change
   → Revenue Engine (50+ fee combinations × 12 months = 600 calculations)
@@ -883,11 +914,11 @@ PRD target: <3 seconds full recalculation. But with complex cascades:
 - Revenue calculation: 50 combinations × 12 = 600 operations × 5 decimal operations per cell = 3,000 FP ops
 - Each FP operation with Decimal.js: ~1 ms (vs. native float: ~0.01 ms)
 - Cascade overhead: 600 × 1 ms = 600 ms (Revenue alone)
-- + DHG: 200 ms
-- + Staff Costs: 800 ms (168 × 12 × FTE lookup)
-- + P&L: 200 ms
-- + Dashboard: 100 ms
-- + Scenarios: 3x multiplier = 2,800 ms
+- - DHG: 200 ms
+- - Staff Costs: 800 ms (168 × 12 × FTE lookup)
+- - P&L: 200 ms
+- - Dashboard: 100 ms
+- - Scenarios: 3x multiplier = 2,800 ms
 
 **Total: ~2.8 seconds** (within tolerance, but leaves no margin)
 
@@ -936,11 +967,13 @@ If database queries are slow (e.g., slow connection) or calculations are ineffic
 Scenario comparison report: 3 scenarios × 1,500 students × 50 fee combinations × 12 months × 5 metrics (enrollment, revenue, cost, variance, percentage).
 
 Data volume:
+
 - 3 scenarios × 50 combinations × 12 months = 1,800 rows
 - × 5 metrics per row = 9,000 data points
 - × variance calculations (A vs B, B vs C, etc.) = 27,000 calculations
 
 Report generation:
+
 1. Query database for 3 scenario sets
 2. Join with fee grid (50 combinations)
 3. Pivot to monthly layout (12 columns)
@@ -978,17 +1011,20 @@ PRD target: 5 seconds for version comparison. Scenario comparison is more comple
 Audit trail specification: "Every data modification is logged" (FR-AUD-001). Retention: 7 years.
 
 Over 7 years of operation (365 days × 7 = 2,555 days) with daily usage:
+
 - Estimated events per day: 50-100 (50 enrollment edits, 100 cost edits, etc.)
 - 7-year total: 2,555 × 75 = 191,625 audit events
 
 Audit trail search:
+
 - User queries: "Show all changes to Enrollment module for Terminale in 2024"
-- Query: SELECT * FROM audit_log WHERE module = 'Enrollment' AND grade = 'Terminale' AND year(created_at) = 2024
+- Query: SELECT \* FROM audit_log WHERE module = 'Enrollment' AND grade = 'Terminale' AND year(created_at) = 2024
 - Without proper indexing: full table scan of 191,625 rows
 - Query time: 1-2 seconds
 
 If user requests large range (all changes for all grades for all years):
-- SELECT * FROM audit_log (no WHERE clause)
+
+- SELECT \* FROM audit_log (no WHERE clause)
 - 191,625 rows returned
 - Network transfer: ~20 MB (each row ~100 bytes)
 - Browser rendering 191,625 rows: OOM or > 30 second load
@@ -1039,6 +1075,7 @@ If user requests large range (all changes for all grades for all years):
 Excel source file "01_EFIR_Revenue_FY2026_v3.xlsx" contains known issues (per PRD Section 2.1: "Executive Summary sheet already contains a #REF! error").
 
 Dirty data patterns:
+
 1. **Formula errors:** `#REF!` (broken cross-file reference), `#DIV/0!` (division by zero), `#N/A` (lookup failure)
 2. **Missing values:** Empty cells in mandatory fields (e.g., fee grid missing value for one nationality/grade combination)
 3. **Invalid data types:** Fee grid containing text ("forty-seven thousand") instead of numeric value
@@ -1046,6 +1083,7 @@ Dirty data patterns:
 5. **Inconsistent formatting:** Some fees formatted as `47250` (integer), others as `47250.00` (float), others as `47,250` (with comma)
 
 Migration attempt:
+
 - Application tries to import FEE_GRID sheet
 - Encounters formula error `#REF!` in one cell
 - Parser crashes OR silently ignores error OR imports as string "#REF!"
@@ -1098,6 +1136,7 @@ level_code, student_count, year
 ```
 
 CSV encoding:
+
 - File may be UTF-8, Windows-1252 (Latin-1), or even MacRoman
 - If parser assumes UTF-8 but file is Windows-1252: accents display incorrectly ("Él é mentaire" instead of "Élémentaire")
 - Grade level lookup fails: system expects "Élémentaire" but imports "Él é mentaire"
@@ -1148,16 +1187,19 @@ vs. 4725000 (scaled integer — fils)
 ```
 
 After import, fee calculations:
+
 - Approach A: Net Fee = 47250 × 0.75 = 35437.5 → round to 35437.50
 - Approach B: Net Fee = 47250.00 × 0.75 = 35437.50
 - Approach C: Net Fee = 4725000 × 75 / 100 / 100 = 35437.50
 
 All three produce same result in this case, but:
+
 - If fee has fractional component: 47,250.25 SAR
 - Approach A: 47250.25 × 0.75 = 35437.6875 → round to 35437.69
 - Approach C: 4725025 × 75 / 100 / 100 = 35437.6875 → round to 35437.69 ✓
 
 If Excel stored fee as integer (losing fractional cent):
+
 - Excel: 47,250 SAR (displayed), but actual is 47250.0625 (internal precision)
 - Application imports as: 47,250 (loses fractional cent)
 - Calculation diverges by 0.0469 SAR (rounding the rounding error)
@@ -1210,11 +1252,13 @@ Excel override_log:
 ```
 
 If application doesn't have override functionality (not in original PRD), these records are:
+
 - Not extracted during migration
 - Or extracted but not applied (orphaned)
 - Or extracted and applied to all students in cohort (wrong, should be student-specific)
 
 Result:
+
 - Migrated revenue is calculated using standard fees (47,250), not overridden fees (35,000)
 - Total revenue in app ≠ Excel actuals (discrepancy of 12,250 SAR per override × 5-10 overrides = 60K-120K SAR variance)
 
@@ -1258,6 +1302,7 @@ FR-AUD-001 requires: "Every data modification is logged with timestamp, user, fi
 Bulk operation example: Finance team applies 3% salary augmentation to all 168 employees.
 
 Naive audit logging:
+
 ```
 FOR each employee in employees:
     old_salary = employee.salary
@@ -1267,11 +1312,13 @@ FOR each employee in employees:
 ```
 
 Audit table size:
+
 - 168 employees × 5 salary components (base, housing, transport, premium, HSA) = 840 rows per bulk operation
 - Per year: assume 2-3 bulk operations (annual augmentation, summer adjustment, etc.) = 1,680-2,520 audit rows per year
 - 7-year retention: 11,760-17,640 audit rows
 
 Issues:
+
 1. **Audit table bloat:** Storage grows rapidly; queries slow
 2. **Lost context:** Audit shows 840 individual changes but no indication they were part of single bulk operation
 3. **Audit usability:** User searching audit log sees 840 rows for single operation; unclear what happened
@@ -1285,13 +1332,14 @@ Issues:
 **Suggested Resolution**
 
 1. **Batch audit concept:** Group related audit entries with batch_id
+
    ```
    INSERT INTO audit_log WITH RECURSIVE batch (
        user, batch_id, operation, timestamp, details
    ) VALUES (
        'CFO', 'BULK_AUGMENT_20260303', 'Apply 3% salary augmentation', 2026-03-03 14:30:00, '168 employees updated'
    );
-   
+
    THEN INSERT 840 individual audit rows with same batch_id
    ```
 
@@ -1318,11 +1366,13 @@ Issues:
 Some fields are auto-calculated; should they be logged as modifications?
 
 Examples:
+
 - Monthly Revenue = SUM(Headcount × Net Fee) — auto-calculated from enrollment
 - FTE = Total DHG Hours / ORS — auto-calculated from enrollment sections
 - EoS Accrual = Annual Charge / 12 — auto-calculated from employee data
 
 If these are logged every time source data changes:
+
 - User edits Enrollment for Maternelle
 - System auto-calculates Revenue, FTE, Staffing
 - 12 months × revenue = 12 audit rows
@@ -1344,15 +1394,16 @@ Audit log is flooded with auto-calculated changes; hard to find actual user edit
 1. **Separate audit streams:**
    - **Manual audit log:** Only user-initiated edits (INSERT/UPDATE/DELETE)
    - **Calculation audit log:** Auto-calculated field changes (reference only, not compliance-critical)
-   
+
    UI shows both, but search defaults to manual changes.
 
 2. **Audit entry classification:**
+
    ```
    audit_log: user, field, old_value, new_value, timestamp, audit_type
-   
+
    audit_type: "USER_CHANGE" | "AUTO_CALCULATED" | "SYSTEM_GENERATED"
-   
+
    User filter: Show only "USER_CHANGE" entries
    ```
 
@@ -1375,6 +1426,7 @@ Audit log is flooded with auto-calculated changes; hard to find actual user edit
 **Edge Case Description**
 
 Data dependencies:
+
 ```
 Enrollment → Revenue → P&L
      ↓
@@ -1382,6 +1434,7 @@ Enrollment → Revenue → P&L
 ```
 
 When user changes Enrollment from 1,500 to 1,550:
+
 1. Enrollment record updated → audit log: "Enrollment change: 1,500 → 1,550"
 2. Revenue recalculated (50 combinations × 12 months) → 600 audit entries?
 3. DHG recalculated (4 bands) → 4 audit entries?
@@ -1391,6 +1444,7 @@ When user changes Enrollment from 1,500 to 1,550:
 Cascade audit entries: 1 + 600 + 4 + 2,016 + 50 = 2,671 audit entries for single enrollment edit.
 
 Issues:
+
 1. **Audit table bloat:** Primary user edit generates thousands of downstream audit rows
 2. **Lost causation:** Audit entries for staff costs don't indicate they were triggered by enrollment change
 3. **Audit confusion:** User searches for "who changed staff costs" and finds 2,000 auto-calculated entries from enrollment change
@@ -1404,18 +1458,19 @@ Issues:
 **Suggested Resolution**
 
 1. **Audit causation chain:**
+
    ```
    audit_log: parent_audit_id (links cascade edits to original change)
-   
+
    User edits Enrollment:
        audit_entry_1: id=1001, user='CFO', change='Enrollment 1500→1550', parent_id=NULL
-       
+
    System auto-calculates Revenue:
        audit_entry_2: id=1002, user='SYSTEM', change='Revenue recalculated', parent_id=1001
        audit_entry_3: id=1003, user='SYSTEM', change='Monthly revenue 50 combinations', parent_id=1001
        ... (600 entries, all with parent_id=1001)
    ```
-   
+
    User can query: "Show all changes caused by Enrollment edit #1001" and trace cascade.
 
 2. **Audit aggregation:**
@@ -1450,6 +1505,7 @@ But calculation produced error: #DIV/0! (from upstream hidden calculation)
 ```
 
 Or Excel export contains:
+
 - Formula references to sheets that don't exist (app creates dynamic sheet names)
 - Formula references like `=REVENUE!B12` but no REVENUE sheet (REVENUE data is in SQL database, not exported sheet)
 - Circular formula references: `=SUM(C1:C10)` where C1 references C2, etc.
@@ -1496,6 +1552,7 @@ User opens exported file, sees `#DIV/0!` or `#REF!` errors, assumes data is corr
 PDF export of P&L report. SAR currency symbol (﷼) is Unicode U+FDFC (Arabic Ryal Sign).
 
 In PDF:
+
 - If PDF uses standard Latin-1 encoding: SAR symbol not representable (outside encoding range)
 - Possible outputs:
   - Symbol is omitted: "47250" instead of "﷼47250"
@@ -1539,24 +1596,28 @@ In PDF:
 CSV export of staff list containing Arabic employee names.
 
 CSV standard (RFC 4180):
+
 - Fields containing commas, quotes, or newlines must be quoted
 - Quote character inside quoted field must be escaped: "Ahmed ""Al-Rashid"" Al-Otaibi" (double quote)
 
 Employee name: "أحمد الراشد" (Ahmed Al-Rashid in Arabic)
 
 CSV export:
+
 ```
 ID,Name,Department
 1,"أحمد الراشد",Elementaire
 ```
 
 But if system uses wrong quote escaping:
+
 ```
 ID,Name,Department
 1,"أحمد "الراشد",Elementaire  ← Unescaped quote breaks CSV
 ```
 
 When user opens in Excel or import tool:
+
 - Parser fails or interprets incorrectly
 - Name becomes: `أحمد ` (truncated)
 - Rest of line is misinterpreted
@@ -1599,11 +1660,13 @@ When user opens in Excel or import tool:
 Version management: Budget version is Locked after publication; Forecast remains editable.
 
 RBAC roles:
+
 - Admin: Full access (create, edit, lock, unlock, delete versions)
 - Editor: Can edit drafts; cannot lock/publish
 - Viewer: Read-only
 
 Edge case:
+
 1. Editor creates Budget draft, edits enrollment data
 2. Admin publishes Budget v1 (changes to Locked)
 3. Editor attempts to edit Budget v1 (now Locked)
@@ -1612,11 +1675,13 @@ Edge case:
    - Or allow edit but flag in audit?
 
 If application allows Editor to edit a Locked version (wrong behavior):
+
 - Locked version is modified despite lock
 - Audit approval process is broken (Lock should be immutable)
 - Finance team approval is circumvented
 
 If application silently blocks edit without clear message:
+
 - Editor is confused: "Where did my edits go?"
 - No audit entry explaining why edit was blocked
 
@@ -1633,12 +1698,14 @@ If application silently blocks edit without clear message:
    - Exception: Admin can UNLOCK version (with audit trail)
 
 2. **Check lock status before any edit:**
+
    ```
    IF version.locked AND user.role != "Admin":
        RETURN ERROR 403 Forbidden: "Version is locked. Contact Admin to unlock."
    ```
 
 3. **RBAC matrix for version operations:**
+
    ```
    | Operation | Admin | Editor | Viewer |
    |-----------|-------|--------|--------|
@@ -1668,6 +1735,7 @@ If application silently blocks edit without clear message:
 Audit trail contains immutable record of all changes. But what if an Administrator (or attacker with database access) modifies audit log directly?
 
 Example:
+
 - User A edits Enrollment from 1,500 to 2,000 students (unauthorized change)
 - Audit trail shows: "User A, 2026-03-03 14:30, Enrollment 1500 → 2000"
 - Admin (or attacker) deletes or modifies audit entry to hide change
@@ -1714,20 +1782,24 @@ Example:
 **Edge Case Description**
 
 Data export (Excel, PDF, CSV) may contain sensitive information:
+
 - Employee salary details (if HR Finance staff exports via Staff Costs module)
 - Student enrollment data (if enrollment is exported)
 
 RBAC control:
+
 - Admin: Can export all data
 - Editor: Can export reports (P&L, variance) but NOT employee-level salary data
 - Viewer: Can export aggregated reports only
 
 Edge case:
+
 1. Viewer user navigates to Staff Costs module
 2. Clicks "Export Staff Cost Budget to Excel"
 3. Application generates Excel with all 168 employee salary details (should be blocked)
 
 If application doesn't enforce export controls:
+
 - Viewer downloads sensitive salary data (security breach)
 - Audit trail shows download but doesn't capture that it was sensitive
 - GDPR/privacy violation
@@ -1741,6 +1813,7 @@ If application doesn't enforce export controls:
 **Suggested Resolution**
 
 1. **Export permission matrix:**
+
    ```
    | Data | Admin | Editor | Viewer |
    |------|-------|--------|--------|
@@ -1753,6 +1826,7 @@ If application doesn't enforce export controls:
    ```
 
 2. **Export function filtering:**
+
    ```
    FUNCTION export_staff_costs_to_excel(version, user):
        IF user.role == "Viewer":
@@ -1785,6 +1859,7 @@ If application doesn't enforce export controls:
 Application uses SSO for authentication. PRD specifies < 3 second recalculation, but complex scenarios can take 5-10 seconds.
 
 Timeline:
+
 1. User logs in via SSO (session token expires in 30 minutes)
 2. User initiates large scenario comparison report (5 second calculation)
 3. At 4 seconds, SSO token expires (due to inactivity timeout or scheduled expiration)
@@ -1840,6 +1915,7 @@ undo_stack = [
 ```
 
 Security issue:
+
 1. User edits employee salary (sensitive data)
 2. User's session remains active (logged in)
 3. If user walks away without logging out, another person can access their computer
@@ -1847,6 +1923,7 @@ Security issue:
 5. Sensitive salary data is exposed
 
 Or:
+
 1. Application crashes and attempts to recover by re-loading undo stack from memory
 2. If memory dump is captured (for debugging), undo stack is exposed
 
@@ -1922,18 +1999,17 @@ Or:
 
 Track success against these metrics:
 
-| Metric | Target | Success Criteria |
-|--------|--------|-----------------|
-| Calculation Accuracy | ±0 SAR vs. Excel | 100% of revenue and cost line items match Excel within ±1 SAR |
-| Data Integrity | Zero orphan records | Monthly audit: 0 broken foreign keys, 0 orphan records |
-| Performance | <3s recalculation | 95th percentile recalculation time < 3s for typical scenario |
-| Audit Trail Quality | Complete coverage | 100% of user-initiated changes logged; batch operations have parent_id |
-| RBAC Enforcement | No privilege escalation | 0 unauthorized access attempts; RBAC matrix validated in UAT |
-| Export Quality | No corrupted exports | 100% of exports valid and importable; no encoding/formula errors |
+| Metric               | Target                  | Success Criteria                                                       |
+| -------------------- | ----------------------- | ---------------------------------------------------------------------- |
+| Calculation Accuracy | ±0 SAR vs. Excel        | 100% of revenue and cost line items match Excel within ±1 SAR          |
+| Data Integrity       | Zero orphan records     | Monthly audit: 0 broken foreign keys, 0 orphan records                 |
+| Performance          | <3s recalculation       | 95th percentile recalculation time < 3s for typical scenario           |
+| Audit Trail Quality  | Complete coverage       | 100% of user-initiated changes logged; batch operations have parent_id |
+| RBAC Enforcement     | No privilege escalation | 0 unauthorized access attempts; RBAC matrix validated in UAT           |
+| Export Quality       | No corrupted exports    | 100% of exports valid and importable; no encoding/formula errors       |
 
 ---
 
 **End of Edge Case Analysis**
 
-*For questions or clarifications, contact the Solutions Architect.*
-
+_For questions or clarifications, contact the Solutions Architect._

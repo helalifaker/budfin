@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 
 const updateBodySchema = z.object({
-	updates: z.array(z.object({
-		key: z.string(),
-		value: z.string(),
-	})),
+	updates: z.array(
+		z.object({
+			key: z.string(),
+			value: z.string(),
+		})
+	),
 });
 
 export async function systemConfigRoutes(app: FastifyInstance) {
@@ -33,9 +35,7 @@ export async function systemConfigRoutes(app: FastifyInstance) {
 		schema: { body: updateBodySchema },
 		preHandler: [app.authenticate, app.requireRole('Admin')],
 		handler: async (request) => {
-			const { updates } = request.body as z.infer<
-				typeof updateBodySchema
-			>;
+			const { updates } = request.body as z.infer<typeof updateBodySchema>;
 			let updated = 0;
 
 			for (const { key, value } of updates) {

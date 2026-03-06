@@ -48,14 +48,14 @@ pnpm lint:md      # Lint Markdown documentation
 
 ## Documentation
 
-| Document | Location |
-| --- | --- |
-| Technical Design Document | `docs/tdd/` |
-| Product Requirements | `docs/prd/` |
-| Edge Case Analysis | `docs/edge-cases/` |
+| Document                      | Location                       |
+| ----------------------------- | ------------------------------ |
+| Technical Design Document     | `docs/tdd/`                    |
+| Product Requirements          | `docs/prd/`                    |
+| Edge Case Analysis            | `docs/edge-cases/`             |
 | Architecture Decision Records | `docs/tdd/09_decisions_log.md` |
-| Stack version manifest | `docs/tdd/stack-versions.md` |
-| Implementation plans | `plans/` |
+| Stack version manifest        | `docs/tdd/stack-versions.md`   |
+| Implementation plans          | `plans/`                       |
 
 ## Project Layout
 

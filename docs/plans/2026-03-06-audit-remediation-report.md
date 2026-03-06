@@ -37,14 +37,14 @@ but missing from the TDD.
 
 **Added:** Explicit mapping table between PRD's 6 personas and TDD's 4 RBAC roles:
 
-| PRD Persona | RBAC Role |
-|-------------|-----------|
-| System Administrator | Admin |
+| PRD Persona                           | RBAC Role   |
+| ------------------------------------- | ----------- |
+| System Administrator                  | Admin       |
 | Budget Owner (CAO / Finance Director) | BudgetOwner |
-| Budget Analyst (Finance Manager) | Editor |
-| HR/Payroll Coordinator | Editor |
-| School Administrator (Proviseur) | Viewer |
-| External Auditor | Viewer |
+| Budget Analyst (Finance Manager)      | Editor      |
+| HR/Payroll Coordinator                | Editor      |
+| School Administrator (Proviseur)      | Viewer      |
+| External Auditor                      | Viewer      |
 
 **Rationale:** The PRD and TDD used different role vocabularies, causing confusion about
 which personas map to which technical roles. This mapping is now authoritative.
@@ -94,6 +94,7 @@ updated to A3.
 **Files changed:** `docs/ui-ux-spec/07-scenarios.md` SS5.3
 
 **Added:** 6th parameter slider for `ors_hours` (Obligation Reglementaire de Service):
+
 - Type: hours
 - Default: 18h (all scenarios)
 - Range: 15--21, step 0.5
@@ -107,6 +108,7 @@ ORS hours directly affects FTE calculation and is critical for staffing scenario
 **Files changed:** `docs/tdd/02_component_design.md` SS5.3
 
 **Added:** "Duplicate Employee Detection Rules" subsection codifying the PRD's definition:
+
 - Match when 2+ of: full name (case-insensitive), department, joining date (+/-30 days)
 - Advisory deduplication (no schema constraint)
 - User prompted to confirm or skip each flagged row
@@ -125,13 +127,13 @@ The audit flagged "auto-save: blur vs debounce" as a cross-epic conflict. On rev
 the Global Framework (docs/ui-ux-spec/00-global-framework.md SS6.1) defines a coherent
 multi-trigger approach:
 
-| Trigger | Behavior |
-|---------|----------|
-| Field blur | Save immediately via PATCH/PUT |
-| 30-second interval | Batch save any pending changes |
-| Module navigation | Save all pending before navigating |
-| Calculate button | Save all pending before calculating |
-| Ctrl+S | Force save immediately |
+| Trigger            | Behavior                            |
+| ------------------ | ----------------------------------- |
+| Field blur         | Save immediately via PATCH/PUT      |
+| 30-second interval | Batch save any pending changes      |
+| Module navigation  | Save all pending before navigating  |
+| Calculate button   | Save all pending before calculating |
+| Ctrl+S             | Force save immediately              |
 
 This is not a conflict -- it is a layered save strategy where blur is the primary
 trigger and the 30-second interval is a safety net. No document changes needed.
@@ -181,6 +183,7 @@ Epic 12 is rated NOT READY and remains so until source files are available.
 
 Every epic currently has no stories or acceptance criteria. This is the single largest
 blocker but it is the intended output of the current phase. Resolution path:
+
 1. Run `/plan:spec epic-N` for each epic to write the feature spec
 2. Run `/plan:stories epic-N` for each epic to create story issues from the spec
 3. Priority order: Epic 13 (Infra) -> 11 (Auth) -> 7 (Master Data) -> 1 (Enrollment) -> ...
@@ -191,14 +194,14 @@ blocker but it is the intended output of the current phase. Resolution path:
 
 Six UI flows are referenced in backend specs but have no frontend specification:
 
-| Missing UI | Referenced By | Impact |
-|------------|---------------|--------|
-| Fiscal period management screen | API Contract SS6.3.11 | Backend has no frontend |
-| Two-phase CSV import preview | API Contract (validate+commit) | No validation preview UX |
-| Actual version import flow | PRD FR-VER requirements | Finance team can't import actuals |
-| Calculation audit log viewer | Data model `calculation_audit_log` | No UI for calc audit data |
-| Optimistic lock conflict dialog | TDD SS6.3 (409 response) | Users see raw error on conflicts |
-| Other Operating Expenses input | P&L aggregates but no CRUD | P&L shows 0 for non-staff expenses |
+| Missing UI                      | Referenced By                      | Impact                             |
+| ------------------------------- | ---------------------------------- | ---------------------------------- |
+| Fiscal period management screen | API Contract SS6.3.11              | Backend has no frontend            |
+| Two-phase CSV import preview    | API Contract (validate+commit)     | No validation preview UX           |
+| Actual version import flow      | PRD FR-VER requirements            | Finance team can't import actuals  |
+| Calculation audit log viewer    | Data model `calculation_audit_log` | No UI for calc audit data          |
+| Optimistic lock conflict dialog | TDD SS6.3 (409 response)           | Users see raw error on conflicts   |
+| Other Operating Expenses input  | P&L aggregates but no CRUD         | P&L shows 0 for non-staff expenses |
 
 These should be addressed during the `/plan:spec` phase for their respective epics.
 
@@ -219,21 +222,21 @@ correctly reference it. No action needed.
 After remediation, the cross-document consistency issues are resolved. The remaining
 blockers are all Phase 4 deliverables (specs, stories, AC) and stakeholder decisions.
 
-| Epic | Title | Before | After | Remaining Blockers |
-|------|-------|--------|-------|-------------------|
-| 13 | Infrastructure & CI/CD | RISKS | RISKS | No AC (Phase 4) |
-| 11 | Authentication & RBAC | RISKS | RISKS | No AC (Phase 4); role model NOW resolved |
-| 7 | Master Data Management | RISKS | RISKS | No AC; DHG seed data (stakeholder) |
-| 1 | Enrollment & Capacity | RISKS | RISKS | No AC; import UI gap (Phase 4 spec) |
-| 2 | Revenue | RISKS | RISKS | No AC; revenue recognition (stakeholder) |
-| 3 | Staffing (DHG) | RISKS | RISKS | No AC; DHG seed data (stakeholder) |
-| 4 | Staff Costs | RISKS | RISKS | No AC; dedup key NOW resolved |
-| 5 | P&L Reporting | RISKS | RISKS | No AC; PDF size NOW resolved |
-| 6 | Scenario Modeling | RISKS | RISKS | No AC; ORS slider NOW resolved |
-| 8 | Audit Trail | RISKS | RISKS | No AC (Phase 4) |
-| 9 | Dashboard | RISKS | RISKS | No AC (Phase 4) |
-| 10 | Version Management | RISKS | RISKS | No AC; revert NOW resolved |
-| 12 | Data Migration | NOT READY | NOT READY | No AC; no source data (stakeholder) |
+| Epic | Title                  | Before    | After     | Remaining Blockers                       |
+| ---- | ---------------------- | --------- | --------- | ---------------------------------------- |
+| 13   | Infrastructure & CI/CD | RISKS     | RISKS     | No AC (Phase 4)                          |
+| 11   | Authentication & RBAC  | RISKS     | RISKS     | No AC (Phase 4); role model NOW resolved |
+| 7    | Master Data Management | RISKS     | RISKS     | No AC; DHG seed data (stakeholder)       |
+| 1    | Enrollment & Capacity  | RISKS     | RISKS     | No AC; import UI gap (Phase 4 spec)      |
+| 2    | Revenue                | RISKS     | RISKS     | No AC; revenue recognition (stakeholder) |
+| 3    | Staffing (DHG)         | RISKS     | RISKS     | No AC; DHG seed data (stakeholder)       |
+| 4    | Staff Costs            | RISKS     | RISKS     | No AC; dedup key NOW resolved            |
+| 5    | P&L Reporting          | RISKS     | RISKS     | No AC; PDF size NOW resolved             |
+| 6    | Scenario Modeling      | RISKS     | RISKS     | No AC; ORS slider NOW resolved           |
+| 8    | Audit Trail            | RISKS     | RISKS     | No AC (Phase 4)                          |
+| 9    | Dashboard              | RISKS     | RISKS     | No AC (Phase 4)                          |
+| 10   | Version Management     | RISKS     | RISKS     | No AC; revert NOW resolved               |
+| 12   | Data Migration         | NOT READY | NOT READY | No AC; no source data (stakeholder)      |
 
 **Overall: 7 cross-document conflicts resolved. 3 stakeholder decisions pending.
 13 epics awaiting Phase 4 spec work (expected).**

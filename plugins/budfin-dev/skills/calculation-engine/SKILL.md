@@ -11,13 +11,13 @@ description: Financial calculation patterns for BudFin. Use when writing or revi
 
 ```typescript
 // CORRECT — always use Decimal.js
-import { Decimal } from 'decimal.js'
-const result = new Decimal(a).plus(b).times(c)
+import { Decimal } from 'decimal.js';
+const result = new Decimal(a).plus(b).times(c);
 
 // FORBIDDEN — native arithmetic on monetary values
-const result = a + b        // VIOLATION
-const result = a * b        // VIOLATION
-const result = (a + b) * c  // VIOLATION
+const result = a + b; // VIOLATION
+const result = a * b; // VIOLATION
+const result = (a + b) * c; // VIOLATION
 ```
 
 ESLint `no-restricted-syntax` enforces this at the linter level. Any linter violation must be fixed before commit — never disable this rule.
@@ -33,19 +33,19 @@ ESLint `no-restricted-syntax` enforces this at the linter level. Any linter viol
 
 ```typescript
 function yearFrac(startDate: Date, endDate: Date): Decimal {
-  // US 30/360: each month treated as 30 days, year = 360 days
-  // Must match Excel YEARFRAC(start, end, 0) exactly
+	// US 30/360: each month treated as 30 days, year = 360 days
+	// Must match Excel YEARFRAC(start, end, 0) exactly
 }
 ```
 
 ## TC-003 — Database Precision
 
-| Field type | Prisma type | PostgreSQL precision |
-|-----------|-------------|----------------------|
-| Monetary amounts | `Decimal` | `DECIMAL(15,4)` |
-| Rates (multipliers) | `Decimal` | `DECIMAL(7,6)` |
-| Percentages | `Decimal` | `DECIMAL(5,4)` |
-| Years / fractions | `Decimal` | `DECIMAL(7,4)` |
+| Field type          | Prisma type | PostgreSQL precision |
+| ------------------- | ----------- | -------------------- |
+| Monetary amounts    | `Decimal`   | `DECIMAL(15,4)`      |
+| Rates (multipliers) | `Decimal`   | `DECIMAL(7,6)`       |
+| Percentages         | `Decimal`   | `DECIMAL(5,4)`       |
+| Years / fractions   | `Decimal`   | `DECIMAL(7,4)`       |
 
 Never use `Float` or `Double` for financial data — only `Decimal`.
 
@@ -58,8 +58,8 @@ Never use `Float` or `Double` for financial data — only `Decimal`.
 
 ```typescript
 // In a React component (TC-004 compliant)
-import { Decimal } from 'decimal.js'
-const display = new Decimal(amount).toFixed(2) // display only
+import { Decimal } from 'decimal.js';
+const display = new Decimal(amount).toFixed(2); // display only
 ```
 
 ## TC-005 — Arabia Standard Time (UTC+3)
@@ -70,8 +70,8 @@ const display = new Decimal(amount).toFixed(2) // display only
 - Fiscal year boundaries, enrollment dates, salary periods — all must be in AST
 
 ```typescript
-import { toZonedTime } from '@date-fns/tz'
-const riyadhDate = toZonedTime(new Date(), 'Asia/Riyadh')
+import { toZonedTime } from '@date-fns/tz';
+const riyadhDate = toZonedTime(new Date(), 'Asia/Riyadh');
 ```
 
 ## ADR-002 — All Calculations Server-Side
@@ -94,12 +94,12 @@ Engine functions must be pure (no side effects):
 // Input: domain objects loaded from Prisma
 // Output: result arrays ready for createMany()
 function calculateStaffCost(
-  staff: StaffRecord[],
-  fiscalYear: FiscalYear,
-  rateCard: RateCard
+	staff: StaffRecord[],
+	fiscalYear: FiscalYear,
+	rateCard: RateCard
 ): StaffCostResult[] {
-  // Pure computation using Decimal.js throughout
-  // No DB calls, no logging, no mutations
+	// Pure computation using Decimal.js throughout
+	// No DB calls, no logging, no mutations
 }
 ```
 
@@ -128,6 +128,7 @@ await prisma.$transaction([
 ## Audit Log Requirement
 
 Every calculation run MUST create a `calculation_audit_log` entry containing:
+
 - Which engine ran
 - Input parameters (version ID, fiscal year, run timestamp)
 - Who triggered it (userId)

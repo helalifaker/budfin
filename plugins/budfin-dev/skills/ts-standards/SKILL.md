@@ -29,11 +29,11 @@ description: TypeScript and project-wide coding standards for BudFin. Use when c
 
 ## Module Resolution
 
-| Package | `module` | `moduleResolution` |
-|---------|----------|--------------------|
-| `apps/api` | `Node16` | `Node16` |
-| `apps/web` | `ESNext` (inherits base) | `Bundler` (inherits base) |
-| `packages/types` | inherits base | inherits base |
+| Package          | `module`                 | `moduleResolution`        |
+| ---------------- | ------------------------ | ------------------------- |
+| `apps/api`       | `Node16`                 | `Node16`                  |
+| `apps/web`       | `ESNext` (inherits base) | `Bundler` (inherits base) |
+| `packages/types` | inherits base            | inherits base             |
 
 - `tsconfig.base.json` sets `"moduleResolution": "Bundler"` for web compatibility
 - `apps/api/tsconfig.json` overrides with `"module": "Node16"`, `"moduleResolution": "Node16"`
@@ -73,6 +73,7 @@ pnpm build
 ## Pre-Commit Checklist
 
 Before every commit:
+
 1. `pnpm lint` — must pass with zero errors and zero warnings
 2. `pnpm typecheck` — must pass with zero errors
 3. `pnpm test` — all tests must pass

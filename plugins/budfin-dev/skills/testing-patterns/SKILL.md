@@ -42,76 +42,76 @@ Test names describe intent and expected behavior — not implementation:
 
 ```typescript
 // GOOD — describes behavior
-it('returns zero staff cost when no employees are enrolled in the fiscal year')
-it('rounds displayed amounts to 2 decimal places using ROUND_HALF_UP')
-it('rejects login after 5 failed attempts and returns account locked error')
+it('returns zero staff cost when no employees are enrolled in the fiscal year');
+it('rounds displayed amounts to 2 decimal places using ROUND_HALF_UP');
+it('rejects login after 5 failed attempts and returns account locked error');
 
 // BAD — describes implementation
-it('calls calculateStaffCost with correct args')
-it('sets isLocked to true')
+it('calls calculateStaffCost with correct args');
+it('sets isLocked to true');
 ```
 
 ## Financial Test Patterns
 
 ```typescript
-import { Decimal } from 'decimal.js'
-import { describe, it, expect } from 'vitest'
-import { yearFrac } from '../engines/year-frac'
+import { Decimal } from 'decimal.js';
+import { describe, it, expect } from 'vitest';
+import { yearFrac } from '../engines/year-frac';
 
 describe('yearFrac', () => {
-  it('matches Excel YEARFRAC(date1, date2, 0) for a full calendar year', () => {
-    const start = new Date('2025-01-01')
-    const end = new Date('2026-01-01')
-    const result = yearFrac(start, end)
-    // Known Excel value for US 30/360
-    expect(result.toString()).toBe('1.0000')
-  })
+	it('matches Excel YEARFRAC(date1, date2, 0) for a full calendar year', () => {
+		const start = new Date('2025-01-01');
+		const end = new Date('2026-01-01');
+		const result = yearFrac(start, end);
+		// Known Excel value for US 30/360
+		expect(result.toString()).toBe('1.0000');
+	});
 
-  it('handles mid-year enrollment with TC-002 US 30/360 precision', () => {
-    const start = new Date('2025-09-01')
-    const end = new Date('2026-06-30')
-    const result = yearFrac(start, end)
-    expect(result.toString()).toBe('0.8306') // validated against reference dataset
-  })
-})
+	it('handles mid-year enrollment with TC-002 US 30/360 precision', () => {
+		const start = new Date('2025-09-01');
+		const end = new Date('2026-06-30');
+		const result = yearFrac(start, end);
+		expect(result.toString()).toBe('0.8306'); // validated against reference dataset
+	});
+});
 
 describe('Decimal.js precision', () => {
-  it('does not lose precision in staff cost multiplication', () => {
-    const salary = new Decimal('12345.6789')
-    const rate = new Decimal('0.031500')
-    const result = salary.times(rate)
-    // Should not lose digits
-    expect(result.dp()).toBeGreaterThanOrEqual(4)
-  })
-})
+	it('does not lose precision in staff cost multiplication', () => {
+		const salary = new Decimal('12345.6789');
+		const rate = new Decimal('0.031500');
+		const result = salary.times(rate);
+		// Should not lose digits
+		expect(result.dp()).toBeGreaterThanOrEqual(4);
+	});
+});
 ```
 
 ## Mocking Prisma
 
 ```typescript
-import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { PrismaClient } from '@prisma/client'
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { PrismaClient } from '@prisma/client';
 
 // Mock at module level — never hit real DB in unit tests
-vi.mock('@prisma/client')
+vi.mock('@prisma/client');
 
 const mockPrisma = {
-  budgetVersion: {
-    findFirstOrThrow: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-  $transaction: vi.fn(),
-}
+	budgetVersion: {
+		findFirstOrThrow: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+	},
+	$transaction: vi.fn(),
+};
 
 beforeEach(() => {
-  vi.clearAllMocks()
-  mockPrisma.budgetVersion.findFirstOrThrow.mockResolvedValue({
-    id: 'version-uuid',
-    name: 'FY2026 Draft',
-    status: 'Draft',
-  })
-})
+	vi.clearAllMocks();
+	mockPrisma.budgetVersion.findFirstOrThrow.mockResolvedValue({
+		id: 'version-uuid',
+		name: 'FY2026 Draft',
+		status: 'Draft',
+	});
+});
 ```
 
 ## Integration Tests

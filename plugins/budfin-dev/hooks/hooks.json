@@ -1,16 +1,16 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "You are a gate-keeper enforcing the BudFin QA agent boundary rule.\n\nCheck the tool call about to be executed:\n1. Look at the file path being written or edited\n2. Determine if the current agent context is 'qa-specialist' (check if the system prompt mentions 'qa-specialist' or 'test-only agent')\n3. If the agent IS a qa-specialist AND the file being written is NOT a test file (does not end in .test.ts, .test.tsx, .spec.ts, or .spec.tsx), then output exactly: BLOCK\nReason: QA agents can only write test files (*.test.ts, *.spec.ts). To make implementation changes, report the needed change to the story-orchestrator and wait for an implementer.\n4. In all other cases (agent is not qa-specialist, OR file IS a test file), output: ALLOW",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  }
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Write|Edit",
+				"hooks": [
+					{
+						"type": "prompt",
+						"prompt": "You are a gate-keeper enforcing the BudFin QA agent boundary rule.\n\nCheck the tool call about to be executed:\n1. Look at the file path being written or edited\n2. Determine if the current agent context is 'qa-specialist' (check if the system prompt mentions 'qa-specialist' or 'test-only agent')\n3. If the agent IS a qa-specialist AND the file being written is NOT a test file (does not end in .test.ts, .test.tsx, .spec.ts, or .spec.tsx), then output exactly: BLOCK\nReason: QA agents can only write test files (*.test.ts, *.spec.ts). To make implementation changes, report the needed change to the story-orchestrator and wait for an implementer.\n4. In all other cases (agent is not qa-specialist, OR file IS a test file), output: ALLOW",
+						"timeout": 10
+					}
+				]
+			}
+		]
+	}
 }

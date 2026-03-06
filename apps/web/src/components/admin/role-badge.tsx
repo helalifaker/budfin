@@ -15,7 +15,7 @@ const badgeVariants = cva(
 		defaultVariants: {
 			role: 'Viewer',
 		},
-	},
+	}
 );
 
 type RoleBadgeProps = VariantProps<typeof badgeVariants> & {
@@ -24,9 +24,5 @@ type RoleBadgeProps = VariantProps<typeof badgeVariants> & {
 
 export function RoleBadge({ role, className }: RoleBadgeProps) {
 	const label = role === 'BudgetOwner' ? 'Budget Owner' : role;
-	return (
-		<span className={cn(badgeVariants({ role }), className)}>
-			{label}
-		</span>
-	);
+	return <span className={cn(badgeVariants({ role }), className)}>{label}</span>;
 }
