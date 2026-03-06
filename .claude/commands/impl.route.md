@@ -8,6 +8,9 @@ argument-hint: '"[resource]" "[method]"'
 allowed-tools: Bash, Read, Write, Edit, Skill
 ---
 
+> **Internal scaffolding command.** Called by story-orchestrator agents during /impl:story.
+> Not intended for direct user invocation.
+
 Parse the arguments:
 
 - `resource`: the resource name in lowercase (e.g., "enrollment", "staff", "budget")

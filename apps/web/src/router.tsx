@@ -5,6 +5,8 @@ import { ManagementShell } from './layouts/management-shell';
 import { UsersPage } from './pages/admin/users';
 import { AuditPage } from './pages/admin/audit';
 import { SettingsPage } from './pages/admin/settings';
+import { VersionsPage } from './pages/versions/versions';
+import { FiscalPeriodsPage } from './pages/versions/fiscal-periods';
 
 export const router = createBrowserRouter([
 	{ path: '/login', element: <LoginPage /> },
@@ -34,6 +36,14 @@ export const router = createBrowserRouter([
 					{
 						path: '/admin/settings',
 						element: <SettingsPage />,
+					},
+					{
+						path: '/versions',
+						element: <VersionsPage />,
+					},
+					{
+						path: '/fiscal-periods',
+						element: <FiscalPeriodsPage />,
 					},
 				],
 			},

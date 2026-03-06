@@ -62,6 +62,11 @@ model User {
   updatedDepartments   Department[]     @relation("DepartmentUpdater")
   updatedAssumptions   Assumption[]     @relation("AssumptionUpdater")
 
+  // Version Management relations (Epic 10)
+  createdVersions    BudgetVersion[]    @relation("VersionCreator")
+  lockedFiscalPeriods FiscalPeriod[]   @relation("FiscalPeriodLocker")
+  importedActuals    ActualsImportLog[] @relation("ActualsImporter")
+
   @@map("users")
 }
 
@@ -293,4 +298,88 @@ model Assumption {
   updater User? @relation("AssumptionUpdater", fields: [updatedBy], references: [id])
 
   @@map("assumptions")
+}
+
+// ── Version Management (Epic 10) ──────────────────────────────────────────────
+
+model BudgetVersion {
+  id                Int      @id @default(autoincrement())
+  fiscalYear        Int      @map("fiscal_year") @db.SmallInt
+  name              String   @db.VarChar(100)
+  type              String   @db.VarChar(10)
+  status            String   @default("Draft") @db.VarChar(10)
+  description       String?  @db.Text
+  dataSource        String   @default("CALCULATED") @map("data_source") @db.VarChar(12)
+  sourceVersionId   Int?     @map("source_version_id")
+  modificationCount Int      @default(0) @map("modification_count")
+  staleModules      String[] @default([]) @map("stale_modules")
+  createdById       Int      @map("created_by_id")
+  publishedAt       DateTime? @map("published_at") @db.Timestamptz
+  lockedAt          DateTime? @map("locked_at") @db.Timestamptz
+  archivedAt        DateTime? @map("archived_at") @db.Timestamptz
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  createdBy     User            @relation("VersionCreator", fields: [createdById], references: [id])
+  sourceVersion BudgetVersion?  @relation("VersionCloneSource", fields: [sourceVersionId], references: [id], onDelete: SetNull)
+  clones        BudgetVersion[] @relation("VersionCloneSource")
+
+  fiscalPeriods     FiscalPeriod[]
+  monthlySummaries  MonthlyBudgetSummary[]
+  actualsImportLogs ActualsImportLog[]
+
+  @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
+  @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
+  @@index([status], map: "idx_budget_versions_status")
+  @@map("budget_versions")
+}
+
+model FiscalPeriod {
+  id              Int       @id @default(autoincrement())
+  fiscalYear      Int       @map("fiscal_year") @db.SmallInt
+  month           Int       @db.SmallInt
+  status          String    @default("Draft") @db.VarChar(10)
+  actualVersionId Int?      @map("actual_version_id")
+  lockedAt        DateTime? @map("locked_at") @db.Timestamptz
+  lockedById      Int?      @map("locked_by_id")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  actualVersion BudgetVersion? @relation(fields: [actualVersionId], references: [id], onDelete: SetNull)
+  lockedBy      User?          @relation("FiscalPeriodLocker", fields: [lockedById], references: [id], onDelete: SetNull)
+
+  @@unique([fiscalYear, month], map: "uq_fiscal_period")
+  @@map("fiscal_periods")
+}
+
+model MonthlyBudgetSummary {
+  id           Int      @id @default(autoincrement())
+  versionId    Int      @map("version_id")
+  month        Int      @db.SmallInt
+  revenueHt    Decimal  @default(0) @map("revenue_ht") @db.Decimal(15, 4)
+  staffCosts   Decimal  @default(0) @map("staff_costs") @db.Decimal(15, 4)
+  netProfit    Decimal  @default(0) @map("net_profit") @db.Decimal(15, 4)
+  calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, month], map: "uq_monthly_summary")
+  @@index([versionId], map: "idx_monthly_summary_version")
+  @@map("monthly_budget_summary")
+}
+
+model ActualsImportLog {
+  id               Int      @id @default(autoincrement())
+  versionId        Int      @map("version_id")
+  module           String   @db.VarChar(12)
+  sourceFile       String   @map("source_file") @db.VarChar(255)
+  validationStatus String   @map("validation_status") @db.VarChar(10)
+  rowsImported     Int      @default(0) @map("rows_imported")
+  importedById     Int      @map("imported_by_id")
+  importedAt       DateTime @default(now()) @map("imported_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id])
+  importedBy User          @relation("ActualsImporter", fields: [importedById], references: [id])
+
+  @@map("actuals_import_log")
 }

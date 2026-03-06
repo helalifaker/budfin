@@ -20,7 +20,6 @@ Never skip a phase. Never skip a checklist item.
 | Command | Phase | Purpose |
 |---------|-------|---------|
 | `/plan:decompose` | 2 | Bulk-create all 13 GitHub Epics + Projects board |
-| `/plan:epic [N] "[name]" [priority] [tier]` | 2 | Create a single GitHub Epic issue |
 | `/plan:spec [epic-N] "[feature name]"` | 4 | Write feature spec + run Orchestrator review |
 | `/plan:stories [epic-N]` | 4 | Batch-create all GitHub Story issues from spec |
 | `/plan:adr "[decision title]"` | Any | Record an architectural decision |
@@ -31,9 +30,7 @@ Never skip a phase. Never skip a checklist item.
 |---------|-------|---------|
 | `/impl:story [story-#]` | 5–6 | Implement single story: TDD RED → GREEN → Review swarm |
 | `/impl:epic [epic-#]` | 5–6 | Implement all stories for an Epic in dependency order |
-| `/impl:route "[resource]" "[method]"` | 5–6 | Scaffold Fastify 5 route + test file |
-| `/impl:model "[ModelName]"` | 5–6 | Scaffold Prisma 6 model + generate + migrate |
-| `/impl:component "[ComponentName]"` | 5–6 | Scaffold React 19 component + test file |
+| `/impl:commit [story-#]` | 6 | Commit + push + open draft PR |
 
 ### Fix Commands
 
@@ -46,6 +43,14 @@ Never skip a phase. Never skip a checklist item.
 | `/fix:precision` | Any | Fix TC-001 Decimal.js violations + monetary serialization |
 | `/fix:debug "[symptom]"` | Any | Root cause analysis for any error |
 | `/fix:all` | Any | Run all fixers in sequence |
+
+### Review Commands
+
+| Command | Phase | Purpose |
+|---------|-------|---------|
+| `/review:run [story-#\|--all]` | 7 | Review + CI check + merge + epic rollup |
+| `/ci:check [story-#]` | 6–7 | Diagnose CI failures + auto-fix |
+| `/pr:merge [story-#]` | 7 | Manual squash-merge (single PR) |
 
 ### Workflow Commands
 
@@ -66,6 +71,7 @@ Never skip a phase. Never skip a checklist item.
 | TC-001 native arithmetic / JSON serialization | `/fix:precision` |
 | Unexplained error — need root cause | `/fix:debug "[symptom]"` |
 | Multiple error types | `/fix:all` |
+| CI failure on PR | `/ci:check [story-#]` |
 
 ---
 
@@ -216,7 +222,9 @@ Use scaffolding shortcuts when needed:
 
 > Three agents review in parallel before merging.
 
-**Command**: `/impl:story [story-#]` — after GREEN, `story-orchestrator` launches the three review agents in parallel automatically. No manual invocation needed.
+**Commands**: `/review:run [story-#|--all]` — review orchestrator that checks CI, runs review agents, merges approved PRs, and performs epic rollup. Also: `/ci:check [story-#]` for CI diagnosis, `/pr:merge [story-#]` for manual single-PR merge.
+
+`/impl:story [story-#]` — after GREEN, `story-orchestrator` launches the three review agents in parallel automatically. No manual invocation needed.
 
 | Agent | File | Responsibility |
 |-------|------|----------------|
@@ -292,15 +300,15 @@ See `.claude/COMMANDS.md` for the full decision-tree user guide.
 | `/workflow:advance` | Gate-check and advance to next phase |
 | `/workflow:run [epic-#]` | Full Epic driver: spec → stories → implement → advance |
 | `/plan:decompose` | Bulk-create all 13 GitHub Epics + Projects board |
-| `/plan:epic [N] "[name]" [priority] [tier]` | Create a single GitHub Epic issue |
 | `/plan:spec [epic-N] "[feature name]"` | Write feature spec + run Orchestrator review |
 | `/plan:stories [epic-N]` | Batch-create all GitHub Story issues from spec |
 | `/plan:adr "[decision title]"` | Record an architectural decision |
 | `/impl:story [story-#]` | Implement story: TDD RED → GREEN → Review swarm |
 | `/impl:epic [epic-#]` | Implement all stories for an Epic |
-| `/impl:route "[resource]" "[method]"` | Scaffold Fastify 5 route + test file |
-| `/impl:model "[ModelName]"` | Scaffold Prisma 6 model + migrate |
-| `/impl:component "[ComponentName]"` | Scaffold React 19 component + test file |
+| `/impl:commit [story-#]` | Commit + push + open draft PR |
+| `/review:run [story-#\|--all]` | Review + CI check + merge + epic rollup |
+| `/ci:check [story-#]` | Diagnose CI failures + auto-fix |
+| `/pr:merge [story-#]` | Manual squash-merge (single PR) |
 | `/fix:lint` | Fix all ESLint / Prettier / markdownlint errors |
 | `/fix:types` | Fix all TypeScript type errors |
 | `/fix:tests` | Fix failing tests + confirm ≥ 80% coverage |

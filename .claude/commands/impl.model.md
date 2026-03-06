@@ -9,6 +9,9 @@ argument-hint: '"[ModelName]"'
 allowed-tools: Bash, Read, Write, Edit, Skill
 ---
 
+> **Internal scaffolding command.** Called by story-orchestrator agents during /impl:story.
+> Not intended for direct user invocation.
+
 Parse the argument:
 
 - `ModelName`: PascalCase model name (e.g., "Enrollment", "StaffMember", "FiscalYear")

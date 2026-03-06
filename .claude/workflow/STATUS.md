@@ -1,7 +1,7 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 7 -- Master Data Management
+**Phase**: 4 — SPECIFY
+**Current Epic**: (pending selection)
 **Last updated**: 2026-03-06
 
 ## Phase History
@@ -37,7 +37,7 @@
 | 7 | Master Data Management | DONE | All 12 stories complete (12/12), merged PR #49 — 2026-03-06 |
 | 8 | Audit Trail | 2 | Epic Created (#9) |
 | 9 | Dashboard | 2 | Epic Created (#13) |
-| 10 | Version Management | 2 | Epic Created (#14) |
+| 10 | Version Management | 7 | Phase 7 -- Review in progress, PR #63 |
 | 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) -- 2026-03-06 |
 | 12 | Data Migration | 2 | Epic Created (#10) |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
