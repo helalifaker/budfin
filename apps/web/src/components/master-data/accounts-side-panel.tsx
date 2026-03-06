@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import type { Account } from '../../hooks/use-accounts';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const accountSchema = z.object({
 	accountCode: z.string().min(1, 'Account code is required'),
@@ -42,12 +43,6 @@ const CENTER_TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUSES = ['ACTIVE', 'INACTIVE'] as const;
-
-const selectClass = cn(
-	'mt-1 flex h-9 w-full rounded-md border',
-	'border-slate-300 bg-white px-3 py-2 text-sm text-slate-900',
-	'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-);
 
 export function AccountsSidePanel({
 	open,
@@ -203,13 +198,24 @@ export function AccountsSidePanel({
 							<label htmlFor="type" className="block text-sm font-medium">
 								Type
 							</label>
-							<select id="type" className={selectClass} {...form.register('type')}>
-								{TYPES.map((t) => (
-									<option key={t} value={t}>
-										{TYPE_LABELS[t]}
-									</option>
-								))}
-							</select>
+							<Controller
+								control={form.control}
+								name="type"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="type" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{TYPES.map((t) => (
+												<SelectItem key={t} value={t}>
+													{TYPE_LABELS[t]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
 						</div>
 
 						<div>
@@ -233,13 +239,24 @@ export function AccountsSidePanel({
 							<label htmlFor="centerType" className="block text-sm font-medium">
 								Center Type
 							</label>
-							<select id="centerType" className={selectClass} {...form.register('centerType')}>
-								{CENTER_TYPES.map((ct) => (
-									<option key={ct} value={ct}>
-										{CENTER_TYPE_LABELS[ct]}
-									</option>
-								))}
-							</select>
+							<Controller
+								control={form.control}
+								name="centerType"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="centerType" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{CENTER_TYPES.map((ct) => (
+												<SelectItem key={ct} value={ct}>
+													{CENTER_TYPE_LABELS[ct]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
 						</div>
 
 						<div>
@@ -262,13 +279,24 @@ export function AccountsSidePanel({
 							<label htmlFor="status" className="block text-sm font-medium">
 								Status
 							</label>
-							<select id="status" className={selectClass} {...form.register('status')}>
-								{STATUSES.map((s) => (
-									<option key={s} value={s}>
-										{s === 'ACTIVE' ? 'Active' : 'Inactive'}
-									</option>
-								))}
-							</select>
+							<Controller
+								control={form.control}
+								name="status"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="status" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{STATUSES.map((s) => (
+												<SelectItem key={s} value={s}>
+													{s === 'ACTIVE' ? 'Active' : 'Inactive'}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
 						</div>
 					</form>
 				</div>

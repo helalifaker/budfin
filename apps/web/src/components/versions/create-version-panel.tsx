@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import { useCreateVersion } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const createSchema = z.object({
 	name: z.string().min(1, 'Name is required').max(100, 'Name must be ≤ 100 characters'),
@@ -137,15 +138,21 @@ export function CreateVersionPanel({
 									*
 								</span>
 							</label>
-							<select
-								id="cv-type"
-								aria-required="true"
-								className="mt-1 flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-								{...form.register('type')}
-							>
-								<option value="Budget">Budget</option>
-								<option value="Forecast">Forecast</option>
-							</select>
+							<Controller
+								control={form.control}
+								name="type"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="cv-type" aria-required="true" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="Budget">Budget</SelectItem>
+											<SelectItem value="Forecast">Forecast</SelectItem>
+										</SelectContent>
+									</Select>
+								)}
+							/>
 							{form.formState.errors.type && (
 								<p className="mt-1 text-xs text-red-600" role="alert">
 									{form.formState.errors.type.message}
