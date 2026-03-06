@@ -126,7 +126,8 @@ See `.claude/COMMANDS.md` for the full command reference. Key commands:
 | Full command reference (plan/impl/fix/workflow) | `.claude/COMMANDS.md`             |
 | Canonical pinned versions                       | `docs/tdd/stack-versions.md`      |
 | Architecture overview                           | `docs/tdd/01_overview.md`         |
-| ADRs (ADR-008 to ADR-017)                       | `docs/tdd/09_decisions_log.md`    |
+| ADRs (ADR-001 to ADR-017)                       | `docs/tdd/09_decisions_log.md`    |
+| ADRs (ADR-018+)                                 | `docs/adr/`                       |
 | Security architecture                           | `docs/tdd/05_security.md`         |
 | Data model                                      | `docs/tdd/02_component_design.md` |
 | API contracts                                   | `docs/tdd/04_api_contract.md`     |

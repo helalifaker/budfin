@@ -34,7 +34,7 @@
 
 | Epic # | Feature | Phase | Status |
 | -------- | --------- | ------- | -------- |
-| 1 | Enrollment & Capacity | 2 | Epic Created (#3) |
+| 1 | Enrollment & Capacity | 4 | SPECIFY in progress (#3) |
 | 2 | Revenue | 2 | Epic Created (#6) |
 | 3 | Staffing (DHG) | 2 | Epic Created (#7) |
 | 4 | Staff Costs | 2 | Epic Created (#8) |

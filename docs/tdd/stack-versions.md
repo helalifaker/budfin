@@ -45,12 +45,13 @@ This file is the canonical source of truth for all package versions used in BudF
 
 ### Backend DevDependencies
 
-| Package         | Version | Notes                             |
-| --------------- | ------- | --------------------------------- |
-| vitest          | ^4.0.0  | Browser Mode stable in v4         |
-| tsx             | latest  | TypeScript execute for dev server |
-| @types/bcryptjs | latest  | Type definitions                  |
-| @types/node     | ^22.0.0 | Node.js v22 type definitions      |
+| Package             | Version | Notes                             |
+| ------------------- | ------- | --------------------------------- |
+| vitest              | ^4.0.0  | Browser Mode stable in v4         |
+| @vitest/coverage-v8 | ^4.0.0  | V8-based code coverage provider   |
+| tsx                 | latest  | TypeScript execute for dev server |
+| @types/bcryptjs     | latest  | Type definitions                  |
+| @types/node         | ^22.0.0 | Node.js v22 type definitions      |
 
 ---
 
@@ -75,6 +76,7 @@ This file is the canonical source of truth for all package versions used in BudF
 | clsx                     | ^2.1.0   | Conditional className utility                                                   |
 | tailwind-merge           | ^3.5.0   | Merge Tailwind classes without conflicts                                        |
 | lucide-react             | ^0.576.0 | Icon library used by shadcn/ui                                                  |
+| react-router             | ^7.13.0  | Client-side routing for SPA                                                     |
 
 ### Frontend DevDependencies
 
@@ -86,6 +88,7 @@ This file is the canonical source of truth for all package versions used in BudF
 | tailwindcss            | ^4.2.0  | CSS-first config; Oxide engine (5x faster); no `tailwind.config.js` |
 | vitest                 | ^4.0.0  | Shared test framework                                               |
 | @testing-library/react | ^16.3.0 | React component testing                                             |
+| jsdom                  | ^28.1.0 | DOM environment for Vitest                                          |
 | @types/react           | ^19.0.0 | React 19 type definitions                                           |
 | @types/react-dom       | ^19.0.0 | React DOM type definitions                                          |
 
@@ -93,12 +96,19 @@ This file is the canonical source of truth for all package versions used in BudF
 
 ## Root (Shared DevDependencies)
 
-| Package          | Version        | Notes                                                                                              |
-| ---------------- | -------------- | -------------------------------------------------------------------------------------------------- |
-| typescript       | 5.9.3 (pinned) | Shared compiler across all workspaces; see ADR-013                                                 |
-| prettier         | ^3.8.0         | No breaking changes                                                                                |
-| eslint           | ^9.0.0         | **Flat config** (`eslint.config.ts`) — breaking from `.eslintrc`; v9 chosen for stability over v10 |
-| markdownlint-cli | ^0.48.0        | Markdown linting                                                                                   |
+| Package                     | Version        | Notes                                                                                              |
+| --------------------------- | -------------- | -------------------------------------------------------------------------------------------------- |
+| typescript                  | 5.9.3 (pinned) | Shared compiler across all workspaces; see ADR-013                                                 |
+| prettier                    | ^3.8.0         | No breaking changes                                                                                |
+| eslint                      | ^9.0.0         | **Flat config** (`eslint.config.ts`) — breaking from `.eslintrc`; v9 chosen for stability over v10 |
+| @eslint/js                  | ^9.39.0        | ESLint core rules package                                                                          |
+| typescript-eslint           | ^8.56.0        | TypeScript ESLint integration (flat config)                                                        |
+| eslint-plugin-react-hooks   | ^7.0.0         | React Hooks linting rules                                                                          |
+| eslint-plugin-react-refresh | ^0.5.2         | React Refresh validation for Vite HMR                                                              |
+| globals                     | ^17.4.0        | Global variable definitions for ESLint                                                             |
+| markdownlint-cli            | ^0.48.0        | Markdown linting                                                                                   |
+| husky                       | ^9.1.0         | Git hooks manager (pre-commit)                                                                     |
+| lint-staged                 | ^15.5.0        | Run linters on staged files only                                                                   |
 
 ---
 

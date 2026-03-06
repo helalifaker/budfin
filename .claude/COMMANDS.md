@@ -33,6 +33,7 @@ are covered by the commands below — you should rarely need to type a custom pr
 | Re-run review on a single story | `/review:run [story-#]` |
 | CI failed on a PR | `/ci:check [story-#]` |
 | Verify CI + reviews, squash-merge, roll up Epic status | `/pr:merge [story-#]` |
+| Drive one or more PRs to merge autonomously | `/pr:drive [story-#]` or `/pr:drive --pr N [N...]` |
 
 ### Something is broken
 
@@ -75,9 +76,8 @@ are covered by the commands below — you should rarely need to type a custom pr
        ↓
 /impl:commit [#]  (Phase 6 — branch + commit + draft PR)
        ↓
-/review:run [#|--all]  (Phase 7 — CI check + review agents + merge)
-       ↓
-/pr:merge [#]  (Phase 7 — manual squash-merge if needed)
+/pr:drive [#]  (Phase 6-7 — autonomous: CI fix + review + merge + epic rollup)
+  (or manually: /ci:check → /review:run → /pr:merge)
        ↓
 /workflow:advance  (Phase 7 → next Epic, after ALL stories merged)
 ```
@@ -100,6 +100,7 @@ Or use `/workflow:run [epic-N]` to drive the full Epic lifecycle with one comman
 | `/review:run` | — | — | — | — | — | — | ✓ |
 | `/ci:check` | — | — | — | — | — | ✓ | ✓ |
 | `/pr:merge` | — | — | — | — | — | — | ✓ |
+| `/pr:drive` | — | — | — | — | — | ✓ | ✓ |
 | `/fix:*` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `/workflow:status` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `/workflow:advance` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -153,6 +154,12 @@ appropriate fix action, commits fixes, and re-checks until green.
 Phase 7. Verifies CI checks green and PR is not a draft, then squash-merges with branch
 deletion. Auto-closes the story via `Fixes #N`. Runs Epic rollup: closes the Epic issue and
 moves it to Done if all sibling stories are merged.
+
+**`/pr:drive [story-#]`** or **`/pr:drive --pr N [N...]`**
+Phase 6-7 (story mode) or any phase (PR mode). Autonomous PR driver: takes one or more PRs
+and loops through CI checks, fixes, review agents, blocker resolution, and merge. PR mode
+(`--pr`) skips phase gating and story/epic metadata. Stuck detection stops after 2 consecutive
+identical failures. Performs epic rollup after merge when story metadata is present.
 
 ### Fix Commands
 
@@ -210,6 +217,17 @@ Full Epic driver. Runs spec → stories → impl:epic → review:run → advance
 /fix:types      # if TypeScript errors
 /fix:tests      # if Vitest failures
 /fix:debug "symptom description"  # if root cause unclear
+```
+
+### Autonomous PR merge (after impl:commit)
+```
+/impl:commit [story-#]  # commit + push + draft PR
+/pr:drive [story-#]     # autonomous: CI -> fix -> review -> merge -> epic rollup
+```
+
+### Drive existing PRs directly (no story required)
+```
+/pr:drive --pr 64 65    # drive PR #64 and #65 to merge sequentially
 ```
 
 ### Quick Epic (using workflow:run)

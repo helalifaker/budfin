@@ -86,7 +86,7 @@ These three phases run once at project start.
 > Freeze all requirements before writing a single line of code.
 
 - [x] PRD v2.0 reviewed and frozen (`docs/prd/BudFin_PRD_v2.0.md`)
-- [x] Project constitution written (`.claude/workflow/references/constitution.md`)
+- [x] PRD v2.0 reviewed and frozen (serves as project constitution)
 - [x] Technology constraints documented (TC-001 → TC-005)
 - [x] Edge cases analyzed — 35 cases, severity rated (`docs/edge-cases/`)
 - [x] All scope assumptions confirmed (SA-001 → SA-009)
@@ -105,7 +105,7 @@ These three phases run once at project start.
 **Commands**: Run `/plan:decompose` to bulk-create all 13 epics and the Projects board automatically.
 
 - [ ] GitHub Projects board created (columns: Backlog / In Progress / In Review / Done)
-- [ ] 13 features identified from PRD Feature Decomposition (see `docs/planning/PLANNING_PROCESS.md`)
+- [ ] 13 features identified from PRD Feature Decomposition (see Phase 2 above)
 - [ ] One GitHub Epic created per feature (`epic` label, MoSCoW priority in description)
 - [ ] Each Epic has: summary, acceptance criteria reference, MVP/Target/Stretch tier
 - [ ] Dependencies between epics documented in each Epic body

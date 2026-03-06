@@ -537,3 +537,12 @@ This 21x discrepancy on the refresh token TTL (7 days vs. 8 hours) is security-c
 - **Remove prom-client:** Removing the instrumentation would require re-adding it in v2 alongside Grafana. Keeping it in code costs nothing.
 
 **Consequences:** The production environment matrix is updated: "Grafana + UptimeRobot" → "UptimeRobot + Winston email alerts". Grafana setup is documented as a v2 deliverable in `08_implementation_roadmap.md`. The `/metrics` endpoint is protected by nginx (subnet restriction) but is live and ready for a future Prometheus scraper.
+
+---
+
+## Post-TDD ADRs
+
+ADRs created during epic implementation are stored in `docs/adr/`. These extend the decisions log above:
+
+- **ADR-018** — Dedicated Master Data Endpoints (`docs/adr/ADR-018-dedicated-master-data-endpoints.md`): Created during Epic 7 (Master Data Management) implementation.
+- **ADR-019** — Version Lifecycle State Machine (`docs/adr/ADR-019-version-lifecycle-state-machine.md`): Created during Epic 10 (Version Management) implementation.
