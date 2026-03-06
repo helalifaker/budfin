@@ -77,7 +77,11 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 	const handleSubmit = form.handleSubmit(async (data) => {
 		setProgress(true);
 		try {
-			await mutateAsync({ id: source.id, name: data.name });
+			await mutateAsync({
+				id: source.id,
+				name: data.name,
+				...(data.description ? { description: data.description } : {}),
+			});
 			onSuccess(data.name, source.name);
 		} finally {
 			setProgress(false);

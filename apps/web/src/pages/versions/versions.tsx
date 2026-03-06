@@ -9,8 +9,10 @@ import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
 import { useVersions } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
+import { formatDate } from '../../lib/format-date';
 import { CreateVersionPanel } from '../../components/versions/create-version-panel';
 import { CloneVersionDialog } from '../../components/versions/clone-version-dialog';
+import { CompareDialog } from '../../components/versions/compare-dialog';
 import { VersionDetailPanel } from '../../components/versions/version-detail-panel';
 import {
 	PublishDialog,
@@ -106,6 +108,7 @@ export function VersionsPage() {
 
 	// --- Panel / Dialog state ---
 	const [createOpen, setCreateOpen] = useState(false);
+	const [compareOpen, setCompareOpen] = useState(false);
 	const [cloneSource, setCloneSource] = useState<BudgetVersion | null>(null);
 	const [detailVersion, setDetailVersion] = useState<BudgetVersion | null>(null);
 	const [publishTarget, setPublishTarget] = useState<BudgetVersion | null>(null);
@@ -164,10 +167,7 @@ export function VersionsPage() {
 			}),
 			columnHelper.accessor('createdAt', {
 				header: 'Created At',
-				cell: (info) => {
-					const iso = info.getValue();
-					return new Date(iso).toLocaleDateString();
-				},
+				cell: (info) => formatDate(info.getValue()),
 			}),
 			columnHelper.accessor('modificationCount', {
 				header: 'Mods',
@@ -294,6 +294,17 @@ export function VersionsPage() {
 					<option value="Locked">Locked</option>
 					<option value="Archived">Archived</option>
 				</select>
+
+				<button
+					type="button"
+					className={cn(
+						'rounded-md border border-slate-300 px-4 py-2 text-sm',
+						'font-medium text-slate-700 hover:bg-slate-50'
+					)}
+					onClick={() => setCompareOpen(true)}
+				>
+					Compare
+				</button>
 
 				{canCreate && (
 					<button
@@ -430,6 +441,13 @@ export function VersionsPage() {
 					showStatus(`"${deleteTarget?.name}" deleted successfully.`, 'success');
 					setDeleteTarget(null);
 				}}
+			/>
+
+			{/* Compare Dialog */}
+			<CompareDialog
+				open={compareOpen}
+				fiscalYear={fiscalYear}
+				onClose={() => setCompareOpen(false)}
 			/>
 		</div>
 	);

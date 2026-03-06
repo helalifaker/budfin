@@ -37,6 +37,7 @@ export interface CreateVersionInput {
 
 export interface CloneVersionInput {
 	name: string;
+	description?: string;
 	fiscalYear?: number;
 }
 

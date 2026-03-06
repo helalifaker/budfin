@@ -4,6 +4,7 @@ import { LandingRedirect } from './components/landing-redirect';
 import { ProtectedRoute } from './components/protected-route';
 import { LoginPage } from './pages/login';
 import { ManagementShell } from './layouts/management-shell';
+import { PlanningShell } from './layouts/planning-shell';
 import { UsersPage } from './pages/admin/users';
 import { AuditPage } from './pages/admin/audit';
 import { SettingsPage } from './pages/admin/settings';
@@ -13,6 +14,7 @@ import { AccountsPage } from './pages/master-data/accounts';
 import { AcademicPage } from './pages/master-data/academic';
 import { ReferencePage } from './pages/master-data/reference';
 import { AssumptionsPage } from './pages/master-data/assumptions';
+import { PlanningLandingPage } from './pages/planning/index';
 
 export const routes: RouteObject[] = [
 	{ path: '/login', element: <LoginPage /> },
@@ -53,6 +55,14 @@ export const routes: RouteObject[] = [
 						element: <AssumptionsPage />,
 					},
 					{
+						path: '/versions',
+						element: <VersionsPage />,
+					},
+					{
+						path: '/fiscal-periods',
+						element: <FiscalPeriodsPage />,
+					},
+					{
 						element: <ProtectedRoute roles={['Admin']} />,
 						children: [
 							{
@@ -67,15 +77,17 @@ export const routes: RouteObject[] = [
 								path: '/admin/settings',
 								element: <SettingsPage />,
 							},
-							{
-								path: '/versions',
-								element: <VersionsPage />,
-							},
-							{
-								path: '/fiscal-periods',
-								element: <FiscalPeriodsPage />,
-							},
 						],
+					},
+				],
+			},
+			{
+				element: <PlanningShell />,
+				children: [
+					{
+						index: true,
+						path: '/planning',
+						element: <PlanningLandingPage />,
 					},
 				],
 			},

@@ -1,13 +1,15 @@
 /**
- * Story #54 — Fiscal Period API
+ * Story #54 — Fiscal Period API (remediated)
  *
  * GET /api/v1/fiscal-periods/:fiscalYear
  * PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock
  *
  * AC-14: GET returns exactly 12 rows; auto-seeds on first GET for new fiscal year
- * AC-15: PATCH /lock with valid actual_version_id (Locked Actual version) → status=Locked
+ * AC-15: PATCH /lock with valid actual_version_id (Locked Actual IMPORTED version) → status=Locked
  * AC-19 (partial): Editor/Viewer on PATCH /lock → 403
- * Lock with invalid actual_version_id → 422
+ * PERIOD_ALREADY_LOCKED: 409 if period is already locked
+ * INVALID_ACTUAL_VERSION: 422 if version is not Actual+Locked+IMPORTED
+ * VERSION_NOT_FOUND: 404 if actual_version_id does not exist
  */
 
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
@@ -23,6 +25,7 @@ vi.mock('../lib/prisma.js', () => {
 	const mockPrisma = {
 		fiscalPeriod: {
 			findMany: vi.fn(),
+			findUnique: vi.fn(),
 			createMany: vi.fn().mockResolvedValue({ count: 0 }),
 			update: vi.fn(),
 		},
@@ -48,6 +51,7 @@ import { prisma } from '../lib/prisma.js';
 const mockPrisma = prisma as unknown as {
 	fiscalPeriod: {
 		findMany: ReturnType<typeof vi.fn>;
+		findUnique: ReturnType<typeof vi.fn>;
 		createMany: ReturnType<typeof vi.fn>;
 		update: ReturnType<typeof vi.fn>;
 	};
@@ -129,11 +133,10 @@ describe('GET /api/v1/fiscal-periods/:fiscalYear', () => {
 		expect(body[0].fiscalYear).toBe(2026);
 	});
 
-	it('AC-14: auto-seeds 12 rows on first GET (empty result → createMany then re-fetch)', async () => {
-		// First findMany returns empty (no periods yet), after createMany returns 12 rows
+	it('AC-14: auto-seeds 12 rows on first GET (empty result -> createMany then re-fetch)', async () => {
 		mockPrisma.fiscalPeriod.findMany
-			.mockResolvedValueOnce([]) // first call — empty
-			.mockResolvedValueOnce(make12Periods(2027)); // second call after seeding
+			.mockResolvedValueOnce([])
+			.mockResolvedValueOnce(make12Periods(2027));
 
 		const token = await makeToken({ role: 'Viewer' });
 		const res = await app.inject({
@@ -182,8 +185,8 @@ describe('GET /api/v1/fiscal-periods/:fiscalYear', () => {
 // ── AC-15: PATCH /:fiscalYear/:month/lock ────────────────────────────────────
 
 describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
-	it('AC-15: Admin locks period with valid Locked Actual version → status=Locked', async () => {
-		const lockedActual = { id: 5, type: 'Actual', status: 'Locked' };
+	it('AC-15: Admin locks period with valid Locked Actual IMPORTED version', async () => {
+		const lockedActual = { id: 5, type: 'Actual', status: 'Locked', dataSource: 'IMPORTED' };
 		const period = makePeriod(2026, 1);
 		const updatedPeriod = {
 			...period,
@@ -193,6 +196,8 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 			lockedById: 1,
 		};
 
+		// Period not already locked
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(lockedActual);
 		mockPrisma.fiscalPeriod.update.mockResolvedValue(updatedPeriod);
 
@@ -211,8 +216,11 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 	});
 
 	it('AC-15: BudgetOwner can lock a period', async () => {
-		const lockedActual = { id: 5, type: 'Actual', status: 'Locked' };
+		const lockedActual = { id: 5, type: 'Actual', status: 'Locked', dataSource: 'IMPORTED' };
+		const period = makePeriod(2026, 1);
 		const updatedPeriod = makePeriod(2026, 1, { status: 'Locked', actualVersionId: 5 });
+
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(lockedActual);
 		mockPrisma.fiscalPeriod.update.mockResolvedValue(updatedPeriod);
 
@@ -227,8 +235,11 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		expect(res.statusCode).toBe(200);
 	});
 
-	it('AC-15: writes audit entry VERSION_PERIOD_LOCKED', async () => {
-		const lockedActual = { id: 5, type: 'Actual', status: 'Locked' };
+	it('AC-15: writes audit entry FISCAL_PERIOD_LOCKED', async () => {
+		const lockedActual = { id: 5, type: 'Actual', status: 'Locked', dataSource: 'IMPORTED' };
+		const period = makePeriod(2026, 1);
+
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(lockedActual);
 		mockPrisma.fiscalPeriod.update.mockResolvedValue(makePeriod(2026, 1, { status: 'Locked' }));
 
@@ -247,12 +258,30 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		);
 	});
 
-	it('422 when actual_version_id references non-Actual type version', async () => {
-		// Version exists but is not Actual type
+	it('409 PERIOD_ALREADY_LOCKED when period is already locked', async () => {
+		const lockedPeriod = makePeriod(2026, 1, { status: 'Locked', actualVersionId: 5 });
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(lockedPeriod);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/fiscal-periods/2026/1/lock',
+			headers: authHeader(token),
+			payload: { actual_version_id: 5 },
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('PERIOD_ALREADY_LOCKED');
+	});
+
+	it('422 INVALID_ACTUAL_VERSION when version is non-Actual type', async () => {
+		const period = makePeriod(2026, 1);
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			id: 3,
 			type: 'Budget',
 			status: 'Locked',
+			dataSource: 'IMPORTED',
 		});
 
 		const token = await makeToken({ role: 'Admin' });
@@ -264,15 +293,17 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		});
 
 		expect(res.statusCode).toBe(422);
-		expect(res.json().code).toBe('ACTUAL_VERSION_REQUIRED');
+		expect(res.json().code).toBe('INVALID_ACTUAL_VERSION');
 	});
 
-	it('422 when actual_version_id references Actual version that is not Locked', async () => {
-		// Actual version but in Published status (not Locked)
+	it('422 INVALID_ACTUAL_VERSION when Actual version is not Locked', async () => {
+		const period = makePeriod(2026, 1);
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			id: 6,
 			type: 'Actual',
 			status: 'Published',
+			dataSource: 'IMPORTED',
 		});
 
 		const token = await makeToken({ role: 'Admin' });
@@ -284,10 +315,34 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		});
 
 		expect(res.statusCode).toBe(422);
-		expect(res.json().code).toBe('ACTUAL_VERSION_REQUIRED');
+		expect(res.json().code).toBe('INVALID_ACTUAL_VERSION');
 	});
 
-	it('404 when actual_version_id does not exist', async () => {
+	it('422 INVALID_ACTUAL_VERSION when version dataSource is not IMPORTED', async () => {
+		const period = makePeriod(2026, 1);
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			id: 7,
+			type: 'Actual',
+			status: 'Locked',
+			dataSource: 'CALCULATED',
+		});
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/fiscal-periods/2026/1/lock',
+			headers: authHeader(token),
+			payload: { actual_version_id: 7 },
+		});
+
+		expect(res.statusCode).toBe(422);
+		expect(res.json().code).toBe('INVALID_ACTUAL_VERSION');
+	});
+
+	it('404 VERSION_NOT_FOUND when actual_version_id does not exist', async () => {
+		const period = makePeriod(2026, 1);
+		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
 
 		const token = await makeToken({ role: 'Admin' });
@@ -299,6 +354,7 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		});
 
 		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
 	});
 
 	it('AC-19: Editor gets 403 on PATCH /lock', async () => {

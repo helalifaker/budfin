@@ -6,6 +6,7 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
+import { formatDate } from '../../lib/format-date';
 import { useAuthStore } from '../../stores/auth-store';
 import { useFiscalPeriods, useLockFiscalPeriod } from '../../hooks/use-fiscal-periods';
 import type { FiscalPeriod } from '../../hooks/use-fiscal-periods';
@@ -118,7 +119,7 @@ export function FiscalPeriodsPage() {
 				cell: (info) => {
 					const iso = info.getValue();
 					if (!iso) return <span className="text-slate-400">—</span>;
-					return new Date(iso).toLocaleDateString();
+					return formatDate(iso);
 				},
 			}),
 			columnHelper.accessor('lockedById', {
