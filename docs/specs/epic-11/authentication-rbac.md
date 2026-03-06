@@ -29,7 +29,7 @@ Each criterion must be testable and specific. Use "Given / When / Then" or plain
 ## Stories
 
 | # | Story | Depends On | GitHub Issue |
-|---|-------|------------|--------------|
+| --- | --- | --- | --- |
 | 1 | Prisma schema: users, refresh_tokens, system_config, audit_entries tables + Role enum + indexes + seed admin user | -- | #25 |
 | 2 | Password hashing service (bcrypt cost 12, hash + compare) | Story 1 | #26 |
 | 3 | JWT token service (RS256 sign/verify via jose, access + refresh pair generation) | Story 1 | #27 |
@@ -125,7 +125,7 @@ GRANT INSERT, SELECT ON audit_entries TO app_user;
 ## API Endpoints
 
 | Method | Path | Request | Response | Auth |
-|--------|------|---------|----------|------|
+| --- | --- | --- | --- | --- |
 | POST | /api/v1/auth/login | `{ email: string, password: string }` | `{ access_token: string, expires_in: 1800, user: { id, email, role } }` + Set-Cookie | Public |
 | POST | /api/v1/auth/refresh | No body (reads refresh_token cookie) | Same shape as login + new Set-Cookie | Public (cookie) |
 | POST | /api/v1/auth/logout | No body (reads refresh_token cookie) | 204 No Content + clear cookie | Authenticated |
@@ -148,7 +148,7 @@ ManagementShell -- no context bar, no docked right panel. The Admin module is ve
 ### Key Components
 
 | Component | Type | Source | Notes |
-|-----------|------|--------|-------|
+| --- | --- | --- | --- |
 | User table | TanStack Table v8 | 09-admin.md Section 3.2 | 8 columns (email, role, status, last_login, failed_attempts, locked_until, created_at, actions). Client-side sort/filter. Email left-pinned. 44px row height. |
 | Role badges | shadcn/ui Badge (custom) | 09-admin.md Section 3.3 | Color-coded per role: Admin=red, BudgetOwner=blue, Editor=green, Viewer=slate. |
 | Status badges | shadcn/ui Badge (custom) | 09-admin.md Section 3.3 | Active=green, Inactive=slate. |
@@ -197,7 +197,7 @@ ManagementShell -- no context bar, no docked right panel. The Admin module is ve
 From `docs/edge-cases/` -- list all relevant cases for this feature.
 
 | Case ID | Description | Handling |
-|---------|-------------|---------|
+| --- | --- | --- |
 | PO-027 | Audit trail retention lifecycle -- after 7 years, archive or delete? | 7-year retention guaranteed. Archive policy TBD before go-live (decision point -- does not block v1 implementation). Audit entries are append-only at DB level. |
 | EC-AUTH-01 | Token replay attack (revoked refresh token reused) | Family-based revocation: all tokens in the family are revoked, all user sessions invalidated, logged as TOKEN_FAMILY_REVOKED. |
 | EC-AUTH-02 | Concurrent login race condition (two logins at exact same time for same user at session limit) | Use database advisory lock on user_id during session enforcement to serialize concurrent login attempts. |

@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { generateRefreshToken, hashRefreshToken } from './token.js'
+
+type TxClient = Prisma.TransactionClient
 
 const REFRESH_TOKEN_TTL_MS = 8 * 60 * 60 * 1000 // 8 hours
 
@@ -60,7 +63,7 @@ export async function rotateToken(
 	familyId: string,
 	ipAddress?: string,
 ): Promise<RotateTokenResult> {
-	return prisma.$transaction(async (tx) => {
+	return prisma.$transaction(async (tx: TxClient) => {
 		// Revoke old token
 		await tx.refreshToken.updateMany({
 			where: { tokenHash: oldTokenHash, familyId },
@@ -120,7 +123,7 @@ export async function detectReplay(
 	if (!existing.isRevoked) return 'VALID'
 
 	// Revoked token replayed — revoke entire family
-	await prisma.$transaction(async (tx) => {
+	await prisma.$transaction(async (tx: TxClient) => {
 		await tx.refreshToken.updateMany({
 			where: { familyId: existing.familyId, isRevoked: false },
 			data: { isRevoked: true },
