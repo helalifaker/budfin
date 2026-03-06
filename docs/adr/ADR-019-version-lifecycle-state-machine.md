@@ -40,11 +40,11 @@ The single `PATCH /versions/:id/status` handler looks up the transition, enforce
 
 ## Alternatives Considered
 
-| Option | Why Rejected |
-|--------|-------------|
-| Database-level state machine (triggers + CHECK constraints) | More complex to maintain; transition logic would be split between application and database; harder to include role checks and audit note validation in SQL |
-| Separate endpoints per transition (e.g., POST /versions/:id/publish) | Proliferates endpoints unnecessarily; the state machine pattern with a single PATCH endpoint is more RESTful and easier to extend |
-| External workflow engine (e.g., XState, temporal) | Over-engineering for a 4-state linear lifecycle; adds a runtime dependency for minimal benefit |
+| Option                                                               | Why Rejected                                                                                                                                               |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Database-level state machine (triggers + CHECK constraints)          | More complex to maintain; transition logic would be split between application and database; harder to include role checks and audit note validation in SQL |
+| Separate endpoints per transition (e.g., POST /versions/:id/publish) | Proliferates endpoints unnecessarily; the state machine pattern with a single PATCH endpoint is more RESTful and easier to extend                          |
+| External workflow engine (e.g., XState, temporal)                    | Over-engineering for a 4-state linear lifecycle; adds a runtime dependency for minimal benefit                                                             |
 
 ## References
 

@@ -47,8 +47,7 @@ const CURRENT_FISCAL_YEAR = new Date().getFullYear();
 
 export function VersionsPage() {
 	const currentUser = useAuthStore((s) => s.user);
-	const canCreate =
-		currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
+	const canCreate = currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
 
 	// Filters
 	const [fiscalYear, setFiscalYear] = useState<number>(CURRENT_FISCAL_YEAR);
