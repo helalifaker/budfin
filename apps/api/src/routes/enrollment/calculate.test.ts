@@ -64,8 +64,8 @@ function authHeader(token: string) {
 	return { authorization: `Bearer ${token}` };
 }
 
-const ROUTE_PREFIX = '/api/v1/versions/:versionId/enrollment';
-const URL_PREFIX = '/api/v1/versions/1/enrollment';
+const ROUTE_PREFIX = '/api/v1/versions/:versionId/calculate';
+const URL_PREFIX = '/api/v1/versions/1/calculate';
 
 const mockDraftVersion = {
 	id: 1,
@@ -125,7 +125,7 @@ describe('POST /calculate', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 			headers: authHeader(token),
 		});
 
@@ -154,7 +154,7 @@ describe('POST /calculate', () => {
 		const token = await makeToken();
 		await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 			headers: authHeader(token),
 		});
 
@@ -186,7 +186,7 @@ describe('POST /calculate', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 			headers: authHeader(token),
 		});
 
@@ -203,7 +203,7 @@ describe('POST /calculate', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 			headers: authHeader(token),
 		});
 
@@ -217,7 +217,7 @@ describe('POST /calculate', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 			headers: authHeader(token),
 		});
 
@@ -229,7 +229,7 @@ describe('POST /calculate', () => {
 		const token = await makeToken({ role: 'Viewer' });
 		const res = await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 			headers: authHeader(token),
 		});
 
@@ -240,7 +240,7 @@ describe('POST /calculate', () => {
 	it('returns 401 without auth', async () => {
 		const res = await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 		});
 
 		expect(res.statusCode).toBe(401);
@@ -256,7 +256,7 @@ describe('POST /calculate', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'POST',
-			url: `${URL_PREFIX}/calculate`,
+			url: `${URL_PREFIX}/enrollment`,
 			headers: authHeader(token),
 		});
 

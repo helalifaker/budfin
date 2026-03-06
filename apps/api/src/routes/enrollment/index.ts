@@ -7,8 +7,9 @@ import { historicalRoutes } from './historical.js';
 export async function enrollmentRoutes(app: FastifyInstance) {
 	await app.register(headcountRoutes);
 	await app.register(detailRoutes);
-	await app.register(calculateRoutes);
 }
+
+export { calculateRoutes };
 
 export async function enrollmentHistoricalRoutes(app: FastifyInstance) {
 	await app.register(historicalRoutes);

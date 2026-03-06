@@ -4,7 +4,6 @@ import { LandingRedirect } from './components/landing-redirect';
 import { ProtectedRoute } from './components/protected-route';
 import { LoginPage } from './pages/login';
 import { ManagementShell } from './layouts/management-shell';
-import { PlanningShell } from './layouts/planning-shell';
 import { UsersPage } from './pages/admin/users';
 import { AuditPage } from './pages/admin/audit';
 import { SettingsPage } from './pages/admin/settings';
@@ -14,8 +13,8 @@ import { AccountsPage } from './pages/master-data/accounts';
 import { AcademicPage } from './pages/master-data/academic';
 import { ReferencePage } from './pages/master-data/reference';
 import { AssumptionsPage } from './pages/master-data/assumptions';
-import { PlanningLandingPage } from './pages/planning/index';
 import { EnrollmentPage } from './pages/planning/enrollment';
+import { PlaceholderPage } from './pages/placeholder';
 
 export const routes: RouteObject[] = [
 	{ path: '/login', element: <LoginPage /> },
@@ -29,6 +28,7 @@ export const routes: RouteObject[] = [
 			{
 				element: <ManagementShell />,
 				children: [
+					// Master Data
 					{
 						path: '/master-data/accounts',
 						element: <AccountsPage />,
@@ -41,20 +41,11 @@ export const routes: RouteObject[] = [
 						path: '/master-data/reference',
 						element: <ReferencePage />,
 					},
-				],
-			},
-		],
-	},
-	{
-		element: <ProtectedRoute />,
-		children: [
-			{
-				element: <ManagementShell />,
-				children: [
 					{
 						path: '/master-data/assumptions',
 						element: <AssumptionsPage />,
 					},
+					// Versions
 					{
 						path: '/versions',
 						element: <VersionsPage />,
@@ -63,6 +54,24 @@ export const routes: RouteObject[] = [
 						path: '/fiscal-periods',
 						element: <FiscalPeriodsPage />,
 					},
+					// Planning
+					{
+						path: '/enrollment',
+						element: <EnrollmentPage />,
+					},
+					{
+						path: '/staff',
+						element: <PlaceholderPage title="Staff & Positions" description="Coming in Epic 3" />,
+					},
+					{
+						path: '/budget',
+						element: <PlaceholderPage title="Budget" description="Coming in Epic 4" />,
+					},
+					{
+						path: '/reports',
+						element: <PlaceholderPage title="Reports" description="Coming in Epic 5" />,
+					},
+					// Admin (role-gated)
 					{
 						element: <ProtectedRoute roles={['Admin']} />,
 						children: [
@@ -79,20 +88,6 @@ export const routes: RouteObject[] = [
 								element: <SettingsPage />,
 							},
 						],
-					},
-				],
-			},
-			{
-				path: '/planning',
-				element: <PlanningShell />,
-				children: [
-					{
-						index: true,
-						element: <PlanningLandingPage />,
-					},
-					{
-						path: 'enrollment',
-						element: <EnrollmentPage />,
 					},
 				],
 			},

@@ -8,10 +8,9 @@ const FISCAL_YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 1 + i);
 
 // Academic period options (tied to master-data AY structure)
 const ACADEMIC_PERIODS = [
-	{ value: 'AY1', label: 'Academic Year 1' },
-	{ value: 'AY2', label: 'Academic Year 2' },
-	{ value: 'SUMMER', label: 'Summer' },
-	{ value: 'FULL', label: 'Full Year' },
+	{ value: 'both', label: 'Both Periods' },
+	{ value: 'AY1', label: 'AY1 (Jan-Jun)' },
+	{ value: 'AY2', label: 'AY2 (Sep-Dec)' },
 ] as const;
 
 // Scenario dropdown is a UI stub — no backend support in v1.
@@ -158,7 +157,7 @@ export function ContextBar() {
 					Period
 				</label>
 				<Select
-					value={academicPeriod ?? 'FULL'}
+					value={academicPeriod ?? 'both'}
 					onValueChange={(value) => setAcademicPeriod(value)}
 				>
 					<SelectTrigger

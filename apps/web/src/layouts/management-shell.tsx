@@ -1,10 +1,14 @@
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useLocation } from 'react-router';
 import type { LucideIcon } from 'lucide-react';
 import {
 	Landmark,
 	GraduationCap,
 	Database,
 	SlidersHorizontal,
+	UserRound,
+	Briefcase,
+	DollarSign,
+	BarChart2,
 	Layers,
 	Calendar,
 	Users,
@@ -13,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/cn';
 import { useAuthStore } from '../stores/auth-store';
+import { ContextBar } from '../components/context-bar';
 
 interface NavItem {
 	to: string;
@@ -25,6 +30,8 @@ interface NavGroup {
 	adminOnly?: boolean;
 	items: NavItem[];
 }
+
+const PLANNING_ROUTES = ['/enrollment', '/staff', '/budget', '/reports'];
 
 const navGroups: NavGroup[] = [
 	{
@@ -39,6 +46,10 @@ const navGroups: NavGroup[] = [
 	{
 		label: 'Planning',
 		items: [
+			{ to: '/enrollment', label: 'Enrollment', Icon: UserRound },
+			{ to: '/staff', label: 'Staff & Positions', Icon: Briefcase },
+			{ to: '/budget', label: 'Budget', Icon: DollarSign },
+			{ to: '/reports', label: 'Reports', Icon: BarChart2 },
 			{ to: '/versions', label: 'Version Management', Icon: Layers },
 			{ to: '/fiscal-periods', label: 'Fiscal Periods', Icon: Calendar },
 		],
@@ -57,8 +68,10 @@ const navGroups: NavGroup[] = [
 export function ManagementShell() {
 	const user = useAuthStore((s) => s.user);
 	const logout = useAuthStore((s) => s.logout);
+	const location = useLocation();
 	const isAdmin = user?.role === 'Admin';
 	const visibleGroups = navGroups.filter((group) => !group.adminOnly || isAdmin);
+	const showContextBar = PLANNING_ROUTES.some((route) => location.pathname.startsWith(route));
 
 	return (
 		<div className="min-h-screen flex bg-gray-50">
@@ -116,6 +129,7 @@ export function ManagementShell() {
 						Logout
 					</button>
 				</header>
+				{showContextBar && <ContextBar />}
 				<main className="flex-1 p-6">
 					<Outlet />
 				</main>

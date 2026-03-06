@@ -16,7 +16,11 @@ import { systemConfigRoutes } from './routes/system-config.js';
 import { versionRoutes } from './routes/versions.js';
 import { fiscalPeriodRoutes } from './routes/fiscal-periods.js';
 import { masterDataRoutes } from './routes/master-data/index.js';
-import { enrollmentRoutes, enrollmentHistoricalRoutes } from './routes/enrollment/index.js';
+import {
+	enrollmentRoutes,
+	calculateRoutes,
+	enrollmentHistoricalRoutes,
+} from './routes/enrollment/index.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -53,6 +57,9 @@ export async function buildApp() {
 	await app.register(versionRoutes, { prefix: '/api/v1/versions' });
 	await app.register(enrollmentRoutes, {
 		prefix: '/api/v1/versions/:versionId/enrollment',
+	});
+	await app.register(calculateRoutes, {
+		prefix: '/api/v1/versions/:versionId/calculate',
 	});
 	await app.register(enrollmentHistoricalRoutes, {
 		prefix: '/api/v1/enrollment',

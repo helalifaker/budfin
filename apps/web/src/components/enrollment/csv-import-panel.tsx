@@ -116,10 +116,19 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 							<Upload className="mr-1.5 h-4 w-4" />
 							Validate
 						</Button>
-						{validationResult && validationResult.errors.length === 0 && (
-							<Button onClick={handleImport} disabled={importMutation.isPending}>
-								Import
-							</Button>
+						{validationResult && validationResult.validRows > 0 && (
+							<>
+								{validationResult.errors.length > 0 && (
+									<p className="text-xs text-amber-700">
+										{validationResult.errors.length} row(s) will be skipped
+									</p>
+								)}
+								<Button onClick={handleImport} disabled={importMutation.isPending}>
+									{validationResult.errors.length > 0
+										? `Import ${validationResult.validRows} Valid Rows`
+										: 'Import'}
+								</Button>
+							</>
 						)}
 					</div>
 

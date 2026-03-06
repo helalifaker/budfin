@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
@@ -7,9 +7,8 @@ import {
 } from '@tanstack/react-table';
 import { Check, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/cn';
-import { useHeadcount, useDetail, usePutDetail } from '../../hooks/use-enrollment';
+import { useHeadcount, useDetail } from '../../hooks/use-enrollment';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
-import type { DetailEntry } from '@budfin/types';
 import type { GradeBand } from '../../hooks/use-grade-levels';
 import { TableSkeleton } from '../ui/skeleton';
 
@@ -34,11 +33,10 @@ interface Props {
 	bandFilter: GradeBand | 'ALL';
 }
 
-export function ByNationalityGrid({ versionId, isReadOnly, bandFilter }: Props) {
+export function ByNationalityGrid({ versionId, bandFilter }: Props) {
 	const { data: headcountData } = useHeadcount(versionId);
 	const { data: detailData, isLoading } = useDetail(versionId);
 	const { data: gradeLevelData } = useGradeLevels();
-	const putDetail = usePutDetail(versionId);
 
 	const gradeLevels = gradeLevelData?.gradeLevels ?? [];
 	const headcountEntries = headcountData?.entries ?? [];
@@ -87,21 +85,6 @@ export function ByNationalityGrid({ versionId, isReadOnly, bandFilter }: Props) 
 		[rows]
 	);
 
-	const handleCellSave = useCallback(
-		(gradeLevel: string, nationality: string, value: number) => {
-			if (isReadOnly) return;
-			const entry: DetailEntry = {
-				gradeLevel: gradeLevel as DetailEntry['gradeLevel'],
-				academicPeriod: 'AY1',
-				nationality: nationality as DetailEntry['nationality'],
-				tariff: 'RP',
-				headcount: value,
-			};
-			putDetail.mutate([entry]);
-		},
-		[isReadOnly, putDetail]
-	);
-
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('gradeName', {
@@ -111,31 +94,25 @@ export function ByNationalityGrid({ versionId, isReadOnly, bandFilter }: Props) 
 			columnHelper.accessor('francais', {
 				header: 'Francais',
 				cell: (info) => (
-					<EditableNatCell
-						value={info.getValue()}
-						isReadOnly={isReadOnly}
-						onSave={(val) => handleCellSave(info.row.original.gradeLevel, 'Francais', val)}
-					/>
+					<span className="inline-block w-16 px-2 py-1 text-right text-sm tabular-nums">
+						{info.getValue()}
+					</span>
 				),
 			}),
 			columnHelper.accessor('nationaux', {
 				header: 'Nationaux',
 				cell: (info) => (
-					<EditableNatCell
-						value={info.getValue()}
-						isReadOnly={isReadOnly}
-						onSave={(val) => handleCellSave(info.row.original.gradeLevel, 'Nationaux', val)}
-					/>
+					<span className="inline-block w-16 px-2 py-1 text-right text-sm tabular-nums">
+						{info.getValue()}
+					</span>
 				),
 			}),
 			columnHelper.accessor('autres', {
 				header: 'Autres',
 				cell: (info) => (
-					<EditableNatCell
-						value={info.getValue()}
-						isReadOnly={isReadOnly}
-						onSave={(val) => handleCellSave(info.row.original.gradeLevel, 'Autres', val)}
-					/>
+					<span className="inline-block w-16 px-2 py-1 text-right text-sm tabular-nums">
+						{info.getValue()}
+					</span>
 				),
 			}),
 			columnHelper.accessor('total', {
@@ -161,7 +138,7 @@ export function ByNationalityGrid({ versionId, isReadOnly, bandFilter }: Props) 
 				cell: (info) => <span className="text-slate-500 tabular-nums">{info.getValue()}</span>,
 			}),
 		],
-		[isReadOnly, handleCellSave]
+		[]
 	);
 
 	const table = useReactTable({
@@ -219,76 +196,5 @@ export function ByNationalityGrid({ versionId, isReadOnly, bandFilter }: Props) 
 				</table>
 			</div>
 		</div>
-	);
-}
-
-function EditableNatCell({
-	value,
-	isReadOnly,
-	onSave,
-}: {
-	value: number;
-	isReadOnly: boolean;
-	onSave: (val: number) => void;
-}) {
-	const [editing, setEditing] = useState(false);
-	const [draft, setDraft] = useState(String(value));
-
-	const handleDoubleClick = () => {
-		if (isReadOnly) return;
-		setEditing(true);
-		setDraft(String(value));
-	};
-
-	const handleBlur = () => {
-		setEditing(false);
-		const parsed = parseInt(draft, 10);
-		if (!isNaN(parsed) && parsed >= 0 && parsed !== value) {
-			onSave(parsed);
-		}
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter') {
-			(e.target as HTMLInputElement).blur();
-		} else if (e.key === 'Escape') {
-			setEditing(false);
-		}
-	};
-
-	if (editing) {
-		return (
-			<input
-				type="number"
-				min={0}
-				className="w-16 rounded border border-blue-400 bg-yellow-50 px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-				value={draft}
-				onChange={(e) => setDraft(e.target.value)}
-				onBlur={handleBlur}
-				onKeyDown={handleKeyDown}
-				autoFocus
-				aria-label="Edit nationality headcount"
-			/>
-		);
-	}
-
-	return (
-		<span
-			className={cn(
-				'inline-block w-16 rounded px-2 py-1 text-right text-sm tabular-nums',
-				!isReadOnly && 'cursor-pointer hover:bg-yellow-50'
-			)}
-			onDoubleClick={handleDoubleClick}
-			role={isReadOnly ? undefined : 'button'}
-			tabIndex={isReadOnly ? undefined : 0}
-			aria-readonly={isReadOnly}
-			onKeyDown={(e) => {
-				if (!isReadOnly && (e.key === 'Enter' || e.key === ' ')) {
-					handleDoubleClick();
-				}
-			}}
-		>
-			{value}
-		</span>
 	);
 }

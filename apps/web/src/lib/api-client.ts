@@ -40,7 +40,11 @@ export async function apiClient<T>(path: string, options: ApiOptions = {}): Prom
 		}
 	}
 
-	if (fetchOptions.body && !headers.has('Content-Type')) {
+	if (
+		fetchOptions.body &&
+		!(fetchOptions.body instanceof FormData) &&
+		!headers.has('Content-Type')
+	) {
 		headers.set('Content-Type', 'application/json');
 	}
 

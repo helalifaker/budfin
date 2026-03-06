@@ -6,10 +6,11 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
-import type { HeadcountEntry } from '@budfin/types';
+import type { HeadcountEntry, CapacityResult, CapacityAlert } from '@budfin/types';
 import type { HeadcountRow } from '../../hooks/use-enrollment';
 import type { GradeLevel, GradeBand } from '../../hooks/use-grade-levels';
 import { TableSkeleton } from '../ui/skeleton';
+import { AlertBadge, UtilizationCell } from './capacity-columns';
 
 const BAND_LABELS: Record<string, string> = {
 	MATERNELLE: 'Maternelle',
@@ -33,6 +34,8 @@ interface ByGradeGridProps {
 	versionId: number;
 	onSave: (entries: HeadcountEntry[]) => void;
 	bandFilter: GradeBand | 'ALL';
+	comparisonEntries?: HeadcountRow[] | undefined;
+	capacityResults?: CapacityResult[] | undefined;
 }
 
 interface GridRow {
@@ -48,6 +51,9 @@ interface GridRow {
 	deltaAy1: number | null;
 	deltaAy2: number | null;
 	isNew: boolean;
+	sectionsNeeded: number;
+	utilization: number;
+	alert: CapacityAlert | null;
 }
 
 const columnHelper = createColumnHelper<GridRow>();
@@ -159,6 +165,8 @@ export function ByGradeGrid({
 	versionId: _versionId,
 	onSave,
 	bandFilter,
+	comparisonEntries,
+	capacityResults,
 }: ByGradeGridProps) {
 	const [pendingChanges, setPendingChanges] = useState<Map<string, HeadcountEntry>>(new Map());
 
@@ -166,6 +174,20 @@ export function ByGradeGrid({
 		const entryMap = new Map<string, HeadcountRow>();
 		for (const e of entries) {
 			entryMap.set(`${e.gradeLevel}:${e.academicPeriod}`, e);
+		}
+
+		const compMap = new Map<string, HeadcountRow>();
+		if (comparisonEntries) {
+			for (const e of comparisonEntries) {
+				compMap.set(`${e.gradeLevel}:${e.academicPeriod}`, e);
+			}
+		}
+
+		const capMap = new Map<string, CapacityResult>();
+		if (capacityResults) {
+			for (const r of capacityResults) {
+				capMap.set(`${r.gradeLevel}:${r.academicPeriod}`, r);
+			}
 		}
 
 		const filtered =
@@ -179,6 +201,24 @@ export function ByGradeGrid({
 				const ay1 = ay1Entry?.headcount ?? 0;
 				const ay2 = ay2Entry?.headcount ?? 0;
 
+				const priorAy1 = compMap.get(`${gl.gradeCode}:AY1`)?.headcount ?? 0;
+				const priorAy2 = compMap.get(`${gl.gradeCode}:AY2`)?.headcount ?? 0;
+
+				const computeDelta = (current: number, prior: number): number | null => {
+					if (prior === 0) return null;
+					return ((current - prior) / prior) * 100;
+				};
+
+				const isNew =
+					comparisonEntries !== undefined &&
+					priorAy1 === 0 &&
+					priorAy2 === 0 &&
+					(ay1 > 0 || ay2 > 0);
+
+				const capAy1 = capMap.get(`${gl.gradeCode}:AY1`);
+				const capAy2 = capMap.get(`${gl.gradeCode}:AY2`);
+				const bestCap = capAy1 ?? capAy2;
+
 				return {
 					gradeLevel: gl.gradeCode,
 					gradeName: gl.gradeName,
@@ -187,14 +227,17 @@ export function ByGradeGrid({
 					ay1,
 					ay2,
 					total: ay1 + ay2,
-					priorAy1: 0,
-					priorAy2: 0,
-					deltaAy1: null,
-					deltaAy2: null,
-					isNew: false,
+					priorAy1,
+					priorAy2,
+					deltaAy1: computeDelta(ay1, priorAy1),
+					deltaAy2: computeDelta(ay2, priorAy2),
+					isNew,
+					sectionsNeeded: bestCap?.sectionsNeeded ?? 0,
+					utilization: bestCap?.utilization ?? 0,
+					alert: bestCap?.alert ?? null,
 				};
 			});
-	}, [entries, gradeLevels, bandFilter]);
+	}, [entries, gradeLevels, bandFilter, comparisonEntries, capacityResults]);
 
 	const flushChanges = useCallback(() => {
 		if (pendingChanges.size > 0) {
@@ -297,6 +340,25 @@ export function ByGradeGrid({
 				header: 'Delta AY2',
 				cell: (info) => <DeltaCell delta={info.getValue()} isNew={info.row.original.isNew} />,
 			}),
+			columnHelper.accessor('sectionsNeeded', {
+				header: 'Sections',
+				cell: (info) => {
+					const val = info.getValue();
+					return val > 0 ? (
+						<span className="tabular-nums">{val}</span>
+					) : (
+						<span className="text-slate-300">-</span>
+					);
+				},
+			}),
+			columnHelper.accessor('utilization', {
+				header: 'Utilization',
+				cell: (info) => <UtilizationCell value={info.getValue()} />,
+			}),
+			columnHelper.accessor('alert', {
+				header: 'Alert',
+				cell: (info) => <AlertBadge alert={info.getValue()} />,
+			}),
 		],
 		[isReadOnly, handleCellSave]
 	);
@@ -368,6 +430,9 @@ export function ByGradeGrid({
 								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.ay1}</td>
 								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.ay2}</td>
 								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.total}</td>
+								<td className="px-4 py-2" />
+								<td className="px-4 py-2" />
+								<td className="px-4 py-2" />
 								<td className="px-4 py-2" />
 								<td className="px-4 py-2" />
 							</tr>
