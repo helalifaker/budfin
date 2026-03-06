@@ -339,9 +339,9 @@ All endpoints follow the standard error response format from `04_api_contract.md
 
 ```json
 {
-	"code": "VALIDATION_ERROR | DUPLICATE_CODE | REFERENCED_RECORD | OPTIMISTIC_LOCK | FORBIDDEN",
-	"message": "Human-readable description",
-	"field_errors": [{ "field": "accountCode", "message": "Must match ^[A-Z0-9]{3,10}$" }]
+    "code": "VALIDATION_ERROR | DUPLICATE_CODE | REFERENCED_RECORD | OPTIMISTIC_LOCK | FORBIDDEN",
+    "message": "Human-readable description",
+    "field_errors": [{ "field": "accountCode", "message": "Must match ^[A-Z0-9]{3,10}$" }]
 }
 ```
 

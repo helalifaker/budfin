@@ -19,9 +19,9 @@ The current planned order places Version Management at position 10, but **every 
 
 **Recommended order:** Shift Epic 10 immediately after Epic 11 (Auth), making it Epic 11B or renaming the sequence to:
 
-```
+```text
 Epic 13 → Epic 11 → Epic 10 → Epic 7 → Epic 1 → Epic 2 → Epic 3 → Epic 4 → Epic 5 → Epic 6 → Epic 8 → Epic 9 → Epic 12
-```
+```text
 
 ---
 
@@ -55,9 +55,9 @@ Every data-modifying epic after authentication requires a version to exist:
 
 From `docs/tdd/03_data_architecture.md`, these tables MUST have a `version_id` FK to `budget_versions`:
 
-```
+```text
 FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE
-```
+```text
 
 Tables explicitly dependent:
 
@@ -92,14 +92,14 @@ Without these endpoints (or at minimum `POST /api/v1/versions` to create), no do
 
 From `docs/tdd/04_api_contract.md`, all data-modifying endpoints follow this pattern:
 
-```
+```text
 PUT /api/v1/versions/:versionId/enrollment/headcount
 PUT /api/v1/versions/:versionId/fee-grid
 PUT /api/v1/versions/:versionId/employees
 POST /api/v1/versions/:versionId/employees/import
 PUT /api/v1/versions/:versionId/discounts
 POST /api/v1/versions/:versionId/calculate/enrollment
-```
+```text
 
 Every path includes `:versionId`, and the API contract defines `404 VERSION_NOT_FOUND` as a potential error for each, confirming that:
 
@@ -153,7 +153,7 @@ Epic 11 does not depend on Epic 10 — it creates the auth infrastructure, not v
 
 ### New Sequence
 
-```
+```text
 Phase 5 (IMPLEMENT):
   Epic 13 (Week 1-2)       → Infrastructure & CI/CD
   Epic 11 (Week 3-4)       → Authentication & RBAC
@@ -168,7 +168,7 @@ Phase 5 (IMPLEMENT):
   Epic 8  (Week 21-22)     → Audit Trail
   Epic 9  (Week 23-24)     → Dashboard
   Epic 12 (Week 25-26+)    → Data Migration
-```
+```text
 
 ### Why This Works
 
