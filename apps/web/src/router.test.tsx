@@ -52,6 +52,7 @@ function renderRoute(
 		accessToken: 'test-access-token',
 		user,
 		isAuthenticated: true,
+		isInitializing: false,
 	});
 
 	const router = createMemoryRouter(routes, {
