@@ -10,19 +10,23 @@ interface AuthState {
 	accessToken: string | null;
 	user: User | null;
 	isAuthenticated: boolean;
+	isInitializing: boolean;
 	login: (email: string, password: string) => Promise<void>;
 	refresh: () => Promise<boolean>;
 	logout: () => Promise<void>;
 	setAuth: (token: string, user: User) => void;
 	clearAuth: () => void;
+	initialize: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
 	accessToken: null,
 	user: null,
 	isAuthenticated: false,
+	isInitializing: true,
 
-	setAuth: (token, user) => set({ accessToken: token, user, isAuthenticated: true }),
+	setAuth: (token, user) =>
+		set({ accessToken: token, user, isAuthenticated: true, isInitializing: false }),
 
 	clearAuth: () =>
 		set({
@@ -30,6 +34,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 			user: null,
 			isAuthenticated: false,
 		}),
+
+	initialize: async () => {
+		const success = await get().refresh();
+		if (!success) {
+			set({ isInitializing: false });
+		}
+	},
 
 	login: async (email, password) => {
 		const response = await fetch('/api/v1/auth/login', {

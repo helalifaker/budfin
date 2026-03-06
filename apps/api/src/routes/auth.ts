@@ -50,6 +50,15 @@ export async function authRoutes(fastify: FastifyInstance) {
 			});
 
 			if (!user) {
+				await prisma.auditEntry.create({
+					data: {
+						userId: null,
+						operation: 'LOGIN_FAILED_UNKNOWN_EMAIL',
+						tableName: 'users',
+						ipAddress: ip,
+						newValues: { email } as unknown as Prisma.InputJsonValue,
+					},
+				});
 				return reply.status(401).send({
 					error: 'INVALID_CREDENTIALS',
 					message: 'Invalid email or password',
@@ -92,8 +101,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 					failedAttempts: newAttempts,
 				};
 
+				let isNowLocked = false;
+				let lockedUntil: Date | undefined;
+
 				if (newAttempts >= threshold) {
-					updateData.lockedUntil = new Date(Date.now() + durationMinutes * 60 * 1000);
+					lockedUntil = new Date(Date.now() + durationMinutes * 60 * 1000);
+					updateData.lockedUntil = lockedUntil;
+					isNowLocked = true;
 
 					await prisma.auditEntry.create({
 						data: {
@@ -118,6 +132,14 @@ export async function authRoutes(fastify: FastifyInstance) {
 						ipAddress: ip,
 					},
 				});
+
+				if (isNowLocked) {
+					return reply.status(401).send({
+						error: 'ACCOUNT_LOCKED',
+						message: 'Account locked due to too many failed attempts',
+						locked_until: lockedUntil!.toISOString(),
+					});
+				}
 
 				return reply.status(401).send({
 					error: 'INVALID_CREDENTIALS',
@@ -294,6 +316,14 @@ export async function authRoutes(fastify: FastifyInstance) {
 
 			// Rotate token within same family
 			const rotated = await rotateToken(tokenHash, existing.familyId, ip);
+
+			if (!rotated) {
+				reply.clearCookie('refresh_token', { path: '/api/v1/auth' });
+				return reply.status(401).send({
+					error: 'REFRESH_TOKEN_REUSE',
+					message: 'Token reuse detected',
+				});
+			}
 
 			// Sign new access token
 			const accessToken = await signAccessToken({
