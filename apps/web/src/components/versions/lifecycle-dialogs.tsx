@@ -23,7 +23,7 @@ type InnerDialogProps = {
 function useFocusTrap(
 	ref: React.RefObject<HTMLElement | null>,
 	open: boolean,
-	onClose: () => void,
+	onClose: () => void
 ) {
 	useEffect(() => {
 		if (!open) return;
@@ -31,7 +31,7 @@ function useFocusTrap(
 		if (!el) return;
 
 		const focusable = el.querySelectorAll<HTMLElement>(
-			'input, select, textarea, button, [tabindex]:not([tabindex="-1"])',
+			'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
 		);
 		const first = focusable[0];
 		const last = focusable[focusable.length - 1];
@@ -75,11 +75,7 @@ export function PublishDialog({ open, version, onClose, onSuccess }: BaseDialogP
 
 	return (
 		<>
-			<div
-				className="fixed inset-0 z-40 bg-black/30"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
 			<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 				<div
 					ref={dialogRef}
@@ -96,8 +92,7 @@ export function PublishDialog({ open, version, onClose, onSuccess }: BaseDialogP
 
 					<div className="px-6 py-4">
 						<p className="text-sm text-slate-700">
-							Publish version &lsquo;{version.name}&rsquo;? This makes it
-							visible to all users.
+							Publish version &lsquo;{version.name}&rsquo;? This makes it visible to all users.
 						</p>
 					</div>
 
@@ -109,7 +104,7 @@ export function PublishDialog({ open, version, onClose, onSuccess }: BaseDialogP
 							className={cn(
 								'rounded-md border border-slate-300',
 								'px-4 py-2 text-sm font-medium',
-								'hover:bg-slate-50 disabled:opacity-50',
+								'hover:bg-slate-50 disabled:opacity-50'
 							)}
 						>
 							Cancel
@@ -121,7 +116,7 @@ export function PublishDialog({ open, version, onClose, onSuccess }: BaseDialogP
 							className={cn(
 								'rounded-md bg-blue-600 px-4 py-2 text-sm',
 								'font-medium text-white',
-								'hover:bg-blue-700 disabled:opacity-50',
+								'hover:bg-blue-700 disabled:opacity-50'
 							)}
 						>
 							{isPending ? 'Publishing...' : 'Publish'}
@@ -151,11 +146,7 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 
 	return (
 		<>
-			<div
-				className="fixed inset-0 z-40 bg-black/30"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
 			<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 				<div
 					ref={dialogRef}
@@ -172,8 +163,7 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 
 					<div className="px-6 py-4">
 						<p className="text-sm text-slate-700">
-							Lock version &lsquo;{version.name}&rsquo;? No further edits
-							will be allowed.
+							Lock version &lsquo;{version.name}&rsquo;? No further edits will be allowed.
 						</p>
 					</div>
 
@@ -185,7 +175,7 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 							className={cn(
 								'rounded-md border border-slate-300',
 								'px-4 py-2 text-sm font-medium',
-								'hover:bg-slate-50 disabled:opacity-50',
+								'hover:bg-slate-50 disabled:opacity-50'
 							)}
 						>
 							Cancel
@@ -197,7 +187,7 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 							className={cn(
 								'rounded-md bg-violet-600 px-4 py-2 text-sm',
 								'font-medium text-white',
-								'hover:bg-violet-700 disabled:opacity-50',
+								'hover:bg-violet-700 disabled:opacity-50'
 							)}
 						>
 							{isPending ? (
@@ -246,11 +236,7 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 
 	return (
 		<>
-			<div
-				className="fixed inset-0 z-40 bg-black/30"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
 			<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 				<div
 					ref={dialogRef}
@@ -267,8 +253,8 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 
 					<div className="px-6 py-4">
 						<p className="text-sm text-slate-700">
-							Archive version &lsquo;{version.name}&rsquo;? It will be
-							read-only and hidden from active views.
+							Archive version &lsquo;{version.name}&rsquo;? It will be read-only and hidden from
+							active views.
 						</p>
 					</div>
 
@@ -280,7 +266,7 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 							className={cn(
 								'rounded-md border border-slate-300',
 								'px-4 py-2 text-sm font-medium',
-								'hover:bg-slate-50 disabled:opacity-50',
+								'hover:bg-slate-50 disabled:opacity-50'
 							)}
 						>
 							Cancel
@@ -292,7 +278,7 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 							className={cn(
 								'rounded-md bg-slate-600 px-4 py-2 text-sm',
 								'font-medium text-white',
-								'hover:bg-slate-700 disabled:opacity-50',
+								'hover:bg-slate-700 disabled:opacity-50'
 							)}
 						>
 							{isPending ? 'Archiving...' : 'Archive'}
@@ -330,11 +316,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 
 	return (
 		<>
-			<div
-				className="fixed inset-0 z-40 bg-black/30"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
 			<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 				<div
 					ref={dialogRef}
@@ -351,15 +333,12 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 
 					<div className="px-6 py-4">
 						<p className="mb-4 text-sm text-slate-700">
-							Revert version &lsquo;{version.name}&rsquo; back to Draft
-							status. An audit note is required to explain why.
+							Revert version &lsquo;{version.name}&rsquo; back to Draft status. An audit note is
+							required to explain why.
 						</p>
 
 						<div>
-							<label
-								htmlFor="revert-audit-note"
-								className="block text-sm font-medium"
-							>
+							<label htmlFor="revert-audit-note" className="block text-sm font-medium">
 								Audit Note (min 10 characters){' '}
 								<span aria-hidden="true" className="text-red-500">
 									*
@@ -375,18 +354,13 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 								onChange={(e) => setAuditNote(e.target.value)}
 								className={cn(
 									'mt-1 w-full rounded-md border px-3 py-2 text-sm',
-									noteLength > 0 && !isValid
-										? 'border-amber-400'
-										: 'border-slate-300',
+									noteLength > 0 && !isValid ? 'border-amber-400' : 'border-slate-300'
 								)}
 								placeholder="Explain the reason for reverting..."
 							/>
 							<p
 								id="revert-char-count"
-								className={cn(
-									'mt-1 text-xs',
-									isValid ? 'text-slate-500' : 'text-amber-600',
-								)}
+								className={cn('mt-1 text-xs', isValid ? 'text-slate-500' : 'text-amber-600')}
 							>
 								{noteLength}/10 minimum characters
 							</p>
@@ -401,7 +375,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 							className={cn(
 								'rounded-md border border-slate-300',
 								'px-4 py-2 text-sm font-medium',
-								'hover:bg-slate-50 disabled:opacity-50',
+								'hover:bg-slate-50 disabled:opacity-50'
 							)}
 						>
 							Cancel
@@ -413,7 +387,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 							className={cn(
 								'rounded-md bg-amber-600 px-4 py-2 text-sm',
 								'font-medium text-white',
-								'hover:bg-amber-700 disabled:opacity-50',
+								'hover:bg-amber-700 disabled:opacity-50'
 							)}
 						>
 							{isPending ? 'Reverting...' : 'Revert to Draft'}
@@ -427,13 +401,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 
 export function RevertDialog({ open, version, onClose, onSuccess }: BaseDialogProps) {
 	if (!open || !version) return null;
-	return (
-		<RevertDialogContent
-			version={version}
-			onClose={onClose}
-			onSuccess={onSuccess}
-		/>
-	);
+	return <RevertDialogContent version={version} onClose={onClose} onSuccess={onSuccess} />;
 }
 
 // ---------- DeleteDialog ----------
@@ -458,11 +426,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 
 	return (
 		<>
-			<div
-				className="fixed inset-0 z-40 bg-black/30"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
 			<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 				<div
 					ref={dialogRef}
@@ -480,15 +444,12 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 
 					<div className="px-6 py-4">
 						<p id={descId} className="mb-4 text-sm text-slate-700">
-							This action is irreversible. All data associated with version
-							&lsquo;{version.name}&rsquo; will be permanently deleted.
+							This action is irreversible. All data associated with version &lsquo;{version.name}
+							&rsquo; will be permanently deleted.
 						</p>
 
 						<div>
-							<label
-								htmlFor="delete-confirm-input"
-								className="block text-sm font-medium"
-							>
+							<label htmlFor="delete-confirm-input" className="block text-sm font-medium">
 								Type the version name to confirm deletion:
 							</label>
 							<input
@@ -500,9 +461,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 								onChange={(e) => setConfirmText(e.target.value)}
 								className={cn(
 									'mt-1 w-full rounded-md border px-3 py-2 text-sm',
-									confirmText.length > 0 && !canDelete
-										? 'border-red-300'
-										: 'border-slate-300',
+									confirmText.length > 0 && !canDelete ? 'border-red-300' : 'border-slate-300'
 								)}
 								placeholder={version.name}
 							/>
@@ -523,7 +482,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 							className={cn(
 								'rounded-md border border-slate-300',
 								'px-4 py-2 text-sm font-medium',
-								'hover:bg-slate-50 disabled:opacity-50',
+								'hover:bg-slate-50 disabled:opacity-50'
 							)}
 						>
 							Cancel
@@ -535,7 +494,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 							className={cn(
 								'rounded-md bg-red-600 px-4 py-2 text-sm',
 								'font-medium text-white',
-								'hover:bg-red-700 disabled:opacity-50',
+								'hover:bg-red-700 disabled:opacity-50'
 							)}
 						>
 							{isPending ? 'Deleting...' : 'Delete Version'}
@@ -549,11 +508,5 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 
 export function DeleteDialog({ open, version, onClose, onSuccess }: BaseDialogProps) {
 	if (!open || !version) return null;
-	return (
-		<DeleteDialogContent
-			version={version}
-			onClose={onClose}
-			onSuccess={onSuccess}
-		/>
-	);
+	return <DeleteDialogContent version={version} onClose={onClose} onSuccess={onSuccess} />;
 }

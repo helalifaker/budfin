@@ -149,7 +149,7 @@ describe('GET /api/v1/fiscal-periods/:fiscalYear', () => {
 					expect.objectContaining({ fiscalYear: 2027, month: 12, status: 'Draft' }),
 				]),
 				skipDuplicates: true,
-			}),
+			})
 		);
 		expect(res.json()).toHaveLength(12);
 	});
@@ -184,7 +184,13 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 	it('AC-15: Admin locks period with valid Locked Actual version → status=Locked', async () => {
 		const lockedActual = { id: 5, type: 'Actual', status: 'Locked' };
 		const period = makePeriod(2026, 1);
-		const updatedPeriod = { ...period, status: 'Locked', actualVersionId: 5, lockedAt: now, lockedById: 1 };
+		const updatedPeriod = {
+			...period,
+			status: 'Locked',
+			actualVersionId: 5,
+			lockedAt: now,
+			lockedById: 1,
+		};
 
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(lockedActual);
 		mockPrisma.fiscalPeriod.update.mockResolvedValue(updatedPeriod);
@@ -236,13 +242,17 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		expect(mockPrisma.auditEntry.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				data: expect.objectContaining({ operation: 'FISCAL_PERIOD_LOCKED' }),
-			}),
+			})
 		);
 	});
 
 	it('422 when actual_version_id references non-Actual type version', async () => {
 		// Version exists but is not Actual type
-		mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 3, type: 'Budget', status: 'Locked' });
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			id: 3,
+			type: 'Budget',
+			status: 'Locked',
+		});
 
 		const token = await makeToken({ role: 'Admin' });
 		const res = await app.inject({
@@ -258,7 +268,11 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 
 	it('422 when actual_version_id references Actual version that is not Locked', async () => {
 		// Actual version but in Published status (not Locked)
-		mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 6, type: 'Actual', status: 'Published' });
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			id: 6,
+			type: 'Actual',
+			status: 'Published',
+		});
 
 		const token = await makeToken({ role: 'Admin' });
 		const res = await app.inject({

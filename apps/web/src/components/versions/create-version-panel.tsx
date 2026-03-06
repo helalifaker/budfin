@@ -42,7 +42,7 @@ export function CreateVersionPanel({
 		if (!panel) return;
 
 		const focusable = panel.querySelectorAll<HTMLElement>(
-			'input, select, textarea, button, [tabindex]:not([tabindex="-1"])',
+			'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
 		);
 		const first = focusable[0];
 		const last = focusable[focusable.length - 1];
@@ -91,7 +91,11 @@ export function CreateVersionPanel({
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby={titleId}
-				className={cn('fixed right-0 top-0 z-50 h-full w-[480px]', 'bg-white shadow-xl', 'flex flex-col')}
+				className={cn(
+					'fixed right-0 top-0 z-50 h-full w-[480px]',
+					'bg-white shadow-xl',
+					'flex flex-col'
+				)}
 			>
 				<div className="border-b px-6 py-4">
 					<h2 id={titleId} className="text-lg font-semibold">
@@ -104,7 +108,10 @@ export function CreateVersionPanel({
 					<form id="create-version-form" onSubmit={handleSubmit} className="space-y-4">
 						<div>
 							<label htmlFor="cv-name" className="block text-sm font-medium">
-								Name <span aria-hidden="true" className="text-red-500">*</span>
+								Name{' '}
+								<span aria-hidden="true" className="text-red-500">
+									*
+								</span>
 							</label>
 							<input
 								id="cv-name"
@@ -113,7 +120,7 @@ export function CreateVersionPanel({
 								maxLength={100}
 								className={cn(
 									'mt-1 w-full rounded-md border px-3 py-2 text-sm',
-									form.formState.errors.name ? 'border-red-400' : 'border-slate-300',
+									form.formState.errors.name ? 'border-red-400' : 'border-slate-300'
 								)}
 								{...form.register('name')}
 							/>
@@ -126,7 +133,10 @@ export function CreateVersionPanel({
 
 						<div>
 							<label htmlFor="cv-type" className="block text-sm font-medium">
-								Type <span aria-hidden="true" className="text-red-500">*</span>
+								Type{' '}
+								<span aria-hidden="true" className="text-red-500">
+									*
+								</span>
 							</label>
 							<select
 								id="cv-type"
@@ -174,7 +184,7 @@ export function CreateVersionPanel({
 						disabled={isPending}
 						className={cn(
 							'rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white',
-							'hover:bg-blue-700 disabled:opacity-50',
+							'hover:bg-blue-700 disabled:opacity-50'
 						)}
 					>
 						{isPending ? 'Creating...' : 'Create Version'}

@@ -54,7 +54,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 		if (!panel) return;
 
 		const focusable = panel.querySelectorAll<HTMLElement>(
-			'button, [tabindex]:not([tabindex="-1"])',
+			'button, [tabindex]:not([tabindex="-1"])'
 		);
 		const first = focusable[0];
 		const last = focusable[focusable.length - 1];
@@ -81,16 +81,11 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 
 	if (!open || !version) return null;
 
-	const staleDisplay =
-		version.staleModules.length > 0 ? version.staleModules : null;
+	const staleDisplay = version.staleModules.length > 0 ? version.staleModules : null;
 
 	return (
 		<>
-			<div
-				className="fixed inset-0 z-40 bg-black/30"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
 			<aside
 				ref={panelRef}
 				role="dialog"
@@ -99,7 +94,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
 					'bg-white shadow-xl',
-					'flex flex-col',
+					'flex flex-col'
 				)}
 			>
 				{/* Header */}
@@ -111,7 +106,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 						<span
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-								STATUS_BADGE_COLORS[version.status],
+								STATUS_BADGE_COLORS[version.status]
 							)}
 						>
 							{version.status}
@@ -133,10 +128,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 							<Field label="Type">
 								<span className="inline-flex items-center gap-1.5">
 									<span
-										className={cn(
-											'h-2 w-2 rounded-full',
-											TYPE_DOT_COLORS[version.type],
-										)}
+										className={cn('h-2 w-2 rounded-full', TYPE_DOT_COLORS[version.type])}
 										aria-hidden="true"
 									/>
 									{version.type}
@@ -151,15 +143,9 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 						<SectionHeading>Lifecycle</SectionHeading>
 						<dl className="grid grid-cols-2 gap-4">
 							<Field label="Status">{version.status}</Field>
-							<Field label="Published At">
-								{formatDate(version.publishedAt)}
-							</Field>
-							<Field label="Locked At">
-								{formatDate(version.lockedAt)}
-							</Field>
-							<Field label="Archived At">
-								{formatDate(version.archivedAt)}
-							</Field>
+							<Field label="Published At">{formatDate(version.publishedAt)}</Field>
+							<Field label="Locked At">{formatDate(version.lockedAt)}</Field>
+							<Field label="Archived At">{formatDate(version.archivedAt)}</Field>
 						</dl>
 					</section>
 
@@ -167,9 +153,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 					<section>
 						<SectionHeading>Version Control</SectionHeading>
 						<dl className="grid grid-cols-2 gap-4">
-							<Field label="Modification Count">
-								{version.modificationCount}
-							</Field>
+							<Field label="Modification Count">{version.modificationCount}</Field>
 							<Field label="Stale Modules">
 								{staleDisplay ? (
 									<span className="flex flex-wrap gap-1">
@@ -179,7 +163,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 												className={cn(
 													'inline-flex rounded-full px-2 py-0.5',
 													'text-xs font-medium',
-													'bg-amber-100 text-amber-800',
+													'bg-amber-100 text-amber-800'
 												)}
 											>
 												{mod}
@@ -191,9 +175,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 								)}
 							</Field>
 							<Field label="Source Version ID">
-								{version.sourceVersionId !== null
-									? version.sourceVersionId
-									: 'Original'}
+								{version.sourceVersionId !== null ? version.sourceVersionId : 'Original'}
 							</Field>
 						</dl>
 					</section>
@@ -202,15 +184,9 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 					<section>
 						<SectionHeading>Audit</SectionHeading>
 						<dl className="grid grid-cols-2 gap-4">
-							<Field label="Created By">
-								{version.createdByEmail ?? '\u2014'}
-							</Field>
-							<Field label="Created At">
-								{formatDate(version.createdAt)}
-							</Field>
-							<Field label="Updated At">
-								{formatDate(version.updatedAt)}
-							</Field>
+							<Field label="Created By">{version.createdByEmail ?? '\u2014'}</Field>
+							<Field label="Created At">{formatDate(version.createdAt)}</Field>
+							<Field label="Updated At">{formatDate(version.updatedAt)}</Field>
 						</dl>
 					</section>
 				</div>
@@ -223,7 +199,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 						className={cn(
 							'rounded-md border border-slate-300',
 							'px-4 py-2 text-sm font-medium',
-							'hover:bg-slate-50',
+							'hover:bg-slate-50'
 						)}
 					>
 						Close

@@ -94,14 +94,14 @@ describe('GET /api/v1/versions/compare', () => {
 				revenueHt: '1200.0000',
 				staffCosts: '600.0000',
 				netProfit: '600.0000',
-			}),
+			})
 		);
 		const compSummaries = Array.from({ length: 12 }, (_, i) =>
 			makeSummary(2, i + 1, {
 				revenueHt: '1000.0000',
 				staffCosts: '500.0000',
 				netProfit: '500.0000',
-			}),
+			})
 		);
 
 		mockPrisma.budgetVersion.findUnique
@@ -137,10 +137,10 @@ describe('GET /api/v1/versions/compare', () => {
 
 	it('PO-008: both amounts 0 → absolute=0, percentage=null', async () => {
 		const zeroSummaries = Array.from({ length: 1 }, (_, i) =>
-			makeSummary(1, i + 1, { revenueHt: '0.0000', staffCosts: '0.0000', netProfit: '0.0000' }),
+			makeSummary(1, i + 1, { revenueHt: '0.0000', staffCosts: '0.0000', netProfit: '0.0000' })
 		);
 		const zeroCompSummaries = Array.from({ length: 1 }, (_, i) =>
-			makeSummary(2, i + 1, { revenueHt: '0.0000', staffCosts: '0.0000', netProfit: '0.0000' }),
+			makeSummary(2, i + 1, { revenueHt: '0.0000', staffCosts: '0.0000', netProfit: '0.0000' })
 		);
 
 		mockPrisma.budgetVersion.findUnique
@@ -217,9 +217,7 @@ describe('GET /api/v1/versions/compare', () => {
 		mockPrisma.budgetVersion.findUnique
 			.mockResolvedValueOnce({ id: 1 })
 			.mockResolvedValueOnce({ id: 2 });
-		mockPrisma.monthlyBudgetSummary.findMany
-			.mockResolvedValueOnce([])
-			.mockResolvedValueOnce([]);
+		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
 		const token = await makeToken({ role: 'Viewer' });
 		const res = await app.inject({

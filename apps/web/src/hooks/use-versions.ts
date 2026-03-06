@@ -84,8 +84,7 @@ export function usePatchVersionStatus() {
 export function useDeleteVersion() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (id: number) =>
-			apiClient<void>(`/versions/${id}`, { method: 'DELETE' }),
+		mutationFn: (id: number) => apiClient<void>(`/versions/${id}`, { method: 'DELETE' }),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versions'] }),
 	});
 }
@@ -98,7 +97,6 @@ export function useVersions(fiscalYear?: number, status?: string) {
 
 	return useQuery({
 		queryKey: ['versions', { fiscalYear, status }],
-		queryFn: () =>
-			apiClient<VersionListResponse>(`/versions${query ? `?${query}` : ''}`),
+		queryFn: () => apiClient<VersionListResponse>(`/versions${query ? `?${query}` : ''}`),
 	});
 }

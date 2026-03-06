@@ -38,7 +38,7 @@ export function SelectTrigger({ className, children, ...props }: SelectTriggerPr
 				'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
 				'disabled:cursor-not-allowed disabled:opacity-50',
 				'[&>span]:line-clamp-1',
-				className,
+				className
 			)}
 			{...props}
 		>
@@ -101,8 +101,8 @@ export function SelectContent({
 					'data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
 					position === 'popper' &&
 						'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1' +
-						' data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
-					className,
+							' data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
+					className
 				)}
 				position={position}
 				{...props}
@@ -113,7 +113,7 @@ export function SelectContent({
 						'p-1',
 						position === 'popper' &&
 							'h-[var(--radix-select-trigger-height)] w-full' +
-							' min-w-[var(--radix-select-trigger-width)]',
+								' min-w-[var(--radix-select-trigger-width)]'
 					)}
 				>
 					{children}
@@ -145,7 +145,7 @@ export function SelectItem({ className, children, ...props }: SelectItemProps) {
 				'py-1.5 pl-8 pr-2 text-sm outline-none',
 				'focus:bg-slate-100 focus:text-slate-900',
 				'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-				className,
+				className
 			)}
 			{...props}
 		>
@@ -159,9 +159,7 @@ export function SelectItem({ className, children, ...props }: SelectItemProps) {
 	);
 }
 
-export type SelectSeparatorProps = React.ComponentPropsWithoutRef<
-	typeof SelectPrimitive.Separator
->;
+export type SelectSeparatorProps = React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>;
 
 export function SelectSeparator({ className, ...props }: SelectSeparatorProps) {
 	return (

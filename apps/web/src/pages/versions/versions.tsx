@@ -64,7 +64,7 @@ export function VersionsPage() {
 			const timer = setTimeout(() => setSearchDebounced(value), 300);
 			setSearchTimer(timer);
 		},
-		[searchTimer],
+		[searchTimer]
 	);
 
 	// Server-side filtering: fiscal year and status go to the API
@@ -82,7 +82,7 @@ export function VersionsPage() {
 		}
 		// Default sort: createdAt DESC
 		rows = [...rows].sort(
-			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 		);
 		return rows;
 	}, [data, typeFilter, searchDebounced]);
@@ -146,7 +146,7 @@ export function VersionsPage() {
 						<span
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-								STATUS_BADGE_COLORS[value],
+								STATUS_BADGE_COLORS[value]
 							)}
 							aria-label={`Status: ${value}`}
 						>
@@ -214,7 +214,7 @@ export function VersionsPage() {
 					]
 				: []),
 		],
-		[canCreate],
+		[canCreate]
 	);
 
 	const table = useReactTable({
@@ -233,7 +233,7 @@ export function VersionsPage() {
 						'mb-4 rounded-md px-4 py-3 text-sm font-medium',
 						statusMessage.type === 'success'
 							? 'bg-green-50 text-green-800'
-							: 'bg-red-50 text-red-800',
+							: 'bg-red-50 text-red-800'
 					)}
 				>
 					{statusMessage.text}
@@ -252,7 +252,7 @@ export function VersionsPage() {
 					className={cn(
 						'w-[240px] rounded-md border border-slate-300',
 						'px-3 py-2 text-sm',
-						'placeholder:text-slate-400',
+						'placeholder:text-slate-400'
 					)}
 					aria-label="Search versions"
 				/>
@@ -300,7 +300,7 @@ export function VersionsPage() {
 						type="button"
 						className={cn(
 							'rounded-md bg-blue-600 px-4 py-2 text-sm',
-							'font-medium text-white hover:bg-blue-700',
+							'font-medium text-white hover:bg-blue-700'
 						)}
 						onClick={() => setCreateOpen(true)}
 					>
@@ -324,10 +324,7 @@ export function VersionsPage() {
 											role="columnheader"
 											className="px-4 py-3 font-medium text-slate-600"
 										>
-											{flexRender(
-												header.column.columnDef.header,
-												header.getContext(),
-											)}
+											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
 								</tr>
@@ -345,22 +342,10 @@ export function VersionsPage() {
 								</tr>
 							) : (
 								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										role="row"
-										className="border-b last:border-0 hover:bg-slate-50"
-									>
+									<tr key={row.id} role="row" className="border-b last:border-0 hover:bg-slate-50">
 										{row.getVisibleCells().map((cell) => (
-											<td
-												key={cell.id}
-												role="gridcell"
-												aria-readonly="true"
-												className="px-4 py-3"
-											>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
+											<td key={cell.id} role="gridcell" aria-readonly="true" className="px-4 py-3">
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
 											</td>
 										))}
 									</tr>
@@ -389,10 +374,7 @@ export function VersionsPage() {
 				onClose={() => setCloneSource(null)}
 				onSuccess={(clonedName, sourceName) => {
 					setCloneSource(null);
-					showStatus(
-						`"${clonedName}" cloned from "${sourceName}" successfully.`,
-						'success',
-					);
+					showStatus(`"${clonedName}" cloned from "${sourceName}" successfully.`, 'success');
 				}}
 			/>
 
@@ -409,10 +391,7 @@ export function VersionsPage() {
 				version={publishTarget}
 				onClose={() => setPublishTarget(null)}
 				onSuccess={() => {
-					showStatus(
-						`"${publishTarget?.name}" published successfully.`,
-						'success',
-					);
+					showStatus(`"${publishTarget?.name}" published successfully.`, 'success');
 					setPublishTarget(null);
 				}}
 			/>
@@ -430,10 +409,7 @@ export function VersionsPage() {
 				version={archiveTarget}
 				onClose={() => setArchiveTarget(null)}
 				onSuccess={() => {
-					showStatus(
-						`"${archiveTarget?.name}" archived successfully.`,
-						'success',
-					);
+					showStatus(`"${archiveTarget?.name}" archived successfully.`, 'success');
 					setArchiveTarget(null);
 				}}
 			/>
@@ -442,10 +418,7 @@ export function VersionsPage() {
 				version={revertTarget}
 				onClose={() => setRevertTarget(null)}
 				onSuccess={() => {
-					showStatus(
-						`"${revertTarget?.name}" reverted to Draft.`,
-						'success',
-					);
+					showStatus(`"${revertTarget?.name}" reverted to Draft.`, 'success');
 					setRevertTarget(null);
 				}}
 			/>
@@ -454,10 +427,7 @@ export function VersionsPage() {
 				version={deleteTarget}
 				onClose={() => setDeleteTarget(null)}
 				onSuccess={() => {
-					showStatus(
-						`"${deleteTarget?.name}" deleted successfully.`,
-						'success',
-					);
+					showStatus(`"${deleteTarget?.name}" deleted successfully.`, 'success');
 					setDeleteTarget(null);
 				}}
 			/>
@@ -510,7 +480,7 @@ function VersionActions({
 				onClick={() => setOpen((prev) => !prev)}
 				className={cn(
 					'rounded-md border border-slate-300 px-2 py-1 text-xs font-medium',
-					'hover:bg-slate-50',
+					'hover:bg-slate-50'
 				)}
 			>
 				Actions
@@ -519,16 +489,12 @@ function VersionActions({
 			{open && (
 				<>
 					{/* Backdrop to close menu on outside click */}
-					<div
-						className="fixed inset-0 z-10"
-						aria-hidden="true"
-						onClick={() => setOpen(false)}
-					/>
+					<div className="fixed inset-0 z-10" aria-hidden="true" onClick={() => setOpen(false)} />
 					<div
 						role="menu"
 						className={cn(
 							'absolute right-0 z-20 mt-1 w-44 rounded-md border bg-white py-1 shadow-lg',
-							'text-sm',
+							'text-sm'
 						)}
 					>
 						<button

@@ -20,9 +20,7 @@ export function useWorkspaceContext() {
 		? Number(searchParams.get('compare'))
 		: null;
 	const academicPeriod = searchParams.get('period');
-	const scenarioId = searchParams.get('scenario')
-		? Number(searchParams.get('scenario'))
-		: null;
+	const scenarioId = searchParams.get('scenario') ? Number(searchParams.get('scenario')) : null;
 
 	const setVersion = useCallback(
 		(id: number | null) => {
@@ -38,7 +36,7 @@ export function useWorkspaceContext() {
 			// Invalidate all version-scoped queries on version change
 			void queryClient.invalidateQueries({ queryKey: ['version'] });
 		},
-		[setSearchParams, queryClient],
+		[setSearchParams, queryClient]
 	);
 
 	const setFiscalYear = useCallback(
@@ -49,7 +47,7 @@ export function useWorkspaceContext() {
 				return next;
 			});
 		},
-		[setSearchParams],
+		[setSearchParams]
 	);
 
 	const setComparisonVersion = useCallback(
@@ -64,7 +62,7 @@ export function useWorkspaceContext() {
 				return next;
 			});
 		},
-		[setSearchParams],
+		[setSearchParams]
 	);
 
 	const setAcademicPeriod = useCallback(
@@ -79,7 +77,7 @@ export function useWorkspaceContext() {
 				return next;
 			});
 		},
-		[setSearchParams],
+		[setSearchParams]
 	);
 
 	const setScenario = useCallback(
@@ -94,7 +92,7 @@ export function useWorkspaceContext() {
 				return next;
 			});
 		},
-		[setSearchParams],
+		[setSearchParams]
 	);
 
 	return {

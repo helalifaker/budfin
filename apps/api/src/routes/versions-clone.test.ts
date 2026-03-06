@@ -168,10 +168,31 @@ describe('POST /api/v1/versions/:id/clone', () => {
 	it('AC-11: clone copies monthly_budget_summary rows in transaction', async () => {
 		const source = makeVersion({ id: 1 });
 		const summaries = [
-			{ id: 10, versionId: 1, month: 1, revenueHt: '100.00', staffCosts: '50.00', netProfit: '50.00', calculatedAt: now },
-			{ id: 11, versionId: 1, month: 2, revenueHt: '200.00', staffCosts: '80.00', netProfit: '120.00', calculatedAt: now },
+			{
+				id: 10,
+				versionId: 1,
+				month: 1,
+				revenueHt: '100.00',
+				staffCosts: '50.00',
+				netProfit: '50.00',
+				calculatedAt: now,
+			},
+			{
+				id: 11,
+				versionId: 1,
+				month: 2,
+				revenueHt: '200.00',
+				staffCosts: '80.00',
+				netProfit: '120.00',
+				calculatedAt: now,
+			},
 		];
-		const cloned = makeVersion({ id: 2, name: 'Budget Clone', sourceVersionId: 1, createdBy: { email: 'admin@budfin.app' } });
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Budget Clone',
+			sourceVersionId: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		});
 
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
 		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValue(summaries);
@@ -191,13 +212,18 @@ describe('POST /api/v1/versions/:id/clone', () => {
 					expect.objectContaining({ month: 1, versionId: 2 }),
 					expect.objectContaining({ month: 2, versionId: 2 }),
 				]),
-			}),
+			})
 		);
 	});
 
 	it('AC-11: writes audit entry for VERSION_CLONED', async () => {
 		const source = makeVersion({ id: 1 });
-		const cloned = makeVersion({ id: 2, name: 'Clone', sourceVersionId: 1, createdBy: { email: 'admin@budfin.app' } });
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Clone',
+			sourceVersionId: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		});
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
 		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
 
@@ -212,7 +238,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		expect(mockPrisma.auditEntry.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				data: expect.objectContaining({ operation: 'VERSION_CLONED' }),
-			}),
+			})
 		);
 	});
 
@@ -240,7 +266,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 				code: 'P2002',
 				clientVersion: '6.0.0',
 				meta: { target: ['fiscal_year', 'name'] },
-			}),
+			})
 		);
 
 		const token = await makeToken({ role: 'Admin' });

@@ -132,13 +132,16 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 		expect(mockPrisma.auditEntry.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				data: expect.objectContaining({ operation: 'VERSION_PUBLISHED' }),
-			}),
+			})
 		);
 	});
 
 	it('AC-04: BudgetOwner can publish Draft version', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(makeDraft({ status: 'Draft' }));
-		mockPrisma.budgetVersion.update.mockResolvedValue({ ...makeDraft({ status: 'Published' }), createdBy: { email: 'admin@budfin.app' } });
+		mockPrisma.budgetVersion.update.mockResolvedValue({
+			...makeDraft({ status: 'Published' }),
+			createdBy: { email: 'admin@budfin.app' },
+		});
 
 		const token = await makeToken({ role: 'BudgetOwner' });
 		const res = await app.inject({
@@ -154,7 +157,12 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 	// AC-05: Published → Locked
 	it('AC-05: Published → Locked sets lockedAt', async () => {
 		const published = makeDraft({ status: 'Published', publishedAt: now });
-		const locked = { ...published, status: 'Locked', lockedAt: now, createdBy: { email: 'admin@budfin.app' } };
+		const locked = {
+			...published,
+			status: 'Locked',
+			lockedAt: now,
+			createdBy: { email: 'admin@budfin.app' },
+		};
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(published);
 		mockPrisma.budgetVersion.update.mockResolvedValue(locked);
 
@@ -171,14 +179,19 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 		expect(mockPrisma.auditEntry.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				data: expect.objectContaining({ operation: 'VERSION_LOCKED' }),
-			}),
+			})
 		);
 	});
 
 	// AC-06: Locked → Archived
 	it('AC-06: Locked → Archived sets archivedAt', async () => {
 		const locked = makeDraft({ status: 'Locked', publishedAt: now, lockedAt: now });
-		const archived = { ...locked, status: 'Archived', archivedAt: now, createdBy: { email: 'admin@budfin.app' } };
+		const archived = {
+			...locked,
+			status: 'Archived',
+			archivedAt: now,
+			createdBy: { email: 'admin@budfin.app' },
+		};
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(locked);
 		mockPrisma.budgetVersion.update.mockResolvedValue(archived);
 
@@ -197,7 +210,13 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 	// AC-07: reverse transition (Published → Draft)
 	it('AC-07: Published → Draft with valid audit_note increments modificationCount', async () => {
 		const published = makeDraft({ status: 'Published', publishedAt: now });
-		const reverted = { ...published, status: 'Draft', publishedAt: null, modificationCount: 1, createdBy: { email: 'admin@budfin.app' } };
+		const reverted = {
+			...published,
+			status: 'Draft',
+			publishedAt: null,
+			modificationCount: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		};
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(published);
 		mockPrisma.budgetVersion.update.mockResolvedValue(reverted);
 
@@ -217,7 +236,7 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 					operation: 'VERSION_REVERTED',
 					newValues: expect.objectContaining({ audit_note: 'Reverted for corrections' }),
 				}),
-			}),
+			})
 		);
 	});
 
@@ -285,7 +304,7 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 
 	it('Archived → Draft → 409 INVALID_TRANSITION (cannot revert from Archived)', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(
-			makeDraft({ status: 'Archived', publishedAt: now, lockedAt: now, archivedAt: now }),
+			makeDraft({ status: 'Archived', publishedAt: now, lockedAt: now, archivedAt: now })
 		);
 
 		const token = await makeToken({ role: 'Admin' });

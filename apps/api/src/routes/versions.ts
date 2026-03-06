@@ -184,10 +184,14 @@ export async function versionRoutes(app: FastifyInstance) {
 			]);
 
 			if (!primaryVersion) {
-				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${primary} not found` });
+				return reply
+					.status(404)
+					.send({ code: 'NOT_FOUND', message: `Version ${primary} not found` });
 			}
 			if (!compVersion) {
-				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${comparison} not found` });
+				return reply
+					.status(404)
+					.send({ code: 'NOT_FOUND', message: `Version ${comparison} not found` });
 			}
 
 			const [primarySummaries, compSummaries] = await Promise.all([
@@ -195,12 +199,17 @@ export async function versionRoutes(app: FastifyInstance) {
 				prisma.monthlyBudgetSummary.findMany({ where: { versionId: comparison } }),
 			]);
 
-			type SummaryRow = { month: number; revenueHt: unknown; staffCosts: unknown; netProfit: unknown };
+			type SummaryRow = {
+				month: number;
+				revenueHt: unknown;
+				staffCosts: unknown;
+				netProfit: unknown;
+			};
 			const primaryByMonth = new Map<number, SummaryRow>(
-				(primarySummaries as SummaryRow[]).map((s) => [s.month, s]),
+				(primarySummaries as SummaryRow[]).map((s) => [s.month, s])
 			);
 			const compByMonth = new Map<number, SummaryRow>(
-				(compSummaries as SummaryRow[]).map((s) => [s.month, s]),
+				(compSummaries as SummaryRow[]).map((s) => [s.month, s])
 			);
 
 			const allMonths = new Set([...primaryByMonth.keys(), ...compByMonth.keys()]);
@@ -279,7 +288,11 @@ export async function versionRoutes(app: FastifyInstance) {
 
 			// Build month → actualVersionId map for locked periods
 			const lockedMap = new Map<number, number>();
-			for (const period of periods as Array<{ month: number; status: string; actualVersionId: number | null }>) {
+			for (const period of periods as Array<{
+				month: number;
+				status: string;
+				actualVersionId: number | null;
+			}>) {
 				if (period.status === 'Locked' && period.actualVersionId !== null) {
 					lockedMap.set(period.month, period.actualVersionId);
 				}
@@ -289,16 +302,21 @@ export async function versionRoutes(app: FastifyInstance) {
 
 			// Always fetch both — actual summaries (may be empty) then forecast summaries
 			const actualSummaries = await prisma.monthlyBudgetSummary.findMany({
-				where: actualVersionIds.length > 0
-					? { versionId: { in: actualVersionIds } }
-					: { versionId: -1 }, // returns empty, avoids conditional
+				where:
+					actualVersionIds.length > 0 ? { versionId: { in: actualVersionIds } } : { versionId: -1 }, // returns empty, avoids conditional
 			});
 
 			const forecastSummaries = await prisma.monthlyBudgetSummary.findMany({
 				where: { versionId: id },
 			});
 
-			type SummaryRow = { versionId: number; month: number; revenueHt: unknown; staffCosts: unknown; netProfit: unknown };
+			type SummaryRow = {
+				versionId: number;
+				month: number;
+				revenueHt: unknown;
+				staffCosts: unknown;
+				netProfit: unknown;
+			};
 			const actualByKey = new Map<string, SummaryRow>();
 			for (const s of actualSummaries as SummaryRow[]) {
 				actualByKey.set(`${s.versionId}:${s.month}`, s);
@@ -378,12 +396,11 @@ export async function versionRoutes(app: FastifyInstance) {
 					return created;
 				});
 
-				return reply.status(201).send(formatVersion(version as Parameters<typeof formatVersion>[0]));
+				return reply
+					.status(201)
+					.send(formatVersion(version as Parameters<typeof formatVersion>[0]));
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_VERSION_NAME',
 						message: 'A version with this name already exists for this fiscal year',
@@ -511,10 +528,7 @@ export async function versionRoutes(app: FastifyInstance) {
 
 				return reply.status(201).send(formatVersion(cloned as Parameters<typeof formatVersion>[0]));
 			} catch (error) {
-				if (
-					error instanceof Prisma.PrismaClientKnownRequestError &&
-					error.code === 'P2002'
-				) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 					return reply.status(409).send({
 						code: 'DUPLICATE_VERSION_NAME',
 						message: 'A version with this name already exists for this fiscal year',

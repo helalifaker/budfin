@@ -20,12 +20,7 @@ export type CloneVersionDialogProps = {
 	onSuccess: (clonedName: string, sourceName: string) => void;
 };
 
-export function CloneVersionDialog({
-	open,
-	source,
-	onClose,
-	onSuccess,
-}: CloneVersionDialogProps) {
+export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVersionDialogProps) {
 	const dialogRef = useRef<HTMLDivElement>(null);
 	const titleId = 'clone-version-dialog-title';
 	const { mutateAsync, isPending } = useCloneVersion();
@@ -43,7 +38,7 @@ export function CloneVersionDialog({
 		if (!dialog) return;
 
 		const focusable = dialog.querySelectorAll<HTMLElement>(
-			'input, select, textarea, button, [tabindex]:not([tabindex="-1"])',
+			'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
 		);
 		const first = focusable[0];
 		const last = focusable[focusable.length - 1];
@@ -130,7 +125,10 @@ export function CloneVersionDialog({
 								<form id="clone-version-form" onSubmit={handleSubmit} className="space-y-4">
 									<div>
 										<label htmlFor="clone-name" className="block text-sm font-medium">
-											Name <span aria-hidden="true" className="text-red-500">*</span>
+											Name{' '}
+											<span aria-hidden="true" className="text-red-500">
+												*
+											</span>
 										</label>
 										<input
 											id="clone-name"
@@ -139,7 +137,7 @@ export function CloneVersionDialog({
 											maxLength={100}
 											className={cn(
 												'mt-1 w-full rounded-md border px-3 py-2 text-sm',
-												form.formState.errors.name ? 'border-red-400' : 'border-slate-300',
+												form.formState.errors.name ? 'border-red-400' : 'border-slate-300'
 											)}
 											{...form.register('name')}
 										/>
@@ -183,7 +181,7 @@ export function CloneVersionDialog({
 								disabled={isPending}
 								className={cn(
 									'rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white',
-									'hover:bg-blue-700 disabled:opacity-50',
+									'hover:bg-blue-700 disabled:opacity-50'
 								)}
 							>
 								{isPending ? 'Cloning...' : 'Clone Version'}

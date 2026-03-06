@@ -38,8 +38,7 @@ const CURRENT_FISCAL_YEAR = new Date().getFullYear();
 
 export function FiscalPeriodsPage() {
 	const currentUser = useAuthStore((s) => s.user);
-	const canLock =
-		currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
+	const canLock = currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
 
 	const [fiscalYear, setFiscalYear] = useState<number>(CURRENT_FISCAL_YEAR);
 
@@ -110,14 +109,8 @@ export function FiscalPeriodsPage() {
 					const value = info.getValue();
 					if (value == null) return <span className="text-slate-400">—</span>;
 					// Find the version name if available
-					const version = lockedActualVersions.find(
-						(v: BudgetVersion) => v.id === value
-					);
-					return (
-						<span>
-							{version ? `${version.name} (#${value})` : `#${value}`}
-						</span>
-					);
+					const version = lockedActualVersions.find((v: BudgetVersion) => v.id === value);
+					return <span>{version ? `${version.name} (#${value})` : `#${value}`}</span>;
 				},
 			}),
 			columnHelper.accessor('lockedAt', {
@@ -184,17 +177,12 @@ export function FiscalPeriodsPage() {
 
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-xl font-semibold">
-					Fiscal Period Management
-				</h1>
+				<h1 className="mr-auto text-xl font-semibold">Fiscal Period Management</h1>
 
 				<select
 					value={String(fiscalYear)}
 					onChange={(e) => setFiscalYear(Number(e.target.value))}
-					className={cn(
-						'rounded-md border border-slate-300',
-						'px-3 py-2 text-sm'
-					)}
+					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
 					aria-label="Filter by fiscal year"
 				>
 					{fiscalYearOptions.map((fy) => (
@@ -220,10 +208,7 @@ export function FiscalPeriodsPage() {
 											role="columnheader"
 											className="px-4 py-3 font-medium text-slate-600"
 										>
-											{flexRender(
-												header.column.columnDef.header,
-												header.getContext()
-											)}
+											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
 								</tr>
@@ -241,22 +226,10 @@ export function FiscalPeriodsPage() {
 								</tr>
 							) : (
 								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										role="row"
-										className="border-b last:border-0 hover:bg-slate-50"
-									>
+									<tr key={row.id} role="row" className="border-b last:border-0 hover:bg-slate-50">
 										{row.getVisibleCells().map((cell) => (
-											<td
-												key={cell.id}
-												role="gridcell"
-												aria-readonly="true"
-												className="px-4 py-3"
-											>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext()
-												)}
+											<td key={cell.id} role="gridcell" aria-readonly="true" className="px-4 py-3">
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
 											</td>
 										))}
 									</tr>
@@ -280,11 +253,7 @@ type LockActionProps = {
 	onStatusMessage: (text: string, type: 'success' | 'error') => void;
 };
 
-function LockAction({
-	period,
-	lockedActualVersions,
-	onStatusMessage,
-}: LockActionProps) {
+function LockAction({ period, lockedActualVersions, onStatusMessage }: LockActionProps) {
 	const [selectedVersionId, setSelectedVersionId] = useState<string>('');
 	const [confirming, setConfirming] = useState(false);
 	const lockMutation = useLockFiscalPeriod();
@@ -293,10 +262,7 @@ function LockAction({
 
 	const handleLock = useCallback(() => {
 		if (!selectedVersionId) {
-			onStatusMessage(
-				'Please select an Actual version before locking.',
-				'error',
-			);
+			onStatusMessage('Please select an Actual version before locking.', 'error');
 			return;
 		}
 
@@ -314,17 +280,11 @@ function LockAction({
 			},
 			{
 				onSuccess: () => {
-					onStatusMessage(
-						`${monthName} locked successfully.`,
-						'success'
-					);
+					onStatusMessage(`${monthName} locked successfully.`, 'success');
 					setSelectedVersionId('');
 				},
 				onError: () => {
-					onStatusMessage(
-						`Failed to lock ${monthName}. Please try again.`,
-						'error'
-					);
+					onStatusMessage(`Failed to lock ${monthName}. Please try again.`, 'error');
 				},
 			}
 		);
@@ -347,10 +307,7 @@ function LockAction({
 				id={`version-select-${period.month}`}
 				value={selectedVersionId}
 				onChange={(e) => setSelectedVersionId(e.target.value)}
-				className={cn(
-					'rounded-md border border-slate-300',
-					'px-2 py-1 text-xs'
-				)}
+				className={cn('rounded-md border border-slate-300', 'px-2 py-1 text-xs')}
 				disabled={lockMutation.isPending}
 				aria-label={`Select Actual version for ${monthName}`}
 			>
@@ -370,15 +327,11 @@ function LockAction({
 					confirming
 						? 'bg-red-600 text-white hover:bg-red-700'
 						: 'bg-violet-600 text-white hover:bg-violet-700',
-					'disabled:cursor-not-allowed disabled:opacity-50',
+					'disabled:cursor-not-allowed disabled:opacity-50'
 				)}
 				aria-label={`Lock period ${monthName}`}
 			>
-				{lockMutation.isPending
-					? 'Locking...'
-					: confirming
-						? 'Confirm Lock'
-						: 'Lock Period'}
+				{lockMutation.isPending ? 'Locking...' : confirming ? 'Confirm Lock' : 'Lock Period'}
 			</button>
 			{confirming && (
 				<button

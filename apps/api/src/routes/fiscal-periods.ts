@@ -125,7 +125,11 @@ export async function fiscalPeriodRoutes(app: FastifyInstance) {
 						tableName: 'fiscal_periods',
 						recordId: result.id,
 						ipAddress: request.ip,
-						newValues: { fiscalYear, month, actualVersionId: actual_version_id } as Prisma.InputJsonValue,
+						newValues: {
+							fiscalYear,
+							month,
+							actualVersionId: actual_version_id,
+						} as Prisma.InputJsonValue,
 					},
 				});
 

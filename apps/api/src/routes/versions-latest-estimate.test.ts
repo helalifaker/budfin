@@ -112,17 +112,17 @@ describe('GET /api/v1/versions/:id/latest-estimate', () => {
 		// months 1-6 locked with actualVersionId=10, months 7-12 draft
 		const periods = [
 			...Array.from({ length: 6 }, (_, i) =>
-				makePeriod(2026, i + 1, { status: 'Locked', actualVersionId: 10 }),
+				makePeriod(2026, i + 1, { status: 'Locked', actualVersionId: 10 })
 			),
 			...Array.from({ length: 6 }, (_, i) => makePeriod(2026, i + 7)),
 		];
 		// Actual version summaries (months 1-6)
 		const actualSummaries = Array.from({ length: 6 }, (_, i) =>
-			makeSummary(10, i + 1, { revenueHt: '2000.0000' }),
+			makeSummary(10, i + 1, { revenueHt: '2000.0000' })
 		);
 		// Forecast version summaries (months 7-12)
 		const forecastSummaries = Array.from({ length: 6 }, (_, i) =>
-			makeSummary(1, i + 7, { revenueHt: '1500.0000' }),
+			makeSummary(1, i + 7, { revenueHt: '1500.0000' })
 		);
 
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(version);
@@ -198,9 +198,7 @@ describe('GET /api/v1/versions/:id/latest-estimate', () => {
 		const version = { id: 1, fiscalYear: 2026, createdBy: { email: 'admin@budfin.app' } };
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(version);
 		mockPrisma.fiscalPeriod.findMany.mockResolvedValue([]);
-		mockPrisma.monthlyBudgetSummary.findMany
-			.mockResolvedValueOnce([])
-			.mockResolvedValueOnce([]);
+		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
 		const token = await makeToken({ role: 'Viewer' });
 		const res = await app.inject({

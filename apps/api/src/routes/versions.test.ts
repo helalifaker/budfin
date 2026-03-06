@@ -153,7 +153,7 @@ describe('GET /api/v1/versions', () => {
 		expect(mockPrisma.budgetVersion.findMany).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: expect.objectContaining({ fiscalYear: 2026 }),
-			}),
+			})
 		);
 	});
 
@@ -172,7 +172,7 @@ describe('GET /api/v1/versions', () => {
 		expect(mockPrisma.budgetVersion.findMany).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: expect.objectContaining({ status: 'Draft' }),
-			}),
+			})
 		);
 	});
 
@@ -278,7 +278,7 @@ describe('POST /api/v1/versions', () => {
 				code: 'P2002',
 				clientVersion: '6.0.0',
 				meta: { target: ['fiscal_year', 'name'] },
-			}),
+			})
 		);
 
 		const token = await makeToken({ role: 'Admin' });

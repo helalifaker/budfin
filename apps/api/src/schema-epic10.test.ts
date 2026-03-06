@@ -26,9 +26,7 @@ describe('Epic 10 DB Schema — Story #50', () => {
 		});
 
 		it('BudgetVersion DMMF contains all required fields', () => {
-			const model = Prisma.dmmf.datamodel.models.find(
-				(m) => m.name === 'BudgetVersion',
-			);
+			const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'BudgetVersion');
 			expect(model).toBeDefined();
 
 			const fieldNames = model!.fields.map((f) => f.name);
@@ -56,9 +54,7 @@ describe('Epic 10 DB Schema — Story #50', () => {
 		});
 
 		it('staleModules is a list (String[]) field', () => {
-			const model = Prisma.dmmf.datamodel.models.find(
-				(m) => m.name === 'BudgetVersion',
-			);
+			const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'BudgetVersion');
 			const staleField = model!.fields.find((f) => f.name === 'staleModules');
 			expect(staleField).toBeDefined();
 			expect(staleField!.isList).toBe(true);
@@ -66,14 +62,11 @@ describe('Epic 10 DB Schema — Story #50', () => {
 		});
 
 		it('BudgetVersion has unique constraint on (fiscalYear, name)', () => {
-			const model = Prisma.dmmf.datamodel.models.find(
-				(m) => m.name === 'BudgetVersion',
-			);
+			const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'BudgetVersion');
 			expect(model).toBeDefined();
 			// uniqueIndexes contains the composite unique constraint
 			const hasUniqueConstraint = model!.uniqueIndexes.some(
-				(idx) =>
-					idx.fields.includes('fiscalYear') && idx.fields.includes('name'),
+				(idx) => idx.fields.includes('fiscalYear') && idx.fields.includes('name')
 			);
 			expect(hasUniqueConstraint).toBe(true);
 		});
@@ -89,9 +82,7 @@ describe('Epic 10 DB Schema — Story #50', () => {
 		});
 
 		it('FiscalPeriod DMMF contains all required fields', () => {
-			const model = Prisma.dmmf.datamodel.models.find(
-				(m) => m.name === 'FiscalPeriod',
-			);
+			const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'FiscalPeriod');
 			expect(model).toBeDefined();
 
 			const fieldNames = model!.fields.map((f) => f.name);
@@ -108,13 +99,10 @@ describe('Epic 10 DB Schema — Story #50', () => {
 		});
 
 		it('FiscalPeriod has unique constraint on (fiscalYear, month)', () => {
-			const model = Prisma.dmmf.datamodel.models.find(
-				(m) => m.name === 'FiscalPeriod',
-			);
+			const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'FiscalPeriod');
 			expect(model).toBeDefined();
 			const hasUniqueConstraint = model!.uniqueIndexes.some(
-				(idx) =>
-					idx.fields.includes('fiscalYear') && idx.fields.includes('month'),
+				(idx) => idx.fields.includes('fiscalYear') && idx.fields.includes('month')
 			);
 			expect(hasUniqueConstraint).toBe(true);
 		});
@@ -129,9 +117,7 @@ describe('Epic 10 DB Schema — Story #50', () => {
 		});
 
 		it('MonthlyBudgetSummary DMMF contains all required fields', () => {
-			const model = Prisma.dmmf.datamodel.models.find(
-				(m) => m.name === 'MonthlyBudgetSummary',
-			);
+			const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'MonthlyBudgetSummary');
 			expect(model).toBeDefined();
 
 			const fieldNames = model!.fields.map((f) => f.name);
@@ -155,9 +141,7 @@ describe('Epic 10 DB Schema — Story #50', () => {
 		});
 
 		it('ActualsImportLog DMMF contains all required fields', () => {
-			const model = Prisma.dmmf.datamodel.models.find(
-				(m) => m.name === 'ActualsImportLog',
-			);
+			const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'ActualsImportLog');
 			expect(model).toBeDefined();
 
 			const fieldNames = model!.fields.map((f) => f.name);

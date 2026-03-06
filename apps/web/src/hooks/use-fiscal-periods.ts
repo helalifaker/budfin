@@ -16,8 +16,7 @@ export interface FiscalPeriod {
 export function useFiscalPeriods(fiscalYear: number) {
 	return useQuery({
 		queryKey: ['fiscal-periods', fiscalYear],
-		queryFn: () =>
-			apiClient<FiscalPeriod[]>(`/fiscal-periods/${fiscalYear}`),
+		queryFn: () => apiClient<FiscalPeriod[]>(`/fiscal-periods/${fiscalYear}`),
 	});
 }
 
@@ -33,14 +32,10 @@ export function useLockFiscalPeriod() {
 			month: number;
 			actual_version_id: number;
 		}) =>
-			apiClient<FiscalPeriod>(
-				`/fiscal-periods/${fiscalYear}/${month}/lock`,
-				{
-					method: 'PATCH',
-					body: JSON.stringify({ actual_version_id }),
-				}
-			),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: ['fiscal-periods'] }),
+			apiClient<FiscalPeriod>(`/fiscal-periods/${fiscalYear}/${month}/lock`, {
+				method: 'PATCH',
+				body: JSON.stringify({ actual_version_id }),
+			}),
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fiscal-periods'] }),
 	});
 }

@@ -1,12 +1,6 @@
 import { useWorkspaceContext } from '../hooks/use-workspace-context';
 import { useVersions } from '../hooks/use-versions';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 // Fiscal years available for selection — covers a rolling window around the current year.
 const CURRENT_YEAR = new Date().getFullYear();
@@ -72,10 +66,7 @@ export function ContextBar() {
 				>
 					FY
 				</label>
-				<Select
-					value={String(fiscalYear)}
-					onValueChange={handleFiscalYearChange}
-				>
+				<Select value={String(fiscalYear)} onValueChange={handleFiscalYearChange}>
 					<SelectTrigger
 						id="ctx-fiscal-year"
 						aria-label="Fiscal year"
@@ -163,10 +154,7 @@ export function ContextBar() {
 
 			{/* Academic Period */}
 			<div className="flex items-center gap-2">
-				<label
-					htmlFor="ctx-period"
-					className="text-xs font-medium text-gray-500 whitespace-nowrap"
-				>
+				<label htmlFor="ctx-period" className="text-xs font-medium text-gray-500 whitespace-nowrap">
 					Period
 				</label>
 				<Select
