@@ -134,7 +134,7 @@ export async function rotateToken(
 
 /**
  * Check a token hash for replay attacks.
- * If the token is revoked, revokes entire family and logs audit.
+ * If the token is revoked, revokes ALL user sessions (AC-06) and logs audit.
  * Unknown tokens are treated as replay.
  */
 export async function detectReplay(
@@ -152,12 +152,9 @@ export async function detectReplay(
 	// Valid, non-revoked token
 	if (!existing.isRevoked) return 'VALID';
 
-	// Revoked token replayed — revoke entire family
+	// Revoked token replayed — revoke ALL user sessions (AC-06)
 	await prisma.$transaction(async (tx: TxClient) => {
-		await tx.refreshToken.updateMany({
-			where: { familyId: existing.familyId, isRevoked: false },
-			data: { isRevoked: true },
-		});
+		await revokeAllUserTokens(userId, ipAddress, tx);
 
 		await tx.auditEntry.create({
 			data: {

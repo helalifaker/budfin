@@ -168,7 +168,7 @@ describe('token-family service', () => {
 			expect(result).toBe('VALID');
 		});
 
-		it('revokes entire family when revoked token is replayed', async () => {
+		it('revokes ALL user sessions when revoked token is replayed (AC-06)', async () => {
 			const familyId = 'fam-replay';
 			mockRefreshTokenFindFirst.mockResolvedValue({
 				tokenHash: 'hash',
@@ -180,12 +180,12 @@ describe('token-family service', () => {
 
 			expect(result).toBe('TOKEN_FAMILY_REVOKED');
 			expect(mockRefreshTokenUpdateMany).toHaveBeenCalledWith({
-				where: { familyId, isRevoked: false },
+				where: { userId: 1, isRevoked: false },
 				data: { isRevoked: true },
 			});
 		});
 
-		it('creates TOKEN_FAMILY_REVOKED audit entry on replay', async () => {
+		it('creates ALL_SESSIONS_REVOKED and TOKEN_FAMILY_REVOKED audit entries on replay (AC-06)', async () => {
 			const familyId = 'fam-audit';
 			mockRefreshTokenFindFirst.mockResolvedValue({
 				tokenHash: 'hash',
@@ -194,6 +194,15 @@ describe('token-family service', () => {
 			});
 
 			await detectReplay('hash', 7, '172.16.0.1');
+
+			expect(mockAuditEntryCreate).toHaveBeenCalledWith({
+				data: {
+					userId: 7,
+					operation: 'ALL_SESSIONS_REVOKED',
+					tableName: 'refresh_tokens',
+					ipAddress: '172.16.0.1',
+				},
+			});
 
 			expect(mockAuditEntryCreate).toHaveBeenCalledWith({
 				data: {
