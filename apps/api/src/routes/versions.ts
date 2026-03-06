@@ -258,6 +258,79 @@ export async function versionRoutes(app: FastifyInstance) {
 		},
 	});
 
+	// GET /:id/latest-estimate — Blended actual + forecast view (AC-16)
+	app.get('/:id/latest-estimate', {
+		schema: { params: idParamsSchema },
+		preHandler: [app.authenticate],
+		handler: async (request, reply) => {
+			const { id } = request.params as z.infer<typeof idParamsSchema>;
+
+			const version = await prisma.budgetVersion.findUnique({ where: { id } });
+
+			if (!version) {
+				return reply.status(404).send({ code: 'NOT_FOUND', message: `Version ${id} not found` });
+			}
+
+			// Fetch fiscal periods for this version's fiscal year
+			const periods = await prisma.fiscalPeriod.findMany({
+				where: { fiscalYear: version.fiscalYear },
+				orderBy: { month: 'asc' },
+			});
+
+			// Build month → actualVersionId map for locked periods
+			const lockedMap = new Map<number, number>();
+			for (const period of periods as Array<{ month: number; status: string; actualVersionId: number | null }>) {
+				if (period.status === 'Locked' && period.actualVersionId !== null) {
+					lockedMap.set(period.month, period.actualVersionId);
+				}
+			}
+
+			const actualVersionIds = [...new Set(lockedMap.values())];
+
+			// Always fetch both — actual summaries (may be empty) then forecast summaries
+			const actualSummaries = await prisma.monthlyBudgetSummary.findMany({
+				where: actualVersionIds.length > 0
+					? { versionId: { in: actualVersionIds } }
+					: { versionId: -1 }, // returns empty, avoids conditional
+			});
+
+			const forecastSummaries = await prisma.monthlyBudgetSummary.findMany({
+				where: { versionId: id },
+			});
+
+			type SummaryRow = { versionId: number; month: number; revenueHt: unknown; staffCosts: unknown; netProfit: unknown };
+			const actualByKey = new Map<string, SummaryRow>();
+			for (const s of actualSummaries as SummaryRow[]) {
+				actualByKey.set(`${s.versionId}:${s.month}`, s);
+			}
+
+			const forecastByMonth = new Map<number, SummaryRow>();
+			for (const s of forecastSummaries as SummaryRow[]) {
+				forecastByMonth.set(s.month, s);
+			}
+
+			const months = Array.from({ length: 12 }, (_, i) => {
+				const month = i + 1;
+				const lockedActualVersionId = lockedMap.get(month);
+				const isActual = lockedActualVersionId !== undefined;
+
+				const summary = isActual
+					? actualByKey.get(`${lockedActualVersionId}:${month}`)
+					: forecastByMonth.get(month);
+
+				return {
+					month,
+					source: isActual ? 'ACTUAL' : 'FORECAST',
+					revenueHt: String(summary?.revenueHt ?? '0'),
+					staffCosts: String(summary?.staffCosts ?? '0'),
+					netProfit: String(summary?.netProfit ?? '0'),
+				};
+			});
+
+			return { months };
+		},
+	});
+
 	// POST / — Create version (Admin, BudgetOwner only — AC-01, AC-02, AC-19)
 	app.post('/', {
 		schema: { body: createVersionSchema },
