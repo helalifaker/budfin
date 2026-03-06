@@ -212,14 +212,12 @@ describe('POST /api/v1/master-data/academic-years', () => {
 			async (fn: (tx: unknown) => Promise<unknown>) => {
 				return fn({
 					academicYear: {
-						create: vi
-							.fn()
-							.mockRejectedValue(
-								new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-									code: 'P2002',
-									clientVersion: '6.0.0',
-								})
-							),
+						create: vi.fn().mockRejectedValue(
+							new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+								code: 'P2002',
+								clientVersion: '6.0.0',
+							})
+						),
 					},
 					auditEntry: {
 						create: vi.fn().mockResolvedValue({ id: 1 }),
