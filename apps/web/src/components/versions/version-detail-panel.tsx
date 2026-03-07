@@ -12,8 +12,8 @@ export type VersionDetailPanelProps = {
 
 const STATUS_BADGE_COLORS: Record<BudgetVersion['status'], string> = {
 	Draft: 'bg-[var(--workspace-bg-muted)] text-[var(--text-primary)]',
-	Published: 'bg-blue-100 text-blue-800',
-	Locked: 'bg-violet-100 text-violet-800',
+	Published: 'bg-[var(--version-budget-bg)] text-[var(--status-published)]',
+	Locked: 'bg-[color-mix(in_srgb,var(--status-locked)_15%,white)] text-[var(--status-locked)]',
 	Archived: 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
 };
 
@@ -167,7 +167,7 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 												className={cn(
 													'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5',
 													'text-[length:var(--text-xs)] font-medium',
-													'bg-amber-100 text-amber-800'
+													'bg-[var(--color-warning-bg)] text-[var(--color-warning)]'
 												)}
 											>
 												{mod}

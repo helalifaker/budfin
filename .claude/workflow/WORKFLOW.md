@@ -15,7 +15,7 @@ Never skip a phase. Never skip a checklist item.
 
 ## Command Reference
 
-8 user-facing commands. See `.claude/COMMANDS.md` for the full decision tree.
+9 user-facing commands. See `.claude/COMMANDS.md` for the full decision tree.
 
 | # | Command | Phase | Purpose |
 |---|---------|-------|---------|
@@ -27,6 +27,7 @@ Never skip a phase. Never skip a checklist item.
 | 6 | `/plan:adr "[title]"` | Any | Record architectural decision |
 | 7 | `/plan:spec [epic-#]` | 4 | Write feature spec interactively |
 | 8 | `/impl:story [story-#]` | 5-6 | Implement a single story (5-agent TDD swarm) |
+| 9 | `/audit:360 [--epic N... / --all]` | Any | 360-degree implementation audit (read-only, 8 layers) |
 
 ### Error Type -> Fix Command
 
@@ -233,6 +234,11 @@ for a single story, `/workflow:run [epic-#]` handles Phase 7 automatically.
 | Documentor | `.claude/agents/workflow-documentor.md` | CHANGELOG, ADRs, traceability matrix | Phase 7 |
 | Security Reviewer | `.claude/agents/security-reviewer.md` | JWT, RBAC, SQL injection | `/fix:security` |
 | Precision Reviewer | `.claude/agents/financial-precision-reviewer.md` | TC-001 Decimal.js violations | `/fix:precision` |
+| Spec Compliance Auditor | `.claude/agents/spec-compliance-auditor.md` | AC extraction and verification | `/audit:360` Layer 1 |
+| API Contract Auditor | `.claude/agents/api-contract-auditor.md` | Route/schema/status code compliance | `/audit:360` Layer 2 |
+| Data Model Auditor | `.claude/agents/data-model-auditor.md` | Prisma vs spec schema alignment | `/audit:360` Layer 3 |
+| Frontend Conformance Auditor | `.claude/agents/frontend-conformance-auditor.md` | Component/token/a11y compliance | `/audit:360` Layer 4 |
+| Cross-Epic Auditor | `.claude/agents/cross-epic-auditor.md` | Data flow and shared-type consistency | `/audit:360` Layer 6 |
 
 ## Template Reference
 
@@ -275,6 +281,7 @@ See `.claude/COMMANDS.md` for the full decision-tree user guide.
 | 6 | `/plan:adr "[title]"` | Record architectural decision |
 | 7 | `/plan:spec [epic-#]` | Write feature spec interactively |
 | 8 | `/impl:story [story-#]` | Implement a single story (5-agent TDD swarm) |
+| 9 | `/audit:360 [--epic N... / --all]` | 360-degree implementation audit (read-only, 8 layers) |
 
 ---
 

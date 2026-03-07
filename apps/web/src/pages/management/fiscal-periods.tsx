@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
 import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
+import { toast } from '../../components/ui/toast-state';
 import { useAuthStore } from '../../stores/auth-store';
 import { useFiscalPeriods, useLockFiscalPeriod } from '../../hooks/use-fiscal-periods';
 import type { FiscalPeriod } from '../../hooks/use-fiscal-periods';
@@ -40,8 +41,8 @@ const MONTH_NAMES = [
 ] as const;
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
-	Draft: 'bg-slate-100 text-slate-700',
-	Locked: 'bg-violet-100 text-violet-800',
+	Draft: 'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-[var(--status-draft)]',
+	Locked: 'bg-[color-mix(in_srgb,var(--status-locked)_15%,white)] text-[var(--status-locked)]',
 };
 
 const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
@@ -60,17 +61,6 @@ export function FiscalPeriodsPage() {
 		const allVersions = versionsData?.data ?? [];
 		return allVersions.filter((v: BudgetVersion) => v.type === 'Actual');
 	}, [versionsData]);
-
-	// Status messages for user feedback
-	const [statusMessage, setStatusMessage] = useState<{
-		text: string;
-		type: 'success' | 'error';
-	} | null>(null);
-
-	const showStatus = useCallback((text: string, type: 'success' | 'error') => {
-		setStatusMessage({ text, type });
-		setTimeout(() => setStatusMessage(null), 4000);
-	}, []);
 
 	const fiscalYearOptions = useMemo(() => {
 		const base = CURRENT_FISCAL_YEAR;
@@ -104,7 +94,8 @@ export function FiscalPeriodsPage() {
 						<span
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-								STATUS_BADGE_COLORS[value] ?? 'bg-slate-100 text-slate-700'
+								STATUS_BADGE_COLORS[value] ??
+									'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-[var(--status-draft)]'
 							)}
 							aria-label={`Status: ${value}`}
 						>
@@ -117,7 +108,7 @@ export function FiscalPeriodsPage() {
 				header: 'Actual Version',
 				cell: (info) => {
 					const value = info.getValue();
-					if (value == null) return <span className="text-slate-400">—</span>;
+					if (value == null) return <span className="text-[var(--text-muted)]">—</span>;
 					// Find the version name if available
 					const version = lockedActualVersions.find((v: BudgetVersion) => v.id === value);
 					return <span>{version ? `${version.name} (#${value})` : `#${value}`}</span>;
@@ -127,7 +118,7 @@ export function FiscalPeriodsPage() {
 				header: 'Locked At',
 				cell: (info) => {
 					const iso = info.getValue();
-					if (!iso) return <span className="text-slate-400">—</span>;
+					if (!iso) return <span className="text-[var(--text-muted)]">—</span>;
 					return formatDate(iso);
 				},
 			}),
@@ -135,7 +126,7 @@ export function FiscalPeriodsPage() {
 				header: 'Locked By',
 				cell: (info) => {
 					const value = info.getValue();
-					if (value == null) return <span className="text-slate-400">—</span>;
+					if (value == null) return <span className="text-[var(--text-muted)]">—</span>;
 					return <span>User #{value}</span>;
 				},
 			}),
@@ -147,19 +138,13 @@ export function FiscalPeriodsPage() {
 							cell: ({ row }) => {
 								const period = row.original;
 								if (period.status === 'Locked') return null;
-								return (
-									<LockAction
-										period={period}
-										lockedActualVersions={lockedActualVersions}
-										onStatusMessage={showStatus}
-									/>
-								);
+								return <LockAction period={period} lockedActualVersions={lockedActualVersions} />;
 							},
 						}),
 					]
 				: []),
 		],
-		[canLock, lockedActualVersions, showStatus]
+		[canLock, lockedActualVersions]
 	);
 
 	const table = useReactTable({
@@ -170,21 +155,6 @@ export function FiscalPeriodsPage() {
 
 	return (
 		<div className="p-6">
-			{/* Status message */}
-			{statusMessage && (
-				<div
-					aria-live="polite"
-					className={cn(
-						'mb-4 rounded-md px-4 py-3 text-sm font-medium',
-						statusMessage.type === 'success'
-							? 'bg-green-50 text-green-800'
-							: 'bg-red-50 text-red-800'
-					)}
-				>
-					{statusMessage.text}
-				</div>
-			)}
-
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
 				<h1 className="mr-auto text-xl font-semibold">Fiscal Period Management</h1>
@@ -215,11 +185,14 @@ export function FiscalPeriodsPage() {
 			) : (
 				<div className="overflow-x-auto rounded-lg border">
 					<table role="table" className="w-full text-left text-sm">
-						<thead className="border-b bg-slate-50">
+						<thead className="border-b bg-[var(--workspace-bg-subtle)]">
 							{table.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+										<th
+											key={header.id}
+											className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+										>
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
@@ -231,14 +204,17 @@ export function FiscalPeriodsPage() {
 								<tr>
 									<td
 										colSpan={columns.length}
-										className="px-4 py-12 text-center text-sm text-slate-500"
+										className="px-4 py-12 text-center text-sm text-[var(--text-muted)]"
 									>
 										No fiscal periods for FY{fiscalYear}
 									</td>
 								</tr>
 							) : (
 								table.getRowModel().rows.map((row) => (
-									<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+									<tr
+										key={row.id}
+										className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
+									>
 										{row.getVisibleCells().map((cell) => (
 											<td key={cell.id} role="cell" className="px-4 py-3">
 												{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -262,10 +238,9 @@ export function FiscalPeriodsPage() {
 type LockActionProps = {
 	period: FiscalPeriod;
 	lockedActualVersions: BudgetVersion[];
-	onStatusMessage: (text: string, type: 'success' | 'error') => void;
 };
 
-function LockAction({ period, lockedActualVersions, onStatusMessage }: LockActionProps) {
+function LockAction({ period, lockedActualVersions }: LockActionProps) {
 	const [selectedVersionId, setSelectedVersionId] = useState<string>('');
 	const [confirming, setConfirming] = useState(false);
 	const lockMutation = useLockFiscalPeriod();
@@ -274,7 +249,7 @@ function LockAction({ period, lockedActualVersions, onStatusMessage }: LockActio
 
 	const handleLock = useCallback(() => {
 		if (!selectedVersionId) {
-			onStatusMessage('Please select an Actual version before locking.', 'error');
+			toast.error('Please select an Actual version before locking.');
 			return;
 		}
 
@@ -292,23 +267,15 @@ function LockAction({ period, lockedActualVersions, onStatusMessage }: LockActio
 			},
 			{
 				onSuccess: () => {
-					onStatusMessage(`${monthName} locked successfully.`, 'success');
+					toast.success(`${monthName} locked successfully.`);
 					setSelectedVersionId('');
 				},
 				onError: () => {
-					onStatusMessage(`Failed to lock ${monthName}. Please try again.`, 'error');
+					toast.error(`Failed to lock ${monthName}. Please try again.`);
 				},
 			}
 		);
-	}, [
-		selectedVersionId,
-		confirming,
-		lockMutation,
-		period.fiscalYear,
-		period.month,
-		monthName,
-		onStatusMessage,
-	]);
+	}, [selectedVersionId, confirming, lockMutation, period.fiscalYear, period.month, monthName]);
 
 	return (
 		<div className="flex items-center gap-2">

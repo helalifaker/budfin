@@ -144,7 +144,7 @@ export function DepartmentSidePanel({
 								className={cn(
 									'mt-1 uppercase',
 									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
-									form.formState.errors.code && 'border-red-500'
+									form.formState.errors.code && 'border-[var(--color-error)]'
 								)}
 								{...form.register('code')}
 							/>
@@ -164,7 +164,7 @@ export function DepartmentSidePanel({
 							<Input
 								id="dept-label"
 								type="text"
-								className={cn('mt-1', form.formState.errors.label && 'border-red-500')}
+								className={cn('mt-1', form.formState.errors.label && 'border-[var(--color-error)]')}
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (

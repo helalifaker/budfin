@@ -13,22 +13,22 @@ const ALERT_CONFIG: Record<
 	OVER: {
 		icon: AlertTriangle,
 		label: 'Over capacity',
-		className: 'bg-[var(--error-bg)] text-red-800',
+		className: 'bg-[var(--color-error-bg)] text-[var(--color-error)]',
 	},
 	NEAR_CAP: {
 		icon: AlertTriangle,
 		label: 'Near capacity',
-		className: 'bg-amber-100 text-amber-800',
+		className: 'bg-[var(--color-warning-bg)] text-[var(--color-warning)]',
 	},
 	OK: {
 		icon: CheckCircle,
 		label: 'OK',
-		className: 'bg-green-100 text-green-800',
+		className: 'bg-[var(--color-success-bg)] text-[var(--color-success)]',
 	},
 	UNDER: {
 		icon: Info,
 		label: 'Under-enrolled',
-		className: 'bg-[var(--accent-50)] text-blue-800',
+		className: 'bg-[var(--accent-50)] text-[var(--badge-elementaire)]',
 	},
 };
 
@@ -60,7 +60,7 @@ export function UtilizationCell({ value }: { value: number }) {
 			className={cn(
 				'tabular-nums text-[length:var(--text-sm)]',
 				value > 100 && 'font-medium text-[var(--color-error)]',
-				value > 95 && value <= 100 && 'text-amber-600',
+				value > 95 && value <= 100 && 'text-[var(--color-warning)]',
 				value >= 70 && value <= 95 && 'text-[var(--color-success)]',
 				value < 70 && value > 0 && 'text-[var(--accent-600)]'
 			)}

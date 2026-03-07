@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
@@ -48,15 +48,15 @@ import { toast } from '../../components/ui/toast-state';
 const columnHelper = createColumnHelper<Account>();
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-	REVENUE: 'bg-[var(--accent-50)] text-[var(--accent-700)]',
-	EXPENSE: 'bg-red-50 text-red-700',
-	ASSET: 'bg-emerald-50 text-emerald-700',
-	LIABILITY: 'bg-amber-50 text-amber-700',
+	REVENUE: 'bg-[var(--badge-revenue-bg)] text-[var(--badge-revenue)]',
+	EXPENSE: 'bg-[var(--badge-expense-bg)] text-[var(--badge-expense)]',
+	ASSET: 'bg-[var(--badge-asset-bg)] text-[var(--badge-asset)]',
+	LIABILITY: 'bg-[var(--badge-liability-bg)] text-[var(--badge-liability)]',
 };
 
 const CENTER_TYPE_BADGE_COLORS: Record<string, string> = {
-	PROFIT_CENTER: 'bg-purple-50 text-purple-700',
-	COST_CENTER: 'bg-orange-50 text-orange-700',
+	PROFIT_CENTER: 'bg-[var(--badge-profit-center-bg)] text-[var(--badge-profit-center)]',
+	COST_CENTER: 'bg-[var(--badge-cost-center-bg)] text-[var(--badge-cost-center)]',
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -78,20 +78,16 @@ export function AccountsPage() {
 	// Filters
 	const [searchInput, setSearchInput] = useState('');
 	const [searchDebounced, setSearchDebounced] = useState('');
-	const [searchTimer, setSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+	const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const [typeFilter, setTypeFilter] = useState('');
 	const [centerTypeFilter, setCenterTypeFilter] = useState('');
 	const [statusFilter, setStatusFilter] = useState('');
 
-	const handleSearchChange = useCallback(
-		(value: string) => {
-			setSearchInput(value);
-			if (searchTimer) clearTimeout(searchTimer);
-			const timer = setTimeout(() => setSearchDebounced(value), 300);
-			setSearchTimer(timer);
-		},
-		[searchTimer]
-	);
+	const handleSearchChange = useCallback((value: string) => {
+		setSearchInput(value);
+		if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+		searchTimerRef.current = setTimeout(() => setSearchDebounced(value), 300);
+	}, []);
 
 	const filters: AccountFilters = useMemo(() => {
 		const f: AccountFilters = {};
@@ -482,7 +478,7 @@ export function AccountsPage() {
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-[var(--color-error)] hover:bg-red-700"
+							className="bg-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
 							disabled={deleteConfirmCode !== deleteTarget?.accountCode || deleteMutation.isPending}
 							onClick={handleDelete}
 						>

@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn';
 import type { Tariff } from '../../hooks/use-reference-data';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
 const tariffSchema = z.object({
 	code: z
@@ -130,7 +131,7 @@ export function TariffSidePanel({
 								className={cn(
 									'mt-1 uppercase',
 									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
-									form.formState.errors.code && 'border-red-500'
+									form.formState.errors.code && 'border-[var(--color-error)]'
 								)}
 								{...form.register('code')}
 							/>
@@ -150,7 +151,7 @@ export function TariffSidePanel({
 							<Input
 								id="tariff-label"
 								type="text"
-								className={cn('mt-1', form.formState.errors.label && 'border-red-500')}
+								className={cn('mt-1', form.formState.errors.label && 'border-[var(--color-error)]')}
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (
@@ -166,16 +167,10 @@ export function TariffSidePanel({
 							>
 								Description (optional)
 							</label>
-							<textarea
+							<Textarea
 								id="tariff-description"
 								rows={3}
-								className={cn(
-									'mt-1 flex w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
-									'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
-									'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
-									'disabled:cursor-not-allowed disabled:opacity-50',
-									'resize-none'
-								)}
+								className="mt-1 resize-none"
 								{...form.register('description')}
 							/>
 						</div>

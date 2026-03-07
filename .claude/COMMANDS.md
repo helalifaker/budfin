@@ -1,6 +1,6 @@
 # BudFin Command Reference
 
-8 user-facing commands. Everything else is internal and called automatically.
+9 user-facing commands. Everything else is internal and called automatically.
 
 ---
 
@@ -37,12 +37,18 @@ What do I want to do?
   |     /plan:spec [epic-#]
   |
   +-- Implement a single story
-        /impl:story [story-#]
+  |     /impl:story [story-#]
+  |
+  +-- Audit implementation quality
+        /audit:360 --all             (all completed epics)
+        /audit:360 --epic 1 2 10     (specific epics)
+        /audit:360 --all --quick     (fast mode, skip runtime)
+        /audit:360 --all --layer 1 2 (specific layers only)
 ```
 
 ---
 
-## The 8 Commands
+## The 9 Commands
 
 ### 1. `/workflow:run [epic-#]`
 
@@ -122,11 +128,27 @@ Implement a single story end-to-end. Spawns 5-agent TDD swarm (orchestrator + im
 
 **Phase gate**: Phase 5-6.
 
+### 9. `/audit:360 [--epic N... | --all] [--layer L...] [--quick]`
+
+360-degree implementation audit. Read-only diagnostic across 8 layers.
+
+**Layers**: spec compliance, API contract, data model, frontend conformance, engine integrity, cross-epic consistency, test coverage, dependency readiness.
+
+**Modes**:
+- `--all` — audit all completed epics
+- `--epic 1 2 10` — audit specific epics
+- `--layer 1 2 4` — run specific layers only (1-8)
+- `--quick` — fast mode: layers 1-4 + 6 only (skip runtime checks)
+
+**Output**: structured report with severity-tagged findings (Blocker/Warning/Info) and file:line references. Spawns 5 audit agents in parallel for static analysis.
+
+**Phase gate**: any phase (read-only).
+
 ---
 
 ## Internal Commands (called automatically)
 
-These commands are invoked by the 8 user-facing commands above. You should not need to run them directly.
+These commands are invoked by the 9 user-facing commands above. You should not need to run them directly.
 
 ### Called by `/workflow:run`
 
@@ -170,3 +192,4 @@ These commands are invoked by the 8 user-facing commands above. You should not n
 | `/plan:adr` | Y | Y | Y | Y |
 | `/plan:spec` | -- | Y | -- | -- |
 | `/impl:story` | -- | -- | Y | -- |
+| `/audit:360` | Y | Y | Y | Y |

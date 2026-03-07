@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn';
 import type { Account } from '../../hooks/use-accounts';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const accountSchema = z.object({
@@ -169,7 +170,7 @@ export function AccountsSidePanel({
 								className={cn(
 									'mt-1',
 									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
-									form.formState.errors.accountCode && 'border-red-500'
+									form.formState.errors.accountCode && 'border-[var(--color-error)]'
 								)}
 								{...form.register('accountCode')}
 							/>
@@ -190,7 +191,10 @@ export function AccountsSidePanel({
 							<Input
 								id="accountName"
 								type="text"
-								className={cn('mt-1', form.formState.errors.accountName && 'border-red-500')}
+								className={cn(
+									'mt-1',
+									form.formState.errors.accountName && 'border-[var(--color-error)]'
+								)}
 								{...form.register('accountName')}
 							/>
 							{form.formState.errors.accountName && (
@@ -234,7 +238,10 @@ export function AccountsSidePanel({
 							<Input
 								id="ifrsCategory"
 								type="text"
-								className={cn('mt-1', form.formState.errors.ifrsCategory && 'border-red-500')}
+								className={cn(
+									'mt-1',
+									form.formState.errors.ifrsCategory && 'border-[var(--color-error)]'
+								)}
 								{...form.register('ifrsCategory')}
 							/>
 							{form.formState.errors.ifrsCategory && (
@@ -278,14 +285,10 @@ export function AccountsSidePanel({
 							>
 								Description
 							</label>
-							<textarea
+							<Textarea
 								id="description"
 								rows={3}
-								className={cn(
-									'mt-1 flex w-full rounded-[var(--radius-md)] border',
-									'border-[var(--workspace-border)] bg-[var(--workspace-bg-card)] px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
-									'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
-								)}
+								className="mt-1"
 								{...form.register('description')}
 							/>
 						</div>

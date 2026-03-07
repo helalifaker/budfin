@@ -45,7 +45,7 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 			columnHelper.accessor('distributionMethod', {
 				header: 'Distribution',
 				cell: (info) => (
-					<span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-xs">
+					<span className="inline-block rounded bg-[var(--workspace-bg-muted)] px-2 py-0.5 text-xs">
 						{DISTRIBUTION_LABELS[info.getValue()] ?? info.getValue()}
 					</span>
 				),
@@ -53,7 +53,9 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 			columnHelper.accessor('ifrsCategory', {
 				header: 'IFRS Category',
 				cell: (info) => (
-					<span className="text-xs text-slate-600">{info.getValue().replace(/_/g, ' ')}</span>
+					<span className="text-xs text-[var(--text-secondary)]">
+						{info.getValue().replace(/_/g, ' ')}
+					</span>
 				),
 			}),
 			columnHelper.display({
@@ -71,7 +73,7 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 						monthly = annual / 12;
 					}
 					return (
-						<span className="tabular-nums text-slate-500">
+						<span className="tabular-nums text-[var(--text-muted)]">
 							~{formatDecimal(String(monthly.toFixed(4)))}
 						</span>
 					);
@@ -89,7 +91,7 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				Loading other revenue items...
 			</div>
 		);
@@ -97,7 +99,7 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 
 	if (items.length === 0) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				No other revenue items. Add non-tuition revenue sources.
 			</div>
 		);
@@ -107,11 +109,14 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 		<div className="space-y-4">
 			<div className="overflow-x-auto rounded-lg border">
 				<table role="grid" className="w-full text-left text-sm" aria-label="Other revenue items">
-					<thead className="border-b bg-slate-50">
+					<thead className="border-b bg-[var(--workspace-bg-subtle)]">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+									<th
+										key={header.id}
+										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -120,7 +125,10 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 					</thead>
 					<tbody>
 						{table.getRowModel().rows.map((row) => (
-							<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+							<tr
+								key={row.id}
+								className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
+							>
 								{row.getVisibleCells().map((cell) => (
 									<td key={cell.id} className="px-4 py-2">
 										{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -134,8 +142,8 @@ export function OtherRevenueTab({ versionId }: OtherRevenueTabProps) {
 
 			{/* Total summary */}
 			<div className="flex justify-end">
-				<div className="rounded-lg border bg-slate-50 px-4 py-2 text-sm">
-					<span className="text-slate-600">Total Annual: </span>
+				<div className="rounded-lg border bg-[var(--workspace-bg-subtle)] px-4 py-2 text-sm">
+					<span className="text-[var(--text-secondary)]">Total Annual: </span>
 					<span className="font-semibold tabular-nums">
 						{formatDecimal(
 							String(items.reduce((sum, i) => sum + Number(i.annualAmount), 0).toFixed(4))

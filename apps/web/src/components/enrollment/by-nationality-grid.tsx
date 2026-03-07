@@ -133,7 +133,10 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 					return info.getValue() ? (
 						<Check className="h-4 w-4 text-[var(--color-success)]" aria-label="Totals match" />
 					) : (
-						<AlertTriangle className="h-4 w-4 text-amber-500" aria-label="Totals do not match" />
+						<AlertTriangle
+							className="h-4 w-4 text-[var(--color-warning)]"
+							aria-label="Totals do not match"
+						/>
 					);
 				},
 			}),
@@ -156,7 +159,7 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 	return (
 		<div>
 			{mismatchCount > 0 && (
-				<div className="mb-2 flex items-center gap-2 rounded-[var(--radius-md)] bg-amber-50 px-3 py-2 text-[length:var(--text-sm)] text-amber-800">
+				<div className="mb-2 flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-warning-bg)] px-3 py-2 text-[length:var(--text-sm)] text-[var(--color-warning)]">
 					<AlertTriangle className="h-4 w-4" />
 					{mismatchCount} grade{mismatchCount > 1 ? 's' : ''} with nationality total mismatch
 				</div>
@@ -190,7 +193,9 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 									key={row.id}
 									className={cn(
 										'border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]',
-										!row.original.matches && row.original.stage1Total > 0 && 'bg-amber-50/30'
+										!row.original.matches &&
+											row.original.stage1Total > 0 &&
+											'bg-[var(--color-warning-bg)]/30'
 									)}
 								>
 									{row.getVisibleCells().map((cell) => (

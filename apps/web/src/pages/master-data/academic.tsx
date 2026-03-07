@@ -23,10 +23,10 @@ function formatDate(iso: string): string {
 }
 
 const BAND_STYLES: Record<GradeBand, string> = {
-	MATERNELLE: 'bg-pink-50 text-pink-700',
-	ELEMENTAIRE: 'bg-[var(--accent-50)] text-[var(--accent-700)]',
-	COLLEGE: 'bg-emerald-50 text-emerald-700',
-	LYCEE: 'bg-purple-50 text-purple-700',
+	MATERNELLE: 'bg-[var(--badge-maternelle-bg)] text-[var(--badge-maternelle)]',
+	ELEMENTAIRE: 'bg-[var(--badge-elementaire-bg)] text-[var(--badge-elementaire)]',
+	COLLEGE: 'bg-[var(--badge-college-bg)] text-[var(--badge-college)]',
+	LYCEE: 'bg-[var(--badge-lycee-bg)] text-[var(--badge-lycee)]',
 };
 
 const ayColumnHelper = createColumnHelper<AcademicYear>();
@@ -104,9 +104,9 @@ export function AcademicPage() {
 				id: 'actions',
 				header: 'Actions',
 				cell: ({ row }) => (
-					<button
-						type="button"
-						className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
+					<Button
+						variant="ghost"
+						size="icon"
 						aria-label={`Edit ${row.original.fiscalYear}`}
 						onClick={(e) => {
 							e.stopPropagation();
@@ -115,7 +115,7 @@ export function AcademicPage() {
 						}}
 					>
 						<Pencil className="h-4 w-4 text-[var(--text-muted)]" />
-					</button>
+					</Button>
 				),
 			}),
 		],
@@ -173,9 +173,9 @@ export function AcademicPage() {
 				id: 'actions',
 				header: 'Actions',
 				cell: ({ row }) => (
-					<button
-						type="button"
-						className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
+					<Button
+						variant="ghost"
+						size="icon"
 						aria-label={`Edit ${row.original.gradeName}`}
 						onClick={(e) => {
 							e.stopPropagation();
@@ -184,7 +184,7 @@ export function AcademicPage() {
 						}}
 					>
 						<Pencil className="h-4 w-4 text-[var(--text-muted)]" />
-					</button>
+					</Button>
 				),
 			}),
 		],

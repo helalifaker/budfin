@@ -3,10 +3,10 @@ import { cn } from '../../lib/cn';
 import { subscribe } from './toast-state';
 
 const TOAST_STYLES = {
-	success: 'border-[var(--color-success)] bg-[var(--color-success-bg)] text-green-900',
-	error: 'border-[var(--color-error)] bg-[var(--color-error-bg)] text-red-900',
-	info: 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-blue-900',
-	warning: 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-amber-900',
+	success: 'border-[var(--color-success)] bg-[var(--color-success-bg)] text-[var(--color-success)]',
+	error: 'border-[var(--color-error)] bg-[var(--color-error-bg)] text-[var(--color-error)]',
+	info: 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]',
+	warning: 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning)]',
 } as const;
 
 const TOAST_DOT = {
