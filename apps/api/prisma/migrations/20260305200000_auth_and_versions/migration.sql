@@ -1,3 +1,8 @@
+-- DOWN MIGRATION: Not provided. This is the initial auth and versions schema;
+-- rollback would destroy all user data, audit trail, and budget versions.
+-- Not meaningful for a greenfield migration. To reverse, drop tables in
+-- reverse dependency order then drop the user_role enum.
+
 -- CreateEnum
 CREATE TYPE "user_role" AS ENUM ('Admin', 'BudgetOwner', 'Editor', 'Viewer');
 
@@ -184,3 +189,18 @@ ALTER TABLE "actuals_import_log" ADD CONSTRAINT "actuals_import_log_version_id_f
 
 -- AddForeignKey
 ALTER TABLE "actuals_import_log" ADD CONSTRAINT "actuals_import_log_imported_by_id_fkey" FOREIGN KEY ("imported_by_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Audit trail tamper protection (per docs/tdd/05_security.md Section 7.7)
+-- audit_entries must be append-only at the database level.
+-- Note: These grants apply to the application database role. When using Prisma
+-- with a superuser connection (e.g., in dev), these restrictions don't apply
+-- to the superuser itself but protect against application-level compromise.
+DO $$
+BEGIN
+    -- Only apply if the application role exists (production/staging)
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'budfin_app') THEN
+        EXECUTE 'REVOKE UPDATE, DELETE ON audit_entries FROM budfin_app';
+        EXECUTE 'GRANT INSERT, SELECT ON audit_entries TO budfin_app';
+    END IF;
+END
+$$;
