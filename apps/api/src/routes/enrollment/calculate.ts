@@ -9,7 +9,7 @@ const versionIdParamsSchema = z.object({
 });
 
 export async function calculateRoutes(app: FastifyInstance) {
-	app.post('/calculate', {
+	app.post('/enrollment', {
 		schema: { params: versionIdParamsSchema },
 		preHandler: [app.authenticate, app.requireRole('Admin', 'BudgetOwner', 'Editor')],
 		handler: async (request, reply) => {

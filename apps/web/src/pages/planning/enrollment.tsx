@@ -24,7 +24,7 @@ const BAND_FILTERS: Array<{ value: string; label: string }> = [
 ];
 
 export function EnrollmentPage() {
-	const { versionId, academicPeriod } = useWorkspaceContext();
+	const { versionId, academicPeriod, comparisonVersionId } = useWorkspaceContext();
 	const user = useAuthStore((s) => s.user);
 	const isViewer = user?.role === 'Viewer';
 
@@ -37,6 +37,10 @@ export function EnrollmentPage() {
 		academicPeriod as AcademicPeriod | null
 	);
 	const { data: gradeLevelData } = useGradeLevels();
+	const { data: comparisonData } = useHeadcount(
+		comparisonVersionId,
+		academicPeriod as AcademicPeriod | null
+	);
 	const putHeadcount = usePutHeadcount(versionId);
 	const calculateMutation = useCalculateEnrollment(versionId);
 
@@ -122,6 +126,8 @@ export function EnrollmentPage() {
 						versionId={versionId}
 						onSave={handleHeadcountSave}
 						bandFilter={bandFilter as GradeBand | 'ALL'}
+						comparisonEntries={comparisonData?.entries}
+						capacityResults={calculateMutation.data?.results}
 					/>
 				</TabsContent>
 
@@ -138,6 +144,7 @@ export function EnrollmentPage() {
 						versionId={versionId}
 						isReadOnly={isViewer}
 						bandFilter={bandFilter as GradeBand | 'ALL'}
+						academicPeriod={academicPeriod ?? 'AY1'}
 					/>
 				</TabsContent>
 			</Tabs>

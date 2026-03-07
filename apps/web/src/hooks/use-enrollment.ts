@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
-import type { HeadcountEntry, DetailEntry, CapacitySummary, AcademicPeriod } from '@budfin/types';
+import type { HeadcountEntry, DetailEntry, CapacityResult, AcademicPeriod } from '@budfin/types';
 
 // ── Response types ───────────────────────────────────────────────────────────
 
@@ -111,11 +111,24 @@ export function usePutDetail(versionId: number | null) {
 
 // ── Capacity calculation ─────────────────────────────────────────────────────
 
+export interface CalculateEnrollmentResponse {
+	runId: string;
+	durationMs: number;
+	summary: {
+		totalStudentsAy1: number;
+		totalStudentsAy2: number;
+		overCapacityGrades: string[];
+	};
+	results: CapacityResult[];
+}
+
 export function useCalculateEnrollment(versionId: number | null) {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: () =>
-			apiClient<CapacitySummary>(`/versions/${versionId}/calculate/enrollment`, { method: 'POST' }),
+			apiClient<CalculateEnrollmentResponse>(`/versions/${versionId}/calculate/enrollment`, {
+				method: 'POST',
+			}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['enrollment', 'headcount', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
@@ -159,7 +172,6 @@ export function useImportHistorical() {
 				{
 					method: 'POST',
 					body: formData,
-					headers: {},
 				}
 			);
 		},

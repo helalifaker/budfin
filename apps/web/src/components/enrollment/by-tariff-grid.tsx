@@ -31,10 +31,14 @@ interface TariffRow {
 
 const columnHelper = createColumnHelper<TariffRow>();
 
+const NATIONALITIES = ['Francais', 'Nationaux', 'Autres'] as const;
+const TARIFF_TYPES = ['RP', 'R3+', 'Plein'] as const;
+
 interface Props {
 	versionId: number;
 	isReadOnly: boolean;
 	bandFilter: GradeBand | 'ALL';
+	academicPeriod: string;
 }
 
 function EditableTariffCell({
@@ -103,7 +107,7 @@ function EditableTariffCell({
 	);
 }
 
-export function ByTariffGrid({ versionId, isReadOnly, bandFilter }: Props) {
+export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod }: Props) {
 	const { data: detailData, isLoading } = useDetail(versionId);
 	const { data: gradeLevelData } = useGradeLevels();
 	const putDetail = usePutDetail(versionId);
@@ -167,16 +171,30 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter }: Props) {
 	const handleCellSave = useCallback(
 		(gradeLevel: string, nationality: string, tariff: string, value: number) => {
 			if (isReadOnly) return;
-			const entry: DetailEntry = {
-				gradeLevel: gradeLevel as DetailEntry['gradeLevel'],
-				academicPeriod: 'AY1',
-				nationality: nationality as DetailEntry['nationality'],
-				tariff: tariff as DetailEntry['tariff'],
-				headcount: value,
-			};
-			putDetail.mutate([entry]);
+			const period = academicPeriod as DetailEntry['academicPeriod'];
+			const entries: DetailEntry[] = [];
+			for (const nat of NATIONALITIES) {
+				for (const tar of TARIFF_TYPES) {
+					const isEdited = nat === nationality && tar === tariff;
+					const current = detailEntries.find(
+						(d) =>
+							d.gradeLevel === gradeLevel &&
+							d.academicPeriod === period &&
+							d.nationality === nat &&
+							d.tariff === tar
+					);
+					entries.push({
+						gradeLevel: gradeLevel as DetailEntry['gradeLevel'],
+						academicPeriod: period,
+						nationality: nat as DetailEntry['nationality'],
+						tariff: tar as DetailEntry['tariff'],
+						headcount: isEdited ? value : (current?.headcount ?? 0),
+					});
+				}
+			}
+			putDetail.mutate(entries);
 		},
-		[isReadOnly, putDetail]
+		[isReadOnly, putDetail, academicPeriod, detailEntries]
 	);
 
 	const makeTariffCol = (

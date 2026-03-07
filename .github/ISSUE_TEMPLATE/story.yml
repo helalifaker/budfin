@@ -1,0 +1,53 @@
+name: Story
+description: A user story linked to a BudFin Epic
+labels: ['story']
+body:
+  - type: input
+    id: parent-epic
+    attributes:
+      label: Parent Epic
+      description: 'GitHub issue number of the parent Epic'
+      placeholder: '#6'
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Story Description
+      description: 'What this story implements'
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: 'Testable criteria from the feature spec'
+      placeholder: |
+        - [ ] Given X, when Y, then Z
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Story Dependencies
+      description: 'Other stories that must be completed first'
+      placeholder: 'Depends on Story #NN'
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: definition-of-done
+    attributes:
+      label: Definition of Done
+      options:
+        - label: 'Tests written and RED (Phase 5)'
+        - label: 'Tests GREEN, coverage >= 80% (Phase 6)'
+        - label: 'Linter passes -- 0 errors, 0 warnings'
+        - label: 'PR open and linked to this issue'
+        - label: 'Reviewer agent approved (Phase 7)'
+        - label: 'QA agent approved (Phase 7)'
+        - label: 'Documentor agent complete (Phase 7)'
+        - label: 'PR merged, issue auto-closes'
