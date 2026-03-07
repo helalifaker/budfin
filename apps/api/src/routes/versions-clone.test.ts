@@ -3,7 +3,7 @@
  *
  * POST /api/v1/versions/:id/clone
  *
- * AC-11: Admin/BudgetOwner can clone Budget/Forecast → new Draft with sourceVersionId + deep copy of monthlyBudgetSummary
+ * AC-11: Admin/BudgetOwner can clone Budget/Forecast → new Draft with sourceVersionId + deep copy of enrollment data
  * AC-12: Clone on Actual version → 409 ACTUAL_VERSION_CLONE_PROHIBITED
  * AC-19 (partial): Editor/Viewer → 403 on POST /clone
  * Duplicate name → 409 DUPLICATE_VERSION_NAME
@@ -25,7 +25,11 @@ vi.mock('../lib/prisma.js', () => {
 			findUnique: vi.fn(),
 			create: vi.fn(),
 		},
-		monthlyBudgetSummary: {
+		enrollmentHeadcount: {
+			findMany: vi.fn().mockResolvedValue([]),
+			createMany: vi.fn().mockResolvedValue({ count: 0 }),
+		},
+		enrollmentDetail: {
 			findMany: vi.fn().mockResolvedValue([]),
 			createMany: vi.fn().mockResolvedValue({ count: 0 }),
 		},
@@ -35,7 +39,8 @@ vi.mock('../lib/prisma.js', () => {
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
 				budgetVersion: mockPrisma.budgetVersion,
-				monthlyBudgetSummary: mockPrisma.monthlyBudgetSummary,
+				enrollmentHeadcount: mockPrisma.enrollmentHeadcount,
+				enrollmentDetail: mockPrisma.enrollmentDetail,
 				auditEntry: mockPrisma.auditEntry,
 			})
 		),
@@ -50,7 +55,11 @@ const mockPrisma = prisma as unknown as {
 		findUnique: ReturnType<typeof vi.fn>;
 		create: ReturnType<typeof vi.fn>;
 	};
-	monthlyBudgetSummary: {
+	enrollmentHeadcount: {
+		findMany: ReturnType<typeof vi.fn>;
+		createMany: ReturnType<typeof vi.fn>;
+	};
+	enrollmentDetail: {
 		findMany: ReturnType<typeof vi.fn>;
 		createMany: ReturnType<typeof vi.fn>;
 	};
@@ -166,26 +175,24 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		expect(res.statusCode).toBe(201);
 	});
 
-	it('AC-11: clone copies monthly_budget_summary rows in transaction', async () => {
+	it('AC-11: clone copies enrollmentHeadcount rows', async () => {
 		const source = makeVersion({ id: 1 });
-		const summaries = [
+		const headcounts = [
 			{
 				id: 10,
 				versionId: 1,
-				month: 1,
-				revenueHt: '100.00',
-				staffCosts: '50.00',
-				netProfit: '50.00',
-				calculatedAt: now,
+				academicPeriod: 'AY1',
+				gradeLevel: 'CP',
+				headcount: 25,
+				createdBy: 1,
 			},
 			{
 				id: 11,
 				versionId: 1,
-				month: 2,
-				revenueHt: '200.00',
-				staffCosts: '80.00',
-				netProfit: '120.00',
-				calculatedAt: now,
+				academicPeriod: 'AY1',
+				gradeLevel: 'CE1',
+				headcount: 30,
+				createdBy: 1,
 			},
 		];
 		const cloned = makeVersion({
@@ -196,7 +203,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		});
 
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
-		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValue(summaries);
+		mockPrisma.enrollmentHeadcount.findMany.mockResolvedValue(headcounts);
 		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
 
 		const token = await makeToken({ role: 'Admin' });
@@ -207,12 +214,88 @@ describe('POST /api/v1/versions/:id/clone', () => {
 			payload: { name: 'Budget Clone' },
 		});
 
-		expect(mockPrisma.monthlyBudgetSummary.createMany).toHaveBeenCalledWith(
+		expect(mockPrisma.enrollmentHeadcount.createMany).toHaveBeenCalledWith(
 			expect.objectContaining({
 				data: expect.arrayContaining([
-					expect.objectContaining({ month: 1, versionId: 2 }),
-					expect.objectContaining({ month: 2, versionId: 2 }),
+					expect.objectContaining({ gradeLevel: 'CP', versionId: 2 }),
+					expect.objectContaining({ gradeLevel: 'CE1', versionId: 2 }),
 				]),
+			})
+		);
+	});
+
+	it('AC-11: clone copies enrollmentDetail rows', async () => {
+		const source = makeVersion({ id: 1 });
+		const details = [
+			{
+				id: 20,
+				versionId: 1,
+				academicPeriod: 'AY1',
+				gradeLevel: 'CP',
+				nationality: 'Francais',
+				tariff: 'RP',
+				headcount: 15,
+				createdBy: 1,
+			},
+		];
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Detail Clone',
+			sourceVersionId: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		});
+
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
+		mockPrisma.enrollmentDetail.findMany.mockResolvedValue(details);
+		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
+
+		const token = await makeToken({ role: 'Admin' });
+		await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions/1/clone',
+			headers: authHeader(token),
+			payload: { name: 'Detail Clone' },
+		});
+
+		expect(mockPrisma.enrollmentDetail.createMany).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.arrayContaining([
+					expect.objectContaining({
+						gradeLevel: 'CP',
+						nationality: 'Francais',
+						versionId: 2,
+					}),
+				]),
+			})
+		);
+	});
+
+	it('AC-11: clone sets staleModules to ENROLLMENT', async () => {
+		const source = makeVersion({ id: 1 });
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Stale Clone',
+			sourceVersionId: 1,
+			staleModules: ['ENROLLMENT'],
+			createdBy: { email: 'admin@budfin.app' },
+		});
+
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
+		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
+
+		const token = await makeToken({ role: 'Admin' });
+		await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions/1/clone',
+			headers: authHeader(token),
+			payload: { name: 'Stale Clone' },
+		});
+
+		expect(mockPrisma.budgetVersion.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({
+					staleModules: ['ENROLLMENT'],
+				}),
 			})
 		);
 	});

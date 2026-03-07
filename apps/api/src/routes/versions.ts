@@ -607,11 +607,6 @@ export async function versionRoutes(app: FastifyInstance) {
 				});
 			}
 
-			// Fetch existing monthly summaries to deep-copy
-			const summaries = await prisma.monthlyBudgetSummary.findMany({
-				where: { versionId: id },
-			});
-
 			try {
 				const cloned = await prisma.$transaction(async (tx) => {
 					const newVersion = await (tx as typeof prisma).budgetVersion.create({
@@ -623,22 +618,43 @@ export async function versionRoutes(app: FastifyInstance) {
 							sourceVersionId: id,
 							createdById: request.user.id,
 							modificationCount: 0,
-							staleModules: [],
+							staleModules: ['ENROLLMENT'],
 							status: 'Draft',
 							dataSource: source.dataSource,
 						},
 						include: { createdBy: { select: { email: true } } },
 					});
 
-					if (summaries.length > 0) {
-						await (tx as typeof prisma).monthlyBudgetSummary.createMany({
-							data: summaries.map((s) => ({
+					// Copy enrollment headcount rows
+					const headcounts = await (tx as typeof prisma).enrollmentHeadcount.findMany({
+						where: { versionId: id },
+					});
+					if (headcounts.length > 0) {
+						await (tx as typeof prisma).enrollmentHeadcount.createMany({
+							data: headcounts.map((h) => ({
 								versionId: newVersion.id,
-								month: s.month,
-								revenueHt: s.revenueHt,
-								staffCosts: s.staffCosts,
-								netProfit: s.netProfit,
-								calculatedAt: s.calculatedAt,
+								academicPeriod: h.academicPeriod,
+								gradeLevel: h.gradeLevel,
+								headcount: h.headcount,
+								createdBy: request.user.id,
+							})),
+						});
+					}
+
+					// Copy enrollment detail rows
+					const details = await (tx as typeof prisma).enrollmentDetail.findMany({
+						where: { versionId: id },
+					});
+					if (details.length > 0) {
+						await (tx as typeof prisma).enrollmentDetail.createMany({
+							data: details.map((d) => ({
+								versionId: newVersion.id,
+								academicPeriod: d.academicPeriod,
+								gradeLevel: d.gradeLevel,
+								nationality: d.nationality,
+								tariff: d.tariff,
+								headcount: d.headcount,
+								createdBy: request.user.id,
 							})),
 						});
 					}
