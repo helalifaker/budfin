@@ -1,8 +1,8 @@
 # BudFin — Current Status
 
-**Phase**: 4 — SPECIFY
+**Phase**: 5 — TDD RED
 **Current Epic**: Epic 2 — Revenue (#6)
-**Current Story**: —
+**Current Story**: Story 2.1 (#101)
 **Last updated**: 2026-03-07
 
 ## Phase History
@@ -32,13 +32,14 @@
 | 5 — TDD RED (Epic 1) | ✅ Complete | 2026-03-07 |
 | 6 — IMPLEMENT (Epic 1) | ✅ Complete | 2026-03-07 |
 | 7 — REVIEW (Epic 1) | ✅ Complete | 2026-03-07 |
+| 4 — SPECIFY (Epic 2) | ✅ Complete | 2026-03-07 |
 
 ## Feature Progress
 
 | Epic # | Feature | Phase | Status |
 | -------- | --------- | ------- | -------- |
 | 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07 |
-| 2 | Revenue | 2 | Epic Created (#6) |
+| 2 | Revenue | 5 | Spec approved, 12 stories created (#101-#112) |
 | 3 | Staffing (DHG) | 2 | Epic Created (#7) |
 | 4 | Staff Costs | 2 | Epic Created (#8) |
 | 5 | P&L Reporting | 2 | Epic Created (#11) |
