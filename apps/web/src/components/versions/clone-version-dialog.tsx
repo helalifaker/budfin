@@ -7,6 +7,7 @@ import { useCloneVersion } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import {
 	Dialog,
 	DialogContent,
@@ -74,7 +75,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 				</DialogHeader>
 
 				{isActual && (
-					<div className="rounded-[var(--radius-md)] bg-amber-50 px-4 py-3 text-[length:var(--text-sm)] text-amber-800">
+					<div className="rounded-[var(--radius-md)] bg-[var(--color-warning-bg)] px-4 py-3 text-[length:var(--text-sm)] text-[var(--color-warning)]">
 						Actual versions cannot be cloned.
 					</div>
 				)}
@@ -131,11 +132,11 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 								>
 									Description
 								</label>
-								<textarea
+								<Textarea
 									id="clone-description"
 									rows={2}
 									maxLength={500}
-									className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] px-3 py-2 text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2"
+									className="mt-1"
 									{...form.register('description')}
 								/>
 							</div>

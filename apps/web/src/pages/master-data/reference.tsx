@@ -104,7 +104,7 @@ function DeleteConfirmDialog({
 				<AlertDialogFooter>
 					<AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
 					<AlertDialogAction
-						className="bg-[var(--color-error)] hover:bg-red-700"
+						className="bg-[var(--color-error)] hover:bg-[var(--color-error)]"
 						disabled={confirmText !== entityCode || loading}
 						onClick={onConfirm}
 					>
@@ -119,10 +119,10 @@ function DeleteConfirmDialog({
 // --- Band Mapping Badge ---
 
 const BAND_COLORS: Record<BandMapping, string> = {
-	MATERNELLE: 'bg-pink-50 text-pink-700',
-	ELEMENTAIRE: 'bg-[var(--accent-50)] text-[var(--accent-700)]',
-	COLLEGE: 'bg-emerald-50 text-emerald-700',
-	LYCEE: 'bg-purple-50 text-purple-700',
+	MATERNELLE: 'bg-[var(--badge-maternelle-bg)] text-[var(--badge-maternelle)]',
+	ELEMENTAIRE: 'bg-[var(--badge-elementaire-bg)] text-[var(--badge-elementaire)]',
+	COLLEGE: 'bg-[var(--badge-college-bg)] text-[var(--badge-college)]',
+	LYCEE: 'bg-[var(--badge-lycee-bg)] text-[var(--badge-lycee)]',
 	NON_ACADEMIC: 'bg-[var(--workspace-bg-muted)] text-[var(--text-primary)]',
 };
 
@@ -258,7 +258,7 @@ export function ReferencePage() {
 						className={cn(
 							'inline-block rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 							info.getValue()
-								? 'bg-emerald-50 text-emerald-700'
+								? 'bg-[var(--color-success-bg)] text-[var(--color-success)]'
 								: 'bg-[var(--workspace-bg-muted)] text-[var(--text-secondary)]'
 						)}
 					>

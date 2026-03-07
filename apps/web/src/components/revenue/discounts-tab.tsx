@@ -31,7 +31,7 @@ export function DiscountsTab({ versionId }: DiscountsTabProps) {
 					return val ? (
 						<span>{val}</span>
 					) : (
-						<span className="text-slate-400 italic">All nationalities</span>
+						<span className="text-[var(--text-muted)] italic">All nationalities</span>
 					);
 				},
 			}),
@@ -48,10 +48,10 @@ export function DiscountsTab({ versionId }: DiscountsTabProps) {
 				cell: (info) => {
 					const rate = Number(info.row.original.discountRate);
 					if (rate === 0) {
-						return <span className="text-slate-400">No discount</span>;
+						return <span className="text-[var(--text-muted)]">No discount</span>;
 					}
 					return (
-						<span className="inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+						<span className="inline-block rounded bg-[var(--color-warning-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)]">
 							-{(rate * 100).toFixed(1)}% off tuition
 						</span>
 					);
@@ -69,7 +69,7 @@ export function DiscountsTab({ versionId }: DiscountsTabProps) {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				Loading discount policies...
 			</div>
 		);
@@ -77,7 +77,7 @@ export function DiscountsTab({ versionId }: DiscountsTabProps) {
 
 	if (entries.length === 0) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				No discount policies configured. Add policies to apply tuition discounts.
 			</div>
 		);
@@ -86,11 +86,11 @@ export function DiscountsTab({ versionId }: DiscountsTabProps) {
 	return (
 		<div className="overflow-x-auto rounded-lg border">
 			<table role="grid" className="w-full text-left text-sm" aria-label="Discount policies">
-				<thead className="border-b bg-slate-50">
+				<thead className="border-b bg-[var(--workspace-bg-subtle)]">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
 							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
 									{flexRender(header.column.columnDef.header, header.getContext())}
 								</th>
 							))}
@@ -99,7 +99,10 @@ export function DiscountsTab({ versionId }: DiscountsTabProps) {
 				</thead>
 				<tbody>
 					{table.getRowModel().rows.map((row) => (
-						<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+						<tr
+							key={row.id}
+							className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
+						>
 							{row.getVisibleCells().map((cell) => (
 								<td key={cell.id} className="px-4 py-2">
 									{flexRender(cell.column.columnDef.cell, cell.getContext())}

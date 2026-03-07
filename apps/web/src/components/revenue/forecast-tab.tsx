@@ -85,7 +85,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 				cell: (info) => {
 					const val = Number(info.getValue());
 					return (
-						<span className={`tabular-nums ${val > 0 ? 'text-red-600' : ''}`}>
+						<span className={`tabular-nums ${val > 0 ? 'text-[var(--color-error)]' : ''}`}>
 							{val > 0 ? '-' : ''}
 							{formatDecimal(info.getValue())}
 						</span>
@@ -101,7 +101,9 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 			columnHelper.accessor('vatAmount', {
 				header: 'VAT',
 				cell: (info) => (
-					<span className="tabular-nums text-slate-500">{formatDecimal(info.getValue())}</span>
+					<span className="tabular-nums text-[var(--text-muted)]">
+						{formatDecimal(info.getValue())}
+					</span>
 				),
 			}),
 		],
@@ -116,7 +118,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				Loading forecast results...
 			</div>
 		);
@@ -124,7 +126,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 
 	if (!data || data.rowCount === 0) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				No forecast data. Run &ldquo;Calculate Revenue&rdquo; to generate the forecast.
 			</div>
 		);
@@ -135,25 +137,25 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 			{/* Summary cards */}
 			<div className="grid grid-cols-4 gap-4">
 				<div className="rounded-lg border bg-white p-4">
-					<div className="text-xs text-slate-500">Gross Revenue HT</div>
+					<div className="text-xs text-[var(--text-muted)]">Gross Revenue HT</div>
 					<div className="mt-1 text-lg font-semibold tabular-nums">
 						{formatDecimal(data.totals.grossRevenueHt)}
 					</div>
 				</div>
 				<div className="rounded-lg border bg-white p-4">
-					<div className="text-xs text-slate-500">Total Discounts</div>
-					<div className="mt-1 text-lg font-semibold tabular-nums text-red-600">
+					<div className="text-xs text-[var(--text-muted)]">Total Discounts</div>
+					<div className="mt-1 text-lg font-semibold tabular-nums text-[var(--color-error)]">
 						-{formatDecimal(data.totals.discountAmount)}
 					</div>
 				</div>
 				<div className="rounded-lg border bg-white p-4">
-					<div className="text-xs text-slate-500">Net Revenue HT</div>
-					<div className="mt-1 text-lg font-semibold tabular-nums text-emerald-700">
+					<div className="text-xs text-[var(--text-muted)]">Net Revenue HT</div>
+					<div className="mt-1 text-lg font-semibold tabular-nums text-[var(--color-success)]">
 						{formatDecimal(data.totals.netRevenueHt)}
 					</div>
 				</div>
 				<div className="rounded-lg border bg-white p-4">
-					<div className="text-xs text-slate-500">VAT Collected</div>
+					<div className="text-xs text-[var(--text-muted)]">VAT Collected</div>
 					<div className="mt-1 text-lg font-semibold tabular-nums">
 						{formatDecimal(data.totals.vatAmount)}
 					</div>
@@ -162,15 +164,15 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 
 			{/* Group by selector */}
 			<div className="flex items-center gap-2">
-				<span className="text-sm text-slate-600">Group by:</span>
+				<span className="text-sm text-[var(--text-secondary)]">Group by:</span>
 				{(Object.keys(GROUP_LABELS) as GroupBy[]).map((g) => (
 					<button
 						key={g}
 						onClick={() => setGroupBy(g)}
 						className={`rounded px-3 py-1 text-sm ${
 							groupBy === g
-								? 'bg-slate-900 text-white'
-								: 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+								? 'bg-[var(--text-primary)] text-white'
+								: 'bg-[var(--workspace-bg-muted)] text-[var(--text-secondary)] hover:bg-[var(--workspace-bg-muted)]'
 						}`}
 					>
 						{GROUP_LABELS[g]}
@@ -185,11 +187,14 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 					className="w-full text-left text-sm"
 					aria-label="Revenue forecast breakdown"
 				>
-					<thead className="border-b bg-slate-50">
+					<thead className="border-b bg-[var(--workspace-bg-subtle)]">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+									<th
+										key={header.id}
+										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -198,7 +203,10 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 					</thead>
 					<tbody>
 						{table.getRowModel().rows.map((row) => (
-							<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+							<tr
+								key={row.id}
+								className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
+							>
 								{row.getVisibleCells().map((cell) => (
 									<td key={cell.id} className="px-4 py-2">
 										{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -207,12 +215,12 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 							</tr>
 						))}
 						{/* Totals row */}
-						<tr className="border-t-2 bg-slate-100 font-semibold">
+						<tr className="border-t-2 bg-[var(--workspace-bg-muted)] font-semibold">
 							<td className="px-4 py-2">Total</td>
 							<td className="px-4 py-2 tabular-nums">
 								{formatDecimal(data.totals.grossRevenueHt)}
 							</td>
-							<td className="px-4 py-2 tabular-nums text-red-600">
+							<td className="px-4 py-2 tabular-nums text-[var(--color-error)]">
 								-{formatDecimal(data.totals.discountAmount)}
 							</td>
 							<td className="px-4 py-2 tabular-nums">{formatDecimal(data.totals.netRevenueHt)}</td>

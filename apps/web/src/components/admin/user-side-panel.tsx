@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
+import { Checkbox } from '../ui/checkbox';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
@@ -154,7 +155,10 @@ export function UserSidePanel({
 								<Input
 									id="email"
 									type="email"
-									className={cn('mt-1', createForm.formState.errors.email && 'border-red-500')}
+									className={cn(
+										'mt-1',
+										createForm.formState.errors.email && 'border-[var(--color-error)]'
+									)}
 									{...createForm.register('email')}
 								/>
 								{createForm.formState.errors.email && (
@@ -173,7 +177,10 @@ export function UserSidePanel({
 								<Input
 									id="password"
 									type="password"
-									className={cn('mt-1', createForm.formState.errors.password && 'border-red-500')}
+									className={cn(
+										'mt-1',
+										createForm.formState.errors.password && 'border-[var(--color-error)]'
+									)}
 									{...createForm.register('password')}
 								/>
 								{createForm.formState.errors.password && (
@@ -238,28 +245,41 @@ export function UserSidePanel({
 									)}
 								/>
 							</div>
-							<div className="flex items-center gap-3">
-								<input
-									id="is-active"
-									type="checkbox"
-									className="h-4 w-4 rounded-[var(--radius-sm)]"
-									{...editForm.register('is_active')}
-								/>
-								<label htmlFor="is-active" className="text-[length:var(--text-sm)] font-medium">
-									Active
-								</label>
-							</div>
-							<div className="flex items-center gap-3">
-								<input
-									id="force-reset"
-									type="checkbox"
-									className="h-4 w-4 rounded-[var(--radius-sm)]"
-									{...editForm.register('force_password_reset')}
-								/>
-								<label htmlFor="force-reset" className="text-[length:var(--text-sm)] font-medium">
-									Force Password Reset
-								</label>
-							</div>
+							<Controller
+								control={editForm.control}
+								name="is_active"
+								render={({ field }) => (
+									<div className="flex items-center gap-3">
+										<Checkbox
+											id="is-active"
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+										<label htmlFor="is-active" className="text-[length:var(--text-sm)] font-medium">
+											Active
+										</label>
+									</div>
+								)}
+							/>
+							<Controller
+								control={editForm.control}
+								name="force_password_reset"
+								render={({ field }) => (
+									<div className="flex items-center gap-3">
+										<Checkbox
+											id="force-reset"
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+										<label
+											htmlFor="force-reset"
+											className="text-[length:var(--text-sm)] font-medium"
+										>
+											Force Password Reset
+										</label>
+									</div>
+								)}
+							/>
 						</form>
 					)}
 				</div>

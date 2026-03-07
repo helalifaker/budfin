@@ -550,3 +550,7 @@ ADRs created during epic implementation are stored in `docs/adr/`. These extend 
 
 - **ADR-018** — Dedicated Master Data Endpoints (`docs/adr/ADR-018-dedicated-master-data-endpoints.md`): Created during Epic 7 (Master Data Management) implementation.
 - **ADR-019** — Version Lifecycle State Machine (`docs/adr/ADR-019-version-lifecycle-state-machine.md`): Created during Epic 10 (Version Management) implementation.
+- **ADR-020** — Allow Logout Without Valid Access Token (`docs/adr/ADR-020-unauthenticated-logout.md`): Created during Epic 15 (UI/UX Rewrite) implementation.
+- **ADR-021** — Single-Shell Layout (`docs/adr/ADR-021-single-shell-layout.md`): Superseded by ADR-023.
+- **ADR-022** — Calculation Persistence and Audit Logging (`docs/adr/ADR-022-calculation-persistence-and-audit.md`): Created during Epic 2 (Revenue) implementation.
+- **ADR-023** — Restore Two-Shell Layout Architecture (`docs/adr/ADR-023-two-shell-layout.md`): Created during Epic 15 (UI/UX Rewrite) implementation.

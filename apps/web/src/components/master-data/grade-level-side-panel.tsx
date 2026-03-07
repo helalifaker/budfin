@@ -122,7 +122,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 
 	if (!open || !gradeLevel) return null;
 
-	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-red-500');
+	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-[var(--color-error)]');
 
 	return (
 		<>

@@ -6,9 +6,9 @@ const badgeVariants = cva(
 	{
 		variants: {
 			role: {
-				Admin: 'bg-red-50 text-red-700',
+				Admin: 'bg-[var(--badge-admin-bg)] text-[var(--badge-admin)]',
 				BudgetOwner: 'bg-[var(--accent-50)] text-[var(--accent-700)]',
-				Editor: 'bg-emerald-50 text-emerald-700',
+				Editor: 'bg-[var(--badge-editor-bg)] text-[var(--badge-editor)]',
 				Viewer: 'bg-[var(--workspace-bg-muted)] text-[var(--text-primary)]',
 			},
 		},

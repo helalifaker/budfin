@@ -4,6 +4,7 @@ import { usePatchVersionStatus, useDeleteVersion } from '../../hooks/use-version
 import type { BudgetVersion } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -41,7 +42,7 @@ type InnerDialogProps = {
 function ErrorBanner({ message }: { message: string }) {
 	return (
 		<div
-			className="mt-3 rounded-[var(--radius-md)] bg-red-50 px-4 py-3 text-[length:var(--text-sm)] text-red-800"
+			className="mt-3 rounded-[var(--radius-md)] bg-[var(--color-error-bg)] px-4 py-3 text-[length:var(--text-sm)] text-[var(--color-error)]"
 			role="alert"
 		>
 			{message}
@@ -121,7 +122,7 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 					<AlertDialogAction
 						onClick={handleConfirm}
 						disabled={isPending}
-						className="bg-violet-600 hover:bg-violet-700"
+						className="bg-[var(--status-locked)] hover:bg-[color-mix(in_srgb,var(--status-locked),black_15%)]"
 					>
 						{isPending ? 'Locking...' : 'Lock'}
 					</AlertDialogAction>
@@ -165,7 +166,7 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 					<AlertDialogAction
 						onClick={handleConfirm}
 						disabled={isPending}
-						className="bg-[var(--text-secondary)] hover:bg-slate-700"
+						className="bg-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--text-secondary),black_15%)]"
 					>
 						{isPending ? 'Archiving...' : 'Archive'}
 					</AlertDialogAction>
@@ -222,7 +223,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 							*
 						</span>
 					</label>
-					<textarea
+					<Textarea
 						id="revert-audit-note"
 						rows={4}
 						maxLength={500}
@@ -231,8 +232,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 						value={auditNote}
 						onChange={(e) => setAuditNote(e.target.value)}
 						className={
-							'mt-1 w-full rounded-[var(--radius-md)] border px-3 py-2 text-[length:var(--text-sm)] ' +
-							(noteLength > 0 && !isValid ? 'border-amber-400' : 'border-[var(--workspace-border)]')
+							'mt-1 ' + (noteLength > 0 && !isValid ? 'border-[var(--color-warning)]' : '')
 						}
 						placeholder="Explain the reason for reverting..."
 					/>
@@ -240,7 +240,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 						id="revert-char-count"
 						className={
 							'mt-1 text-[length:var(--text-xs)] ' +
-							(isValid ? 'text-[var(--text-muted)]' : 'text-amber-600')
+							(isValid ? 'text-[var(--text-muted)]' : 'text-[var(--color-warning)]')
 						}
 					>
 						{noteLength}/10 minimum characters
@@ -255,7 +255,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 						onClick={handleConfirm}
 						disabled={!isValid || isPending}
 						loading={isPending}
-						className="bg-amber-600 hover:bg-amber-700"
+						className="bg-[var(--color-warning)] hover:bg-[color-mix(in_srgb,var(--color-warning),black_15%)]"
 					>
 						Revert to Draft
 					</Button>
@@ -334,7 +334,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 					<AlertDialogAction
 						onClick={handleConfirm}
 						disabled={!canDelete || isPending}
-						className="bg-[var(--color-error)] hover:bg-red-700"
+						className="bg-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
 					>
 						{isPending ? 'Deleting...' : 'Delete Version'}
 					</AlertDialogAction>

@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import type { Nationality } from '../../hooks/use-reference-data';
 import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
 import { Input } from '../ui/input';
 
 const nationalitySchema = z.object({
@@ -127,7 +128,7 @@ export function NationalitySidePanel({
 								className={cn(
 									'mt-1 uppercase',
 									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
-									form.formState.errors.code && 'border-red-500'
+									form.formState.errors.code && 'border-[var(--color-error)]'
 								)}
 								{...form.register('code')}
 							/>
@@ -144,7 +145,7 @@ export function NationalitySidePanel({
 							<Input
 								id="nat-label"
 								type="text"
-								className={cn('mt-1', form.formState.errors.label && 'border-red-500')}
+								className={cn('mt-1', form.formState.errors.label && 'border-[var(--color-error)]')}
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (
@@ -153,17 +154,25 @@ export function NationalitySidePanel({
 								</p>
 							)}
 						</div>
-						<div className="flex items-center gap-3">
-							<input
-								id="nat-vat-exempt"
-								type="checkbox"
-								className="h-4 w-4 rounded-[var(--radius-sm)]"
-								{...form.register('vatExempt')}
-							/>
-							<label htmlFor="nat-vat-exempt" className="text-[length:var(--text-sm)] font-medium">
-								VAT Exempt
-							</label>
-						</div>
+						<Controller
+							control={form.control}
+							name="vatExempt"
+							render={({ field }) => (
+								<div className="flex items-center gap-3">
+									<Checkbox
+										id="nat-vat-exempt"
+										checked={field.value}
+										onCheckedChange={field.onChange}
+									/>
+									<label
+										htmlFor="nat-vat-exempt"
+										className="text-[length:var(--text-sm)] font-medium"
+									>
+										VAT Exempt
+									</label>
+								</div>
+							)}
+						/>
 					</form>
 				</div>
 

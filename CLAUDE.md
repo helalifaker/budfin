@@ -101,7 +101,7 @@ Flat config only (`eslint.config.ts`). No `.eslintrc` files. All plugins must su
 
 All development follows the 7-phase BudFin workflow defined in `.claude/workflow/WORKFLOW.md`. Current phase is tracked in `.claude/workflow/STATUS.md`.
 
-See `.claude/COMMANDS.md` for the full command reference. 8 user-facing commands:
+See `.claude/COMMANDS.md` for the full command reference. 9 user-facing commands:
 
 | #   | Command                         | Purpose                                                                                                        |
 | --- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -113,6 +113,7 @@ See `.claude/COMMANDS.md` for the full command reference. 8 user-facing commands
 | 6   | `/plan:adr "[title]"`           | Record architectural decision                                                                                  |
 | 7   | `/plan:spec [epic-#]`           | Write feature spec interactively                                                                               |
 | 8   | `/impl:story [story-#]`         | Implement a single story                                                                                       |
+| 9   | `/audit:360 [--epic N / --all]` | 360-degree implementation audit (read-only, 8 layers)                                                          |
 
 ## File Output Rules
 

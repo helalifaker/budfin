@@ -172,7 +172,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 
 	if (!open) return null;
 
-	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-red-500');
+	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-[var(--color-error)]');
 
 	return (
 		<>

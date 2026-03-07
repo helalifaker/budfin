@@ -126,7 +126,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 						{validationResult && validationResult.validRows > 0 && (
 							<>
 								{validationResult.errors.length > 0 && (
-									<p className="text-[length:var(--text-xs)] text-amber-700">
+									<p className="text-[length:var(--text-xs)] text-[var(--color-warning)]">
 										{validationResult.errors.length} row(s) will be skipped
 									</p>
 								)}
@@ -146,14 +146,14 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 								{validationResult.errors.length === 0 ? (
 									<>
 										<Check className="h-4 w-4 text-[var(--color-success)]" />
-										<span className="text-green-800">
+										<span className="text-[var(--color-success)]">
 											All {validationResult.validRows} rows valid
 										</span>
 									</>
 								) : (
 									<>
-										<AlertTriangle className="h-4 w-4 text-amber-500" />
-										<span className="text-amber-800">
+										<AlertTriangle className="h-4 w-4 text-[var(--color-warning)]" />
+										<span className="text-[var(--color-warning)]">
 											{validationResult.validRows}/{validationResult.totalRows} valid,{' '}
 											{validationResult.errors.length} errors
 										</span>
@@ -198,7 +198,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 					{/* Success */}
 					{importSuccess && (
-						<div className="flex items-center gap-2 rounded-[var(--radius-lg)] bg-green-50 px-4 py-3 text-[length:var(--text-sm)] text-green-800">
+						<div className="flex items-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-success-bg)] px-4 py-3 text-[length:var(--text-sm)] text-[var(--color-success)]">
 							<Check className="h-4 w-4" />
 							Import completed successfully
 						</div>

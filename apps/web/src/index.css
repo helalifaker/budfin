@@ -107,6 +107,40 @@
 	--shadow-sidebar: 1px 0 8px rgba(0, 0, 0, 0.12);
 	--shadow-glow-accent: 0 0 20px rgba(20, 184, 166, 0.15);
 
+	/* ── Band/Department Badge Colors ── */
+	--badge-maternelle: #be185d;
+	--badge-maternelle-bg: #fdf2f8;
+	--badge-elementaire: #2563eb;
+	--badge-elementaire-bg: var(--accent-50);
+	--badge-college: #15803d;
+	--badge-college-bg: #ecfdf5;
+	--badge-lycee: #7e22ce;
+	--badge-lycee-bg: #faf5ff;
+	--badge-non-academic: var(--text-secondary);
+	--badge-non-academic-bg: var(--workspace-bg-muted);
+
+	/* ── Account Type Badge Colors ── */
+	--badge-revenue: var(--accent-700);
+	--badge-revenue-bg: var(--accent-50);
+	--badge-expense: #b91c1c;
+	--badge-expense-bg: #fef2f2;
+	--badge-asset: #15803d;
+	--badge-asset-bg: #ecfdf5;
+	--badge-liability: #b45309;
+	--badge-liability-bg: #fffbeb;
+
+	/* ── Center Type Badge Colors ── */
+	--badge-profit-center: #7e22ce;
+	--badge-profit-center-bg: #faf5ff;
+	--badge-cost-center: #c2410c;
+	--badge-cost-center-bg: #fff7ed;
+
+	/* ── Role Badge Colors ── */
+	--badge-admin: #b91c1c;
+	--badge-admin-bg: #fef2f2;
+	--badge-editor: #15803d;
+	--badge-editor-bg: #ecfdf5;
+
 	/* ── Animation Tokens ── */
 	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 	--ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);

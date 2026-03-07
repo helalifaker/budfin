@@ -8,7 +8,7 @@ export type ButtonVariant =
 	| 'destructive'
 	| 'default'
 	| 'outline';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 	variant?: ButtonVariant;
 	size?: ButtonSize;
@@ -33,8 +33,8 @@ const VARIANT_STYLES: Record<string, string> = {
 	].join(' '),
 	destructive: [
 		'bg-[var(--color-error)] text-white border-transparent',
-		'hover:bg-red-700',
-		'active:bg-red-800 active:scale-[0.98]',
+		'hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]',
+		'active:bg-[color-mix(in_srgb,var(--color-error),black_25%)] active:scale-[0.98]',
 	].join(' '),
 };
 VARIANT_STYLES.default = VARIANT_STYLES.primary!;
@@ -44,6 +44,7 @@ const SIZE: Record<ButtonSize, string> = {
 	sm: 'h-8 px-3 text-xs gap-1.5',
 	md: 'h-9 px-4 text-sm gap-2',
 	lg: 'h-10 px-5 text-sm gap-2',
+	icon: 'h-8 w-8 p-0',
 };
 
 export function Button({

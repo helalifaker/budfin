@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn';
 import { useCreateVersion, useVersions } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const createSchema = z.object({
@@ -187,11 +188,11 @@ export function CreateVersionPanel({
 							>
 								Description
 							</label>
-							<textarea
+							<Textarea
 								id="cv-description"
 								rows={3}
 								maxLength={500}
-								className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] px-3 py-2 text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2"
+								className="mt-1"
 								{...form.register('description')}
 							/>
 						</div>

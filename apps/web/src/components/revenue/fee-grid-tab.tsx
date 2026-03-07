@@ -30,7 +30,7 @@ export function FeeGridTab({ versionId }: FeeGridTabProps) {
 			columnHelper.accessor('academicPeriod', {
 				header: 'Period',
 				cell: (info) => (
-					<span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-medium">
+					<span className="inline-block rounded bg-[var(--workspace-bg-muted)] px-2 py-0.5 text-xs font-medium">
 						{info.getValue()}
 					</span>
 				),
@@ -81,7 +81,7 @@ export function FeeGridTab({ versionId }: FeeGridTabProps) {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				Loading fee grid...
 			</div>
 		);
@@ -89,7 +89,7 @@ export function FeeGridTab({ versionId }: FeeGridTabProps) {
 
 	if (entries.length === 0) {
 		return (
-			<div className="flex items-center justify-center h-32 text-slate-500">
+			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
 				No fee grid data. Add fee entries to begin revenue planning.
 			</div>
 		);
@@ -98,11 +98,11 @@ export function FeeGridTab({ versionId }: FeeGridTabProps) {
 	return (
 		<div className="overflow-x-auto rounded-lg border">
 			<table role="grid" className="w-full text-left text-sm" aria-label="Fee grid">
-				<thead className="border-b bg-slate-50">
+				<thead className="border-b bg-[var(--workspace-bg-subtle)]">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
 							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
 									{flexRender(header.column.columnDef.header, header.getContext())}
 								</th>
 							))}
@@ -111,7 +111,10 @@ export function FeeGridTab({ versionId }: FeeGridTabProps) {
 				</thead>
 				<tbody>
 					{table.getRowModel().rows.map((row) => (
-						<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+						<tr
+							key={row.id}
+							className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
+						>
 							{row.getVisibleCells().map((cell) => (
 								<td key={cell.id} className="px-4 py-2">
 									{flexRender(cell.column.columnDef.cell, cell.getContext())}

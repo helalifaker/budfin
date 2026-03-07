@@ -20,10 +20,10 @@ const BAND_LABELS: Record<string, string> = {
 };
 
 const BAND_STYLES: Record<string, string> = {
-	MATERNELLE: 'bg-pink-50 text-pink-800',
-	ELEMENTAIRE: 'bg-[var(--accent-50)] text-blue-800',
-	COLLEGE: 'bg-green-50 text-green-800',
-	LYCEE: 'bg-purple-50 text-purple-800',
+	MATERNELLE: 'bg-[var(--badge-maternelle-bg)] text-[var(--badge-maternelle)]',
+	ELEMENTAIRE: 'bg-[var(--badge-elementaire-bg)] text-[var(--badge-elementaire)]',
+	COLLEGE: 'bg-[var(--badge-college-bg)] text-[var(--badge-college)]',
+	LYCEE: 'bg-[var(--badge-lycee-bg)] text-[var(--badge-lycee)]',
 };
 
 interface ByGradeGridProps {
@@ -133,7 +133,7 @@ function EditableCell({
 function DeltaCell({ delta, isNew }: { delta: number | null; isNew: boolean }) {
 	if (isNew) {
 		return (
-			<span className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--accent-50)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium text-blue-800">
+			<span className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--accent-50)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium text-[var(--badge-elementaire)]">
 				New
 			</span>
 		);

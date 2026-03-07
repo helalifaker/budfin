@@ -17,7 +17,7 @@ export function RevenuePage() {
 
 	if (!versionId) {
 		return (
-			<div className="flex items-center justify-center h-64 text-slate-500">
+			<div className="flex items-center justify-center h-64 text-[var(--text-muted)]">
 				Select a version from the context bar to begin revenue planning.
 			</div>
 		);
@@ -27,7 +27,7 @@ export function RevenuePage() {
 		<div className="space-y-4">
 			{/* Module Toolbar */}
 			<div className="flex items-center justify-between">
-				<h1 className="text-xl font-semibold text-slate-900">Revenue</h1>
+				<h1 className="text-xl font-semibold text-[var(--text-primary)]">Revenue</h1>
 				{!isViewer && (
 					<Button
 						size="sm"
@@ -41,12 +41,12 @@ export function RevenuePage() {
 
 			{/* Status feedback */}
 			{calculateMutation.isSuccess && (
-				<div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+				<div className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-bg)] px-4 py-2 text-sm text-[var(--color-success)]">
 					Revenue calculated successfully.
 				</div>
 			)}
 			{calculateMutation.isError && (
-				<div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+				<div className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]">
 					Calculation failed. Ensure fee grid and enrollment data are configured.
 				</div>
 			)}

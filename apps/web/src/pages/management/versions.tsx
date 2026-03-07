@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
@@ -44,10 +44,11 @@ import {
 const columnHelper = createColumnHelper<BudgetVersion>();
 
 const STATUS_BADGE_COLORS: Record<BudgetVersion['status'], string> = {
-	Draft: 'bg-slate-100 text-slate-700',
-	Published: 'bg-blue-100 text-blue-800',
-	Locked: 'bg-violet-100 text-violet-800',
-	Archived: 'bg-slate-100 text-slate-500',
+	Draft: 'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-[var(--status-draft)]',
+	Published: 'bg-[var(--version-budget-bg)] text-[var(--status-published)]',
+	Locked: 'bg-[color-mix(in_srgb,var(--status-locked)_15%,white)] text-[var(--status-locked)]',
+	Archived:
+		'bg-[color-mix(in_srgb,var(--status-archived)_15%,white)] text-[var(--status-archived)]',
 };
 
 const TYPE_LABELS: Record<BudgetVersion['type'], string> = {
@@ -74,17 +75,13 @@ export function VersionsPage() {
 	const [statusFilter, setStatusFilter] = useState('');
 	const [searchInput, setSearchInput] = useState('');
 	const [searchDebounced, setSearchDebounced] = useState('');
-	const [searchTimer, setSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+	const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const handleSearchChange = useCallback(
-		(value: string) => {
-			setSearchInput(value);
-			if (searchTimer) clearTimeout(searchTimer);
-			const timer = setTimeout(() => setSearchDebounced(value), 300);
-			setSearchTimer(timer);
-		},
-		[searchTimer]
-	);
+	const handleSearchChange = useCallback((value: string) => {
+		setSearchInput(value);
+		if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+		searchTimerRef.current = setTimeout(() => setSearchDebounced(value), 300);
+	}, []);
 
 	const { data, isLoading } = useVersions(fiscalYear, statusFilter || undefined);
 
@@ -320,11 +317,14 @@ export function VersionsPage() {
 			{/* Data table */}
 			<div className="overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-sm">
-					<thead className="border-b bg-slate-50">
+					<thead className="border-b bg-[var(--workspace-bg-subtle)]">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+									<th
+										key={header.id}
+										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -338,14 +338,17 @@ export function VersionsPage() {
 							<tr>
 								<td
 									colSpan={columns.length}
-									className="px-4 py-12 text-center text-sm text-slate-500"
+									className="px-4 py-12 text-center text-sm text-[var(--text-muted)]"
 								>
 									<EmptyState fiscalYear={fiscalYear} />
 								</td>
 							</tr>
 						) : (
 							table.getRowModel().rows.map((row) => (
-								<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+								<tr
+									key={row.id}
+									className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
+								>
 									{row.getVisibleCells().map((cell) => (
 										<td key={cell.id} role="cell" className="px-4 py-3">
 											{flexRender(cell.column.columnDef.cell, cell.getContext())}

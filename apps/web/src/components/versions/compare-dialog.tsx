@@ -88,7 +88,7 @@ function CompareDialogContent({ fiscalYear, onClose }: Omit<CompareDialogProps, 
 					</div>
 
 					{primaryId && comparisonId && primaryId === comparisonId && (
-						<p className="text-[length:var(--text-xs)] text-amber-600" role="alert">
+						<p className="text-[length:var(--text-xs)] text-[var(--color-warning)]" role="alert">
 							Primary and comparison versions must be different.
 						</p>
 					)}
