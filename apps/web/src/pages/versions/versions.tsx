@@ -10,7 +10,7 @@ import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
 import { useVersions } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
-import { formatDate } from '../../lib/format-date';
+import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
 import { toast } from '../../components/ui/toast-state';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -62,7 +62,7 @@ const TYPE_DOT_COLORS: Record<BudgetVersion['type'], string> = {
 	Actual: 'bg-green-500',
 };
 
-const CURRENT_FISCAL_YEAR = new Date().getFullYear();
+const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
 
 export function VersionsPage() {
 	const currentUser = useAuthStore((s) => s.user);

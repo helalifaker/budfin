@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
+import { getCurrentFiscalYear } from '../lib/format-date';
 
 export interface WorkspaceContext {
 	fiscalYear: number;
@@ -14,7 +15,7 @@ export function useWorkspaceContext() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const queryClient = useQueryClient();
 
-	const fiscalYear = Number(searchParams.get('fy')) || new Date().getFullYear();
+	const fiscalYear = Number(searchParams.get('fy')) || getCurrentFiscalYear();
 	const versionId = searchParams.get('version') ? Number(searchParams.get('version')) : null;
 	const comparisonVersionId = searchParams.get('compare')
 		? Number(searchParams.get('compare'))
