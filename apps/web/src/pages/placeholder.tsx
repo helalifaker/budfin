@@ -1,3 +1,6 @@
+import { Clock } from 'lucide-react';
+import { cn } from '../lib/cn';
+
 interface PlaceholderPageProps {
 	title: string;
 	description: string;
@@ -5,9 +8,46 @@ interface PlaceholderPageProps {
 
 export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
 	return (
-		<div className="flex flex-col items-center justify-center h-64 text-center">
-			<h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-			<p className="mt-2 text-sm text-slate-500">{description}</p>
+		<div className="flex flex-1 flex-col items-center justify-center py-24 text-center animate-fade-in">
+			<div
+				className={cn(
+					'flex h-14 w-14 items-center justify-center',
+					'rounded-[var(--radius-xl)] bg-[var(--accent-50)]',
+					'animate-slide-up'
+				)}
+			>
+				<Clock className="h-7 w-7 text-[var(--accent-500)]" strokeWidth={1.5} aria-hidden="true" />
+			</div>
+			<h1
+				className={cn(
+					'mt-5 text-[length:var(--text-xl)] font-semibold text-[var(--text-primary)]',
+					'animate-slide-up'
+				)}
+				style={{ animationDelay: '100ms' }}
+			>
+				{title}
+			</h1>
+			<p
+				className={cn(
+					'mt-2 max-w-sm text-[length:var(--text-sm)] text-[var(--text-secondary)]',
+					'animate-slide-up'
+				)}
+				style={{ animationDelay: '150ms' }}
+			>
+				{description}
+			</p>
+			<div className="mt-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
+				<span
+					className={cn(
+						'inline-block text-[length:var(--text-sm)] font-medium',
+						'bg-gradient-to-r from-[var(--accent-400)] via-[var(--accent-600)] to-[var(--accent-400)]',
+						'bg-[length:200%_100%] bg-clip-text text-transparent',
+						'animate-shimmer'
+					)}
+				>
+					Coming soon
+				</span>
+			</div>
 		</div>
 	);
 }

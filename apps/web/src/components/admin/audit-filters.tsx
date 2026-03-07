@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '../ui/input';
-import { cn } from '../../lib/cn';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 export interface AuditFilterValues {
 	from?: string;
@@ -32,13 +32,6 @@ const OPERATIONS = [
 
 const ENTITIES = ['users', 'refresh_tokens', 'system_config'];
 
-const selectClassName = cn(
-	'flex h-9 w-full rounded-md border border-slate-300 bg-white',
-	'px-3 py-2 text-sm text-slate-900',
-	'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-	'disabled:cursor-not-allowed disabled:opacity-50'
-);
-
 export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 	const [filters, setFilters] = useState<AuditFilterValues>({});
 	const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -63,7 +56,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 	return (
 		<div className="flex flex-wrap items-end gap-3 pb-4">
 			<div>
-				<label htmlFor="filter-from" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-from"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					From
 				</label>
 				<Input
@@ -74,7 +70,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label htmlFor="filter-to" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-to"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					To
 				</label>
 				<Input
@@ -85,7 +84,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label htmlFor="filter-user" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-user"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					User ID
 				</label>
 				<Input
@@ -97,38 +99,46 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label htmlFor="filter-action" className="block text-xs font-medium text-slate-600">
+				<label className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]">
 					Action
 				</label>
-				<select
-					id="filter-action"
-					className={cn(selectClassName, 'mt-1')}
-					onChange={(e) => update('operation', e.target.value)}
+				<Select
+					value={filters.operation || 'all'}
+					onValueChange={(v) => update('operation', v === 'all' ? '' : v)}
 				>
-					<option value="">All</option>
-					{OPERATIONS.map((op) => (
-						<option key={op} value={op}>
-							{op}
-						</option>
-					))}
-				</select>
+					<SelectTrigger className="mt-1 w-[200px]" aria-label="Filter by action">
+						<SelectValue placeholder="All" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All</SelectItem>
+						{OPERATIONS.map((op) => (
+							<SelectItem key={op} value={op}>
+								{op}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 			<div>
-				<label htmlFor="filter-entity" className="block text-xs font-medium text-slate-600">
+				<label className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]">
 					Entity
 				</label>
-				<select
-					id="filter-entity"
-					className={cn(selectClassName, 'mt-1')}
-					onChange={(e) => update('table_name', e.target.value)}
+				<Select
+					value={filters.table_name || 'all'}
+					onValueChange={(v) => update('table_name', v === 'all' ? '' : v)}
 				>
-					<option value="">All</option>
-					{ENTITIES.map((e) => (
-						<option key={e} value={e}>
-							{e}
-						</option>
-					))}
-				</select>
+					<SelectTrigger className="mt-1 w-[180px]" aria-label="Filter by entity">
+						<SelectValue placeholder="All" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All</SelectItem>
+						{ENTITIES.map((e) => (
+							<SelectItem key={e} value={e}>
+								{e}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 		</div>
 	);

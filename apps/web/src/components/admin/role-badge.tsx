@@ -2,14 +2,14 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/cn';
 
 const badgeVariants = cva(
-	'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+	'inline-flex items-center rounded-[var(--radius-sm)] px-2.5 py-0.5 text-[length:var(--text-xs)] font-medium',
 	{
 		variants: {
 			role: {
-				Admin: 'bg-red-100 text-red-800',
-				BudgetOwner: 'bg-blue-100 text-blue-800',
-				Editor: 'bg-green-100 text-green-800',
-				Viewer: 'bg-slate-100 text-slate-800',
+				Admin: 'bg-red-50 text-red-700',
+				BudgetOwner: 'bg-[var(--accent-50)] text-[var(--accent-700)]',
+				Editor: 'bg-emerald-50 text-emerald-700',
+				Viewer: 'bg-[var(--workspace-bg-muted)] text-[var(--text-primary)]',
 			},
 		},
 		defaultVariants: {

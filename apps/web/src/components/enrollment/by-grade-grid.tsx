@@ -21,7 +21,7 @@ const BAND_LABELS: Record<string, string> = {
 
 const BAND_STYLES: Record<string, string> = {
 	MATERNELLE: 'bg-pink-50 text-pink-800',
-	ELEMENTAIRE: 'bg-blue-50 text-blue-800',
+	ELEMENTAIRE: 'bg-[var(--accent-50)] text-blue-800',
 	COLLEGE: 'bg-green-50 text-green-800',
 	LYCEE: 'bg-purple-50 text-purple-800',
 };
@@ -98,7 +98,7 @@ function EditableCell({
 			<input
 				type="number"
 				min={0}
-				className="w-20 rounded border border-blue-400 bg-yellow-50 px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+				className="w-20 rounded-[var(--radius-md)] border border-[var(--accent-500)] bg-[var(--cell-editable-bg)] px-2 py-1 text-right text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]"
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
 				onBlur={handleBlur}
@@ -112,8 +112,8 @@ function EditableCell({
 	return (
 		<span
 			className={cn(
-				'inline-block w-20 rounded px-2 py-1 text-right text-sm tabular-nums',
-				!isReadOnly && 'cursor-pointer hover:bg-yellow-50'
+				'inline-block w-20 rounded-[var(--radius-sm)] px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums',
+				!isReadOnly && 'cursor-pointer hover:bg-[var(--cell-editable-bg)]'
 			)}
 			onDoubleClick={handleDoubleClick}
 			role={isReadOnly ? undefined : 'button'}
@@ -133,12 +133,12 @@ function EditableCell({
 function DeltaCell({ delta, isNew }: { delta: number | null; isNew: boolean }) {
 	if (isNew) {
 		return (
-			<span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+			<span className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--accent-50)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium text-blue-800">
 				New
 			</span>
 		);
 	}
-	if (delta === null) return <span className="text-slate-300">-</span>;
+	if (delta === null) return <span className="text-[var(--text-muted)]">-</span>;
 
 	const absVal = Math.abs(delta);
 	const sign = delta >= 0 ? '+' : '';
@@ -147,8 +147,8 @@ function DeltaCell({ delta, isNew }: { delta: number | null; isNew: boolean }) {
 	return (
 		<span
 			className={cn(
-				'text-sm tabular-nums',
-				isLarge ? 'font-medium text-red-600' : 'text-slate-600'
+				'text-[length:var(--text-sm)] tabular-nums',
+				isLarge ? 'font-medium text-[var(--color-error)]' : 'text-[var(--text-secondary)]'
 			)}
 		>
 			{sign}
@@ -290,7 +290,9 @@ export function ByGradeGrid({
 		() => [
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
-				cell: (info) => <span className="font-medium text-slate-900">{info.getValue()}</span>,
+				cell: (info) => (
+					<span className="font-medium text-[var(--text-primary)]">{info.getValue()}</span>
+				),
 			}),
 			columnHelper.accessor('band', {
 				header: 'Band',
@@ -299,7 +301,7 @@ export function ByGradeGrid({
 					return (
 						<span
 							className={cn(
-								'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+								'inline-block rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 								BAND_STYLES[band] ?? ''
 							)}
 						>
@@ -347,7 +349,7 @@ export function ByGradeGrid({
 					return val > 0 ? (
 						<span className="tabular-nums">{val}</span>
 					) : (
-						<span className="text-slate-300">-</span>
+						<span className="text-[var(--text-muted)]">-</span>
 					);
 				},
 			}),
@@ -370,13 +372,17 @@ export function ByGradeGrid({
 	});
 
 	return (
-		<div className="overflow-x-auto rounded-lg border" onBlur={flushChanges}>
-			<table role="grid" className="w-full text-left text-sm" aria-label="Enrollment by grade">
-				<thead className="border-b bg-slate-50">
+		<div className="overflow-x-auto rounded-[var(--radius-lg)] border" onBlur={flushChanges}>
+			<table
+				role="grid"
+				className="w-full text-left text-[length:var(--text-sm)]"
+				aria-label="Enrollment by grade"
+			>
+				<thead className="border-b bg-[var(--workspace-bg-muted)]">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
 							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
 									{flexRender(header.column.columnDef.header, header.getContext())}
 								</th>
 							))}
@@ -388,7 +394,10 @@ export function ByGradeGrid({
 						<TableSkeleton rows={15} cols={columns.length} />
 					) : rows.length === 0 ? (
 						<tr>
-							<td colSpan={columns.length} className="px-4 py-6 text-center text-slate-500">
+							<td
+								colSpan={columns.length}
+								className="px-4 py-6 text-center text-[var(--text-muted)]"
+							>
 								No enrollment data. Start entering headcount for each grade.
 							</td>
 						</tr>
@@ -397,10 +406,10 @@ export function ByGradeGrid({
 							{[...bands.entries()].map(([band, bandRows]) => (
 								<React.Fragment key={`band-${band}`}>
 									{/* Band group header */}
-									<tr className="bg-slate-50/50">
+									<tr className="bg-[var(--workspace-bg-muted)]/50">
 										<td
 											colSpan={columns.length}
-											className="px-4 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider"
+											className="px-4 py-1.5 text-[length:var(--text-xs)] font-semibold text-[var(--text-muted)] uppercase tracking-wider"
 											aria-expanded="true"
 										>
 											{BAND_LABELS[band] ?? band} ({bandRows.length} grades)
@@ -412,7 +421,10 @@ export function ByGradeGrid({
 											.rows.find((r) => r.original.gradeLevel === row.gradeLevel);
 										if (!tableRow) return null;
 										return (
-											<tr key={tableRow.id} className="border-b last:border-0 hover:bg-slate-50">
+											<tr
+												key={tableRow.id}
+												className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+											>
 												{tableRow.getVisibleCells().map((cell) => (
 													<td key={cell.id} className="px-4 py-2">
 														{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -424,8 +436,8 @@ export function ByGradeGrid({
 								</React.Fragment>
 							))}
 							{/* Grand total row */}
-							<tr className="sticky bottom-0 border-t-2 bg-slate-100 font-semibold">
-								<td className="px-4 py-2 text-slate-900">Grand Total</td>
+							<tr className="sticky bottom-0 border-t-2 bg-[var(--workspace-bg-muted)] font-semibold">
+								<td className="px-4 py-2 text-[var(--text-primary)]">Grand Total</td>
 								<td className="px-4 py-2" />
 								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.ay1}</td>
 								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.ay2}</td>

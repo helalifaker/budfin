@@ -13,7 +13,7 @@ const ALERT_CONFIG: Record<
 	OVER: {
 		icon: AlertTriangle,
 		label: 'Over capacity',
-		className: 'bg-red-100 text-red-800',
+		className: 'bg-[var(--error-bg)] text-red-800',
 	},
 	NEAR_CAP: {
 		icon: AlertTriangle,
@@ -28,12 +28,12 @@ const ALERT_CONFIG: Record<
 	UNDER: {
 		icon: Info,
 		label: 'Under-enrolled',
-		className: 'bg-blue-100 text-blue-800',
+		className: 'bg-[var(--accent-50)] text-blue-800',
 	},
 };
 
 export function AlertBadge({ alert }: AlertBadgeProps) {
-	if (!alert) return <span className="text-slate-300">-</span>;
+	if (!alert) return <span className="text-[var(--text-muted)]">-</span>;
 
 	const config = ALERT_CONFIG[alert];
 	if (!config) return null;
@@ -42,7 +42,7 @@ export function AlertBadge({ alert }: AlertBadgeProps) {
 	return (
 		<span
 			className={cn(
-				'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+				'inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 				config.className
 			)}
 			role="status"
@@ -58,11 +58,11 @@ export function UtilizationCell({ value }: { value: number }) {
 	return (
 		<span
 			className={cn(
-				'tabular-nums text-sm',
-				value > 100 && 'font-medium text-red-600',
+				'tabular-nums text-[length:var(--text-sm)]',
+				value > 100 && 'font-medium text-[var(--color-error)]',
 				value > 95 && value <= 100 && 'text-amber-600',
-				value >= 70 && value <= 95 && 'text-green-600',
-				value < 70 && value > 0 && 'text-blue-600'
+				value >= 70 && value <= 95 && 'text-[var(--color-success)]',
+				value < 70 && value > 0 && 'text-[var(--accent-600)]'
 			)}
 		>
 			{value > 0 ? `${value.toFixed(1)}%` : '-'}

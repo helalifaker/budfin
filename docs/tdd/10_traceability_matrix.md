@@ -1,4 +1,18 @@
+| Field  | Value           |
+| ------ | --------------- |
+| Status | Living Document |
+
 # Appendix A — Functional Requirement Traceability Matrix
+
+## Related Specifications
+
+| Epic                            | Spec File                                     |
+| ------------------------------- | --------------------------------------------- |
+| Epic 1 — Enrollment & Capacity  | `docs/specs/epic-1/enrollment-capacity.md`    |
+| Epic 2 — Revenue                | `docs/specs/epic-2/revenue.md`                |
+| Epic 7 — Master Data Management | `docs/specs/epic-7/master-data-management.md` |
+| Epic 10 — Version Management    | `docs/specs/epic-10/version-management.md`    |
+| Epic 11 — Authentication & RBAC | `docs/specs/epic-11/authentication-rbac.md`   |
 
 This appendix maps every functional requirement from PRD v2.0 to the TDD design sections, responsible components, implementing API endpoints, relevant database tables, and test types. The matrix ensures complete traceability from business requirements through technical design to verification.
 

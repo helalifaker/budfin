@@ -1,5 +1,9 @@
 # BudFin Technical Design Document v1.0
 
+| Field  | Value    |
+| ------ | -------- |
+| Status | Approved |
+
 ## Section 7 — Security Architecture
 
 ### 7.1 Authentication Design
@@ -20,6 +24,7 @@ BudFin uses JWT-based stateless authentication with asymmetric signing to elimin
     "sub": 42,
     "email": "user@efir.edu.sa",
     "role": "Editor",
+    "sessionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "iat": 1709452200,
     "exp": 1709454000
 }
@@ -157,8 +162,8 @@ FROM employees WHERE id = $id;
 
 **Key management:**
 
-- Encryption key stored in the `SALARY_ENCRYPTION_KEY` environment variable, never committed to source control, never stored in the database.
-- In production, the key is provided as a Docker secret (`salary_encryption_key`) mounted at `/run/secrets/salary_encryption_key`.
+- The `SALARY_ENCRYPTION_KEY` environment variable contains a **file path** (e.g., `/run/secrets/salary_encryption_key`). The application reads the file contents at startup. The key value is never committed to source control and never stored in the database.
+- In production, the key file is provided as a Docker secret (`salary_encryption_key`) mounted at `/run/secrets/salary_encryption_key`.
 - Key rotation procedure: an application-level script decrypts all encrypted rows with the old key, re-encrypts with the new key, within a single database transaction. If any row fails, the entire transaction rolls back.
 
 #### Salary Field Visibility Enforcement

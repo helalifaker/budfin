@@ -6,7 +6,7 @@
 
 | Field             | Value                                                      |
 | ----------------- | ---------------------------------------------------------- |
-| Document Version  | 2.0                                                        |
+| Document Version  | 2.1                                                        |
 | Date              | March 3, 2026                                              |
 | Status            | Frozen Baseline -- Comprehensive Audit Remediation Applied |
 | Confidentiality   | Internal -- Restricted                                     |
@@ -22,6 +22,7 @@
 | 1.0     | 2026-02-15 | Office of the Chief Accounting Officer | Initial draft. Established product vision, scope, functional requirements (Enrollment, Revenue, Staffing & Staff Costs, P&L, Scenarios, Master Data, Audit Trail, Dashboard, Input Management), data model overview, calculation engine specifications, non-functional requirements, UI/UX design principles, data migration strategy, implementation roadmap, risks and mitigations, acceptance criteria, and appendices A through I.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 1.1     | 2026-03-03 | Office of the Chief Accounting Officer | Phase 1 Stakeholder Review applied. Incorporated 6 decisions from CAO review: (D-001) reorganized navigation into 4 groups (Dashboard, Planning, Master Data, Admin); (D-002) merged Enrollment and Capacity Planning into unified "Enrollment & Capacity" module; (D-003) merged Staffing (DHG) and Staff Costs into unified "Staffing & Staff Costs" module; (D-004) added explicit Calculate button per planning module with stale-state indicator; (D-005) simplified Audit Trail scope for v1 (basic logging, deferred CSV export to v2); (D-006) added Version Management as dedicated Planning module with FRs VER-001 through VER-006. Added Decision Log (Section 19). Added Addendum with 32 additional FRs from Excel workbook analysis (FR-ADD-001 through FR-ADD-032).                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | 2.0     | 2026-03-03 | Office of the Chief Accounting Officer | Comprehensive audit remediation -- 72 gaps addressed across 10 dimensions. Added: Revision History, Glossary, Intended Audience, Document Versioning Policy, Approvers & Sign-Off, RACI matrix, Communication Plan. Added Scope Assumptions (SA-001 through SA-009), Change Control Process, Scope Freeze. Added 2 personas (System Administrator, External Auditor), 25 user stories (US-001 through US-025), 4 user journey maps, persona-to-FR traceability matrix. Added Technology Constraints (TC-001 through TC-005), Data Dictionary (5 entities), API Contract Guidance, Data Flow description. Replaced NFR table with 97 expanded NFRs across 12 categories including RBAC matrix. Added Acceptance Criteria for top 30 FRs with Given/When/Then format. Enhanced Data Migration Strategy with cleansing, rollback, transformation rules, parallel-run specification, and error handling. Replaced timeline (30 weeks with buffers), expanded risk register (15 risks with owners), added Resource Plan, MVP/Target/Stretch tiers, integrated testing strategy. Merged Addendum (32 FR-ADD items) into main body, applied MoSCoW priority tags to all 68 FRs, deleted Section 18 (Addendum). |
+| 2.1     | 2026-03-07 | Office of the Chief Accounting Officer | Documentation alignment remediation -- 5 fixes applied (data_source unification, health endpoint path, deployment wording, External Auditor resolution, data model authority note).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ---
 
@@ -303,14 +304,14 @@ Changes submitted after the scope freeze are evaluated against the current sprin
 
 ### 5.1 Persona Registry
 
-| Persona                | Role                                        | Primary Needs                                                                                    | Key Activities                                                                                                                                                                                 |
-| ---------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Budget Owner           | Chief Accounting Officer / Finance Director | Full control over budget versions, assumptions, and approvals; variance analysis                 | Create/lock budget versions; approve forecasts; review P&L variance; present to board                                                                                                          |
-| Budget Analyst         | Finance Manager / Controller                | Efficient data entry, scenario modeling, detailed drill-down                                     | Enter enrollment projections; adjust fee grids; run scenarios; prepare monthly close reports                                                                                                   |
-| HR/Payroll Coordinator | HR Manager                                  | Staff roster accuracy, cost projections for new hires                                            | Maintain employee master data; validate salary components; review EoS provisions                                                                                                               |
-| School Administrator   | Proviseur / Principal                       | Enrollment visibility, capacity planning, staffing adequacy                                      | Review enrollment trends; check class capacity; validate DHG staffing requirements                                                                                                             |
-| System Administrator   | IT Manager / Technical Lead                 | System reliability, user access management, data backup integrity                                | Manage user accounts and RBAC roles; monitor system health; perform database backups; configure system parameters; troubleshoot technical issues                                               |
-| External Auditor       | IFRS Auditor / Compliance Reviewer          | Read-only access to financial data, audit trail, and version history for compliance verification | Review IFRS Income Statement outputs; verify audit trail completeness; validate calculation methodology; inspect version lifecycle compliance; confirm data integrity against source documents |
+| Persona                | Role                                        | Primary Needs                                                                                                               | Key Activities                                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Budget Owner           | Chief Accounting Officer / Finance Director | Full control over budget versions, assumptions, and approvals; variance analysis                                            | Create/lock budget versions; approve forecasts; review P&L variance; present to board                                                                                                                                    |
+| Budget Analyst         | Finance Manager / Controller                | Efficient data entry, scenario modeling, detailed drill-down                                                                | Enter enrollment projections; adjust fee grids; run scenarios; prepare monthly close reports                                                                                                                             |
+| HR/Payroll Coordinator | HR Manager                                  | Staff roster accuracy, cost projections for new hires                                                                       | Maintain employee master data; validate salary components; review EoS provisions                                                                                                                                         |
+| School Administrator   | Proviseur / Principal                       | Enrollment visibility, capacity planning, staffing adequacy                                                                 | Review enrollment trends; check class capacity; validate DHG staffing requirements                                                                                                                                       |
+| System Administrator   | IT Manager / Technical Lead                 | System reliability, user access management, data backup integrity                                                           | Manage user accounts and RBAC roles; monitor system health; perform database backups; configure system parameters; troubleshoot technical issues                                                                         |
+| External Auditor       | IFRS Auditor / Compliance Reviewer          | Read-only access to financial reports, version history, and summarized audit data for compliance verification (Viewer role) | Review IFRS Income Statement outputs via exported reports; validate calculation methodology; inspect version lifecycle compliance; confirm data integrity against source documents (no direct access to raw audit trail) |
 
 ### 5.2 User Stories
 
@@ -458,10 +459,10 @@ As an External Auditor, I want to view the IFRS Income Statement with full line-
 - **Acceptance Criteria:** P&L displayed with IFRS classifications; all values in SAR HT; reclassification mapping visible; read-only access (no edit capability).
 - **Related FRs:** FR-PNL-001, FR-PNL-016, FR-PNL-018
 
-**US-023: Inspect Audit Trail**
-As an External Auditor, I want to review the complete audit trail for a given fiscal year and version, so that I can confirm all data changes are properly attributed and timestamped.
+**US-023: Review Summarized Audit Reports**
+As an External Auditor, I want to access summarized audit reports for a given fiscal year and version, so that I can confirm data changes are properly attributed and timestamped without requiring direct access to the raw audit trail.
 
-- **Acceptance Criteria:** Audit log filterable by date range and version; entries show user, timestamp, field, old/new values; 7-year retention confirmed.
+- **Acceptance Criteria:** Summarized audit reports available via export (Excel/PDF); reports include change summaries by module, user attribution, and date ranges; 7-year retention confirmed; raw audit trail access restricted to Admin role.
 - **Related FRs:** FR-AUD-001, FR-AUD-002, FR-AUD-003
 
 **US-024: Validate Calculation Methodology**
@@ -961,6 +962,8 @@ explicitly enumerated in the original PRD scope sections but derived from the re
 
 ## 9. Data Model Overview
 
+> **Note:** This section presents the logical/conceptual data model. For the authoritative physical schema definition, refer to TDD Section 3 (03_data_architecture.md).
+
 The application database follows a normalized relational schema organized into five domains.
 
 | Domain                | Core Tables                                                                          | Key Relationships                                                                                                 |
@@ -1101,22 +1104,22 @@ Represents a single fee combination in the tuition fee grid. Source: FEE_GRID sh
 
 Represents a named budget version with lifecycle state. Source: Version Management System (Section 7).
 
-| Field                | Type                                               | Constraints                                     | Description                                                                     |
-| -------------------- | -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
-| `id`                 | `BIGSERIAL`                                        | `PRIMARY KEY`                                   | Unique version identifier.                                                      |
-| `name`               | `VARCHAR(100)`                                     | `NOT NULL`                                      | User-assigned version name.                                                     |
-| `type`               | `ENUM('Actual', 'Budget', 'Forecast')`             | `NOT NULL`                                      | Version type per Section 7.1.                                                   |
-| `status`             | `ENUM('Draft', 'Published', 'Locked', 'Archived')` | `NOT NULL, DEFAULT 'Draft'`                     | Lifecycle status per Section 7.2.                                               |
-| `fiscal_year`        | `INT`                                              | `NOT NULL, CHECK (>= 2020 AND <= 2040)`         | Fiscal year this version covers.                                                |
-| `created_by`         | `INT`                                              | `FOREIGN KEY -> users.user_id, NOT NULL`        | User who created this version.                                                  |
-| `created_at`         | `TIMESTAMPTZ`                                      | `NOT NULL, DEFAULT CURRENT_TIMESTAMP`           | Creation timestamp in UTC. Displayed in AST per SA-003.                         |
-| `updated_at`         | `TIMESTAMPTZ`                                      | `NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE` | Last modification timestamp.                                                    |
-| `locked_at`          | `TIMESTAMPTZ`                                      | `NULL`                                          | Timestamp when locked. NULL if not yet locked.                                  |
-| `locked_by`          | `INT`                                              | `FOREIGN KEY -> users.user_id, NULL`            | User who locked this version.                                                   |
-| `data_source`        | `ENUM('MANUAL', 'IMPORTED')`                       | `NOT NULL, DEFAULT 'MANUAL'`                    | How data was entered. IMPORTED versions block calculation engines (FR-ACT-002). |
-| `modification_count` | `INT`                                              | `NOT NULL, DEFAULT 0`                           | Increments on each data modification. Used for optimistic concurrency control.  |
-| `description`        | `TEXT`                                             | `NULL`                                          | Optional description or notes (FR-VER-006).                                     |
-| `source_version_id`  | `BIGINT`                                           | `FOREIGN KEY -> budget_versions.id, NULL`       | If cloned from another version (FR-VER-005). NULL for originals.                |
+| Field                | Type                                               | Constraints                                     | Description                                                                                                                                             |
+| -------------------- | -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                 | `BIGSERIAL`                                        | `PRIMARY KEY`                                   | Unique version identifier.                                                                                                                              |
+| `name`               | `VARCHAR(100)`                                     | `NOT NULL`                                      | User-assigned version name.                                                                                                                             |
+| `type`               | `ENUM('Actual', 'Budget', 'Forecast')`             | `NOT NULL`                                      | Version type per Section 7.1.                                                                                                                           |
+| `status`             | `ENUM('Draft', 'Published', 'Locked', 'Archived')` | `NOT NULL, DEFAULT 'Draft'`                     | Lifecycle status per Section 7.2.                                                                                                                       |
+| `fiscal_year`        | `INT`                                              | `NOT NULL, CHECK (>= 2020 AND <= 2040)`         | Fiscal year this version covers.                                                                                                                        |
+| `created_by`         | `INT`                                              | `FOREIGN KEY -> users.user_id, NOT NULL`        | User who created this version.                                                                                                                          |
+| `created_at`         | `TIMESTAMPTZ`                                      | `NOT NULL, DEFAULT CURRENT_TIMESTAMP`           | Creation timestamp in UTC. Displayed in AST per SA-003.                                                                                                 |
+| `updated_at`         | `TIMESTAMPTZ`                                      | `NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE` | Last modification timestamp.                                                                                                                            |
+| `locked_at`          | `TIMESTAMPTZ`                                      | `NULL`                                          | Timestamp when locked. NULL if not yet locked.                                                                                                          |
+| `locked_by`          | `INT`                                              | `FOREIGN KEY -> users.user_id, NULL`            | User who locked this version.                                                                                                                           |
+| `data_source`        | `ENUM('CALCULATED', 'IMPORTED')`                   | `NOT NULL`                                      | How data was populated. CALCULATED = calculation engines; IMPORTED = Excel/CSV import service. Determines valid operations on the version (FR-ACT-002). |
+| `modification_count` | `INT`                                              | `NOT NULL, DEFAULT 0`                           | Increments on each data modification. Used for optimistic concurrency control.                                                                          |
+| `description`        | `TEXT`                                             | `NULL`                                          | Optional description or notes (FR-VER-006).                                                                                                             |
+| `source_version_id`  | `BIGINT`                                           | `FOREIGN KEY -> budget_versions.id, NULL`       | If cloned from another version (FR-VER-005). NULL for originals.                                                                                        |
 
 > _All timestamps use `TIMESTAMPTZ` (UTC+3 / AST). See TC-005 and SA-003._
 
@@ -1561,7 +1564,7 @@ Four roles with explicit permission assignments:
 | Code coverage -- critical paths | 90% branch coverage for RBAC and financial calculations |
 | API versioning | All endpoints prefixed with version (e.g., /api/v1/) |
 | API documentation | OpenAPI 3.0 specification maintained for all endpoints |
-| Deployment strategy | Zero-downtime deployment capability (rolling or blue-green) |
+| Deployment strategy | Controlled deployment with tested rollback and defined RTO/RPO |
 | Database migrations | Forward-only versioned migrations; rollback scripts required |
 | Dependency management | No known critical or high-severity CVEs in production dependencies; monthly audit |
 
@@ -1569,7 +1572,7 @@ Four roles with explicit permission assignments:
 
 | Requirement | Target |
 | --- | --- |
-| Application health endpoint | GET /health returns status, uptime, database connectivity; responds in < 200 ms |
+| Application health endpoint | GET /api/v1/health returns status, uptime, database connectivity; responds in < 200 ms |
 | Error logging | Structured JSON logs with severity levels; ERROR and FATAL trigger alerts |
 | Error alerting | Email notification to system administrator within 5 minutes of any FATAL error |
 | Calculation audit log | Every calculation run logs: user, module, version, input hash, output hash, duration, success/failure |

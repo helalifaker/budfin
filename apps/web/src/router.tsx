@@ -3,18 +3,21 @@ import { createBrowserRouter } from 'react-router';
 import { LandingRedirect } from './components/landing-redirect';
 import { ProtectedRoute } from './components/protected-route';
 import { LoginPage } from './pages/login';
+import { RootLayout } from './layouts/root-layout';
+import { PlanningShell } from './layouts/planning-shell';
 import { ManagementShell } from './layouts/management-shell';
-import { UsersPage } from './pages/admin/users';
-import { AuditPage } from './pages/admin/audit';
-import { SettingsPage } from './pages/admin/settings';
-import { VersionsPage } from './pages/versions/versions';
-import { FiscalPeriodsPage } from './pages/versions/fiscal-periods';
+import { DashboardPage } from './pages/planning/dashboard';
+import { EnrollmentPage } from './pages/planning/enrollment';
+import { RevenuePage } from './pages/planning/revenue';
+import { VersionsPage } from './pages/management/versions';
+import { FiscalPeriodsPage } from './pages/management/fiscal-periods';
 import { AccountsPage } from './pages/master-data/accounts';
 import { AcademicPage } from './pages/master-data/academic';
 import { ReferencePage } from './pages/master-data/reference';
 import { AssumptionsPage } from './pages/master-data/assumptions';
-import { EnrollmentPage } from './pages/planning/enrollment';
-import { RevenuePage } from './pages/planning/revenue';
+import { UsersPage } from './pages/admin/users';
+import { AuditPage } from './pages/admin/audit';
+import { SettingsPage } from './pages/admin/settings';
 import { PlaceholderPage } from './pages/placeholder';
 
 export const routes: RouteObject[] = [
@@ -27,70 +30,99 @@ export const routes: RouteObject[] = [
 				element: <LandingRedirect />,
 			},
 			{
-				element: <ManagementShell />,
+				element: <RootLayout />,
 				children: [
-					// Master Data
+					// Planning Shell
 					{
-						path: '/master-data/accounts',
-						element: <AccountsPage />,
-					},
-					{
-						path: '/master-data/academic',
-						element: <AcademicPage />,
-					},
-					{
-						path: '/master-data/reference',
-						element: <ReferencePage />,
-					},
-					{
-						path: '/master-data/assumptions',
-						element: <AssumptionsPage />,
-					},
-					// Versions
-					{
-						path: '/versions',
-						element: <VersionsPage />,
-					},
-					{
-						path: '/fiscal-periods',
-						element: <FiscalPeriodsPage />,
-					},
-					// Planning
-					{
-						path: '/enrollment',
-						element: <EnrollmentPage />,
-					},
-					{
-						path: '/revenue',
-						element: <RevenuePage />,
-					},
-					{
-						path: '/staff',
-						element: <PlaceholderPage title="Staff & Positions" description="Coming in Epic 3" />,
-					},
-					{
-						path: '/budget',
-						element: <PlaceholderPage title="Budget" description="Coming in Epic 4" />,
-					},
-					{
-						path: '/reports',
-						element: <PlaceholderPage title="Reports" description="Coming in Epic 5" />,
-					},
-					// Admin (role-gated)
-					{
-						element: <ProtectedRoute roles={['Admin']} />,
+						element: <PlanningShell />,
 						children: [
 							{
-								path: '/admin/users',
-								element: <UsersPage />,
+								path: '/planning',
+								element: <DashboardPage />,
 							},
 							{
-								path: '/admin/audit',
-								element: <AuditPage />,
+								path: '/planning/enrollment',
+								element: <EnrollmentPage />,
 							},
 							{
-								path: '/admin/settings',
-								element: <SettingsPage />,
+								path: '/planning/revenue',
+								element: <RevenuePage />,
+							},
+							{
+								path: '/planning/staffing',
+								element: (
+									<PlaceholderPage
+										title="Staffing & Staff Costs"
+										description="Staff positions, salary structures, and cost projections"
+									/>
+								),
+							},
+							{
+								path: '/planning/pnl',
+								element: (
+									<PlaceholderPage
+										title="P&L Reporting"
+										description="Profit & loss statements and financial reporting"
+									/>
+								),
+							},
+							{
+								path: '/planning/scenarios',
+								element: (
+									<PlaceholderPage
+										title="Scenario Modeling"
+										description="Compare budget scenarios and what-if analysis"
+									/>
+								),
+							},
+						],
+					},
+					// Management Shell
+					{
+						element: <ManagementShell />,
+						children: [
+							{
+								path: '/management/versions',
+								element: <VersionsPage />,
+							},
+							{
+								path: '/management/fiscal-periods',
+								element: <FiscalPeriodsPage />,
+							},
+							// Master Data
+							{
+								path: '/master-data/accounts',
+								element: <AccountsPage />,
+							},
+							{
+								path: '/master-data/academic',
+								element: <AcademicPage />,
+							},
+							{
+								path: '/master-data/reference',
+								element: <ReferencePage />,
+							},
+							{
+								path: '/master-data/assumptions',
+								element: <AssumptionsPage />,
+							},
+							// Admin (role-gated)
+							{
+								element: <ProtectedRoute roles={['Admin']} />,
+								children: [
+									{
+										path: '/admin/users',
+										element: <UsersPage />,
+									},
+									{
+										path: '/admin/audit',
+										element: <AuditPage />,
+									},
+									{
+										path: '/admin/settings',
+										element: <SettingsPage />,
+									},
+								],
 							},
 						],
 					},

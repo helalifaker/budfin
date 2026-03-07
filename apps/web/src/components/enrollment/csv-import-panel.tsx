@@ -70,7 +70,10 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 				<div className="mt-6 space-y-4">
 					{/* Year selector */}
 					<div>
-						<label htmlFor="import-year" className="mb-1 block text-sm font-medium text-slate-700">
+						<label
+							htmlFor="import-year"
+							className="mb-1 block text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]"
+						>
 							Academic Year
 						</label>
 						<Select value={year} onValueChange={setYear}>
@@ -89,7 +92,10 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 					{/* File picker */}
 					<div>
-						<label htmlFor="csv-file" className="mb-1 block text-sm font-medium text-slate-700">
+						<label
+							htmlFor="csv-file"
+							className="mb-1 block text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]"
+						>
 							CSV File
 						</label>
 						<input
@@ -98,10 +104,10 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 							type="file"
 							accept=".csv"
 							onChange={handleFileChange}
-							className="block w-full text-sm text-slate-500 file:mr-4 file:rounded file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+							className="block w-full text-[length:var(--text-sm)] text-[var(--text-muted)] file:mr-4 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--workspace-bg-muted)] file:px-4 file:py-2 file:text-[length:var(--text-sm)] file:font-medium file:text-[var(--text-primary)] hover:file:bg-[var(--workspace-bg-muted)]"
 						/>
 						{file && (
-							<p className="mt-1 text-xs text-slate-500">
+							<p className="mt-1 text-[length:var(--text-xs)] text-[var(--text-muted)]">
 								Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
 							</p>
 						)}
@@ -120,7 +126,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 						{validationResult && validationResult.validRows > 0 && (
 							<>
 								{validationResult.errors.length > 0 && (
-									<p className="text-xs text-amber-700">
+									<p className="text-[length:var(--text-xs)] text-amber-700">
 										{validationResult.errors.length} row(s) will be skipped
 									</p>
 								)}
@@ -135,11 +141,11 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 					{/* Validation results */}
 					{validationResult && (
-						<div className="rounded-lg border p-4 space-y-3">
-							<div className="flex items-center gap-2 text-sm">
+						<div className="rounded-[var(--radius-lg)] border p-4 space-y-3">
+							<div className="flex items-center gap-2 text-[length:var(--text-sm)]">
 								{validationResult.errors.length === 0 ? (
 									<>
-										<Check className="h-4 w-4 text-green-600" />
+										<Check className="h-4 w-4 text-[var(--color-success)]" />
 										<span className="text-green-800">
 											All {validationResult.validRows} rows valid
 										</span>
@@ -157,9 +163,9 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 							{/* Preview table */}
 							{validationResult.preview.length > 0 && (
-								<div className="max-h-48 overflow-y-auto rounded border">
-									<table className="w-full text-xs">
-										<thead className="bg-slate-50">
+								<div className="max-h-48 overflow-y-auto rounded-[var(--radius-md)] border">
+									<table className="w-full text-[length:var(--text-xs)]">
+										<thead className="bg-[var(--workspace-bg-muted)]">
 											<tr>
 												<th className="px-3 py-1.5 text-left font-medium">Grade</th>
 												<th className="px-3 py-1.5 text-right font-medium">Count</th>
@@ -179,7 +185,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 							{/* Error list */}
 							{validationResult.errors.length > 0 && (
-								<div className="max-h-32 overflow-y-auto text-xs text-red-700">
+								<div className="max-h-32 overflow-y-auto text-[length:var(--text-xs)] text-[var(--color-error)]">
 									{validationResult.errors.map((err, i) => (
 										<div key={i} className="py-0.5">
 											Row {err.row}: {err.field} — {err.message}
@@ -192,7 +198,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 					{/* Success */}
 					{importSuccess && (
-						<div className="flex items-center gap-2 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">
+						<div className="flex items-center gap-2 rounded-[var(--radius-lg)] bg-green-50 px-4 py-3 text-[length:var(--text-sm)] text-green-800">
 							<Check className="h-4 w-4" />
 							Import completed successfully
 						</div>

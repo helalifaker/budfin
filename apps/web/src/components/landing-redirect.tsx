@@ -8,5 +8,5 @@ export function LandingRedirect() {
 		return <Navigate to="/login" replace />;
 	}
 
-	return <Navigate to={user.role === 'Admin' ? '/admin/users' : '/master-data/accounts'} replace />;
+	return <Navigate to={user.role === 'Admin' ? '/admin/users' : '/planning'} replace />;
 }

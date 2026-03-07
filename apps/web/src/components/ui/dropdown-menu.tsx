@@ -24,8 +24,10 @@ export function DropdownMenuContent({
 			<P.Content
 				sideOffset={sideOffset}
 				className={cn(
-					'z-50 min-w-[8rem] overflow-hidden rounded-md border border-slate-200',
-					'bg-white p-1 shadow-md text-sm text-slate-900',
+					'z-50 min-w-[8rem] overflow-hidden',
+					'rounded-[var(--radius-md)] border border-[var(--workspace-border)]',
+					'bg-white p-1 shadow-[var(--shadow-md)]',
+					'text-[length:var(--text-sm)] text-[var(--text-primary)]',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 					'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -45,10 +47,12 @@ export function DropdownMenuItem({
 	return (
 		<P.Item
 			className={cn(
-				'relative flex cursor-default select-none items-center gap-2 rounded-sm',
-				'px-3 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100',
+				'relative flex cursor-default select-none items-center gap-2',
+				'rounded-[var(--radius-sm)] px-3 py-1.5 text-[length:var(--text-sm)] outline-none',
+				'transition-colors duration-[var(--duration-fast)]',
+				'focus:bg-[var(--accent-50)]',
 				'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-				destructive && 'text-red-600 focus:bg-red-50 focus:text-red-700',
+				destructive && 'text-[var(--color-error)] focus:bg-[var(--color-error-bg)]',
 				className
 			)}
 			{...props}
@@ -60,5 +64,10 @@ export function DropdownMenuSeparator({
 	className,
 	...props
 }: React.ComponentPropsWithoutRef<typeof P.Separator>) {
-	return <P.Separator className={cn('-mx-1 my-1 h-px bg-slate-100', className)} {...props} />;
+	return (
+		<P.Separator
+			className={cn('-mx-1 my-1 h-px bg-[var(--workspace-border)]', className)}
+			{...props}
+		/>
+	);
 }

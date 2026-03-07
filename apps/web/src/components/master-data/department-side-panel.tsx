@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import type { BandMapping, Department } from '../../hooks/use-reference-data';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const BAND_OPTIONS: { value: BandMapping; label: string }[] = [
 	{ value: 'MATERNELLE', label: 'Maternelle' },
@@ -116,12 +117,12 @@ export function DepartmentSidePanel({
 				aria-label={isEdit ? 'Edit Department' : 'Add Department'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-white shadow-xl',
+					'bg-[var(--workspace-bg-card)] shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-lg font-semibold">
+					<h2 className="text-[length:var(--text-lg)] font-semibold">
 						{isEdit ? `Edit ${department.code}` : 'Add Department'}
 					</h2>
 				</div>
@@ -133,7 +134,7 @@ export function DepartmentSidePanel({
 						className="space-y-4"
 					>
 						<div>
-							<label htmlFor="dept-code" className="block text-sm font-medium">
+							<label htmlFor="dept-code" className="block text-[length:var(--text-sm)] font-medium">
 								Code
 							</label>
 							<Input
@@ -142,17 +143,22 @@ export function DepartmentSidePanel({
 								disabled={isEdit}
 								className={cn(
 									'mt-1 uppercase',
-									isEdit && 'bg-slate-100 text-slate-500',
+									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
 									form.formState.errors.code && 'border-red-500'
 								)}
 								{...form.register('code')}
 							/>
 							{form.formState.errors.code && (
-								<p className="mt-1 text-xs text-red-600">{form.formState.errors.code.message}</p>
+								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									{form.formState.errors.code.message}
+								</p>
 							)}
 						</div>
 						<div>
-							<label htmlFor="dept-label" className="block text-sm font-medium">
+							<label
+								htmlFor="dept-label"
+								className="block text-[length:var(--text-sm)] font-medium"
+							>
 								Label
 							</label>
 							<Input
@@ -162,28 +168,33 @@ export function DepartmentSidePanel({
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (
-								<p className="mt-1 text-xs text-red-600">{form.formState.errors.label.message}</p>
+								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									{form.formState.errors.label.message}
+								</p>
 							)}
 						</div>
 						<div>
-							<label htmlFor="dept-band" className="block text-sm font-medium">
+							<label htmlFor="dept-band" className="block text-[length:var(--text-sm)] font-medium">
 								Band Mapping
 							</label>
-							<select
-								id="dept-band"
-								className={cn(
-									'mt-1 flex h-9 w-full rounded-md border',
-									'border-slate-300 bg-white px-3 py-2 text-sm text-slate-900',
-									'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+							<Controller
+								control={form.control}
+								name="bandMapping"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="dept-band" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{BAND_OPTIONS.map((opt) => (
+												<SelectItem key={opt.value} value={opt.value}>
+													{opt.label}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								)}
-								{...form.register('bandMapping')}
-							>
-								{BAND_OPTIONS.map((opt) => (
-									<option key={opt.value} value={opt.value}>
-										{opt.label}
-									</option>
-								))}
-							</select>
+							/>
 						</div>
 					</form>
 				</div>

@@ -1,3 +1,7 @@
+| Field  | Value    |
+| ------ | -------- |
+| Status | Approved |
+
 # Section 9: NFR Design
 
 ## 9.1 Performance Design

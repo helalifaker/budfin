@@ -3,7 +3,7 @@
 | Field            | Value                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Section          | 5 — Data Architecture                                                                                                    |
-| Status           | Draft                                                                                                                    |
+| Status           | As-Built                                                                                                                 |
 | Date             | March 3, 2026                                                                                                            |
 | Related Sections | 01_overview.md (TC-001 through TC-005), 02_component_design.md (engine interfaces), 05_security.md (RBAC and encryption) |
 
@@ -429,7 +429,7 @@ COMMENT ON COLUMN employees.payment_method IS 'Payment method for salary disburs
 COMMENT ON COLUMN employees.is_saudi IS 'TRUE if the employee is a Saudi national. Determines GOSI applicability (11.75% employer contribution for Saudis only).';
 COMMENT ON COLUMN employees.is_ajeer IS 'TRUE if the employee is registered on the Ajeer platform. Determines Ajeer levy and monthly fee applicability.';
 COMMENT ON COLUMN employees.hourly_percentage IS 'Teaching load fraction (0.0001 to 1.0000). 1.0000 = full-time. Part-time employees have proportionally reduced salary costs. DECIMAL(5,4) per TC-003.';
-COMMENT ON COLUMN employees.base_salary_encrypted IS 'AES-256 encrypted using pgp_sym_encrypt(value::text, encryption_key). Decryption: pgp_sym_decrypt(base_salary_encrypted, $key)::DECIMAL(15,4). Encryption key stored in Docker secret SALARY_ENCRYPTION_KEY env var. PDPL compliance: employee salary is classified as Confidential PII.';
+COMMENT ON COLUMN employees.base_salary_encrypted IS 'AES-256 encrypted using pgp_sym_encrypt(value::text, encryption_key). Decryption: pgp_sym_decrypt(base_salary_encrypted, $key)::DECIMAL(15,4). Encryption key loaded from the file path specified in the SALARY_ENCRYPTION_KEY env var (Docker secret mounted at /run/secrets/salary_encryption_key). PDPL compliance: employee salary is classified as Confidential PII.';
 COMMENT ON COLUMN employees.housing_allowance_encrypted IS 'AES-256 encrypted housing allowance. Same encryption scheme as base_salary_encrypted.';
 COMMENT ON COLUMN employees.transport_allowance_encrypted IS 'AES-256 encrypted transport allowance. Same encryption scheme as base_salary_encrypted.';
 COMMENT ON COLUMN employees.responsibility_premium_encrypted IS 'AES-256 encrypted responsibility premium. Same encryption scheme as base_salary_encrypted.';
@@ -477,7 +477,7 @@ SELECT
   pgp_sym_decrypt(hsa_amount_encrypted, $1)::DECIMAL(15,4) AS hsa_amount
 FROM employees
 WHERE version_id = $2;
--- $1 = SALARY_ENCRYPTION_KEY from environment variable
+-- $1 = encryption key read from the file path in SALARY_ENCRYPTION_KEY env var
 -- $2 = budget version ID
 ```
 
@@ -1524,7 +1524,7 @@ INSERT INTO system_config (key, value, description, data_type) VALUES
   ('academic_week_count', '36', 'Number of instructional weeks in the academic year.', 'INTEGER'),
   ('default_ors_hours', '18.0000', 'Default ORS (Obligation Reglementaire de Service) weekly hours per FTE teacher.', 'DECIMAL'),
   ('zakat_rate', '0.025000', 'Zakat rate applied to profit before zakat (2.5%).', 'DECIMAL'),
-  ('salary_encryption_key_id', 'SALARY_ENCRYPTION_KEY', 'Reference to the Docker secret / env var name holding the pgcrypto encryption key. The actual key is NEVER stored in this table.', 'STRING'),
+  ('salary_encryption_key_id', 'SALARY_ENCRYPTION_KEY', 'Reference to the env var name whose value is the file path to the pgcrypto encryption key (Docker secret). The actual key is NEVER stored in this table.', 'STRING'),
   ('max_failed_login_attempts', '5', 'Number of consecutive failed login attempts before account lockout.', 'INTEGER'),
   ('lockout_duration_minutes', '30', 'Duration in minutes that a locked account remains locked.', 'INTEGER'),
   -- S-03: Reconciled with ADR-005 and ADR-012. Access token TTL = 30 min (not 15).
@@ -1872,7 +1872,7 @@ This section documents the five critical calculation flows that transform input 
 
 **Trigger:** User clicks "Calculate Staffing" -> `POST /api/v1/versions/:id/calculate/staffing`
 
-1. **Employee data load.** The Staff Cost Engine loads all employee records for the version. Encrypted salary fields are decrypted at read time using `pgp_sym_decrypt(field, $SALARY_ENCRYPTION_KEY)::DECIMAL(15,4)`.
+1. **Employee data load.** The Staff Cost Engine loads all employee records for the version. Encrypted salary fields are decrypted at read time using `pgp_sym_decrypt(field, $key)::DECIMAL(15,4)`, where `$key` is the encryption key read from the file path specified in the `SALARY_ENCRYPTION_KEY` env var.
 
 2. **Calculation logged.** `calculation_audit_log` entry created with status `STARTED`, input snapshot (employee count, version_id).
 
@@ -2056,7 +2056,7 @@ This merge is performed at the API layer. No additional database tables are requ
 
 - Algorithm: AES-256 via pgcrypto `pgp_sym_encrypt(value::text, $key)`.
 - Decryption: `pgp_sym_decrypt(encrypted_field, $key)::DECIMAL(15,4)`.
-- Key source: `SALARY_ENCRYPTION_KEY` environment variable. In production, injected as a Docker secret.
+- Key source: The `SALARY_ENCRYPTION_KEY` environment variable contains a **file path** (e.g., `/run/secrets/salary_encryption_key`). The application reads the file contents at startup. In production, the key file is mounted as a Docker secret.
 
 **Key rotation procedure:**
 
@@ -2146,5 +2146,5 @@ Automated as a CI pipeline step in Phase 6. All validations must pass before mig
       (type='Actual', data_source='IMPORTED', status='Locked'), then populates
       `enrollment_headcount` rows per grade per AY period using the AY→FY mapping rule.
 - **Idempotency:** All scripts use `INSERT ... ON CONFLICT DO UPDATE`. Safe to re-run without creating duplicates.
-- **Encryption:** `migrate_staff_costs.py` encrypts salary fields using `pgp_sym_encrypt()` via a raw SQL `INSERT` statement with the encryption key passed as a parameter from the `SALARY_ENCRYPTION_KEY` environment variable.
+- **Encryption:** `migrate_staff_costs.py` encrypts salary fields using `pgp_sym_encrypt()` via a raw SQL `INSERT` statement with the encryption key read from the file path specified in the `SALARY_ENCRYPTION_KEY` environment variable.
 - **Logging:** Each migration script writes a structured JSON log with row counts, checksums, duration, and any warnings or skipped rows.

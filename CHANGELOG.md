@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Design token system using CSS custom properties for consistent theming across all components — colours, spacing, typography, radii, shadows, and animation durations are centrally defined in index.css (#114)
+- Two-shell layout architecture: PlanningShell (context bar + docked right panel) for budget modules, ManagementShell (toolbar + overlay panels) for admin/master-data pages (ADR-023, #114)
+- Right panel component with resizable width and four tab views (Details, Activity, Audit, Help) for contextual information alongside data grids (#114)
+- Module toolbar component for page-level actions (save, export, calculate) with loading states (#114)
+- Save indicator and stale indicator shell components for real-time feedback on data persistence and calculation freshness (#114)
+- Breadcrumb navigation component reflecting the current route hierarchy (#114)
+- Sidebar redesign with collapsible sections, icon + label navigation items, and dark theme (#114)
+- `TableSkeleton` loading component replaces raw "Loading..." text across all data table pages (#114)
 - Calculation audit trail records every enrollment calculation run with timing, inputs, outputs, and the triggering user for accountability (#96)
 - DHG requirements table persists calculated sections, utilization, and alerts per grade so results survive page reloads and are available to downstream modules (#96)
 - Enrollment & Capacity module for student headcount planning across 15 grade levels and dual academic periods (AY1 Jan-Jun, AY2 Sep-Dec) (#3)
@@ -69,6 +77,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- All native `<select>` elements replaced with shadcn/ui `<Select>` components for consistent styling and keyboard accessibility (#114)
+- All native `<button>` elements in data pages replaced with shadcn/ui `<Button>` component (#114)
+- Data tables use `role="table"` instead of `role="grid"` since cells are not individually focusable (#114)
+- Fiscal Periods page uses `<Select>` for fiscal year filter and `<Button>` for lock actions (#114)
+- Audit Filters use `<Select>` for Action and Entity dropdowns (#114)
+- Accounts page uses `<Select>` for Type, Center Type, and Status filters (#114)
 - Version comparison endpoint returns nested shape with version metadata, 12 month rows (zero-filled), and annual totals with variance calculations (#14)
 - Fiscal period locking validates that the referenced Actual version has dataSource=IMPORTED and rejects already-locked periods with 409 (#14)
 - All version API error codes aligned to spec: VERSION_NOT_FOUND, PERIOD_ALREADY_LOCKED, INVALID_ACTUAL_VERSION (#14)

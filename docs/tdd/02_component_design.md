@@ -1,5 +1,9 @@
 # 4. Detailed Component Design
 
+| Field  | Value    |
+| ------ | -------- |
+| Status | Approved |
+
 This section specifies every first-class component in BudFin, covering purpose, internal structure, TypeScript interfaces, interaction contracts, and traceability to functional requirements (FR) and non-functional requirements (NFR) defined in the PRD.
 
 ---
@@ -71,7 +75,7 @@ When `refresh()` is called with a valid token, the service immediately revokes t
 
 ### Lockout Logic
 
-The `users` table carries `failed_attempts INTEGER DEFAULT 0` and `locked_until TIMESTAMPTZ`. On each failed login attempt the service increments `failed_attempts`. When the counter reaches 5, the service sets `locked_until = NOW() + INTERVAL '30 minutes'` and writes an audit entry with operation `ACCOUNT_LOCKOUT`. Any login attempt while `NOW() < locked_until` is rejected with HTTP 423 regardless of credential correctness. A successful login resets `failed_attempts` to 0 and clears `locked_until`.
+The `users` table carries `failed_attempts INTEGER DEFAULT 0` and `locked_until TIMESTAMPTZ`. On each failed login attempt the service increments `failed_attempts`. When the counter reaches 5, the service sets `locked_until = NOW() + INTERVAL '30 minutes'` and writes an audit entry with operation `ACCOUNT_LOCKED`. Any login attempt while `NOW() < locked_until` is rejected with HTTP 401 regardless of credential correctness. A successful login resets `failed_attempts` to 0 and clears `locked_until`.
 
 ### Component Interactions
 

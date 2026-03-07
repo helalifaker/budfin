@@ -19,7 +19,7 @@ function DialogOverlay({ className, ...props }: React.ComponentPropsWithoutRef<t
 	return (
 		<P.Overlay
 			className={cn(
-				'fixed inset-0 z-50 bg-black/50',
+				'fixed inset-0 z-50 bg-black/40',
 				'data-[state=open]:animate-in data-[state=closed]:animate-out',
 				'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 				className
@@ -40,7 +40,7 @@ export function DialogContent({
 			<P.Content
 				className={cn(
 					'fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2',
-					'rounded-lg bg-white p-6 shadow-lg',
+					'rounded-[var(--radius-lg)] bg-white p-6 shadow-[var(--shadow-lg)]',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 					'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -50,7 +50,12 @@ export function DialogContent({
 			>
 				{children}
 				<P.Close
-					className="absolute right-4 top-4 rounded-md opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					className={cn(
+						'absolute right-4 top-4 rounded-[var(--radius-sm)]',
+						'opacity-70 hover:opacity-100',
+						'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]',
+						'transition-opacity duration-[var(--duration-fast)]'
+					)}
 					aria-label="Close"
 				>
 					<X className="h-4 w-4" />
@@ -68,14 +73,27 @@ export function DialogTitle({
 	className,
 	...props
 }: React.ComponentPropsWithoutRef<typeof P.Title>) {
-	return <P.Title className={cn('text-lg font-semibold text-slate-900', className)} {...props} />;
+	return (
+		<P.Title
+			className={cn(
+				'text-[length:var(--text-lg)] font-semibold text-[var(--text-primary)]',
+				className
+			)}
+			{...props}
+		/>
+	);
 }
 
 export function DialogDescription({
 	className,
 	...props
 }: React.ComponentPropsWithoutRef<typeof P.Description>) {
-	return <P.Description className={cn('text-sm text-slate-600', className)} {...props} />;
+	return (
+		<P.Description
+			className={cn('text-[length:var(--text-sm)] text-[var(--text-secondary)]', className)}
+			{...props}
+		/>
+	);
 }
 
 export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

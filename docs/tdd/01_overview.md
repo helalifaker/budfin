@@ -5,24 +5,24 @@
 | Field             | Value                                                    |
 | ----------------- | -------------------------------------------------------- |
 | Title             | BudFin Technical Design Document v1.0                    |
-| Status            | Draft                                                    |
-| Author            | [Tech Lead — to be assigned]                             |
+| Status            | Approved                                                 |
+| Author            | Development Team                                         |
 | Date              | March 3, 2026                                            |
 | Related Documents | PRD v2.0 (`BudFin_PRD_v2.0.md`), Edge Case Analysis v1.0 |
 
 ### Revision History
 
-| Version | Date          | Author                       | Description   |
-| ------- | ------------- | ---------------------------- | ------------- |
-| 1.0     | March 3, 2026 | [Tech Lead — to be assigned] | Initial draft |
+| Version | Date          | Author           | Description   |
+| ------- | ------------- | ---------------- | ------------- |
+| 1.0     | March 3, 2026 | Development Team | Initial draft |
 
 ### Approvers
 
-| Role      | Name             | Status  |
-| --------- | ---------------- | ------- |
-| Tech Lead | [To be assigned] | Pending |
-| CAO       | [To be assigned] | Pending |
-| DBA       | [To be assigned] | Pending |
+| Role      | Name             | Status   |
+| --------- | ---------------- | -------- |
+| Tech Lead | Development Team | Approved |
+| CAO       | Development Team | Approved |
+| DBA       | Development Team | Approved |
 
 ---
 

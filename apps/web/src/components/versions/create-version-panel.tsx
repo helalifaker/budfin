@@ -92,15 +92,17 @@ export function CreateVersionPanel({
 				aria-labelledby={titleId}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-white shadow-xl',
+					'bg-[var(--workspace-bg-card)] shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 id={titleId} className="text-lg font-semibold">
+					<h2 id={titleId} className="text-[length:var(--text-lg)] font-semibold">
 						New Version
 					</h2>
-					<p className="mt-0.5 text-sm text-slate-500">Fiscal Year: FY{fiscalYear}</p>
+					<p className="mt-0.5 text-[length:var(--text-sm)] text-[var(--text-muted)]">
+						Fiscal Year: FY{fiscalYear}
+					</p>
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-6 py-4">
@@ -122,9 +124,9 @@ export function CreateVersionPanel({
 						className="space-y-4"
 					>
 						<div>
-							<label htmlFor="cv-name" className="block text-sm font-medium">
+							<label htmlFor="cv-name" className="block text-[length:var(--text-sm)] font-medium">
 								Name{' '}
-								<span aria-hidden="true" className="text-red-500">
+								<span aria-hidden="true" className="text-[var(--color-error)]">
 									*
 								</span>
 							</label>
@@ -133,20 +135,23 @@ export function CreateVersionPanel({
 								type="text"
 								aria-required="true"
 								maxLength={100}
-								className={cn('mt-1', form.formState.errors.name && 'border-red-400')}
+								className={cn('mt-1', form.formState.errors.name && 'border-[var(--color-error)]')}
 								{...form.register('name')}
 							/>
 							{form.formState.errors.name && (
-								<p className="mt-1 text-xs text-red-600" role="alert">
+								<p
+									className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]"
+									role="alert"
+								>
 									{form.formState.errors.name.message}
 								</p>
 							)}
 						</div>
 
 						<div>
-							<label htmlFor="cv-type" className="block text-sm font-medium">
+							<label htmlFor="cv-type" className="block text-[length:var(--text-sm)] font-medium">
 								Type{' '}
-								<span aria-hidden="true" className="text-red-500">
+								<span aria-hidden="true" className="text-[var(--color-error)]">
 									*
 								</span>
 							</label>
@@ -166,41 +171,57 @@ export function CreateVersionPanel({
 								)}
 							/>
 							{form.formState.errors.type && (
-								<p className="mt-1 text-xs text-red-600" role="alert">
+								<p
+									className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]"
+									role="alert"
+								>
 									{form.formState.errors.type.message}
 								</p>
 							)}
 						</div>
 
 						<div>
-							<label htmlFor="cv-description" className="block text-sm font-medium">
+							<label
+								htmlFor="cv-description"
+								className="block text-[length:var(--text-sm)] font-medium"
+							>
 								Description
 							</label>
 							<textarea
 								id="cv-description"
 								rows={3}
 								maxLength={500}
-								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+								className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] px-3 py-2 text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2"
 								{...form.register('description')}
 							/>
 						</div>
 
 						<div>
-							<label htmlFor="cv-source" className="block text-sm font-medium">
+							<label htmlFor="cv-source" className="block text-[length:var(--text-sm)] font-medium">
 								Copy Data From
 							</label>
-							<select
-								id="cv-source"
-								className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-								{...form.register('sourceVersionId')}
-							>
-								<option value="">None (start empty)</option>
-								{sourceVersionOptions.map((v) => (
-									<option key={v.id} value={v.id}>
-										{v.name} ({v.type})
-									</option>
-								))}
-							</select>
+							<Controller
+								control={form.control}
+								name="sourceVersionId"
+								render={({ field }) => (
+									<Select
+										value={field.value || 'none'}
+										onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
+									>
+										<SelectTrigger id="cv-source" className="mt-1">
+											<SelectValue placeholder="None (start empty)" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="none">None (start empty)</SelectItem>
+											{sourceVersionOptions.map((v) => (
+												<SelectItem key={v.id} value={String(v.id)}>
+													{v.name} ({v.type})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
 						</div>
 					</form>
 				</div>

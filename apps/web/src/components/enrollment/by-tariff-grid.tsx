@@ -77,7 +77,7 @@ function EditableTariffCell({
 			<input
 				type="number"
 				min={0}
-				className="w-14 rounded border border-blue-400 bg-yellow-50 px-1 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+				className="w-14 rounded-[var(--radius-md)] border border-[var(--accent-500)] bg-[var(--cell-editable-bg)] px-1 py-1 text-right text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]"
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
 				onBlur={handleBlur}
@@ -91,8 +91,8 @@ function EditableTariffCell({
 	return (
 		<span
 			className={cn(
-				'inline-block w-14 rounded px-1 py-1 text-right text-sm tabular-nums',
-				!isReadOnly && 'cursor-pointer hover:bg-yellow-50'
+				'inline-block w-14 rounded-[var(--radius-sm)] px-1 py-1 text-right text-[length:var(--text-sm)] tabular-nums',
+				!isReadOnly && 'cursor-pointer hover:bg-[var(--cell-editable-bg)]'
 			)}
 			onDoubleClick={handleDoubleClick}
 			role={isReadOnly ? undefined : 'button'}
@@ -219,7 +219,9 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 		return [
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
-				cell: (info) => <span className="font-medium text-slate-900">{info.getValue()}</span>,
+				cell: (info) => (
+					<span className="font-medium text-[var(--text-primary)]">{info.getValue()}</span>
+				),
 			}),
 			makeTariffCol('francaisRp', 'FR RP', 'Francais', 'RP'),
 			makeTariffCol('francaisR3', 'FR R3+', 'Francais', 'R3+'),
@@ -244,33 +246,37 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 	});
 
 	return (
-		<div className="overflow-x-auto rounded-lg border">
-			<table role="grid" className="w-full text-left text-sm" aria-label="Enrollment by tariff">
-				<thead className="border-b bg-slate-50">
+		<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
+			<table
+				role="grid"
+				className="w-full text-left text-[length:var(--text-sm)]"
+				aria-label="Enrollment by tariff"
+			>
+				<thead className="border-b bg-[var(--workspace-bg-muted)]">
 					{/* Two-level header */}
 					<tr>
-						<th rowSpan={2} className="px-4 py-3 font-medium text-slate-600">
+						<th rowSpan={2} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
 							Grade
 						</th>
 						<th
 							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-xs font-medium text-slate-500"
+							className="border-b border-l px-4 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
 						>
 							Francais
 						</th>
 						<th
 							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-xs font-medium text-slate-500"
+							className="border-b border-l px-4 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
 						>
 							Nationaux
 						</th>
 						<th
 							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-xs font-medium text-slate-500"
+							className="border-b border-l px-4 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
 						>
 							Autres
 						</th>
-						<th rowSpan={2} className="border-l px-4 py-3 font-medium text-slate-600">
+						<th rowSpan={2} className="border-l px-4 py-3 font-medium text-[var(--text-secondary)]">
 							Total
 						</th>
 					</tr>
@@ -278,7 +284,7 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 						{['RP', 'R3+', 'Plein', 'RP', 'R3+', 'Plein', 'RP', 'R3+', 'Plein'].map((t, i) => (
 							<th
 								key={`${t}-${i}`}
-								className="border-l px-3 py-1.5 text-center text-xs font-medium text-slate-500"
+								className="border-l px-3 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
 							>
 								{t}
 							</th>
@@ -290,7 +296,10 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 						<TableSkeleton rows={15} cols={11} />
 					) : (
 						table.getRowModel().rows.map((row) => (
-							<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+							<tr
+								key={row.id}
+								className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+							>
 								{row.getVisibleCells().map((cell) => (
 									<td key={cell.id} className="px-3 py-2">
 										{flexRender(cell.column.columnDef.cell, cell.getContext())}

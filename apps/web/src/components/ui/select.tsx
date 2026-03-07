@@ -1,8 +1,3 @@
-/**
- * shadcn/ui Select component — copy-pasted pattern using the unified radix-ui package.
- * Wraps @radix-ui/react-select primitives (exported as Select namespace from 'radix-ui').
- * Do NOT import this from an npm package — it lives here as a local component.
- */
 import * as React from 'react';
 import { Select as SelectPrimitive } from 'radix-ui';
 import { ChevronDown, ChevronUp, Check } from 'lucide-react';
@@ -32,11 +27,15 @@ export function SelectTrigger({ className, children, ...props }: SelectTriggerPr
 	return (
 		<SelectPrimitive.Trigger
 			className={cn(
-				'flex h-10 w-full items-center justify-between rounded-md border border-slate-300',
-				'bg-white px-3 py-2 text-sm ring-offset-white',
-				'placeholder:text-slate-500',
-				'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+				'flex h-9 w-full items-center justify-between',
+				'rounded-[var(--radius-md)] border border-[var(--workspace-border)]',
+				'bg-white px-3 py-2 text-[length:var(--text-sm)]',
+				'shadow-[var(--shadow-xs)]',
+				'placeholder:text-[var(--text-muted)]',
+				'focus:outline-none focus:border-[var(--accent-500)]',
+				'focus:shadow-[var(--shadow-glow-accent)]',
 				'disabled:cursor-not-allowed disabled:opacity-50',
+				'transition-all duration-[var(--duration-fast)]',
 				'[&>span]:line-clamp-1',
 				className
 			)}
@@ -92,8 +91,9 @@ export function SelectContent({
 		<SelectPrimitive.Portal>
 			<SelectPrimitive.Content
 				className={cn(
-					'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border',
-					'border-slate-200 bg-white text-slate-950 shadow-md',
+					'relative z-50 max-h-96 min-w-[8rem] overflow-hidden',
+					'rounded-[var(--radius-md)] border border-[var(--workspace-border)]',
+					'bg-white text-[var(--text-primary)] shadow-[var(--shadow-lg)]',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 					'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -129,7 +129,7 @@ export type SelectLabelProps = React.ComponentPropsWithoutRef<typeof SelectPrimi
 export function SelectLabel({ className, ...props }: SelectLabelProps) {
 	return (
 		<SelectPrimitive.Label
-			className={cn('py-1.5 pl-8 pr-2 text-sm font-semibold', className)}
+			className={cn('py-1.5 pl-8 pr-2 text-[length:var(--text-sm)] font-semibold', className)}
 			{...props}
 		/>
 	);
@@ -141,17 +141,18 @@ export function SelectItem({ className, children, ...props }: SelectItemProps) {
 	return (
 		<SelectPrimitive.Item
 			className={cn(
-				'relative flex w-full cursor-default select-none items-center rounded-sm',
-				'py-1.5 pl-8 pr-2 text-sm outline-none',
-				'focus:bg-slate-100 focus:text-slate-900',
+				'relative flex w-full cursor-default select-none items-center',
+				'rounded-[var(--radius-sm)] py-1.5 pl-8 pr-2 text-[length:var(--text-sm)] outline-none',
+				'focus:bg-[var(--accent-50)] focus:text-[var(--text-primary)]',
 				'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+				'transition-colors duration-[var(--duration-fast)]',
 				className
 			)}
 			{...props}
 		>
 			<span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
 				<SelectPrimitive.ItemIndicator>
-					<Check className="h-4 w-4" />
+					<Check className="h-4 w-4 text-[var(--accent-500)]" />
 				</SelectPrimitive.ItemIndicator>
 			</span>
 			<SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -164,7 +165,7 @@ export type SelectSeparatorProps = React.ComponentPropsWithoutRef<typeof SelectP
 export function SelectSeparator({ className, ...props }: SelectSeparatorProps) {
 	return (
 		<SelectPrimitive.Separator
-			className={cn('-mx-1 my-1 h-px bg-slate-100', className)}
+			className={cn('-mx-1 my-1 h-px bg-[var(--workspace-border)]', className)}
 			{...props}
 		/>
 	);
