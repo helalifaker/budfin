@@ -1,3 +1,4 @@
+-- Irreversible: reverting would restore the security vulnerability (no rollback needed)
 -- Fix audit_entries append-only protection to target actual runtime role (app_user)
 -- The original migration targeted budfin_app which doesn't exist in the running stack
 DO $$
