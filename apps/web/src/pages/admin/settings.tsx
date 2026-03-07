@@ -33,7 +33,7 @@ const GROUPS: SettingGroup[] = [
 				label: 'Max Sessions per User',
 			},
 			{
-				key: 'session_timeout',
+				key: 'session_timeout_minutes',
 				label: 'Session Timeout (minutes)',
 			},
 		],
@@ -57,7 +57,7 @@ const GROUPS: SettingGroup[] = [
 		description: 'General application settings',
 		keys: [
 			{
-				key: 'fiscal_year_start',
+				key: 'fiscal_year_start_month',
 				label: 'Fiscal Year Start (month)',
 			},
 			{
@@ -65,7 +65,7 @@ const GROUPS: SettingGroup[] = [
 				label: 'Fiscal Year Range',
 			},
 			{
-				key: 'autosave_interval',
+				key: 'autosave_interval_seconds',
 				label: 'Autosave Interval (seconds)',
 			},
 		],
