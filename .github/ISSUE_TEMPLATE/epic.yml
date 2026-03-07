@@ -1,0 +1,72 @@
+name: Epic
+description: A feature-level Epic for BudFin
+labels: ['epic']
+body:
+  - type: input
+    id: epic-number
+    attributes:
+      label: Epic Number
+      description: 'Epic number (1-13)'
+      placeholder: '2'
+    validations:
+      required: true
+
+  - type: input
+    id: feature-name
+    attributes:
+      label: Feature Name
+      description: 'Short feature name'
+      placeholder: 'Revenue'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: moscow
+    attributes:
+      label: MoSCoW Priority
+      options:
+        - Must Have
+        - Should Have
+        - Could Have
+        - "Won't Have"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Tier
+      options:
+        - MVP
+        - Target
+        - Stretch
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 'What this Epic delivers for EFIR finance staff (2-3 sentences)'
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: 'List Epics this depends on'
+      placeholder: |
+        - Epic 11: Authentication & RBAC
+        - Epic 13: Infrastructure & CI/CD
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria Reference
+      description: 'Link to spec once written'
+      value: 'See `docs/specs/epic-N/<feature-slug>.md` once written in Phase 4.'
+    validations:
+      required: false
