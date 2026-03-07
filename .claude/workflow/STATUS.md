@@ -48,7 +48,7 @@
 | 8 | Audit Trail | 2 | Epic Created (#9) |
 | 9 | Dashboard | 2 | Epic Created (#13) |
 | 10 | Version Management | DONE | All 13 stories complete (13/13), merged PR #63 + remediation PR #66 — 2026-03-06 |
-| 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) -- 2026-03-06 |
+| 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) + remediation PR #98 -- 2026-03-06 |
 | 12 | Data Migration | 2 | Epic Created (#10) |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 
