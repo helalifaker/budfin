@@ -55,6 +55,8 @@ export async function apiClient<T>(path: string, options: ApiOptions = {}): Prom
 	});
 
 	if (response.status === 401 && !skipAuth) {
+		// Capture token before refresh — if another tab already refreshed,
+		// shouldSkipRefresh() will debounce and we'll use the updated store token.
 		const refreshed = await useAuthStore.getState().refresh();
 		if (refreshed) {
 			const newToken = useAuthStore.getState().accessToken;

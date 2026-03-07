@@ -1,4 +1,10 @@
 import { create } from 'zustand';
+import {
+	broadcastLogout,
+	broadcastTokenRefresh,
+	onAuthMessage,
+	shouldSkipRefresh,
+} from '../lib/tab-sync';
 
 interface User {
 	id: number;
@@ -18,6 +24,8 @@ interface AuthState {
 	clearAuth: () => void;
 	initialize: () => Promise<void>;
 }
+
+let refreshPromise: Promise<boolean> | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
 	accessToken: null,
@@ -58,18 +66,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 	},
 
 	refresh: async () => {
-		try {
-			const response = await fetch('/api/v1/auth/refresh', {
-				method: 'POST',
-				credentials: 'include',
-			});
-			if (!response.ok) return false;
-			const data = await response.json();
-			get().setAuth(data.access_token, data.user);
-			return true;
-		} catch {
-			return false;
+		if (shouldSkipRefresh()) {
+			return get().accessToken !== null;
 		}
+		if (refreshPromise) return refreshPromise;
+		refreshPromise = (async () => {
+			try {
+				const response = await fetch('/api/v1/auth/refresh', {
+					method: 'POST',
+					credentials: 'include',
+				});
+				if (!response.ok) return false;
+				const data = await response.json();
+				get().setAuth(data.access_token, data.user);
+				broadcastTokenRefresh(data.access_token, data.user);
+				return true;
+			} catch {
+				return false;
+			} finally {
+				refreshPromise = null;
+			}
+		})();
+		return refreshPromise;
 	},
 
 	logout: async () => {
@@ -84,5 +102,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 			// Ignore logout failures
 		}
 		get().clearAuth();
+		broadcastLogout();
 	},
 }));
+
+// Listen for auth events from other tabs
+onAuthMessage((msg) => {
+	if (msg.type === 'TOKEN_REFRESHED') {
+		useAuthStore.getState().setAuth(msg.accessToken, msg.user);
+	} else if (msg.type === 'LOGOUT') {
+		useAuthStore.getState().clearAuth();
+	}
+});
