@@ -29,6 +29,23 @@ vi.mock('../../lib/prisma.js', () => {
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
+		calculationAuditLog: {
+			create: vi.fn().mockResolvedValue({ id: 1 }),
+			updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+		},
+		dhgRequirement: {
+			upsert: vi.fn().mockResolvedValue({}),
+		},
+		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
+			fn({
+				budgetVersion: mockPrisma.budgetVersion,
+				enrollmentHeadcount: mockPrisma.enrollmentHeadcount,
+				gradeLevel: mockPrisma.gradeLevel,
+				auditEntry: mockPrisma.auditEntry,
+				calculationAuditLog: mockPrisma.calculationAuditLog,
+				dhgRequirement: mockPrisma.dhgRequirement,
+			})
+		),
 	};
 	return { prisma: mockPrisma };
 });
@@ -47,6 +64,14 @@ const mockPrisma = prisma as unknown as {
 		findMany: ReturnType<typeof vi.fn>;
 	};
 	auditEntry: { create: ReturnType<typeof vi.fn> };
+	calculationAuditLog: {
+		create: ReturnType<typeof vi.fn>;
+		updateMany: ReturnType<typeof vi.fn>;
+	};
+	dhgRequirement: {
+		upsert: ReturnType<typeof vi.fn>;
+	};
+	$transaction: ReturnType<typeof vi.fn>;
 };
 
 let app: FastifyInstance;

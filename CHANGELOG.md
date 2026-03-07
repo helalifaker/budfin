@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Calculation audit trail records every enrollment calculation run with timing, inputs, outputs, and the triggering user for accountability (#96)
+- DHG requirements table persists calculated sections, utilization, and alerts per grade so results survive page reloads and are available to downstream modules (#96)
 - Enrollment & Capacity module for student headcount planning across 15 grade levels and dual academic periods (AY1 Jan-Jun, AY2 Sep-Dec) (#3)
 - Two-stage enrollment workflow: Stage 1 captures total headcount per grade, Stage 2 breaks down by nationality (Francais, Nationaux, Autres) and tariff (RP, R3+, Plein) with server-validated sum constraints (#80-#82)
 - Capacity calculation engine computing sections needed, classroom utilization percentages, and traffic-light alerts (OVER, NEAR_CAP, OK, UNDER) per grade level (#83)
@@ -76,6 +78,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Nationality grid now filters by the selected academic period (AY1 or AY2) instead of showing all periods combined (#96)
+- Enrollment calculation results are now saved atomically; if any part of the save fails, the entire calculation is rolled back to prevent partial data (#96)
 - Enrollment calculate endpoint now uses the correct API path, matching the documented contract (#94)
 - Context Bar period selector now shows only the valid options (AY1, AY2, Both Periods) instead of including Summer and Full Year (#94)
 - Nationality grid is now a read-only summary view; editing is done in the By Tariff grid to avoid conflicting data entry (#94)

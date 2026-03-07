@@ -5,46 +5,11 @@ import { Decimal } from 'decimal.js';
 import multipart from '@fastify/multipart';
 import Papa from 'papaparse';
 import { prisma } from '../../lib/prisma.js';
+import { VALID_GRADE_CODES, GRADE_BAND_MAP } from '../../lib/enrollment-constants.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const VALID_GRADES = [
-	'PS',
-	'MS',
-	'GS',
-	'CP',
-	'CE1',
-	'CE2',
-	'CM1',
-	'CM2',
-	'6eme',
-	'5eme',
-	'4eme',
-	'3eme',
-	'2nde',
-	'1ere',
-	'Terminale',
-] as const;
-
-const VALID_GRADE_SET = new Set<string>(VALID_GRADES);
-
-const BAND_MAP: Record<string, string> = {
-	PS: 'MATERNELLE',
-	MS: 'MATERNELLE',
-	GS: 'MATERNELLE',
-	CP: 'ELEMENTAIRE',
-	CE1: 'ELEMENTAIRE',
-	CE2: 'ELEMENTAIRE',
-	CM1: 'ELEMENTAIRE',
-	CM2: 'ELEMENTAIRE',
-	'6eme': 'COLLEGE',
-	'5eme': 'COLLEGE',
-	'4eme': 'COLLEGE',
-	'3eme': 'COLLEGE',
-	'2nde': 'LYCEE',
-	'1ere': 'LYCEE',
-	Terminale: 'LYCEE',
-};
+const VALID_GRADE_SET = new Set<string>(VALID_GRADE_CODES);
 
 // ── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -133,7 +98,7 @@ export async function historicalRoutes(app: FastifyInstance) {
 			}
 
 			for (const row of data) {
-				const band = BAND_MAP[row.gradeLevel];
+				const band = GRADE_BAND_MAP[row.gradeLevel];
 				if (!band) continue;
 				const map = bandYearTotals[band]!;
 				map.set(row.academicYear, (map.get(row.academicYear) ?? 0) + row.headcount);

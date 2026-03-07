@@ -73,6 +73,9 @@ model User {
   createdDetails     EnrollmentDetail[]    @relation("DetailCreator")
   updatedDetails     EnrollmentDetail[]    @relation("DetailUpdater")
 
+  // Calculation audit relations
+  triggeredCalculations CalculationAuditLog[] @relation("CalculationTriggeredBy")
+
   @@map("users")
 }
 
@@ -337,6 +340,8 @@ model BudgetVersion {
   // Enrollment & Capacity (Epic 1)
   enrollmentHeadcounts EnrollmentHeadcount[]
   enrollmentDetails    EnrollmentDetail[]
+  dhgRequirements      DhgRequirement[]
+  calculationAuditLogs CalculationAuditLog[]
 
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
@@ -438,4 +443,47 @@ model EnrollmentDetail {
   @@unique([versionId, academicPeriod, gradeLevel, nationality, tariff], map: "uq_enrollment_detail")
   @@index([versionId, academicPeriod, gradeLevel], map: "idx_enrollment_detail_version_period_grade")
   @@map("enrollment_detail")
+}
+
+// ── DHG & Calculation Audit (Epic 1) ──────────────────────────────────────────
+
+model DhgRequirement {
+  id              Int      @id @default(autoincrement())
+  versionId       Int      @map("version_id")
+  academicPeriod  String   @map("academic_period") @db.VarChar(3)
+  gradeLevel      String   @map("grade_level") @db.VarChar(10)
+  headcount       Int      @default(0)
+  maxClassSize    Int      @map("max_class_size")
+  sectionsNeeded  Int      @default(0) @map("sections_needed")
+  utilization     Decimal  @default(0) @db.Decimal(5, 1)
+  alert           String?  @db.VarChar(10)
+  recruitmentSlots Int     @default(0) @map("recruitment_slots")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, academicPeriod, gradeLevel], map: "uq_dhg_requirement")
+  @@index([versionId], map: "idx_dhg_requirements_version")
+  @@map("dhg_requirements")
+}
+
+model CalculationAuditLog {
+  id            Int       @id @default(autoincrement())
+  versionId     Int       @map("version_id")
+  runId         String    @map("run_id") @db.Uuid
+  module        String    @default("ENROLLMENT") @db.VarChar(20)
+  status        String    @default("STARTED") @db.VarChar(20)
+  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamptz
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+  durationMs    Int?      @map("duration_ms")
+  inputSummary  Json?     @map("input_summary") @db.JsonB
+  outputSummary Json?     @map("output_summary") @db.JsonB
+  triggeredBy   Int?      @map("triggered_by")
+
+  version   BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  triggerer User?         @relation("CalculationTriggeredBy", fields: [triggeredBy], references: [id])
+
+  @@index([versionId], map: "idx_calc_audit_version")
+  @@map("calculation_audit_log")
 }

@@ -8,7 +8,7 @@ import {
 import { cn } from '../../lib/cn';
 import { useDetail, usePutDetail } from '../../hooks/use-enrollment';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
-import type { DetailEntry } from '@budfin/types';
+import type { AcademicPeriod, DetailEntry } from '@budfin/types';
 import type { GradeBand } from '../../hooks/use-grade-levels';
 import { TableSkeleton } from '../ui/skeleton';
 
@@ -108,7 +108,7 @@ function EditableTariffCell({
 }
 
 export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod }: Props) {
-	const { data: detailData, isLoading } = useDetail(versionId);
+	const { data: detailData, isLoading } = useDetail(versionId, academicPeriod as AcademicPeriod);
 	const { data: gradeLevelData } = useGradeLevels();
 	const putDetail = usePutDetail(versionId);
 
