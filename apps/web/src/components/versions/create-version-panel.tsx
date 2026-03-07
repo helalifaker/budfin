@@ -200,18 +200,28 @@ export function CreateVersionPanel({
 							<label htmlFor="cv-source" className="block text-[length:var(--text-sm)] font-medium">
 								Copy Data From
 							</label>
-							<select
-								id="cv-source"
-								className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] px-3 py-2 text-[length:var(--text-sm)]"
-								{...form.register('sourceVersionId')}
-							>
-								<option value="">None (start empty)</option>
-								{sourceVersionOptions.map((v) => (
-									<option key={v.id} value={v.id}>
-										{v.name} ({v.type})
-									</option>
-								))}
-							</select>
+							<Controller
+								control={form.control}
+								name="sourceVersionId"
+								render={({ field }) => (
+									<Select
+										value={field.value || 'none'}
+										onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
+									>
+										<SelectTrigger id="cv-source" className="mt-1">
+											<SelectValue placeholder="None (start empty)" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="none">None (start empty)</SelectItem>
+											{sourceVersionOptions.map((v) => (
+												<SelectItem key={v.id} value={String(v.id)}>
+													{v.name} ({v.type})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
 						</div>
 					</form>
 				</div>

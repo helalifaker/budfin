@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const createSchema = z.object({
 	email: z.string().email('Invalid email'),
@@ -119,13 +120,6 @@ export function UserSidePanel({
 
 	if (!open) return null;
 
-	const selectClassName = cn(
-		'flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
-		'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
-		'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
-		'disabled:cursor-not-allowed disabled:opacity-50'
-	);
-
 	return (
 		<>
 			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
@@ -192,17 +186,24 @@ export function UserSidePanel({
 								<label htmlFor="role" className="block text-[length:var(--text-sm)] font-medium">
 									Role
 								</label>
-								<select
-									id="role"
-									className={cn(selectClassName, 'mt-1')}
-									{...createForm.register('role')}
-								>
-									{ROLES.map((r) => (
-										<option key={r} value={r}>
-											{ROLE_LABELS[r]}
-										</option>
-									))}
-								</select>
+								<Controller
+									control={createForm.control}
+									name="role"
+									render={({ field }) => (
+										<Select value={field.value} onValueChange={field.onChange}>
+											<SelectTrigger id="role" className="mt-1">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												{ROLES.map((r) => (
+													<SelectItem key={r} value={r}>
+														{ROLE_LABELS[r]}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
 							</div>
 						</form>
 					) : (
@@ -218,17 +219,24 @@ export function UserSidePanel({
 								>
 									Role
 								</label>
-								<select
-									id="edit-role"
-									className={cn(selectClassName, 'mt-1')}
-									{...editForm.register('role')}
-								>
-									{ROLES.map((r) => (
-										<option key={r} value={r}>
-											{ROLE_LABELS[r]}
-										</option>
-									))}
-								</select>
+								<Controller
+									control={editForm.control}
+									name="role"
+									render={({ field }) => (
+										<Select value={field.value} onValueChange={field.onChange}>
+											<SelectTrigger id="edit-role" className="mt-1">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												{ROLES.map((r) => (
+													<SelectItem key={r} value={r}>
+														{ROLE_LABELS[r]}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
 							</div>
 							<div className="flex items-center gap-3">
 								<input

@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import type { BandMapping, Department } from '../../hooks/use-reference-data';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 const BAND_OPTIONS: { value: BandMapping; label: string }[] = [
 	{ value: 'MATERNELLE', label: 'Maternelle' },
@@ -176,21 +177,24 @@ export function DepartmentSidePanel({
 							<label htmlFor="dept-band" className="block text-[length:var(--text-sm)] font-medium">
 								Band Mapping
 							</label>
-							<select
-								id="dept-band"
-								className={cn(
-									'mt-1 flex h-9 w-full rounded-[var(--radius-md)] border',
-									'border-[var(--workspace-border)] bg-[var(--workspace-bg-card)] px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
-									'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
+							<Controller
+								control={form.control}
+								name="bandMapping"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange}>
+										<SelectTrigger id="dept-band" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{BAND_OPTIONS.map((opt) => (
+												<SelectItem key={opt.value} value={opt.value}>
+													{opt.label}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								)}
-								{...form.register('bandMapping')}
-							>
-								{BAND_OPTIONS.map((opt) => (
-									<option key={opt.value} value={opt.value}>
-										{opt.label}
-									</option>
-								))}
-							</select>
+							/>
 						</div>
 					</form>
 				</div>
