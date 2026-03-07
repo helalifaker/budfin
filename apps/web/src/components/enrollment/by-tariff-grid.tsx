@@ -112,7 +112,7 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 	const { data: gradeLevelData } = useGradeLevels();
 	const putDetail = usePutDetail(versionId);
 
-	const detailEntries = detailData?.entries ?? [];
+	const detailEntries = useMemo(() => detailData?.entries ?? [], [detailData]);
 
 	const rows: TariffRow[] = useMemo(() => {
 		const gradeLevels = gradeLevelData?.gradeLevels ?? [];
