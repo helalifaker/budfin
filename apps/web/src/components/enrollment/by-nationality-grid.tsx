@@ -38,11 +38,11 @@ export function ByNationalityGrid({ versionId, bandFilter }: Props) {
 	const { data: detailData, isLoading } = useDetail(versionId);
 	const { data: gradeLevelData } = useGradeLevels();
 
-	const gradeLevels = gradeLevelData?.gradeLevels ?? [];
-	const headcountEntries = headcountData?.entries ?? [];
-	const detailEntries = detailData?.entries ?? [];
-
 	const rows: NationalityRow[] = useMemo(() => {
+		const gradeLevels = gradeLevelData?.gradeLevels ?? [];
+		const headcountEntries = headcountData?.entries ?? [];
+		const detailEntries = detailData?.entries ?? [];
+
 		const filtered =
 			bandFilter === 'ALL' ? gradeLevels : gradeLevels.filter((gl) => gl.band === bandFilter);
 
@@ -78,7 +78,7 @@ export function ByNationalityGrid({ versionId, bandFilter }: Props) {
 					matches: total === stage1Total,
 				};
 			});
-	}, [gradeLevels, detailEntries, headcountEntries, bandFilter]);
+	}, [gradeLevelData, detailData, headcountData, bandFilter]);
 
 	const mismatchCount = useMemo(
 		() => rows.filter((r) => !r.matches && r.stage1Total > 0).length,

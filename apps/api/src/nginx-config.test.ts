@@ -40,15 +40,15 @@ describe('Nginx configuration', () => {
 	});
 });
 
-describe('Docker Compose dev override', () => {
-	const devComposePath = resolve(__dirname, '../../../docker-compose.dev.yml');
+describe('Docker Compose', () => {
+	const composePath = resolve(__dirname, '../../../docker-compose.yml');
 
-	it('docker-compose.dev.yml exists', () => {
-		expect(existsSync(devComposePath)).toBe(true);
+	it('docker-compose.yml exists', () => {
+		expect(existsSync(composePath)).toBe(true);
 	});
 
 	it('exposes db port 5432 for development', () => {
-		const content = readFileSync(devComposePath, 'utf-8');
+		const content = readFileSync(composePath, 'utf-8');
 		expect(content).toContain("'5432:5432'");
 	});
 });

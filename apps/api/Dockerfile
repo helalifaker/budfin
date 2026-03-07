@@ -42,7 +42,7 @@ USER budfin
 EXPOSE 3001
 CMD ["node", "dist/index.js"]
 
-# Development target (used by docker-compose.dev.yml)
+# Development target (used by docker-compose.yml)
 FROM deps AS development
 COPY apps/api/src apps/api/src
 COPY apps/api/tsconfig.json apps/api/

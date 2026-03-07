@@ -112,10 +112,10 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 	const { data: gradeLevelData } = useGradeLevels();
 	const putDetail = usePutDetail(versionId);
 
-	const gradeLevels = gradeLevelData?.gradeLevels ?? [];
-	const detailEntries = detailData?.entries ?? [];
-
 	const rows: TariffRow[] = useMemo(() => {
+		const gradeLevels = gradeLevelData?.gradeLevels ?? [];
+		const detailEntries = detailData?.entries ?? [];
+
 		const filtered =
 			bandFilter === 'ALL' ? gradeLevels : gradeLevels.filter((gl) => gl.band === bandFilter);
 
@@ -166,7 +166,7 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 						autresPlein,
 				};
 			});
-	}, [gradeLevels, detailEntries, bandFilter]);
+	}, [gradeLevelData, detailData, bandFilter]);
 
 	const handleCellSave = useCallback(
 		(gradeLevel: string, nationality: string, tariff: string, value: number) => {
@@ -197,25 +197,25 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 		[isReadOnly, putDetail, academicPeriod, detailEntries]
 	);
 
-	const makeTariffCol = (
-		accessor: keyof TariffRow,
-		header: string,
-		nationality: string,
-		tariff: string
-	) =>
-		columnHelper.accessor(accessor as 'francaisRp', {
-			header,
-			cell: (info) => (
-				<EditableTariffCell
-					value={info.getValue() as number}
-					isReadOnly={isReadOnly}
-					onSave={(val) => handleCellSave(info.row.original.gradeLevel, nationality, tariff, val)}
-				/>
-			),
-		});
+	const columns = useMemo(() => {
+		const makeTariffCol = (
+			accessor: keyof TariffRow,
+			header: string,
+			nationality: string,
+			tariff: string
+		) =>
+			columnHelper.accessor(accessor as 'francaisRp', {
+				header,
+				cell: (info) => (
+					<EditableTariffCell
+						value={info.getValue() as number}
+						isReadOnly={isReadOnly}
+						onSave={(val) => handleCellSave(info.row.original.gradeLevel, nationality, tariff, val)}
+					/>
+				),
+			});
 
-	const columns = useMemo(
-		() => [
+		return [
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
 				cell: (info) => <span className="font-medium text-slate-900">{info.getValue()}</span>,
@@ -233,9 +233,8 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 				header: 'Total',
 				cell: (info) => <span className="font-medium tabular-nums">{info.getValue()}</span>,
 			}),
-		],
-		[isReadOnly, handleCellSave]
-	);
+		];
+	}, [isReadOnly, handleCellSave]);
 
 	const table = useReactTable({
 		data: rows,

@@ -15,6 +15,61 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: development
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://app_user:${DB_PASSWORD:-changeme}@db:5432/budfindb
+      LOG_LEVEL: debug
+      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
+      JWT_PUBLIC_KEY_PATH: /run/secrets/jwt_public_key
+      SALARY_ENCRYPTION_KEY: /run/secrets/salary_encryption_key
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - '3001:3001'
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/prisma:/app/apps/api/prisma
+      - ./apps/api/.env:/app/apps/api/.env:ro
+      - ./packages/types/src:/app/packages/types/src
+    secrets:
+      - jwt_private_key
+      - jwt_public_key
+      - salary_encryption_key
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      VITE_API_URL: http://localhost:3001
+      API_PROXY_TARGET: http://api:3001
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/index.html:/app/apps/web/index.html
+      - ./packages/types/src:/app/packages/types/src
+    depends_on:
+      - api
+    restart: unless-stopped
+
+secrets:
+  jwt_private_key:
+    file: ./secrets/jwt_private_key.pem
+  jwt_public_key:
+    file: ./secrets/jwt_public_key.pem
+  salary_encryption_key:
+    file: ./secrets/salary_encryption_key.txt
 
 volumes:
   pgdata:
