@@ -18,6 +18,7 @@ import {
 import { cn } from '../lib/cn';
 import { useAuthStore } from '../stores/auth-store';
 import { ContextBar } from '../components/context-bar';
+import { Button } from '../components/ui/button';
 
 interface NavItem {
 	to: string;
@@ -121,13 +122,14 @@ export function ManagementShell() {
 					<span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
 						{user?.role}
 					</span>
-					<button
-						type="button"
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={() => logout()}
 						className="text-sm text-red-600 hover:text-red-700"
 					>
 						Logout
-					</button>
+					</Button>
 				</header>
 				{showContextBar && <ContextBar />}
 				<main className="flex-1 p-6">

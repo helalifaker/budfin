@@ -157,7 +157,7 @@ export function ByNationalityGrid({ versionId, bandFilter }: Props) {
 			)}
 			<div className="overflow-x-auto rounded-lg border">
 				<table
-					role="grid"
+					role="table"
 					className="w-full text-left text-sm"
 					aria-label="Enrollment by nationality"
 				>
