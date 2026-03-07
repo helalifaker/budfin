@@ -174,10 +174,10 @@ export function UsersPage() {
 								<button
 									type="button"
 									className="inline-flex h-8 w-8 items-center justify-center
-										rounded-md hover:bg-slate-100"
+										rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
 									aria-label={`Actions for ${user.email}`}
 								>
-									<MoreHorizontal className="h-4 w-4 text-slate-500" />
+									<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
 								</button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
@@ -230,7 +230,7 @@ export function UsersPage() {
 	return (
 		<div className="p-6">
 			<div className="flex items-center justify-between pb-4">
-				<h1 className="text-xl font-semibold">User Management</h1>
+				<h1 className="text-[length:var(--text-xl)] font-semibold">User Management</h1>
 				<Button
 					type="button"
 					onClick={() => {
@@ -243,13 +243,16 @@ export function UsersPage() {
 				</Button>
 			</div>
 
-			<div className="overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-sm">
-					<thead className="border-b bg-slate-50">
+			<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
+				<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
+					<thead className="border-b bg-[var(--workspace-bg-muted)]">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+									<th
+										key={header.id}
+										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -261,7 +264,10 @@ export function UsersPage() {
 							<TableSkeleton rows={5} cols={8} />
 						) : (
 							table.getRowModel().rows.map((row) => (
-								<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+								<tr
+									key={row.id}
+									className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+								>
 									{row.getVisibleCells().map((cell) => (
 										<td key={cell.id} className="px-4 py-3">
 											{flexRender(cell.column.columnDef.cell, cell.getContext())}

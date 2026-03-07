@@ -23,10 +23,10 @@ function formatDate(iso: string): string {
 }
 
 const BAND_STYLES: Record<GradeBand, string> = {
-	MATERNELLE: 'bg-pink-100 text-pink-800',
-	ELEMENTAIRE: 'bg-blue-100 text-blue-800',
-	COLLEGE: 'bg-green-100 text-green-800',
-	LYCEE: 'bg-purple-100 text-purple-800',
+	MATERNELLE: 'bg-pink-50 text-pink-700',
+	ELEMENTAIRE: 'bg-[var(--accent-50)] text-[var(--accent-700)]',
+	COLLEGE: 'bg-emerald-50 text-emerald-700',
+	LYCEE: 'bg-purple-50 text-purple-700',
 };
 
 const ayColumnHelper = createColumnHelper<AcademicYear>();
@@ -106,7 +106,7 @@ export function AcademicPage() {
 				cell: ({ row }) => (
 					<button
 						type="button"
-						className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+						className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
 						aria-label={`Edit ${row.original.fiscalYear}`}
 						onClick={(e) => {
 							e.stopPropagation();
@@ -114,7 +114,7 @@ export function AcademicPage() {
 							setAyPanelOpen(true);
 						}}
 					>
-						<Pencil className="h-4 w-4 text-slate-500" />
+						<Pencil className="h-4 w-4 text-[var(--text-muted)]" />
 					</button>
 				),
 			}),
@@ -139,7 +139,7 @@ export function AcademicPage() {
 					return (
 						<span
 							className={cn(
-								'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+								'inline-block rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 								BAND_STYLES[band]
 							)}
 							aria-label={`Band: ${band}`}
@@ -175,7 +175,7 @@ export function AcademicPage() {
 				cell: ({ row }) => (
 					<button
 						type="button"
-						className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+						className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
 						aria-label={`Edit ${row.original.gradeName}`}
 						onClick={(e) => {
 							e.stopPropagation();
@@ -183,7 +183,7 @@ export function AcademicPage() {
 							setGlPanelOpen(true);
 						}}
 					>
-						<Pencil className="h-4 w-4 text-slate-500" />
+						<Pencil className="h-4 w-4 text-[var(--text-muted)]" />
 					</button>
 				),
 			}),
@@ -208,7 +208,7 @@ export function AcademicPage() {
 			{/* Academic Years Section */}
 			<section>
 				<div className="flex items-center justify-between pb-4">
-					<h2 className="text-xl font-semibold">Academic Years</h2>
+					<h2 className="text-[length:var(--text-xl)] font-semibold">Academic Years</h2>
 					{isAdmin && (
 						<Button
 							type="button"
@@ -222,13 +222,16 @@ export function AcademicPage() {
 					)}
 				</div>
 
-				<div className="overflow-x-auto rounded-lg border">
-					<table role="table" className="w-full text-left text-sm">
-						<thead className="border-b bg-slate-50">
+				<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
+					<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
+						<thead className="border-b bg-[var(--workspace-bg-muted)]">
 							{ayTable.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+										<th
+											key={header.id}
+											className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+										>
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
@@ -240,7 +243,10 @@ export function AcademicPage() {
 								<TableSkeleton rows={5} cols={ayColumns.length} />
 							) : ayTable.getRowModel().rows.length === 0 ? (
 								<tr>
-									<td colSpan={ayColumns.length} className="px-4 py-6 text-center text-slate-500">
+									<td
+										colSpan={ayColumns.length}
+										className="px-4 py-6 text-center text-[var(--text-muted)]"
+									>
 										No academic years found
 									</td>
 								</tr>
@@ -248,7 +254,7 @@ export function AcademicPage() {
 								ayTable.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
-										className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
+										className="cursor-pointer border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
 										onClick={() => {
 											setEditingAy(row.original);
 											setAyPanelOpen(true);
@@ -270,16 +276,19 @@ export function AcademicPage() {
 			{/* Grade Levels Section */}
 			<section>
 				<div className="pb-4">
-					<h2 className="text-xl font-semibold">Grade Levels</h2>
+					<h2 className="text-[length:var(--text-xl)] font-semibold">Grade Levels</h2>
 				</div>
 
-				<div className="overflow-x-auto rounded-lg border">
-					<table role="table" className="w-full text-left text-sm">
-						<thead className="border-b bg-slate-50">
+				<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
+					<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
+						<thead className="border-b bg-[var(--workspace-bg-muted)]">
 							{glTable.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+										<th
+											key={header.id}
+											className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+										>
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
@@ -291,7 +300,10 @@ export function AcademicPage() {
 								<TableSkeleton rows={10} cols={glColumns.length} />
 							) : glTable.getRowModel().rows.length === 0 ? (
 								<tr>
-									<td colSpan={glColumns.length} className="px-4 py-6 text-center text-slate-500">
+									<td
+										colSpan={glColumns.length}
+										className="px-4 py-6 text-center text-[var(--text-muted)]"
+									>
 										No grade levels found
 									</td>
 								</tr>
@@ -299,7 +311,7 @@ export function AcademicPage() {
 								glTable.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
-										className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
+										className="cursor-pointer border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
 										onClick={() => {
 											setEditingGl(row.original);
 											setGlPanelOpen(true);

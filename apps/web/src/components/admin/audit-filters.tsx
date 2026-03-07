@@ -33,9 +33,9 @@ const OPERATIONS = [
 const ENTITIES = ['users', 'refresh_tokens', 'system_config'];
 
 const selectClassName = cn(
-	'flex h-9 w-full rounded-md border border-slate-300 bg-white',
-	'px-3 py-2 text-sm text-slate-900',
-	'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+	'flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
+	'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
+	'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
 	'disabled:cursor-not-allowed disabled:opacity-50'
 );
 
@@ -63,7 +63,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 	return (
 		<div className="flex flex-wrap items-end gap-3 pb-4">
 			<div>
-				<label htmlFor="filter-from" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-from"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					From
 				</label>
 				<Input
@@ -74,7 +77,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label htmlFor="filter-to" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-to"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					To
 				</label>
 				<Input
@@ -85,7 +91,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label htmlFor="filter-user" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-user"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					User ID
 				</label>
 				<Input
@@ -97,7 +106,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label htmlFor="filter-action" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-action"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					Action
 				</label>
 				<select
@@ -114,7 +126,10 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				</select>
 			</div>
 			<div>
-				<label htmlFor="filter-entity" className="block text-xs font-medium text-slate-600">
+				<label
+					htmlFor="filter-entity"
+					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+				>
 					Entity
 				</label>
 				<select

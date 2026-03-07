@@ -146,7 +146,10 @@ export function SettingsPage() {
 				</div>
 				<div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
 					{Array.from({ length: 3 }).map((_, i) => (
-						<div key={i} className="rounded-lg border border-slate-200 bg-white p-6">
+						<div
+							key={i}
+							className="rounded-[var(--radius-lg)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)] p-6"
+						>
 							<Skeleton className="h-5 w-24" />
 							<Skeleton className="mt-2 h-4 w-48" />
 							<div className="mt-4 space-y-3">
@@ -167,7 +170,7 @@ export function SettingsPage() {
 	return (
 		<div className="p-6">
 			<div className="flex items-center justify-between pb-6">
-				<h1 className="text-xl font-semibold">System Settings</h1>
+				<h1 className="text-[length:var(--text-xl)] font-semibold">System Settings</h1>
 				<Button
 					type="button"
 					disabled={!hasChanges}

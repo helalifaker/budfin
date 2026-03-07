@@ -91,12 +91,14 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 		() => [
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
-				cell: (info) => <span className="font-medium text-slate-900">{info.getValue()}</span>,
+				cell: (info) => (
+					<span className="font-medium text-[var(--text-primary)]">{info.getValue()}</span>
+				),
 			}),
 			columnHelper.accessor('francais', {
 				header: 'Francais',
 				cell: (info) => (
-					<span className="inline-block w-16 px-2 py-1 text-right text-sm tabular-nums">
+					<span className="inline-block w-16 px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums">
 						{info.getValue()}
 					</span>
 				),
@@ -104,7 +106,7 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 			columnHelper.accessor('nationaux', {
 				header: 'Nationaux',
 				cell: (info) => (
-					<span className="inline-block w-16 px-2 py-1 text-right text-sm tabular-nums">
+					<span className="inline-block w-16 px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums">
 						{info.getValue()}
 					</span>
 				),
@@ -112,7 +114,7 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 			columnHelper.accessor('autres', {
 				header: 'Autres',
 				cell: (info) => (
-					<span className="inline-block w-16 px-2 py-1 text-right text-sm tabular-nums">
+					<span className="inline-block w-16 px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums">
 						{info.getValue()}
 					</span>
 				),
@@ -126,10 +128,10 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 				cell: (info) => {
 					const row = info.row.original;
 					if (row.stage1Total === 0) {
-						return <span className="text-slate-300">-</span>;
+						return <span className="text-[var(--text-muted)]">-</span>;
 					}
 					return info.getValue() ? (
-						<Check className="h-4 w-4 text-green-600" aria-label="Totals match" />
+						<Check className="h-4 w-4 text-[var(--color-success)]" aria-label="Totals match" />
 					) : (
 						<AlertTriangle className="h-4 w-4 text-amber-500" aria-label="Totals do not match" />
 					);
@@ -137,7 +139,9 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 			}),
 			columnHelper.accessor('stage1Total', {
 				header: 'Stage 1',
-				cell: (info) => <span className="text-slate-500 tabular-nums">{info.getValue()}</span>,
+				cell: (info) => (
+					<span className="text-[var(--text-muted)] tabular-nums">{info.getValue()}</span>
+				),
 			}),
 		],
 		[]
@@ -152,22 +156,25 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 	return (
 		<div>
 			{mismatchCount > 0 && (
-				<div className="mb-2 flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+				<div className="mb-2 flex items-center gap-2 rounded-[var(--radius-md)] bg-amber-50 px-3 py-2 text-[length:var(--text-sm)] text-amber-800">
 					<AlertTriangle className="h-4 w-4" />
 					{mismatchCount} grade{mismatchCount > 1 ? 's' : ''} with nationality total mismatch
 				</div>
 			)}
-			<div className="overflow-x-auto rounded-lg border">
+			<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
 				<table
 					role="table"
-					className="w-full text-left text-sm"
+					className="w-full text-left text-[length:var(--text-sm)]"
 					aria-label="Enrollment by nationality"
 				>
-					<thead className="border-b bg-slate-50">
+					<thead className="border-b bg-[var(--workspace-bg-muted)]">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+									<th
+										key={header.id}
+										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -182,7 +189,7 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 								<tr
 									key={row.id}
 									className={cn(
-										'border-b last:border-0 hover:bg-slate-50',
+										'border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]',
 										!row.original.matches && row.original.stage1Total > 0 && 'bg-amber-50/30'
 									)}
 								>

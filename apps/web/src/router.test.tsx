@@ -4,23 +4,28 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { routes } from './router';
 import { useAuthStore } from './stores/auth-store';
 
-vi.mock('./pages/admin/users', () => ({
-	UsersPage: () => <div>Users Page</div>,
+// Mock page components
+vi.mock('./pages/planning/dashboard', () => ({
+	DashboardPage: () => <div>Dashboard Page</div>,
 }));
 
-vi.mock('./pages/admin/audit', () => ({
-	AuditPage: () => <div>Audit Page</div>,
+vi.mock('./pages/planning/enrollment', () => ({
+	EnrollmentPage: () => <div>Enrollment Page</div>,
 }));
 
-vi.mock('./pages/admin/settings', () => ({
-	SettingsPage: () => <div>Settings Page</div>,
+vi.mock('./pages/planning/revenue', () => ({
+	RevenuePage: () => <div>Revenue Page</div>,
 }));
 
-vi.mock('./pages/versions/versions', () => ({
+vi.mock('./pages/placeholder', () => ({
+	PlaceholderPage: ({ title }: { title: string }) => <div>{title}</div>,
+}));
+
+vi.mock('./pages/management/versions', () => ({
 	VersionsPage: () => <div>Versions Page</div>,
 }));
 
-vi.mock('./pages/versions/fiscal-periods', () => ({
+vi.mock('./pages/management/fiscal-periods', () => ({
 	FiscalPeriodsPage: () => <div>Fiscal Periods Page</div>,
 }));
 
@@ -39,6 +44,29 @@ vi.mock('./pages/master-data/reference', () => ({
 vi.mock('./pages/master-data/assumptions', () => ({
 	AssumptionsPage: () => <div>Assumptions Page</div>,
 }));
+
+vi.mock('./pages/admin/users', () => ({
+	UsersPage: () => <div>Users Page</div>,
+}));
+
+vi.mock('./pages/admin/audit', () => ({
+	AuditPage: () => <div>Audit Page</div>,
+}));
+
+vi.mock('./pages/admin/settings', () => ({
+	SettingsPage: () => <div>Settings Page</div>,
+}));
+
+// Mock layout shells to render Outlet directly
+vi.mock('./layouts/planning-shell', async () => {
+	const { Outlet } = await import('react-router');
+	return { PlanningShell: () => <Outlet /> };
+});
+
+vi.mock('./layouts/management-shell', async () => {
+	const { Outlet } = await import('react-router');
+	return { ManagementShell: () => <Outlet /> };
+});
 
 function renderRoute(
 	initialEntry: string,
@@ -85,14 +113,14 @@ describe('router access control', () => {
 		expect(screen.getByRole('heading', { name: 'Admin' })).toBeDefined();
 	});
 
-	it('redirects non-admin users at / to /master-data/accounts', async () => {
+	it('redirects non-admin users at / to /planning', async () => {
 		renderRoute('/', {
 			id: 2,
 			email: 'editor@budfin.app',
 			role: 'Editor',
 		});
 
-		expect(await screen.findByText('Accounts Page')).toBeDefined();
+		expect(await screen.findByText('Dashboard Page')).toBeDefined();
 		expect(screen.getByRole('heading', { name: 'Master Data' })).toBeDefined();
 		expect(screen.queryByRole('heading', { name: 'Admin' })).toBeNull();
 	});
@@ -116,7 +144,7 @@ describe('router access control', () => {
 			role: 'BudgetOwner',
 		});
 
-		expect(await screen.findByText('Accounts Page')).toBeDefined();
+		expect(await screen.findByText('Dashboard Page')).toBeDefined();
 		expect(screen.queryByText('Users Page')).toBeNull();
 		expect(screen.queryByRole('heading', { name: 'Admin' })).toBeNull();
 	});

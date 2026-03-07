@@ -41,15 +41,15 @@ import { toast } from '../../components/ui/toast-state';
 const columnHelper = createColumnHelper<Account>();
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-	REVENUE: 'bg-blue-100 text-blue-800',
-	EXPENSE: 'bg-red-100 text-red-800',
-	ASSET: 'bg-green-100 text-green-800',
-	LIABILITY: 'bg-yellow-100 text-yellow-800',
+	REVENUE: 'bg-[var(--accent-50)] text-[var(--accent-700)]',
+	EXPENSE: 'bg-red-50 text-red-700',
+	ASSET: 'bg-emerald-50 text-emerald-700',
+	LIABILITY: 'bg-amber-50 text-amber-700',
 };
 
 const CENTER_TYPE_BADGE_COLORS: Record<string, string> = {
-	PROFIT_CENTER: 'bg-purple-100 text-purple-800',
-	COST_CENTER: 'bg-orange-100 text-orange-800',
+	PROFIT_CENTER: 'bg-purple-50 text-purple-700',
+	COST_CENTER: 'bg-orange-50 text-orange-700',
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -202,7 +202,7 @@ export function AccountsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+								'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 								TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Type: ${TYPE_LABELS[value]}`}
@@ -222,7 +222,7 @@ export function AccountsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+								'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 								CENTER_TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Center type: ${CENTER_TYPE_LABELS[value]}`}
@@ -239,11 +239,16 @@ export function AccountsPage() {
 					const isActive = value === 'ACTIVE';
 					return (
 						<span
-							className={cn('inline-flex items-center gap-1.5 text-xs font-medium')}
+							className={cn(
+								'inline-flex items-center gap-1.5 text-[length:var(--text-xs)] font-medium'
+							)}
 							aria-label={`Status: ${isActive ? 'Active' : 'Inactive'}`}
 						>
 							<span
-								className={cn('h-2 w-2 rounded-full', isActive ? 'bg-green-500' : 'bg-slate-400')}
+								className={cn(
+									'h-2 w-2 rounded-full',
+									isActive ? 'bg-[var(--color-success)]' : 'bg-[var(--text-muted)]'
+								)}
 							/>
 							{isActive ? 'Active' : 'Inactive'}
 						</span>
@@ -262,10 +267,10 @@ export function AccountsPage() {
 										<DropdownMenuTrigger asChild>
 											<button
 												type="button"
-												className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+												className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
 												aria-label={`Actions for ${account.accountCode}`}
 											>
-												<MoreHorizontal className="h-4 w-4 text-slate-500" />
+												<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
 											</button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent align="end">
@@ -302,7 +307,7 @@ export function AccountsPage() {
 		<div className="p-6">
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-xl font-semibold">Chart of Accounts</h1>
+				<h1 className="mr-auto text-[length:var(--text-xl)] font-semibold">Chart of Accounts</h1>
 
 				<Input
 					type="search"
@@ -317,9 +322,9 @@ export function AccountsPage() {
 					value={typeFilter}
 					onChange={(e) => setTypeFilter(e.target.value)}
 					className={cn(
-						'flex h-9 rounded-md border border-slate-300 bg-white',
-						'px-3 py-2 text-sm text-slate-900',
-						'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+						'flex h-9 rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
+						'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
+						'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
 					)}
 					aria-label="Filter by type"
 				>
@@ -334,9 +339,9 @@ export function AccountsPage() {
 					value={centerTypeFilter}
 					onChange={(e) => setCenterTypeFilter(e.target.value)}
 					className={cn(
-						'flex h-9 rounded-md border border-slate-300 bg-white',
-						'px-3 py-2 text-sm text-slate-900',
-						'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+						'flex h-9 rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
+						'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
+						'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
 					)}
 					aria-label="Filter by center type"
 				>
@@ -349,9 +354,9 @@ export function AccountsPage() {
 					value={statusFilter}
 					onChange={(e) => setStatusFilter(e.target.value)}
 					className={cn(
-						'flex h-9 rounded-md border border-slate-300 bg-white',
-						'px-3 py-2 text-sm text-slate-900',
-						'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+						'flex h-9 rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
+						'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
+						'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
 					)}
 					aria-label="Filter by status"
 				>
@@ -374,13 +379,16 @@ export function AccountsPage() {
 			</div>
 
 			{/* Data table */}
-			<div className="overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-sm">
-					<thead className="border-b bg-slate-50">
+			<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
+				<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
+					<thead className="border-b bg-[var(--workspace-bg-muted)]">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
+									<th
+										key={header.id}
+										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
+									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -394,14 +402,17 @@ export function AccountsPage() {
 							<tr>
 								<td
 									colSpan={columns.length}
-									className="px-4 py-8 text-center text-sm text-slate-500"
+									className="px-4 py-8 text-center text-[length:var(--text-sm)] text-[var(--text-muted)]"
 								>
 									No accounts found
 								</td>
 							</tr>
 						) : (
 							table.getRowModel().rows.map((row) => (
-								<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
+								<tr
+									key={row.id}
+									className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+								>
 									{row.getVisibleCells().map((cell) => (
 										<td key={cell.id} className="px-4 py-3">
 											{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -467,7 +478,7 @@ export function AccountsPage() {
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-red-600 hover:bg-red-700"
+							className="bg-[var(--color-error)] hover:bg-red-700"
 							disabled={deleteConfirmCode !== deleteTarget?.accountCode || deleteMutation.isPending}
 							onClick={handleDelete}
 						>

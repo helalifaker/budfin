@@ -120,9 +120,9 @@ export function UserSidePanel({
 	if (!open) return null;
 
 	const selectClassName = cn(
-		'flex h-9 w-full rounded-md border border-slate-300 bg-white',
-		'px-3 py-2 text-sm text-slate-900',
-		'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+		'flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
+		'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
+		'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
 		'disabled:cursor-not-allowed disabled:opacity-50'
 	);
 
@@ -136,12 +136,12 @@ export function UserSidePanel({
 				aria-label={mode === 'create' ? 'Add User' : 'Edit User'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-white shadow-xl',
+					'bg-[var(--workspace-bg-card)] shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-lg font-semibold">
+					<h2 className="text-[length:var(--text-lg)] font-semibold">
 						{mode === 'create' ? 'Add User' : `Edit ${user?.email ?? 'User'}`}
 					</h2>
 				</div>
@@ -154,7 +154,7 @@ export function UserSidePanel({
 							className="space-y-4"
 						>
 							<div>
-								<label htmlFor="email" className="block text-sm font-medium">
+								<label htmlFor="email" className="block text-[length:var(--text-sm)] font-medium">
 									Email
 								</label>
 								<Input
@@ -164,13 +164,16 @@ export function UserSidePanel({
 									{...createForm.register('email')}
 								/>
 								{createForm.formState.errors.email && (
-									<p className="mt-1 text-xs text-red-600">
+									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
 										{createForm.formState.errors.email.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label htmlFor="password" className="block text-sm font-medium">
+								<label
+									htmlFor="password"
+									className="block text-[length:var(--text-sm)] font-medium"
+								>
 									Password
 								</label>
 								<Input
@@ -180,13 +183,13 @@ export function UserSidePanel({
 									{...createForm.register('password')}
 								/>
 								{createForm.formState.errors.password && (
-									<p className="mt-1 text-xs text-red-600">
+									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
 										{createForm.formState.errors.password.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label htmlFor="role" className="block text-sm font-medium">
+								<label htmlFor="role" className="block text-[length:var(--text-sm)] font-medium">
 									Role
 								</label>
 								<select
@@ -209,7 +212,10 @@ export function UserSidePanel({
 							className="space-y-4"
 						>
 							<div>
-								<label htmlFor="edit-role" className="block text-sm font-medium">
+								<label
+									htmlFor="edit-role"
+									className="block text-[length:var(--text-sm)] font-medium"
+								>
 									Role
 								</label>
 								<select
@@ -228,10 +234,10 @@ export function UserSidePanel({
 								<input
 									id="is-active"
 									type="checkbox"
-									className="h-4 w-4 rounded"
+									className="h-4 w-4 rounded-[var(--radius-sm)]"
 									{...editForm.register('is_active')}
 								/>
-								<label htmlFor="is-active" className="text-sm font-medium">
+								<label htmlFor="is-active" className="text-[length:var(--text-sm)] font-medium">
 									Active
 								</label>
 							</div>
@@ -239,10 +245,10 @@ export function UserSidePanel({
 								<input
 									id="force-reset"
 									type="checkbox"
-									className="h-4 w-4 rounded"
+									className="h-4 w-4 rounded-[var(--radius-sm)]"
 									{...editForm.register('force_password_reset')}
 								/>
-								<label htmlFor="force-reset" className="text-sm font-medium">
+								<label htmlFor="force-reset" className="text-[length:var(--text-sm)] font-medium">
 									Force Password Reset
 								</label>
 							</div>

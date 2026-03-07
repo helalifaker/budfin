@@ -74,7 +74,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 				</DialogHeader>
 
 				{isActual && (
-					<div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+					<div className="rounded-[var(--radius-md)] bg-amber-50 px-4 py-3 text-[length:var(--text-sm)] text-amber-800">
 						Actual versions cannot be cloned.
 					</div>
 				)}
@@ -83,18 +83,23 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 					<>
 						{progress && (
 							<div>
-								<p className="mb-1 text-xs text-slate-500">Copying version data...</p>
-								<div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-									<div className="h-full animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-full bg-blue-600" />
+								<p className="mb-1 text-[length:var(--text-xs)] text-[var(--text-muted)]">
+									Copying version data...
+								</p>
+								<div className="h-1.5 w-full overflow-hidden rounded-[var(--radius-sm)] bg-[var(--workspace-border)]">
+									<div className="h-full animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-[var(--radius-sm)] bg-[var(--accent-500)]" />
 								</div>
 							</div>
 						)}
 
 						<form id="clone-version-form" onSubmit={handleSubmit} className="space-y-4">
 							<div>
-								<label htmlFor="clone-name" className="block text-sm font-medium">
+								<label
+									htmlFor="clone-name"
+									className="block text-[length:var(--text-sm)] font-medium"
+								>
 									Name{' '}
-									<span aria-hidden="true" className="text-red-500">
+									<span aria-hidden="true" className="text-[var(--color-error)]">
 										*
 									</span>
 								</label>
@@ -103,25 +108,34 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 									type="text"
 									aria-required="true"
 									maxLength={100}
-									className={cn('mt-1', form.formState.errors.name && 'border-red-400')}
+									className={cn(
+										'mt-1',
+										form.formState.errors.name && 'border-[var(--color-error)]'
+									)}
 									{...form.register('name')}
 								/>
 								{form.formState.errors.name && (
-									<p className="mt-1 text-xs text-red-600" role="alert">
+									<p
+										className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]"
+										role="alert"
+									>
 										{form.formState.errors.name.message}
 									</p>
 								)}
 							</div>
 
 							<div>
-								<label htmlFor="clone-description" className="block text-sm font-medium">
+								<label
+									htmlFor="clone-description"
+									className="block text-[length:var(--text-sm)] font-medium"
+								>
 									Description
 								</label>
 								<textarea
 									id="clone-description"
 									rows={2}
 									maxLength={500}
-									className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+									className="mt-1 w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] px-3 py-2 text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2"
 									{...form.register('description')}
 								/>
 							</div>

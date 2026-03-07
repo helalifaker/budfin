@@ -11,21 +11,21 @@ export type VersionDetailPanelProps = {
 };
 
 const STATUS_BADGE_COLORS: Record<BudgetVersion['status'], string> = {
-	Draft: 'bg-slate-100 text-slate-700',
+	Draft: 'bg-[var(--workspace-bg-muted)] text-[var(--text-primary)]',
 	Published: 'bg-blue-100 text-blue-800',
 	Locked: 'bg-violet-100 text-violet-800',
-	Archived: 'bg-slate-100 text-slate-500',
+	Archived: 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
 };
 
 const TYPE_DOT_COLORS: Record<BudgetVersion['type'], string> = {
-	Budget: 'bg-blue-500',
-	Forecast: 'bg-amber-500',
-	Actual: 'bg-green-500',
+	Budget: 'bg-[var(--version-budget)]',
+	Forecast: 'bg-[var(--version-forecast)]',
+	Actual: 'bg-[var(--version-actual)]',
 };
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
 	return (
-		<h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+		<h3 className="mb-2 text-[length:var(--text-xs)] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
 			{children}
 		</h3>
 	);
@@ -34,8 +34,10 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div>
-			<dt className="text-sm text-slate-500">{label}</dt>
-			<dd className="text-sm font-medium text-slate-900">{children}</dd>
+			<dt className="text-[length:var(--text-sm)] text-[var(--text-muted)]">{label}</dt>
+			<dd className="text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]">
+				{children}
+			</dd>
 		</div>
 	);
 }
@@ -90,19 +92,19 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 				aria-labelledby={titleId}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-white shadow-xl',
+					'bg-[var(--workspace-bg-card)] shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				{/* Header */}
 				<div className="border-b px-6 py-4">
 					<div className="flex items-center gap-3">
-						<h2 id={titleId} className="text-lg font-semibold">
+						<h2 id={titleId} className="text-[length:var(--text-lg)] font-semibold">
 							{version.name}
 						</h2>
 						<span
 							className={cn(
-								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+								'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 								STATUS_BADGE_COLORS[version.status]
 							)}
 						>
@@ -110,7 +112,9 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 						</span>
 					</div>
 					{version.description && (
-						<p className="mt-1 text-sm text-slate-500">{version.description}</p>
+						<p className="mt-1 text-[length:var(--text-sm)] text-[var(--text-muted)]">
+							{version.description}
+						</p>
 					)}
 				</div>
 
@@ -125,7 +129,10 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 							<Field label="Type">
 								<span className="inline-flex items-center gap-1.5">
 									<span
-										className={cn('h-2 w-2 rounded-full', TYPE_DOT_COLORS[version.type])}
+										className={cn(
+											'h-2 w-2 rounded-[var(--radius-sm)]',
+											TYPE_DOT_COLORS[version.type]
+										)}
 										aria-hidden="true"
 									/>
 									{version.type}
@@ -158,8 +165,8 @@ export function VersionDetailPanel({ open, version, onClose }: VersionDetailPane
 											<span
 												key={mod}
 												className={cn(
-													'inline-flex rounded-full px-2 py-0.5',
-													'text-xs font-medium',
+													'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5',
+													'text-[length:var(--text-xs)] font-medium',
 													'bg-amber-100 text-amber-800'
 												)}
 											>

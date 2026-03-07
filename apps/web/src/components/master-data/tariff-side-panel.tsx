@@ -100,12 +100,14 @@ export function TariffSidePanel({
 				aria-label={isEdit ? 'Edit Tariff' : 'Add Tariff'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-white shadow-xl',
+					'bg-[var(--workspace-bg-card)] shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-lg font-semibold">{isEdit ? `Edit ${tariff.code}` : 'Add Tariff'}</h2>
+					<h2 className="text-[length:var(--text-lg)] font-semibold">
+						{isEdit ? `Edit ${tariff.code}` : 'Add Tariff'}
+					</h2>
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-6 py-4">
@@ -115,7 +117,10 @@ export function TariffSidePanel({
 						className="space-y-4"
 					>
 						<div>
-							<label htmlFor="tariff-code" className="block text-sm font-medium">
+							<label
+								htmlFor="tariff-code"
+								className="block text-[length:var(--text-sm)] font-medium"
+							>
 								Code
 							</label>
 							<Input
@@ -124,17 +129,22 @@ export function TariffSidePanel({
 								disabled={isEdit}
 								className={cn(
 									'mt-1 uppercase',
-									isEdit && 'bg-slate-100 text-slate-500',
+									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
 									form.formState.errors.code && 'border-red-500'
 								)}
 								{...form.register('code')}
 							/>
 							{form.formState.errors.code && (
-								<p className="mt-1 text-xs text-red-600">{form.formState.errors.code.message}</p>
+								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									{form.formState.errors.code.message}
+								</p>
 							)}
 						</div>
 						<div>
-							<label htmlFor="tariff-label" className="block text-sm font-medium">
+							<label
+								htmlFor="tariff-label"
+								className="block text-[length:var(--text-sm)] font-medium"
+							>
 								Label
 							</label>
 							<Input
@@ -144,20 +154,25 @@ export function TariffSidePanel({
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (
-								<p className="mt-1 text-xs text-red-600">{form.formState.errors.label.message}</p>
+								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									{form.formState.errors.label.message}
+								</p>
 							)}
 						</div>
 						<div>
-							<label htmlFor="tariff-description" className="block text-sm font-medium">
+							<label
+								htmlFor="tariff-description"
+								className="block text-[length:var(--text-sm)] font-medium"
+							>
 								Description (optional)
 							</label>
 							<textarea
 								id="tariff-description"
 								rows={3}
 								className={cn(
-									'mt-1 flex w-full rounded-md border border-slate-300 bg-white',
-									'px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400',
-									'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+									'mt-1 flex w-full rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
+									'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
+									'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
 									'disabled:cursor-not-allowed disabled:opacity-50',
 									'resize-none'
 								)}

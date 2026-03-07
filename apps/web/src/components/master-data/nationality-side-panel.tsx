@@ -100,12 +100,12 @@ export function NationalitySidePanel({
 				aria-label={isEdit ? 'Edit Nationality' : 'Add Nationality'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-white shadow-xl',
+					'bg-[var(--workspace-bg-card)] shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-lg font-semibold">
+					<h2 className="text-[length:var(--text-lg)] font-semibold">
 						{isEdit ? `Edit ${nationality.code}` : 'Add Nationality'}
 					</h2>
 				</div>
@@ -117,7 +117,7 @@ export function NationalitySidePanel({
 						className="space-y-4"
 					>
 						<div>
-							<label htmlFor="nat-code" className="block text-sm font-medium">
+							<label htmlFor="nat-code" className="block text-[length:var(--text-sm)] font-medium">
 								Code
 							</label>
 							<Input
@@ -126,17 +126,19 @@ export function NationalitySidePanel({
 								disabled={isEdit}
 								className={cn(
 									'mt-1 uppercase',
-									isEdit && 'bg-slate-100 text-slate-500',
+									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
 									form.formState.errors.code && 'border-red-500'
 								)}
 								{...form.register('code')}
 							/>
 							{form.formState.errors.code && (
-								<p className="mt-1 text-xs text-red-600">{form.formState.errors.code.message}</p>
+								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									{form.formState.errors.code.message}
+								</p>
 							)}
 						</div>
 						<div>
-							<label htmlFor="nat-label" className="block text-sm font-medium">
+							<label htmlFor="nat-label" className="block text-[length:var(--text-sm)] font-medium">
 								Label
 							</label>
 							<Input
@@ -146,17 +148,19 @@ export function NationalitySidePanel({
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (
-								<p className="mt-1 text-xs text-red-600">{form.formState.errors.label.message}</p>
+								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									{form.formState.errors.label.message}
+								</p>
 							)}
 						</div>
 						<div className="flex items-center gap-3">
 							<input
 								id="nat-vat-exempt"
 								type="checkbox"
-								className="h-4 w-4 rounded"
+								className="h-4 w-4 rounded-[var(--radius-sm)]"
 								{...form.register('vatExempt')}
 							/>
-							<label htmlFor="nat-vat-exempt" className="text-sm font-medium">
+							<label htmlFor="nat-vat-exempt" className="text-[length:var(--text-sm)] font-medium">
 								VAT Exempt
 							</label>
 						</div>

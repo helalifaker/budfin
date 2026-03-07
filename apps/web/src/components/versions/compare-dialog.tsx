@@ -52,7 +52,9 @@ function CompareDialogContent({ fiscalYear, onClose }: Omit<CompareDialogProps, 
 
 				<div className="space-y-4">
 					<div>
-						<label className="block text-sm font-medium">Primary Version</label>
+						<label className="block text-[length:var(--text-sm)] font-medium">
+							Primary Version
+						</label>
 						<Select value={primaryId} onValueChange={setPrimaryId}>
 							<SelectTrigger className="mt-1 w-full" aria-label="Select primary version">
 								<SelectValue placeholder="Select version..." />
@@ -68,7 +70,9 @@ function CompareDialogContent({ fiscalYear, onClose }: Omit<CompareDialogProps, 
 					</div>
 
 					<div>
-						<label className="block text-sm font-medium">Comparison Version</label>
+						<label className="block text-[length:var(--text-sm)] font-medium">
+							Comparison Version
+						</label>
 						<Select value={comparisonId} onValueChange={setComparisonId}>
 							<SelectTrigger className="mt-1 w-full" aria-label="Select comparison version">
 								<SelectValue placeholder="Select version..." />
@@ -84,7 +88,7 @@ function CompareDialogContent({ fiscalYear, onClose }: Omit<CompareDialogProps, 
 					</div>
 
 					{primaryId && comparisonId && primaryId === comparisonId && (
-						<p className="text-xs text-amber-600" role="alert">
+						<p className="text-[length:var(--text-xs)] text-amber-600" role="alert">
 							Primary and comparison versions must be different.
 						</p>
 					)}
