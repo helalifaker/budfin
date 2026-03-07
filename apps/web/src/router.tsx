@@ -14,6 +14,7 @@ import { AcademicPage } from './pages/master-data/academic';
 import { ReferencePage } from './pages/master-data/reference';
 import { AssumptionsPage } from './pages/master-data/assumptions';
 import { EnrollmentPage } from './pages/planning/enrollment';
+import { RevenuePage } from './pages/planning/revenue';
 import { PlaceholderPage } from './pages/placeholder';
 
 export const routes: RouteObject[] = [
@@ -58,6 +59,10 @@ export const routes: RouteObject[] = [
 					{
 						path: '/enrollment',
 						element: <EnrollmentPage />,
+					},
+					{
+						path: '/revenue',
+						element: <RevenuePage />,
 					},
 					{
 						path: '/staff',
