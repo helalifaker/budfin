@@ -37,7 +37,7 @@
 
 | Epic # | Feature | Phase | Status |
 | -------- | --------- | ------- | -------- |
-| 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 — 2026-03-07 |
+| 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PR #94 — 2026-03-07 |
 | 2 | Revenue | 2 | Epic Created (#6) |
 | 3 | Staffing (DHG) | 2 | Epic Created (#7) |
 | 4 | Staff Costs | 2 | Epic Created (#8) |

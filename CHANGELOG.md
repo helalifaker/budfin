@@ -76,6 +76,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Enrollment calculate endpoint now uses the correct API path, matching the documented contract (#94)
+- Context Bar period selector now shows only the valid options (AY1, AY2, Both Periods) instead of including Summer and Full Year (#94)
+- Nationality grid is now a read-only summary view; editing is done in the By Tariff grid to avoid conflicting data entry (#94)
+- Tariff grid batch-saves all 9 entries per grade (3 nationalities x 3 tariffs) in a single request instead of saving only edited cells (#94)
+- CSV import now allows partial import of valid rows when some rows fail validation, instead of rejecting the entire file (#94)
+- Capacity columns (Sections, Utilization, Alert) are now wired into the By Grade grid with live data from the calculation engine (#94)
+- Navigation simplified to a single shell layout; all pages are accessible from one sidebar without switching between Management and Planning views (ADR-021, #94)
+- Enrollment page moved from /planning/enrollment to /enrollment for simpler navigation (#94)
 - Logout no longer fails when the user's session token has expired; users can always sign out regardless of token state (#4)
 - Application context now returns the configured school year (e.g., "2025-26") instead of blank; the value is read from system settings (#4)
 - API client now parses structured error responses (code + message) from the server, providing meaningful error text (#14)
