@@ -10,18 +10,18 @@
 
 ## 1. Design Decisions
 
-| Decision             | Choice                                           |
-| -------------------- | ------------------------------------------------ |
-| Scope                | Full clean slate rewrite                         |
-| Accent color         | Teal/emerald (#14B8A6 family)                    |
-| Animation level      | Full motion design (30+ animation points)        |
-| Shell architecture   | Two-shell (PlanningShell + ManagementShell)       |
-| Sidebar              | Collapsible (240px/64px) with smart auto-collapse |
-| Login                | Animated mesh gradient + glassmorphic card        |
-| Grid                 | Full micro-interaction set                       |
-| Page transitions     | Cross-fade with directional slide                |
-| Loading              | Diagonal shimmer skeletons + staggered reveal    |
-| Fonts                | Inter Variable + JetBrains Mono Variable         |
+| Decision           | Choice                                            |
+| ------------------ | ------------------------------------------------- |
+| Scope              | Full clean slate rewrite                          |
+| Accent color       | Teal/emerald (#14B8A6 family)                     |
+| Animation level    | Full motion design (30+ animation points)         |
+| Shell architecture | Two-shell (PlanningShell + ManagementShell)       |
+| Sidebar            | Collapsible (240px/64px) with smart auto-collapse |
+| Login              | Animated mesh gradient + glassmorphic card        |
+| Grid               | Full micro-interaction set                        |
+| Page transitions   | Cross-fade with directional slide                 |
+| Loading            | Diagonal shimmer skeletons + staggered reveal     |
+| Fonts              | Inter Variable + JetBrains Mono Variable          |
 
 **Preserved (not rewritten):** hooks/, stores/auth-store.ts, lib/ -- these contain working business logic and API integration.
 
@@ -33,30 +33,30 @@
 
 #### Brand Teal (Signature Accent)
 
-| Token          | Value     | Usage                               |
-| -------------- | --------- | ----------------------------------- |
-| `--accent-50`  | `#F0FDFA` | Subtle backgrounds, selected rows   |
-| `--accent-100` | `#CCFBF1` | Hover backgrounds, badge bgs        |
-| `--accent-200` | `#99F6E4` | Light borders on accent elements    |
-| `--accent-300` | `#5EEAD4` | Secondary buttons, toggle active    |
-| `--accent-400` | `#2DD4BF` | Charts, progress bars               |
-| `--accent-500` | `#14B8A6` | Primary buttons, active indicators  |
-| `--accent-600` | `#0D9488` | Primary button hover, links         |
-| `--accent-700` | `#0F766E` | Primary button active/pressed       |
-| `--accent-800` | `#115E59` | Dark accent text on light bg        |
-| `--accent-900` | `#134E4A` | Accent text in sidebar              |
+| Token          | Value     | Usage                              |
+| -------------- | --------- | ---------------------------------- |
+| `--accent-50`  | `#F0FDFA` | Subtle backgrounds, selected rows  |
+| `--accent-100` | `#CCFBF1` | Hover backgrounds, badge bgs       |
+| `--accent-200` | `#99F6E4` | Light borders on accent elements   |
+| `--accent-300` | `#5EEAD4` | Secondary buttons, toggle active   |
+| `--accent-400` | `#2DD4BF` | Charts, progress bars              |
+| `--accent-500` | `#14B8A6` | Primary buttons, active indicators |
+| `--accent-600` | `#0D9488` | Primary button hover, links        |
+| `--accent-700` | `#0F766E` | Primary button active/pressed      |
+| `--accent-800` | `#115E59` | Dark accent text on light bg       |
+| `--accent-900` | `#134E4A` | Accent text in sidebar             |
 
 #### Sidebar (Dark Carbon)
 
-| Token                | Value                      | Usage                          |
-| -------------------- | -------------------------- | ------------------------------ |
-| `--sidebar-bg`       | `#0C1222`                  | Deep navy-black background     |
-| `--sidebar-bg-hover` | `#162032`                  | Item hover                     |
-| `--sidebar-bg-active`| `#0D9488`                  | Active item (teal accent)      |
-| `--sidebar-text`     | `#A1B4CC`                  | Default text                   |
-| `--sidebar-text-active` | `#FFFFFF`               | Active item text               |
-| `--sidebar-border`   | `#1E2D42`                  | Dividers                       |
-| `--sidebar-glow`     | `rgba(20,184,166,0.15)`    | Teal glow on active item       |
+| Token                   | Value                   | Usage                      |
+| ----------------------- | ----------------------- | -------------------------- |
+| `--sidebar-bg`          | `#0C1222`               | Deep navy-black background |
+| `--sidebar-bg-hover`    | `#162032`               | Item hover                 |
+| `--sidebar-bg-active`   | `#0D9488`               | Active item (teal accent)  |
+| `--sidebar-text`        | `#A1B4CC`               | Default text               |
+| `--sidebar-text-active` | `#FFFFFF`               | Active item text           |
+| `--sidebar-border`      | `#1E2D42`               | Dividers                   |
+| `--sidebar-glow`        | `rgba(20,184,166,0.15)` | Teal glow on active item   |
 
 #### Workspace (Light)
 
@@ -71,27 +71,27 @@
 
 #### Semantic Colors (unchanged)
 
-| Token              | Value     | Usage                     |
-| ------------------ | --------- | ------------------------- |
-| `--color-success`  | `#16A34A` | Favorable variance        |
-| `--color-success-bg` | `#F0FDF4` | Success background       |
-| `--color-warning`  | `#D97706` | Near-cap alerts           |
-| `--color-warning-bg` | `#FFFBEB` | Warning background       |
-| `--color-error`    | `#DC2626` | Unfavorable variance      |
-| `--color-error-bg` | `#FEF2F2` | Error background          |
-| `--color-info`     | `#2563EB` | Information indicators    |
-| `--color-info-bg`  | `#EFF6FF` | Info background           |
-| `--color-stale`    | `#F59E0B` | Stale calculation         |
+| Token                | Value     | Usage                  |
+| -------------------- | --------- | ---------------------- |
+| `--color-success`    | `#16A34A` | Favorable variance     |
+| `--color-success-bg` | `#F0FDF4` | Success background     |
+| `--color-warning`    | `#D97706` | Near-cap alerts        |
+| `--color-warning-bg` | `#FFFBEB` | Warning background     |
+| `--color-error`      | `#DC2626` | Unfavorable variance   |
+| `--color-error-bg`   | `#FEF2F2` | Error background       |
+| `--color-info`       | `#2563EB` | Information indicators |
+| `--color-info-bg`    | `#EFF6FF` | Info background        |
+| `--color-stale`      | `#F59E0B` | Stale calculation      |
 
 #### Version Type Colors (unchanged)
 
-| Token                 | Value     | Type     |
-| --------------------- | --------- | -------- |
-| `--version-budget`    | `#2563EB` | Budget   |
-| `--version-budget-bg` | `#DBEAFE` | Budget   |
-| `--version-actual`    | `#16A34A` | Actual   |
-| `--version-actual-bg` | `#DCFCE7` | Actual   |
-| `--version-forecast`  | `#EA580C` | Forecast |
+| Token                   | Value     | Type     |
+| ----------------------- | --------- | -------- |
+| `--version-budget`      | `#2563EB` | Budget   |
+| `--version-budget-bg`   | `#DBEAFE` | Budget   |
+| `--version-actual`      | `#16A34A` | Actual   |
+| `--version-actual-bg`   | `#DCFCE7` | Actual   |
+| `--version-forecast`    | `#EA580C` | Forecast |
 | `--version-forecast-bg` | `#FFF7ED` | Forecast |
 
 #### Status Colors (unchanged)
@@ -116,54 +116,54 @@ Note: `--cell-editable-focus` changed from blue to teal to match accent.
 
 ### 2.2 Typography
 
-| Token           | Font                                            | Size | Weight | Usage                    |
-| --------------- | ----------------------------------------------- | ---- | ------ | ------------------------ |
-| `--font-family` | `'Inter Variable', Inter, system-ui, sans-serif`| --   | --     | Primary                  |
-| `--font-mono`   | `'JetBrains Mono Variable', ui-monospace, mono` | --   | --     | Numeric values in grids  |
-| `--text-xs`     | --                                              | 11px | 400    | Grid cells, metadata     |
-| `--text-sm`     | --                                              | 13px | 400    | Body text, form labels   |
-| `--text-base`   | --                                              | 14px | 400    | Toolbar text, buttons    |
-| `--text-lg`     | --                                              | 16px | 600    | Section headers          |
-| `--text-xl`     | --                                              | 20px | 600    | Module page titles       |
-| `--text-2xl`    | --                                              | 28px | 700    | KPI card values          |
-| `--text-3xl`    | --                                              | 36px | 700    | Dashboard hero metric    |
+| Token           | Font                                             | Size | Weight | Usage                   |
+| --------------- | ------------------------------------------------ | ---- | ------ | ----------------------- |
+| `--font-family` | `'Inter Variable', Inter, system-ui, sans-serif` | --   | --     | Primary                 |
+| `--font-mono`   | `'JetBrains Mono Variable', ui-monospace, mono`  | --   | --     | Numeric values in grids |
+| `--text-xs`     | --                                               | 11px | 400    | Grid cells, metadata    |
+| `--text-sm`     | --                                               | 13px | 400    | Body text, form labels  |
+| `--text-base`   | --                                               | 14px | 400    | Toolbar text, buttons   |
+| `--text-lg`     | --                                               | 16px | 600    | Section headers         |
+| `--text-xl`     | --                                               | 20px | 600    | Module page titles      |
+| `--text-2xl`    | --                                               | 28px | 700    | KPI card values         |
+| `--text-3xl`    | --                                               | 36px | 700    | Dashboard hero metric   |
 
 Fonts self-hosted via `@fontsource-variable/inter` and `@fontsource-variable/jetbrains-mono`.
 
 ### 2.3 Shadows
 
-| Token                  | Value                                                           | Usage             |
-| ---------------------- | --------------------------------------------------------------- | ----------------- |
-| `--shadow-xs`          | `0 1px 2px rgba(0,0,0,0.04)`                                   | Subtle card lift  |
-| `--shadow-sm`          | `0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)`      | Cards, inputs     |
-| `--shadow-md`          | `0 4px 8px -2px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04)` | Dropdowns    |
-| `--shadow-lg`          | `0 12px 24px -4px rgba(0,0,0,0.10), 0 4px 8px -4px rgba(0,0,0,0.04)` | Modals     |
-| `--shadow-sidebar`     | `1px 0 8px rgba(0,0,0,0.12)`                                   | Sidebar edge      |
-| `--shadow-glow-accent` | `0 0 20px rgba(20,184,166,0.15)`                                | Accent focus glow |
+| Token                  | Value                                                                | Usage             |
+| ---------------------- | -------------------------------------------------------------------- | ----------------- |
+| `--shadow-xs`          | `0 1px 2px rgba(0,0,0,0.04)`                                         | Subtle card lift  |
+| `--shadow-sm`          | `0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)`             | Cards, inputs     |
+| `--shadow-md`          | `0 4px 8px -2px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04)`   | Dropdowns         |
+| `--shadow-lg`          | `0 12px 24px -4px rgba(0,0,0,0.10), 0 4px 8px -4px rgba(0,0,0,0.04)` | Modals            |
+| `--shadow-sidebar`     | `1px 0 8px rgba(0,0,0,0.12)`                                         | Sidebar edge      |
+| `--shadow-glow-accent` | `0 0 20px rgba(20,184,166,0.15)`                                     | Accent focus glow |
 
 ### 2.4 Animation Tokens
 
-| Token              | Value                             | Usage                          |
-| ------------------ | --------------------------------- | ------------------------------ |
-| `--ease-out-expo`  | `cubic-bezier(0.16, 1, 0.3, 1)`  | Panel open, page transitions   |
-| `--ease-out-back`  | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Toast enter, tooltip pop    |
-| `--ease-in-out`    | `cubic-bezier(0.4, 0, 0.2, 1)`   | Standard transitions           |
-| `--duration-fast`  | `150ms`                           | Hover states, toggles          |
-| `--duration-normal`| `250ms`                           | Panel transitions, fades       |
-| `--duration-slow`  | `400ms`                           | Page transitions, stagger root |
-| `--duration-slower`| `600ms`                           | Chart draw-in, counter roll-up |
-| `--stagger-delay`  | `50ms`                            | List item reveal offset        |
+| Token               | Value                               | Usage                          |
+| ------------------- | ----------------------------------- | ------------------------------ |
+| `--ease-out-expo`   | `cubic-bezier(0.16, 1, 0.3, 1)`     | Panel open, page transitions   |
+| `--ease-out-back`   | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Toast enter, tooltip pop       |
+| `--ease-in-out`     | `cubic-bezier(0.4, 0, 0.2, 1)`      | Standard transitions           |
+| `--duration-fast`   | `150ms`                             | Hover states, toggles          |
+| `--duration-normal` | `250ms`                             | Panel transitions, fades       |
+| `--duration-slow`   | `400ms`                             | Page transitions, stagger root |
+| `--duration-slower` | `600ms`                             | Chart draw-in, counter roll-up |
+| `--stagger-delay`   | `50ms`                              | List item reveal offset        |
 
 ### 2.5 Border Radii
 
-| Token          | Value | Usage                       |
-| -------------- | ----- | --------------------------- |
-| `--radius-none`| `0px` | Grid cells                  |
-| `--radius-sm`  | `6px` | Badges, small buttons       |
-| `--radius-md`  | `8px` | Cards, inputs, dropdowns    |
-| `--radius-lg`  | `12px`| Modals, panels              |
-| `--radius-xl`  | `16px`| KPI cards, large containers |
-| `--radius-2xl` | `24px`| Login card, hero elements   |
+| Token           | Value  | Usage                       |
+| --------------- | ------ | --------------------------- |
+| `--radius-none` | `0px`  | Grid cells                  |
+| `--radius-sm`   | `6px`  | Badges, small buttons       |
+| `--radius-md`   | `8px`  | Cards, inputs, dropdowns    |
+| `--radius-lg`   | `12px` | Modals, panels              |
+| `--radius-xl`   | `16px` | KPI cards, large containers |
+| `--radius-2xl`  | `24px` | Login card, hero elements   |
 
 ### 2.6 Spacing (unchanged from spec, 4px grid)
 
@@ -191,29 +191,34 @@ BudFin is a single, persistent workspace. Users don't navigate to pages -- they 
 **States:** Expanded (240px) and Collapsed (64px).
 
 **Expanded:**
+
 - Logo area (56px) with teal accent dot + "BudFin" wordmark
 - Nav groups: Planning, Management, Master Data, Admin (admin-only)
 - Collapse toggle at bottom with rotating chevron
 - User avatar + email + role badge at bottom
 
 **Collapsed:**
+
 - Icon-only navigation
 - Tooltips slide out to the right on hover
 - Active item: teal left bar (3px)
 - Logo icon only
 
 **Transition choreography (expand/collapse):**
+
 1. Width: 250ms `--ease-out-expo`
 2. Labels: fade in/out with 50ms delay after width starts
 3. Group headers: fade in 100ms after labels
 4. Chevron: 180-degree rotation with spring (`--ease-out-back`)
 
 **Nav item hover:**
+
 - Background slides in from left edge (150ms)
 - Icon shifts 2px right (subtle parallax)
 - Click ripple: teal-tinted, emanates from click point (300ms)
 
 **Smart auto-collapse:**
+
 - Right panel opens -> sidebar collapses (coordinated animation)
 - User re-expands sidebar while panel open -> panel closes (mutual exclusion)
 
@@ -236,6 +241,7 @@ BudFin is a single, persistent workspace. Users don't navigate to pages -- they 
 ```
 
 **Context bar:**
+
 - Frosted glass: `backdrop-filter: blur(12px)`, semi-transparent white bg
 - Breadcrumb: `FY2026 / Budget v1 > Module Name`, clickable FY+Version
 - Module name cross-fades on navigation
@@ -244,6 +250,7 @@ BudFin is a single, persistent workspace. Users don't navigate to pages -- they 
 - Stale indicator: amber warning with tooltip listing stale modules
 
 **Module content transitions:**
+
 1. Current content: fade out + slide down 8px (150ms)
 2. 50ms gap
 3. New content: fade in + slide up from 8px (200ms, `--ease-out-expo`)
@@ -251,6 +258,7 @@ BudFin is a single, persistent workspace. Users don't navigate to pages -- they 
 5. Content reveal: rows fade in with 30ms stagger
 
 **Right panel:**
+
 - Opens: slide from right (250ms, `--ease-out-expo`), workspace shrinks
 - Resize handle: hover glows teal, drag shows guide line
 - Tab switching: content cross-fades (150ms), indicator slides to position
@@ -273,6 +281,7 @@ BudFin is a single, persistent workspace. Users don't navigate to pages -- they 
 No context bar. No docked right panel. Overlay side panels for CRUD.
 
 **Overlay panel animation:**
+
 1. Dark backdrop fades in (150ms, 40% opacity)
 2. Panel slides from right (250ms, `--ease-out-expo`)
 3. Form fields stagger-reveal (50ms per field)
@@ -328,12 +337,12 @@ No context bar. No docked right panel. Overlay side panels for CRUD.
 
 ### 4.1 Button Variants
 
-| Variant       | Idle                                | Hover                      | Active              |
-| ------------- | ----------------------------------- | -------------------------- | ------------------- |
-| `primary`     | Teal-500 bg, white text             | Teal-600 bg, shadow lift   | Teal-700, scale 0.98|
-| `secondary`   | White bg, teal-600 text, teal border| Accent-50 bg               | Accent-100 bg       |
-| `ghost`       | Transparent, muted text             | Accent-50 bg fades in      | Accent-100 bg       |
-| `destructive` | Red-600 bg, white text              | Red-700 bg                 | Red-800, scale 0.98 |
+| Variant       | Idle                                 | Hover                    | Active               |
+| ------------- | ------------------------------------ | ------------------------ | -------------------- |
+| `primary`     | Teal-500 bg, white text              | Teal-600 bg, shadow lift | Teal-700, scale 0.98 |
+| `secondary`   | White bg, teal-600 text, teal border | Accent-50 bg             | Accent-100 bg        |
+| `ghost`       | Transparent, muted text              | Accent-50 bg fades in    | Accent-100 bg        |
+| `destructive` | Red-600 bg, white text               | Red-700 bg               | Red-800, scale 0.98  |
 
 All: 150ms transitions. Click micro-scale bounce (0.97->1.0, spring, 200ms).
 
