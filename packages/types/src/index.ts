@@ -21,3 +21,16 @@ export type {
 	CapacityResult,
 	CapacitySummary,
 } from './enrollment.js';
+
+export { DISTRIBUTION_METHODS, IFRS_CATEGORIES } from './revenue.js';
+
+export type {
+	DistributionMethod,
+	IfrsCategory,
+	FeeGridEntry,
+	DiscountEntry,
+	OtherRevenueItem,
+	MonthlyRevenueEntry,
+	RevenueTotals,
+	RevenueResultsResponse,
+} from './revenue.js';

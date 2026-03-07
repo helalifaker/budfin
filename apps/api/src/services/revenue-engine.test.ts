@@ -5,548 +5,461 @@ import {
 	distributeAcrossMonths,
 	type EnrollmentDetailInput,
 	type FeeGridInput,
-	type DiscountPolicyInput,
 	type RevenueEngineInput,
+	type MonthlyRevenueOutput,
 } from './revenue-engine.js';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeFee(overrides: Partial<FeeGridInput> = {}): FeeGridInput {
 	return {
-		gradeLevel: 'PS',
+		academicPeriod: 'AY1',
+		gradeLevel: 'CP',
 		nationality: 'Francais',
 		tariff: 'Plein',
-		academicPeriod: 'AY1',
-		tuitionTtc: '46000.0000',
-		tuitionHt: '40000.0000',
+		tuitionTtc: '60000.0000',
+		tuitionHt: '52173.9130',
 		dai: '5000.0000',
-		registrationFee: '3000.0000',
-		reRegistrationFee: '2000.0000',
-		insuranceFee: '500.0000',
 		...overrides,
 	};
 }
 
 function makeEnrollment(overrides: Partial<EnrollmentDetailInput> = {}): EnrollmentDetailInput {
 	return {
-		gradeLevel: 'PS',
+		academicPeriod: 'AY1',
+		gradeLevel: 'CP',
 		nationality: 'Francais',
 		tariff: 'Plein',
-		academicPeriod: 'AY1',
-		headcount: 10,
+		headcount: 20,
 		...overrides,
 	};
 }
 
 function makeInput(overrides: Partial<RevenueEngineInput> = {}): RevenueEngineInput {
 	return {
-		enrollmentDetail: [makeEnrollment()],
+		enrollmentDetails: [makeEnrollment()],
 		feeGrid: [makeFee()],
 		discountPolicies: [],
-		otherRevenue: [],
+		otherRevenueItems: [],
 		...overrides,
 	};
 }
 
-/**
- * Sum all monthly values for a given field from revenue rows.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function sumField(rows: any[], field: string): Decimal {
-	return rows.reduce(
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		(acc: Decimal, row: any) => acc.plus(new Decimal(row[field] as string)),
-		new Decimal(0)
-	);
+function sumField(rows: MonthlyRevenueOutput[], field: keyof MonthlyRevenueOutput): Decimal {
+	return rows.reduce((sum, row) => sum.plus(new Decimal(row[field] as string)), new Decimal(0));
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+// ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('calculateRevenue', () => {
-	describe('basic tuition revenue — single grade, single period, no discounts', () => {
-		it('distributes tuition across AY1 months 1-6 with last-bucket rounding', () => {
-			const input = makeInput();
-			const result = calculateRevenue(input);
+describe('Revenue Engine', () => {
+	describe('Basic Tuition Calculation', () => {
+		it('should calculate monthly tuition for AY1 (6 months)', () => {
+			const result = calculateRevenue(makeInput());
 
-			// 10 students * 40000 HT = 400000 annual gross
-			// No discount → net = 400000
-			// Distributed over 6 months: 400000 / 6 = 66666.6667 per month
-			// Last month gets remainder: 400000 - 5 * 66666.6667 = 66666.6665
+			// 20 students * 52173.9130 HT = 1,043,478.2600 annual gross
+			// Distributed over 6 months (AY1: Jan-Jun)
 			expect(result.tuitionRevenue).toHaveLength(6);
+			expect(result.tuitionRevenue.every((r) => r.academicPeriod === 'AY1')).toBe(true);
+			expect(result.tuitionRevenue.map((r) => r.month)).toEqual([1, 2, 3, 4, 5, 6]);
 
-			const months = result.tuitionRevenue.map((r) => r.month);
-			expect(months).toEqual([1, 2, 3, 4, 5, 6]);
-
-			// First 5 months: 66666.6667
-			for (let i = 0; i < 5; i++) {
-				expect(result.tuitionRevenue[i]!.grossRevenueHt).toBe('66666.6667');
-				expect(result.tuitionRevenue[i]!.netRevenueHt).toBe('66666.6667');
-				expect(result.tuitionRevenue[i]!.discountAmount).toBe('0.0000');
-			}
-
-			// Last month (6): remainder = 400000 - 5 * 66666.6667 = 66666.6665
-			expect(result.tuitionRevenue[5]!.grossRevenueHt).toBe('66666.6665');
-			expect(result.tuitionRevenue[5]!.netRevenueHt).toBe('66666.6665');
-
-			// Total must exactly equal 400000
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			expect(totalGross.toFixed(4)).toBe('400000.0000');
+			expect(totalGross.toFixed(4)).toBe('1043478.2600');
+		});
+
+		it('should calculate monthly tuition for AY2 (4 months)', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ academicPeriod: 'AY2' })],
+					feeGrid: [makeFee({ academicPeriod: 'AY2' })],
+				})
+			);
+
+			expect(result.tuitionRevenue).toHaveLength(4);
+			expect(result.tuitionRevenue.map((r) => r.month)).toEqual([9, 10, 11, 12]);
+		});
+
+		it('should produce zero revenue for summer months (7-8)', () => {
+			const result = calculateRevenue(makeInput());
+			const summerMonths = result.tuitionRevenue.filter((r) => r.month === 7 || r.month === 8);
+			expect(summerMonths).toHaveLength(0);
 		});
 	});
 
-	describe('VAT treatment', () => {
-		it('charges zero VAT for Nationaux nationality', () => {
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ nationality: 'Nationaux' })],
-				feeGrid: [makeFee({ nationality: 'Nationaux' })],
-			});
-			const result = calculateRevenue(input);
+	describe('VAT Treatment', () => {
+		it('should apply 0% VAT for Nationaux students', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ nationality: 'Nationaux' })],
+					feeGrid: [
+						makeFee({
+							nationality: 'Nationaux',
+							tuitionTtc: '50000.0000',
+							tuitionHt: '50000.0000',
+						}),
+					],
+				})
+			);
 
-			for (const row of result.tuitionRevenue) {
-				expect(row.vatAmount).toBe('0.0000');
-			}
+			const totalVat = sumField(result.tuitionRevenue, 'vatAmount');
+			expect(totalVat.toFixed(4)).toBe('0.0000');
 		});
 
-		it('charges 15% VAT for Francais nationality', () => {
-			const input = makeInput();
-			const result = calculateRevenue(input);
-
-			// Net per month (first 5) = 66666.6667, VAT = 66666.6667 * 0.15 = 10000.0000
-			for (let i = 0; i < 5; i++) {
-				const row = result.tuitionRevenue[i]!;
-				const expectedVat = new Decimal(row.netRevenueHt)
-					.times('0.15')
-					.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
-				expect(row.vatAmount).toBe(expectedVat.toFixed(4));
-			}
-		});
-
-		it('charges 15% VAT for Autres nationality', () => {
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ nationality: 'Autres' })],
-				feeGrid: [makeFee({ nationality: 'Autres' })],
-			});
-			const result = calculateRevenue(input);
-
-			for (const row of result.tuitionRevenue) {
-				const expectedVat = new Decimal(row.netRevenueHt)
-					.times('0.15')
-					.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
-				expect(row.vatAmount).toBe(expectedVat.toFixed(4));
-			}
-		});
-	});
-
-	describe('discount application', () => {
-		it('applies 25% discount correctly', () => {
-			const discountPolicies: DiscountPolicyInput[] = [
-				{ tariff: 'RP', nationality: null, discountRate: '0.25' },
-			];
-
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ tariff: 'RP', headcount: 10 })],
-				feeGrid: [makeFee({ tariff: 'RP' })],
-				discountPolicies,
-			});
-			const result = calculateRevenue(input);
-
-			// Gross = 10 * 40000 = 400000
-			// Discount = 400000 * 0.25 = 100000
-			// Net = 300000
-			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
+		it('should apply 15% VAT for Francais students', () => {
+			const result = calculateRevenue(makeInput());
 			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
+			const totalVat = sumField(result.tuitionRevenue, 'vatAmount');
 
-			expect(totalGross.toFixed(4)).toBe('400000.0000');
-			expect(totalDiscount.toFixed(4)).toBe('100000.0000');
-			expect(totalNet.toFixed(4)).toBe('300000.0000');
+			// VAT = netHT * 0.15
+			const expectedVat = totalNet.mul(new Decimal('0.15'));
+			expect(totalVat.toFixed(4)).toBe(expectedVat.toFixed(4));
+		});
+
+		it('should apply 15% VAT for Autres students', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ nationality: 'Autres' })],
+					feeGrid: [makeFee({ nationality: 'Autres' })],
+				})
+			);
+
+			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
+			const totalVat = sumField(result.tuitionRevenue, 'vatAmount');
+			const expectedVat = totalNet.mul(new Decimal('0.15'));
+			expect(totalVat.toFixed(4)).toBe(expectedVat.toFixed(4));
 		});
 	});
 
-	describe('highest discount wins', () => {
-		it('applies the higher of two matching discount rates', () => {
-			const discountPolicies: DiscountPolicyInput[] = [
-				{ tariff: 'RP', nationality: 'Francais', discountRate: '0.10' },
-				{ tariff: 'RP', nationality: null, discountRate: '0.25' },
-			];
+	describe('Discount Application', () => {
+		it('should apply discount rate to gross revenue', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ tariff: 'RP' })],
+					feeGrid: [makeFee({ tariff: 'RP' })],
+					discountPolicies: [{ tariff: 'RP', nationality: 'Francais', discountRate: '0.250000' }],
+				})
+			);
 
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ tariff: 'RP' })],
-				feeGrid: [makeFee({ tariff: 'RP' })],
-				discountPolicies,
-			});
-			const result = calculateRevenue(input);
-
-			// Should use 25% (higher), not 10%
-			// Gross = 400000, Discount = 100000, Net = 300000
+			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
 			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
-			expect(totalDiscount.toFixed(4)).toBe('100000.0000');
+			const expectedDiscount = totalGross.mul(new Decimal('0.25'));
+			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
 		});
 
-		it('does not apply discount for non-matching tariff', () => {
-			const discountPolicies: DiscountPolicyInput[] = [
-				{ tariff: 'RP', nationality: null, discountRate: '0.25' },
-			];
+		it('should apply highest discount when multiple policies match (SA-006)', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ tariff: 'RP' })],
+					feeGrid: [makeFee({ tariff: 'RP' })],
+					discountPolicies: [
+						// Exact match: RP + Francais = 20%
+						{ tariff: 'RP', nationality: 'Francais', discountRate: '0.200000' },
+						// Wildcard match: RP + null = 30% — should win
+						{ tariff: 'RP', nationality: null, discountRate: '0.300000' },
+					],
+				})
+			);
 
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ tariff: 'Plein' })],
-				feeGrid: [makeFee({ tariff: 'Plein' })],
-				discountPolicies,
-			});
-			const result = calculateRevenue(input);
+			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
+			const expectedDiscount = totalGross.mul(new Decimal('0.30'));
+			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
+		});
+
+		it('should apply no discount for Plein tariff', () => {
+			const result = calculateRevenue(
+				makeInput({
+					discountPolicies: [{ tariff: 'RP', nationality: null, discountRate: '0.300000' }],
+				})
+			);
 
 			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
 			expect(totalDiscount.toFixed(4)).toBe('0.0000');
 		});
 	});
 
-	describe('summer months zero', () => {
-		it('produces no revenue rows for months 7-8', () => {
-			// Test both AY1 and AY2
-			const input = makeInput({
-				enrollmentDetail: [
-					makeEnrollment({ academicPeriod: 'AY1' }),
-					makeEnrollment({ academicPeriod: 'AY2' }),
-				],
-				feeGrid: [makeFee({ academicPeriod: 'AY1' }), makeFee({ academicPeriod: 'AY2' })],
-			});
-			const result = calculateRevenue(input);
+	describe('Last-Bucket Rounding', () => {
+		it('should ensure monthly amounts sum exactly to annual total (AY1)', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ headcount: 7 })],
+				})
+			);
 
-			const summerRows = result.tuitionRevenue.filter((r) => r.month === 7 || r.month === 8);
-			expect(summerRows).toHaveLength(0);
-		});
-	});
-
-	describe('AY2 distribution', () => {
-		it('distributes tuition across months 9-12 only', () => {
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ academicPeriod: 'AY2' })],
-				feeGrid: [makeFee({ academicPeriod: 'AY2' })],
-			});
-			const result = calculateRevenue(input);
-
-			expect(result.tuitionRevenue).toHaveLength(4);
-			const months = result.tuitionRevenue.map((r) => r.month);
-			expect(months).toEqual([9, 10, 11, 12]);
-
-			// 400000 / 4 = 100000 exactly — no rounding needed
-			for (const row of result.tuitionRevenue) {
-				expect(row.grossRevenueHt).toBe('100000.0000');
-			}
-		});
-	});
-
-	describe('last bucket rounding correctness', () => {
-		it('ensures sum of monthly gross equals annual gross exactly', () => {
-			// Use a headcount that creates non-trivial rounding
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ headcount: 7 })],
-			});
-			const result = calculateRevenue(input);
-
-			// 7 * 40000 = 280000
+			// 7 * 52173.9130 = 365217.3910 annual gross HT
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			expect(totalGross.toFixed(4)).toBe('280000.0000');
-
-			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
-			expect(totalNet.toFixed(4)).toBe('280000.0000');
+			expect(totalGross.toFixed(4)).toBe('365217.3910');
 		});
 
-		it('last bucket absorbs rounding difference for odd divisions', () => {
-			// 100000 / 6 = 16666.6667 * 5 = 83333.3335, last = 16666.6665
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ headcount: 1 })],
-				feeGrid: [makeFee({ tuitionHt: '100000.0000' })],
-			});
-			const result = calculateRevenue(input);
+		it('should ensure monthly amounts sum exactly to annual total (AY2)', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ academicPeriod: 'AY2', headcount: 7 })],
+					feeGrid: [makeFee({ academicPeriod: 'AY2' })],
+				})
+			);
 
-			// First 5 months
-			for (let i = 0; i < 5; i++) {
-				expect(result.tuitionRevenue[i]!.grossRevenueHt).toBe('16666.6667');
-			}
-			// Last month
-			expect(result.tuitionRevenue[5]!.grossRevenueHt).toBe('16666.6665');
-
-			const total = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			expect(total.toFixed(4)).toBe('100000.0000');
+			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			expect(totalGross.toFixed(4)).toBe('365217.3910');
 		});
 	});
 
-	describe('other revenue — ACADEMIC_10', () => {
-		it('distributes across 10 academic months, zero for Jul-Aug', () => {
-			const input = makeInput({
-				enrollmentDetail: [],
-				feeGrid: [],
-				otherRevenue: [
-					{
-						lineItemName: 'Cantine',
-						annualAmount: '100000.0000',
-						distributionMethod: 'ACADEMIC_10',
-						ifrsCategory: 'Services',
-					},
-				],
-			});
-			const result = calculateRevenue(input);
+	describe('Other Revenue Distribution', () => {
+		it('should distribute ACADEMIC_10 across 10 academic months', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [],
+					feeGrid: [],
+					otherRevenueItems: [
+						{
+							lineItemName: 'Cantine',
+							annualAmount: '100000.0000',
+							distributionMethod: 'ACADEMIC_10',
+							ifrsCategory: 'OTHER_OPERATING_INCOME',
+						},
+					],
+				})
+			);
 
-			// Should have 10 months (1-6, 9-12)
 			expect(result.otherRevenue).toHaveLength(10);
+			// No Jul (7) or Aug (8)
+			expect(result.otherRevenue.every((r) => r.month !== 7 && r.month !== 8)).toBe(true);
 
-			const months = result.otherRevenue.map((r) => r.month).sort((a, b) => a - b);
-			expect(months).toEqual([1, 2, 3, 4, 5, 6, 9, 10, 11, 12]);
-
-			// No July or August
-			const summerRows = result.otherRevenue.filter((r) => r.month === 7 || r.month === 8);
-			expect(summerRows).toHaveLength(0);
-
-			// Sum must equal annual amount
 			const total = result.otherRevenue.reduce(
-				(acc, r) => acc.plus(new Decimal(r.amount)),
+				(sum, r) => sum.plus(new Decimal(r.amount)),
 				new Decimal(0)
 			);
 			expect(total.toFixed(4)).toBe('100000.0000');
-
-			// First 9 months: 100000/10 = 10000.0000 exactly
-			for (let i = 0; i < 9; i++) {
-				expect(result.otherRevenue[i]!.amount).toBe('10000.0000');
-			}
 		});
-	});
 
-	describe('other revenue — CUSTOM_WEIGHTS', () => {
-		it('distributes according to custom weight array', () => {
-			// Only allocate to Q1 with weights [3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-			const input = makeInput({
-				enrollmentDetail: [],
-				feeGrid: [],
-				otherRevenue: [
-					{
-						lineItemName: 'Project Revenue',
-						annualAmount: '60000.0000',
-						distributionMethod: 'CUSTOM_WEIGHTS',
-						weightArray: [3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-						ifrsCategory: 'Project',
-					},
-				],
-			});
-			const result = calculateRevenue(input);
-
-			// Only 3 months active (Jan, Feb, Mar)
-			expect(result.otherRevenue).toHaveLength(3);
-
-			// Weight total = 6
-			// Jan: 60000 * 3/6 = 30000
-			// Feb: 60000 * 2/6 = 20000
-			// Mar: remainder = 60000 - 30000 - 20000 = 10000
-			const jan = result.otherRevenue.find((r) => r.month === 1);
-			const feb = result.otherRevenue.find((r) => r.month === 2);
-			const mar = result.otherRevenue.find((r) => r.month === 3);
-
-			expect(jan!.amount).toBe('30000.0000');
-			expect(feb!.amount).toBe('20000.0000');
-			expect(mar!.amount).toBe('10000.0000');
-
-			const total = result.otherRevenue.reduce(
-				(acc, r) => acc.plus(new Decimal(r.amount)),
-				new Decimal(0)
+		it('should distribute YEAR_ROUND_12 across all 12 months', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [],
+					feeGrid: [],
+					otherRevenueItems: [
+						{
+							lineItemName: 'Rent Income',
+							annualAmount: '120000.0000',
+							distributionMethod: 'YEAR_ROUND_12',
+							ifrsCategory: 'OTHER_OPERATING_INCOME',
+						},
+					],
+				})
 			);
-			expect(total.toFixed(4)).toBe('60000.0000');
-		});
-
-		it('throws if weightArray has wrong length', () => {
-			expect(() =>
-				distributeAcrossMonths(
-					new Decimal(1000),
-					'CUSTOM_WEIGHTS',
-					[1, 2, 3] // only 3 elements
-				)
-			).toThrow('CUSTOM_WEIGHTS requires a weightArray of exactly 12 elements');
-		});
-	});
-
-	describe('other revenue — SPECIFIC_PERIOD', () => {
-		it('distributes only to specified months', () => {
-			const input = makeInput({
-				enrollmentDetail: [],
-				feeGrid: [],
-				otherRevenue: [
-					{
-						lineItemName: 'Annual Event',
-						annualAmount: '30000.0000',
-						distributionMethod: 'SPECIFIC_PERIOD',
-						specificMonths: [3, 9],
-						ifrsCategory: 'Events',
-					},
-				],
-			});
-			const result = calculateRevenue(input);
-
-			expect(result.otherRevenue).toHaveLength(2);
-			const months = result.otherRevenue.map((r) => r.month).sort((a, b) => a - b);
-			expect(months).toEqual([3, 9]);
-
-			// 30000 / 2 = 15000 each
-			for (const row of result.otherRevenue) {
-				expect(row.amount).toBe('15000.0000');
-			}
-		});
-	});
-
-	describe('other revenue — YEAR_ROUND_12', () => {
-		it('distributes equally across all 12 months', () => {
-			const input = makeInput({
-				enrollmentDetail: [],
-				feeGrid: [],
-				otherRevenue: [
-					{
-						lineItemName: 'Rent Income',
-						annualAmount: '120000.0000',
-						distributionMethod: 'YEAR_ROUND_12',
-						ifrsCategory: 'Rental',
-					},
-				],
-			});
-			const result = calculateRevenue(input);
 
 			expect(result.otherRevenue).toHaveLength(12);
-
-			// 120000 / 12 = 10000 exactly
-			for (const row of result.otherRevenue) {
-				expect(row.amount).toBe('10000.0000');
-			}
-
 			const total = result.otherRevenue.reduce(
-				(acc, r) => acc.plus(new Decimal(r.amount)),
+				(sum, r) => sum.plus(new Decimal(r.amount)),
 				new Decimal(0)
 			);
 			expect(total.toFixed(4)).toBe('120000.0000');
 		});
 
-		it('handles non-divisible amounts with last-bucket', () => {
-			const input = makeInput({
-				enrollmentDetail: [],
-				feeGrid: [],
-				otherRevenue: [
-					{
-						lineItemName: 'Misc',
-						annualAmount: '100000.0000',
-						distributionMethod: 'YEAR_ROUND_12',
-						ifrsCategory: 'Other',
-					},
-				],
-			});
-			const result = calculateRevenue(input);
+		it('should distribute CUSTOM_WEIGHTS using provided weights', () => {
+			// 50% in month 1, 50% in month 9, rest 0
+			const weights = [0.5, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0];
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [],
+					feeGrid: [],
+					otherRevenueItems: [
+						{
+							lineItemName: 'DAI Revenue',
+							annualAmount: '200000.0000',
+							distributionMethod: 'CUSTOM_WEIGHTS',
+							weightArray: weights,
+							ifrsCategory: 'REVENUE_FROM_CONTRACTS',
+						},
+					],
+				})
+			);
 
-			// 100000 / 12 = 8333.3333 (rounded)
-			// First 11: 8333.3333 * 11 = 91666.6663
-			// Last: 100000 - 91666.6663 = 8333.3337
-			expect(result.otherRevenue[0]!.amount).toBe('8333.3333');
-			expect(result.otherRevenue[11]!.amount).toBe('8333.3337');
+			// Only non-zero months should appear
+			const nonZero = result.otherRevenue.filter((r) => !new Decimal(r.amount).isZero());
+			expect(nonZero).toHaveLength(2);
+			expect(nonZero[0]!.month).toBe(1);
+			expect(nonZero[0]!.amount).toBe('100000.0000');
+			// Month 9 gets the last-bucket remainder
+			expect(nonZero[1]!.month).toBe(9);
+		});
+
+		it('should distribute SPECIFIC_PERIOD to specified months only', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [],
+					feeGrid: [],
+					otherRevenueItems: [
+						{
+							lineItemName: 'AEFE Subvention',
+							annualAmount: '90000.0000',
+							distributionMethod: 'SPECIFIC_PERIOD',
+							specificMonths: [3, 6, 9],
+							ifrsCategory: 'OTHER_OPERATING_INCOME',
+						},
+					],
+				})
+			);
+
+			expect(result.otherRevenue).toHaveLength(3);
+			expect(result.otherRevenue.map((r) => r.month)).toEqual([3, 6, 9]);
 
 			const total = result.otherRevenue.reduce(
-				(acc, r) => acc.plus(new Decimal(r.amount)),
+				(sum, r) => sum.plus(new Decimal(r.amount)),
 				new Decimal(0)
 			);
-			expect(total.toFixed(4)).toBe('100000.0000');
+			expect(total.toFixed(4)).toBe('90000.0000');
 		});
-	});
 
-	describe('empty inputs', () => {
-		it('returns empty result when no enrollment detail', () => {
-			const input = makeInput({
-				enrollmentDetail: [],
-				feeGrid: [],
-				otherRevenue: [],
-			});
-			const result = calculateRevenue(input);
-
-			expect(result.tuitionRevenue).toHaveLength(0);
-			expect(result.otherRevenue).toHaveLength(0);
-			expect(result.totals.totalRevenueHtAy1).toBe('0.0000');
-			expect(result.totals.totalRevenueHtAy2).toBe('0.0000');
-			expect(result.totals.totalAnnualRevenueHt).toBe('0.0000');
-		});
-	});
-
-	describe('negative other revenue (Bourses)', () => {
-		it('distributes negative amounts correctly', () => {
-			const input = makeInput({
-				enrollmentDetail: [],
-				feeGrid: [],
-				otherRevenue: [
-					{
-						lineItemName: 'Bourses AEFE',
-						annualAmount: '-50000.0000',
-						distributionMethod: 'ACADEMIC_10',
-						ifrsCategory: 'Scholarships',
-					},
-				],
-			});
-			const result = calculateRevenue(input);
-
-			expect(result.otherRevenue).toHaveLength(10);
-
-			// -50000 / 10 = -5000 each
-			for (const row of result.otherRevenue) {
-				expect(row.amount).toBe('-5000.0000');
-			}
+		it('should handle negative amounts (Social Aid / Bourses)', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [],
+					feeGrid: [],
+					otherRevenueItems: [
+						{
+							lineItemName: 'Bourses AEFE',
+							annualAmount: '-50000.0000',
+							distributionMethod: 'ACADEMIC_10',
+							ifrsCategory: 'REVENUE_FROM_CONTRACTS',
+						},
+					],
+				})
+			);
 
 			const total = result.otherRevenue.reduce(
-				(acc, r) => acc.plus(new Decimal(r.amount)),
+				(sum, r) => sum.plus(new Decimal(r.amount)),
 				new Decimal(0)
 			);
 			expect(total.toFixed(4)).toBe('-50000.0000');
 		});
 	});
 
-	describe('totals', () => {
-		it('correctly separates AY1 and AY2 totals', () => {
-			const input = makeInput({
-				enrollmentDetail: [
-					makeEnrollment({ academicPeriod: 'AY1', headcount: 10 }),
-					makeEnrollment({ academicPeriod: 'AY2', headcount: 5 }),
-				],
-				feeGrid: [makeFee({ academicPeriod: 'AY1' }), makeFee({ academicPeriod: 'AY2' })],
+	describe('Empty / Edge Cases', () => {
+		it('should return empty results for empty inputs', () => {
+			const result = calculateRevenue({
+				enrollmentDetails: [],
+				feeGrid: [],
+				discountPolicies: [],
+				otherRevenueItems: [],
 			});
-			const result = calculateRevenue(input);
 
-			// AY1: 10 * 40000 = 400000
-			// AY2: 5 * 40000 = 200000
-			expect(result.totals.totalRevenueHtAy1).toBe('400000.0000');
-			expect(result.totals.totalRevenueHtAy2).toBe('200000.0000');
-			expect(result.totals.totalAnnualRevenueHt).toBe('600000.0000');
+			expect(result.tuitionRevenue).toHaveLength(0);
+			expect(result.otherRevenue).toHaveLength(0);
+			expect(result.totals.grossRevenueHt).toBe('0.0000');
+		});
+
+		it('should skip enrollment rows with headcount=0', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ headcount: 0 })],
+				})
+			);
+
+			expect(result.tuitionRevenue).toHaveLength(0);
+		});
+
+		it('should skip enrollment rows with no matching fee grid entry (SA-010)', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ gradeLevel: 'PS' })],
+					// Fee grid only has CP, not PS
+					feeGrid: [makeFee({ gradeLevel: 'CP' })],
+				})
+			);
+
+			expect(result.tuitionRevenue).toHaveLength(0);
+		});
+
+		it('should handle multiple enrollment segments and produce separate rows', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [
+						makeEnrollment({ gradeLevel: 'CP', nationality: 'Francais', headcount: 10 }),
+						makeEnrollment({ gradeLevel: 'CP', nationality: 'Nationaux', headcount: 5 }),
+					],
+					feeGrid: [
+						makeFee({ nationality: 'Francais' }),
+						makeFee({
+							nationality: 'Nationaux',
+							tuitionTtc: '50000.0000',
+							tuitionHt: '50000.0000',
+						}),
+					],
+				})
+			);
+
+			// 6 months * 2 segments = 12 rows
+			expect(result.tuitionRevenue).toHaveLength(12);
+
+			// Nationaux should have 0 VAT
+			const nationauxRows = result.tuitionRevenue.filter((r) => r.nationality === 'Nationaux');
+			const nationauxVat = nationauxRows.reduce(
+				(sum, r) => sum.plus(new Decimal(r.vatAmount)),
+				new Decimal(0)
+			);
+			expect(nationauxVat.toFixed(4)).toBe('0.0000');
 		});
 	});
 
-	describe('fee grid lookup error', () => {
-		it('throws when fee grid entry is missing', () => {
-			const input = makeInput({
-				enrollmentDetail: [makeEnrollment({ gradeLevel: 'CM2' })],
-				feeGrid: [makeFee({ gradeLevel: 'PS' })], // mismatch
-			});
+	describe('Totals', () => {
+		it('should compute correct totals across all segments', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [
+						makeEnrollment({ headcount: 10 }),
+						makeEnrollment({ academicPeriod: 'AY2', headcount: 10 }),
+					],
+					feeGrid: [makeFee(), makeFee({ academicPeriod: 'AY2' })],
+					otherRevenueItems: [
+						{
+							lineItemName: 'Cantine',
+							annualAmount: '100000.0000',
+							distributionMethod: 'YEAR_ROUND_12',
+							ifrsCategory: 'OTHER_OPERATING_INCOME',
+						},
+					],
+				})
+			);
 
-			expect(() => calculateRevenue(input)).toThrow('No fee grid entry for CM2');
+			// Verify totals match row sums
+			const rowGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			expect(result.totals.grossRevenueHt).toBe(rowGross.toFixed(4));
+
+			const rowDiscount = sumField(result.tuitionRevenue, 'discountAmount');
+			expect(result.totals.totalDiscounts).toBe(rowDiscount.toFixed(4));
+
+			const rowNet = sumField(result.tuitionRevenue, 'netRevenueHt');
+			expect(result.totals.netRevenueHt).toBe(rowNet.toFixed(4));
+
+			const rowVat = sumField(result.tuitionRevenue, 'vatAmount');
+			expect(result.totals.totalVat).toBe(rowVat.toFixed(4));
+
+			expect(result.totals.totalOtherRevenue).toBe('100000.0000');
 		});
 	});
-});
 
-describe('distributeAcrossMonths', () => {
-	it('SPECIFIC_PERIOD throws on empty months array', () => {
-		expect(() =>
-			distributeAcrossMonths(new Decimal(1000), 'SPECIFIC_PERIOD', undefined, [])
-		).toThrow('SPECIFIC_PERIOD requires a non-empty specificMonths array');
-	});
+	describe('distributeAcrossMonths', () => {
+		it('should throw for CUSTOM_WEIGHTS with invalid weight array', () => {
+			expect(() => distributeAcrossMonths(new Decimal(1000), 'CUSTOM_WEIGHTS', [0.5, 0.5])).toThrow(
+				'CUSTOM_WEIGHTS requires a weight_array of exactly 12 values'
+			);
+		});
 
-	it('CUSTOM_WEIGHTS throws on zero total weight', () => {
-		expect(() =>
-			distributeAcrossMonths(
-				new Decimal(1000),
-				'CUSTOM_WEIGHTS',
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-			)
-		).toThrow('CUSTOM_WEIGHTS: total weight must not be zero');
+		it('should throw for SPECIFIC_PERIOD with empty months', () => {
+			expect(() => distributeAcrossMonths(new Decimal(1000), 'SPECIFIC_PERIOD', null, [])).toThrow(
+				'SPECIFIC_PERIOD requires a non-empty specific_months array'
+			);
+		});
+
+		it('should distribute YEAR_ROUND_12 with last-bucket ensuring exact sum', () => {
+			// 1000 / 12 = 83.3333... — not perfectly divisible
+			const result = distributeAcrossMonths(new Decimal('1000'), 'YEAR_ROUND_12');
+			let sum = new Decimal(0);
+			for (const [, amount] of result) {
+				sum = sum.plus(amount);
+			}
+			expect(sum.toFixed(4)).toBe('1000.0000');
+			expect(result.size).toBe(12);
+		});
 	});
 });

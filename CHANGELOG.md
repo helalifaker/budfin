@@ -78,6 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- System Settings page now displays all configured values correctly; three fields (session timeout, fiscal year start, autosave interval) previously appeared empty due to mismatched setting key names (#5)
 - Audit trail tamper protection now correctly applied; database migration targets the actual runtime role (`app_user`) instead of a non-existent role, restoring append-only enforcement on the audit log (#98)
 - Multiple browser tabs no longer cause unexpected logouts; token refresh is now synchronized across tabs with automatic session sharing, preventing duplicate refresh requests from triggering theft detection (#98)
 - Nationality grid now filters by the selected academic period (AY1 or AY2) instead of showing all periods combined (#96)

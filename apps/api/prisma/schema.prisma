@@ -76,6 +76,15 @@ model User {
   // Calculation audit relations
   triggeredCalculations CalculationAuditLog[] @relation("CalculationTriggeredBy")
 
+  // Revenue relations (Epic 2)
+  createdFeeGrids      FeeGrid[]          @relation("FeeGridCreator")
+  updatedFeeGrids      FeeGrid[]          @relation("FeeGridUpdater")
+  createdDiscounts     DiscountPolicy[]   @relation("DiscountCreator")
+  updatedDiscounts     DiscountPolicy[]   @relation("DiscountUpdater")
+  createdOtherRevenue  OtherRevenueItem[] @relation("OtherRevenueCreator")
+  updatedOtherRevenue  OtherRevenueItem[] @relation("OtherRevenueUpdater")
+  calculatedRevenue    MonthlyRevenue[]   @relation("RevenueCalculator")
+
   @@map("users")
 }
 
@@ -343,6 +352,12 @@ model BudgetVersion {
   dhgRequirements      DhgRequirement[]
   calculationAuditLogs CalculationAuditLog[]
 
+  // Revenue (Epic 2)
+  feeGrids           FeeGrid[]
+  discountPolicies   DiscountPolicy[]
+  otherRevenueItems  OtherRevenueItem[]
+  monthlyRevenues    MonthlyRevenue[]
+
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
   @@index([status], map: "idx_budget_versions_status")
@@ -486,4 +501,108 @@ model CalculationAuditLog {
 
   @@index([versionId], map: "idx_calc_audit_version")
   @@map("calculation_audit_log")
+}
+
+// ── Revenue (Epic 2) ──────────────────────────────────────────────────────────
+
+model FeeGrid {
+  id             Int      @id @default(autoincrement())
+  versionId      Int      @map("version_id")
+  academicPeriod String   @map("academic_period") @db.VarChar(3)
+  gradeLevel     String   @map("grade_level") @db.VarChar(10)
+  nationality    String   @db.VarChar(10)
+  tariff         String   @db.VarChar(10)
+  dai            Decimal  @default(0) @db.Decimal(15, 4)
+  tuitionTtc     Decimal  @map("tuition_ttc") @db.Decimal(15, 4)
+  tuitionHt      Decimal  @map("tuition_ht") @db.Decimal(15, 4)
+  term1Amount    Decimal  @default(0) @map("term1_amount") @db.Decimal(15, 4)
+  term2Amount    Decimal  @default(0) @map("term2_amount") @db.Decimal(15, 4)
+  term3Amount    Decimal  @default(0) @map("term3_amount") @db.Decimal(15, 4)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy      Int      @map("created_by")
+  updatedBy      Int?     @map("updated_by")
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  creator User          @relation("FeeGridCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  updater User?         @relation("FeeGridUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([versionId, academicPeriod, gradeLevel, nationality, tariff], map: "uq_fee_grid")
+  @@index([versionId, academicPeriod, gradeLevel, nationality, tariff], map: "idx_fee_grids_revenue_calc")
+  @@index([createdBy], map: "idx_fee_grids_created_by")
+  @@map("fee_grids")
+}
+
+model DiscountPolicy {
+  id           Int      @id @default(autoincrement())
+  versionId    Int      @map("version_id")
+  tariff       String   @db.VarChar(10)
+  nationality  String?  @db.VarChar(10)
+  discountRate Decimal  @map("discount_rate") @db.Decimal(7, 6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy    Int      @map("created_by")
+  updatedBy    Int?     @map("updated_by")
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  creator User          @relation("DiscountCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  updater User?         @relation("DiscountUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([versionId, tariff, nationality], map: "uq_discount_policy")
+  @@index([versionId, tariff, nationality], map: "idx_discount_policies_calc")
+  @@index([createdBy], map: "idx_discount_policies_created_by")
+  @@map("discount_policies")
+}
+
+model OtherRevenueItem {
+  id                 Int      @id @default(autoincrement())
+  versionId          Int      @map("version_id")
+  lineItemName       String   @map("line_item_name") @db.Text
+  annualAmount       Decimal  @map("annual_amount") @db.Decimal(15, 4)
+  distributionMethod String   @map("distribution_method") @db.VarChar(20)
+  weightArray        Json?    @map("weight_array") @db.JsonB
+  specificMonths     Int[]    @map("specific_months")
+  ifrsCategory       String   @map("ifrs_category") @db.VarChar(50)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy          Int      @map("created_by")
+  updatedBy          Int?     @map("updated_by")
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  creator User          @relation("OtherRevenueCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  updater User?         @relation("OtherRevenueUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([versionId, lineItemName], map: "uq_other_revenue_item")
+  @@index([versionId], map: "idx_other_revenue_items_version")
+  @@index([createdBy], map: "idx_other_revenue_items_created_by")
+  @@map("other_revenue_items")
+}
+
+model MonthlyRevenue {
+  id                   Int      @id @default(autoincrement())
+  versionId            Int      @map("version_id")
+  scenarioName         String   @default("Base") @map("scenario_name") @db.VarChar(20)
+  academicPeriod       String   @map("academic_period") @db.VarChar(3)
+  gradeLevel           String   @map("grade_level") @db.VarChar(10)
+  nationality          String   @db.VarChar(10)
+  tariff               String   @db.VarChar(10)
+  month                Int      @db.SmallInt
+  grossRevenueHt       Decimal  @default(0) @map("gross_revenue_ht") @db.Decimal(15, 4)
+  discountAmount       Decimal  @default(0) @map("discount_amount") @db.Decimal(15, 4)
+  scholarshipDeduction Decimal  @default(0) @map("scholarship_deduction") @db.Decimal(15, 4)
+  netRevenueHt         Decimal  @default(0) @map("net_revenue_ht") @db.Decimal(15, 4)
+  vatAmount            Decimal  @default(0) @map("vat_amount") @db.Decimal(15, 4)
+  calculatedAt         DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  calculatedBy         Int?     @map("calculated_by")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  calculator User?         @relation("RevenueCalculator", fields: [calculatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([versionId, scenarioName, academicPeriod, gradeLevel, nationality, tariff, month], map: "uq_monthly_revenue")
+  @@index([versionId, month], map: "idx_monthly_revenue_version_month")
+  @@index([versionId, academicPeriod], map: "idx_monthly_revenue_version_period")
+  @@index([calculatedBy], map: "idx_monthly_revenue_calculated_by")
+  @@map("monthly_revenue")
 }

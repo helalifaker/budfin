@@ -21,6 +21,7 @@ import {
 	calculateRoutes,
 	enrollmentHistoricalRoutes,
 } from './routes/enrollment/index.js';
+import { revenueRoutes, revenueCalculateRoutes } from './routes/revenue/index.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -63,6 +64,12 @@ export async function buildApp() {
 	});
 	await app.register(enrollmentHistoricalRoutes, {
 		prefix: '/api/v1/enrollment',
+	});
+	await app.register(revenueRoutes, {
+		prefix: '/api/v1/versions/:versionId',
+	});
+	await app.register(revenueCalculateRoutes, {
+		prefix: '/api/v1/versions/:versionId/calculate',
 	});
 	await app.register(fiscalPeriodRoutes, { prefix: '/api/v1/fiscal-periods' });
 
