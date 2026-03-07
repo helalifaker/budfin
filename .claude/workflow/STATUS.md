@@ -1,8 +1,8 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 2 — Revenue (#6)
-**Current Story**: All stories implemented, PR #113 in review
+**Phase**: 4 — SPECIFY
+**Current Epic**: Epic 3 — Staffing/DHG (#7)
+**Current Story**: —
 **Last updated**: 2026-03-07
 
 ## Phase History
@@ -35,13 +35,14 @@
 | 4 — SPECIFY (Epic 2) | ✅ Complete | 2026-03-07 |
 | 5 — TDD RED (Epic 2) | ✅ Complete | 2026-03-07 |
 | 6 — IMPLEMENT (Epic 2) | ✅ Complete | 2026-03-07 |
+| 7 — REVIEW (Epic 2) | ✅ Complete | 2026-03-07 |
 
 ## Feature Progress
 
 | Epic # | Feature | Phase | Status |
 | -------- | --------- | ------- | -------- |
 | 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07 |
-| 2 | Revenue | 7 | All 12 stories implemented, PR #113 — CI green, pending merge |
+| 2 | Revenue | DONE | All 12 stories complete (12/12), merged PR #113 — 2026-03-07 |
 | 3 | Staffing (DHG) | 2 | Epic Created (#7) |
 | 4 | Staff Costs | 2 | Epic Created (#8) |
 | 5 | P&L Reporting | 2 | Epic Created (#11) |
