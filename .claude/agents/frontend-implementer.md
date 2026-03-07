@@ -238,6 +238,17 @@ Before marking implementation complete, verify every item:
 
 ---
 
+## Visual Verification (before GREEN gate)
+
+Before marking implementation complete, perform visual verification:
+
+- [ ] Run dev server and navigate to affected route
+- [ ] Verify component renders correctly against UI/UX spec
+- [ ] Verify CSS tokens used (inspect computed styles, no hardcoded hex)
+- [ ] Capture screenshot for PR description
+
+---
+
 ## When Done
 
 Mark tasks completed via TaskUpdate. Send message to story-orchestrator with:
@@ -248,3 +259,4 @@ Mark tasks completed via TaskUpdate. Send message to story-orchestrator with:
 - Any implementation gaps or questions
 - UI/UX conformance: [checklist results — any deviations with justification]
 - Shell type used: [PlanningShell / ManagementShell]
+- Visual verification: [PASS / findings]

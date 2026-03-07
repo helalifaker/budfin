@@ -7,6 +7,8 @@ description: >
 allowed-tools: Bash, Read, Edit
 ---
 
+> **Internal command.** Called by `/fix:all` automatically.
+
 Fix all failing Vitest tests. Fix implementation code to match what tests expect — never modify
 tests to pass (weakening tests is not allowed).
 

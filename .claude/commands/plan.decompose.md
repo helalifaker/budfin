@@ -4,6 +4,8 @@ description: Phase 2 - Bulk-create all 13 BudFin GitHub Epics, required labels, 
 allowed-tools: Bash, Read, Edit
 ---
 
+> **Internal command.** Called by `/workflow:run` automatically.
+
 Invoke the plan-decompose skill before any steps.
 
 This command executes Phase 2 (DECOMPOSE) of the BudFin workflow in full.

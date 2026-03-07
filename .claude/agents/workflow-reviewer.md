@@ -100,6 +100,17 @@ Use the sign-off template from the review checklist:
 Status: APPROVED / CHANGES REQUESTED
 ```
 
+## PR Process Integrity
+
+Before reviewing code, verify the PR itself is in good shape:
+
+- PR title matches story title
+- PR body contains `Fixes #[story-#]` and `Part of Epic #[epic-#]`
+- CI is green at time of review
+- All PR review conversations are resolved (0 unresolved threads)
+
+Report any PR process issues as **Blockers** in the review output.
+
 ## Rules
 
 - Be specific — always include file name and line number
@@ -110,3 +121,4 @@ Status: APPROVED / CHANGES REQUESTED
 - Financial precision violations (TC-001) are always Blockers — no exceptions
 - Security violations (missing authenticate preHandler, SQL injection risk) are always Blockers
 - A finding in the Blocker category blocks the PR — do not downgrade Blockers to Warnings
+- All PR review conversations must be resolved before approving

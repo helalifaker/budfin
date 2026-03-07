@@ -108,6 +108,25 @@
 
 ---
 
+## PR Process Integrity (Blocker)
+
+- **Blocker** -- All PR review conversations resolved (0 unresolved threads)
+- **Blocker** -- PR title matches story title
+- **Blocker** -- PR body contains `Fixes #[story-#]` and `Part of Epic #[epic-#]`
+- **Blocker** -- CI is green at time of review
+
+## UI/UX Interaction Coverage (Blocker -- frontend stories only)
+
+> Skip if the story has no frontend files in `apps/web/src/`.
+
+- **Blocker** -- Dev server starts and route renders without console errors
+- **Blocker** -- Shell type matches UI/UX spec (PlanningShell vs ManagementShell)
+- **Blocker** -- Key Components from spec are present in DOM
+- **Blocker** -- Keyboard navigation works (Tab order, Enter/Space activation, Escape cancel)
+- **Blocker** -- ARIA roles match spec accessibility requirements
+
+---
+
 ## Sign-Off Template
 
 Paste this into the PR after review:

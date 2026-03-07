@@ -1,9 +1,10 @@
 ---
 name: workflow:run
 description: >
-  Full Epic driver. Drives the complete lifecycle for a single BudFin Epic: spec → stories →
-  implement all stories → advance phase. One command to rule them all for a single Epic.
-  Requires Phase 4 or later. Usage - /workflow:run [epic-issue-number]
+  Full Epic driver. Drives the complete lifecycle for a single BudFin Epic: health check ->
+  spec -> stories -> implement all stories -> review -> visual audit -> merge -> rollup.
+  Self-healing with auto-fix, stuck detection, and PR conversation resolution.
+  Usage - /workflow:run [epic-issue-number]
 argument-hint: '[epic-issue-number]'
 allowed-tools: Bash, Read, Edit, Agent, TeamCreate, TaskCreate, TaskUpdate, TaskList, SendMessage, Skill
 ---
@@ -14,24 +15,42 @@ Parse the argument:
 
 If missing, ask the user: "Which Epic issue number should I run? (Check /workflow:status for available Epics)"
 
-## Step 1 — Read Current Phase
+---
 
-Read `.claude/workflow/STATUS.md` to determine current phase.
+## CHECKPOINT 1: ORIENTATION
 
-## Step 2 — Phase Routing
+1. Read `.claude/workflow/STATUS.md` to determine current phase.
+2. Display inline status:
+   ```
+   >>> Phase [N] -- [PHASE_NAME] | Epic #[N] -- [EPIC_NAME]
+   ```
+3. Validate phase >= 4:
+   - If earlier: error and stop:
+     ```
+     Error: /workflow:run requires Phase 4 (SPECIFY) or later.
+     Current phase is [N] -- [NAME].
+     Complete earlier phase work first, then run /workflow:advance.
+     ```
 
-### If Phase 3 (SETUP) or earlier:
+---
+
+## CHECKPOINT 2: HEALTH CHECK (auto-fix mode)
+
+Run health check before any feature work:
+
+```bash
+pnpm lint 2>&1
+pnpm typecheck 2>&1
 ```
-Error: /workflow:run requires Phase 4 (SPECIFY) or later.
-Current phase is [N] — [NAME].
 
-Complete Phase 3 setup work first, then run /workflow:advance.
-Once in Phase 4, re-run: /workflow:run $EPIC_NUMBER
-```
-Stop.
+- If clean: display `Health: clean`
+- If auto-fixable issues found: run `/fix:all` internally, commit `fix(health): resolve pre-epic health issues`
+- If unfixable blockers remain after auto-fix: report and STOP
+- Display: `Health: [clean | N issues auto-fixed]`
 
-### If Phase 4 (SPECIFY):
-Execute in sequence:
+---
+
+## PHASE 4 (SPECIFY)
 
 **4a. Check if spec exists**:
 ```bash
@@ -48,25 +67,164 @@ gh issue list --label "story" --json number,title,body --state open 2>/dev/null 
 
 If no stories: run the full `plan:stories` workflow to create all story issues.
 
-**4c. Advance to Phase 5**:
-Run `workflow:advance` logic — gate-check Phase 4, advance STATUS.md to Phase 5.
+**4c. Gate**: spec approved + stories created.
 
-**4d. Fall through to Phase 5 logic below.**
+**4d. Advance to Phase 5**:
+Run `workflow:advance` logic -- gate-check Phase 4, advance STATUS.md to Phase 5.
 
-### If Phase 5 or 6 (TDD RED / IMPLEMENT):
+Display: `>>> Phase 5 -- TDD RED | [N] stories queued`
+
+**4e. Fall through to Phase 5 logic below.**
+
+---
+
+## PHASE 5-6 (IMPLEMENT)
+
 Run the full `impl:epic` workflow:
-1. Load all open stories for this Epic in dependency order
-2. Implement each story using the `impl:story` swarm
-3. Pause on any Blocker and wait for resolution
-4. Continue until all stories have approved PRs
 
-### If Phase 7 (REVIEW):
-Execute the `review:run --all` workflow inline:
-1. Load all open PRs for this Epic in dependency order
-2. For each PR: check CI -> fix if needed -> run review agents -> merge
-3. Epic rollup: close Epic issue, update STATUS.md
-4. Auto-advance to Phase 4 for next Epic
-5. Output: "Epic #$EPIC_NUMBER complete. Next: /workflow:run [next-epic-#]"
+1. Load all open stories for this Epic in dependency order
+2. For each story:
+   - Display: `>>> Story [X/N]: #[number] -- [title]`
+   - Run `impl:story` swarm (RED -> GREEN -> draft PR)
+   - **HEALTH CHECK after each story**: `pnpm lint && pnpm typecheck`
+     - If auto-fixable: run `/fix:all`, commit `fix(health): post-story cleanup`
+     - If blocker: retry ONCE with `/fix:all`, then STOP if still blocked
+3. Gate: all stories have draft PRs with passing tests
+4. Advance to Phase 7
+
+Display: `>>> Phase 7 -- REVIEW | [N] PRs to merge`
+
+---
+
+## PHASE 7 (REVIEW + MERGE)
+
+Use `pr:drive` loop logic for each PR in dependency order. For each PR:
+
+### Step 7a: CI CHECK
+
+```bash
+gh pr checks $PR_NUMBER --watch
+```
+
+- If failing: auto-fix (format -> lint -> types -> tests -> build)
+- Commit `fix(ci): resolve failures for PR #$PR_NUMBER`
+- Re-check CI (loop, max 3 cycles)
+- **Stuck detection**: 2 identical CI fingerprints -> STOP with diagnostics
+
+### Step 7b: REVIEW AGENTS (if CI green)
+
+Spawn 3 agents in parallel:
+
+1. **workflow-reviewer** -- code quality, security, financial precision
+2. **workflow-qa** -- AC coverage, edge cases, coverage >= 80%
+3. **workflow-documentor** -- CHANGELOG, docs, traceability
+
+Provide each agent with PR diff, story number, Epic number, changed files.
+
+- If blockers: auto-fix, re-run agents (max 2 cycles)
+- **Stuck detection**: 2 identical review fingerprints -> STOP
+
+### Step 7c: PR CONVERSATION RESOLUTION
+
+```bash
+gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/reviews --jq '[.[] | select(.state == "CHANGES_REQUESTED")] | length'
+gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments --jq '[.[] | select(.in_reply_to_id == null)] | length'
+```
+
+- Check: all review threads resolved
+- If unresolved: list threads, attempt to address each finding, re-check
+- Gate: 0 unresolved conversations, no CHANGES_REQUESTED reviews pending
+
+### Step 7d: VISUAL UI/UX AUDIT (frontend stories only)
+
+Detect frontend changes in PR diff:
+```bash
+gh pr diff $PR_NUMBER --name-only | grep '\.tsx$'
+```
+
+If frontend changes found:
+1. Start dev server: `pnpm dev` (wait for localhost:3000)
+2. Navigate to affected routes via Chrome automation (`mcp__claude-in-chrome__navigate`)
+3. Take screenshots of key components (`mcp__claude-in-chrome__computer`)
+4. Read accessibility tree (`mcp__claude-in-chrome__read_page`)
+5. Test keyboard navigation (Tab, Enter, Escape via `mcp__claude-in-chrome__computer`)
+6. Compare against UI/UX spec (`docs/ui-ux-spec/NN-module.md`):
+   - Correct shell (PlanningShell vs ManagementShell)
+   - CSS tokens used (not hardcoded colors)
+   - Component structure matches spec
+   - ARIA roles present
+   - Keyboard navigation works
+7. Report: PASS or list visual findings
+8. Stop dev server
+
+Visual audit findings are **warnings, not blockers**. Log in post-epic report but do not block merge.
+
+If no frontend changes: skip this step.
+
+### Step 7e: MERGE
+
+```bash
+gh pr ready $PR_NUMBER
+```
+
+Final pre-flight:
+```bash
+pnpm test && pnpm typecheck && pnpm lint
+```
+
+Squash merge:
+```bash
+gh pr merge $PR_NUMBER --squash --delete-branch
+```
+
+Verify story issue closed:
+```bash
+gh issue view $STORY_NUMBER --json state --jq '.state'
+```
+If not closed: `gh issue close $STORY_NUMBER --comment "Closed by merge of PR #$PR_NUMBER."`
+
+### Step 7f: INTER-PR HEALTH CHECK
+
+After each PR merge, check for regressions:
+```bash
+git pull origin main && pnpm test
+```
+
+If failing: auto-fix with `/fix:all`, commit, continue.
+
+---
+
+## CHECKPOINT 3: EPIC ROLLUP
+
+1. Verify ALL stories for Epic are closed:
+   ```bash
+   gh issue list --label "story" --search "Part of Epic #$EPIC_NUMBER" --json number,state --state all
+   ```
+2. Comment on Epic issue: `gh issue comment $EPIC_NUMBER --body "All N stories merged -- Epic #$EPIC_NUMBER complete."`
+3. Close Epic issue: `gh issue close $EPIC_NUMBER`
+4. Add done label: `gh issue edit $EPIC_NUMBER --add-label "done"`
+5. Update STATUS.md: mark Epic complete in Feature Progress table
+6. Auto-select next Epic (dependency order + MoSCoW priority)
+
+---
+
+## CHECKPOINT 4: POST-EPIC REPORT
+
+Display summary:
+```
+=== Epic #$EPIC_NUMBER Complete ===
+
+Stories merged:       N
+PRs merged:           N
+Health issues fixed:  N
+Visual audit findings: N (warnings only)
+Coverage:             N%
+
+Next Epic: #[N] -- [Name]
+Command:   /workflow:run [next-epic-#]
+```
+
+---
 
 ## Zero-Prompt Mode
 
@@ -77,33 +235,7 @@ Suppressed prompts:
 - impl:epic "Ready to implement N stories?" -> auto-yes
 - workflow:advance "Which Epic next?" -> auto-advance, show next epic
 
-## Step 3 — Epic Completion (after all stories implemented and approved)
-
-After all stories have approved draft PRs:
-
-1. Display PR list for user to merge in dependency order:
-   ```
-   All stories approved. Merge PRs in this order:
-   1. PR #N — [story title] (no dependencies)
-   2. PR #N — [story title] (after PR #N)
-   ...
-   ```
-
-2. Ask: "Would you like to advance to the next phase now? (yes/no)"
-   - If yes: run `workflow:advance` logic
-
-3. Output:
-   ```
-   Epic #$EPIC_NUMBER — [Feature Name] complete.
-
-   Stories implemented: N
-   PRs approved: N
-   Phase advanced to: [next phase]
-
-   Next Epic:
-     /workflow:status (to see which Epic to tackle next)
-     /workflow:run [next-epic-number]
-   ```
+---
 
 ## Error Handling
 

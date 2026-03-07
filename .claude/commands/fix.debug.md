@@ -8,6 +8,8 @@ argument-hint: '"[symptom description]"'
 allowed-tools: Bash, Read, Edit, Skill
 ---
 
+> **Internal command.** Called by `/fix:all` automatically.
+
 Parse the argument:
 
 - `symptom`: description of the error or unexpected behavior in quotes

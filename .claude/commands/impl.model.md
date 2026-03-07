@@ -9,6 +9,8 @@ argument-hint: '"[ModelName]"'
 allowed-tools: Bash, Read, Write, Edit, Skill
 ---
 
+> **Internal command.** Called by `/impl:story` automatically.
+
 > **Internal scaffolding command.** Called by story-orchestrator agents during /impl:story.
 > Not intended for direct user invocation.
 

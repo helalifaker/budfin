@@ -15,63 +15,30 @@ Never skip a phase. Never skip a checklist item.
 
 ## Command Reference
 
-### Planning Commands
+8 user-facing commands. See `.claude/COMMANDS.md` for the full decision tree.
 
-| Command | Phase | Purpose |
-|---------|-------|---------|
-| `/plan:decompose` | 2 | Bulk-create all 13 GitHub Epics + Projects board |
-| `/plan:spec [epic-N] "[feature name]"` | 4 | Write feature spec + run Orchestrator review |
-| `/plan:stories [epic-N]` | 4 | Batch-create all GitHub Story issues from spec |
-| `/plan:adr "[decision title]"` | Any | Record an architectural decision |
+| # | Command | Phase | Purpose |
+|---|---------|-------|---------|
+| 1 | `/workflow:run [epic-#]` | 4-7 | Full Epic lifecycle: health check -> spec -> stories -> implement -> review -> visual audit -> merge -> rollup |
+| 2 | `/workflow:status` | Any | Phase, checklist, `>>> NEXT:` recommendation |
+| 3 | `/fix:all [symptom?]` | Any | Fix everything (or debug a specific symptom) |
+| 4 | `/pr:drive [--pr N / --epic #]` | 5-7 | Push PRs to merge autonomously |
+| 5 | `/workflow:advance` | Any | Manual phase gate check |
+| 6 | `/plan:adr "[title]"` | Any | Record architectural decision |
+| 7 | `/plan:spec [epic-#]` | 4 | Write feature spec interactively |
+| 8 | `/impl:story [story-#]` | 5-6 | Implement a single story (5-agent TDD swarm) |
 
-### Implementation Commands
-
-| Command | Phase | Purpose |
-|---------|-------|---------|
-| `/impl:story [story-#]` | 5–6 | Implement single story: TDD RED → GREEN → Review swarm |
-| `/impl:epic [epic-#]` | 5–6 | Implement all stories for an Epic in dependency order |
-| `/impl:commit [story-#]` | 6 | Commit + push + open draft PR |
-
-### Fix Commands
-
-| Command | Phase | Purpose |
-|---------|-------|---------|
-| `/fix:lint` | Any | Fix all ESLint, Prettier, markdownlint errors |
-| `/fix:types` | Any | Fix all TypeScript type errors |
-| `/fix:tests` | Any | Fix all failing Vitest tests + confirm ≥80% coverage |
-| `/fix:security` | Any | Fix JWT, RBAC, SQL injection, audit log issues |
-| `/fix:precision` | Any | Fix TC-001 Decimal.js violations + monetary serialization |
-| `/fix:debug "[symptom]"` | Any | Root cause analysis for any error |
-| `/fix:all` | Any | Run all fixers in sequence |
-
-### Review Commands
-
-| Command | Phase | Purpose |
-|---------|-------|---------|
-| `/review:run [story-#\|--all]` | 7 | Review + CI check + merge + epic rollup |
-| `/ci:check [story-#]` | 6–7 | Diagnose CI failures + auto-fix |
-| `/pr:merge [story-#]` | 7 | Manual squash-merge (single PR) |
-
-### Workflow Commands
-
-| Command | Phase | Purpose |
-|---------|-------|---------|
-| `/workflow:status` | Any | Show current phase, checklist, valid commands |
-| `/workflow:advance` | Any | Gate-check and advance to next phase |
-| `/workflow:run [epic-#]` | 4–7 | Full Epic driver: spec → stories → implement → advance |
-
-### Error Type → Fix Command
+### Error Type -> Fix Command
 
 | Error | Fix Command |
 |-------|-------------|
-| ESLint / Prettier / markdownlint errors | `/fix:lint` |
-| TypeScript type errors | `/fix:types` |
-| Vitest test failures | `/fix:tests` |
-| JWT / RBAC / SQL injection / audit | `/fix:security` |
-| TC-001 native arithmetic / JSON serialization | `/fix:precision` |
-| Unexplained error — need root cause | `/fix:debug "[symptom]"` |
+| ESLint / Prettier / markdownlint errors | `/fix:all --lint` |
+| TypeScript type errors | `/fix:all --types` |
+| Vitest test failures | `/fix:all --tests` |
+| JWT / RBAC / SQL injection / audit | `/fix:all --security` |
+| TC-001 native arithmetic / JSON serialization | `/fix:all --precision` |
+| Unexplained error -- need root cause | `/fix:all "[symptom]"` |
 | Multiple error types | `/fix:all` |
-| CI failure on PR | `/ci:check [story-#]` |
 
 ---
 
@@ -220,29 +187,33 @@ Use scaffolding shortcuts when needed:
 
 ### Phase 7: REVIEW
 
-> Three agents review in parallel before merging.
+> PR-driven review: CI fix -> review agents -> conversation resolution -> visual audit -> merge.
 
-**Commands**: `/review:run [story-#|--all]` — review orchestrator that checks CI, runs review agents, merges approved PRs, and performs epic rollup. Also: `/ci:check [story-#]` for CI diagnosis, `/pr:merge [story-#]` for manual single-PR merge.
-
-`/impl:story [story-#]` — after GREEN, `story-orchestrator` launches the three review agents in parallel automatically. No manual invocation needed.
+**Commands**: `/pr:drive --epic [epic-#]` — autonomous PR driver that loops each PR through CI checks,
+auto-fixes, review agents, conversation resolution, and squash-merge. Also: `/pr:drive [story-#]`
+for a single story, `/workflow:run [epic-#]` handles Phase 7 automatically.
 
 | Agent | File | Responsibility |
 |-------|------|----------------|
-| Reviewer | `.claude/agents/workflow-reviewer.md` | Code quality, security, performance, maintainability |
-| QA | `.claude/agents/workflow-qa.md` | Edge cases, acceptance criteria, regression risk, coverage |
+| Reviewer | `.claude/agents/workflow-reviewer.md` | Code quality, security, performance, PR process integrity |
+| QA | `.claude/agents/workflow-qa.md` | Edge cases, AC coverage, UI/UX interaction coverage, regression risk |
 | Documentor | `.claude/agents/workflow-documentor.md` | API docs, CHANGELOG, ADRs, traceability matrix |
 
+- [ ] **CI green** — auto-fixed if failing (stuck detection after 2 identical fingerprints)
 - [ ] **Reviewer agent** run — review-checklist.md used (`.claude/workflow/references/review-checklist.md`)
-- [ ] **QA agent** run — all 35 edge cases checked, `pnpm test --coverage` ≥ 80% *(parallel)*
+- [ ] **QA agent** run — all 35 edge cases checked, `pnpm test --coverage` >= 80% *(parallel)*
 - [ ] **Documentor agent** run — CHANGELOG + traceability matrix updated *(parallel with QA)*
 - [ ] All **blocker**-severity issues resolved (no exceptions)
 - [ ] Warning-severity issues resolved or explicitly accepted with justification
+- [ ] **PR conversations resolved** — 0 unresolved review threads before merge
+- [ ] **Visual UI/UX audit** (frontend stories only) — screenshots + accessibility + keyboard navigation
 - [ ] Tests still green after review changes applied
 - [ ] Draft PR exists and is linked to story issue
 - [ ] PR approved (all three agents: PASS)
 - [ ] PR squash-merged and branch deleted
 - [ ] Story issue auto-closed (or manually closed with PR reference)
 - [ ] Epic issue updated with story completion count
+- [ ] **Inter-PR health check** — `pnpm test` passes after each merge (catch regressions)
 
 **Gate**: PR merged, issue closed, CHANGELOG updated, traceability matrix updated.
 
@@ -294,28 +265,16 @@ When something breaks, match the error type to its fix command:
 
 See `.claude/COMMANDS.md` for the full decision-tree user guide.
 
-| Command | Purpose |
-|---------|---------|
-| `/workflow:status` | Show current phase, checklist, valid commands |
-| `/workflow:advance` | Gate-check and advance to next phase |
-| `/workflow:run [epic-#]` | Full Epic driver: spec → stories → implement → advance |
-| `/plan:decompose` | Bulk-create all 13 GitHub Epics + Projects board |
-| `/plan:spec [epic-N] "[feature name]"` | Write feature spec + run Orchestrator review |
-| `/plan:stories [epic-N]` | Batch-create all GitHub Story issues from spec |
-| `/plan:adr "[decision title]"` | Record an architectural decision |
-| `/impl:story [story-#]` | Implement story: TDD RED → GREEN → Review swarm |
-| `/impl:epic [epic-#]` | Implement all stories for an Epic |
-| `/impl:commit [story-#]` | Commit + push + open draft PR |
-| `/review:run [story-#\|--all]` | Review + CI check + merge + epic rollup |
-| `/ci:check [story-#]` | Diagnose CI failures + auto-fix |
-| `/pr:merge [story-#]` | Manual squash-merge (single PR) |
-| `/fix:lint` | Fix all ESLint / Prettier / markdownlint errors |
-| `/fix:types` | Fix all TypeScript type errors |
-| `/fix:tests` | Fix failing tests + confirm ≥ 80% coverage |
-| `/fix:security` | Fix JWT, RBAC, SQL injection issues |
-| `/fix:precision` | Fix TC-001 Decimal.js violations |
-| `/fix:debug "[symptom]"` | Root cause analysis |
-| `/fix:all` | Run all fixers in sequence |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/workflow:run [epic-#]` | Full Epic lifecycle (one command to rule them all) |
+| 2 | `/workflow:status` | Phase, checklist, `>>> NEXT:` recommendation |
+| 3 | `/fix:all [symptom?]` | Fix everything (or debug a specific symptom) |
+| 4 | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously |
+| 5 | `/workflow:advance` | Manual phase gate check |
+| 6 | `/plan:adr "[title]"` | Record architectural decision |
+| 7 | `/plan:spec [epic-#]` | Write feature spec interactively |
+| 8 | `/impl:story [story-#]` | Implement a single story (5-agent TDD swarm) |
 
 ---
 

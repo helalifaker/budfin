@@ -8,6 +8,8 @@ argument-hint: '[epic-issue-number] [--single]'
 allowed-tools: Bash, Read, Agent
 ---
 
+> **Internal command.** Called by `/workflow:run` automatically.
+
 Parse the arguments:
 
 - `epic-issue-number`: the GitHub issue number of the parent Epic (e.g., 5)

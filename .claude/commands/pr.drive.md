@@ -2,23 +2,23 @@
 name: pr:drive
 description: >
   Autonomous PR driver. Takes one or more PRs and loops each until merged:
-  CI check -> fix -> review agents -> fix blockers -> retry. Stuck detection
-  stops after 2 consecutive identical error fingerprints. Performs epic rollup after merge
-  when story/epic metadata is present.
-  Usage - /pr:drive [story-#] or /pr:drive --pr 64 65
-argument-hint: '[story-# or --pr N [N...]]'
+  CI check -> fix -> review agents -> conversation resolution -> fix blockers -> retry.
+  Stuck detection stops after 2 consecutive identical error fingerprints.
+  Supports --epic flag to drive all PRs for an Epic in dependency order.
+  Usage - /pr:drive [story-#] or /pr:drive --pr N [N...] or /pr:drive --epic [epic-#]
+argument-hint: '[story-# or --pr N [N...] or --epic [epic-#]]'
 allowed-tools: Bash, Read, Edit, Agent, TeamCreate, Skill
 ---
 
 Parse the argument:
 
-Two modes:
+Three modes:
 
 - **Story mode**: `/pr:drive [story-issue-number]` -- finds PR via `Fixes #N` search, enforces phase gate
 - **PR mode**: `/pr:drive --pr N [N...]` -- drives one or more PRs by number directly, no phase gate
+- **Epic mode**: `/pr:drive --epic [epic-#]` -- drives ALL open PRs for an Epic in dependency order
 
-If `--pr` flag is present, collect all PR numbers that follow (space-separated).
-If neither mode matches, ask: "Provide a story number or use --pr N [N...] for direct PR numbers."
+If none match, ask: "Provide a story number, use --pr N [N...] for direct PR numbers, or --epic N for all Epic PRs."
 
 ---
 
@@ -69,6 +69,19 @@ If not authenticated, guide user to `gh auth login` and stop.
    If any PR not found, report and skip it.
 
 3. PR queue = all valid PRs in the order given.
+
+**Epic mode (--epic N):**
+
+1. No phase gate -- proceed regardless of current phase.
+
+2. Find all open PRs for this Epic:
+   ```bash
+   gh pr list --search "Part of Epic #$EPIC_NUMBER" --json number,url,headRefName,isDraft,title,body --state open
+   ```
+
+3. Sort PRs by story dependency order (parse story dependencies from PR bodies and linked issue bodies).
+
+4. PR queue = all PRs in dependency order.
 
 ### 0c. Extract metadata per PR
 
@@ -198,7 +211,7 @@ Wait for ALL THREE agents to return results.
 
 ### 3d. Evaluate results
 
-If all three agents return APPROVED -> jump to **Step 4** (PR Clean).
+If all three agents return APPROVED -> jump to **Step 3.5** (Conversation Resolution).
 
 If any agent returns blockers:
 1. Build review fingerprint: sort blockers as `agent:file:description-hash`, join with `|`
@@ -226,6 +239,36 @@ git add -A && git commit -m "fix(review): resolve review blockers for PR #$PR_NU
 Append to `FIX_LOG`: `"Cycle $CYCLE: Review fix -- [N] blockers resolved"`
 
 Loop back to **Step 1** (CI first, since code changed).
+
+---
+
+## Step 3.5 -- Conversation Resolution
+
+Report: `--- Checking PR conversations ---`
+
+### 3.5a. Check for CHANGES_REQUESTED reviews
+
+```bash
+gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/reviews --jq '[.[] | select(.state == "CHANGES_REQUESTED")] | length'
+```
+
+### 3.5b. Check for unresolved comment threads
+
+```bash
+gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments --jq '[.[] | select(.in_reply_to_id == null)] | length'
+```
+
+### 3.5c. Resolution
+
+If unresolved threads or CHANGES_REQUESTED reviews exist:
+1. List each thread with context
+2. Attempt to address each finding (fix code or respond to comment)
+3. If code changes needed: fix, commit, push, loop back to **Step 1**
+4. Request re-review if CHANGES_REQUESTED was present
+
+Gate: 0 unresolved conversations, no CHANGES_REQUESTED reviews pending.
+
+If clean -> proceed to **Step 4** (PR Clean).
 
 ---
 
@@ -431,3 +474,4 @@ Next:
 5. **No retry limit** -- loop until merged or stuck; stuck detection is the safety valve
 6. **CI after review fixes** -- always restart from Step 1 after any code change
 7. **Never `--no-gpg-sign`** -- respect signing config
+8. **Conversations resolved** -- never merge with unresolved PR review threads

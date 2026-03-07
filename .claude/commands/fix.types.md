@@ -7,6 +7,8 @@ description: >
 allowed-tools: Bash, Read, Edit
 ---
 
+> **Internal command.** Called by `/fix:all` automatically.
+
 Fix all TypeScript errors across the BudFin monorepo. Repeat until `pnpm typecheck` reports
 zero errors.
 

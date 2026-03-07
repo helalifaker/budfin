@@ -7,6 +7,8 @@ description: >
 allowed-tools: Bash, Read, Edit, Agent, Skill
 ---
 
+> **Internal command.** Called by `/fix:all` automatically.
+
 Fix all security vulnerabilities in recently changed files. Launch security-reviewer agent,
 fix every Blocker, and confirm clean before committing.
 

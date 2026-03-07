@@ -7,6 +7,8 @@ description: >
 allowed-tools: Bash, Read, Edit, Agent, Skill
 ---
 
+> **Internal command.** Called by `/fix:all` automatically.
+
 Fix all financial precision violations in recently changed files. Launch
 financial-precision-reviewer agent, fix every BLOCKING violation, and confirm PASS.
 

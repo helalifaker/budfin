@@ -7,6 +7,8 @@ argument-hint: "[story-issue-number]"
 allowed-tools: Bash, Read, Glob, Grep, Skill
 ---
 
+> **Internal command.** Called by `/impl:story` automatically.
+
 Parse the argument:
 
 - `story-#`: the GitHub issue number for the story being committed (required integer)

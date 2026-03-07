@@ -8,6 +8,8 @@ argument-hint: '[epic-issue-number]'
 allowed-tools: Bash, Read, Agent, TeamCreate, TaskCreate, TaskUpdate, TaskList, SendMessage
 ---
 
+> **Internal command.** Called by `/workflow:run` automatically.
+
 Parse the argument:
 
 - `epic-issue-number`: integer GitHub issue number of the parent Epic (e.g., 5)

@@ -7,6 +7,8 @@ description: >
 allowed-tools: Bash, Read, Edit
 ---
 
+> **Internal command.** Called by `/fix:all` automatically.
+
 Fix all linting errors across the BudFin monorepo. Verify first — only fix if dirty.
 
 ## Step 1 — Verify (read-only, no mutations)

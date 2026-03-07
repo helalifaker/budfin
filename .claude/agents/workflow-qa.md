@@ -58,12 +58,19 @@ Pay special attention to:
 - Are auth failure cases tested (missing token, wrong role, wrong tenant)?
 - Are 4xx responses tested with the correct status codes?
 
-### UI/UX Interaction Verification (Frontend Stories Only)
+### UI/UX Interaction Coverage (Blocker -- frontend stories only)
 
 If the story involves frontend components:
 
 1. Read the feature spec's `## UI/UX Specification` section — note user flows and interaction patterns
 2. Read the primary UI/UX spec file for component-specific behaviors
+
+Verify:
+- [ ] Dev server starts and route renders without console errors
+- [ ] Shell type matches UI/UX spec (PlanningShell vs ManagementShell)
+- [ ] Key Components from spec are present in DOM
+- [ ] Keyboard navigation works (Tab order, Enter/Space activation, Escape cancel)
+- [ ] ARIA roles match spec accessibility requirements
 
 Verify these interaction tests exist:
 - **User Flows**: For each flow in the spec, is there a test exercising it?
@@ -71,7 +78,7 @@ Verify these interaction tests exist:
 - **Cell States** (if data grids): editable/read-only/focus states tested
 - **Accessibility**: ARIA roles and `aria-live` announcements tested
 
-Flag any applicable interaction pattern with no test as **Missing UI/UX Coverage**.
+Flag any applicable interaction pattern with no test as **Missing UI/UX Coverage** (Blocker).
 
 ## Output Format
 

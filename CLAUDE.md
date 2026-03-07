@@ -41,8 +41,8 @@ Husky pre-commit hooks run `lint-staged`: prettier + eslint --fix on TS/JS files
 ### Environment setup
 
 Copy `.env.example` to `.env` before first run. The API requires a `DATABASE_URL` (PostgreSQL)
-and `PGCRYPTO_KEY` (salary field encryption). In Docker Compose, `PGCRYPTO_KEY` is mounted as
-a Docker secret at `/run/secrets/pgcrypto_key`.
+and `SALARY_ENCRYPTION_KEY` (salary field encryption). In Docker Compose, the key is mounted as
+a Docker secret at `/run/secrets/salary_encryption_key`.
 
 ## Architecture
 
@@ -101,16 +101,18 @@ Flat config only (`eslint.config.ts`). No `.eslintrc` files. All plugins must su
 
 All development follows the 7-phase BudFin workflow defined in `.claude/workflow/WORKFLOW.md`. Current phase is tracked in `.claude/workflow/STATUS.md`.
 
-See `.claude/COMMANDS.md` for the full command reference. Key commands:
+See `.claude/COMMANDS.md` for the full command reference. 8 user-facing commands:
 
-- `/workflow:status` — show current phase and checklist
-- `/workflow:advance` — gate-check and move to next phase
-- `/workflow:run [epic-N]` — drive full Epic lifecycle (spec → stories → implement)
-- `/plan:spec [epic-N]` — Phase 4: write a feature spec
-- `/plan:stories [epic-N]` — Phase 4: create story issues from a spec
-- `/impl:story [#]` — implement a single story (5-agent TDD swarm)
-- `/impl:commit [#]` — commit, push branch, open draft PR
-- `/fix:lint` / `/fix:types` / `/fix:tests` / `/fix:all` — targeted fixers
+| #   | Command                         | Purpose                                                                                                        |
+| --- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1   | `/workflow:run [epic-#]`        | Full Epic lifecycle: health check -> spec -> stories -> implement -> review -> visual audit -> merge -> rollup |
+| 2   | `/workflow:status`              | Phase, checklist, `>>> NEXT:` recommendation                                                                   |
+| 3   | `/fix:all [symptom?]`           | Fix everything (or debug a specific symptom with root cause analysis)                                          |
+| 4   | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously                                                                                 |
+| 5   | `/workflow:advance`             | Manual phase gate check                                                                                        |
+| 6   | `/plan:adr "[title]"`           | Record architectural decision                                                                                  |
+| 7   | `/plan:spec [epic-#]`           | Write feature spec interactively                                                                               |
+| 8   | `/impl:story [story-#]`         | Implement a single story                                                                                       |
 
 ## File Output Rules
 
