@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
+import { VALID_GRADE_CODES } from '../../lib/enrollment-constants.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -11,23 +12,7 @@ const versionIdParamsSchema = z.object({
 
 const academicPeriodEnum = z.enum(['AY1', 'AY2']);
 
-const gradeLevelEnum = z.enum([
-	'PS',
-	'MS',
-	'GS',
-	'CP',
-	'CE1',
-	'CE2',
-	'CM1',
-	'CM2',
-	'6eme',
-	'5eme',
-	'4eme',
-	'3eme',
-	'2nde',
-	'1ere',
-	'Terminale',
-]);
+const gradeLevelEnum = z.enum(VALID_GRADE_CODES as [string, ...string[]]);
 
 const getQuerySchema = z.object({
 	academic_period: z.enum(['AY1', 'AY2', 'both']).optional().default('both'),

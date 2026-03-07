@@ -136,6 +136,7 @@ export function EnrollmentPage() {
 						versionId={versionId}
 						isReadOnly={isViewer}
 						bandFilter={bandFilter as GradeBand | 'ALL'}
+						academicPeriod={academicPeriod ?? 'AY1'}
 					/>
 				</TabsContent>
 

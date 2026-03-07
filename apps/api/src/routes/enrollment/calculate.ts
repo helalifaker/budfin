@@ -15,6 +15,7 @@ export async function calculateRoutes(app: FastifyInstance) {
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParamsSchema>;
 			const startTime = performance.now();
+			const runId = randomUUID();
 
 			// Fetch version
 			const version = await prisma.budgetVersion.findUnique({
@@ -69,14 +70,6 @@ export async function calculateRoutes(app: FastifyInstance) {
 
 			const results = calculateCapacity(inputs, gradeConfigs);
 
-			// AC-23: Remove ENROLLMENT from staleModules after successful calculation
-			const currentStale = new Set(version.staleModules);
-			currentStale.delete('ENROLLMENT');
-			await prisma.budgetVersion.update({
-				where: { id: versionId },
-				data: { staleModules: [...currentStale] },
-			});
-
 			// AC-13: Summary
 			const totalStudentsAy1 = results
 				.filter((r) => r.academicPeriod === 'AY1')
@@ -90,8 +83,83 @@ export async function calculateRoutes(app: FastifyInstance) {
 
 			const durationMs = Math.round(performance.now() - startTime);
 
+			// Persist results in a transaction
+			await prisma.$transaction(async (tx) => {
+				const txPrisma = tx as typeof prisma;
+
+				// Create audit log entry
+				await txPrisma.calculationAuditLog.create({
+					data: {
+						versionId,
+						runId,
+						module: 'ENROLLMENT',
+						status: 'STARTED',
+						triggeredBy: request.user.id,
+						inputSummary: {
+							headcountRows: inputs.length,
+							totalStudentsAy1,
+							totalStudentsAy2,
+						},
+					},
+				});
+
+				// Upsert DHG requirements
+				for (const r of results) {
+					await txPrisma.dhgRequirement.upsert({
+						where: {
+							versionId_academicPeriod_gradeLevel: {
+								versionId,
+								academicPeriod: r.academicPeriod,
+								gradeLevel: r.gradeLevel,
+							},
+						},
+						create: {
+							versionId,
+							academicPeriod: r.academicPeriod,
+							gradeLevel: r.gradeLevel,
+							headcount: r.headcount,
+							maxClassSize: r.maxClassSize,
+							sectionsNeeded: r.sectionsNeeded,
+							utilization: r.utilization,
+							alert: r.alert ?? null,
+							recruitmentSlots: r.recruitmentSlots,
+						},
+						update: {
+							headcount: r.headcount,
+							maxClassSize: r.maxClassSize,
+							sectionsNeeded: r.sectionsNeeded,
+							utilization: r.utilization,
+							alert: r.alert ?? null,
+							recruitmentSlots: r.recruitmentSlots,
+						},
+					});
+				}
+
+				// AC-23: Remove ENROLLMENT from staleModules
+				const currentStale = new Set(version.staleModules);
+				currentStale.delete('ENROLLMENT');
+				await txPrisma.budgetVersion.update({
+					where: { id: versionId },
+					data: { staleModules: [...currentStale] },
+				});
+
+				// Update audit log to COMPLETED
+				await txPrisma.calculationAuditLog.updateMany({
+					where: { runId },
+					data: {
+						status: 'COMPLETED',
+						completedAt: new Date(),
+						durationMs,
+						outputSummary: {
+							resultRows: results.length,
+							overCapacityGrades,
+						},
+					},
+				});
+			});
+
 			return {
-				runId: randomUUID(),
+				runId,
 				durationMs,
 				summary: {
 					totalStudentsAy1,

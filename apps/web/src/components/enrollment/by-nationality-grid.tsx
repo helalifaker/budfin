@@ -9,6 +9,7 @@ import { Check, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useHeadcount, useDetail } from '../../hooks/use-enrollment';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
+import type { AcademicPeriod } from '@budfin/types';
 import type { GradeBand } from '../../hooks/use-grade-levels';
 import { TableSkeleton } from '../ui/skeleton';
 
@@ -31,11 +32,12 @@ interface Props {
 	versionId: number;
 	isReadOnly: boolean;
 	bandFilter: GradeBand | 'ALL';
+	academicPeriod: string;
 }
 
-export function ByNationalityGrid({ versionId, bandFilter }: Props) {
-	const { data: headcountData } = useHeadcount(versionId);
-	const { data: detailData, isLoading } = useDetail(versionId);
+export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Props) {
+	const { data: headcountData } = useHeadcount(versionId, academicPeriod as AcademicPeriod);
+	const { data: detailData, isLoading } = useDetail(versionId, academicPeriod as AcademicPeriod);
 	const { data: gradeLevelData } = useGradeLevels();
 
 	const rows: NationalityRow[] = useMemo(() => {
