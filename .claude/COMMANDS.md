@@ -148,7 +148,7 @@ Implement a single story end-to-end. Spawns 5-agent TDD swarm (orchestrator + im
 
 ## Internal Commands (called automatically)
 
-These commands are invoked by the 8 user-facing commands above. You should not need to run them directly.
+These commands are invoked by the 9 user-facing commands above. You should not need to run them directly.
 
 ### Called by `/workflow:run`
 

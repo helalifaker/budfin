@@ -6,6 +6,7 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import { useRevenueResults } from '../../hooks/use-revenue';
+import { Button } from '../ui/button';
 
 interface ForecastTabProps {
 	versionId: number;
@@ -166,17 +167,14 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 			<div className="flex items-center gap-2">
 				<span className="text-sm text-[var(--text-secondary)]">Group by:</span>
 				{(Object.keys(GROUP_LABELS) as GroupBy[]).map((g) => (
-					<button
+					<Button
 						key={g}
+						variant={groupBy === g ? 'primary' : 'ghost'}
+						size="sm"
 						onClick={() => setGroupBy(g)}
-						className={`rounded px-3 py-1 text-sm ${
-							groupBy === g
-								? 'bg-[var(--text-primary)] text-white'
-								: 'bg-[var(--workspace-bg-muted)] text-[var(--text-secondary)] hover:bg-[var(--workspace-bg-muted)]'
-						}`}
 					>
 						{GROUP_LABELS[g]}
-					</button>
+					</Button>
 				))}
 			</div>
 

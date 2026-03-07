@@ -104,7 +104,7 @@ function DeleteConfirmDialog({
 				<AlertDialogFooter>
 					<AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
 					<AlertDialogAction
-						className="bg-[var(--color-error)] hover:bg-[var(--color-error)]"
+						className="bg-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
 						disabled={confirmText !== entityCode || loading}
 						onClick={onConfirm}
 					>

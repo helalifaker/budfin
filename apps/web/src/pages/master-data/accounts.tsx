@@ -478,7 +478,7 @@ export function AccountsPage() {
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-[var(--color-error)] hover:bg-[var(--color-error)]"
+							className="bg-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
 							disabled={deleteConfirmCode !== deleteTarget?.accountCode || deleteMutation.isPending}
 							onClick={handleDelete}
 						>
