@@ -112,9 +112,10 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 	const { data: gradeLevelData } = useGradeLevels();
 	const putDetail = usePutDetail(versionId);
 
+	const detailEntries = detailData?.entries ?? [];
+
 	const rows: TariffRow[] = useMemo(() => {
 		const gradeLevels = gradeLevelData?.gradeLevels ?? [];
-		const detailEntries = detailData?.entries ?? [];
 
 		const filtered =
 			bandFilter === 'ALL' ? gradeLevels : gradeLevels.filter((gl) => gl.band === bandFilter);
@@ -166,7 +167,7 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 						autresPlein,
 				};
 			});
-	}, [gradeLevelData, detailData, bandFilter]);
+	}, [gradeLevelData, detailEntries, bandFilter]);
 
 	const handleCellSave = useCallback(
 		(gradeLevel: string, nationality: string, tariff: string, value: number) => {
