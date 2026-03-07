@@ -1,3 +1,6 @@
+-- Irreversible: DROP TABLE calculation_audit_log; DROP TABLE dhg_requirements;
+-- No down migration — these tables are new with no production data to preserve.
+
 -- DHG Requirements table (calculation outputs)
 CREATE TABLE dhg_requirements (
   id SERIAL PRIMARY KEY,
