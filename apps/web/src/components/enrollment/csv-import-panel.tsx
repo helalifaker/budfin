@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useImportHistorical, type ImportValidationResult } from '../../hooks/use-enrollment';
+import { getCurrentFiscalYear } from '../../lib/format-date';
 import { AlertTriangle, Check, Upload } from 'lucide-react';
 
 interface CsvImportPanelProps {
@@ -10,7 +11,7 @@ interface CsvImportPanelProps {
 	onClose: () => void;
 }
 
-const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_YEAR = getCurrentFiscalYear();
 const YEARS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - i);
 
 export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {

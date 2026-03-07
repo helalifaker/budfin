@@ -1,9 +1,10 @@
 import { useWorkspaceContext } from '../hooks/use-workspace-context';
 import { useVersions } from '../hooks/use-versions';
+import { getCurrentFiscalYear } from '../lib/format-date';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 // Fiscal years available for selection — covers a rolling window around the current year.
-const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_YEAR = getCurrentFiscalYear();
 const FISCAL_YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 1 + i);
 
 // Academic period options (tied to master-data AY structure)

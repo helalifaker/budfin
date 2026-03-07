@@ -14,3 +14,7 @@ export function formatDate(iso: string | null): string {
 	const date = new TZDate(iso, TIMEZONE);
 	return format(date, 'dd MMM yyyy');
 }
+
+export function getCurrentFiscalYear(): number {
+	return new TZDate(Date.now(), TIMEZONE).getFullYear();
+}

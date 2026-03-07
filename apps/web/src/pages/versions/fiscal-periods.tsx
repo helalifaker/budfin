@@ -6,7 +6,7 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
-import { formatDate } from '../../lib/format-date';
+import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
 import { useAuthStore } from '../../stores/auth-store';
 import { useFiscalPeriods, useLockFiscalPeriod } from '../../hooks/use-fiscal-periods';
 import type { FiscalPeriod } from '../../hooks/use-fiscal-periods';
@@ -35,7 +35,7 @@ const STATUS_BADGE_COLORS: Record<string, string> = {
 	Locked: 'bg-violet-100 text-violet-800',
 };
 
-const CURRENT_FISCAL_YEAR = new Date().getFullYear();
+const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
 
 export function FiscalPeriodsPage() {
 	const currentUser = useAuthStore((s) => s.user);
