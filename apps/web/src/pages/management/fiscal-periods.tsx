@@ -12,6 +12,15 @@ import { useFiscalPeriods, useLockFiscalPeriod } from '../../hooks/use-fiscal-pe
 import type { FiscalPeriod } from '../../hooks/use-fiscal-periods';
 import { useVersions } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
+import { Button } from '../../components/ui/button';
+import {
+	Select,
+	SelectTrigger,
+	SelectValue,
+	SelectContent,
+	SelectItem,
+} from '../../components/ui/select';
+import { TableSkeleton } from '../../components/ui/skeleton';
 
 const columnHelper = createColumnHelper<FiscalPeriod>();
 
@@ -180,35 +189,37 @@ export function FiscalPeriodsPage() {
 			<div className="flex flex-wrap items-center gap-3 pb-4">
 				<h1 className="mr-auto text-xl font-semibold">Fiscal Period Management</h1>
 
-				<select
-					value={String(fiscalYear)}
-					onChange={(e) => setFiscalYear(Number(e.target.value))}
-					className={cn('rounded-md border border-slate-300', 'px-3 py-2 text-sm')}
-					aria-label="Filter by fiscal year"
-				>
-					{fiscalYearOptions.map((fy) => (
-						<option key={fy} value={String(fy)}>
-							FY {fy}
-						</option>
-					))}
-				</select>
+				<Select value={String(fiscalYear)} onValueChange={(v) => setFiscalYear(Number(v))}>
+					<SelectTrigger className="w-[130px]" aria-label="Filter by fiscal year">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						{fiscalYearOptions.map((fy) => (
+							<SelectItem key={fy} value={String(fy)}>
+								FY {fy}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 
 			{/* Data table */}
 			{isLoading ? (
-				<p className="text-sm text-slate-500">Loading...</p>
+				<div className="overflow-x-auto rounded-lg border">
+					<table role="table" className="w-full text-left text-sm">
+						<tbody>
+							<TableSkeleton rows={6} cols={6} />
+						</tbody>
+					</table>
+				</div>
 			) : (
 				<div className="overflow-x-auto rounded-lg border">
-					<table role="grid" className="w-full text-left text-sm">
+					<table role="table" className="w-full text-left text-sm">
 						<thead className="border-b bg-slate-50">
 							{table.getHeaderGroups().map((hg) => (
-								<tr key={hg.id} role="row">
+								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											role="columnheader"
-											className="px-4 py-3 font-medium text-slate-600"
-										>
+										<th key={header.id} className="px-4 py-3 font-medium text-slate-600">
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
@@ -227,9 +238,9 @@ export function FiscalPeriodsPage() {
 								</tr>
 							) : (
 								table.getRowModel().rows.map((row) => (
-									<tr key={row.id} role="row" className="border-b last:border-0 hover:bg-slate-50">
+									<tr key={row.id} className="border-b last:border-0 hover:bg-slate-50">
 										{row.getVisibleCells().map((cell) => (
-											<td key={cell.id} role="gridcell" aria-readonly="true" className="px-4 py-3">
+											<td key={cell.id} role="cell" className="px-4 py-3">
 												{flexRender(cell.column.columnDef.cell, cell.getContext())}
 											</td>
 										))}
@@ -301,47 +312,40 @@ function LockAction({ period, lockedActualVersions, onStatusMessage }: LockActio
 
 	return (
 		<div className="flex items-center gap-2">
-			<label className="sr-only" htmlFor={`version-select-${period.month}`}>
-				Select Actual version for {monthName}
-			</label>
-			<select
-				id={`version-select-${period.month}`}
-				value={selectedVersionId}
-				onChange={(e) => setSelectedVersionId(e.target.value)}
-				className={cn('rounded-md border border-slate-300', 'px-2 py-1 text-xs')}
+			<Select
+				{...(selectedVersionId ? { value: selectedVersionId } : {})}
+				onValueChange={setSelectedVersionId}
 				disabled={lockMutation.isPending}
-				aria-label={`Select Actual version for ${monthName}`}
 			>
-				<option value="">Select version...</option>
-				{lockedActualVersions.map((v: BudgetVersion) => (
-					<option key={v.id} value={String(v.id)}>
-						{v.name} (#{v.id})
-					</option>
-				))}
-			</select>
-			<button
+				<SelectTrigger
+					className="w-[180px] h-8 text-xs"
+					aria-label={`Select Actual version for ${monthName}`}
+				>
+					<SelectValue placeholder="Select version..." />
+				</SelectTrigger>
+				<SelectContent>
+					{lockedActualVersions.map((v: BudgetVersion) => (
+						<SelectItem key={v.id} value={String(v.id)}>
+							{v.name} (#{v.id})
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+			<Button
 				type="button"
 				onClick={handleLock}
-				disabled={!selectedVersionId || lockMutation.isPending}
-				className={cn(
-					'rounded-md px-3 py-1 text-xs font-medium',
-					confirming
-						? 'bg-red-600 text-white hover:bg-red-700'
-						: 'bg-violet-600 text-white hover:bg-violet-700',
-					'disabled:cursor-not-allowed disabled:opacity-50'
-				)}
+				disabled={!selectedVersionId}
+				loading={lockMutation.isPending}
+				variant={confirming ? 'destructive' : 'primary'}
+				size="sm"
 				aria-label={`Lock period ${monthName}`}
 			>
-				{lockMutation.isPending ? 'Locking...' : confirming ? 'Confirm Lock' : 'Lock Period'}
-			</button>
+				{confirming ? 'Confirm Lock' : 'Lock Period'}
+			</Button>
 			{confirming && (
-				<button
-					type="button"
-					onClick={() => setConfirming(false)}
-					className="rounded-md px-2 py-1 text-xs text-slate-600 hover:bg-slate-100"
-				>
+				<Button type="button" onClick={() => setConfirming(false)} variant="ghost" size="sm">
 					Cancel
-				</button>
+				</Button>
 			)}
 		</div>
 	);

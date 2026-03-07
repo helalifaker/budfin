@@ -16,12 +16,14 @@
 	--accent-900: #134e4a;
 
 	/* ── Sidebar (Dark Carbon) ── */
-	--sidebar-bg: #0c1222;
-	--sidebar-bg-hover: #162032;
-	--sidebar-bg-active: #0d9488;
-	--sidebar-text: #a1b4cc;
+	--sidebar-bg: #0f172a;
+	--sidebar-bg-hover: #1e293b;
+	--sidebar-bg-active: #1e40af;
+	--sidebar-text: #cbd5e1;
 	--sidebar-text-active: #ffffff;
-	--sidebar-border: #1e2d42;
+	--sidebar-border: #334155;
+	--sidebar-icon: #94a3b8;
+	--sidebar-icon-active: #ffffff;
 	--sidebar-glow: rgba(20, 184, 166, 0.15);
 
 	/* ── Workspace (Light) ── */
@@ -64,7 +66,7 @@
 
 	/* ── Editable Cell Colors ── */
 	--cell-editable-bg: #fefce8;
-	--cell-editable-focus: #14b8a6;
+	--cell-editable-focus: #2563eb;
 	--cell-readonly-bg: #f8fafc;
 	--cell-error-border: #dc2626;
 
@@ -75,9 +77,9 @@
 	--text-sm: 13px;
 	--text-base: 14px;
 	--text-lg: 16px;
-	--text-xl: 20px;
-	--text-2xl: 28px;
-	--text-3xl: 36px;
+	--text-xl: 18px;
+	--text-2xl: 24px;
+	--text-3xl: 30px;
 
 	/* ── Spacing (4px grid) ── */
 	--space-1: 4px;

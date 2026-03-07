@@ -19,6 +19,13 @@ import { AccountsSidePanel } from '../../components/master-data/accounts-side-pa
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
+	Select,
+	SelectTrigger,
+	SelectValue,
+	SelectContent,
+	SelectItem,
+} from '../../components/ui/select';
+import {
 	AlertDialog,
 	AlertDialogContent,
 	AlertDialogHeader,
@@ -318,52 +325,49 @@ export function AccountsPage() {
 					aria-label="Search accounts"
 				/>
 
-				<select
-					value={typeFilter}
-					onChange={(e) => setTypeFilter(e.target.value)}
-					className={cn(
-						'flex h-9 rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
-						'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
-						'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
-					)}
-					aria-label="Filter by type"
+				<Select
+					value={typeFilter || 'all'}
+					onValueChange={(v) => setTypeFilter(v === 'all' ? '' : v)}
 				>
-					<option value="">All Types</option>
-					<option value="REVENUE">Revenue</option>
-					<option value="EXPENSE">Expense</option>
-					<option value="ASSET">Asset</option>
-					<option value="LIABILITY">Liability</option>
-				</select>
+					<SelectTrigger className="w-[160px]" aria-label="Filter by type">
+						<SelectValue placeholder="All Types" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All Types</SelectItem>
+						<SelectItem value="REVENUE">Revenue</SelectItem>
+						<SelectItem value="EXPENSE">Expense</SelectItem>
+						<SelectItem value="ASSET">Asset</SelectItem>
+						<SelectItem value="LIABILITY">Liability</SelectItem>
+					</SelectContent>
+				</Select>
 
-				<select
-					value={centerTypeFilter}
-					onChange={(e) => setCenterTypeFilter(e.target.value)}
-					className={cn(
-						'flex h-9 rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
-						'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
-						'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
-					)}
-					aria-label="Filter by center type"
+				<Select
+					value={centerTypeFilter || 'all'}
+					onValueChange={(v) => setCenterTypeFilter(v === 'all' ? '' : v)}
 				>
-					<option value="">All Center Types</option>
-					<option value="PROFIT_CENTER">Profit Center</option>
-					<option value="COST_CENTER">Cost Center</option>
-				</select>
+					<SelectTrigger className="w-[180px]" aria-label="Filter by center type">
+						<SelectValue placeholder="All Center Types" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All Center Types</SelectItem>
+						<SelectItem value="PROFIT_CENTER">Profit Center</SelectItem>
+						<SelectItem value="COST_CENTER">Cost Center</SelectItem>
+					</SelectContent>
+				</Select>
 
-				<select
-					value={statusFilter}
-					onChange={(e) => setStatusFilter(e.target.value)}
-					className={cn(
-						'flex h-9 rounded-[var(--radius-md)] border border-[var(--workspace-border)] bg-[var(--workspace-bg-card)]',
-						'px-3 py-2 text-[length:var(--text-sm)] text-[var(--text-primary)]',
-						'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2'
-					)}
-					aria-label="Filter by status"
+				<Select
+					value={statusFilter || 'all'}
+					onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}
 				>
-					<option value="">All Statuses</option>
-					<option value="ACTIVE">Active</option>
-					<option value="INACTIVE">Inactive</option>
-				</select>
+					<SelectTrigger className="w-[160px]" aria-label="Filter by status">
+						<SelectValue placeholder="All Statuses" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All Statuses</SelectItem>
+						<SelectItem value="ACTIVE">Active</SelectItem>
+						<SelectItem value="INACTIVE">Inactive</SelectItem>
+					</SelectContent>
+				</Select>
 
 				{isAdmin && (
 					<Button

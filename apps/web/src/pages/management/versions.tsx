@@ -209,7 +209,7 @@ export function VersionsPage() {
 					if (!stale || stale.length === 0) return null;
 					return (
 						<span
-							className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+							className="inline-flex rounded-[var(--radius-sm)] bg-[var(--color-warning-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)]"
 							title={stale.join(', ')}
 							aria-label={`Stale modules: ${stale.join(', ')}`}
 						>

@@ -71,7 +71,7 @@ export function RightPanel() {
 			<div className="flex flex-1 flex-col overflow-hidden">
 				{/* Header */}
 				<div className="flex h-12 items-center justify-between border-b border-[var(--workspace-border)] px-4">
-					<div className="flex items-center gap-1">
+					<div className="flex items-center gap-1" role="tablist">
 						{TABS.map((tab) => (
 							<button
 								key={tab.id}
