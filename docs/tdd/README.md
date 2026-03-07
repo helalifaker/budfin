@@ -4,7 +4,7 @@
 | ---------------- | --------------- |
 | Document Version | 1.0             |
 | Date             | March 3, 2026   |
-| Status           | Draft           |
+| Status           | Approved        |
 | Related PRD      | BudFin PRD v2.0 |
 
 ## Purpose

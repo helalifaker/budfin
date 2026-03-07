@@ -3,6 +3,10 @@
 > BudFin Technical Design Document -- Section 6 of 12
 > Last updated: 2026-03-03
 
+| Field  | Value    |
+| ------ | -------- |
+| Status | Approved |
+
 ---
 
 ## 6.1 Design Principles
@@ -76,6 +80,7 @@ BudFin uses a dual-token authentication pattern:
     "sub": 42,
     "email": "user@efir.edu.sa",
     "role": "BudgetOwner",
+    "sessionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "iat": 1709510400,
     "exp": 1709512200
 }

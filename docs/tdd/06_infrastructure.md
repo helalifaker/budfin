@@ -1,5 +1,9 @@
 # BudFin Technical Design Document v1.0
 
+| Field  | Value    |
+| ------ | -------- |
+| Status | Approved |
+
 ## Section 8 — Infrastructure & Deployment
 
 ### 8.1 Docker Compose Stack

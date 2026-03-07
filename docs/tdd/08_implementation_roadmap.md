@@ -1,7 +1,35 @@
 # Section 11: Implementation Roadmap
 
+> **Status:** Approved (with delivery status annotations)
+> **Last updated:** 2026-03-07
+
 Follows PRD Section 14 exactly. 30 working weeks + 5-week buffer total = 35 weeks.
 6 phases.
+
+### Delivery Status Legend
+
+| Status          | Meaning                         |
+| --------------- | ------------------------------- |
+| **Implemented** | Epic fully delivered and merged |
+| **In Progress** | Epic actively being worked on   |
+| **Planned**     | Epic not yet started            |
+
+### Epic Delivery Status
+
+| Epic    | Name                      | Status          |
+| ------- | ------------------------- | --------------- |
+| Epic 13 | Infrastructure & Tooling  | **Implemented** |
+| Epic 11 | Authentication & RBAC     | **Implemented** |
+| Epic 7  | Master Data Management    | **Implemented** |
+| Epic 10 | Version Management        | **Implemented** |
+| Epic 1  | Enrollment & Capacity     | **Implemented** |
+| Epic 2  | Revenue                   | **Implemented** |
+| Epic 15 | UI/UX Clean-Slate Rewrite | **In Progress** |
+| Epic 3  | Staffing & Staff Costs    | **Planned**     |
+| Epic 4  | P&L Consolidation         | **Planned**     |
+| Epic 5  | Scenario Modeling         | **Planned**     |
+| Epic 6  | Dashboard & Export        | **Planned**     |
+| Epic 8  | Data Migration            | **Planned**     |
 
 ## 11.1 Team Structure
 
@@ -16,7 +44,7 @@ Follows PRD Section 14 exactly. 30 working weeks + 5-week buffer total = 35 week
 | Project Manager        | 1.0  | All phases           |
 | Finance SME (EFIR)     | 0.25 | Advisory, all phases |
 
-## 11.2 Phase 1: Foundation (Weeks 1-4.5)
+## 11.2 Phase 1: Foundation (Weeks 1-4.5) — **Implemented**
 
 **Objective:** Validate tech stack; establish data layer; implement authentication
 and master data.
@@ -65,7 +93,7 @@ Owner: Dev 1 + Dev 2
 
 Deliverables:
 
-- React SPA scaffold: Vite + TypeScript + React Router v6 + @tanstack/react-table v8 + shadcn/ui Table
+- React SPA scaffold: Vite + TypeScript + React Router v7 + @tanstack/react-table v8 + shadcn/ui Table
 - Login page with JWT flow (access token in memory, refresh cookie)
 - Navigation shell: 4 groups (Dashboard, Planning, Master Data, Admin)
 - Context bar component: fiscalYear, versionId, comparisonVersionId, scenario selectors
@@ -80,7 +108,7 @@ Owner: Dev 2 + UX Designer
 - Tech Lead code review: auth security, RBAC completeness
 - M1 Gate criteria: Docker Compose starts cleanly; auth login/refresh/logout working; YEARFRAC unit tests passing; all Decimal.js precision tests passing; DBA signs off on schema
 
-## 11.3 Phase 2: Enrollment and Revenue (Weeks 5-11)
+## 11.3 Phase 2: Enrollment and Revenue (Weeks 5-11) — **Implemented**
 
 **Objective:** Implement complete enrollment input and revenue calculation engine.
 First Excel regression validation.
@@ -138,7 +166,7 @@ Owner: Dev 1 (backend) + Dev 2 (frontend)
 - QA: functional testing of enrollment and revenue modules
 - M2 Gate criteria: POST /calculate/revenue produces revenue within +/- 1 SAR of Excel baseline for all 12 months; all FR-ENR-001 through FR-REV-021 unit and integration tests passing; Excel regression suite passing
 
-## 11.4 Phase 3: Staffing and Staff Costs (Weeks 12-18)
+## 11.4 Phase 3: Staffing and Staff Costs (Weeks 12-18) — **Planned**
 
 **Objective:** Implement DHG staffing model and complete staff cost engine including
 GOSI/Ajeer/EoS.
@@ -191,7 +219,7 @@ GOSI/Ajeer/EoS.
 - QA functional testing of staffing module
 - M3 Gate criteria: POST /calculate/staffing produces staff costs within +/- 1 SAR of Excel baseline for all 168 employees x 12 months; YEARFRAC matches Excel for all 168 joining dates; all FR-DHG and FR-STC tests passing
 
-## 11.5 Phase 4: Versions and P&L (Weeks 19-25)
+## 11.5 Phase 4: Versions and P&L (Weeks 19-25) — **Planned**
 
 **Objective:** Version lifecycle management, P&L consolidation, IFRS mapping,
 scenario modeling.
@@ -245,7 +273,7 @@ scenario modeling.
 - Full chain regression: enrollment -> revenue -> staffing -> P&L end-to-end within +/- 1 SAR
 - M4 Gate criteria: full calculation chain validated; all FR-VER, FR-PNL, FR-SCN tests passing; version comparison producing correct variances
 
-## 11.6 Phase 5: Dashboard, Audit UI, and Export (Weeks 26-29.5)
+## 11.6 Phase 5: Dashboard, Audit UI, and Export (Weeks 26-29.5) — **Planned**
 
 **Objective:** Executive dashboard, audit trail browsing UI, data export, input
 management, polish.
@@ -272,7 +300,7 @@ Owner: Dev 2
 
 - ExcelJS xlsx generation for all report types (Revenue Detail, Staff Costs, P&L Monthly, Full Budget)
 - fast-csv CSV export
-- Async job queue using export_jobs table + worker process
+- Async job queue using export_jobs table + in-process pg-boss workers (ADR-015)
 - Job status polling (GET /export/jobs/:id)
 - Download with expiry (GET /export/jobs/:id/download)
 
@@ -294,7 +322,7 @@ Owner: Dev 2
 
 - M5 Gate criteria: Dashboard displaying all KPI widgets; xlsx/PDF/CSV export working for all report types; k6 performance tests passing; all Playwright E2E tests passing
 
-## 11.7 Phase 6: Data Migration and Go-Live (Weeks 30-36)
+## 11.7 Phase 6: Data Migration and Go-Live (Weeks 30-36) — **Planned**
 
 **Objective:** Migrate real EFIR data, validate, parallel run, UAT, go-live.
 

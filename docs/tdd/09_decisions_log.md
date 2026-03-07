@@ -1,3 +1,7 @@
+| Field  | Value           |
+| ------ | --------------- |
+| Status | Living Document |
+
 # Section 12 — Open Questions & Decisions Log
 
 This section documents all open questions raised during TDD authoring, the assumptions made when concrete answers were unavailable, and the formal Architecture Decision Records (ADRs) that capture each significant design choice. Every item is resolved — there are no outstanding TBDs.
