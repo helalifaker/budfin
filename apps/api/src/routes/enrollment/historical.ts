@@ -181,7 +181,7 @@ export async function historicalRoutes(app: FastifyInstance) {
 			for (let i = 0; i < parsed.data.length; i++) {
 				const row = parsed.data[i]!;
 				const rowNum = i + 2; // 1-based, header is row 1
-				const gradeLevel = (row['grade_level'] ?? '').trim();
+				const gradeLevel = (row['grade_level'] ?? row['level_code'] ?? '').trim();
 				const countStr = (row['student_count'] ?? row['headcount'] ?? '').trim();
 
 				// AC-20: validate grade level

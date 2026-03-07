@@ -1,0 +1,1508 @@
+{
+	"sheets": [
+		{
+			"name": "Parameters",
+			"rowCount": 48,
+			"columnCount": 4,
+			"headers": ["School Name", "EFIR"]
+		},
+		{
+			"name": "Enrollment",
+			"rowCount": 20,
+			"columnCount": 10,
+			"headers": [
+				"Grade",
+				"Band",
+				"AY2 Enrollment",
+				"Max Class Size",
+				"Sections Needed",
+				"Plancher (70%)",
+				"Cible (85%)",
+				"Plafond (100%)",
+				"Utilization %",
+				"Alert"
+			]
+		},
+		{
+			"name": "Grille_Maternelle",
+			"rowCount": 26,
+			"columnCount": 5,
+			"headers": ["Domain / Activity", "PS (h/wk)", "MS (h/wk)", "GS (h/wk)", "Notes"]
+		},
+		{
+			"name": "Grille_Elementaire",
+			"rowCount": 27,
+			"columnCount": 7,
+			"headers": [
+				"Discipline",
+				"CP (h/wk)",
+				"CE1 (h/wk)",
+				"CE2 (h/wk)",
+				"CM1 (h/wk)",
+				"CM2 (h/wk)",
+				"Notes"
+			]
+		},
+		{
+			"name": "DHG_College",
+			"rowCount": 29,
+			"columnCount": 10,
+			"headers": [
+				"Discipline",
+				"6ème (h/wk)",
+				"5ème (h/wk)",
+				"4ème (h/wk)",
+				"3ème (h/wk)",
+				"6ème Total",
+				"5ème Total",
+				"4ème Total",
+				"3ème Total",
+				"Notes"
+			]
+		},
+		{
+			"name": "DHG_Lycee",
+			"rowCount": 71,
+			"columnCount": 8,
+			"headers": ["SECONDE GÉNÉRALE ET TECHNOLOGIQUE"]
+		},
+		{
+			"name": "DHG_Optimization",
+			"rowCount": 44,
+			"columnCount": 8,
+			"headers": ["SECTION A: Raw DHG Hours Summary"]
+		},
+		{
+			"name": "Staff_Summary",
+			"rowCount": 37,
+			"columnCount": 8,
+			"headers": ["SECTION A: Staff Count by Level"]
+		},
+		{
+			"name": "Staffing_By_Subject",
+			"rowCount": 57,
+			"columnCount": 14,
+			"headers": ["SECTION A: Enrollment Summary & Projections"]
+		}
+	],
+	"parameters": {
+		"schoolInfo": [
+			{
+				"category": "school",
+				"label": "School Name",
+				"value": "EFIR",
+				"notes": ""
+			},
+			{
+				"category": "school",
+				"label": "Academic Year",
+				"value": "AY 2026-2027",
+				"notes": "Projection year"
+			},
+			{
+				"category": "school",
+				"label": "Curriculum",
+				"value": "French National (Éducation Nationale)",
+				"notes": "AEFE homologated"
+			},
+			{
+				"category": "school",
+				"label": "Tracks Offered",
+				"value": "Voie Générale only",
+				"notes": ""
+			},
+			{
+				"category": "school",
+				"label": "Weeks per Year",
+				"value": 36,
+				"notes": "Standard French school year"
+			}
+		],
+		"classSizeParams": [
+			{
+				"category": "classSize",
+				"label": "PS (Maternelle)",
+				"value": 24,
+				"notes": "Standard French maternelle"
+			},
+			{
+				"category": "classSize",
+				"label": "MS (Maternelle)",
+				"value": 24,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "GS (Maternelle)",
+				"value": 24,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "CP",
+				"value": 26,
+				"notes": "Élémentaire standard"
+			},
+			{
+				"category": "classSize",
+				"label": "CE1",
+				"value": 26,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "CE2",
+				"value": 26,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "CM1",
+				"value": 26,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "CM2",
+				"value": 26,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "6ème",
+				"value": 26,
+				"notes": "Collège standard"
+			},
+			{
+				"category": "classSize",
+				"label": "5ème",
+				"value": 26,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "4ème",
+				"value": 26,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "3ème",
+				"value": 26,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "2nde",
+				"value": 28,
+				"notes": "Lycée — voie générale"
+			},
+			{
+				"category": "classSize",
+				"label": "1ère",
+				"value": 28,
+				"notes": ""
+			},
+			{
+				"category": "classSize",
+				"label": "Terminale",
+				"value": 28,
+				"notes": ""
+			}
+		],
+		"teacherServiceObligations": [
+			{
+				"category": "service",
+				"label": "Professeur des Écoles (Maternelle/Élémentaire)",
+				"value": 24,
+				"notes": "26h in front of students, 108h annual other duties"
+			},
+			{
+				"category": "service",
+				"label": "Certifié (Collège/Lycée)",
+				"value": 18,
+				"notes": "Standard secondary teaching obligation"
+			},
+			{
+				"category": "service",
+				"label": "Agrégé (Collège/Lycée)",
+				"value": 15,
+				"notes": "If applicable"
+			},
+			{
+				"category": "service",
+				"label": "Professeur d'EPS",
+				"value": 20,
+				"notes": "Physical education"
+			},
+			{
+				"category": "service",
+				"label": "Documentaliste",
+				"value": 30,
+				"notes": "CDI — different nature of service"
+			},
+			{
+				"category": "service",
+				"label": "Arabic/Islamic Studies Teacher",
+				"value": 24,
+				"notes": "Estimated — adjust per EFIR contract"
+			},
+			{
+				"category": "service",
+				"label": "ASEM / Teaching Assistant (Maternelle)",
+				"value": 35,
+				"notes": "Full-time assistant"
+			}
+		],
+		"hsaOptimization": [
+			{
+				"category": "hsa",
+				"label": "HSA per Certifié (avg)",
+				"value": 1.5,
+				"notes": "0 – 2"
+			},
+			{
+				"category": "hsa",
+				"label": "HSA per Agrégé (avg)",
+				"value": 1.5,
+				"notes": "0 – 2"
+			},
+			{
+				"category": "hsa",
+				"label": "HSA per EPS teacher (avg)",
+				"value": 1,
+				"notes": "0 – 2"
+			},
+			{
+				"category": "hsa",
+				"label": "Effective ORS — Certifié",
+				"value": 19.5,
+				"notes": "h/wk"
+			},
+			{
+				"category": "hsa",
+				"label": "Effective ORS — Agrégé",
+				"value": 16.5,
+				"notes": "h/wk"
+			},
+			{
+				"category": "hsa",
+				"label": "Effective ORS — EPS",
+				"value": 21,
+				"notes": "h/wk"
+			}
+		]
+	},
+	"enrollment": {
+		"grades": [
+			{
+				"grade": "PS",
+				"band": "Maternelle",
+				"enrollment": 65,
+				"maxClassSize": 24,
+				"sectionsNeeded": 3,
+				"utilizationPct": 0.9028,
+				"alert": "OK"
+			},
+			{
+				"grade": "MS",
+				"band": "Maternelle",
+				"enrollment": 77,
+				"maxClassSize": 24,
+				"sectionsNeeded": 4,
+				"utilizationPct": 0.8021,
+				"alert": "OK"
+			},
+			{
+				"grade": "GS",
+				"band": "Maternelle",
+				"enrollment": 124,
+				"maxClassSize": 24,
+				"sectionsNeeded": 6,
+				"utilizationPct": 0.8611,
+				"alert": "OK"
+			},
+			{
+				"grade": "CP",
+				"band": "Élémentaire",
+				"enrollment": 126,
+				"maxClassSize": 26,
+				"sectionsNeeded": 5,
+				"utilizationPct": 0.9692,
+				"alert": "⚠ Near Cap"
+			},
+			{
+				"grade": "CE1",
+				"band": "Élémentaire",
+				"enrollment": 118,
+				"maxClassSize": 26,
+				"sectionsNeeded": 5,
+				"utilizationPct": 0.9077,
+				"alert": "OK"
+			},
+			{
+				"grade": "CE2",
+				"band": "Élémentaire",
+				"enrollment": 132,
+				"maxClassSize": 26,
+				"sectionsNeeded": 6,
+				"utilizationPct": 0.8462,
+				"alert": "OK"
+			},
+			{
+				"grade": "CM1",
+				"band": "Élémentaire",
+				"enrollment": 121,
+				"maxClassSize": 26,
+				"sectionsNeeded": 5,
+				"utilizationPct": 0.9308,
+				"alert": "OK"
+			},
+			{
+				"grade": "CM2",
+				"band": "Élémentaire",
+				"enrollment": 121,
+				"maxClassSize": 26,
+				"sectionsNeeded": 5,
+				"utilizationPct": 0.9308,
+				"alert": "OK"
+			},
+			{
+				"grade": "6ème",
+				"band": "Collège",
+				"enrollment": 151,
+				"maxClassSize": 26,
+				"sectionsNeeded": 6,
+				"utilizationPct": 0.9679,
+				"alert": "⚠ Near Cap"
+			},
+			{
+				"grade": "5ème",
+				"band": "Collège",
+				"enrollment": 139,
+				"maxClassSize": 26,
+				"sectionsNeeded": 6,
+				"utilizationPct": 0.891,
+				"alert": "OK"
+			},
+			{
+				"grade": "4ème",
+				"band": "Collège",
+				"enrollment": 120,
+				"maxClassSize": 26,
+				"sectionsNeeded": 5,
+				"utilizationPct": 0.9231,
+				"alert": "OK"
+			},
+			{
+				"grade": "3ème",
+				"band": "Collège",
+				"enrollment": 103,
+				"maxClassSize": 26,
+				"sectionsNeeded": 4,
+				"utilizationPct": 0.9904,
+				"alert": "⚠ Near Cap"
+			},
+			{
+				"grade": "2nde",
+				"band": "Lycée",
+				"enrollment": 125,
+				"maxClassSize": 28,
+				"sectionsNeeded": 5,
+				"utilizationPct": 0.8929,
+				"alert": "OK"
+			},
+			{
+				"grade": "1ère",
+				"band": "Lycée",
+				"enrollment": 120,
+				"maxClassSize": 28,
+				"sectionsNeeded": 5,
+				"utilizationPct": 0.8571,
+				"alert": "OK"
+			},
+			{
+				"grade": "Terminale",
+				"band": "Lycée",
+				"enrollment": 111,
+				"maxClassSize": 28,
+				"sectionsNeeded": 4,
+				"utilizationPct": 0.9911,
+				"alert": "⚠ Near Cap"
+			}
+		],
+		"totalStudents": 1753,
+		"totalSections": 74
+	},
+	"maternelleHours": [
+		{
+			"subject": "Mobiliser le langage (oral & écrit)",
+			"hoursPerWeek": {
+				"PS": 8,
+				"MS": 8,
+				"GS": 9
+			}
+		},
+		{
+			"subject": "Agir, s'exprimer à travers l'activité physique",
+			"hoursPerWeek": {
+				"PS": 3,
+				"MS": 3,
+				"GS": 3
+			}
+		},
+		{
+			"subject": "Agir, s'exprimer à travers les activités artistiques",
+			"hoursPerWeek": {
+				"PS": 3,
+				"MS": 3,
+				"GS": 2.5
+			}
+		},
+		{
+			"subject": "Construire les premiers outils (maths)",
+			"hoursPerWeek": {
+				"PS": 2,
+				"MS": 3,
+				"GS": 3.5
+			}
+		},
+		{
+			"subject": "Explorer le monde",
+			"hoursPerWeek": {
+				"PS": 2.5,
+				"MS": 2.5,
+				"GS": 2.5
+			}
+		},
+		{
+			"subject": "Récréations",
+			"hoursPerWeek": {
+				"PS": 2.5,
+				"MS": 2.5,
+				"GS": 2.5
+			}
+		},
+		{
+			"subject": "Accueil / Rituels",
+			"hoursPerWeek": {
+				"PS": 3,
+				"MS": 2,
+				"GS": 1
+			}
+		},
+		{
+			"subject": "Total Student Hours / Week",
+			"hoursPerWeek": {
+				"PS": 24,
+				"MS": 24,
+				"GS": 24
+			}
+		},
+		{
+			"subject": "[Host-Country] Arabic Language",
+			"hoursPerWeek": {
+				"PS": 2,
+				"MS": 3,
+				"GS": 3
+			}
+		},
+		{
+			"subject": "[Host-Country] Islamic Studies",
+			"hoursPerWeek": {
+				"PS": 1,
+				"MS": 1,
+				"GS": 1
+			}
+		}
+	],
+	"elementaireHours": [
+		{
+			"subject": "Français",
+			"hoursPerWeek": {
+				"CP": 10,
+				"CE1": 8,
+				"CE2": 8,
+				"CM1": 8,
+				"CM2": 8
+			}
+		},
+		{
+			"subject": "Mathématiques",
+			"hoursPerWeek": {
+				"CP": 5,
+				"CE1": 5,
+				"CE2": 5,
+				"CM1": 5,
+				"CM2": 5
+			}
+		},
+		{
+			"subject": "Langue Vivante (Anglais)",
+			"hoursPerWeek": {
+				"CP": 1.5,
+				"CE1": 1.5,
+				"CE2": 1.5,
+				"CM1": 1.5,
+				"CM2": 1.5
+			}
+		},
+		{
+			"subject": "EPS",
+			"hoursPerWeek": {
+				"CP": 3,
+				"CE1": 3,
+				"CE2": 3,
+				"CM1": 3,
+				"CM2": 3
+			}
+		},
+		{
+			"subject": "Sciences et Technologie",
+			"hoursPerWeek": {
+				"CP": 1,
+				"CE1": 1.5,
+				"CE2": 1.5,
+				"CM1": 2,
+				"CM2": 2
+			}
+		},
+		{
+			"subject": "Histoire-Géographie-EMC",
+			"hoursPerWeek": {
+				"CP": 1,
+				"CE1": 1.5,
+				"CE2": 1.5,
+				"CM1": 2,
+				"CM2": 2
+			}
+		},
+		{
+			"subject": "Arts Plastiques",
+			"hoursPerWeek": {
+				"CP": 1,
+				"CE1": 1,
+				"CE2": 1,
+				"CM1": 1,
+				"CM2": 1
+			}
+		},
+		{
+			"subject": "Éducation Musicale",
+			"hoursPerWeek": {
+				"CP": 1,
+				"CE1": 1,
+				"CE2": 1,
+				"CM1": 1,
+				"CM2": 1
+			}
+		},
+		{
+			"subject": "Récréations",
+			"hoursPerWeek": {
+				"CP": 0.5,
+				"CE1": 0.5,
+				"CE2": 0.5,
+				"CM1": 0.5,
+				"CM2": 0.5
+			}
+		},
+		{
+			"subject": "Total Student Hours / Week",
+			"hoursPerWeek": {
+				"CP": 24,
+				"CE1": 23,
+				"CE2": 23,
+				"CM1": 24,
+				"CM2": 24
+			}
+		},
+		{
+			"subject": "[Host-Country] Arabic Language",
+			"hoursPerWeek": {
+				"CP": 4,
+				"CE1": 4,
+				"CE2": 4,
+				"CM1": 3,
+				"CM2": 3
+			}
+		},
+		{
+			"subject": "[Host-Country] Islamic Studies",
+			"hoursPerWeek": {
+				"CP": 2,
+				"CE1": 2,
+				"CE2": 2,
+				"CM1": 1,
+				"CM2": 1
+			}
+		}
+	],
+	"collegeDHG": [
+		{
+			"level": "6EME",
+			"discipline": "Français",
+			"hoursPerWeekPerStudent": 4.5,
+			"totalHoursPerWeek": 27,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Français",
+			"hoursPerWeekPerStudent": 4.5,
+			"totalHoursPerWeek": 27,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Français",
+			"hoursPerWeekPerStudent": 4.5,
+			"totalHoursPerWeek": 22.5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Français",
+			"hoursPerWeekPerStudent": 4,
+			"totalHoursPerWeek": 16,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Mathématiques",
+			"hoursPerWeekPerStudent": 4.5,
+			"totalHoursPerWeek": 27,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Mathématiques",
+			"hoursPerWeekPerStudent": 3.5,
+			"totalHoursPerWeek": 21,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Mathématiques",
+			"hoursPerWeekPerStudent": 3.5,
+			"totalHoursPerWeek": 17.5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Mathématiques",
+			"hoursPerWeekPerStudent": 3.5,
+			"totalHoursPerWeek": 14,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Histoire-Géographie-EMC",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Histoire-Géographie-EMC",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Histoire-Géographie-EMC",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 15,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Histoire-Géographie-EMC",
+			"hoursPerWeekPerStudent": 3.5,
+			"totalHoursPerWeek": 14,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "LVA — Anglais",
+			"hoursPerWeekPerStudent": 4,
+			"totalHoursPerWeek": 24,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "LVA — Anglais",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "LVA — Anglais",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 15,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "LVA — Anglais",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 12,
+			"sections": 4
+		},
+		{
+			"level": "5EME",
+			"discipline": "LVB — Espagnol",
+			"hoursPerWeekPerStudent": 2.5,
+			"totalHoursPerWeek": 15,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "LVB — Espagnol",
+			"hoursPerWeekPerStudent": 2.5,
+			"totalHoursPerWeek": 12.5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "LVB — Espagnol",
+			"hoursPerWeekPerStudent": 2.5,
+			"totalHoursPerWeek": 10,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Sciences de la Vie et de la Terre",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 9,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Sciences de la Vie et de la Terre",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 9,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Sciences de la Vie et de la Terre",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 7.5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Sciences de la Vie et de la Terre",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 6,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Physique-Chimie",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 6,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Physique-Chimie",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 9,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Physique-Chimie",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 7.5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Physique-Chimie",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 6,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Technologie",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 9,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Technologie",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 9,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Technologie",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 7.5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Technologie",
+			"hoursPerWeekPerStudent": 1.5,
+			"totalHoursPerWeek": 6,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Arts Plastiques",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 6,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Arts Plastiques",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 6,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Arts Plastiques",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Arts Plastiques",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 4,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Éducation Musicale",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 6,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Éducation Musicale",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 6,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Éducation Musicale",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Éducation Musicale",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 4,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "EPS",
+			"hoursPerWeekPerStudent": 4,
+			"totalHoursPerWeek": 24,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "EPS",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "EPS",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 15,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "EPS",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 12,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "Marge d'autonomie (3h/division)",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "Marge d'autonomie (3h/division)",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "Marge d'autonomie (3h/division)",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 15,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "Marge d'autonomie (3h/division)",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 12,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "[Host-Country] Arabic Language",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "[Host-Country] Arabic Language",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 18,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "[Host-Country] Arabic Language",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 15,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "[Host-Country] Arabic Language",
+			"hoursPerWeekPerStudent": 3,
+			"totalHoursPerWeek": 12,
+			"sections": 4
+		},
+		{
+			"level": "6EME",
+			"discipline": "[Host-Country] Islamic Studies",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 6,
+			"sections": 6
+		},
+		{
+			"level": "5EME",
+			"discipline": "[Host-Country] Islamic Studies",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 6,
+			"sections": 6
+		},
+		{
+			"level": "4EME",
+			"discipline": "[Host-Country] Islamic Studies",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 5,
+			"sections": 5
+		},
+		{
+			"level": "3EME",
+			"discipline": "[Host-Country] Islamic Studies",
+			"hoursPerWeekPerStudent": 1,
+			"totalHoursPerWeek": 4,
+			"sections": 4
+		}
+	],
+	"lyceeDHG": {
+		"seconde": [
+			{
+				"level": "2NDE",
+				"discipline": "Français",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 20,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Histoire-Géographie",
+				"hoursPerWeekPerStudent": 3,
+				"totalHoursPerWeek": 15,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "LVA — Anglais",
+				"hoursPerWeekPerStudent": 3,
+				"totalHoursPerWeek": 15,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "LVB — Espagnol",
+				"hoursPerWeekPerStudent": 2.5,
+				"totalHoursPerWeek": 12.5,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Sciences Économiques et Sociales",
+				"hoursPerWeekPerStudent": 1.5,
+				"totalHoursPerWeek": 7.5,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Mathématiques",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 20,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Physique-Chimie",
+				"hoursPerWeekPerStudent": 3,
+				"totalHoursPerWeek": 15,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Sciences de la Vie et de la Terre",
+				"hoursPerWeekPerStudent": 1.5,
+				"totalHoursPerWeek": 7.5,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "EPS",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 10,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Enseignement Moral et Civique",
+				"hoursPerWeekPerStudent": 0.5,
+				"totalHoursPerWeek": 2.5,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Sciences Numériques et Technologie",
+				"hoursPerWeekPerStudent": 1.5,
+				"totalHoursPerWeek": 7.5,
+				"sections": 5
+			},
+			{
+				"level": "2NDE",
+				"discipline": "Heures d'autonomie (12h/division)",
+				"hoursPerWeekPerStudent": 12,
+				"totalHoursPerWeek": 60,
+				"sections": 5
+			}
+		],
+		"premiere": [
+			{
+				"level": "1ERE",
+				"discipline": "[Tronc Commun] Français",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 20,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Tronc Commun] Histoire-Géographie",
+				"hoursPerWeekPerStudent": 3,
+				"totalHoursPerWeek": 15,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Tronc Commun] LVA — Anglais",
+				"hoursPerWeekPerStudent": 2.5,
+				"totalHoursPerWeek": 12.5,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Tronc Commun] LVB — Espagnol",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 10,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Tronc Commun] Enseignement Scientifique",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 10,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Tronc Commun] EPS",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 10,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Tronc Commun] Enseignement Moral et Civique",
+				"hoursPerWeekPerStudent": 0.5,
+				"totalHoursPerWeek": 2.5,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] Mathématiques",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 12,
+				"sections": 3
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] Physique-Chimie",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 8,
+				"sections": 2
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] SVT",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 8,
+				"sections": 2
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] SES",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 8,
+				"sections": 2
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] HGGSP",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 8,
+				"sections": 2
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] NSI",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 4,
+				"sections": 1
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] Heures d'autonomie (8h/division)",
+				"hoursPerWeekPerStudent": 8,
+				"totalHoursPerWeek": 40,
+				"sections": 5
+			},
+			{
+				"level": "1ERE",
+				"discipline": "[Specialite] Maths Tronc Commun (non-spé, 1.5h)",
+				"hoursPerWeekPerStudent": 1.5,
+				"totalHoursPerWeek": 3,
+				"sections": 2
+			}
+		],
+		"terminale": [
+			{
+				"level": "TERM",
+				"discipline": "[Tronc Commun] Philosophie",
+				"hoursPerWeekPerStudent": 4,
+				"totalHoursPerWeek": 16,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Tronc Commun] Histoire-Géographie",
+				"hoursPerWeekPerStudent": 3,
+				"totalHoursPerWeek": 12,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Tronc Commun] LVA — Anglais",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 8,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Tronc Commun] LVB — Espagnol",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 8,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Tronc Commun] Enseignement Scientifique",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 8,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Tronc Commun] EPS",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 8,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Tronc Commun] Enseignement Moral et Civique",
+				"hoursPerWeekPerStudent": 0.5,
+				"totalHoursPerWeek": 2,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] Mathématiques",
+				"hoursPerWeekPerStudent": 6,
+				"totalHoursPerWeek": 18,
+				"sections": 3
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] Physique-Chimie",
+				"hoursPerWeekPerStudent": 6,
+				"totalHoursPerWeek": 12,
+				"sections": 2
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] SVT",
+				"hoursPerWeekPerStudent": 6,
+				"totalHoursPerWeek": 12,
+				"sections": 2
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] SES",
+				"hoursPerWeekPerStudent": 6,
+				"totalHoursPerWeek": 6,
+				"sections": 1
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] HGGSP",
+				"hoursPerWeekPerStudent": 6,
+				"totalHoursPerWeek": 6,
+				"sections": 1
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] NSI",
+				"hoursPerWeekPerStudent": 6,
+				"totalHoursPerWeek": 6,
+				"sections": 1
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] Heures d'autonomie (8h/division)",
+				"hoursPerWeekPerStudent": 8,
+				"totalHoursPerWeek": 32,
+				"sections": 4
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] Arabic Language",
+				"hoursPerWeekPerStudent": 2,
+				"totalHoursPerWeek": 2,
+				"sections": 2
+			},
+			{
+				"level": "TERM",
+				"discipline": "[Specialite] Islamic Studies",
+				"hoursPerWeekPerStudent": 1,
+				"totalHoursPerWeek": 1,
+				"sections": 1
+			}
+		]
+	},
+	"staffingSummary": [
+		{
+			"level": "PS",
+			"sections": 3,
+			"frenchTeachers": 3,
+			"asemAssistants": 3,
+			"arabicHours": 6,
+			"islamicHours": 3
+		},
+		{
+			"level": "MS",
+			"sections": 4,
+			"frenchTeachers": 4,
+			"asemAssistants": 4,
+			"arabicHours": 12,
+			"islamicHours": 4
+		},
+		{
+			"level": "GS",
+			"sections": 6,
+			"frenchTeachers": 6,
+			"asemAssistants": 6,
+			"arabicHours": 18,
+			"islamicHours": 6
+		},
+		{
+			"level": "CP",
+			"sections": 5,
+			"frenchTeachers": 5,
+			"asemAssistants": 0,
+			"arabicHours": 20,
+			"islamicHours": 10
+		},
+		{
+			"level": "CE1",
+			"sections": 5,
+			"frenchTeachers": 5,
+			"asemAssistants": 0,
+			"arabicHours": 20,
+			"islamicHours": 10
+		},
+		{
+			"level": "CE2",
+			"sections": 6,
+			"frenchTeachers": 6,
+			"asemAssistants": 0,
+			"arabicHours": 24,
+			"islamicHours": 12
+		},
+		{
+			"level": "CM1",
+			"sections": 5,
+			"frenchTeachers": 5,
+			"asemAssistants": 0,
+			"arabicHours": 15,
+			"islamicHours": 5
+		},
+		{
+			"level": "CM2",
+			"sections": 5,
+			"frenchTeachers": 5,
+			"asemAssistants": 0,
+			"arabicHours": 15,
+			"islamicHours": 5
+		},
+		{
+			"level": "6ème",
+			"sections": 6,
+			"frenchTeachers": 8.92,
+			"asemAssistants": 0,
+			"arabicHours": 18,
+			"islamicHours": 6
+		},
+		{
+			"level": "5ème",
+			"sections": 6,
+			"frenchTeachers": 8.92,
+			"asemAssistants": 0,
+			"arabicHours": 18,
+			"islamicHours": 6
+		},
+		{
+			"level": "4ème",
+			"sections": 5,
+			"frenchTeachers": 7.44,
+			"asemAssistants": 0,
+			"arabicHours": 15,
+			"islamicHours": 5
+		},
+		{
+			"level": "3ème",
+			"sections": 4,
+			"frenchTeachers": 5.95,
+			"asemAssistants": 0,
+			"arabicHours": 12,
+			"islamicHours": 4
+		},
+		{
+			"level": "2nde",
+			"sections": 5,
+			"frenchTeachers": 9.87,
+			"asemAssistants": 0,
+			"arabicHours": 10,
+			"islamicHours": 5
+		},
+		{
+			"level": "1ère",
+			"sections": 5,
+			"frenchTeachers": 8.77,
+			"asemAssistants": 0,
+			"arabicHours": 10,
+			"islamicHours": 5
+		},
+		{
+			"level": "Terminale",
+			"sections": 4,
+			"frenchTeachers": 7.9,
+			"asemAssistants": 0,
+			"arabicHours": 8,
+			"islamicHours": 4
+		}
+	],
+	"subjectList": [
+		"Accueil / Rituels",
+		"Agir, s'exprimer à travers l'activité physique",
+		"Agir, s'exprimer à travers les activités artistiques",
+		"Arts Plastiques",
+		"Construire les premiers outils (maths)",
+		"EPS",
+		"Enseignement Moral et Civique",
+		"Explorer le monde",
+		"Français",
+		"Heures d'autonomie (12h/division)",
+		"Histoire-Géographie",
+		"Histoire-Géographie-EMC",
+		"LVA — Anglais",
+		"LVB — Espagnol",
+		"Langue Vivante (Anglais)",
+		"Marge d'autonomie (3h/division)",
+		"Mathématiques",
+		"Mobiliser le langage (oral & écrit)",
+		"Physique-Chimie",
+		"Récréations",
+		"Sciences Numériques et Technologie",
+		"Sciences de la Vie et de la Terre",
+		"Sciences et Technologie",
+		"Sciences Économiques et Sociales",
+		"Technologie",
+		"Total Student Hours / Week",
+		"[Host-Country] Arabic Language",
+		"[Host-Country] Islamic Studies",
+		"[Specialite] Arabic Language",
+		"[Specialite] HGGSP",
+		"[Specialite] Heures d'autonomie (8h/division)",
+		"[Specialite] Islamic Studies",
+		"[Specialite] Maths Tronc Commun (non-spé, 1.5h)",
+		"[Specialite] Mathématiques",
+		"[Specialite] NSI",
+		"[Specialite] Physique-Chimie",
+		"[Specialite] SES",
+		"[Specialite] SVT",
+		"[Tronc Commun] EPS",
+		"[Tronc Commun] Enseignement Moral et Civique",
+		"[Tronc Commun] Enseignement Scientifique",
+		"[Tronc Commun] Français",
+		"[Tronc Commun] Histoire-Géographie",
+		"[Tronc Commun] LVA — Anglais",
+		"[Tronc Commun] LVB — Espagnol",
+		"[Tronc Commun] Philosophie",
+		"Éducation Musicale"
+	]
+}

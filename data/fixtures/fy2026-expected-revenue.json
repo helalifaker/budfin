@@ -1,0 +1,101 @@
+[
+	{
+		"month": 1,
+		"tuitionFees": "56638541.0217",
+		"discountImpact": "-223032.1837",
+		"registrationFees": "9810050.0000",
+		"activitiesServices": "1312800.0000",
+		"examinationFees": "394800.0000",
+		"totalOperatingRevenue": "5728363.7543"
+	},
+	{
+		"month": 2,
+		"tuitionFees": "0.8310",
+		"discountImpact": "-223032.1837",
+		"registrationFees": "0.1439",
+		"activitiesServices": "0.0193",
+		"examinationFees": "0.0058",
+		"totalOperatingRevenue": "5728363.7543"
+	},
+	{
+		"month": 3,
+		"tuitionFees": "0.0000",
+		"discountImpact": "-223032.1837",
+		"registrationFees": "0.0000",
+		"activitiesServices": "0.0000",
+		"examinationFees": "0.0000",
+		"totalOperatingRevenue": "5728363.7543"
+	},
+	{
+		"month": 4,
+		"tuitionFees": "0.0000",
+		"discountImpact": "-223032.1837",
+		"registrationFees": "0.0000",
+		"activitiesServices": "0.0000",
+		"examinationFees": "0.0000",
+		"totalOperatingRevenue": "5918263.7543"
+	},
+	{
+		"month": 5,
+		"tuitionFees": "0.0000",
+		"discountImpact": "-223032.1837",
+		"registrationFees": "0.0000",
+		"activitiesServices": "0.0000",
+		"examinationFees": "0.0000",
+		"totalOperatingRevenue": "10754788.7543"
+	},
+	{
+		"month": 6,
+		"tuitionFees": "0.0000",
+		"discountImpact": "-223032.1837",
+		"registrationFees": "0.0000",
+		"activitiesServices": "0.0000",
+		"examinationFees": "0.0000",
+		"totalOperatingRevenue": "10564888.7543"
+	},
+	{
+		"month": 8,
+		"tuitionFees": "5728363.7543",
+		"discountImpact": "0.0000",
+		"registrationFees": "5918263.7543",
+		"activitiesServices": "0.0000",
+		"examinationFees": "5958089.6239",
+		"totalOperatingRevenue": "0.0000"
+	},
+	{
+		"month": 9,
+		"tuitionFees": "0.0000",
+		"discountImpact": "-248879.9011",
+		"registrationFees": "0.0000",
+		"activitiesServices": "0.0000",
+		"examinationFees": "0.0000",
+		"totalOperatingRevenue": "5882089.6239"
+	},
+	{
+		"month": 10,
+		"tuitionFees": "5728363.7543",
+		"discountImpact": "-248879.9011",
+		"registrationFees": "10754788.7543",
+		"activitiesServices": "0.0000",
+		"examinationFees": "5984489.6239",
+		"totalOperatingRevenue": "5958089.6239"
+	},
+	{
+		"month": 11,
+		"tuitionFees": "0.0000",
+		"discountImpact": "-248879.9011",
+		"registrationFees": "0.0000",
+		"activitiesServices": "0.0000",
+		"examinationFees": "0.0000",
+		"totalOperatingRevenue": "5984489.6239"
+	},
+	{
+		"month": 12,
+		"tuitionFees": "5728363.7543",
+		"discountImpact": "-248879.9011",
+		"registrationFees": "10564888.7543",
+		"activitiesServices": "5882089.6239",
+		"examinationFees": "5908489.6239",
+		"totalOperatingRevenue": "5908489.6239"
+	}
+]

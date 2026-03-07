@@ -1,0 +1,2810 @@
+[
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "30000.0000",
+		"tuitionHt": "26086.9565",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "30000.0000",
+		"tuitionHt": "26086.9565",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "30000.0000",
+		"tuitionHt": "26086.9565",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34500.0000",
+		"tuitionHt": "30000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "38500.0000",
+		"tuitionHt": "33478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "34783.0000",
+		"tuitionHt": "34783.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34783.0000",
+		"tuitionHt": "34783.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34783.0000",
+		"tuitionHt": "34783.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35650.0000",
+		"tuitionHt": "35650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "34782.6087",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "34782.6087",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "34782.6087",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "35652.1739",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "46000.0000",
+		"tuitionHt": "40000.0000",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "30000.0000",
+		"tuitionHt": "26086.9565",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "30000.0000",
+		"tuitionHt": "26086.9565",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "30000.0000",
+		"tuitionHt": "26086.9565",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "35500.0000",
+		"tuitionHt": "30869.5652",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35500.0000",
+		"tuitionHt": "30869.5652",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35500.0000",
+		"tuitionHt": "30869.5652",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "35500.0000",
+		"tuitionHt": "30869.5652",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "35500.0000",
+		"tuitionHt": "30869.5652",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "35500.0000",
+		"tuitionHt": "30869.5652",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36000.0000",
+		"tuitionHt": "31304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36500.0000",
+		"tuitionHt": "31739.1304",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40800.0000",
+		"tuitionHt": "35478.2609",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "34783.0000",
+		"tuitionHt": "34783.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "34783.0000",
+		"tuitionHt": "34783.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "34783.0000",
+		"tuitionHt": "34783.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "36650.0000",
+		"tuitionHt": "36650.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "41000.0000",
+		"tuitionHt": "41000.0000",
+		"dai": "4350.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "34782.6087",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "34782.6087",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "40000.0000",
+		"tuitionHt": "34782.6087",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42000.0000",
+		"tuitionHt": "36521.7391",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "42500.0000",
+		"tuitionHt": "36956.5217",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "47500.0000",
+		"tuitionHt": "41304.3478",
+		"dai": "5000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0290",
+		"tuitionHt": "1000.0000",
+		"dai": "1000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0290",
+		"tuitionHt": "1000.0000",
+		"dai": "1000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0290",
+		"tuitionHt": "1000.0000",
+		"dai": "1000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0290",
+		"tuitionHt": "1000.0000",
+		"dai": "1000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0290",
+		"tuitionHt": "1000.0000",
+		"dai": "1000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0290",
+		"tuitionHt": "1000.0000",
+		"dai": "1000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0435",
+		"tuitionHt": "1000.0000",
+		"dai": "1500.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0580",
+		"tuitionHt": "1000.0000",
+		"dai": "2000.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Reduit Personnel",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Reduit 3+",
+		"tuitionTtc": "0.0597",
+		"tuitionHt": "1000.0000",
+		"dai": "2300.0000"
+	}
+]

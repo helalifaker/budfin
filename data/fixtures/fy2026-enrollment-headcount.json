@@ -1,0 +1,377 @@
+[
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "PS",
+		"headcount": 60
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "MS",
+		"headcount": 94
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "GS",
+		"headcount": 97
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "CP",
+		"headcount": 118
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "CE1",
+		"headcount": 119
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "CE2",
+		"headcount": 113
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "CM1",
+		"headcount": 108
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "CM2",
+		"headcount": 98
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "6EME",
+		"headcount": 115
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "5EME",
+		"headcount": 90
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "4EME",
+		"headcount": 98
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "3EME",
+		"headcount": 86
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "2NDE",
+		"headcount": 77
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "1ERE",
+		"headcount": 87
+	},
+	{
+		"academicYear": "2021-22",
+		"gradeLevel": "TERM",
+		"headcount": 74
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "PS",
+		"headcount": 67
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "MS",
+		"headcount": 85
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "GS",
+		"headcount": 115
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "CP",
+		"headcount": 103
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "CE1",
+		"headcount": 116
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "CE2",
+		"headcount": 120
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "CM1",
+		"headcount": 123
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "CM2",
+		"headcount": 112
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "6EME",
+		"headcount": 99
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "5EME",
+		"headcount": 117
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "4EME",
+		"headcount": 96
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "3EME",
+		"headcount": 101
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "2NDE",
+		"headcount": 90
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "1ERE",
+		"headcount": 77
+	},
+	{
+		"academicYear": "2022-23",
+		"gradeLevel": "TERM",
+		"headcount": 78
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "PS",
+		"headcount": 68
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "MS",
+		"headcount": 86
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "GS",
+		"headcount": 95
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "CP",
+		"headcount": 126
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "CE1",
+		"headcount": 108
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "CE2",
+		"headcount": 122
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "CM1",
+		"headcount": 125
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "CM2",
+		"headcount": 126
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "6EME",
+		"headcount": 112
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "5EME",
+		"headcount": 102
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "4EME",
+		"headcount": 126
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "3EME",
+		"headcount": 110
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "2NDE",
+		"headcount": 104
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "1ERE",
+		"headcount": 102
+	},
+	{
+		"academicYear": "2023-24",
+		"gradeLevel": "TERM",
+		"headcount": 75
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "PS",
+		"headcount": 59
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "MS",
+		"headcount": 109
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "GS",
+		"headcount": 123
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "CP",
+		"headcount": 116
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "CE1",
+		"headcount": 140
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "CE2",
+		"headcount": 126
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "CM1",
+		"headcount": 124
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "CM2",
+		"headcount": 145
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "6EME",
+		"headcount": 146
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "5EME",
+		"headcount": 121
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "4EME",
+		"headcount": 104
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "3EME",
+		"headcount": 128
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "2NDE",
+		"headcount": 130
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "1ERE",
+		"headcount": 114
+	},
+	{
+		"academicYear": "2024-25",
+		"gradeLevel": "TERM",
+		"headcount": 109
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "PS",
+		"headcount": 65
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "MS",
+		"headcount": 71
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "GS",
+		"headcount": 124
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "CP",
+		"headcount": 126
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "CE1",
+		"headcount": 118
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "CE2",
+		"headcount": 132
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "CM1",
+		"headcount": 121
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "CM2",
+		"headcount": 121
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "6EME",
+		"headcount": 151
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "5EME",
+		"headcount": 139
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "4EME",
+		"headcount": 120
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "3EME",
+		"headcount": 103
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "2NDE",
+		"headcount": 125
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "1ERE",
+		"headcount": 120
+	},
+	{
+		"academicYear": "2025-26",
+		"gradeLevel": "TERM",
+		"headcount": 111
+	}
+]

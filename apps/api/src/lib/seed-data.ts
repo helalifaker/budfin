@@ -1,16 +1,6 @@
 export const gradeLevels = [
 	{
 		displayOrder: 1,
-		gradeCode: 'TPS',
-		gradeName: 'Toute Petite Section',
-		band: 'MATERNELLE' as const,
-		maxClassSize: 25,
-		plancherPct: '0.7000',
-		ciblePct: '0.8000',
-		plafondPct: '0.9000',
-	},
-	{
-		displayOrder: 2,
 		gradeCode: 'PS',
 		gradeName: 'Petite Section',
 		band: 'MATERNELLE' as const,
@@ -20,7 +10,7 @@ export const gradeLevels = [
 		plafondPct: '0.9000',
 	},
 	{
-		displayOrder: 3,
+		displayOrder: 2,
 		gradeCode: 'MS',
 		gradeName: 'Moyenne Section',
 		band: 'MATERNELLE' as const,
@@ -30,7 +20,7 @@ export const gradeLevels = [
 		plafondPct: '0.9000',
 	},
 	{
-		displayOrder: 4,
+		displayOrder: 3,
 		gradeCode: 'GS',
 		gradeName: 'Grande Section',
 		band: 'MATERNELLE' as const,
@@ -40,7 +30,7 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 5,
+		displayOrder: 4,
 		gradeCode: 'CP',
 		gradeName: 'Cours Preparatoire',
 		band: 'ELEMENTAIRE' as const,
@@ -50,7 +40,7 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 6,
+		displayOrder: 5,
 		gradeCode: 'CE1',
 		gradeName: 'Cours Elementaire 1',
 		band: 'ELEMENTAIRE' as const,
@@ -60,7 +50,7 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 7,
+		displayOrder: 6,
 		gradeCode: 'CE2',
 		gradeName: 'Cours Elementaire 2',
 		band: 'ELEMENTAIRE' as const,
@@ -70,7 +60,7 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 8,
+		displayOrder: 7,
 		gradeCode: 'CM1',
 		gradeName: 'Cours Moyen 1',
 		band: 'ELEMENTAIRE' as const,
@@ -80,7 +70,7 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 9,
+		displayOrder: 8,
 		gradeCode: 'CM2',
 		gradeName: 'Cours Moyen 2',
 		band: 'ELEMENTAIRE' as const,
@@ -90,8 +80,8 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 10,
-		gradeCode: 'S6',
+		displayOrder: 9,
+		gradeCode: '6EME',
 		gradeName: 'Sixieme',
 		band: 'COLLEGE' as const,
 		maxClassSize: 30,
@@ -100,8 +90,8 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 11,
-		gradeCode: 'S5',
+		displayOrder: 10,
+		gradeCode: '5EME',
 		gradeName: 'Cinquieme',
 		band: 'COLLEGE' as const,
 		maxClassSize: 30,
@@ -110,8 +100,8 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 12,
-		gradeCode: 'S4',
+		displayOrder: 11,
+		gradeCode: '4EME',
 		gradeName: 'Quatrieme',
 		band: 'COLLEGE' as const,
 		maxClassSize: 30,
@@ -120,8 +110,8 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 13,
-		gradeCode: 'S3',
+		displayOrder: 12,
+		gradeCode: '3EME',
 		gradeName: 'Troisieme',
 		band: 'COLLEGE' as const,
 		maxClassSize: 30,
@@ -130,8 +120,8 @@ export const gradeLevels = [
 		plafondPct: '0.9500',
 	},
 	{
-		displayOrder: 14,
-		gradeCode: 'S2',
+		displayOrder: 13,
+		gradeCode: '2NDE',
 		gradeName: 'Seconde',
 		band: 'LYCEE' as const,
 		maxClassSize: 35,
@@ -140,9 +130,19 @@ export const gradeLevels = [
 		plafondPct: '1.0000',
 	},
 	{
+		displayOrder: 14,
+		gradeCode: '1ERE',
+		gradeName: 'Premiere',
+		band: 'LYCEE' as const,
+		maxClassSize: 35,
+		plancherPct: '0.8000',
+		ciblePct: '0.9000',
+		plafondPct: '1.0000',
+	},
+	{
 		displayOrder: 15,
-		gradeCode: 'S1T',
-		gradeName: 'Premiere / Terminale',
+		gradeCode: 'TERM',
+		gradeName: 'Terminale',
 		band: 'LYCEE' as const,
 		maxClassSize: 35,
 		plancherPct: '0.8000',

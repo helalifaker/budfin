@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { gradeLevels } from '../src/lib/seed-data.js';
 
 const prisma = new PrismaClient();
 
@@ -87,6 +88,32 @@ async function main() {
 	}
 
 	console.log('Seeded 8 system_config defaults.');
+
+	for (const grade of gradeLevels) {
+		await prisma.gradeLevel.upsert({
+			where: { gradeCode: grade.gradeCode },
+			update: {
+				gradeName: grade.gradeName,
+				band: grade.band,
+				maxClassSize: grade.maxClassSize,
+				plancherPct: grade.plancherPct,
+				ciblePct: grade.ciblePct,
+				plafondPct: grade.plafondPct,
+				displayOrder: grade.displayOrder,
+			},
+			create: {
+				gradeCode: grade.gradeCode,
+				gradeName: grade.gradeName,
+				band: grade.band,
+				maxClassSize: grade.maxClassSize,
+				plancherPct: grade.plancherPct,
+				ciblePct: grade.ciblePct,
+				plafondPct: grade.plafondPct,
+				displayOrder: grade.displayOrder,
+			},
+		});
+	}
+	console.log(`Seeded ${gradeLevels.length} grade levels.`);
 }
 
 main()

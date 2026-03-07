@@ -1,0 +1,17 @@
+[
+	{
+		"tariff": "Reduit Personnel",
+		"nationality": null,
+		"discountRate": "0.250000"
+	},
+	{
+		"tariff": "Reduit 3+",
+		"nationality": null,
+		"discountRate": "0.250000"
+	},
+	{
+		"tariff": "Plein",
+		"nationality": null,
+		"discountRate": "0.000000"
+	}
+]
