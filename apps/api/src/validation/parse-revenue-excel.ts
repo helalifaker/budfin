@@ -240,6 +240,10 @@ function parseFeeGrid(workbook: ExcelJS.Workbook): FeeGridEntry[] {
 			currentPeriod = 'AY1';
 			continue;
 		}
+		if (c1Lower.includes('year-over-year') || c1Lower.includes('year over year')) {
+			currentNationality = '';
+			continue;
+		}
 
 		// Detect nationality sections
 		if (c1Lower === 'francais' || c1Lower === 'français') {

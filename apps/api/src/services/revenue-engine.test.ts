@@ -53,17 +53,17 @@ function sumField(rows: MonthlyRevenueOutput[], field: keyof MonthlyRevenueOutpu
 
 describe('Revenue Engine', () => {
 	describe('Basic Tuition Calculation', () => {
-		it('should calculate monthly tuition for AY1 (6 months)', () => {
+		it('should calculate FY-recognized tuition for AY1 over 6 visible fiscal months', () => {
 			const result = calculateRevenue(makeInput());
 
-			// 20 students * 52173.9130 HT = 1,043,478.2600 annual gross
-			// Distributed over 6 months (AY1: Jan-Jun)
+			// 20 students * 52173.9130 HT = 1,043,478.2600 academic-year tuition.
+			// The workbook recognises AY1 over 10 academic months, of which FY2026 only sees Jan-Jun.
 			expect(result.tuitionRevenue).toHaveLength(6);
 			expect(result.tuitionRevenue.every((r) => r.academicPeriod === 'AY1')).toBe(true);
 			expect(result.tuitionRevenue.map((r) => r.month)).toEqual([1, 2, 3, 4, 5, 6]);
 
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			expect(totalGross.toFixed(4)).toBe('1043478.2600');
+			expect(totalGross.toFixed(4)).toBe('626086.9560');
 		});
 
 		it('should calculate monthly tuition for AY2 (4 months)', () => {
@@ -141,7 +141,8 @@ describe('Revenue Engine', () => {
 
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
 			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
-			const expectedDiscount = totalGross.mul(new Decimal('0.25'));
+			const potentialRevenue = totalGross.plus(totalDiscount);
+			const expectedDiscount = potentialRevenue.mul(new Decimal('0.25'));
 			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
 		});
 
@@ -161,7 +162,8 @@ describe('Revenue Engine', () => {
 
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
 			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
-			const expectedDiscount = totalGross.mul(new Decimal('0.30'));
+			const potentialRevenue = totalGross.plus(totalDiscount);
+			const expectedDiscount = potentialRevenue.mul(new Decimal('0.30'));
 			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
 		});
 
@@ -178,19 +180,20 @@ describe('Revenue Engine', () => {
 	});
 
 	describe('Last-Bucket Rounding', () => {
-		it('should ensure monthly amounts sum exactly to annual total (AY1)', () => {
+		it('should ensure FY-recognized amounts sum exactly to the AY1 fiscal-year share', () => {
 			const result = calculateRevenue(
 				makeInput({
 					enrollmentDetails: [makeEnrollment({ headcount: 7 })],
 				})
 			);
 
-			// 7 * 52173.9130 = 365217.3910 annual gross HT
+			// 7 * 52173.9130 = 365217.3910 academic-year tuition HT.
+			// FY2026 recognises 6/10 of that amount.
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			expect(totalGross.toFixed(4)).toBe('365217.3910');
+			expect(totalGross.toFixed(4)).toBe('219130.4346');
 		});
 
-		it('should ensure monthly amounts sum exactly to annual total (AY2)', () => {
+		it('should ensure FY-recognized amounts sum exactly to the AY2 fiscal-year share', () => {
 			const result = calculateRevenue(
 				makeInput({
 					enrollmentDetails: [makeEnrollment({ academicPeriod: 'AY2', headcount: 7 })],
@@ -199,7 +202,7 @@ describe('Revenue Engine', () => {
 			);
 
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			expect(totalGross.toFixed(4)).toBe('365217.3910');
+			expect(totalGross.toFixed(4)).toBe('146086.9564');
 		});
 	});
 

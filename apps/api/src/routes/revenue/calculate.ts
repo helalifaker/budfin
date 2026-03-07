@@ -133,8 +133,11 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				await txPrisma.monthlyRevenue.deleteMany({
 					where: { versionId, scenarioName: 'Base' },
 				});
+				await txPrisma.monthlyOtherRevenue.deleteMany({
+					where: { versionId, scenarioName: 'Base' },
+				});
 
-				// Insert new monthly revenue rows
+				// Insert new monthly tuition rows
 				if (results.tuitionRevenue.length > 0) {
 					await txPrisma.monthlyRevenue.createMany({
 						data: results.tuitionRevenue.map((r) => ({
@@ -149,6 +152,22 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 							discountAmount: r.discountAmount,
 							netRevenueHt: r.netRevenueHt,
 							vatAmount: r.vatAmount,
+							calculatedBy: request.user.id,
+						})),
+					});
+				}
+
+				// Insert monthly other-revenue rows used by REVENUE_ENGINE / EXECUTIVE_SUMMARY
+				if (results.otherRevenue.length > 0) {
+					await txPrisma.monthlyOtherRevenue.createMany({
+						data: results.otherRevenue.map((r) => ({
+							versionId,
+							scenarioName: 'Base',
+							lineItemName: r.lineItemName,
+							ifrsCategory: r.ifrsCategory,
+							executiveCategory: r.executiveCategory,
+							month: r.month,
+							amount: r.amount,
 							calculatedBy: request.user.id,
 						})),
 					});

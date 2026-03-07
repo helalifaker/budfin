@@ -18,14 +18,10 @@ const distributionMethodEnum = z.enum([
 ]);
 
 const ifrsCategoryEnum = z.enum([
-	'REVENUE_FROM_CONTRACTS',
-	'OTHER_OPERATING_INCOME',
-	'EMPLOYEE_BENEFITS_EXPENSE',
-	'DEPRECIATION_AMORTIZATION',
-	'OPERATING_EXPENSES',
-	'FINANCE_INCOME',
-	'FINANCE_COSTS',
-	'ZAKAT',
+	'Registration Fees',
+	'Activities & Services',
+	'Examination Fees',
+	'Other Revenue',
 ]);
 
 const decimalString = z
@@ -64,7 +60,6 @@ const putBodySchema = z.object({
 	items: z.array(otherRevenueItemSchema).min(1),
 });
 
-const WEIGHT_SUM_TOLERANCE = new Decimal('0.0001');
 const OTHER_REVENUE_STALE_MODULES = ['REVENUE', 'PNL'] as const;
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -137,7 +132,8 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 				});
 			}
 
-			// Validate weight arrays sum to 1.0 (SA-009)
+			// Workbook parity: custom month rows use relative weights (e.g. 1,1 for a 50/50 split)
+			// rather than normalized percentages, so we only require a positive total weight.
 			const weightErrors: Array<{
 				index: number;
 				lineItemName: string;
@@ -148,7 +144,7 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 				const item = items[i]!;
 				if (item.distributionMethod === 'CUSTOM_WEIGHTS' && item.weightArray) {
 					const sum = item.weightArray.reduce((acc, w) => acc.plus(new Decimal(w)), new Decimal(0));
-					if (sum.minus(1).abs().gt(WEIGHT_SUM_TOLERANCE)) {
+					if (sum.lte(0)) {
 						weightErrors.push({
 							index: i,
 							lineItemName: item.lineItemName,
@@ -161,7 +157,7 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 			if (weightErrors.length > 0) {
 				return reply.status(422).send({
 					code: 'INVALID_WEIGHT_ARRAY',
-					message: 'Custom weights must sum to 1.0 (tolerance: 0.0001)',
+					message: 'Custom weights must have a positive total weight',
 					errors: weightErrors,
 				});
 			}

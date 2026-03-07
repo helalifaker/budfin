@@ -1,22 +1,37 @@
-import { useMemo } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
-import { useDiscounts } from '../../hooks/use-revenue';
+import { useEffect, useMemo, useState } from 'react';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { DiscountEntry } from '@budfin/types';
+import { useDiscounts, usePutDiscounts } from '../../hooks/use-revenue';
+import { EditableCell } from '../data-grid/editable-cell';
+import { DataGrid } from '../data-grid/data-grid';
+import { Button } from '../ui/button';
 
 interface DiscountsTabProps {
 	versionId: number;
+	isReadOnly: boolean;
 }
 
 const columnHelper = createColumnHelper<DiscountEntry>();
 
-export function DiscountsTab({ versionId }: DiscountsTabProps) {
+export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 	const { data, isLoading } = useDiscounts(versionId);
-	const entries = data?.entries ?? [];
+	const saveMutation = usePutDiscounts(versionId);
+	const sourceEntries = useMemo(() => data?.entries ?? [], [data?.entries]);
+	const [draftEntries, setDraftEntries] = useState<DiscountEntry[]>([]);
+
+	useEffect(() => {
+		setDraftEntries(sourceEntries);
+	}, [sourceEntries]);
+
+	const isDirty = JSON.stringify(draftEntries) !== JSON.stringify(sourceEntries);
+
+	const handleValueChange = (rowIndex: number, value: string) => {
+		setDraftEntries((current) =>
+			current.map((entry, index) =>
+				index === rowIndex ? { ...entry, discountRate: String(Number(value) || 0) } : entry
+			)
+		);
+	};
 
 	const columns = useMemo(
 		() => [
@@ -26,92 +41,80 @@ export function DiscountsTab({ versionId }: DiscountsTabProps) {
 			}),
 			columnHelper.accessor('nationality', {
 				header: 'Nationality',
-				cell: (info) => {
-					const val = info.getValue();
-					return val ? (
-						<span>{val}</span>
-					) : (
-						<span className="text-[var(--text-muted)] italic">All nationalities</span>
-					);
-				},
+				cell: (info) =>
+					info.getValue() ?? <span className="italic text-[var(--text-muted)]">All</span>,
 			}),
 			columnHelper.accessor('discountRate', {
-				header: 'Discount Rate',
-				cell: (info) => {
-					const rate = Number(info.getValue()) * 100;
-					return <span className="tabular-nums font-medium">{rate.toFixed(2)}%</span>;
-				},
+				header: 'Rate',
+				cell: (info) => (
+					<div className="flex items-center gap-2">
+						<EditableCell
+							value={info.getValue()}
+							onChange={(value) => handleValueChange(info.row.index, value)}
+							isReadOnly={isReadOnly}
+							type="number"
+							className="max-w-[88px]"
+						/>
+						<span className="text-xs text-[var(--text-muted)]">
+							({(Number(info.getValue()) * 100).toFixed(2)}%)
+						</span>
+					</div>
+				),
 			}),
 			columnHelper.display({
-				id: 'impact',
-				header: 'Impact',
+				id: 'effect',
+				header: 'Workbook Effect',
 				cell: (info) => {
 					const rate = Number(info.row.original.discountRate);
-					if (rate === 0) {
-						return <span className="text-[var(--text-muted)]">No discount</span>;
-					}
+					const kept = ((1 - rate) * 100).toFixed(2);
 					return (
-						<span className="inline-block rounded bg-[var(--color-warning-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)]">
-							-{(rate * 100).toFixed(1)}% off tuition
+						<span className="text-xs text-[var(--text-secondary)]">
+							Students are billed at {kept}% of Plein tuition.
 						</span>
 					);
 				},
 			}),
 		],
-		[]
+		[isReadOnly]
 	);
 
 	const table = useReactTable({
-		data: entries,
+		data: draftEntries,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 	});
 
-	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
-				Loading discount policies...
-			</div>
-		);
-	}
-
-	if (entries.length === 0) {
-		return (
-			<div className="flex items-center justify-center h-32 text-[var(--text-muted)]">
-				No discount policies configured. Add policies to apply tuition discounts.
-			</div>
-		);
-	}
-
 	return (
-		<div className="overflow-x-auto rounded-lg border">
-			<table role="grid" className="w-full text-left text-sm" aria-label="Discount policies">
-				<thead className="border-b bg-[var(--workspace-bg-subtle)]">
-					{table.getHeaderGroups().map((hg) => (
-						<tr key={hg.id}>
-							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{table.getRowModel().rows.map((row) => (
-						<tr
-							key={row.id}
-							className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
-						>
-							{row.getVisibleCells().map((cell) => (
-								<td key={cell.id} className="px-4 py-2">
-									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</td>
-							))}
-						</tr>
-					))}
-				</tbody>
-			</table>
+		<div className="space-y-4">
+			<div className="flex items-center justify-between rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-bg-subtle)] px-4 py-3 text-sm">
+				<div>
+					<div className="font-medium text-[var(--text-primary)]">Discount Matrix</div>
+					<div className="text-[var(--text-muted)]">
+						The revenue engine converts these rates into effective tariff tuition, exactly like the
+						workbook.
+					</div>
+				</div>
+				{!isReadOnly && (
+					<Button
+						size="sm"
+						disabled={!isDirty || saveMutation.isPending}
+						onClick={() => saveMutation.mutate(draftEntries)}
+					>
+						{saveMutation.isPending ? 'Saving...' : 'Save Discounts'}
+					</Button>
+				)}
+			</div>
+
+			<DataGrid
+				table={table}
+				isLoading={isLoading}
+				showSkeleton
+				emptyState={
+					<p className="text-sm text-[var(--text-muted)]">
+						No discount policies are configured for this version.
+					</p>
+				}
+			/>
 		</div>
 	);
 }
