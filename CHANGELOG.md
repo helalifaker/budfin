@@ -25,7 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 7 new API endpoints under /api/v1/versions/:versionId/enrollment and /api/v1/enrollment/historical (#81-#84)
 - Version Management system: create, list, and delete budget versions with cursor pagination and fiscal year filtering (#14)
 - Version lifecycle state machine with four states (Draft, Published, Locked, Archived) and role-gated transitions; reverse transitions require a mandatory audit note (#14)
-- Version cloning with deep copy of monthly budget summaries; Actual versions are protected from manual creation and cloning (#14)
+- Version cloning with deep copy of enrollment inputs (headcounts and nationality/tariff details); Actual versions are protected from manual creation and cloning (#14)
 - Version comparison engine computing absolute and percentage variance across revenue, staff costs, and net profit by month (#14)
 - Latest Estimate blending: merges locked-period actuals with forecast-period budget data for a unified 12-month view (#14)
 - Fiscal Period Management with automatic 12-month seeding on first access and month-level locking bound to a confirmed Actual version (#14)
@@ -80,6 +80,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Nationality grid now filters by the selected academic period (AY1 or AY2) instead of showing all periods combined (#96)
 - Enrollment calculation results are now saved atomically; if any part of the save fails, the entire calculation is rolled back to prevent partial data (#96)
+- Version cloning now copies enrollment inputs (headcounts and nationality/tariff breakdowns) instead of computed budget summaries, ensuring cloned versions contain editable source data rather than stale outputs (#97)
+- Cloned versions are now correctly marked with stale enrollment status so downstream modules (Revenue, DHG, Staffing, P&L) are flagged for recalculation (#97)
 - Enrollment calculate endpoint now uses the correct API path, matching the documented contract (#94)
 - Context Bar period selector now shows only the valid options (AY1, AY2, Both Periods) instead of including Summer and Full Year (#94)
 - Nationality grid is now a read-only summary view; editing is done in the By Tariff grid to avoid conflicting data entry (#94)
