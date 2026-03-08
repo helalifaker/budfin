@@ -4,16 +4,19 @@ import { cn } from '../../lib/cn';
 export type EditableCellProps = {
 	value: number | string;
 	onChange: (value: number) => void;
+	onNavigate?: (direction: 'up' | 'down' | 'left' | 'right') => void;
 	type?: 'number' | 'percentage';
 	isReadOnly?: boolean;
 	isError?: boolean;
 	errorMessage?: string;
+	min?: number;
 	className?: string;
 };
 
 function formatDisplay(value: number | string, type: 'number' | 'percentage'): string {
 	const num = typeof value === 'string' ? parseFloat(value) : value;
 	if (isNaN(num)) return String(value);
+	if (num === 0) return '';
 	if (type === 'percentage') return `${num}%`;
 	return num.toLocaleString();
 }
@@ -27,10 +30,12 @@ function toEditValue(value: number | string): string {
 export function EditableCell({
 	value,
 	onChange,
+	onNavigate,
 	type = 'number',
 	isReadOnly = false,
 	isError = false,
 	errorMessage,
+	min,
 	className,
 }: EditableCellProps) {
 	const [editing, setEditing] = useState(false);
@@ -77,12 +82,25 @@ export function EditableCell({
 			if (e.key === 'Enter') {
 				e.preventDefault();
 				confirmEdit();
+				onNavigate?.('down');
 			} else if (e.key === 'Escape') {
 				e.preventDefault();
 				cancelEditing();
+			} else if (e.key === 'Tab') {
+				e.preventDefault();
+				confirmEdit();
+				onNavigate?.(e.shiftKey ? 'left' : 'right');
+			} else if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				confirmEdit();
+				onNavigate?.('up');
+			} else if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				confirmEdit();
+				onNavigate?.('down');
 			}
 		},
-		[confirmEdit, cancelEditing]
+		[confirmEdit, cancelEditing, onNavigate]
 	);
 
 	useEffect(() => {
@@ -97,6 +115,7 @@ export function EditableCell({
 			<input
 				ref={inputRef}
 				type="number"
+				min={min}
 				className={cn(
 					'w-full rounded-sm border border-transparent',
 					'bg-[var(--cell-editable-bg)] px-2 py-1',

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
@@ -11,6 +11,7 @@ import type { HeadcountRow } from '../../hooks/use-enrollment';
 import type { GradeLevel, GradeBand } from '../../hooks/use-grade-levels';
 import { TableSkeleton } from '../ui/skeleton';
 import { AlertBadge, UtilizationCell } from './capacity-columns';
+import { EditableCell } from '../shared/editable-cell';
 
 const BAND_LABELS: Record<string, string> = {
 	MATERNELLE: 'Maternelle',
@@ -58,85 +59,6 @@ interface GridRow {
 
 const columnHelper = createColumnHelper<GridRow>();
 
-function EditableCell({
-	value,
-	isReadOnly,
-	onSave,
-}: {
-	value: number;
-	isReadOnly: boolean;
-	onSave: (val: number) => void;
-}) {
-	const [editing, setEditing] = useState(false);
-	const [draft, setDraft] = useState(String(value));
-
-	const handleDoubleClick = () => {
-		if (isReadOnly) return;
-		setEditing(true);
-		setDraft(String(value));
-	};
-
-	const handleBlur = () => {
-		setEditing(false);
-		const parsed = parseInt(draft, 10);
-		if (!isNaN(parsed) && parsed >= 0 && parsed !== value) {
-			onSave(parsed);
-		}
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter') {
-			(e.target as HTMLInputElement).blur();
-		} else if (e.key === 'Escape') {
-			setEditing(false);
-			setDraft(String(value));
-		}
-	};
-
-	if (editing) {
-		return (
-			<input
-				type="number"
-				min={0}
-				className="w-20 rounded-[var(--radius-md)] border border-[var(--accent-500)] bg-[var(--cell-editable-bg)] px-2 py-1 text-right text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]"
-				value={draft}
-				onChange={(e) => setDraft(e.target.value)}
-				onBlur={handleBlur}
-				onKeyDown={handleKeyDown}
-				autoFocus
-				aria-label="Edit headcount"
-			/>
-		);
-	}
-
-	if (isReadOnly) {
-		return (
-			<span className="inline-block w-20 rounded-[var(--radius-sm)] px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums">
-				{value}
-			</span>
-		);
-	}
-
-	return (
-		<button
-			type="button"
-			className={cn(
-				'inline-block w-20 rounded-[var(--radius-sm)] px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums',
-				'cursor-pointer hover:bg-[var(--cell-editable-bg)]'
-			)}
-			onDoubleClick={handleDoubleClick}
-			onKeyDown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					handleDoubleClick();
-				}
-			}}
-		>
-			{value}
-		</button>
-	);
-}
-
 function DeltaCell({ delta, isNew }: { delta: number | null; isNew: boolean }) {
 	if (isNew) {
 		return (
@@ -175,8 +97,6 @@ export function ByGradeGrid({
 	comparisonEntries,
 	capacityResults,
 }: ByGradeGridProps) {
-	const [pendingChanges, setPendingChanges] = useState<Map<string, HeadcountEntry>>(new Map());
-
 	const rows: GridRow[] = useMemo(() => {
 		const entryMap = new Map<string, HeadcountRow>();
 		for (const e of entries) {
@@ -246,27 +166,13 @@ export function ByGradeGrid({
 			});
 	}, [entries, gradeLevels, bandFilter, comparisonEntries, capacityResults]);
 
-	const flushChanges = useCallback(() => {
-		if (pendingChanges.size > 0) {
-			onSave([...pendingChanges.values()]);
-			setPendingChanges(new Map());
-		}
-	}, [pendingChanges, onSave]);
-
 	const handleCellSave = useCallback(
 		(gradeLevel: string, period: 'AY1' | 'AY2', value: number) => {
-			const key = `${gradeLevel}:${period}`;
 			const entry: HeadcountEntry = {
 				gradeLevel: gradeLevel as HeadcountEntry['gradeLevel'],
 				academicPeriod: period,
 				headcount: value,
 			};
-			setPendingChanges((prev) => {
-				const next = new Map(prev);
-				next.set(key, entry);
-				return next;
-			});
-			// Auto-save immediately on each cell edit
 			onSave([entry]);
 		},
 		[onSave]
@@ -323,7 +229,8 @@ export function ByGradeGrid({
 					<EditableCell
 						value={info.getValue()}
 						isReadOnly={isReadOnly}
-						onSave={(val) => handleCellSave(info.row.original.gradeLevel, 'AY1', val)}
+						min={0}
+						onChange={(val) => handleCellSave(info.row.original.gradeLevel, 'AY1', val)}
 					/>
 				),
 			}),
@@ -333,7 +240,8 @@ export function ByGradeGrid({
 					<EditableCell
 						value={info.getValue()}
 						isReadOnly={isReadOnly}
-						onSave={(val) => handleCellSave(info.row.original.gradeLevel, 'AY2', val)}
+						min={0}
+						onChange={(val) => handleCellSave(info.row.original.gradeLevel, 'AY2', val)}
 					/>
 				),
 			}),
@@ -379,7 +287,7 @@ export function ByGradeGrid({
 	});
 
 	return (
-		<div className="overflow-x-auto rounded-[var(--radius-lg)] border" onBlur={flushChanges}>
+		<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
 			<table
 				role="grid"
 				className="w-full text-left text-[length:var(--text-sm)]"

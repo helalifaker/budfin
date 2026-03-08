@@ -1,7 +1,5 @@
-import { useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
-import { getCurrentFiscalYear } from '../lib/format-date';
+import { useWorkspaceContextStore, type VersionMeta } from '../stores/workspace-context-store';
 
 export interface WorkspaceContext {
 	fiscalYear: number;
@@ -12,100 +10,28 @@ export interface WorkspaceContext {
 }
 
 export function useWorkspaceContext() {
-	const [searchParams, setSearchParams] = useSearchParams();
+	const store = useWorkspaceContextStore();
 	const queryClient = useQueryClient();
 
-	const fiscalYear = Number(searchParams.get('fy')) || getCurrentFiscalYear();
-	const versionId = searchParams.get('version') ? Number(searchParams.get('version')) : null;
-	const comparisonVersionId = searchParams.get('compare')
-		? Number(searchParams.get('compare'))
-		: null;
-	const academicPeriod = searchParams.get('period');
-	const scenarioId = searchParams.get('scenario') ?? null;
-
-	const setVersion = useCallback(
-		(id: number | null) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				if (id !== null) {
-					next.set('version', String(id));
-				} else {
-					next.delete('version');
-				}
-				return next;
-			});
-			// Invalidate version-scoped queries on version change
-			void queryClient.invalidateQueries({ queryKey: ['versions'] });
-		},
-		[setSearchParams, queryClient]
-	);
-
-	const setFiscalYear = useCallback(
-		(fy: number) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				next.set('fy', String(fy));
-				return next;
-			});
-		},
-		[setSearchParams]
-	);
-
-	const setComparisonVersion = useCallback(
-		(id: number | null) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				if (id !== null) {
-					next.set('compare', String(id));
-				} else {
-					next.delete('compare');
-				}
-				return next;
-			});
-		},
-		[setSearchParams]
-	);
-
-	const setAcademicPeriod = useCallback(
-		(period: string | null) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				if (period !== null) {
-					next.set('period', period);
-				} else {
-					next.delete('period');
-				}
-				return next;
-			});
-		},
-		[setSearchParams]
-	);
-
-	const setScenario = useCallback(
-		(id: string | null) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				if (id !== null) {
-					next.set('scenario', id);
-				} else {
-					next.delete('scenario');
-				}
-				return next;
-			});
-		},
-		[setSearchParams]
-	);
+	function setVersion(id: number | null, meta?: VersionMeta) {
+		store.setVersion(id, meta);
+		void queryClient.invalidateQueries({ queryKey: ['versions'] });
+	}
 
 	return {
-		fiscalYear,
-		versionId,
-		comparisonVersionId,
-		academicPeriod,
-		scenarioId,
+		fiscalYear: store.fiscalYear,
+		versionId: store.versionId,
+		comparisonVersionId: store.comparisonVersionId,
+		academicPeriod: store.academicPeriod,
+		scenarioId: store.scenarioId,
+		versionType: store.versionType,
+		versionName: store.versionName,
+		versionStatus: store.versionStatus,
+		versionStaleModules: store.versionStaleModules,
+		setFiscalYear: store.setFiscalYear,
 		setVersion,
-		setFiscalYear,
-		setComparisonVersion,
-		setAcademicPeriod,
-		setScenario,
+		setComparisonVersion: store.setComparisonVersion,
+		setAcademicPeriod: store.setAcademicPeriod,
+		setScenario: store.setScenario,
 	};
 }

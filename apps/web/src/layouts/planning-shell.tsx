@@ -2,12 +2,16 @@ import { useEffect, useRef } from 'react';
 import { Outlet } from 'react-router';
 import { cn } from '../lib/cn';
 import { ContextBar } from '../components/shell/context-bar';
+import { VersionAccentStrip } from '../components/shell/version-accent-strip';
 import { RightPanel } from '../components/shell/right-panel';
 import { useRightPanelStore } from '../stores/right-panel-store';
-import { useWorkspaceContext } from '../hooks/use-workspace-context';
+import { useWorkspaceContextStore } from '../stores/workspace-context-store';
+import { useWorkspaceUrlSync } from '../hooks/use-workspace-url-sync';
 
 export function PlanningShell() {
-	const { versionId } = useWorkspaceContext();
+	useWorkspaceUrlSync();
+
+	const versionId = useWorkspaceContextStore((s) => s.versionId);
 	const openPanel = useRightPanelStore((s) => s.open);
 	const hasAutoOpened = useRef(false);
 
@@ -21,6 +25,7 @@ export function PlanningShell() {
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden">
 			<ContextBar />
+			<VersionAccentStrip />
 			<div className="flex flex-1 overflow-hidden">
 				<main
 					className={cn(

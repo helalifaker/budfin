@@ -1,16 +1,16 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
-import { cn } from '../../lib/cn';
 import { useDetail, usePutDetail } from '../../hooks/use-enrollment';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import type { AcademicPeriod, DetailEntry } from '@budfin/types';
 import type { GradeBand } from '../../hooks/use-grade-levels';
 import { TableSkeleton } from '../ui/skeleton';
+import { EditableCell } from '../shared/editable-cell';
 
 interface TariffRow {
 	gradeLevel: string;
@@ -39,81 +39,6 @@ interface Props {
 	isReadOnly: boolean;
 	bandFilter: GradeBand | 'ALL';
 	academicPeriod: string;
-}
-
-function EditableTariffCell({
-	value,
-	isReadOnly,
-	onSave,
-}: {
-	value: number;
-	isReadOnly: boolean;
-	onSave: (val: number) => void;
-}) {
-	const [editing, setEditing] = useState(false);
-	const [draft, setDraft] = useState(String(value));
-
-	const handleDoubleClick = () => {
-		if (isReadOnly) return;
-		setEditing(true);
-		setDraft(String(value));
-	};
-
-	const handleBlur = () => {
-		setEditing(false);
-		const parsed = parseInt(draft, 10);
-		if (!isNaN(parsed) && parsed >= 0 && parsed !== value) {
-			onSave(parsed);
-		}
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-		else if (e.key === 'Escape') setEditing(false);
-	};
-
-	if (editing) {
-		return (
-			<input
-				type="number"
-				min={0}
-				className="w-14 rounded-md border border-(--accent-500) bg-(--cell-editable-bg) px-1 py-1 text-right text-(length:--text-sm) focus:outline-none focus:ring-2 focus:ring-(--accent-500)"
-				value={draft}
-				onChange={(e) => setDraft(e.target.value)}
-				onBlur={handleBlur}
-				onKeyDown={handleKeyDown}
-				autoFocus
-				aria-label="Edit tariff headcount"
-			/>
-		);
-	}
-
-	if (isReadOnly) {
-		return (
-			<span className="inline-block w-14 rounded-sm px-1 py-1 text-right text-(length:--text-sm) tabular-nums">
-				{value}
-			</span>
-		);
-	}
-
-	return (
-		<button
-			type="button"
-			className={cn(
-				'inline-block w-14 rounded-sm px-1 py-1 text-right text-(length:--text-sm) tabular-nums',
-				'cursor-pointer hover:bg-(--cell-editable-bg)'
-			)}
-			onDoubleClick={handleDoubleClick}
-			onKeyDown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					handleDoubleClick();
-				}
-			}}
-		>
-			{value}
-		</button>
-	);
 }
 
 export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod }: Props) {
@@ -217,10 +142,13 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 			columnHelper.accessor(accessor as 'francaisRp', {
 				header,
 				cell: (info) => (
-					<EditableTariffCell
+					<EditableCell
 						value={info.getValue() as number}
 						isReadOnly={isReadOnly}
-						onSave={(val) => handleCellSave(info.row.original.gradeLevel, nationality, tariff, val)}
+						min={0}
+						onChange={(val) =>
+							handleCellSave(info.row.original.gradeLevel, nationality, tariff, val)
+						}
 					/>
 				),
 			});

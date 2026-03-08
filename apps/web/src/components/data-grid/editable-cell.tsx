@@ -86,7 +86,7 @@ export function EditableCell({
 					className
 				)}
 			>
-				{value}
+				{value === 0 || value === '0' ? '' : value}
 			</span>
 		);
 	}
@@ -138,7 +138,7 @@ export function EditableCell({
 				className
 			)}
 		>
-			{value}
+			{value === 0 || value === '0' ? '' : value}
 			{saveState === 'saved' && (
 				<svg
 					className="inline-block ml-1 h-3 w-3 text-[var(--color-success)]"

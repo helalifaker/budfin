@@ -212,4 +212,88 @@ describe('EditableCell', () => {
 		const input = screen.getByLabelText('Edit cell value');
 		expect(input).toBeDefined();
 	});
+
+	it('displays empty when value is 0', () => {
+		render(<EditableCell value={0} onChange={vi.fn()} />);
+
+		const button = screen.getByRole('button');
+		expect(button.textContent).toBe('');
+	});
+
+	it('displays empty when percentage is 0', () => {
+		render(<EditableCell value={0} onChange={vi.fn()} type="percentage" />);
+
+		const button = screen.getByRole('button');
+		expect(button.textContent).toBe('');
+	});
+
+	it('displays empty when read-only value is 0', () => {
+		render(<EditableCell value={0} onChange={vi.fn()} isReadOnly />);
+
+		const span = screen.getByText('', { selector: 'span' });
+		expect(span).toBeDefined();
+	});
+
+	it('calls onNavigate("right") on Tab', () => {
+		const onNavigate = vi.fn();
+		render(<EditableCell value={10} onChange={vi.fn()} onNavigate={onNavigate} />);
+
+		fireEvent.click(screen.getByRole('button'));
+		const input = screen.getByRole('spinbutton');
+		fireEvent.keyDown(input, { key: 'Tab' });
+
+		expect(onNavigate).toHaveBeenCalledWith('right');
+	});
+
+	it('calls onNavigate("left") on Shift+Tab', () => {
+		const onNavigate = vi.fn();
+		render(<EditableCell value={10} onChange={vi.fn()} onNavigate={onNavigate} />);
+
+		fireEvent.click(screen.getByRole('button'));
+		const input = screen.getByRole('spinbutton');
+		fireEvent.keyDown(input, { key: 'Tab', shiftKey: true });
+
+		expect(onNavigate).toHaveBeenCalledWith('left');
+	});
+
+	it('calls onNavigate("up") on ArrowUp', () => {
+		const onNavigate = vi.fn();
+		render(<EditableCell value={10} onChange={vi.fn()} onNavigate={onNavigate} />);
+
+		fireEvent.click(screen.getByRole('button'));
+		const input = screen.getByRole('spinbutton');
+		fireEvent.keyDown(input, { key: 'ArrowUp' });
+
+		expect(onNavigate).toHaveBeenCalledWith('up');
+	});
+
+	it('calls onNavigate("down") on ArrowDown', () => {
+		const onNavigate = vi.fn();
+		render(<EditableCell value={10} onChange={vi.fn()} onNavigate={onNavigate} />);
+
+		fireEvent.click(screen.getByRole('button'));
+		const input = screen.getByRole('spinbutton');
+		fireEvent.keyDown(input, { key: 'ArrowDown' });
+
+		expect(onNavigate).toHaveBeenCalledWith('down');
+	});
+
+	it('calls onNavigate("down") on Enter', () => {
+		const onNavigate = vi.fn();
+		render(<EditableCell value={10} onChange={vi.fn()} onNavigate={onNavigate} />);
+
+		fireEvent.click(screen.getByRole('button'));
+		const input = screen.getByRole('spinbutton');
+		fireEvent.keyDown(input, { key: 'Enter' });
+
+		expect(onNavigate).toHaveBeenCalledWith('down');
+	});
+
+	it('passes min prop to the input element', () => {
+		render(<EditableCell value={5} onChange={vi.fn()} min={0} />);
+
+		fireEvent.click(screen.getByRole('button'));
+		const input = screen.getByRole('spinbutton') as HTMLInputElement;
+		expect(input.min).toBe('0');
+	});
 });
