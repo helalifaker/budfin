@@ -1,0 +1,198 @@
+import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { Decimal } from 'decimal.js';
+import { prisma } from '../../lib/prisma.js';
+
+const versionIdParams = z.object({
+	versionId: z.coerce.number().int().positive(),
+});
+
+const staffCostsQuery = z.object({
+	group_by: z.enum(['employee', 'department', 'month']).default('month'),
+	include_breakdown: z.coerce.boolean().default(false),
+});
+
+export async function staffingResultRoutes(app: FastifyInstance) {
+	// GET /staff-costs
+	app.get('/staff-costs', {
+		schema: {
+			params: versionIdParams,
+			querystring: staffCostsQuery,
+		},
+		preHandler: [app.authenticate],
+		handler: async (request, reply) => {
+			const { versionId } = request.params as z.infer<typeof versionIdParams>;
+			const { group_by, include_breakdown } = request.query as z.infer<typeof staffCostsQuery>;
+			const redactSalary = request.user.role === 'Viewer';
+
+			const version = await prisma.budgetVersion.findUnique({
+				where: { id: versionId },
+			});
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: `Version ${versionId} not found`,
+				});
+			}
+
+			const costs = await prisma.monthlyStaffCost.findMany({
+				where: { versionId },
+				include: { employee: true },
+				orderBy: [{ employeeId: 'asc' }, { month: 'asc' }],
+			});
+
+			// Group based on query param
+			const groups = new Map<
+				string,
+				{
+					totalGross: Decimal;
+					totalAllowances: Decimal;
+					totalSocialCharges: Decimal;
+					totalCost: Decimal;
+				}
+			>();
+
+			for (const c of costs) {
+				let groupKey: string;
+				switch (group_by) {
+					case 'employee':
+						groupKey = c.employee.name;
+						break;
+					case 'department':
+						groupKey = c.employee.department;
+						break;
+					case 'month':
+					default:
+						groupKey = `Month ${c.month}`;
+						break;
+				}
+
+				const existing = groups.get(groupKey) ?? {
+					totalGross: new Decimal(0),
+					totalAllowances: new Decimal(0),
+					totalSocialCharges: new Decimal(0),
+					totalCost: new Decimal(0),
+				};
+
+				existing.totalGross = existing.totalGross.plus(c.baseGross);
+				existing.totalAllowances = existing.totalAllowances
+					.plus(c.housingAllowance)
+					.plus(c.transportAllowance)
+					.plus(c.responsibilityPremium)
+					.plus(c.hsaAmount);
+				existing.totalSocialCharges = existing.totalSocialCharges
+					.plus(c.gosiAmount)
+					.plus(c.ajeerAmount)
+					.plus(c.eosMonthlyAccrual);
+				existing.totalCost = existing.totalCost.plus(c.totalCost);
+
+				groups.set(groupKey, existing);
+			}
+
+			const data = [...groups.entries()].map(([key, vals]) => ({
+				group_key: key,
+				total_gross_salary: redactSalary ? null : vals.totalGross.toFixed(4),
+				total_allowances: redactSalary ? null : vals.totalAllowances.toFixed(4),
+				total_social_charges: vals.totalSocialCharges.toFixed(4),
+				total_staff_cost: vals.totalCost.toFixed(4),
+			}));
+
+			// Totals
+			let totalGross = new Decimal(0);
+			let totalAllowances = new Decimal(0);
+			let totalSocial = new Decimal(0);
+			let totalCost = new Decimal(0);
+			for (const vals of groups.values()) {
+				totalGross = totalGross.plus(vals.totalGross);
+				totalAllowances = totalAllowances.plus(vals.totalAllowances);
+				totalSocial = totalSocial.plus(vals.totalSocialCharges);
+				totalCost = totalCost.plus(vals.totalCost);
+			}
+
+			const response: Record<string, unknown> = {
+				data,
+				totals: {
+					total_gross_salary: redactSalary ? null : totalGross.toFixed(4),
+					total_allowances: redactSalary ? null : totalAllowances.toFixed(4),
+					total_social_charges: totalSocial.toFixed(4),
+					total_staff_cost: totalCost.toFixed(4),
+				},
+			};
+
+			if (include_breakdown && !redactSalary) {
+				response.breakdown = costs.map((c) => ({
+					employee_id: c.employeeId,
+					employee_name: c.employee.name,
+					department: c.employee.department,
+					month: c.month,
+					base_gross: c.baseGross.toString(),
+					adjusted_gross: c.adjustedGross.toString(),
+					housing_allowance: c.housingAllowance.toString(),
+					transport_allowance: c.transportAllowance.toString(),
+					responsibility_premium: c.responsibilityPremium.toString(),
+					hsa_amount: c.hsaAmount.toString(),
+					gosi_amount: c.gosiAmount.toString(),
+					ajeer_amount: c.ajeerAmount.toString(),
+					eos_monthly_accrual: c.eosMonthlyAccrual.toString(),
+					total_cost: c.totalCost.toString(),
+				}));
+			} else {
+				response.breakdown = null;
+			}
+
+			return response;
+		},
+	});
+
+	// GET /staffing-summary
+	app.get('/staffing-summary', {
+		schema: { params: versionIdParams },
+		preHandler: [app.authenticate],
+		handler: async (request, reply) => {
+			const { versionId } = request.params as z.infer<typeof versionIdParams>;
+
+			const version = await prisma.budgetVersion.findUnique({
+				where: { id: versionId },
+			});
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: `Version ${versionId} not found`,
+				});
+			}
+
+			// FTE from DHG requirements
+			const dhgReqs = await prisma.dhgRequirement.findMany({
+				where: { versionId },
+			});
+			const totalFTE = dhgReqs.reduce((sum, r) => sum.plus(r.fte), new Decimal(0)).toFixed(4);
+
+			// Cost by department
+			const costs = await prisma.monthlyStaffCost.findMany({
+				where: { versionId },
+				include: { employee: true },
+			});
+
+			const deptMap = new Map<string, Decimal>();
+			let totalSalaryCost = new Decimal(0);
+
+			for (const c of costs) {
+				const dept = c.employee.department;
+				const existing = deptMap.get(dept) ?? new Decimal(0);
+				deptMap.set(dept, existing.plus(c.totalCost));
+				totalSalaryCost = totalSalaryCost.plus(c.totalCost);
+			}
+
+			const byDepartment = [...deptMap.entries()].map(([dept, cost]) => ({
+				department: dept,
+				total_cost: cost.toFixed(4),
+			}));
+
+			return {
+				totalFTE,
+				totalSalaryCost: totalSalaryCost.toFixed(4),
+				byDepartment,
+			};
+		},
+	});
+}

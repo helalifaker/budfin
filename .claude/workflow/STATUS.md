@@ -1,9 +1,9 @@
 # BudFin — Current Status
 
-**Phase**: 4 — SPECIFY
+**Phase**: 5 — TDD RED
 **Current Epic**: Epic 3 — Staffing (DHG) (#7)
 **Current Story**: —
-**Last updated**: 2026-03-08
+**Last updated**: 2026-03-09
 **Note**: Epic 15 complete — next eligible Epic by MoSCoW priority and dependency order
 
 ## Phase History
@@ -40,6 +40,7 @@
 | 4 — SPECIFY (Epic 15) | ✅ Complete | 2026-03-07 |
 | 6 — IMPLEMENT (Epic 15) | ✅ Complete | 2026-03-07 |
 | 7 — REVIEW (Epic 15) | ✅ Complete | 2026-03-08 |
+| 4 — SPECIFY (Epic 3) | ✅ Complete | 2026-03-09 |
 
 ## Feature Progress
 
@@ -47,7 +48,7 @@
 | -------- | --------- | ------- | -------- |
 | 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07 |
 | 2 | Revenue | DONE | All 12 stories complete (12/12), merged PR #113 — 2026-03-07 |
-| 3 | Staffing (DHG) | 2 | Epic Created (#7) |
+| 3 | Staffing (DHG) | 4 | Spec approved, 18 stories created (#138-#155) |
 | 4 | Staff Costs | 2 | Epic Created (#8) |
 | 5 | P&L Reporting | 2 | Epic Created (#11) |
 | 6 | Scenario Modeling | 2 | Epic Created (#12) |

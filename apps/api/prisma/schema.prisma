@@ -88,6 +88,11 @@ model User {
   calculatedRevenue    MonthlyRevenue[]   @relation("RevenueCalculator")
   calculatedOtherRevenue MonthlyOtherRevenue[] @relation("OtherRevenueCalculator")
 
+  // Staffing relations (Epic 3)
+  createdEmployees     Employee[]         @relation("EmployeeCreator")
+  updatedEmployees     Employee[]         @relation("EmployeeUpdater")
+  costCalculations     MonthlyStaffCost[] @relation("CostCalculator")
+
   @@map("users")
 }
 
@@ -369,6 +374,11 @@ model BudgetVersion {
   monthlyRevenues    MonthlyRevenue[]
   monthlyOtherRevenues MonthlyOtherRevenue[]
 
+  // Staffing (Epic 3)
+  employees          Employee[]
+  monthlyStaffCosts  MonthlyStaffCost[]
+  eosProvisions      EosProvision[]
+
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
   @@index([status], map: "idx_budget_versions_status")
@@ -486,6 +496,9 @@ model DhgRequirement {
   utilization     Decimal  @default(0) @db.Decimal(5, 1)
   alert           String?  @db.VarChar(10)
   recruitmentSlots Int     @default(0) @map("recruitment_slots")
+  totalWeeklyHours Decimal @default(0) @map("total_weekly_hours") @db.Decimal(10, 4)
+  totalAnnualHours Decimal @default(0) @map("total_annual_hours") @db.Decimal(10, 4)
+  fte              Decimal @default(0) @db.Decimal(7, 4)
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -682,4 +695,113 @@ model MonthlyOtherRevenue {
   @@index([versionId, executiveCategory], map: "idx_monthly_other_revenue_version_category")
   @@index([calculatedBy], map: "idx_monthly_other_revenue_calculated_by")
   @@map("monthly_other_revenue")
+}
+
+// ── Staffing & Staff Costs (Epic 3) ──────────────────────────────────────────
+
+model Employee {
+  id                      Int       @id @default(autoincrement())
+  versionId               Int       @map("version_id")
+  employeeCode            String    @map("employee_code") @db.VarChar(20)
+  name                    String    @db.VarChar(200)
+  functionRole            String    @map("function_role") @db.VarChar(100)
+  department              String    @db.VarChar(50)
+  status                  String    @default("Existing") @db.VarChar(10)
+  joiningDate             DateTime  @map("joining_date") @db.Date
+  paymentMethod           String    @map("payment_method") @db.VarChar(50)
+  isSaudi                 Boolean   @default(false) @map("is_saudi")
+  isAjeer                 Boolean   @default(false) @map("is_ajeer")
+  isTeaching              Boolean   @default(false) @map("is_teaching")
+  hourlyPercentage        Decimal   @default(1.0000) @map("hourly_percentage") @db.Decimal(5, 4)
+  baseSalary              Bytes     @map("base_salary")
+  housingAllowance        Bytes     @map("housing_allowance")
+  transportAllowance      Bytes     @map("transport_allowance")
+  responsibilityPremium   Bytes     @default(dbgenerated()) @map("responsibility_premium")
+  hsaAmount               Bytes     @default(dbgenerated()) @map("hsa_amount")
+  augmentation            Bytes     @default(dbgenerated()) @map("augmentation")
+  augmentationEffectiveDate DateTime? @map("augmentation_effective_date") @db.Date
+  ajeerAnnualLevy         Decimal   @default(0) @map("ajeer_annual_levy") @db.Decimal(15, 4)
+  ajeerMonthlyFee         Decimal   @default(0) @map("ajeer_monthly_fee") @db.Decimal(15, 4)
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy               Int       @map("created_by")
+  updatedBy               Int?      @map("updated_by")
+
+  version            BudgetVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  creator            User             @relation("EmployeeCreator", fields: [createdBy], references: [id])
+  updater            User?            @relation("EmployeeUpdater", fields: [updatedBy], references: [id])
+  monthlyStaffCosts  MonthlyStaffCost[]
+  eosProvision       EosProvision?
+
+  @@unique([versionId, employeeCode], map: "uq_employee_code_version")
+  @@index([versionId], map: "idx_employees_version")
+  @@index([versionId, department], map: "idx_employees_department")
+  @@index([versionId, status], map: "idx_employees_status")
+  @@map("employees")
+}
+
+model DhgGrilleConfig {
+  id                     Int      @id @default(autoincrement())
+  gradeLevel             String   @map("grade_level") @db.VarChar(10)
+  subject                String   @db.VarChar(100)
+  dhgType                String   @default("Structural") @map("dhg_type") @db.VarChar(20)
+  hoursPerWeekPerSection Decimal  @map("hours_per_week_per_section") @db.Decimal(5, 2)
+  effectiveFromYear      Int      @map("effective_from_year")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([gradeLevel, subject, effectiveFromYear], map: "uq_dhg_grille")
+  @@index([gradeLevel], map: "idx_dhg_grille_grade")
+  @@map("dhg_grille_config")
+}
+
+model MonthlyStaffCost {
+  id                    Int      @id @default(autoincrement())
+  versionId             Int      @map("version_id")
+  employeeId            Int      @map("employee_id")
+  month                 Int      @db.SmallInt
+  baseGross             Decimal  @map("base_gross") @db.Decimal(15, 4)
+  adjustedGross         Decimal  @map("adjusted_gross") @db.Decimal(15, 4)
+  housingAllowance      Decimal  @default(0) @map("housing_allowance") @db.Decimal(15, 4)
+  transportAllowance    Decimal  @default(0) @map("transport_allowance") @db.Decimal(15, 4)
+  responsibilityPremium Decimal  @default(0) @map("responsibility_premium") @db.Decimal(15, 4)
+  hsaAmount             Decimal  @default(0) @map("hsa_amount") @db.Decimal(15, 4)
+  gosiAmount            Decimal  @default(0) @map("gosi_amount") @db.Decimal(15, 4)
+  ajeerAmount           Decimal  @default(0) @map("ajeer_amount") @db.Decimal(15, 4)
+  eosMonthlyAccrual     Decimal  @default(0) @map("eos_monthly_accrual") @db.Decimal(15, 4)
+  totalCost             Decimal  @map("total_cost") @db.Decimal(15, 4)
+  calculatedAt          DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  calculatedBy          Int?     @map("calculated_by")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  employee   Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  calculator User?         @relation("CostCalculator", fields: [calculatedBy], references: [id])
+
+  @@unique([versionId, employeeId, month], map: "uq_monthly_staff_cost")
+  @@index([versionId], map: "idx_monthly_staff_costs_version")
+  @@index([employeeId], map: "idx_monthly_staff_costs_employee")
+  @@map("monthly_staff_costs")
+}
+
+model EosProvision {
+  id                Int      @id @default(autoincrement())
+  versionId         Int      @map("version_id")
+  employeeId        Int      @unique @map("employee_id")
+  yearsOfService    Decimal  @map("years_of_service") @db.Decimal(7, 4)
+  eosBase           Decimal  @map("eos_base") @db.Decimal(15, 4)
+  eosAnnual         Decimal  @map("eos_annual") @db.Decimal(15, 4)
+  eosMonthlyAccrual Decimal  @map("eos_monthly_accrual") @db.Decimal(15, 4)
+  asOfDate          DateTime @map("as_of_date") @db.Date
+  calculatedAt      DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  version  BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  employee Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, employeeId], map: "uq_eos_provision")
+  @@index([versionId], map: "idx_eos_provisions_version")
+  @@map("eos_provisions")
 }
