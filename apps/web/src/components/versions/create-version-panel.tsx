@@ -3,20 +3,33 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
+import { getCurrentFiscalYear } from '../../lib/format-date';
 import { useCreateVersion, useVersions } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
+import {
+	Select,
+	SelectTrigger,
+	SelectValue,
+	SelectContent,
+	SelectItem,
+	SelectGroup,
+	SelectLabel,
+} from '../ui/select';
 
 const createSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(100, 'Name must be ≤ 100 characters'),
+	fiscalYear: z.number().int().min(2000).max(2100),
+	name: z.string().min(1, 'Name is required').max(100, 'Name must be \u2264 100 characters'),
 	type: z.enum(['Budget', 'Forecast']),
 	description: z.string().max(500).optional(),
 	sourceVersionId: z.string().optional(),
 });
 
 type CreateForm = z.infer<typeof createSchema>;
+
+const CURRENT_FY = getCurrentFiscalYear();
+const FY_OPTIONS = Array.from({ length: 5 }, (_, i) => CURRENT_FY - 2 + i);
 
 export type CreateVersionPanelProps = {
 	open: boolean;
@@ -34,15 +47,28 @@ export function CreateVersionPanel({
 	const panelRef = useRef<HTMLDivElement>(null);
 	const titleId = 'create-version-panel-title';
 	const { mutateAsync, isPending } = useCreateVersion();
-	const { data: versionsData } = useVersions(fiscalYear);
-	const sourceVersionOptions = useMemo(
-		() => (versionsData?.data ?? []).filter((v) => v.type !== 'Actual'),
-		[versionsData]
-	);
+	const { data: allVersionsData } = useVersions();
+
+	const sourceVersionsByFy = useMemo(() => {
+		const versions = (allVersionsData?.data ?? []).filter((v) => v.type !== 'Actual');
+		const grouped = new Map<number, typeof versions>();
+		for (const v of versions) {
+			const list = grouped.get(v.fiscalYear) ?? [];
+			list.push(v);
+			grouped.set(v.fiscalYear, list);
+		}
+		return Array.from(grouped.entries()).sort(([a], [b]) => b - a);
+	}, [allVersionsData]);
 
 	const form = useForm<CreateForm>({
 		resolver: zodResolver(createSchema),
-		defaultValues: { name: '', type: 'Budget', description: '', sourceVersionId: '' },
+		defaultValues: {
+			fiscalYear,
+			name: '',
+			type: 'Budget',
+			description: '',
+			sourceVersionId: '',
+		},
 	});
 
 	// Focus trap + Escape
@@ -78,8 +104,16 @@ export function CreateVersionPanel({
 	}, [open, onClose]);
 
 	useEffect(() => {
-		if (open) form.reset({ name: '', type: 'Budget', description: '', sourceVersionId: '' });
-	}, [open, form]);
+		if (open) {
+			form.reset({
+				fiscalYear,
+				name: '',
+				type: 'Budget',
+				description: '',
+				sourceVersionId: '',
+			});
+		}
+	}, [open, form, fiscalYear]);
 
 	if (!open) return null;
 
@@ -102,7 +136,7 @@ export function CreateVersionPanel({
 						Create New Version
 					</h2>
 					<p className="mt-0.5 text-[length:var(--text-sm)] text-[var(--text-muted)]">
-						Fiscal Year: FY{fiscalYear}
+						Create a new budget or forecast version
 					</p>
 				</div>
 
@@ -116,7 +150,7 @@ export function CreateVersionPanel({
 							await mutateAsync({
 								name: data.name,
 								type: data.type,
-								fiscalYear,
+								fiscalYear: data.fiscalYear,
 								...(data.description ? { description: data.description } : {}),
 								...(parsedSourceId ? { sourceVersionId: parsedSourceId } : {}),
 							});
@@ -124,6 +158,36 @@ export function CreateVersionPanel({
 						})}
 						className="space-y-4"
 					>
+						<div>
+							<label htmlFor="cv-fy" className="block text-[length:var(--text-sm)] font-medium">
+								Fiscal Year{' '}
+								<span aria-hidden="true" className="text-[var(--color-error)]">
+									*
+								</span>
+							</label>
+							<Controller
+								control={form.control}
+								name="fiscalYear"
+								render={({ field }) => (
+									<Select
+										value={String(field.value)}
+										onValueChange={(v) => field.onChange(Number(v))}
+									>
+										<SelectTrigger id="cv-fy" aria-required="true" className="mt-1">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{FY_OPTIONS.map((fy) => (
+												<SelectItem key={fy} value={String(fy)}>
+													FY{fy}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
+						</div>
+
 						<div>
 							<label htmlFor="cv-name" className="block text-[length:var(--text-sm)] font-medium">
 								Name{' '}
@@ -171,6 +235,15 @@ export function CreateVersionPanel({
 									</Select>
 								)}
 							/>
+							<div className="mt-1.5 space-y-0.5 text-[length:var(--text-xs)] text-[var(--text-muted)]">
+								<p>
+									<span className="font-medium">Budget:</span> Annual operating plan
+								</p>
+								<p>
+									<span className="font-medium">Forecast:</span> Mid-year revision
+								</p>
+								<p className="italic">Actual versions are created automatically via data import</p>
+							</div>
 							{form.formState.errors.type && (
 								<p
 									className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]"
@@ -214,10 +287,15 @@ export function CreateVersionPanel({
 										</SelectTrigger>
 										<SelectContent>
 											<SelectItem value="none">None (start empty)</SelectItem>
-											{sourceVersionOptions.map((v) => (
-												<SelectItem key={v.id} value={String(v.id)}>
-													{v.name} ({v.type})
-												</SelectItem>
+											{sourceVersionsByFy.map(([fy, versions]) => (
+												<SelectGroup key={fy}>
+													<SelectLabel>FY{fy}</SelectLabel>
+													{versions.map((v) => (
+														<SelectItem key={v.id} value={String(v.id)}>
+															{v.name} ({v.type}) - FY{v.fiscalYear}
+														</SelectItem>
+													))}
+												</SelectGroup>
 											))}
 										</SelectContent>
 									</Select>

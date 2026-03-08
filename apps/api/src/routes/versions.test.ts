@@ -29,12 +29,16 @@ vi.mock('../lib/prisma.js', () => {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			create: vi.fn(),
+			update: vi.fn(),
 			delete: vi.fn().mockResolvedValue({}),
 			count: vi.fn(),
 		},
 		monthlyBudgetSummary: {
 			findMany: vi.fn(),
 			createMany: vi.fn(),
+		},
+		actualsImportLog: {
+			findMany: vi.fn(),
 		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
@@ -57,6 +61,7 @@ const mockPrisma = prisma as unknown as {
 		findMany: ReturnType<typeof vi.fn>;
 		findUnique: ReturnType<typeof vi.fn>;
 		create: ReturnType<typeof vi.fn>;
+		update: ReturnType<typeof vi.fn>;
 		delete: ReturnType<typeof vi.fn>;
 		count: ReturnType<typeof vi.fn>;
 	};
@@ -64,6 +69,7 @@ const mockPrisma = prisma as unknown as {
 		findMany: ReturnType<typeof vi.fn>;
 		createMany: ReturnType<typeof vi.fn>;
 	};
+	actualsImportLog: { findMany: ReturnType<typeof vi.fn> };
 	auditEntry: { create: ReturnType<typeof vi.fn> };
 	$transaction: ReturnType<typeof vi.fn>;
 };
@@ -186,9 +192,19 @@ describe('GET /api/v1/versions', () => {
 		);
 	});
 
-	it('returns 400 without fiscalYear param', async () => {
-		const res = await app.inject({ method: 'GET', url: '/api/v1/versions' });
-		expect(res.statusCode).toBe(400);
+	it('returns versions without fiscalYear param (all years)', async () => {
+		const token = await makeToken();
+		mockPrisma.budgetVersion.findMany.mockResolvedValue([]);
+		mockPrisma.budgetVersion.count.mockResolvedValue(0);
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.data).toEqual([]);
+		expect(body.total).toBe(0);
 	});
 
 	it('returns 401 without token', async () => {
@@ -478,5 +494,319 @@ describe('DELETE /api/v1/versions/:id', () => {
 
 		expect(res.statusCode).toBe(403);
 		expect(res.json().code).toBe('FORBIDDEN');
+	});
+});
+
+// ── GET / — type filter ───────────────────────────────────────────────────────
+
+describe('GET /api/v1/versions — type filter', () => {
+	it('filters by type when provided', async () => {
+		mockPrisma.budgetVersion.findMany.mockResolvedValue([mockVersion]);
+		mockPrisma.budgetVersion.count.mockResolvedValue(1);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions?type=Budget',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(mockPrisma.budgetVersion.findMany).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: expect.objectContaining({ type: 'Budget' }),
+			})
+		);
+	});
+});
+
+// ── GET /compare-multi ────────────────────────────────────────────────────────
+
+const mockSummaries = (versionId: number) =>
+	Array.from({ length: 12 }, (_, i) => ({
+		versionId,
+		month: i + 1,
+		revenueHt: '100000.0000',
+		staffCosts: '60000.0000',
+		netProfit: '40000.0000',
+		calculatedAt: now,
+	}));
+
+describe('GET /api/v1/versions/compare-multi', () => {
+	it('returns comparison for 2 versions', async () => {
+		const v1 = { ...mockVersion, id: 1, type: 'Budget' };
+		const v2 = { ...mockVersion, id: 2, type: 'Forecast', name: 'Forecast Q1' };
+		mockPrisma.budgetVersion.findMany.mockResolvedValue([v1, v2]);
+		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValue([
+			...mockSummaries(1),
+			...mockSummaries(2),
+		]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/compare-multi?ids=1,2',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.versions).toHaveLength(2);
+		expect(body.monthly).toHaveLength(12);
+		expect(body.annualTotals).toHaveLength(2);
+		// Version 1 is base — variance should be null
+		expect(body.annualTotals[0].variance).toBeNull();
+		// Version 2 is non-base — has variance fields
+		expect(body.annualTotals[1].variance).not.toBeNull();
+		// Field names match MultiCompareResponse interface
+		expect(body.annualTotals[0]).toHaveProperty('revenueHt');
+		expect(body.annualTotals[0]).toHaveProperty('staffCosts');
+		expect(body.annualTotals[0]).toHaveProperty('netProfit');
+	});
+
+	it('returns comparison for 3 versions', async () => {
+		const v1 = { ...mockVersion, id: 1, type: 'Budget' };
+		const v2 = { ...mockVersion, id: 2, type: 'Forecast', name: 'Forecast Q1' };
+		const v3 = { ...mockVersion, id: 3, type: 'Actual', name: 'Actual 2026' };
+		mockPrisma.budgetVersion.findMany.mockResolvedValue([v1, v2, v3]);
+		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValue([
+			...mockSummaries(1),
+			...mockSummaries(2),
+			...mockSummaries(3),
+		]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/compare-multi?ids=1,2,3',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.versions).toHaveLength(3);
+		expect(body.annualTotals).toHaveLength(3);
+	});
+
+	it('preserves requested version order (first ID is base)', async () => {
+		const v1 = { ...mockVersion, id: 1, type: 'Budget' };
+		const v2 = { ...mockVersion, id: 2, type: 'Forecast', name: 'Forecast Q1' };
+		// API returns in DB order; test that handler re-orders to match requested IDs
+		mockPrisma.budgetVersion.findMany.mockResolvedValue([v2, v1]);
+		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValue([
+			...mockSummaries(1),
+			...mockSummaries(2),
+		]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/compare-multi?ids=2,1',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		// Version 2 should be first (base) since it was requested first
+		expect(body.versions[0].id).toBe(2);
+		expect(body.annualTotals[0].variance).toBeNull();
+	});
+
+	it('returns 400 when fewer than 2 IDs provided', async () => {
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/compare-multi?ids=1',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(400);
+		expect(res.json().code).toBe('INVALID_VERSION_COUNT');
+	});
+
+	it('returns 404 when a version is not found', async () => {
+		// Only returns 1 version when 2 were requested
+		mockPrisma.budgetVersion.findMany.mockResolvedValue([mockVersion]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/compare-multi?ids=1,999',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
+	});
+
+	it('returns 401 without auth', async () => {
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/compare-multi?ids=1,2',
+		});
+		expect(res.statusCode).toBe(401);
+	});
+});
+
+// ── GET /:id/import-logs ──────────────────────────────────────────────────────
+
+describe('GET /api/v1/versions/:id/import-logs', () => {
+	const mockLog = {
+		id: 1,
+		module: 'ACTUALS',
+		sourceFile: 'actuals-2026.xlsx',
+		validationStatus: 'PASSED',
+		rowsImported: 150,
+		importedBy: { email: 'admin@budfin.app' },
+		importedAt: now,
+	};
+
+	it('returns import logs for a valid version', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+		mockPrisma.actualsImportLog.findMany.mockResolvedValue([mockLog]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/1/import-logs',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body).toHaveLength(1);
+		expect(body[0].module).toBe('ACTUALS');
+		expect(body[0].importedByEmail).toBe('admin@budfin.app');
+	});
+
+	it('returns empty array when no import logs exist', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+		mockPrisma.actualsImportLog.findMany.mockResolvedValue([]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/1/import-logs',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(res.json()).toEqual([]);
+	});
+
+	it('returns 404 when version not found', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/999/import-logs',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
+	});
+});
+
+// ── PATCH /:id/status ─────────────────────────────────────────────────────────
+
+describe('PATCH /api/v1/versions/:id/status', () => {
+	const publishedVersion = { ...mockVersion, status: 'Published', publishedAt: now };
+
+	it('AC-04: Admin can transition Draft → Published', async () => {
+		const updatedVersion = { ...publishedVersion };
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+		mockPrisma.budgetVersion.update.mockResolvedValue(updatedVersion);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/1/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Published' },
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(res.json().status).toBe('Published');
+	});
+
+	it('AC-31 (RBAC): BudgetOwner gets 403 when attempting Published → Locked', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(publishedVersion);
+
+		const token = await makeToken({ role: 'BudgetOwner' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/1/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Locked' },
+		});
+
+		expect(res.statusCode).toBe(403);
+		expect(res.json().code).toBe('FORBIDDEN');
+		// Transaction should NOT have been called — RBAC check happens before DB write
+		expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+	});
+
+	it('Admin can transition Published → Locked', async () => {
+		const lockedVersion = { ...publishedVersion, status: 'Locked', lockedAt: now };
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(publishedVersion);
+		mockPrisma.budgetVersion.update.mockResolvedValue(lockedVersion);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/1/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Locked' },
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(res.json().status).toBe('Locked');
+	});
+
+	it('returns 409 for invalid transition (Draft → Locked)', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion); // Draft
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/1/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Locked' },
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('INVALID_TRANSITION');
+	});
+
+	it('AC-08: reverse transition without audit_note returns 400', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(publishedVersion);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/1/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Draft' }, // reverse, no audit_note
+		});
+
+		expect(res.statusCode).toBe(400);
+		expect(res.json().code).toBe('AUDIT_NOTE_REQUIRED');
+	});
+
+	it('returns 404 when version not found', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/999/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Published' },
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
 	});
 });

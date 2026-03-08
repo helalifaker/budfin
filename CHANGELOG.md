@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Multi-version comparison (2–3 versions simultaneously): `GET /api/v1/versions/compare-multi` returns 12-month and annual totals per version with Decimal.js variances against a base version; frontend renders bar + line charts and a variance table with color-coded positive/negative indicators (#136)
+- Import log history per version: `GET /api/v1/versions/:id/import-logs` returns ActualsImportLog records for the Data tab of the version detail panel (#136)
+- `fiscalYear` filter made optional on `GET /api/v1/versions` — omitting it returns all fiscal years with FY group separators in the UI ("All Years" view) (#136)
+- `type` filter added to `GET /api/v1/versions` query parameters (#136)
+- Version clone now accepts `fiscalYear`, `includeEnrollment`, and `includeSummaries` flags; cross-year clone shows a confirmation banner; `MonthlyBudgetSummary` records are deep-copied when `includeSummaries: true` (#136)
+- Versions page consolidated under `/management/versions` with full-width TanStack Table, inline filters, Zustand-backed filter state that persists across navigation, and FY group separators (#136)
+- Version detail panel redesigned as a 3-tab panel (Overview, Lifecycle, Data) with CSS state machine diagram and import log history in the Data tab (#136)
+- Compare mode UI: select 2–3 versions inline for side-by-side comparison using recharts bar + line charts and a variance table (#136)
+- RBAC fix: Lock action (Published → Locked transition) now correctly requires Admin role; BudgetOwner no longer receives a 403 silently — the lock button is hidden in the UI and the API returns 403 FORBIDDEN (#136)
+
 - Revenue module workbook parity: FY-recognition timing aligns with the Excel workbook (AY1 recognised over 6 fiscal months Jan-Jun, AY2 over 4 months Sep-Dec), closing the gap between in-product revenue planning and the source-of-truth spreadsheet (#135)
 - `monthly_other_revenue` table persists monthly other-revenue calculation outputs so the Revenue Engine and Executive Summary views survive page reloads without re-running the calculation (#135)
 - GET /revenue-results now returns `revenueEngine` and `executiveSummary` matrix views with monthly amounts, annual totals, and percentage-of-revenue breakdowns per line item, matching the workbook's two-sheet revenue reporting structure (#135)
