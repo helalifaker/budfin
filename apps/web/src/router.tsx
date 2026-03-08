@@ -18,6 +18,7 @@ import { AssumptionsPage } from './pages/master-data/assumptions';
 import { UsersPage } from './pages/admin/users';
 import { AuditPage } from './pages/admin/audit';
 import { SettingsPage } from './pages/admin/settings';
+import { StaffingPage } from './pages/planning/staffing';
 import { PlaceholderPage } from './pages/placeholder';
 
 export const routes: RouteObject[] = [
@@ -50,12 +51,7 @@ export const routes: RouteObject[] = [
 							},
 							{
 								path: '/planning/staffing',
-								element: (
-									<PlaceholderPage
-										title="Staffing & Staff Costs"
-										description="Staff positions, salary structures, and cost projections"
-									/>
-								),
+								element: <StaffingPage />,
 							},
 							{
 								path: '/planning/pnl',
