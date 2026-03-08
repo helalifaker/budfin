@@ -416,8 +416,8 @@ export async function versionRoutes(app: FastifyInstance) {
 					const row = summaryMap.get(`${v.id}:${m}`);
 					const metrics = {
 						versionId: v.id,
-						totalRevenueHt: toDecStr(row?.revenueHt),
-						totalStaffCosts: toDecStr(row?.staffCosts),
+						revenueHt: toDecStr(row?.revenueHt),
+						staffCosts: toDecStr(row?.staffCosts),
 						netProfit: toDecStr(row?.netProfit),
 					};
 
@@ -433,8 +433,8 @@ export async function versionRoutes(app: FastifyInstance) {
 					return {
 						...metrics,
 						variance: {
-							totalRevenueHt: { abs: revVar.abs, pct: revVar.pct },
-							totalStaffCosts: { abs: staffVar.abs, pct: staffVar.pct },
+							revenueHt: { abs: revVar.abs, pct: revVar.pct },
+							staffCosts: { abs: staffVar.abs, pct: staffVar.pct },
 							netProfit: { abs: netVar.abs, pct: netVar.pct },
 						},
 					};
@@ -458,8 +458,8 @@ export async function versionRoutes(app: FastifyInstance) {
 
 				const totals = {
 					versionId: v.id,
-					totalRevenueHt: revTotal.toFixed(4),
-					totalStaffCosts: staffTotal.toFixed(4),
+					revenueHt: revTotal.toFixed(4),
+					staffCosts: staffTotal.toFixed(4),
 					netProfit: netTotal.toFixed(4),
 				};
 
@@ -485,8 +485,8 @@ export async function versionRoutes(app: FastifyInstance) {
 				return {
 					...totals,
 					variance: {
-						totalRevenueHt: { abs: revVar.abs, pct: revVar.pct },
-						totalStaffCosts: { abs: staffVar.abs, pct: staffVar.pct },
+						revenueHt: { abs: revVar.abs, pct: revVar.pct },
+						staffCosts: { abs: staffVar.abs, pct: staffVar.pct },
 						netProfit: { abs: netVar.abs, pct: netVar.pct },
 					},
 				};

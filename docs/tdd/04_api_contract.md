@@ -215,11 +215,11 @@ List budget versions for a fiscal year.
 
 **Query parameters:**
 
-| Param        | Type    | Required | Description                                                  |
-| ------------ | ------- | -------- | ------------------------------------------------------------ |
-| `fiscalYear` | integer | Yes      | Fiscal year to filter by (e.g., 2026)                        |
-| `status`     | string  | No       | Filter by status: `Draft`, `Published`, `Locked`, `Archived` |
-| `type`       | string  | No       | Filter by type: `Actual`, `Budget`, `Forecast`               |
+| Param        | Type    | Required | Description                                                     |
+| ------------ | ------- | -------- | --------------------------------------------------------------- |
+| `fiscalYear` | integer | No       | Fiscal year to filter by (e.g., 2026); omit to return all years |
+| `status`     | string  | No       | Filter by status: `Draft`, `Published`, `Locked`, `Archived`    |
+| `type`       | string  | No       | Filter by type: `Actual`, `Budget`, `Forecast`                  |
 
 **Response 200:**
 
@@ -479,6 +479,100 @@ Delete a draft version (FR-VER-002). Only versions with status `Draft` can be de
 | 404    | VERSION_NOT_FOUND | No version with this ID                            |
 | 409    | VERSION_NOT_DRAFT | Cannot delete a non-draft version                  |
 | 409    | VERSION_IN_USE    | Version is referenced by an in-progress export job |
+
+---
+
+#### GET /api/v1/versions/compare-multi
+
+Compare 2 or 3 versions side-by-side with monthly and annual totals plus Decimal.js variances against the first (base) version.
+
+**RBAC:** All authenticated roles.
+
+**Query parameters:**
+
+| Param | Type   | Required | Description                                                                                                                                |
+| ----- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ids` | string | Yes      | Comma-separated list of 2 or 3 version IDs (e.g., `1,2` or `1,2,3`). The first ID is treated as the base version for variance calculation. |
+
+**Response 200:**
+
+```json
+{
+    "versions": [{ "id": "number", "name": "string", "type": "string", "fiscalYear": "number" }],
+    "monthly": [
+        {
+            "month": 1,
+            "values": [
+                {
+                    "versionId": "number",
+                    "revenueHt": "string",
+                    "staffCosts": "string",
+                    "netProfit": "string",
+                    "variance": null
+                }
+            ]
+        }
+    ],
+    "annualTotals": [
+        {
+            "versionId": "number",
+            "revenueHt": "string",
+            "staffCosts": "string",
+            "netProfit": "string",
+            "variance": {
+                "revenueHt": { "abs": "string", "pct": "string|null" },
+                "staffCosts": { "abs": "string", "pct": "string|null" },
+                "netProfit": { "abs": "string", "pct": "string|null" }
+            }
+        }
+    ]
+}
+```
+
+Notes:
+
+- The base version (first ID) has `variance: null`.
+- All monetary values are `DECIMAL(15,4)` strings.
+- `pct` is `null` when the base value is zero.
+
+**Error responses:**
+
+| Status | Code                  | Condition                                |
+| ------ | --------------------- | ---------------------------------------- |
+| 400    | INVALID_VERSION_COUNT | Fewer than 2 or more than 3 IDs provided |
+| 404    | VERSION_NOT_FOUND     | One or more version IDs do not exist     |
+
+---
+
+#### GET /api/v1/versions/:id/import-logs
+
+Retrieve the ActualsImportLog history for a version (shown in the Data tab of the version detail panel).
+
+**RBAC:** All authenticated roles.
+
+**Path params:** `id` (integer, required).
+
+**Response 200:** Array of import log entries.
+
+```json
+[
+    {
+        "id": "number",
+        "module": "string",
+        "sourceFile": "string",
+        "validationStatus": "string",
+        "rowsImported": "number",
+        "importedByEmail": "string",
+        "importedAt": "ISO 8601 timestamp"
+    }
+]
+```
+
+**Error responses:**
+
+| Status | Code              | Condition               |
+| ------ | ----------------- | ----------------------- |
+| 404    | VERSION_NOT_FOUND | No version with this ID |
 
 ---
 

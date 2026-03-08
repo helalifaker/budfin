@@ -34,10 +34,12 @@ const MONTH_NAMES = [
 	'Dec',
 ];
 
+// Colors match CSS tokens: --version-budget, --version-forecast, --version-actual
+// Recharts SVG stroke/fill cannot use CSS var() directly, so values are kept in sync here.
 const VERSION_TYPE_COLORS: Record<string, string> = {
-	Budget: '#3b82f6',
-	Forecast: '#f97316',
-	Actual: '#22c55e',
+	Budget: '#2563eb',
+	Forecast: '#ea580c',
+	Actual: '#16a34a',
 };
 
 function getVersionColor(type: string): string {

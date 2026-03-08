@@ -153,7 +153,7 @@ export interface MultiCompareResponse {
 }
 
 export function useMultiCompare(ids: number[]) {
-	const idsStr = ids.sort((a, b) => a - b).join(',');
+	const idsStr = ids.join(',');
 	return useQuery({
 		queryKey: ['versions', 'compare-multi', idsStr],
 		queryFn: () => apiClient<MultiCompareResponse>(`/versions/compare-multi?ids=${idsStr}`),

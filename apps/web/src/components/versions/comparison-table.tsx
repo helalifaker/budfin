@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Decimal } from 'decimal.js';
 import type { MultiCompareResponse } from '../../hooks/use-versions';
 import type { MetricKey } from './comparison-view';
 
@@ -36,7 +37,12 @@ const pctFmt = new Intl.NumberFormat('en-US', {
 
 function computeVariance(a: number, b: number): number | null {
 	if (b === 0) return null;
-	return ((a - b) / Math.abs(b)) * 100;
+	return new Decimal(a)
+		.minus(new Decimal(b))
+		.div(new Decimal(b).abs())
+		.times(100)
+		.toDecimalPlaces(1, Decimal.ROUND_HALF_UP)
+		.toNumber();
 }
 
 function varianceClass(variance: number | null, metric: MetricKey): string {
@@ -44,7 +50,7 @@ function varianceClass(variance: number | null, metric: MetricKey): string {
 	// For costs, negative variance is favorable (costs went down)
 	const isCost = metric === 'staffCosts';
 	const isFavorable = isCost ? variance < 0 : variance > 0;
-	return isFavorable ? 'text-emerald-600' : 'text-red-600';
+	return isFavorable ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]';
 }
 
 function formatVariance(a: number, b: number, metric: MetricKey): { text: string; cls: string } {
