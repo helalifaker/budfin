@@ -4,6 +4,7 @@ archive/
 plugins/
 .agents/
 .claude/
+.codex/
 docs/edge-cases/
 docs/plans/
 docs/specs/

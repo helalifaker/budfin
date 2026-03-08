@@ -412,6 +412,9 @@ See `.claude/COMMANDS.md` for full command reference:
 - `/impl:commit [#]` — commit, push branch, open draft PR
 - `/fix:lint` / `/fix:types` / `/fix:tests` — targeted fixers
 
+For Codex, the project-local workflow pack lives in `.codex/prompts/` and `.codex/agents/` so
+the custom commands and specialist briefs stay with the repository.
+
 ---
 
 ## Common Gotchas

@@ -28,10 +28,14 @@ pnpm install
 # Copy environment file and fill in values
 cp .env.example apps/api/.env
 
+# Start PostgreSQL for local development
+docker compose up db -d
+
 # Generate Prisma client
 pnpm --filter @budfin/api exec prisma generate
 
 # Start development servers (API on :3001, web on :3000)
+# The API applies migrations and seeds default data on startup.
 pnpm dev
 ```
 
