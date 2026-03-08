@@ -133,6 +133,12 @@ export function useVersions(fiscalYear?: number, status?: string, type?: string)
 	});
 }
 
+interface CompareVariance {
+	revenueHt: { abs: string; pct: string | null };
+	staffCosts: { abs: string; pct: string | null };
+	netProfit: { abs: string; pct: string | null };
+}
+
 export interface MultiCompareResponse {
 	versions: Array<{ id: number; name: string; type: string; fiscalYear: number }>;
 	monthly: Array<{
@@ -142,6 +148,7 @@ export interface MultiCompareResponse {
 			revenueHt: string;
 			staffCosts: string;
 			netProfit: string;
+			variance: CompareVariance | null;
 		}>;
 	}>;
 	annualTotals: Array<{
@@ -149,6 +156,7 @@ export interface MultiCompareResponse {
 		revenueHt: string;
 		staffCosts: string;
 		netProfit: string;
+		variance: CompareVariance | null;
 	}>;
 }
 
