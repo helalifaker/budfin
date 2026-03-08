@@ -1,25 +1,55 @@
+import { useState } from 'react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useCalculateRevenue } from '../../hooks/use-revenue';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
-import { Button } from '../../components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
+import { useVersions, type BudgetVersion } from '../../hooks/use-versions';
+import { WorkspaceBoard } from '../../components/shared/workspace-board';
+import { WorkspaceBlock } from '../../components/shared/workspace-block';
+import { RevenueKpiRibbon } from '../../components/revenue/kpi-ribbon';
+import { TariffAssignmentGrid } from '../../components/revenue/tariff-assignment-grid';
 import { FeeGridTab } from '../../components/revenue/fee-grid-tab';
 import { DiscountsTab } from '../../components/revenue/discounts-tab';
 import { OtherRevenueTab } from '../../components/revenue/other-revenue-tab';
-import { ForecastTab } from '../../components/revenue/forecast-tab';
 import { RevenueEngineTab } from '../../components/revenue/revenue-engine-tab';
+import { ForecastTab } from '../../components/revenue/forecast-tab';
+import { Button } from '../../components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 
 export function RevenuePage() {
-	const { versionId, academicPeriod, setAcademicPeriod } = useWorkspaceContext();
+	const { versionId, academicPeriod, setAcademicPeriod, fiscalYear } = useWorkspaceContext();
 	const user = useAuthStore((s) => s.user);
 	const isViewer = user?.role === 'Viewer';
 
 	const calculateMutation = useCalculateRevenue(versionId);
+	const { data: versionsData } = useVersions(fiscalYear);
 	const selectedPeriod =
 		academicPeriod === 'AY1' || academicPeriod === 'AY2' || academicPeriod === 'both'
 			? academicPeriod
 			: 'both';
+
+	const [kpiData, setKpiData] = useState({
+		grossHt: 0,
+		totalDiscounts: 0,
+		netRevenue: 0,
+		avgPerStudent: 0,
+	});
+
+	const version: BudgetVersion | undefined = versionsData?.data.find((v) => v.id === versionId);
+	const isStale = version?.staleModules?.includes('REVENUE') ?? false;
+
+	const handleCalculate = () => {
+		calculateMutation.mutate(undefined, {
+			onSuccess: (result) => {
+				const s = result.summary;
+				setKpiData({
+					grossHt: Number(s.grossRevenueHt),
+					totalDiscounts: Number(s.totalDiscounts),
+					netRevenue: Number(s.netRevenueHt),
+					avgPerStudent: 0,
+				});
+			},
+		});
+	};
 
 	if (!versionId) {
 		return (
@@ -30,17 +60,11 @@ export function RevenuePage() {
 	}
 
 	return (
-		<div className="space-y-4">
-			<div className="flex flex-col gap-3 rounded-lg border border-[var(--workspace-border)] bg-white p-4 shadow-[var(--shadow-xs)] md:flex-row md:items-center md:justify-between">
-				<div className="space-y-1">
-					<h1 className="text-xl font-semibold text-[var(--text-primary)]">Revenue</h1>
-					<p className="text-sm text-[var(--text-muted)]">
-						Use the input sheets to plan revenue, then calculate to populate the application
-						equivalent of the Excel revenue engine and executive summary.
-					</p>
-				</div>
-
-				<div className="flex flex-wrap items-center gap-3">
+		<WorkspaceBoard
+			title="Revenue"
+			description="Plan tuition revenue, discounts, and other income streams."
+			actions={
+				<>
 					<ToggleGroup
 						type="single"
 						value={selectedPeriod}
@@ -53,58 +77,67 @@ export function RevenuePage() {
 					</ToggleGroup>
 
 					{!isViewer && (
-						<Button
-							size="sm"
-							disabled={calculateMutation.isPending}
-							onClick={() => calculateMutation.mutate()}
-						>
+						<Button size="sm" disabled={calculateMutation.isPending} onClick={handleCalculate}>
 							{calculateMutation.isPending ? 'Calculating...' : 'Calculate Revenue'}
 						</Button>
 					)}
-				</div>
-			</div>
-
+				</>
+			}
+			kpiRibbon={
+				<RevenueKpiRibbon
+					grossHt={kpiData.grossHt}
+					totalDiscounts={kpiData.totalDiscounts}
+					netRevenue={kpiData.netRevenue}
+					avgPerStudent={kpiData.avgPerStudent}
+					isStale={isStale}
+				/>
+			}
+		>
 			{/* Status feedback */}
 			{calculateMutation.isSuccess && (
-				<div className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-bg)] px-4 py-2 text-sm text-[var(--color-success)]">
+				<div
+					className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-bg)] px-4 py-2 text-sm text-[var(--color-success)]"
+					role="status"
+				>
 					Revenue calculated successfully.
 				</div>
 			)}
 			{calculateMutation.isError && (
-				<div className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]">
+				<div
+					className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]"
+					role="alert"
+				>
 					Calculation failed. Ensure fee grid and enrollment data are configured.
 				</div>
 			)}
 
-			<Tabs defaultValue="fees">
-				<TabsList>
-					<TabsTrigger value="fees">Fee Grid</TabsTrigger>
-					<TabsTrigger value="discounts">Discounts</TabsTrigger>
-					<TabsTrigger value="other-revenue">Other Revenue</TabsTrigger>
-					<TabsTrigger value="engine">Revenue Engine</TabsTrigger>
-					<TabsTrigger value="forecast">Executive Summary</TabsTrigger>
-				</TabsList>
+			<WorkspaceBlock title="Tariff Assignment" isStale={isStale}>
+				<TariffAssignmentGrid
+					versionId={versionId}
+					academicPeriod={selectedPeriod}
+					isReadOnly={isViewer}
+				/>
+			</WorkspaceBlock>
 
-				<TabsContent value="fees">
-					<FeeGridTab versionId={versionId} academicPeriod={selectedPeriod} isReadOnly={isViewer} />
-				</TabsContent>
+			<WorkspaceBlock title="Fee Grid & Assumptions">
+				<FeeGridTab versionId={versionId} academicPeriod={selectedPeriod} isReadOnly={isViewer} />
+			</WorkspaceBlock>
 
-				<TabsContent value="discounts">
-					<DiscountsTab versionId={versionId} isReadOnly={isViewer} />
-				</TabsContent>
+			<WorkspaceBlock title="Discounts">
+				<DiscountsTab versionId={versionId} isReadOnly={isViewer} />
+			</WorkspaceBlock>
 
-				<TabsContent value="other-revenue">
-					<OtherRevenueTab versionId={versionId} isReadOnly={isViewer} />
-				</TabsContent>
+			<WorkspaceBlock title="Other Revenue" defaultOpen={false}>
+				<OtherRevenueTab versionId={versionId} isReadOnly={isViewer} />
+			</WorkspaceBlock>
 
-				<TabsContent value="engine">
-					<RevenueEngineTab versionId={versionId} />
-				</TabsContent>
+			<WorkspaceBlock title="Revenue Engine">
+				<RevenueEngineTab versionId={versionId} />
+			</WorkspaceBlock>
 
-				<TabsContent value="forecast">
-					<ForecastTab versionId={versionId} />
-				</TabsContent>
-			</Tabs>
-		</div>
+			<WorkspaceBlock title="Executive Summary">
+				<ForecastTab versionId={versionId} />
+			</WorkspaceBlock>
+		</WorkspaceBoard>
 	);
 }

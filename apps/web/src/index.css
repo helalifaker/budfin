@@ -75,6 +75,7 @@
 	--cell-editable-focus: #2563eb;
 	--cell-readonly-bg: #f8fafc;
 	--cell-error-border: #dc2626;
+	--cell-override-bg: #f5f3ff;
 
 	/* ── Typography ── */
 	--font-family: 'Inter Variable', Inter, system-ui, -apple-system, sans-serif;

@@ -59,7 +59,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 	return (
 		<Sheet open={open} onOpenChange={handleClose}>
-			<SheetContent side="right" className="w-[480px] sm:max-w-[480px] overflow-y-auto">
+			<SheetContent side="right" className="w-120 overflow-y-auto sm:max-w-120">
 				<SheetHeader>
 					<SheetTitle>Import Historical Enrollment</SheetTitle>
 					<SheetDescription>

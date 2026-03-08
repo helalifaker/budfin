@@ -22,6 +22,7 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		enrollmentHeadcount: {
 			findMany: vi.fn(),
+			upsert: vi.fn().mockResolvedValue({}),
 		},
 		gradeLevel: {
 			findMany: vi.fn(),
@@ -36,6 +37,13 @@ vi.mock('../../lib/prisma.js', () => {
 		dhgRequirement: {
 			upsert: vi.fn().mockResolvedValue({}),
 		},
+		cohortParameter: {
+			findMany: vi.fn().mockResolvedValue([]),
+		},
+		nationalityBreakdown: {
+			findMany: vi.fn().mockResolvedValue([]),
+			upsert: vi.fn().mockResolvedValue({}),
+		},
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
 				budgetVersion: mockPrisma.budgetVersion,
@@ -44,6 +52,8 @@ vi.mock('../../lib/prisma.js', () => {
 				auditEntry: mockPrisma.auditEntry,
 				calculationAuditLog: mockPrisma.calculationAuditLog,
 				dhgRequirement: mockPrisma.dhgRequirement,
+				cohortParameter: mockPrisma.cohortParameter,
+				nationalityBreakdown: mockPrisma.nationalityBreakdown,
 			})
 		),
 	};
@@ -59,6 +69,7 @@ const mockPrisma = prisma as unknown as {
 	};
 	enrollmentHeadcount: {
 		findMany: ReturnType<typeof vi.fn>;
+		upsert: ReturnType<typeof vi.fn>;
 	};
 	gradeLevel: {
 		findMany: ReturnType<typeof vi.fn>;
@@ -69,6 +80,13 @@ const mockPrisma = prisma as unknown as {
 		updateMany: ReturnType<typeof vi.fn>;
 	};
 	dhgRequirement: {
+		upsert: ReturnType<typeof vi.fn>;
+	};
+	cohortParameter: {
+		findMany: ReturnType<typeof vi.fn>;
+	};
+	nationalityBreakdown: {
+		findMany: ReturnType<typeof vi.fn>;
 		upsert: ReturnType<typeof vi.fn>;
 	};
 	$transaction: ReturnType<typeof vi.fn>;
@@ -105,6 +123,30 @@ const mockDraftVersion = {
 
 const mockGradeLevels = [
 	{
+		gradeCode: 'PS',
+		gradeName: 'Petite Section',
+		band: 'MATERNELLE',
+		displayOrder: 1,
+		maxClassSize: 25,
+		plafondPct: 1.0,
+	},
+	{
+		gradeCode: 'MS',
+		gradeName: 'Moyenne Section',
+		band: 'MATERNELLE',
+		displayOrder: 2,
+		maxClassSize: 25,
+		plafondPct: 1.0,
+	},
+	{
+		gradeCode: 'GS',
+		gradeName: 'Grande Section',
+		band: 'MATERNELLE',
+		displayOrder: 3,
+		maxClassSize: 25,
+		plafondPct: 1.0,
+	},
+	{
 		gradeCode: 'CP',
 		gradeName: 'CP',
 		band: 'ELEMENTAIRE',
@@ -113,12 +155,92 @@ const mockGradeLevels = [
 		plafondPct: 1.1,
 	},
 	{
-		gradeCode: 'PS',
-		gradeName: 'Petite Section',
-		band: 'MATERNELLE',
-		displayOrder: 1,
-		maxClassSize: 25,
-		plafondPct: 1.0,
+		gradeCode: 'CE1',
+		gradeName: 'CE1',
+		band: 'ELEMENTAIRE',
+		displayOrder: 5,
+		maxClassSize: 28,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: 'CE2',
+		gradeName: 'CE2',
+		band: 'ELEMENTAIRE',
+		displayOrder: 6,
+		maxClassSize: 28,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: 'CM1',
+		gradeName: 'CM1',
+		band: 'ELEMENTAIRE',
+		displayOrder: 7,
+		maxClassSize: 28,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: 'CM2',
+		gradeName: 'CM2',
+		band: 'ELEMENTAIRE',
+		displayOrder: 8,
+		maxClassSize: 28,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: '6eme',
+		gradeName: '6eme',
+		band: 'COLLEGE',
+		displayOrder: 9,
+		maxClassSize: 30,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: '5eme',
+		gradeName: '5eme',
+		band: 'COLLEGE',
+		displayOrder: 10,
+		maxClassSize: 30,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: '4eme',
+		gradeName: '4eme',
+		band: 'COLLEGE',
+		displayOrder: 11,
+		maxClassSize: 30,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: '3eme',
+		gradeName: '3eme',
+		band: 'COLLEGE',
+		displayOrder: 12,
+		maxClassSize: 30,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: '2nde',
+		gradeName: '2nde',
+		band: 'LYCEE',
+		displayOrder: 13,
+		maxClassSize: 35,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: '1ere',
+		gradeName: '1ere',
+		band: 'LYCEE',
+		displayOrder: 14,
+		maxClassSize: 35,
+		plafondPct: 1.1,
+	},
+	{
+		gradeCode: 'Terminale',
+		gradeName: 'Terminale',
+		band: 'LYCEE',
+		displayOrder: 15,
+		maxClassSize: 35,
+		plafondPct: 1.1,
 	},
 ];
 
@@ -159,14 +281,18 @@ describe('POST /calculate', () => {
 
 		expect(body.runId).toBeDefined();
 		expect(body.durationMs).toBeGreaterThanOrEqual(0);
-		expect(body.results).toHaveLength(2);
+		// AY1 (2 grades with data) + AY2 (15 grades from cohort progression) = 17+ results
+		expect(body.results.length).toBeGreaterThanOrEqual(17);
 		expect(body.summary.totalStudentsAy1).toBe(45);
-		expect(body.summary.totalStudentsAy2).toBe(0);
+		// AY2: PS gets 20 (from AY1 default), MS gets floor(20*0.97)=19, etc.
+		expect(body.summary.totalStudentsAy2).toBeGreaterThan(0);
 
-		// CP: 25 students, maxClassSize=28 → 1 section
-		const cpResult = body.results.find((r: Record<string, unknown>) => r.gradeLevel === 'CP');
-		expect(cpResult.sectionsNeeded).toBe(1);
-		expect(cpResult.maxClassSize).toBe(28);
+		// CP AY1: 25 students, maxClassSize=28 → 1 section
+		const cpAy1 = body.results.find(
+			(r: Record<string, unknown>) => r.gradeLevel === 'CP' && r.academicPeriod === 'AY1'
+		);
+		expect(cpAy1.sectionsNeeded).toBe(1);
+		expect(cpAy1.maxClassSize).toBe(28);
 	});
 
 	it('AC-23: removes ENROLLMENT from staleModules', async () => {
@@ -287,9 +413,13 @@ describe('POST /calculate', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.results[0].sectionsNeeded).toBe(0);
-		expect(body.results[0].utilization).toBe(0);
-		expect(body.results[0].alert).toBeNull();
-		expect(body.results[0].recruitmentSlots).toBe(0);
+		// Find CP AY1 result specifically (zero headcount)
+		const cpAy1 = body.results.find(
+			(r: Record<string, unknown>) => r.gradeLevel === 'CP' && r.academicPeriod === 'AY1'
+		);
+		expect(cpAy1.sectionsNeeded).toBe(0);
+		expect(cpAy1.utilization).toBe(0);
+		expect(cpAy1.alert).toBeNull();
+		expect(cpAy1.recruitmentSlots).toBe(0);
 	});
 });

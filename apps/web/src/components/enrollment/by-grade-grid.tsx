@@ -109,24 +109,31 @@ function EditableCell({
 		);
 	}
 
+	if (isReadOnly) {
+		return (
+			<span className="inline-block w-20 rounded-[var(--radius-sm)] px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums">
+				{value}
+			</span>
+		);
+	}
+
 	return (
-		<span
+		<button
+			type="button"
 			className={cn(
 				'inline-block w-20 rounded-[var(--radius-sm)] px-2 py-1 text-right text-[length:var(--text-sm)] tabular-nums',
-				!isReadOnly && 'cursor-pointer hover:bg-[var(--cell-editable-bg)]'
+				'cursor-pointer hover:bg-[var(--cell-editable-bg)]'
 			)}
 			onDoubleClick={handleDoubleClick}
-			role={isReadOnly ? undefined : 'button'}
-			tabIndex={isReadOnly ? undefined : 0}
-			aria-readonly={isReadOnly}
 			onKeyDown={(e) => {
-				if (!isReadOnly && (e.key === 'Enter' || e.key === ' ')) {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
 					handleDoubleClick();
 				}
 			}}
 		>
 			{value}
-		</span>
+		</button>
 	);
 }
 
