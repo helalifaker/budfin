@@ -1,10 +1,10 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 15 — UI/UX Clean-Slate Rewrite (#114)
+**Phase**: 4 — SPECIFY
+**Current Epic**: Epic 3 — Staffing (DHG) (#7)
 **Current Story**: —
 **Last updated**: 2026-03-08
-**Note**: Epic 15 inserted before Epic 3 — design system is foundational for all future UI work
+**Note**: Epic 15 complete — next eligible Epic by MoSCoW priority and dependency order
 
 ## Phase History
 
@@ -58,7 +58,7 @@
 | 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) + remediation PR #98 -- 2026-03-06 |
 | 12 | Data Migration | 2 | Epic Created (#10) |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
-| 15 | UI/UX Clean-Slate Rewrite | 7 | All 18 stories complete (18/18), PR #137 under review + workspace refactor — 2026-03-08 |
+| 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
 
 ## Update Instructions
 
