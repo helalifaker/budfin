@@ -359,6 +359,8 @@ model BudgetVersion {
   enrollmentDetails    EnrollmentDetail[]
   dhgRequirements      DhgRequirement[]
   calculationAuditLogs CalculationAuditLog[]
+  cohortParameters       CohortParameter[]
+  nationalityBreakdowns  NationalityBreakdown[]
 
   // Revenue (Epic 2)
   feeGrids           FeeGrid[]
@@ -512,6 +514,46 @@ model CalculationAuditLog {
 
   @@index([versionId], map: "idx_calc_audit_version")
   @@map("calculation_audit_log")
+}
+
+// ── Cohort & Nationality (Enrollment Refactor) ───────────────────────────────
+
+model CohortParameter {
+  id                Int      @id @default(autoincrement())
+  versionId         Int      @map("version_id")
+  gradeLevel        String   @map("grade_level") @db.VarChar(10)
+  retentionRate     Decimal  @default(0.97) @map("retention_rate") @db.Decimal(5, 4)
+  lateralEntryCount Int      @default(0) @map("lateral_entry_count")
+  lateralWeightFr   Decimal  @default(0) @map("lateral_weight_fr") @db.Decimal(5, 4)
+  lateralWeightNat  Decimal  @default(0) @map("lateral_weight_nat") @db.Decimal(5, 4)
+  lateralWeightAut  Decimal  @default(0) @map("lateral_weight_aut") @db.Decimal(5, 4)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, gradeLevel], map: "uq_cohort_parameter")
+  @@index([versionId], map: "idx_cohort_parameters_version")
+  @@map("cohort_parameters")
+}
+
+model NationalityBreakdown {
+  id             Int      @id @default(autoincrement())
+  versionId      Int      @map("version_id")
+  academicPeriod String   @map("academic_period") @db.VarChar(3)
+  gradeLevel     String   @map("grade_level") @db.VarChar(10)
+  nationality    String   @db.VarChar(10)
+  weight         Decimal  @default(0) @db.Decimal(5, 4)
+  headcount      Int      @default(0)
+  isOverridden   Boolean  @default(false) @map("is_overridden")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, academicPeriod, gradeLevel, nationality], map: "uq_nationality_breakdown")
+  @@index([versionId, academicPeriod], map: "idx_nationality_breakdown_version_period")
+  @@map("nationality_breakdown")
 }
 
 // ── Revenue (Epic 2) ──────────────────────────────────────────────────────────

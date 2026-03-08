@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Cohort progression modeling: AY2 headcounts are automatically computed from AY1 using per-grade retention rates and lateral entry counts, replacing manual AY2 data entry with a transparent formula-driven approach (#137)
+- Nationality distribution engine: AY2 nationality breakdowns (Francais, Nationaux, Autres) are computed from prior-grade retention and lateral entry weights, with manual override support per grade (#137)
+- Enrollment workspace redesigned as a Continuous Planning Board with three stacked sections (Cohort Progression, Nationality Distribution, Capacity Planning) visible simultaneously instead of hidden behind tabs (#137)
+- Revenue workspace redesigned as a Continuous Planning Board with stacked sections (Tariff Assignment, Fee Grid, Discounts, Other Revenue, Revenue Engine, Executive Summary) for full-context scrollable planning (#137)
+- KPI ribbon at the top of Enrollment and Revenue workspaces showing key metrics (total students, capacity utilization, alert counts, gross/net revenue) with sticky positioning during scroll (#137)
+- Cohort parameters management: configure retention rates (default 97%) and lateral entry counts per grade level with nationality-weighted lateral distribution (#137)
+- Nationality breakdown view with computed weights and headcounts per grade, filterable by academic period (AY1, AY2, or both) (#137)
+- Version cloning now deep-copies cohort parameters and nationality breakdowns alongside enrollment headcounts (#137)
+- Enrollment calculation engine now integrates cohort progression and nationality distribution as part of the compute pipeline, persisting AY2 headcounts and nationality rows automatically (#137)
+- 2 new database tables: cohort_parameters (retention rates and lateral entry weights per grade) and nationality_breakdown (weight/headcount per version, period, grade, nationality) (#137)
+- 4 new API endpoints: GET/PUT cohort-parameters and GET/PUT nationality-breakdown under /api/v1/versions/:versionId/enrollment (#137)
+- Reusable WorkspaceBoard and WorkspaceBlock shared components for building stacked planning views with collapsible sections and stale-data indicators (#137)
+- Reusable EditableCell component for inline grid editing with yellow-highlighted input styling matching FP&A spreadsheet conventions (#137)
+
 - Multi-version comparison (2–3 versions simultaneously): `GET /api/v1/versions/compare-multi` returns 12-month and annual totals per version with Decimal.js variances against a base version; frontend renders bar + line charts and a variance table with color-coded positive/negative indicators (#136)
 - Import log history per version: `GET /api/v1/versions/:id/import-logs` returns ActualsImportLog records for the Data tab of the version detail panel (#136)
 - `fiscalYear` filter made optional on `GET /api/v1/versions` — omitting it returns all fiscal years with FY group separators in the UI ("All Years" view) (#136)
@@ -93,6 +107,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Enrollment page restructured from tabbed layout (By Grade / By Nationality / By Tariff tabs) to a Continuous Planning Board with three stacked, simultaneously visible sections; tariff assignment moved to the Revenue module where it logically belongs (#137)
+- Revenue page restructured from tabbed layout to a Continuous Planning Board with six stacked sections, eliminating context-switching between revenue planning steps (#137)
+- Enrollment calculation now automatically computes AY2 headcounts via cohort progression instead of requiring manual AY2 entry for each grade (#137)
 - All native `<select>` elements replaced with shadcn/ui `<Select>` components for consistent styling and keyboard accessibility (#114)
 - All native `<button>` elements in data pages replaced with shadcn/ui `<Button>` component (#114)
 - Data tables use `role="table"` instead of `role="grid"` since cells are not individually focusable (#114)

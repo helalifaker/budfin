@@ -22,6 +22,13 @@ export type {
 	CapacitySummary,
 } from './enrollment.js';
 
+export type {
+	CohortParameterEntry,
+	NationalityBreakdownEntry,
+	CohortProgressionRow,
+	EnrollmentKpiData,
+} from './cohort.js';
+
 export { DISTRIBUTION_METHODS, IFRS_CATEGORIES } from './revenue.js';
 
 export type {

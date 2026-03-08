@@ -77,7 +77,7 @@ function EditableTariffCell({
 			<input
 				type="number"
 				min={0}
-				className="w-14 rounded-[var(--radius-md)] border border-[var(--accent-500)] bg-[var(--cell-editable-bg)] px-1 py-1 text-right text-[length:var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]"
+				className="w-14 rounded-md border border-(--accent-500) bg-(--cell-editable-bg) px-1 py-1 text-right text-(length:--text-sm) focus:outline-none focus:ring-2 focus:ring-(--accent-500)"
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
 				onBlur={handleBlur}
@@ -88,22 +88,31 @@ function EditableTariffCell({
 		);
 	}
 
+	if (isReadOnly) {
+		return (
+			<span className="inline-block w-14 rounded-sm px-1 py-1 text-right text-(length:--text-sm) tabular-nums">
+				{value}
+			</span>
+		);
+	}
+
 	return (
-		<span
+		<button
+			type="button"
 			className={cn(
-				'inline-block w-14 rounded-[var(--radius-sm)] px-1 py-1 text-right text-[length:var(--text-sm)] tabular-nums',
-				!isReadOnly && 'cursor-pointer hover:bg-[var(--cell-editable-bg)]'
+				'inline-block w-14 rounded-sm px-1 py-1 text-right text-(length:--text-sm) tabular-nums',
+				'cursor-pointer hover:bg-(--cell-editable-bg)'
 			)}
 			onDoubleClick={handleDoubleClick}
-			role={isReadOnly ? undefined : 'button'}
-			tabIndex={isReadOnly ? undefined : 0}
-			aria-readonly={isReadOnly}
 			onKeyDown={(e) => {
-				if (!isReadOnly && (e.key === 'Enter' || e.key === ' ')) handleDoubleClick();
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					handleDoubleClick();
+				}
 			}}
 		>
 			{value}
-		</span>
+		</button>
 	);
 }
 
@@ -220,7 +229,7 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
 				cell: (info) => (
-					<span className="font-medium text-[var(--text-primary)]">{info.getValue()}</span>
+					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
 				),
 			}),
 			makeTariffCol('francaisRp', 'FR RP', 'Francais', 'RP'),
@@ -246,37 +255,37 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 	});
 
 	return (
-		<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
+		<div className="overflow-x-auto rounded-lg border">
 			<table
 				role="grid"
-				className="w-full text-left text-[length:var(--text-sm)]"
+				className="w-full text-left text-(length:--text-sm)"
 				aria-label="Enrollment by tariff"
 			>
-				<thead className="border-b bg-[var(--workspace-bg-muted)]">
+				<thead className="border-b bg-(--workspace-bg-muted)">
 					{/* Two-level header */}
 					<tr>
-						<th rowSpan={2} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
+						<th rowSpan={2} className="px-4 py-3 font-medium text-(--text-secondary)">
 							Grade
 						</th>
 						<th
 							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
+							className="border-b border-l px-4 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
 						>
 							Francais
 						</th>
 						<th
 							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
+							className="border-b border-l px-4 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
 						>
 							Nationaux
 						</th>
 						<th
 							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
+							className="border-b border-l px-4 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
 						>
 							Autres
 						</th>
-						<th rowSpan={2} className="border-l px-4 py-3 font-medium text-[var(--text-secondary)]">
+						<th rowSpan={2} className="border-l px-4 py-3 font-medium text-(--text-secondary)">
 							Total
 						</th>
 					</tr>
@@ -284,7 +293,7 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 						{['RP', 'R3+', 'Plein', 'RP', 'R3+', 'Plein', 'RP', 'R3+', 'Plein'].map((t, i) => (
 							<th
 								key={`${t}-${i}`}
-								className="border-l px-3 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
+								className="border-l px-3 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
 							>
 								{t}
 							</th>
@@ -298,7 +307,7 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 						table.getRowModel().rows.map((row) => (
 							<tr
 								key={row.id}
-								className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+								className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 							>
 								{row.getVisibleCells().map((cell) => (
 									<td key={cell.id} className="px-3 py-2">

@@ -1,20 +1,21 @@
-import { useState, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
-import { useHeadcount, usePutHeadcount, useCalculateEnrollment } from '../../hooks/use-enrollment';
-import { useGradeLevels } from '../../hooks/use-grade-levels';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+import { useHeadcount, useCalculateEnrollment } from '../../hooks/use-enrollment';
+import { useVersions } from '../../hooks/use-versions';
 import { Button } from '../../components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
-import { ByGradeGrid } from '../../components/enrollment/by-grade-grid';
-import { ByNationalityGrid } from '../../components/enrollment/by-nationality-grid';
-import { ByTariffGrid } from '../../components/enrollment/by-tariff-grid';
+import { WorkspaceBoard } from '../../components/shared/workspace-board';
+import { WorkspaceBlock } from '../../components/shared/workspace-block';
+import { EnrollmentKpiRibbon } from '../../components/enrollment/kpi-ribbon';
+import { CohortProgressionGrid } from '../../components/enrollment/cohort-progression-grid';
+import { NationalityDistributionGrid } from '../../components/enrollment/nationality-distribution-grid';
+import { CapacityGrid } from '../../components/enrollment/capacity-grid';
 import { HistoricalChart } from '../../components/enrollment/historical-chart';
 import { CsvImportPanel } from '../../components/enrollment/csv-import-panel';
 import { CalculateButton } from '../../components/enrollment/calculate-button';
 import { PageTransition } from '../../components/shared/page-transition';
-import type { HeadcountEntry, AcademicPeriod } from '@budfin/types';
-import type { GradeBand } from '../../hooks/use-grade-levels';
+import type { AcademicPeriod } from '@budfin/types';
 
 const BAND_FILTERS: Array<{ value: string; label: string }> = [
 	{ value: 'ALL', label: 'All' },
@@ -25,7 +26,7 @@ const BAND_FILTERS: Array<{ value: string; label: string }> = [
 ];
 
 export function EnrollmentPage() {
-	const { versionId, academicPeriod, comparisonVersionId } = useWorkspaceContext();
+	const { versionId, fiscalYear, academicPeriod } = useWorkspaceContext();
 	const user = useAuthStore((s) => s.user);
 	const isViewer = user?.role === 'Viewer';
 
@@ -33,35 +34,48 @@ export function EnrollmentPage() {
 	const [importOpen, setImportOpen] = useState(false);
 	const [historyOpen, setHistoryOpen] = useState(false);
 
-	const { data: headcountData, isLoading: headcountLoading } = useHeadcount(
-		versionId,
-		academicPeriod as AcademicPeriod | null
-	);
-	const { data: gradeLevelData } = useGradeLevels();
-	const { data: comparisonData } = useHeadcount(
-		comparisonVersionId,
-		academicPeriod as AcademicPeriod | null
-	);
-	const putHeadcount = usePutHeadcount(versionId);
+	const { data: headcountData } = useHeadcount(versionId, academicPeriod as AcademicPeriod | null);
 	const calculateMutation = useCalculateEnrollment(versionId);
+	const { data: versionsData } = useVersions(fiscalYear);
 
-	const gradeLevels = gradeLevelData?.gradeLevels ?? [];
-	const entries = headcountData?.entries ?? [];
+	const currentVersion = useMemo(() => {
+		if (!versionId || !versionsData?.data) return null;
+		return versionsData.data.find((v) => v.id === versionId) ?? null;
+	}, [versionId, versionsData]);
 
-	const filteredEntries =
-		bandFilter === 'ALL' ? entries : entries.filter((e) => e.band === bandFilter);
+	const isStale = currentVersion?.staleModules?.includes('ENROLLMENT') ?? false;
 
-	const handleHeadcountSave = useCallback(
-		(updated: HeadcountEntry[]) => {
-			if (!versionId || isViewer) return;
-			putHeadcount.mutate(updated);
-		},
-		[versionId, isViewer, putHeadcount]
-	);
+	const kpiData = useMemo(() => {
+		const entries = headcountData?.entries ?? [];
+		const ay1Total = entries
+			.filter((e) => e.academicPeriod === 'AY1')
+			.reduce((sum, e) => sum + e.headcount, 0);
+		const ay2Total = entries
+			.filter((e) => e.academicPeriod === 'AY2')
+			.reduce((sum, e) => sum + e.headcount, 0);
+
+		const results = calculateMutation.data?.results ?? [];
+		const overCount = results.filter((r) => r.alert === 'OVER' || r.alert === 'NEAR_CAP').length;
+
+		let avgUtil = 0;
+		if (results.length > 0) {
+			avgUtil = results.reduce((sum, r) => sum + r.utilization, 0) / results.length;
+		}
+
+		return {
+			totalAy1: ay1Total,
+			totalAy2: ay2Total,
+			utilizationPct: avgUtil,
+			alertCount: overCount,
+			isStale,
+		};
+	}, [headcountData, calculateMutation.data, isStale]);
+
+	const capacityCount = calculateMutation.data?.results?.length ?? 0;
 
 	if (!versionId) {
 		return (
-			<div className="flex items-center justify-center h-64 text-[var(--text-muted)]">
+			<div className="flex h-64 items-center justify-center text-[var(--text-muted)]">
 				Select a version from the context bar to begin enrollment planning.
 			</div>
 		);
@@ -69,14 +83,11 @@ export function EnrollmentPage() {
 
 	return (
 		<PageTransition>
-			<div className="space-y-4">
-				{/* Module Toolbar */}
-				<div className="flex items-center justify-between">
-					<h1 className="text-[length:var(--text-xl)] font-semibold text-[var(--text-primary)]">
-						Enrollment & Capacity
-					</h1>
-					<div className="flex items-center gap-2">
-						{/* Band filter toggle */}
+			<WorkspaceBoard
+				title="Enrollment & Capacity"
+				description="Configure cohort progression, nationality distribution, and capacity planning."
+				actions={
+					<>
 						<ToggleGroup
 							type="single"
 							value={bandFilter}
@@ -110,56 +121,42 @@ export function EnrollmentPage() {
 						<Button variant="outline" size="sm" onClick={() => setHistoryOpen(!historyOpen)}>
 							{historyOpen ? 'Hide History' : 'Show History'}
 						</Button>
-					</div>
-				</div>
+					</>
+				}
+				kpiRibbon={<EnrollmentKpiRibbon {...kpiData} />}
+			>
+				<WorkspaceBlock
+					title="Cohort Progression (AY1 → AY2)"
+					count={headcountData?.entries?.length ?? 0}
+					isStale={isStale}
+				>
+					<CohortProgressionGrid
+						versionId={versionId}
+						bandFilter={bandFilter}
+						isReadOnly={isViewer}
+					/>
+				</WorkspaceBlock>
 
-				{/* Tab Bar */}
-				<Tabs defaultValue="by-grade">
-					<TabsList>
-						<TabsTrigger value="by-grade">By Grade</TabsTrigger>
-						<TabsTrigger value="by-nationality">By Nationality</TabsTrigger>
-						<TabsTrigger value="by-tariff">By Tariff</TabsTrigger>
-					</TabsList>
+				<WorkspaceBlock title="Nationality Distribution" isStale={isStale}>
+					<NationalityDistributionGrid
+						versionId={versionId}
+						bandFilter={bandFilter}
+						isReadOnly={isViewer}
+					/>
+				</WorkspaceBlock>
 
-					<TabsContent value="by-grade">
-						<ByGradeGrid
-							entries={filteredEntries}
-							gradeLevels={gradeLevels}
-							isLoading={headcountLoading}
-							isReadOnly={isViewer}
-							versionId={versionId}
-							onSave={handleHeadcountSave}
-							bandFilter={bandFilter as GradeBand | 'ALL'}
-							comparisonEntries={comparisonData?.entries}
-							capacityResults={calculateMutation.data?.results}
-						/>
-					</TabsContent>
+				<WorkspaceBlock title="Capacity Planning" count={capacityCount}>
+					<CapacityGrid
+						versionId={versionId}
+						bandFilter={bandFilter}
+						capacityResults={calculateMutation.data?.results}
+					/>
+				</WorkspaceBlock>
 
-					<TabsContent value="by-nationality">
-						<ByNationalityGrid
-							versionId={versionId}
-							isReadOnly={isViewer}
-							bandFilter={bandFilter as GradeBand | 'ALL'}
-							academicPeriod={academicPeriod ?? 'AY1'}
-						/>
-					</TabsContent>
-
-					<TabsContent value="by-tariff">
-						<ByTariffGrid
-							versionId={versionId}
-							isReadOnly={isViewer}
-							bandFilter={bandFilter as GradeBand | 'ALL'}
-							academicPeriod={academicPeriod ?? 'AY1'}
-						/>
-					</TabsContent>
-				</Tabs>
-
-				{/* Historical Chart (collapsible) */}
 				{historyOpen && <HistoricalChart />}
 
-				{/* CSV Import Side Panel */}
 				<CsvImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
-			</div>
+			</WorkspaceBoard>
 		</PageTransition>
 	);
 }

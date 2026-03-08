@@ -13,6 +13,7 @@
 | Epic 7 — Master Data Management | `docs/specs/epic-7/master-data-management.md` |
 | Epic 10 — Version Management    | `docs/specs/epic-10/version-management.md`    |
 | Epic 11 — Authentication & RBAC | `docs/specs/epic-11/authentication-rbac.md`   |
+| Epic 15 — UI/UX Clean-Slate     | `docs/specs/epic-15/ui-ux-remediation.md`     |
 
 This appendix maps every functional requirement from PRD v2.0 to the TDD design sections, responsible components, implementing API endpoints, relevant database tables, and test types. The matrix ensures complete traceability from business requirements through technical design to verification.
 
@@ -57,21 +58,21 @@ This appendix maps every functional requirement from PRD v2.0 to the TDD design 
 
 ## Enrollment & Historical Data
 
-| FR ID      | MoSCoW | Description                                        | TDD File | Component           | API Endpoints                                     | DB Tables                                                 | Tests   |
-| ---------- | ------ | -------------------------------------------------- | -------- | ------------------- | ------------------------------------------------- | --------------------------------------------------------- | ------- |
-| FR-ENR-001 | MUST   | Import 5+ years enrollment history                 | 02, 04   | Data Import Service | POST /versions/:id/import/enrollment              | enrollment_headcount (via Actual budget_versions)         | U, I    |
-| FR-ENR-002 | MUST   | CSV import format support                          | 02, 04   | Data Import Service | POST /versions/:id/import/enrollment              | actuals_import_log, enrollment_headcount, budget_versions | U, I    |
-| FR-ENR-003 | MUST   | Enrollment trend line chart                        | 04       | Context Bar State   | GET /versions?type=Actual                         | enrollment_headcount, budget_versions                     | E2E     |
-| FR-ENR-004 | MUST   | CAGR and moving averages                           | 02, 04   | Calculation Engine  | GET /versions?type=Actual                         | enrollment_headcount, budget_versions                     | U       |
-| FR-ENR-005 | MUST   | Two-stage enrollment entry                         | 02, 04   | Data Import Service | PUT /enrollment/headcount, PUT /enrollment/detail | enrollment_headcount, enrollment_detail                   | U, I    |
-| FR-ENR-006 | MUST   | Nationality segments (Francais, Nationaux, Autres) | 03, 04   | Calculation Engine  | PUT /enrollment/detail                            | enrollment_detail                                         | U       |
-| FR-ENR-007 | MUST   | Tariff categories (RP, R3+, Plein)                 | 03, 04   | Calculation Engine  | PUT /enrollment/detail                            | enrollment_detail, fee_grids                              | U       |
-| FR-ENR-008 | MUST   | Delta vs. prior year flagging                      | 04       | Version Manager     | GET /versions?type=Actual                         | enrollment_headcount, budget_versions                     | U       |
-| FR-ENR-009 | MUST   | Dual academic year (AY1/AY2)                       | 03, 04   | Calculation Engine  | All version-scoped endpoints                      | enrollment_headcount, enrollment_detail                   | U, I, R |
-| FR-ENR-010 | COULD  | Cohort progression modeling                        | 02, 04   | Calculation Engine  | GET /versions?type=Actual                         | enrollment_headcount, budget_versions                     | U       |
-| FR-ENR-011 | COULD  | Lateral entry weight parameter                     | 03       | Calculation Engine  | PUT /enrollment/headcount                         | enrollment_headcount                                      | U       |
-| FR-ENR-012 | COULD  | Manual new PS intake                               | 04       | Data Import Service | PUT /enrollment/headcount                         | enrollment_headcount                                      | U       |
-| FR-ENR-013 | COULD  | 3-year historical context display                  | 04       | Context Bar State   | GET /versions?type=Actual                         | enrollment_headcount, budget_versions                     | E2E     |
+| FR ID      | MoSCoW | Description                                        | TDD File | Component           | API Endpoints                                                     | DB Tables                                                 | Tests   |
+| ---------- | ------ | -------------------------------------------------- | -------- | ------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- | ------- |
+| FR-ENR-001 | MUST   | Import 5+ years enrollment history                 | 02, 04   | Data Import Service | POST /versions/:id/import/enrollment                              | enrollment_headcount (via Actual budget_versions)         | U, I    |
+| FR-ENR-002 | MUST   | CSV import format support                          | 02, 04   | Data Import Service | POST /versions/:id/import/enrollment                              | actuals_import_log, enrollment_headcount, budget_versions | U, I    |
+| FR-ENR-003 | MUST   | Enrollment trend line chart                        | 04       | Context Bar State   | GET /versions?type=Actual                                         | enrollment_headcount, budget_versions                     | E2E     |
+| FR-ENR-004 | MUST   | CAGR and moving averages                           | 02, 04   | Calculation Engine  | GET /versions?type=Actual                                         | enrollment_headcount, budget_versions                     | U       |
+| FR-ENR-005 | MUST   | Two-stage enrollment entry                         | 02, 04   | Data Import Service | PUT /enrollment/headcount, PUT /enrollment/detail                 | enrollment_headcount, enrollment_detail                   | U, I    |
+| FR-ENR-006 | MUST   | Nationality segments (Francais, Nationaux, Autres) | 03, 04   | Calculation Engine  | PUT /enrollment/detail, GET/PUT /enrollment/nationality-breakdown | enrollment_detail, nationality_breakdown                  | U, I    |
+| FR-ENR-007 | MUST   | Tariff categories (RP, R3+, Plein)                 | 03, 04   | Calculation Engine  | PUT /enrollment/detail                                            | enrollment_detail, fee_grids                              | U       |
+| FR-ENR-008 | MUST   | Delta vs. prior year flagging                      | 04       | Version Manager     | GET /versions?type=Actual                                         | enrollment_headcount, budget_versions                     | U       |
+| FR-ENR-009 | MUST   | Dual academic year (AY1/AY2)                       | 03, 04   | Calculation Engine  | All version-scoped endpoints                                      | enrollment_headcount, enrollment_detail                   | U, I, R |
+| FR-ENR-010 | COULD  | Cohort progression modeling                        | 02, 04   | Calculation Engine  | GET/PUT /enrollment/cohort-parameters, POST /calculate/enrollment | cohort_parameters, enrollment_headcount                   | U, I    |
+| FR-ENR-011 | COULD  | Lateral entry weight parameter                     | 03       | Calculation Engine  | PUT /enrollment/cohort-parameters                                 | cohort_parameters                                         | U, I    |
+| FR-ENR-012 | COULD  | Manual new PS intake                               | 04       | Data Import Service | PUT /enrollment/headcount                                         | enrollment_headcount                                      | U       |
+| FR-ENR-013 | COULD  | 3-year historical context display                  | 04       | Context Bar State   | GET /versions?type=Actual                                         | enrollment_headcount, budget_versions                     | E2E     |
 
 ---
 
@@ -417,30 +418,47 @@ This section maps each Epic 1 story to its implementation files, test files, and
 | AC-91-01 | #91     | Calculate workflow + stale module integration                               | enrollment-capacity.md | apps/web/src/components/enrollment/calculate-button.tsx, apps/web/src/hooks/use-enrollment.ts                | —                                                 | PASS   |
 | AC-92-01 | #92     | Integration tests (E2E API + UI smoke)                                      | enrollment-capacity.md | apps/api/src/routes/enrollment/\*.ts                                                                         | apps/api/src/routes/enrollment/\*.test.ts         | PASS   |
 
+### Enrollment Workspace Refactor (PR #137) -- Additional Implementation
+
+| AC-ID     | Story # | Description                                                                   | Spec File            | Implementation File(s)                                                                        | Test File                                        | Status |
+| --------- | ------- | ----------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------ |
+| AC-137-01 | #137    | Cohort progression engine: pure functions for AY1-to-AY2 headcount derivation | ui-ux-remediation.md | apps/api/src/services/cohort-engine.ts                                                        | apps/api/src/services/cohort-engine.test.ts      | PASS   |
+| AC-137-02 | #137    | Nationality distribution engine: pure functions for nationality bucket split  | ui-ux-remediation.md | apps/api/src/services/nationality-engine.ts                                                   | apps/api/src/services/nationality-engine.test.ts | PASS   |
+| AC-137-03 | #137    | GET/PUT cohort-parameters API endpoints                                       | ui-ux-remediation.md | apps/api/src/routes/enrollment/cohort-parameters.ts                                           | apps/api/src/routes/enrollment/calculate.test.ts | PASS   |
+| AC-137-04 | #137    | GET/PUT nationality-breakdown API endpoints                                   | ui-ux-remediation.md | apps/api/src/routes/enrollment/nationality-breakdown.ts                                       | apps/api/src/routes/enrollment/calculate.test.ts | PASS   |
+| AC-137-05 | #137    | Prisma schema: CohortParameter + NationalityBreakdown models                  | ui-ux-remediation.md | apps/api/prisma/schema.prisma, migrations/20260308180000_cohort_nationality/migration.sql     | apps/api/src/migration-alignment.test.ts         | PASS   |
+| AC-137-06 | #137    | Enrollment calculate integrates cohort + nationality engines                  | ui-ux-remediation.md | apps/api/src/routes/enrollment/calculate.ts                                                   | apps/api/src/routes/enrollment/calculate.test.ts | PASS   |
+| AC-137-07 | #137    | Version clone deep-copies cohort_parameters and nationality_breakdown         | ui-ux-remediation.md | apps/api/src/routes/versions.ts                                                               | apps/api/src/routes/versions-clone.test.ts       | PASS   |
+| AC-137-08 | #137    | WorkspaceBoard + WorkspaceBlock shared layout components                      | ui-ux-remediation.md | apps/web/src/components/shared/workspace-board.tsx, workspace-block.tsx                       | --                                               | PASS   |
+| AC-137-09 | #137    | Enrollment page: Continuous Planning Board with 3 stacked blocks              | ui-ux-remediation.md | apps/web/src/pages/planning/enrollment.tsx, components/enrollment/cohort-progression-grid.tsx | --                                               | PASS   |
+| AC-137-10 | #137    | Revenue page: Continuous Planning Board with 6 stacked blocks + KPI ribbon    | ui-ux-remediation.md | apps/web/src/pages/planning/revenue.tsx, components/revenue/tariff-assignment-grid.tsx        | --                                               | PASS   |
+| AC-137-11 | #137    | Shared types: CohortParameterEntry, NationalityBreakdownEntry, etc.           | ui-ux-remediation.md | packages/types/src/cohort.ts, packages/types/src/index.ts                                     | --                                               | PASS   |
+
 ---
 
 ## Coverage Summary
 
-| Domain                           | MUST       | SHOULD | COULD    | Total             |
-| -------------------------------- | ---------- | ------ | -------- | ----------------- |
-| Version Management               | 6          | 0      | 0        | 6                 |
-| Actuals Management               | 3          | 1      | 0        | 4                 |
-| Enrollment & Historical Data     | 9          | 0      | 4        | 13                |
-| Capacity Planning                | 6          | 1      | 0        | 7                 |
-| Revenue Module                   | 21         | 0      | 0        | 21                |
-| DHG Staffing Module              | 15         | 3      | 3        | 21                |
-| Staff Costs Module               | 19         | 4      | 2        | 25                |
-| P&L and Financial Reporting      | 18         | 0      | 0        | 18                |
-| Scenario Modeling                | 0          | 6      | 1        | 7                 |
-| Master Data Management           | 8          | 0      | 0        | 8                 |
-| Audit Trail                      | 3          | 0      | 0        | 3                 |
-| Dashboard                        | 0          | 5      | 0        | 5                 |
-| Input Management                 | 3          | 0      | 0        | 3                 |
-| Infrastructure & CI/CD (Epic 13) | 10 stories | 18 ACs | All PASS | 18                |
-| Authentication & RBAC (Epic 11)  | 10 stories | 19 ACs | All PASS | 19                |
-| Master Data Management (Epic 7)  | 12 stories | 20 ACs | All PASS | 20                |
-| Version Management (Epic 10)     | 13 stories | 20 ACs | All PASS | 20                |
-| Enrollment & Capacity (Epic 1)   | 13 stories | 18 ACs | All PASS | 18                |
-| **Total**                        | **111**    | **20** | **10**   | **141 + 95 impl** |
+| Domain                           | MUST       | SHOULD | COULD    | Total              |
+| -------------------------------- | ---------- | ------ | -------- | ------------------ |
+| Version Management               | 6          | 0      | 0        | 6                  |
+| Actuals Management               | 3          | 1      | 0        | 4                  |
+| Enrollment & Historical Data     | 9          | 0      | 4        | 13                 |
+| Capacity Planning                | 6          | 1      | 0        | 7                  |
+| Revenue Module                   | 21         | 0      | 0        | 21                 |
+| DHG Staffing Module              | 15         | 3      | 3        | 21                 |
+| Staff Costs Module               | 19         | 4      | 2        | 25                 |
+| P&L and Financial Reporting      | 18         | 0      | 0        | 18                 |
+| Scenario Modeling                | 0          | 6      | 1        | 7                  |
+| Master Data Management           | 8          | 0      | 0        | 8                  |
+| Audit Trail                      | 3          | 0      | 0        | 3                  |
+| Dashboard                        | 0          | 5      | 0        | 5                  |
+| Input Management                 | 3          | 0      | 0        | 3                  |
+| Infrastructure & CI/CD (Epic 13) | 10 stories | 18 ACs | All PASS | 18                 |
+| Authentication & RBAC (Epic 11)  | 10 stories | 19 ACs | All PASS | 19                 |
+| Master Data Management (Epic 7)  | 12 stories | 20 ACs | All PASS | 20                 |
+| Version Management (Epic 10)     | 13 stories | 20 ACs | All PASS | 20                 |
+| Enrollment & Capacity (Epic 1)   | 13 stories | 18 ACs | All PASS | 18                 |
+| Workspace Refactor (PR #137)     | 1 PR       | 11 ACs | All PASS | 11                 |
+| **Total**                        | **111**    | **20** | **10**   | **141 + 106 impl** |
 
-All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), and Epic 1 (Enrollment & Capacity) implementation traceability sections confirm all acceptance criteria passing.
+All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), and Epic 1 (Enrollment & Capacity) implementation traceability sections confirm all acceptance criteria passing. PR #137 (Workspace Refactor) adds 11 additional acceptance criteria implementing FR-ENR-010 (cohort progression) and FR-ENR-011 (lateral entry weights) alongside the Continuous Planning Board UI pattern (ADR-024).
