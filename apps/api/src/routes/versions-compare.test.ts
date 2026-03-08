@@ -3,7 +3,7 @@
  *
  * GET /api/v1/versions/compare?primary=A&comparison=B
  *
- * AC-13: Returns nested shape with 12 month rows, annual_totals, version metadata
+ * AC-13: Returns nested shape with 12 month rows, annualTotals, version metadata
  * TC-001: All arithmetic via Decimal.js
  * PO-008: Both amounts 0 → absolute=0, percentage=null
  * PO-015: Missing monthly_budget_summary rows treated as 0
@@ -87,7 +87,7 @@ beforeEach(async () => {
 });
 
 describe('GET /api/v1/versions/compare', () => {
-	it('AC-13: returns nested shape with version metadata, 12 month rows, and annual_totals', async () => {
+	it('AC-13: returns nested shape with version metadata, 12 month rows, and annualTotals', async () => {
 		const primarySummaries = Array.from({ length: 12 }, (_, i) =>
 			makeSummary(1, i + 1, {
 				revenueHt: '1200.0000',
@@ -120,38 +120,38 @@ describe('GET /api/v1/versions/compare', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 
-		// Top-level structure
-		expect(body.primary_version).toEqual({ id: 1, name: 'Budget v1' });
-		expect(body.comparison_version).toEqual({ id: 2, name: 'Budget v2' });
-		expect(body.monthly_comparison).toHaveLength(12);
-		expect(body.annual_totals).toBeDefined();
+		// Top-level structure (camelCase)
+		expect(body.primaryVersion).toEqual({ id: 1, name: 'Budget v1' });
+		expect(body.comparisonVersion).toEqual({ id: 2, name: 'Budget v2' });
+		expect(body.monthlyComparison).toHaveLength(12);
+		expect(body.annualTotals).toBeDefined();
 
-		// Month 1 nested shape
-		const month1 = body.monthly_comparison[0];
+		// Month 1 nested shape (camelCase, .toFixed(4))
+		const month1 = body.monthlyComparison[0];
 		expect(month1.month).toBe(1);
 		expect(month1.primary).toEqual({
-			total_revenue_ht: '1200',
-			total_staff_costs: '600',
-			net_profit: '600',
+			totalRevenueHt: '1200.0000',
+			totalStaffCosts: '600.0000',
+			netProfit: '600.0000',
 		});
 		expect(month1.comparison).toEqual({
-			total_revenue_ht: '1000',
-			total_staff_costs: '500',
-			net_profit: '500',
+			totalRevenueHt: '1000.0000',
+			totalStaffCosts: '500.0000',
+			netProfit: '500.0000',
 		});
 
 		// revenue: (1200 - 1000) = 200 abs, (200/1000)*100 = 20 pct
-		expect(Number(month1.variance_absolute.total_revenue_ht)).toBeCloseTo(200, 4);
-		expect(Number(month1.variance_pct.total_revenue_ht)).toBeCloseTo(20, 4);
+		expect(Number(month1.varianceAbsolute.totalRevenueHt)).toBeCloseTo(200, 4);
+		expect(Number(month1.variancePct.totalRevenueHt)).toBeCloseTo(20, 4);
 		// staff: (600 - 500) = 100 abs, (100/500)*100 = 20 pct
-		expect(Number(month1.variance_absolute.total_staff_costs)).toBeCloseTo(100, 4);
-		expect(Number(month1.variance_pct.total_staff_costs)).toBeCloseTo(20, 4);
+		expect(Number(month1.varianceAbsolute.totalStaffCosts)).toBeCloseTo(100, 4);
+		expect(Number(month1.variancePct.totalStaffCosts)).toBeCloseTo(20, 4);
 
 		// Annual totals
-		expect(Number(body.annual_totals.primary.total_revenue_ht)).toBeCloseTo(14400, 4);
-		expect(Number(body.annual_totals.comparison.total_revenue_ht)).toBeCloseTo(12000, 4);
-		expect(Number(body.annual_totals.variance_absolute.total_revenue_ht)).toBeCloseTo(2400, 4);
-		expect(Number(body.annual_totals.variance_pct.total_revenue_ht)).toBeCloseTo(20, 4);
+		expect(Number(body.annualTotals.primary.totalRevenueHt)).toBeCloseTo(14400, 4);
+		expect(Number(body.annualTotals.comparison.totalRevenueHt)).toBeCloseTo(12000, 4);
+		expect(Number(body.annualTotals.varianceAbsolute.totalRevenueHt)).toBeCloseTo(2400, 4);
+		expect(Number(body.annualTotals.variancePct.totalRevenueHt)).toBeCloseTo(20, 4);
 	});
 
 	it('AC-13: always returns exactly 12 month rows even with no data', async () => {
@@ -169,24 +169,32 @@ describe('GET /api/v1/versions/compare', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.monthly_comparison).toHaveLength(12);
-		expect(body.monthly_comparison[0].month).toBe(1);
-		expect(body.monthly_comparison[11].month).toBe(12);
+		expect(body.monthlyComparison).toHaveLength(12);
+		expect(body.monthlyComparison[0].month).toBe(1);
+		expect(body.monthlyComparison[11].month).toBe(12);
 
-		// All zero-filled
-		const month1 = body.monthly_comparison[0];
-		expect(month1.primary.total_revenue_ht).toBe('0');
-		expect(month1.comparison.total_revenue_ht).toBe('0');
-		expect(month1.variance_absolute.total_revenue_ht).toBe('0');
-		expect(month1.variance_pct.total_revenue_ht).toBeNull();
+		// All zero-filled with .toFixed(4)
+		const month1 = body.monthlyComparison[0];
+		expect(month1.primary.totalRevenueHt).toBe('0.0000');
+		expect(month1.comparison.totalRevenueHt).toBe('0.0000');
+		expect(month1.varianceAbsolute.totalRevenueHt).toBe('0.0000');
+		expect(month1.variancePct.totalRevenueHt).toBeNull();
 	});
 
 	it('PO-008: both amounts 0 → absolute=0, percentage=null', async () => {
 		const zeroSummaries = Array.from({ length: 1 }, (_, i) =>
-			makeSummary(1, i + 1, { revenueHt: '0.0000', staffCosts: '0.0000', netProfit: '0.0000' })
+			makeSummary(1, i + 1, {
+				revenueHt: '0.0000',
+				staffCosts: '0.0000',
+				netProfit: '0.0000',
+			})
 		);
 		const zeroCompSummaries = Array.from({ length: 1 }, (_, i) =>
-			makeSummary(2, i + 1, { revenueHt: '0.0000', staffCosts: '0.0000', netProfit: '0.0000' })
+			makeSummary(2, i + 1, {
+				revenueHt: '0.0000',
+				staffCosts: '0.0000',
+				netProfit: '0.0000',
+			})
 		);
 
 		mockPrisma.budgetVersion.findUnique
@@ -205,11 +213,11 @@ describe('GET /api/v1/versions/compare', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		const month1 = body.monthly_comparison[0];
-		expect(Number(month1.variance_absolute.total_revenue_ht)).toBe(0);
-		expect(month1.variance_pct.total_revenue_ht).toBeNull();
-		expect(Number(month1.variance_absolute.total_staff_costs)).toBe(0);
-		expect(month1.variance_pct.total_staff_costs).toBeNull();
+		const month1 = body.monthlyComparison[0];
+		expect(Number(month1.varianceAbsolute.totalRevenueHt)).toBe(0);
+		expect(month1.variancePct.totalRevenueHt).toBeNull();
+		expect(Number(month1.varianceAbsolute.totalStaffCosts)).toBe(0);
+		expect(month1.variancePct.totalStaffCosts).toBeNull();
 	});
 
 	it('PO-015: missing rows in primary treated as 0', async () => {
@@ -230,12 +238,12 @@ describe('GET /api/v1/versions/compare', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		// month 1: primary=0, comparison=1000 → abs = -1000, pct = -100
-		const month1 = body.monthly_comparison[0];
-		expect(Number(month1.variance_absolute.total_revenue_ht)).toBeCloseTo(-1000, 4);
-		expect(Number(month1.variance_pct.total_revenue_ht)).toBeCloseTo(-100, 4);
+		const month1 = body.monthlyComparison[0];
+		expect(Number(month1.varianceAbsolute.totalRevenueHt)).toBeCloseTo(-1000, 4);
+		expect(Number(month1.variancePct.totalRevenueHt)).toBeCloseTo(-100, 4);
 	});
 
-	it('PO-015: missing rows in comparison treated as 0 → percentage null (division by zero)', async () => {
+	it('PO-015: missing rows in comparison treated as 0 → percentage null', async () => {
 		mockPrisma.budgetVersion.findUnique
 			.mockResolvedValueOnce({ id: 1, name: 'V1' })
 			.mockResolvedValueOnce({ id: 2, name: 'V2' });
@@ -252,9 +260,10 @@ describe('GET /api/v1/versions/compare', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		const month1 = body.monthly_comparison[0];
-		expect(Number(month1.variance_absolute.total_revenue_ht)).toBeCloseTo(500, 4);
-		expect(month1.variance_pct.total_revenue_ht).toBeNull(); // comparison=0 → null
+		const month1 = body.monthlyComparison[0];
+		expect(Number(month1.varianceAbsolute.totalRevenueHt)).toBeCloseTo(500, 4);
+		// comparison=0 → null
+		expect(month1.variancePct.totalRevenueHt).toBeNull();
 	});
 
 	it('returns 404 VERSION_NOT_FOUND when primary version not found', async () => {

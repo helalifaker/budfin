@@ -63,9 +63,11 @@ model User {
   updatedAssumptions   Assumption[]     @relation("AssumptionUpdater")
 
   // Version Management relations (Epic 10)
-  createdVersions    BudgetVersion[]    @relation("VersionCreator")
-  lockedFiscalPeriods FiscalPeriod[]   @relation("FiscalPeriodLocker")
-  importedActuals    ActualsImportLog[] @relation("ActualsImporter")
+  createdVersions     BudgetVersion[]    @relation("VersionCreator")
+  updatedVersions     BudgetVersion[]    @relation("VersionUpdater")
+  lockedFiscalPeriods FiscalPeriod[]     @relation("FiscalPeriodLocker")
+  updatedFiscalPeriods FiscalPeriod[]   @relation("FiscalPeriodUpdater")
+  importedActuals     ActualsImportLog[] @relation("ActualsImporter")
 
   // Enrollment & Capacity relations (Epic 1)
   createdHeadcounts  EnrollmentHeadcount[] @relation("HeadcountCreator")
@@ -127,6 +129,9 @@ model AuditEntry {
   oldValues  Json?    @map("old_values") @db.JsonB
   newValues  Json?    @map("new_values") @db.JsonB
   ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userEmail  String?  @map("user_email") @db.VarChar(255)
+  sessionId  String?  @map("session_id") @db.VarChar(100)
+  auditNote  String?  @map("audit_note") @db.Text
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   user User? @relation(fields: [userId], references: [id])
@@ -336,10 +341,12 @@ model BudgetVersion {
   publishedAt       DateTime? @map("published_at") @db.Timestamptz
   lockedAt          DateTime? @map("locked_at") @db.Timestamptz
   archivedAt        DateTime? @map("archived_at") @db.Timestamptz
+  updatedById       Int?     @map("updated_by_id")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   createdBy     User            @relation("VersionCreator", fields: [createdById], references: [id])
+  updatedBy     User?           @relation("VersionUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
   sourceVersion BudgetVersion?  @relation("VersionCloneSource", fields: [sourceVersionId], references: [id], onDelete: SetNull)
   clones        BudgetVersion[] @relation("VersionCloneSource")
 
@@ -374,11 +381,13 @@ model FiscalPeriod {
   actualVersionId Int?      @map("actual_version_id")
   lockedAt        DateTime? @map("locked_at") @db.Timestamptz
   lockedById      Int?      @map("locked_by_id")
+  updatedById     Int?      @map("updated_by_id")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   actualVersion BudgetVersion? @relation(fields: [actualVersionId], references: [id], onDelete: SetNull)
   lockedBy      User?          @relation("FiscalPeriodLocker", fields: [lockedById], references: [id], onDelete: SetNull)
+  updatedBy     User?          @relation("FiscalPeriodUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@unique([fiscalYear, month], map: "uq_fiscal_period")
   @@map("fiscal_periods")

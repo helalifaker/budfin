@@ -4,6 +4,8 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { VALID_GRADE_CODES } from '../../lib/enrollment-constants.js';
 
+const DETAIL_STALE_MODULES = ['REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const versionIdParamsSchema = z.object({
@@ -182,10 +184,23 @@ export async function detailRoutes(app: FastifyInstance) {
 					});
 				}
 
+				// Update stale modules
+				const currentStale = new Set(version.staleModules);
+				for (const m of DETAIL_STALE_MODULES) {
+					currentStale.add(m);
+				}
+				const staleModules = [...currentStale];
+
+				await txPrisma.budgetVersion.update({
+					where: { id: versionId },
+					data: { staleModules },
+				});
+
 				// Audit log
 				await txPrisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'DETAIL_UPDATED',
 						tableName: 'enrollment_detail',
 						recordId: versionId,
@@ -202,7 +217,7 @@ export async function detailRoutes(app: FastifyInstance) {
 					},
 				});
 
-				return { updated: entries.length };
+				return { updated: entries.length, staleModules };
 			});
 
 			return result;

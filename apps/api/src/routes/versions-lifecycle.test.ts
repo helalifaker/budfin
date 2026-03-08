@@ -4,7 +4,7 @@
  * PATCH /api/v1/versions/:id/status
  *
  * AC-04: Draft → Published (Admin/BudgetOwner)
- * AC-05: Published → Locked (Admin/BudgetOwner)
+ * AC-05: Published → Locked (Admin only — BudgetOwner cannot lock)
  * AC-06: Locked → Archived (Admin/BudgetOwner)
  * AC-07: Published/Locked → Draft (reverse, Admin only, audit_note ≥10 chars)
  * AC-08: reverse without valid audit_note → 400 AUDIT_NOTE_REQUIRED
@@ -182,6 +182,22 @@ describe('PATCH /api/v1/versions/:id/status — lifecycle transitions', () => {
 				data: expect.objectContaining({ operation: 'VERSION_LOCKED' }),
 			})
 		);
+	});
+
+	it('AC-05: BudgetOwner gets 403 on Published → Locked', async () => {
+		const published = makeDraft({ status: 'Published', publishedAt: now });
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(published);
+
+		const token = await makeToken({ role: 'BudgetOwner' });
+		const res = await app.inject({
+			method: 'PATCH',
+			url: '/api/v1/versions/1/status',
+			headers: authHeader(token),
+			payload: { new_status: 'Locked' },
+		});
+
+		expect(res.statusCode).toBe(403);
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	// AC-06: Locked → Archived

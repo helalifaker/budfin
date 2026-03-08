@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
+import { toast } from '../components/ui/toast-state';
 
 export interface FiscalPeriod {
 	id: number;
@@ -37,5 +38,7 @@ export function useLockFiscalPeriod() {
 				body: JSON.stringify({ actual_version_id }),
 			}),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fiscal-periods'] }),
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }

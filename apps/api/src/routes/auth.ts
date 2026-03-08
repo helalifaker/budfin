@@ -53,6 +53,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				await prisma.auditEntry.create({
 					data: {
 						userId: null,
+						userEmail: email,
 						operation: 'LOGIN_FAILED_UNKNOWN_EMAIL',
 						tableName: 'users',
 						ipAddress: ip,
@@ -60,7 +61,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 					},
 				});
 				return reply.status(401).send({
-					error: 'INVALID_CREDENTIALS',
+					code: 'INVALID_CREDENTIALS',
 					message: 'Invalid email or password',
 				});
 			}
@@ -68,7 +69,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			// 2. Check active
 			if (!user.isActive) {
 				return reply.status(401).send({
-					error: 'ACCOUNT_DISABLED',
+					code: 'ACCOUNT_DISABLED',
 					message: 'Account is disabled',
 				});
 			}
@@ -77,7 +78,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			if (user.lockedUntil) {
 				if (user.lockedUntil > new Date()) {
 					return reply.status(401).send({
-						error: 'ACCOUNT_LOCKED',
+						code: 'ACCOUNT_LOCKED',
 						message: 'Account is locked',
 						locked_until: user.lockedUntil.toISOString(),
 					});
@@ -112,6 +113,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 					await prisma.auditEntry.create({
 						data: {
 							userId: user.id,
+							userEmail: user.email,
 							operation: 'ACCOUNT_LOCKED',
 							tableName: 'users',
 							ipAddress: ip,
@@ -127,6 +129,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				await prisma.auditEntry.create({
 					data: {
 						userId: user.id,
+						userEmail: user.email,
 						operation: 'LOGIN_FAILED',
 						tableName: 'users',
 						ipAddress: ip,
@@ -135,14 +138,14 @@ export async function authRoutes(fastify: FastifyInstance) {
 
 				if (isNowLocked) {
 					return reply.status(401).send({
-						error: 'ACCOUNT_LOCKED',
+						code: 'ACCOUNT_LOCKED',
 						message: 'Account locked due to too many failed attempts',
 						locked_until: lockedUntil!.toISOString(),
 					});
 				}
 
 				return reply.status(401).send({
-					error: 'INVALID_CREDENTIALS',
+					code: 'INVALID_CREDENTIALS',
 					message: 'Invalid email or password',
 				});
 			}
@@ -177,6 +180,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 						await tx.auditEntry.create({
 							data: {
 								userId: user.id,
+								userEmail: user.email,
 								operation: 'SESSION_FORCE_REVOKED',
 								tableName: 'refresh_tokens',
 								ipAddress: ip,
@@ -216,6 +220,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			await prisma.auditEntry.create({
 				data: {
 					userId: user.id,
+					userEmail: user.email,
 					operation: 'LOGIN_SUCCESS',
 					tableName: 'users',
 					ipAddress: ip,
@@ -252,7 +257,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
 			if (!rawToken) {
 				return reply.status(401).send({
-					error: 'MISSING_TOKEN',
+					code: 'MISSING_TOKEN',
 					message: 'No refresh token provided',
 				});
 			}
@@ -267,7 +272,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
 			if (!existing) {
 				return reply.status(401).send({
-					error: 'INVALID_TOKEN',
+					code: 'INVALID_TOKEN',
 					message: 'Invalid refresh token',
 				});
 			}
@@ -279,7 +284,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 					path: '/api/v1/auth',
 				});
 				return reply.status(401).send({
-					error: 'REFRESH_TOKEN_REUSE',
+					code: 'REFRESH_TOKEN_REUSE',
 					message: 'Token reuse detected',
 				});
 			}
@@ -292,6 +297,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				await prisma.auditEntry.create({
 					data: {
 						userId: existing.userId,
+						userEmail: existing.user.email,
 						operation: 'REFRESH_REJECTED_INACTIVE',
 						tableName: 'refresh_tokens',
 						ipAddress: ip,
@@ -301,7 +307,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 					path: '/api/v1/auth',
 				});
 				return reply.status(401).send({
-					error: 'ACCOUNT_DISABLED',
+					code: 'ACCOUNT_DISABLED',
 					message: 'Account is disabled',
 				});
 			}
@@ -309,7 +315,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			// Check expiry
 			if (existing.expiresAt < new Date()) {
 				return reply.status(401).send({
-					error: 'TOKEN_EXPIRED',
+					code: 'TOKEN_EXPIRED',
 					message: 'Refresh token expired',
 				});
 			}
@@ -320,7 +326,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			if (!rotated) {
 				reply.clearCookie('refresh_token', { path: '/api/v1/auth' });
 				return reply.status(401).send({
-					error: 'REFRESH_TOKEN_REUSE',
+					code: 'REFRESH_TOKEN_REUSE',
 					message: 'Token reuse detected',
 				});
 			}

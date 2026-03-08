@@ -49,13 +49,15 @@ export async function systemConfigRoutes(app: FastifyInstance) {
 					const num = Number(value);
 					if (Number.isNaN(num)) {
 						return reply.status(400).send({
-							error: `Invalid value for "${key}": expected a number`,
+							code: 'INVALID_CONFIG_VALUE',
+							message: `Invalid value for "${key}": expected a number`,
 						});
 					}
 				} else if (existing.dataType === 'boolean') {
 					if (!['true', 'false'].includes(value.toLowerCase())) {
 						return reply.status(400).send({
-							error: `Invalid value for "${key}": expected "true" or "false"`,
+							code: 'INVALID_CONFIG_VALUE',
+							message: `Invalid value for "${key}": expected "true" or "false"`,
 						});
 					}
 				}
@@ -72,6 +74,7 @@ export async function systemConfigRoutes(app: FastifyInstance) {
 				await prisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'CONFIG_UPDATED',
 						tableName: 'system_config',
 						ipAddress: request.ip,

@@ -183,7 +183,7 @@ describe('POST /api/v1/auth/login', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('INVALID_CREDENTIALS');
+		expect(res.json().code).toBe('INVALID_CREDENTIALS');
 	});
 
 	it('creates LOGIN_FAILED_UNKNOWN_EMAIL audit entry for unknown email', async () => {
@@ -200,7 +200,7 @@ describe('POST /api/v1/auth/login', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('INVALID_CREDENTIALS');
+		expect(res.json().code).toBe('INVALID_CREDENTIALS');
 
 		expect(mockAuditEntryCreate).toHaveBeenCalledWith({
 			data: expect.objectContaining({
@@ -256,7 +256,7 @@ describe('POST /api/v1/auth/login', () => {
 
 		expect(res.statusCode).toBe(401);
 		const body = res.json();
-		expect(body.error).toBe('ACCOUNT_LOCKED');
+		expect(body.code).toBe('ACCOUNT_LOCKED');
 		expect(body.locked_until).toBe(lockedUntil.toISOString());
 	});
 
@@ -279,7 +279,7 @@ describe('POST /api/v1/auth/login', () => {
 
 		expect(res.statusCode).toBe(401);
 		const body = res.json();
-		expect(body.error).toBe('ACCOUNT_LOCKED');
+		expect(body.code).toBe('ACCOUNT_LOCKED');
 		expect(body.locked_until).toBeTruthy();
 
 		const updateCall = mockUserUpdate.mock.calls[0]![0];

@@ -208,7 +208,7 @@ describe('PATCH /api/v1/users/:id', () => {
 			payload: { is_active: false },
 		});
 		expect(res.statusCode).toBe(400);
-		expect(res.json().error).toBe('SELF_MODIFICATION');
+		expect(res.json().code).toBe('SELF_MODIFICATION');
 	});
 
 	it('rejects last Admin deactivation (400 LAST_ADMIN)', async () => {
@@ -227,7 +227,7 @@ describe('PATCH /api/v1/users/:id', () => {
 			payload: { is_active: false },
 		});
 		expect(res.statusCode).toBe(400);
-		expect(res.json().error).toBe('LAST_ADMIN');
+		expect(res.json().code).toBe('LAST_ADMIN');
 	});
 
 	it('unlock_account clears lockout', async () => {
@@ -358,7 +358,7 @@ describe('POST /api/v1/users — duplicate email', () => {
 			},
 		});
 		expect(res.statusCode).toBe(409);
-		expect(res.json().error).toBe('CONFLICT');
+		expect(res.json().code).toBe('CONFLICT');
 	});
 });
 
@@ -373,7 +373,7 @@ describe('PATCH /api/v1/users/:id — not found', () => {
 			payload: { role: 'Viewer' },
 		});
 		expect(res.statusCode).toBe(404);
-		expect(res.json().error).toBe('NOT_FOUND');
+		expect(res.json().code).toBe('NOT_FOUND');
 	});
 });
 

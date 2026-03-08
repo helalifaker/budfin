@@ -30,7 +30,7 @@ const putBodySchema = z.object({
 		.min(1),
 });
 
-const HEADCOUNT_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+const HEADCOUNT_STALE_MODULES = ['REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -189,6 +189,7 @@ export async function headcountRoutes(app: FastifyInstance) {
 				await txPrisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'HEADCOUNT_UPDATED',
 						tableName: 'enrollment_headcount',
 						recordId: versionId,

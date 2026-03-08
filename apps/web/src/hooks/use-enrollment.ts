@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
+import { toast } from '../components/ui/toast-state';
 import type { HeadcountEntry, DetailEntry, CapacityResult, AcademicPeriod } from '@budfin/types';
 
 // ── Response types ───────────────────────────────────────────────────────────
@@ -75,6 +76,8 @@ export function usePutHeadcount(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['enrollment', 'headcount', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -106,6 +109,8 @@ export function usePutDetail(versionId: number | null) {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['enrollment', 'detail', versionId] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -133,6 +138,8 @@ export function useCalculateEnrollment(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['enrollment', 'headcount', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -178,5 +185,7 @@ export function useImportHistorical() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['enrollment', 'historical'] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }

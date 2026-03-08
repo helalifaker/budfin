@@ -141,6 +141,7 @@ export async function assumptionRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'ASSUMPTION_UPDATED',
 							tableName: 'assumptions',
 							recordId: existing.id,

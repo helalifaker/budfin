@@ -277,6 +277,7 @@ export async function historicalRoutes(app: FastifyInstance) {
 				await txPrisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'HISTORICAL_ENROLLMENT_IMPORTED',
 						tableName: 'enrollment_headcount',
 						recordId: actualVersion.id,

@@ -112,6 +112,7 @@ export async function accountRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'ACCOUNT_CREATED',
 							tableName: 'chart_of_accounts',
 							recordId: created.id,
@@ -183,6 +184,7 @@ export async function accountRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'ACCOUNT_UPDATED',
 							tableName: 'chart_of_accounts',
 							recordId: id,
@@ -240,6 +242,7 @@ export async function accountRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'ACCOUNT_DELETED',
 							tableName: 'chart_of_accounts',
 							recordId: id,

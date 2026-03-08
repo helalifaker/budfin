@@ -23,6 +23,7 @@ const cloneVersionSchema = z.object({
 const compareQuerySchema = z.object({
 	primary: z.coerce.number().int().positive(),
 	comparison: z.coerce.number().int().positive(),
+	month: z.coerce.number().int().min(1).max(12).optional(),
 });
 
 // ── State machine ─────────────────────────────────────────────────────────────
@@ -46,7 +47,7 @@ const TRANSITIONS: Record<string, Record<string, TransitionDef>> = {
 	},
 	Published: {
 		Locked: {
-			roles: ['Admin', 'BudgetOwner'],
+			roles: ['Admin'],
 			isReverse: false,
 			timestampField: 'lockedAt',
 			operation: 'VERSION_LOCKED',
@@ -83,7 +84,7 @@ const createVersionSchema = z.object({
 });
 
 const listQuerySchema = z.object({
-	fiscalYear: z.coerce.number().int().optional(),
+	fiscalYear: z.coerce.number().int(),
 	status: versionStatusEnum.optional(),
 	cursor: z.coerce.number().int().optional(),
 	limit: z.coerce.number().int().min(1).max(100).optional().default(50),
@@ -179,7 +180,7 @@ export async function versionRoutes(app: FastifyInstance) {
 		schema: { querystring: compareQuerySchema },
 		preHandler: [app.authenticate],
 		handler: async (request, reply) => {
-			const { primary, comparison } = request.query as z.infer<typeof compareQuerySchema>;
+			const { primary, comparison, month } = request.query as z.infer<typeof compareQuerySchema>;
 
 			const [primaryVersion, compVersion] = await Promise.all([
 				prisma.budgetVersion.findUnique({
@@ -222,49 +223,54 @@ export async function versionRoutes(app: FastifyInstance) {
 			);
 
 			function toDecStr(val: unknown): string {
-				return new Decimal(String(val ?? 0)).toString();
+				return new Decimal(String(val ?? 0)).toFixed(4);
 			}
 
 			function calcVariance(pVal: unknown, cVal: unknown) {
 				const p = new Decimal(String(pVal ?? 0));
 				const c = new Decimal(String(cVal ?? 0));
 				const abs = p.minus(c);
-				const pct = c.isZero() ? null : abs.div(c.abs()).times(100).toString();
-				return { abs: abs.toString(), pct };
+				const pct = c.isZero() ? null : abs.div(c.abs()).times(100).toFixed(4);
+				return { abs: abs.toFixed(4), pct };
 			}
 
 			function buildMetrics(row: SummaryRow | undefined) {
 				return {
-					total_revenue_ht: toDecStr(row?.revenueHt),
-					total_staff_costs: toDecStr(row?.staffCosts),
-					net_profit: toDecStr(row?.netProfit),
+					totalRevenueHt: toDecStr(row?.revenueHt),
+					totalStaffCosts: toDecStr(row?.staffCosts),
+					netProfit: toDecStr(row?.netProfit),
 				};
 			}
 
 			// Always return exactly 12 months (AC-13)
-			const monthlyComparison = Array.from({ length: 12 }, (_, i) => {
-				const month = i + 1;
-				const p = primaryByMonth.get(month);
-				const c = compByMonth.get(month);
+			let monthlyComparison = Array.from({ length: 12 }, (_, i) => {
+				const m = i + 1;
+				const p = primaryByMonth.get(m);
+				const c = compByMonth.get(m);
 				const revVar = calcVariance(p?.revenueHt, c?.revenueHt);
 				const staffVar = calcVariance(p?.staffCosts, c?.staffCosts);
 				const netVar = calcVariance(p?.netProfit, c?.netProfit);
 				return {
-					month,
+					month: m,
 					primary: buildMetrics(p),
 					comparison: buildMetrics(c),
-					variance_absolute: {
-						total_revenue_ht: revVar.abs,
-						total_staff_costs: staffVar.abs,
-						net_profit: netVar.abs,
+					varianceAbsolute: {
+						totalRevenueHt: revVar.abs,
+						totalStaffCosts: staffVar.abs,
+						netProfit: netVar.abs,
 					},
-					variance_pct: {
-						total_revenue_ht: revVar.pct,
-						total_staff_costs: staffVar.pct,
-						net_profit: netVar.pct,
+					variancePct: {
+						totalRevenueHt: revVar.pct,
+						totalStaffCosts: staffVar.pct,
+						netProfit: netVar.pct,
 					},
 				};
 			});
+
+			// B8: optional month filter
+			if (month !== undefined) {
+				monthlyComparison = monthlyComparison.filter((entry) => entry.month === month);
+			}
 
 			// Annual totals — sum across all 12 months
 			function sumField(
@@ -287,8 +293,8 @@ export async function versionRoutes(app: FastifyInstance) {
 
 			function annualVariance(p: Decimal, c: Decimal) {
 				const abs = p.minus(c);
-				const pct = c.isZero() ? null : abs.div(c.abs()).times(100).toString();
-				return { abs: abs.toString(), pct };
+				const pct = c.isZero() ? null : abs.div(c.abs()).times(100).toFixed(4);
+				return { abs: abs.toFixed(4), pct };
 			}
 
 			const revAnnual = annualVariance(pRevTotal, cRevTotal);
@@ -296,29 +302,35 @@ export async function versionRoutes(app: FastifyInstance) {
 			const netAnnual = annualVariance(pNetTotal, cNetTotal);
 
 			return {
-				primary_version: { id: primaryVersion.id, name: primaryVersion.name },
-				comparison_version: { id: compVersion.id, name: compVersion.name },
-				monthly_comparison: monthlyComparison,
-				annual_totals: {
+				primaryVersion: {
+					id: primaryVersion.id,
+					name: primaryVersion.name,
+				},
+				comparisonVersion: {
+					id: compVersion.id,
+					name: compVersion.name,
+				},
+				monthlyComparison,
+				annualTotals: {
 					primary: {
-						total_revenue_ht: pRevTotal.toString(),
-						total_staff_costs: pStaffTotal.toString(),
-						net_profit: pNetTotal.toString(),
+						totalRevenueHt: pRevTotal.toFixed(4),
+						totalStaffCosts: pStaffTotal.toFixed(4),
+						netProfit: pNetTotal.toFixed(4),
 					},
 					comparison: {
-						total_revenue_ht: cRevTotal.toString(),
-						total_staff_costs: cStaffTotal.toString(),
-						net_profit: cNetTotal.toString(),
+						totalRevenueHt: cRevTotal.toFixed(4),
+						totalStaffCosts: cStaffTotal.toFixed(4),
+						netProfit: cNetTotal.toFixed(4),
 					},
-					variance_absolute: {
-						total_revenue_ht: revAnnual.abs,
-						total_staff_costs: staffAnnual.abs,
-						net_profit: netAnnual.abs,
+					varianceAbsolute: {
+						totalRevenueHt: revAnnual.abs,
+						totalStaffCosts: staffAnnual.abs,
+						netProfit: netAnnual.abs,
 					},
-					variance_pct: {
-						total_revenue_ht: revAnnual.pct,
-						total_staff_costs: staffAnnual.pct,
-						net_profit: netAnnual.pct,
+					variancePct: {
+						totalRevenueHt: revAnnual.pct,
+						totalStaffCosts: staffAnnual.pct,
+						netProfit: netAnnual.pct,
 					},
 				},
 			};
@@ -505,6 +517,7 @@ export async function versionRoutes(app: FastifyInstance) {
 					await (tx as typeof prisma).auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'VERSION_CREATED',
 							tableName: 'budget_versions',
 							recordId: created.id,
@@ -567,6 +580,7 @@ export async function versionRoutes(app: FastifyInstance) {
 				await (tx as typeof prisma).auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'VERSION_DELETED',
 						tableName: 'budget_versions',
 						recordId: id,
@@ -662,6 +676,7 @@ export async function versionRoutes(app: FastifyInstance) {
 					await (tx as typeof prisma).auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'VERSION_CLONED',
 							tableName: 'budget_versions',
 							recordId: newVersion.id,
@@ -718,7 +733,7 @@ export async function versionRoutes(app: FastifyInstance) {
 
 			// RBAC: only allowed roles for this specific transition
 			if (!transition.roles.includes(request.user.role)) {
-				return reply.status(403).send({ error: 'FORBIDDEN', message: 'Insufficient role' });
+				return reply.status(403).send({ code: 'FORBIDDEN', message: 'Insufficient role' });
 			}
 
 			// AC-07/AC-08: reverse transitions require audit_note ≥ 10 chars
@@ -732,7 +747,10 @@ export async function versionRoutes(app: FastifyInstance) {
 			}
 
 			const now = new Date();
-			const updateData: Record<string, unknown> = { status: new_status };
+			const updateData: Record<string, unknown> = {
+				status: new_status,
+				updatedById: request.user.id,
+			};
 
 			if (transition.timestampField) {
 				updateData[transition.timestampField] = now;
@@ -758,6 +776,7 @@ export async function versionRoutes(app: FastifyInstance) {
 				await (tx as typeof prisma).auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: transition.operation,
 						tableName: 'budget_versions',
 						recordId: id,
@@ -767,6 +786,7 @@ export async function versionRoutes(app: FastifyInstance) {
 							status: new_status,
 							...(audit_note ? { audit_note } : {}),
 						} as Prisma.InputJsonValue,
+						auditNote: audit_note ?? null,
 					},
 				});
 

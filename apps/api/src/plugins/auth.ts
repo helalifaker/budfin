@@ -31,7 +31,7 @@ async function authPlugin(app: FastifyInstance) {
 			const header = request.headers.authorization;
 			if (!header?.startsWith('Bearer ')) {
 				return reply.status(401).send({
-					error: 'UNAUTHORIZED',
+					code: 'UNAUTHORIZED',
 					message: 'Missing or invalid authorization header',
 				});
 			}
@@ -46,7 +46,7 @@ async function authPlugin(app: FastifyInstance) {
 				};
 			} catch {
 				return reply.status(401).send({
-					error: 'INVALID_TOKEN',
+					code: 'INVALID_TOKEN',
 					message: 'Token is invalid or expired',
 				});
 			}
@@ -60,6 +60,7 @@ async function authPlugin(app: FastifyInstance) {
 					data: {
 						operation: 'AUTHORIZATION_FAILED',
 						userId: request.user.id,
+						userEmail: request.user.email,
 						ipAddress: request.ip,
 						newValues: {
 							route: request.url,
@@ -70,7 +71,7 @@ async function authPlugin(app: FastifyInstance) {
 					},
 				});
 				return reply.status(403).send({
-					error: 'FORBIDDEN',
+					code: 'FORBIDDEN',
 					message: 'Insufficient permissions',
 				});
 			}
@@ -86,6 +87,7 @@ async function authPlugin(app: FastifyInstance) {
 					data: {
 						operation: 'AUTHORIZATION_FAILED',
 						userId: request.user.id,
+						userEmail: request.user.email,
 						ipAddress: request.ip,
 						newValues: {
 							route: request.url,
@@ -96,7 +98,7 @@ async function authPlugin(app: FastifyInstance) {
 					},
 				});
 				return reply.status(403).send({
-					error: 'FORBIDDEN',
+					code: 'FORBIDDEN',
 					message: 'Insufficient permissions',
 				});
 			}

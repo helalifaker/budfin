@@ -145,6 +145,7 @@ export async function academicYearRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'ACADEMIC_YEAR_CREATED',
 							tableName: 'academic_years',
 							recordId: created.id,
@@ -216,6 +217,7 @@ export async function academicYearRoutes(app: FastifyInstance) {
 				await tx.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'ACADEMIC_YEAR_UPDATED',
 						tableName: 'academic_years',
 						recordId: id,
@@ -260,6 +262,7 @@ export async function academicYearRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'ACADEMIC_YEAR_DELETED',
 							tableName: 'academic_years',
 							recordId: id,

@@ -421,7 +421,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('AC-19: Viewer gets 403 on POST /clone', async () => {
@@ -434,6 +434,6 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 });

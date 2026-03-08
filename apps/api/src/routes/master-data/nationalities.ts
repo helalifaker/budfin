@@ -55,6 +55,7 @@ export async function nationalityRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'NATIONALITY_CREATED',
 							tableName: 'nationalities',
 							recordId: created.id,
@@ -122,6 +123,7 @@ export async function nationalityRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'NATIONALITY_UPDATED',
 							tableName: 'nationalities',
 							recordId: id,
@@ -179,6 +181,7 @@ export async function nationalityRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'NATIONALITY_DELETED',
 							tableName: 'nationalities',
 							recordId: id,

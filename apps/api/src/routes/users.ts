@@ -81,7 +81,7 @@ export async function userRoutes(app: FastifyInstance) {
 			});
 			if (existing) {
 				return reply.status(409).send({
-					error: 'CONFLICT',
+					code: 'CONFLICT',
 					message: 'A user with this email already exists',
 				});
 			}
@@ -101,6 +101,7 @@ export async function userRoutes(app: FastifyInstance) {
 			await prisma.auditEntry.create({
 				data: {
 					userId: request.user.id,
+					userEmail: request.user.email,
 					operation: 'USER_CREATED',
 					tableName: 'users',
 					recordId: user.id,
@@ -131,7 +132,7 @@ export async function userRoutes(app: FastifyInstance) {
 					body.is_active === false || body.role !== undefined || body.force_session_revoke === true;
 				if (isSelfDangerous) {
 					return reply.status(400).send({
-						error: 'SELF_MODIFICATION',
+						code: 'SELF_MODIFICATION',
 						message: 'Cannot modify your own account',
 					});
 				}
@@ -142,7 +143,7 @@ export async function userRoutes(app: FastifyInstance) {
 			});
 			if (!target) {
 				return reply.status(404).send({
-					error: 'NOT_FOUND',
+					code: 'NOT_FOUND',
 					message: `User ${id} not found`,
 				});
 			}
@@ -154,7 +155,7 @@ export async function userRoutes(app: FastifyInstance) {
 				});
 				if (adminCount <= 1) {
 					return reply.status(400).send({
-						error: 'LAST_ADMIN',
+						code: 'LAST_ADMIN',
 						message: 'Cannot deactivate the last active admin',
 					});
 				}
@@ -195,6 +196,7 @@ export async function userRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'ACCOUNT_UNLOCKED',
 							tableName: 'users',
 							recordId: id,
@@ -215,6 +217,7 @@ export async function userRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'SESSION_FORCE_REVOKED',
 							tableName: 'refresh_tokens',
 							recordId: id,
@@ -242,6 +245,7 @@ export async function userRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'USER_UPDATED',
 							tableName: 'users',
 							recordId: id,

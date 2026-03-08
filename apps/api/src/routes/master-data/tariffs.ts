@@ -55,6 +55,7 @@ export async function tariffRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'TARIFF_CREATED',
 							tableName: 'tariffs',
 							recordId: created.id,
@@ -122,6 +123,7 @@ export async function tariffRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'TARIFF_UPDATED',
 							tableName: 'tariffs',
 							recordId: id,
@@ -179,6 +181,7 @@ export async function tariffRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'TARIFF_DELETED',
 							tableName: 'tariffs',
 							recordId: id,

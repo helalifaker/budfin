@@ -64,6 +64,12 @@
 	--status-locked: #7c3aed;
 	--status-archived: #6b7280;
 
+	/* ── Status Badge Backgrounds ── */
+	--status-draft-bg: color-mix(in srgb, var(--status-draft) 15%, white);
+	--status-published-bg: var(--version-budget-bg);
+	--status-locked-bg: color-mix(in srgb, var(--status-locked) 15%, white);
+	--status-archived-bg: color-mix(in srgb, var(--status-archived) 15%, white);
+
 	/* ── Editable Cell Colors ── */
 	--cell-editable-bg: #fefce8;
 	--cell-editable-focus: #2563eb;
@@ -80,6 +86,7 @@
 	--text-xl: 18px;
 	--text-2xl: 24px;
 	--text-3xl: 30px;
+	--text-4xl: 36px;
 
 	/* ── Spacing (4px grid) ── */
 	--space-1: 4px;

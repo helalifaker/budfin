@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
+import { toast } from '../components/ui/toast-state';
 
 export interface Assumption {
 	id: number;
@@ -35,5 +36,7 @@ export function useUpdateAssumptions() {
 				body: JSON.stringify({ updates }),
 			}),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['assumptions'] }),
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }

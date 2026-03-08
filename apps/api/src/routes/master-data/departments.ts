@@ -61,6 +61,7 @@ export async function departmentRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'DEPARTMENT_CREATED',
 							tableName: 'departments',
 							recordId: created.id,
@@ -126,6 +127,7 @@ export async function departmentRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'DEPARTMENT_UPDATED',
 							tableName: 'departments',
 							recordId: id,
@@ -183,6 +185,7 @@ export async function departmentRoutes(app: FastifyInstance) {
 					await tx.auditEntry.create({
 						data: {
 							userId: request.user.id,
+							userEmail: request.user.email,
 							operation: 'DEPARTMENT_DELETED',
 							tableName: 'departments',
 							recordId: id,

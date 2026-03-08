@@ -209,6 +209,7 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 				await txPrisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'OTHER_REVENUE_UPDATED',
 						tableName: 'other_revenue_items',
 						recordId: versionId,

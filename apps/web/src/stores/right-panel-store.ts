@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useSidebarStore } from './sidebar-store';
 
 export type RightPanelTab = 'details' | 'activity' | 'audit' | 'help' | 'form';
 
@@ -28,14 +29,23 @@ export const useRightPanelStore = create<RightPanelState>((set) => ({
 	width: DEFAULT_WIDTH,
 
 	open: (tab) =>
-		set((state) => ({
-			isOpen: true,
-			activeTab: tab ?? state.activeTab,
-		})),
+		set((state) => {
+			useSidebarStore.getState().collapse();
+			return {
+				isOpen: true,
+				activeTab: tab ?? state.activeTab,
+			};
+		}),
 
 	close: () => set({ isOpen: false }),
 
-	toggle: () => set((state) => ({ isOpen: !state.isOpen })),
+	toggle: () =>
+		set((state) => {
+			if (!state.isOpen) {
+				useSidebarStore.getState().collapse();
+			}
+			return { isOpen: !state.isOpen };
+		}),
 
 	setTab: (tab) => set({ activeTab: tab }),
 

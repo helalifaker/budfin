@@ -126,7 +126,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 				credentials: 'include',
 			});
 		} catch {
-			// Ignore logout failures
+			// Fire-and-forget: logout endpoint failure is non-critical.
+			// The access token is already cleared from memory, and the
+			// refresh token cookie will expire naturally. Retrying or
+			// surfacing this error would degrade UX with no security benefit.
 		}
 		get().clearAuth();
 		broadcastLogout();

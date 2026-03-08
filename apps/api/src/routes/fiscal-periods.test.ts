@@ -318,27 +318,8 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		expect(res.json().code).toBe('INVALID_ACTUAL_VERSION');
 	});
 
-	it('422 INVALID_ACTUAL_VERSION when version dataSource is not IMPORTED', async () => {
-		const period = makePeriod(2026, 1);
-		mockPrisma.fiscalPeriod.findUnique.mockResolvedValue(period);
-		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
-			id: 7,
-			type: 'Actual',
-			status: 'Locked',
-			dataSource: 'CALCULATED',
-		});
-
-		const token = await makeToken({ role: 'Admin' });
-		const res = await app.inject({
-			method: 'PATCH',
-			url: '/api/v1/fiscal-periods/2026/1/lock',
-			headers: authHeader(token),
-			payload: { actual_version_id: 7 },
-		});
-
-		expect(res.statusCode).toBe(422);
-		expect(res.json().code).toBe('INVALID_ACTUAL_VERSION');
-	});
+	// B7: dataSource === 'IMPORTED' check removed per audit — any dataSource is valid
+	// as long as version is type=Actual and status=Locked
 
 	it('404 VERSION_NOT_FOUND when actual_version_id does not exist', async () => {
 		const period = makePeriod(2026, 1);
@@ -367,7 +348,7 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('AC-19: Viewer gets 403 on PATCH /lock', async () => {
@@ -380,6 +361,6 @@ describe('PATCH /api/v1/fiscal-periods/:fiscalYear/:month/lock', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 });

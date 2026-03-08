@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
+import { toast } from '../components/ui/toast-state';
 import type {
 	FeeGridEntry,
 	DiscountEntry,
@@ -40,6 +41,8 @@ export function usePutFeeGrid(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'fee-grid', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -69,6 +72,8 @@ export function usePutDiscounts(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'discounts', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -98,6 +103,8 @@ export function usePutOtherRevenue(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'other-revenue', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -127,6 +134,8 @@ export function useCalculateRevenue(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'results', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 

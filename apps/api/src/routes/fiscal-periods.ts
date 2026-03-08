@@ -109,15 +109,10 @@ export async function fiscalPeriodRoutes(app: FastifyInstance) {
 				});
 			}
 
-			if (
-				version.type !== 'Actual' ||
-				version.status !== 'Locked' ||
-				(version as { dataSource: string }).dataSource !== 'IMPORTED'
-			) {
+			if (version.type !== 'Actual' || version.status !== 'Locked') {
 				return reply.status(422).send({
 					code: 'INVALID_ACTUAL_VERSION',
-					message:
-						'actual_version_id must reference a version with type=Actual, status=Locked, and dataSource=IMPORTED',
+					message: 'actual_version_id must reference a version with type=Actual and status=Locked',
 				});
 			}
 
@@ -131,12 +126,14 @@ export async function fiscalPeriodRoutes(app: FastifyInstance) {
 						actualVersionId: actual_version_id,
 						lockedAt: new Date(),
 						lockedById: request.user.id,
+						updatedById: request.user.id,
 					},
 				});
 
 				await (tx as typeof prisma).auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'FISCAL_PERIOD_LOCKED',
 						tableName: 'fiscal_periods',
 						recordId: result.id,

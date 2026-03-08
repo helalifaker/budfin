@@ -259,7 +259,7 @@ describe('POST /calculate', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('returns 401 without auth', async () => {

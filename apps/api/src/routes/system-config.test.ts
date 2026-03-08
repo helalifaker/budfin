@@ -166,7 +166,7 @@ describe('PUT /api/v1/system-config', () => {
 			},
 		});
 		expect(res.statusCode).toBe(400);
-		expect(res.json().error).toContain('expected a number');
+		expect(res.json().code).toBe('INVALID_CONFIG_VALUE');
 	});
 
 	it('rejects non-boolean value for boolean-type config', async () => {
@@ -189,7 +189,7 @@ describe('PUT /api/v1/system-config', () => {
 			},
 		});
 		expect(res.statusCode).toBe(400);
-		expect(res.json().error).toContain('expected "true" or "false"');
+		expect(res.json().code).toBe('INVALID_CONFIG_VALUE');
 	});
 
 	it('accepts valid numeric string for number-type config', async () => {

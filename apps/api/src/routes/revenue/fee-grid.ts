@@ -220,6 +220,7 @@ export async function feeGridRoutes(app: FastifyInstance) {
 				await txPrisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'FEE_GRID_UPDATED',
 						tableName: 'fee_grids',
 						recordId: versionId,

@@ -3,8 +3,10 @@ import {
 	createColumnHelper,
 	flexRender,
 	getCoreRowModel,
+	getSortedRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
+import type { SortingState } from '@tanstack/react-table';
 import { Layers, MoreHorizontal } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
@@ -44,11 +46,10 @@ import {
 const columnHelper = createColumnHelper<BudgetVersion>();
 
 const STATUS_BADGE_COLORS: Record<BudgetVersion['status'], string> = {
-	Draft: 'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-[var(--status-draft)]',
-	Published: 'bg-[var(--version-budget-bg)] text-[var(--status-published)]',
-	Locked: 'bg-[color-mix(in_srgb,var(--status-locked)_15%,white)] text-[var(--status-locked)]',
-	Archived:
-		'bg-[color-mix(in_srgb,var(--status-archived)_15%,white)] text-[var(--status-archived)]',
+	Draft: 'bg-[var(--status-draft-bg)] text-[var(--status-draft)]',
+	Published: 'bg-[var(--status-published-bg)] text-[var(--status-published)]',
+	Locked: 'bg-[var(--status-locked-bg)] text-[var(--status-locked)]',
+	Archived: 'bg-[var(--status-archived-bg)] text-[var(--status-archived)]',
 };
 
 const TYPE_LABELS: Record<BudgetVersion['type'], string> = {
@@ -85,6 +86,9 @@ export function VersionsPage() {
 
 	const { data, isLoading } = useVersions(fiscalYear, statusFilter || undefined);
 
+	// A4: TanStack Table sorting state
+	const [sorting, setSorting] = useState<SortingState>([]);
+
 	const filteredRows = useMemo(() => {
 		let rows = data?.data ?? [];
 		if (typeFilter) {
@@ -94,9 +98,6 @@ export function VersionsPage() {
 			const lower = searchDebounced.toLowerCase();
 			rows = rows.filter((v) => v.name.toLowerCase().includes(lower));
 		}
-		rows = [...rows].sort(
-			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-		);
 		return rows;
 	}, [data, typeFilter, searchDebounced]);
 
@@ -132,7 +133,15 @@ export function VersionsPage() {
 		() => [
 			columnHelper.accessor('name', {
 				header: 'Name',
-				cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+				cell: ({ row, getValue }) => (
+					<button
+						type="button"
+						className="font-medium text-[var(--accent-700)] hover:underline"
+						onClick={() => setDetailVersion(row.original)}
+					>
+						{getValue()}
+					</button>
+				),
 			}),
 			columnHelper.accessor('type', {
 				header: 'Type',
@@ -205,13 +214,15 @@ export function VersionsPage() {
 					const stale = row.original.staleModules;
 					if (!stale || stale.length === 0) return null;
 					return (
-						<span
-							className="inline-flex rounded-[var(--radius-sm)] bg-[var(--color-warning-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)]"
+						<button
+							type="button"
+							className="inline-flex cursor-pointer rounded-[var(--radius-sm)] bg-[var(--color-warning-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)] hover:opacity-80"
 							title={stale.join(', ')}
 							aria-label={`Stale modules: ${stale.join(', ')}`}
+							onClick={() => setDetailVersion(row.original)}
 						>
 							{stale.length} stale
-						</span>
+						</button>
 					);
 				},
 			}),
@@ -235,13 +246,16 @@ export function VersionsPage() {
 				},
 			}),
 		],
-		[]
+		[setDetailVersion]
 	);
 
 	const table = useReactTable({
 		data: filteredRows,
 		columns,
+		state: { sorting },
+		onSortingChange: setSorting,
 		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
 	});
 
 	return (
@@ -325,7 +339,19 @@ export function VersionsPage() {
 										key={header.id}
 										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
 									>
-										{flexRender(header.column.columnDef.header, header.getContext())}
+										{header.column.getCanSort() ? (
+											<button
+												type="button"
+												className="inline-flex items-center gap-1"
+												onClick={header.column.getToggleSortingHandler()}
+											>
+												{flexRender(header.column.columnDef.header, header.getContext())}
+												{header.column.getIsSorted() === 'asc' && ' ↑'}
+												{header.column.getIsSorted() === 'desc' && ' ↓'}
+											</button>
+										) : (
+											flexRender(header.column.columnDef.header, header.getContext())
+										)}
 									</th>
 								))}
 							</tr>
@@ -340,7 +366,11 @@ export function VersionsPage() {
 									colSpan={columns.length}
 									className="px-4 py-12 text-center text-sm text-[var(--text-muted)]"
 								>
-									<EmptyState fiscalYear={fiscalYear} />
+									<EmptyState
+										fiscalYear={fiscalYear}
+										canCreate={!!canCreate}
+										onCreateClick={() => setCreateOpen(true)}
+									/>
 								</td>
 							</tr>
 						) : (
@@ -388,6 +418,12 @@ export function VersionsPage() {
 				open={detailVersion !== null}
 				version={detailVersion}
 				onClose={() => setDetailVersion(null)}
+				currentUserRole={currentUser?.role}
+				onPublish={setPublishTarget}
+				onLock={setLockTarget}
+				onArchive={setArchiveTarget}
+				onRevert={setRevertTarget}
+				onDelete={setDeleteTarget}
 			/>
 
 			{/* Lifecycle Dialogs */}
@@ -481,7 +517,7 @@ function VersionActions({
 	const canArchive = isAdmin && version.status === 'Locked';
 	const canRevert = isAdmin && (version.status === 'Published' || version.status === 'Locked');
 	const canDelete = isMutator && version.status === 'Draft';
-	const canClone = version.type !== 'Actual';
+	const canClone = isMutator && version.type !== 'Actual';
 
 	return (
 		<DropdownMenu>
@@ -490,6 +526,7 @@ function VersionActions({
 					type="button"
 					className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
 					aria-label={`Actions for ${version.name}`}
+					aria-haspopup="menu"
 				>
 					<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
 				</button>
@@ -528,7 +565,15 @@ function VersionActions({
 	);
 }
 
-function EmptyState({ fiscalYear }: { fiscalYear: number }) {
+function EmptyState({
+	fiscalYear,
+	canCreate,
+	onCreateClick,
+}: {
+	fiscalYear: number;
+	canCreate: boolean;
+	onCreateClick: () => void;
+}) {
 	return (
 		<div className="flex flex-col items-center gap-3 py-4">
 			<Layers className="h-10 w-10 text-[var(--accent-400)]" strokeWidth={1.5} aria-hidden="true" />
@@ -538,6 +583,11 @@ function EmptyState({ fiscalYear }: { fiscalYear: number }) {
 			<p className="text-[length:var(--text-sm)] text-[var(--text-secondary)]">
 				Create your first budget version to get started.
 			</p>
+			{canCreate && (
+				<Button variant="primary" onClick={onCreateClick}>
+					+ Create Version
+				</Button>
+			)}
 		</div>
 	);
 }

@@ -96,7 +96,7 @@ describe('authenticate', () => {
 			url: '/authed',
 		});
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('UNAUTHORIZED');
+		expect(res.json().code).toBe('UNAUTHORIZED');
 	});
 
 	it('rejects request with invalid token (401)', async () => {
@@ -106,7 +106,7 @@ describe('authenticate', () => {
 			headers: { authorization: 'Bearer invalid.token.here' },
 		});
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('INVALID_TOKEN');
+		expect(res.json().code).toBe('INVALID_TOKEN');
 	});
 });
 
@@ -130,7 +130,7 @@ describe('requireRole', () => {
 			headers: { authorization: `Bearer ${token}` },
 		});
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('allows when role is in multi-role list', async () => {
@@ -164,7 +164,7 @@ describe('requirePermission', () => {
 			headers: { authorization: `Bearer ${token}` },
 		});
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 });
 

@@ -103,6 +103,7 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 				await tx.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'GRADE_LEVEL_UPDATED',
 						tableName: 'grade_levels',
 						recordId: id,

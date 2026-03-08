@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
+import { toast } from '../components/ui/toast-state';
 
 export interface BudgetVersion {
 	id: number;
@@ -55,6 +56,8 @@ export function useCreateVersion() {
 				body: JSON.stringify(data),
 			}),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versions'] }),
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -67,6 +70,8 @@ export function useCloneVersion() {
 				body: JSON.stringify(data),
 			}),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versions'] }),
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -79,6 +84,8 @@ export function usePatchVersionStatus() {
 				body: JSON.stringify(data),
 			}),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versions'] }),
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -87,6 +94,27 @@ export function useDeleteVersion() {
 	return useMutation({
 		mutationFn: (id: number) => apiClient<void>(`/versions/${id}`, { method: 'DELETE' }),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versions'] }),
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
+	});
+}
+
+export interface AuditTrailEntry {
+	id: number;
+	operation: string;
+	userId: number | null;
+	newValues: Record<string, unknown> | null;
+	oldValues: Record<string, unknown> | null;
+	createdAt: string;
+	ipAddress: string | null;
+}
+
+export function useVersionAuditTrail(versionId: number | undefined) {
+	return useQuery({
+		queryKey: ['version-audit-trail', versionId],
+		queryFn: () =>
+			apiClient<AuditTrailEntry[]>(`/audit?table_name=budget_versions&record_id=${versionId}`),
+		enabled: !!versionId,
 	});
 }
 

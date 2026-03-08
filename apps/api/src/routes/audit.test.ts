@@ -43,6 +43,9 @@ const mockEntry = {
 	oldValues: null,
 	newValues: null,
 	ipAddress: '127.0.0.1',
+	userEmail: null,
+	sessionId: null,
+	auditNote: null,
 	createdAt: new Date('2026-03-01T10:00:00Z'),
 };
 

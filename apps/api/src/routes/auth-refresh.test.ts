@@ -175,7 +175,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('MISSING_TOKEN');
+		expect(res.json().code).toBe('MISSING_TOKEN');
 	});
 
 	it('returns 401 INVALID_TOKEN for unknown token', async () => {
@@ -189,7 +189,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('INVALID_TOKEN');
+		expect(res.json().code).toBe('INVALID_TOKEN');
 	});
 
 	it('returns 401 TOKEN_EXPIRED for expired token', async () => {
@@ -211,7 +211,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('TOKEN_EXPIRED');
+		expect(res.json().code).toBe('TOKEN_EXPIRED');
 	});
 
 	it('returns 401 REFRESH_TOKEN_REUSE for revoked token', async () => {
@@ -234,7 +234,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('REFRESH_TOKEN_REUSE');
+		expect(res.json().code).toBe('REFRESH_TOKEN_REUSE');
 		expect(mockDetectReplay).toHaveBeenCalledWith(expect.any(String), 1, expect.any(String));
 	});
 
@@ -257,7 +257,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('ACCOUNT_DISABLED');
+		expect(res.json().code).toBe('ACCOUNT_DISABLED');
 		expect(mockRevokeAllUserTokens).toHaveBeenCalledWith(1, expect.any(String));
 		expect(mockRotateToken).not.toHaveBeenCalled();
 
@@ -295,7 +295,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().error).toBe('ACCOUNT_DISABLED');
+		expect(res.json().code).toBe('ACCOUNT_DISABLED');
 		expect(mockRevokeAllUserTokens).toHaveBeenCalledWith(1, expect.any(String));
 
 		const cookies = res.cookies as { name: string; value: string }[];

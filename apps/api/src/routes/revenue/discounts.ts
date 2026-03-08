@@ -153,6 +153,7 @@ export async function discountRoutes(app: FastifyInstance) {
 				await txPrisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
+						userEmail: request.user.email,
 						operation: 'DISCOUNT_POLICY_UPDATED',
 						tableName: 'discount_policies',
 						recordId: versionId,

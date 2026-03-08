@@ -99,7 +99,7 @@ export function CreateVersionPanel({
 			>
 				<div className="border-b px-6 py-4">
 					<h2 id={titleId} className="text-[length:var(--text-lg)] font-semibold">
-						New Version
+						Create New Version
 					</h2>
 					<p className="mt-0.5 text-[length:var(--text-sm)] text-[var(--text-muted)]">
 						Fiscal Year: FY{fiscalYear}

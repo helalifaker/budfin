@@ -138,7 +138,7 @@ describe('GET /api/v1/versions', () => {
 		const token = await makeToken({ role: 'Viewer' });
 		const res = await app.inject({
 			method: 'GET',
-			url: '/api/v1/versions',
+			url: '/api/v1/versions?fiscalYear=2026',
 			headers: authHeader(token),
 		});
 
@@ -174,7 +174,7 @@ describe('GET /api/v1/versions', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'GET',
-			url: '/api/v1/versions?status=Draft',
+			url: '/api/v1/versions?fiscalYear=2026&status=Draft',
 			headers: authHeader(token),
 		});
 
@@ -186,8 +186,16 @@ describe('GET /api/v1/versions', () => {
 		);
 	});
 
-	it('returns 401 without token', async () => {
+	it('returns 400 without fiscalYear param', async () => {
 		const res = await app.inject({ method: 'GET', url: '/api/v1/versions' });
+		expect(res.statusCode).toBe(400);
+	});
+
+	it('returns 401 without token', async () => {
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions?fiscalYear=2026',
+		});
 		expect(res.statusCode).toBe(401);
 	});
 });
@@ -313,7 +321,7 @@ describe('POST /api/v1/versions', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('AC-19: Viewer gets 403 INSUFFICIENT_ROLE on POST', async () => {
@@ -326,7 +334,7 @@ describe('POST /api/v1/versions', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('returns 400 for missing required fields', async () => {
@@ -469,6 +477,6 @@ describe('DELETE /api/v1/versions/:id', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 });

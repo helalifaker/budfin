@@ -19,6 +19,7 @@ vi.mock('../../lib/prisma.js', () => {
 	const mockPrisma = {
 		budgetVersion: {
 			findUnique: vi.fn(),
+			update: vi.fn().mockResolvedValue({}),
 		},
 		enrollmentHeadcount: {
 			findMany: vi.fn(),
@@ -32,6 +33,7 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
+				budgetVersion: mockPrisma.budgetVersion,
 				enrollmentDetail: mockPrisma.enrollmentDetail,
 				auditEntry: mockPrisma.auditEntry,
 			})
@@ -45,6 +47,7 @@ import { prisma } from '../../lib/prisma.js';
 const mockPrisma = prisma as unknown as {
 	budgetVersion: {
 		findUnique: ReturnType<typeof vi.fn>;
+		update: ReturnType<typeof vi.fn>;
 	};
 	enrollmentHeadcount: {
 		findMany: ReturnType<typeof vi.fn>;
@@ -378,7 +381,7 @@ describe('PUT /detail', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('returns 404 when version not found', async () => {

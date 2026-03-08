@@ -394,7 +394,7 @@ describe('PUT /headcount', () => {
 		});
 
 		expect(res.statusCode).toBe(403);
-		expect(res.json().error).toBe('FORBIDDEN');
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 
 	it('returns 404 when version not found', async () => {
