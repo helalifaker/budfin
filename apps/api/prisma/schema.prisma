@@ -84,6 +84,7 @@ model User {
   createdOtherRevenue  OtherRevenueItem[] @relation("OtherRevenueCreator")
   updatedOtherRevenue  OtherRevenueItem[] @relation("OtherRevenueUpdater")
   calculatedRevenue    MonthlyRevenue[]   @relation("RevenueCalculator")
+  calculatedOtherRevenue MonthlyOtherRevenue[] @relation("OtherRevenueCalculator")
 
   @@map("users")
 }
@@ -357,6 +358,7 @@ model BudgetVersion {
   discountPolicies   DiscountPolicy[]
   otherRevenueItems  OtherRevenueItem[]
   monthlyRevenues    MonthlyRevenue[]
+  monthlyOtherRevenues MonthlyOtherRevenue[]
 
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
@@ -605,4 +607,28 @@ model MonthlyRevenue {
   @@index([versionId, academicPeriod], map: "idx_monthly_revenue_version_period")
   @@index([calculatedBy], map: "idx_monthly_revenue_calculated_by")
   @@map("monthly_revenue")
+}
+
+model MonthlyOtherRevenue {
+  id                Int      @id @default(autoincrement())
+  versionId         Int      @map("version_id")
+  scenarioName      String   @default("Base") @map("scenario_name") @db.VarChar(20)
+  lineItemName      String   @map("line_item_name") @db.Text
+  ifrsCategory      String   @map("ifrs_category") @db.VarChar(50)
+  executiveCategory String?  @map("executive_category") @db.VarChar(40)
+  month             Int      @db.SmallInt
+  amount            Decimal  @default(0) @db.Decimal(15, 4)
+  calculatedAt      DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  calculatedBy      Int?     @map("calculated_by")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  calculator User?         @relation("OtherRevenueCalculator", fields: [calculatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([versionId, scenarioName, lineItemName, month], map: "uq_monthly_other_revenue")
+  @@index([versionId, month], map: "idx_monthly_other_revenue_version_month")
+  @@index([versionId, executiveCategory], map: "idx_monthly_other_revenue_version_category")
+  @@index([calculatedBy], map: "idx_monthly_other_revenue_calculated_by")
+  @@map("monthly_other_revenue")
 }

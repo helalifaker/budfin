@@ -59,15 +59,21 @@ export interface MonthlyRevenueOutput {
 	nationality: string;
 	tariff: string;
 	month: number;
-	grossRevenueHt: string; // decimal string
-	discountAmount: string;
-	netRevenueHt: string;
+	grossRevenueHt: string; // workbook "Tuition Fees"
+	discountAmount: string; // positive amount, workbook "Discount Impact"
+	netRevenueHt: string; // workbook "Net Tuition"
 	vatAmount: string;
 }
+
+export type ExecutiveRevenueCategory =
+	| 'REGISTRATION_FEES'
+	| 'ACTIVITIES_SERVICES'
+	| 'EXAMINATION_FEES';
 
 export interface OtherRevenueOutput {
 	lineItemName: string;
 	ifrsCategory: string;
+	executiveCategory: ExecutiveRevenueCategory | null;
 	month: number;
 	amount: string; // decimal string
 }
@@ -81,6 +87,8 @@ export interface RevenueEngineResult {
 		netRevenueHt: string;
 		totalVat: string;
 		totalOtherRevenue: string;
+		totalExecutiveOtherRevenue: string;
+		totalOperatingRevenue: string;
 	};
 }
 
@@ -88,21 +96,15 @@ export interface RevenueEngineResult {
 
 const VAT_RATE = new Decimal('0.15');
 const ZERO = new Decimal(0);
+const ONE = new Decimal(1);
+const ACADEMIC_MONTH_COUNT = new Decimal(10);
 
-// AY1: months 1-6 (Jan-Jun), AY2: months 9-12 (Sep-Dec)
 const AY1_MONTHS = [1, 2, 3, 4, 5, 6];
 const AY2_MONTHS = [9, 10, 11, 12];
-
-// Academic months (exclude Jul-Aug summer)
 const ACADEMIC_MONTHS = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12];
 
 // ── Helper: Last-bucket rounding ──────────────────────────────────────────────
 
-/**
- * Distribute a total across N months using last-bucket rounding.
- * Each month gets floor(total / N, 4) except the last month which gets the remainder.
- * This ensures the sum of all months equals the total exactly.
- */
 function distributeWithLastBucket(total: Decimal, months: number[]): Map<number, Decimal> {
 	const result = new Map<number, Decimal>();
 
@@ -114,7 +116,6 @@ function distributeWithLastBucket(total: Decimal, months: number[]): Map<number,
 	for (let i = 0; i < months.length; i++) {
 		const month = months[i]!;
 		if (i === months.length - 1) {
-			// Last bucket gets the remainder
 			result.set(month, total.minus(allocated));
 		} else {
 			result.set(month, perMonth);
@@ -125,15 +126,42 @@ function distributeWithLastBucket(total: Decimal, months: number[]): Map<number,
 	return result;
 }
 
+/**
+ * The workbook recognises each academic year over 10 academic months.
+ * FY2026 only sees the Jan-Jun portion of AY1 and Sep-Dec portion of AY2.
+ */
+function distributeAcademicYearAcrossFiscalMonths(
+	totalAcademicYearAmount: Decimal,
+	months: number[]
+): Map<number, Decimal> {
+	const result = new Map<number, Decimal>();
+
+	if (months.length === 0) return result;
+
+	const visibleTotal = totalAcademicYearAmount
+		.mul(months.length)
+		.div(ACADEMIC_MONTH_COUNT)
+		.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+	const perAcademicMonth = totalAcademicYearAmount
+		.div(ACADEMIC_MONTH_COUNT)
+		.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+
+	let allocated = ZERO;
+	for (let i = 0; i < months.length; i++) {
+		const month = months[i]!;
+		if (i === months.length - 1) {
+			result.set(month, visibleTotal.minus(allocated));
+		} else {
+			result.set(month, perAcademicMonth);
+			allocated = allocated.plus(perAcademicMonth);
+		}
+	}
+
+	return result;
+}
+
 // ── Helper: Resolve discount rate ─────────────────────────────────────────────
 
-/**
- * Find the highest applicable discount rate for a given tariff/nationality.
- * Matching rules:
- * 1. Exact match on (tariff, nationality)
- * 2. Wildcard match on (tariff, null) — applies to all nationalities
- * 3. If multiple match, highest rate wins (SA-006)
- */
 function resolveDiscountRate(
 	tariff: string,
 	nationality: string,
@@ -178,6 +206,78 @@ function buildFeeMap(feeGrid: FeeGridInput[]): Map<FeeKey, FeeGridInput> {
 	return map;
 }
 
+function makePleinFeeKey(academicPeriod: string, gradeLevel: string, nationality: string): FeeKey {
+	return makeFeeKey(academicPeriod, gradeLevel, nationality, 'Plein');
+}
+
+function resolveEffectiveTuitionAmounts(
+	enrollment: EnrollmentDetailInput,
+	fee: FeeGridInput,
+	feeMap: Map<FeeKey, FeeGridInput>,
+	discountPolicies: DiscountPolicyInput[]
+): {
+	tuitionFeesPerStudentHt: Decimal;
+	discountPerStudentHt: Decimal;
+	vatRate: Decimal;
+} {
+	const referencePleinFee =
+		feeMap.get(
+			makePleinFeeKey(enrollment.academicPeriod, enrollment.gradeLevel, enrollment.nationality)
+		) ?? fee;
+
+	const pleinTuitionHt = new Decimal(referencePleinFee.tuitionHt);
+	const selectedTuitionHt = new Decimal(fee.tuitionHt);
+	const discountRate = resolveDiscountRate(
+		enrollment.tariff,
+		enrollment.nationality,
+		discountPolicies
+	);
+
+	let tuitionFeesPerStudentHt = selectedTuitionHt;
+
+	// Workbook parity:
+	// - If tariff rows already store discounted tuition, use them directly.
+	// - If non-Plein rows repeat Plein tuition, derive the effective tuition from the discount policy.
+	if (
+		enrollment.tariff !== 'Plein' &&
+		selectedTuitionHt.eq(pleinTuitionHt) &&
+		discountRate.gt(ZERO)
+	) {
+		tuitionFeesPerStudentHt = pleinTuitionHt.mul(ONE.minus(discountRate));
+	}
+
+	let discountPerStudentHt = pleinTuitionHt.minus(tuitionFeesPerStudentHt);
+	if (discountPerStudentHt.lt(ZERO)) {
+		discountPerStudentHt = ZERO;
+	}
+
+	return {
+		tuitionFeesPerStudentHt,
+		discountPerStudentHt,
+		vatRate: enrollment.nationality === 'Nationaux' ? ZERO : VAT_RATE,
+	};
+}
+
+function resolveExecutiveCategory(item: OtherRevenueInput): ExecutiveRevenueCategory | null {
+	if (item.ifrsCategory === 'Registration Fees') {
+		return 'REGISTRATION_FEES';
+	}
+
+	if (item.ifrsCategory === 'Activities & Services') {
+		return item.lineItemName === 'PSG Academy Rental' ? null : 'ACTIVITIES_SERVICES';
+	}
+
+	if (item.ifrsCategory === 'Examination Fees') {
+		return 'EXAMINATION_FEES';
+	}
+
+	return null;
+}
+
+function shouldDoubleCountInExecutiveSummary(item: OtherRevenueInput): boolean {
+	return item.lineItemName.startsWith('Evaluation');
+}
+
 // ── Public: Distribute across months ──────────────────────────────────────────
 
 export function distributeAcrossMonths(
@@ -197,20 +297,45 @@ export function distributeAcrossMonths(
 			if (!weightArray || weightArray.length !== 12) {
 				throw new Error('CUSTOM_WEIGHTS requires a weight_array of exactly 12 values');
 			}
+
+			const totalWeight = weightArray.reduce(
+				(sum, weight) => sum.plus(new Decimal(weight ?? 0)),
+				ZERO
+			);
+
+			if (totalWeight.lte(ZERO)) {
+				throw new Error('CUSTOM_WEIGHTS requires a positive total weight');
+			}
+
+			const lastWeightedIndex = [...weightArray].reverse().findIndex((weight) => (weight ?? 0) > 0);
+			const lastMonthIndex = lastWeightedIndex === -1 ? -1 : 11 - lastWeightedIndex;
+
+			if (lastMonthIndex === -1) {
+				throw new Error('CUSTOM_WEIGHTS requires at least one positive weight');
+			}
+
 			const result = new Map<number, Decimal>();
 			let allocated = ZERO;
+
 			for (let i = 0; i < 12; i++) {
 				const month = i + 1;
-				if (i === 11) {
-					// Last bucket
+				const weight = new Decimal(weightArray[i] ?? 0);
+
+				if (weight.lte(ZERO)) {
+					result.set(month, ZERO);
+					continue;
+				}
+
+				if (i === lastMonthIndex) {
 					result.set(month, total.minus(allocated));
 				} else {
-					const weight = weightArray[i] ?? 0;
-					const amount = total.mul(new Decimal(weight)).toDecimalPlaces(4, Decimal.ROUND_DOWN);
+					const normalizedWeight = weight.div(totalWeight);
+					const amount = total.mul(normalizedWeight).toDecimalPlaces(4, Decimal.ROUND_DOWN);
 					result.set(month, amount);
 					allocated = allocated.plus(amount);
 				}
 			}
+
 			return result;
 		}
 
@@ -222,7 +347,7 @@ export function distributeAcrossMonths(
 		}
 
 		default:
-			throw new Error(`Unknown distribution method: ${method}`);
+			throw new Error(`Unknown distribution method: ${method satisfies never}`);
 	}
 }
 
@@ -234,12 +359,11 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 	const feeMap = buildFeeMap(feeGrid);
 	const tuitionRevenue: MonthlyRevenueOutput[] = [];
 
-	let totalGrossHt = ZERO;
+	let totalTuitionFeesHt = ZERO;
 	let totalDiscounts = ZERO;
-	let totalNetHt = ZERO;
+	let totalNetTuitionHt = ZERO;
 	let totalVat = ZERO;
 
-	// Process each enrollment detail row
 	for (const enrollment of enrollmentDetails) {
 		if (enrollment.headcount <= 0) continue;
 
@@ -249,44 +373,39 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 			enrollment.nationality,
 			enrollment.tariff
 		);
-		const fee = feeMap.get(feeKey);
+		const fee =
+			feeMap.get(feeKey) ??
+			feeMap.get(
+				makePleinFeeKey(enrollment.academicPeriod, enrollment.gradeLevel, enrollment.nationality)
+			);
 
 		if (!fee) {
-			// No fee grid entry for this combination — skip (SA-010)
 			continue;
 		}
 
 		const headcount = new Decimal(enrollment.headcount);
-		const tuitionHt = new Decimal(fee.tuitionHt);
-
-		// Determine months for this academic period
 		const months = enrollment.academicPeriod === 'AY1' ? AY1_MONTHS : AY2_MONTHS;
+		const { tuitionFeesPerStudentHt, discountPerStudentHt, vatRate } =
+			resolveEffectiveTuitionAmounts(enrollment, fee, feeMap, discountPolicies);
 
-		// Annual tuition revenue HT for this segment
-		const annualGrossHt = headcount.mul(tuitionHt);
+		const academicYearTuitionFees = headcount.mul(tuitionFeesPerStudentHt);
+		const academicYearDiscounts = headcount.mul(discountPerStudentHt);
+		const academicYearNetTuition = academicYearTuitionFees.minus(academicYearDiscounts);
+		const academicYearVat = academicYearTuitionFees.mul(vatRate);
 
-		// Resolve discount
-		const discountRate = resolveDiscountRate(
-			enrollment.tariff,
-			enrollment.nationality,
-			discountPolicies
+		const tuitionFeesPerMonth = distributeAcademicYearAcrossFiscalMonths(
+			academicYearTuitionFees,
+			months
 		);
-		const annualDiscountAmount = annualGrossHt.mul(discountRate);
-		const annualNetHt = annualGrossHt.minus(annualDiscountAmount);
+		const discountPerMonth = distributeAcademicYearAcrossFiscalMonths(
+			academicYearDiscounts,
+			months
+		);
+		const netPerMonth = distributeAcademicYearAcrossFiscalMonths(academicYearNetTuition, months);
+		const vatPerMonth = distributeAcademicYearAcrossFiscalMonths(academicYearVat, months);
 
-		// VAT: Nationaux are exempt (0%), others 15%
-		const vatRate = enrollment.nationality === 'Nationaux' ? ZERO : VAT_RATE;
-		const annualVat = annualNetHt.mul(vatRate);
-
-		// Distribute across months using last-bucket rounding
-		const grossPerMonth = distributeWithLastBucket(annualGrossHt, months);
-		const discountPerMonth = distributeWithLastBucket(annualDiscountAmount, months);
-		const netPerMonth = distributeWithLastBucket(annualNetHt, months);
-		const vatPerMonth = distributeWithLastBucket(annualVat, months);
-
-		// Emit one row per month
 		for (const month of months) {
-			const grossM = grossPerMonth.get(month) ?? ZERO;
+			const grossM = tuitionFeesPerMonth.get(month) ?? ZERO;
 			const discountM = discountPerMonth.get(month) ?? ZERO;
 			const netM = netPerMonth.get(month) ?? ZERO;
 			const vatM = vatPerMonth.get(month) ?? ZERO;
@@ -303,16 +422,16 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 				vatAmount: vatM.toFixed(4),
 			});
 
-			totalGrossHt = totalGrossHt.plus(grossM);
+			totalTuitionFeesHt = totalTuitionFeesHt.plus(grossM);
 			totalDiscounts = totalDiscounts.plus(discountM);
-			totalNetHt = totalNetHt.plus(netM);
+			totalNetTuitionHt = totalNetTuitionHt.plus(netM);
 			totalVat = totalVat.plus(vatM);
 		}
 	}
 
-	// Process other revenue items
 	const otherRevenue: OtherRevenueOutput[] = [];
 	let totalOtherRevenue = ZERO;
+	let totalExecutiveOtherRevenue = ZERO;
 
 	for (const item of otherRevenueItems) {
 		const annualAmount = new Decimal(item.annualAmount);
@@ -322,16 +441,27 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 			item.weightArray,
 			item.specificMonths
 		);
+		const executiveCategory = resolveExecutiveCategory(item);
 
 		for (const [month, amount] of monthlyDistribution) {
-			if (!amount.isZero()) {
-				otherRevenue.push({
-					lineItemName: item.lineItemName,
-					ifrsCategory: item.ifrsCategory,
-					month,
-					amount: amount.toFixed(4),
-				});
-				totalOtherRevenue = totalOtherRevenue.plus(amount);
+			if (amount.isZero()) {
+				continue;
+			}
+
+			otherRevenue.push({
+				lineItemName: item.lineItemName,
+				ifrsCategory: item.ifrsCategory,
+				executiveCategory,
+				month,
+				amount: amount.toFixed(4),
+			});
+
+			totalOtherRevenue = totalOtherRevenue.plus(amount);
+			if (executiveCategory !== null) {
+				totalExecutiveOtherRevenue = totalExecutiveOtherRevenue.plus(amount);
+				if (shouldDoubleCountInExecutiveSummary(item)) {
+					totalExecutiveOtherRevenue = totalExecutiveOtherRevenue.plus(amount);
+				}
 			}
 		}
 	}
@@ -340,11 +470,13 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 		tuitionRevenue,
 		otherRevenue,
 		totals: {
-			grossRevenueHt: totalGrossHt.toFixed(4),
+			grossRevenueHt: totalTuitionFeesHt.toFixed(4),
 			totalDiscounts: totalDiscounts.toFixed(4),
-			netRevenueHt: totalNetHt.toFixed(4),
+			netRevenueHt: totalNetTuitionHt.toFixed(4),
 			totalVat: totalVat.toFixed(4),
 			totalOtherRevenue: totalOtherRevenue.toFixed(4),
+			totalExecutiveOtherRevenue: totalExecutiveOtherRevenue.toFixed(4),
+			totalOperatingRevenue: totalNetTuitionHt.plus(totalExecutiveOtherRevenue).toFixed(4),
 		},
 	};
 }

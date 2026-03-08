@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Revenue module workbook parity: FY-recognition timing aligns with the Excel workbook (AY1 recognised over 6 fiscal months Jan-Jun, AY2 over 4 months Sep-Dec), closing the gap between in-product revenue planning and the source-of-truth spreadsheet (#135)
+- `monthly_other_revenue` table persists monthly other-revenue calculation outputs so the Revenue Engine and Executive Summary views survive page reloads without re-running the calculation (#135)
+- GET /revenue-results now returns `revenueEngine` and `executiveSummary` matrix views with monthly amounts, annual totals, and percentage-of-revenue breakdowns per line item, matching the workbook's two-sheet revenue reporting structure (#135)
+- Revenue Engine tab in the revenue module UI exposing the full workbook-style matrix (Tuition Fees, Discount Impact, Registration Fees, Activities & Services, Examination Fees, TOTAL) (#135)
+- Other-revenue IFRS categories updated to human-readable workbook labels (Registration Fees, Activities & Services, Examination Fees, Other Revenue) — replaces technical code strings (#135)
+- Workbook-parity discount treatment: non-Plein tariff rows derive effective tuition from the Plein rate and discount policy rather than repeating the Plein amount verbatim (#135)
 - Design token system using CSS custom properties for consistent theming across all components — colours, spacing, typography, radii, shadows, and animation durations are centrally defined in index.css (#114)
 - Two-shell layout architecture: PlanningShell (context bar + docked right panel) for budget modules, ManagementShell (toolbar + overlay panels) for admin/master-data pages (ADR-023, #114)
 - Right panel component with resizable width and four tab views (Details, Activity, Audit, Help) for contextual information alongside data grids (#114)

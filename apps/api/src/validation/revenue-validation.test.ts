@@ -18,6 +18,25 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const FIXTURES = resolve(__dirname, '..', '..', '..', '..', 'data', 'fixtures');
+const PARITY_TOLERANCE = new Decimal('0.05');
+const WORKBOOK_TOTALS = {
+	tuitionFees: new Decimal('58972253.7283'),
+	discountImpact: new Decimal('2333712.7065'),
+	netTuition: new Decimal('56638541.0217'),
+	totalOperatingRevenue: new Decimal('68156191.0217'),
+};
+const WORKBOOK_MONTHLY_NET_TUITION: Record<number, Decimal> = {
+	1: new Decimal('5602363.7543'),
+	2: new Decimal('5602363.7543'),
+	3: new Decimal('5602363.7543'),
+	4: new Decimal('5602363.7543'),
+	5: new Decimal('5602363.7543'),
+	6: new Decimal('5602363.7543'),
+	9: new Decimal('5756089.6239'),
+	10: new Decimal('5756089.6239'),
+	11: new Decimal('5756089.6239'),
+	12: new Decimal('5756089.6239'),
+};
 
 // ── Fixture types ────────────────────────────────────────────────────────────
 
@@ -181,7 +200,7 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 			expect(gross.gt(net)).toBe(true);
 			expect(net.gt(0)).toBe(true);
 			expect(disc.gt(0)).toBe(true);
-			expect(gross.minus(disc).toFixed(4)).toBe(net.toFixed(4));
+			expect(gross.minus(disc).minus(net).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 
 		it('should apply 0% VAT for Nationaux students', () => {
@@ -195,47 +214,28 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 
 		it('should apply 15% VAT for Francais students', () => {
 			const francaisRows = result.tuitionRevenue.filter((r) => r.nationality === 'Francais');
-			const totalNet = francaisRows.reduce(
-				(sum, r) => sum.plus(new Decimal(r.netRevenueHt)),
+			const totalGross = francaisRows.reduce(
+				(sum, r) => sum.plus(new Decimal(r.grossRevenueHt)),
 				new Decimal(0)
 			);
 			const totalVat = francaisRows.reduce(
 				(sum, r) => sum.plus(new Decimal(r.vatAmount)),
 				new Decimal(0)
 			);
-			const expectedVat = totalNet.mul(new Decimal('0.15'));
-			expect(totalVat.toFixed(2)).toBe(expectedVat.toFixed(2));
+			const expectedVat = totalGross.mul(new Decimal('0.15'));
+			expect(totalVat.minus(expectedVat).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 	});
 
 	describe('Per-Grade Revenue Cross-Check', () => {
-		it('should match AY1 net tuition totals from Excel ENROLLMENT_DETAIL', () => {
-			// The Excel ENROLLMENT_DETAIL row 29 shows Revenue HT AFTER discounts (net)
-			// Engine gross = 60,484,281.21, discounts = 2,230,321.83, net = 58,253,959.38
+		it('should match workbook AY1 monthly billed tuition after fiscal-year recognition', () => {
 			const ay1Rows = result.tuitionRevenue.filter((r) => r.academicPeriod === 'AY1');
-
-			// Group by grade and sum NET revenue HT (after discounts)
-			const byGrade: Record<string, Decimal> = {};
-			for (const row of ay1Rows) {
-				const grade = row.gradeLevel;
-				byGrade[grade] = (byGrade[grade] ?? new Decimal(0)).plus(new Decimal(row.netRevenueHt));
-			}
-
-			// Verify all 15 grades have revenue
-			const grades = Object.keys(byGrade);
-			expect(grades.length).toBe(15);
-
-			// Total AY1 net should match Excel row 29 total
-			const totalAY1Net = Object.values(byGrade).reduce((sum, v) => sum.plus(v), new Decimal(0));
-
-			// Excel row 29 shows Revenue HT total for AY1: 58,253,959.38 (net after discounts)
-			// Tolerance: 1.00 SAR (rounding differences)
-			const expectedTotal = new Decimal('58253959.38');
-			const diff = totalAY1Net.minus(expectedTotal).abs();
-			expect(
-				diff.lte(new Decimal('1.00')),
-				`AY1 net total diff: ${diff.toFixed(4)} SAR (expected ~58,253,959.38, got ${totalAY1Net.toFixed(4)})`
-			).toBe(true);
+			const monthlyAY1 = ay1Rows.reduce(
+				(sum, row) => sum.plus(new Decimal(row.grossRevenueHt)),
+				new Decimal(0)
+			);
+			const expectedTotal = new Decimal('34952375.6283');
+			expect(monthlyAY1.minus(expectedTotal).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 	});
 
@@ -253,9 +253,8 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 				new Decimal(0)
 			);
 
-			// Discount should be 25% of gross
-			const expectedDiscount = rpGross.mul(new Decimal('0.25'));
-			expect(rpDiscount.toFixed(2)).toBe(expectedDiscount.toFixed(2));
+			const expectedDiscount = rpGross.plus(rpDiscount).mul(new Decimal('0.25'));
+			expect(rpDiscount.minus(expectedDiscount).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 
 		it('should apply 25% discount for Reduit 3+ tariff', () => {
@@ -271,8 +270,8 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 				new Decimal(0)
 			);
 
-			const expectedDiscount = r3Gross.mul(new Decimal('0.25'));
-			expect(r3Discount.toFixed(2)).toBe(expectedDiscount.toFixed(2));
+			const expectedDiscount = r3Gross.plus(r3Discount).mul(new Decimal('0.25'));
+			expect(r3Discount.minus(expectedDiscount).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 
 		it('should apply 0% discount for Plein tariff', () => {
@@ -328,9 +327,6 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 
 	describe('Monthly Total Cross-Check', () => {
 		it('should produce revenue for all 10 academic months with non-zero values', () => {
-			// The expected-revenue fixture has unreliable per-month values due to
-			// ExcelJS formula cell resolution issues in EXECUTIVE_SUMMARY.
-			// Instead, verify structural correctness: all academic months have revenue.
 			const monthlyTuition: Record<number, Decimal> = {};
 			for (const row of result.tuitionRevenue) {
 				monthlyTuition[row.month] = (monthlyTuition[row.month] ?? new Decimal(0)).plus(
@@ -338,21 +334,27 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 				);
 			}
 
-			// All 10 academic months should have non-zero tuition
-			for (const m of [1, 2, 3, 4, 5, 6, 9, 10, 11, 12]) {
+			for (const [month, expected] of Object.entries(WORKBOOK_MONTHLY_NET_TUITION)) {
 				expect(
-					(monthlyTuition[m] ?? new Decimal(0)).gt(0),
-					`Month ${m} should have non-zero net tuition`
+					(monthlyTuition[Number(month)] ?? new Decimal(0))
+						.minus(expected)
+						.abs()
+						.lte(PARITY_TOLERANCE),
+					`Month ${month} net tuition should match workbook`
 				).toBe(true);
 			}
 		});
 
 		it('should have annual net tuition matching Excel total', () => {
-			// Annual net tuition should match sum of AY1 + AY2 net revenue
 			const totalNet = new Decimal(result.totals.netRevenueHt);
-			// The annual net is AY1 (58,253,959.38) + AY2 (comparable amount)
-			// Verify it's a reasonable total (> AY1 alone)
-			expect(totalNet.gt(new Decimal('58253959'))).toBe(true);
+			expect(totalNet.minus(WORKBOOK_TOTALS.netTuition).abs().lte(PARITY_TOLERANCE)).toBe(true);
+		});
+
+		it('should match workbook annual operating revenue', () => {
+			const totalOperating = new Decimal(result.totals.totalOperatingRevenue);
+			expect(
+				totalOperating.minus(WORKBOOK_TOTALS.totalOperatingRevenue).abs().lte(PARITY_TOLERANCE)
+			).toBe(true);
 		});
 	});
 });

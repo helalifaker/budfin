@@ -31,6 +31,11 @@ export type {
 	DiscountEntry,
 	OtherRevenueItem,
 	MonthlyRevenueEntry,
+	MonthlyOtherRevenueEntry,
 	RevenueTotals,
+	RevenueExecutiveCategory,
+	RevenueMatrixRow,
+	RevenueCompositionItem,
+	RevenueExecutiveSummary,
 	RevenueResultsResponse,
 } from './revenue.js';

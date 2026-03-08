@@ -7,16 +7,17 @@ export const DISTRIBUTION_METHODS = [
 export type DistributionMethod = (typeof DISTRIBUTION_METHODS)[number];
 
 export const IFRS_CATEGORIES = [
-	'REVENUE_FROM_CONTRACTS',
-	'OTHER_OPERATING_INCOME',
-	'EMPLOYEE_BENEFITS_EXPENSE',
-	'DEPRECIATION_AMORTIZATION',
-	'OPERATING_EXPENSES',
-	'FINANCE_INCOME',
-	'FINANCE_COSTS',
-	'ZAKAT',
+	'Registration Fees',
+	'Activities & Services',
+	'Examination Fees',
+	'Other Revenue',
 ] as const;
 export type IfrsCategory = (typeof IFRS_CATEGORIES)[number];
+
+export type RevenueExecutiveCategory =
+	| 'REGISTRATION_FEES'
+	| 'ACTIVITIES_SERVICES'
+	| 'EXAMINATION_FEES';
 
 export interface FeeGridEntry {
 	academicPeriod: 'AY1' | 'AY2';
@@ -60,16 +61,56 @@ export interface MonthlyRevenueEntry {
 	vatAmount: string;
 }
 
+export interface MonthlyOtherRevenueEntry {
+	lineItemName: string;
+	ifrsCategory: IfrsCategory | string;
+	executiveCategory: RevenueExecutiveCategory | null;
+	includeInExecutiveSummary: boolean;
+	month: number;
+	amount: string;
+}
+
 export interface RevenueTotals {
 	grossRevenueHt: string;
 	discountAmount: string;
 	netRevenueHt: string;
 	vatAmount: string;
+	otherRevenueAmount: string;
+	totalOperatingRevenue: string;
+}
+
+export interface RevenueMatrixRow {
+	section: string;
+	label: string;
+	monthlyAmounts: string[];
+	annualTotal: string;
+	percentageOfRevenue: string;
+	isTotal: boolean;
+}
+
+export interface RevenueCompositionItem {
+	label: string;
+	amount: string;
+	percentageOfRevenue: string;
+}
+
+export interface RevenueExecutiveSummary {
+	rows: RevenueMatrixRow[];
+	composition: RevenueCompositionItem[];
+	monthlyTrend: Array<{
+		month: number;
+		amount: string;
+	}>;
 }
 
 export interface RevenueResultsResponse {
 	entries: MonthlyRevenueEntry[];
+	otherRevenueEntries: MonthlyOtherRevenueEntry[];
 	summary: Array<Record<string, string>>;
 	totals: RevenueTotals;
 	rowCount: number;
+	revenueEngine: {
+		rows: RevenueMatrixRow[];
+	};
+	executiveSummary: RevenueExecutiveSummary;
 }

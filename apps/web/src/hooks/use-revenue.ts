@@ -13,10 +13,17 @@ interface FeeGridResponse {
 	entries: FeeGridEntry[];
 }
 
-export function useFeeGrid(versionId: number | null) {
+export function useFeeGrid(
+	versionId: number | null,
+	academicPeriod: 'AY1' | 'AY2' | 'both' = 'both'
+) {
+	const params = new URLSearchParams();
+	params.set('academic_period', academicPeriod);
+	const query = params.toString();
+
 	return useQuery({
-		queryKey: ['revenue', 'fee-grid', versionId],
-		queryFn: () => apiClient<FeeGridResponse>(`/versions/${versionId}/fee-grid`),
+		queryKey: ['revenue', 'fee-grid', versionId, academicPeriod],
+		queryFn: () => apiClient<FeeGridResponse>(`/versions/${versionId}/fee-grid?${query}`),
 		enabled: versionId !== null,
 	});
 }
@@ -100,11 +107,12 @@ interface CalculateRevenueResponse {
 	runId: string;
 	durationMs: number;
 	summary: {
-		totalGrossRevenueHt: string;
-		totalDiscountAmount: string;
-		totalNetRevenueHt: string;
-		totalVatAmount: string;
-		rowCount: number;
+		grossRevenueHt: string;
+		totalDiscounts: string;
+		netRevenueHt: string;
+		totalVat: string;
+		totalExecutiveOtherRevenue: string;
+		totalOperatingRevenue: string;
 	};
 }
 
