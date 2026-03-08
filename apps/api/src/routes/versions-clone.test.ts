@@ -40,6 +40,14 @@ vi.mock('../lib/prisma.js', () => {
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
+		cohortParameter: {
+			findMany: vi.fn().mockResolvedValue([]),
+			createMany: vi.fn().mockResolvedValue({ count: 0 }),
+		},
+		nationalityBreakdown: {
+			findMany: vi.fn().mockResolvedValue([]),
+			createMany: vi.fn().mockResolvedValue({ count: 0 }),
+		},
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
 				budgetVersion: mockPrisma.budgetVersion,
@@ -47,6 +55,8 @@ vi.mock('../lib/prisma.js', () => {
 				enrollmentDetail: mockPrisma.enrollmentDetail,
 				monthlyBudgetSummary: mockPrisma.monthlyBudgetSummary,
 				auditEntry: mockPrisma.auditEntry,
+				cohortParameter: mockPrisma.cohortParameter,
+				nationalityBreakdown: mockPrisma.nationalityBreakdown,
 			})
 		),
 	};
@@ -73,6 +83,14 @@ const mockPrisma = prisma as unknown as {
 		createMany: ReturnType<typeof vi.fn>;
 	};
 	auditEntry: { create: ReturnType<typeof vi.fn> };
+	cohortParameter: {
+		findMany: ReturnType<typeof vi.fn>;
+		createMany: ReturnType<typeof vi.fn>;
+	};
+	nationalityBreakdown: {
+		findMany: ReturnType<typeof vi.fn>;
+		createMany: ReturnType<typeof vi.fn>;
+	};
 	$transaction: ReturnType<typeof vi.fn>;
 };
 

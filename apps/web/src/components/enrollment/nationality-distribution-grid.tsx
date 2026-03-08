@@ -56,8 +56,11 @@ export function NationalityDistributionGrid({
 	const putNationality = usePutNationalityBreakdown(versionId);
 	const [localOverrides, setLocalOverrides] = useState<Set<string>>(new Set());
 
-	const gradeLevels = gradeLevelData?.gradeLevels ?? [];
-	const natEntries = natData?.entries ?? [];
+	const gradeLevels = useMemo(
+		() => gradeLevelData?.gradeLevels ?? [],
+		[gradeLevelData?.gradeLevels]
+	);
+	const natEntries = useMemo(() => natData?.entries ?? [], [natData?.entries]);
 
 	const rows: NatRow[] = useMemo(() => {
 		const natMap = new Map<string, Map<string, NationalityBreakdownEntry>>();

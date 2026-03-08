@@ -36,6 +36,8 @@ export interface NationalityOutputRow {
  * Mutates the counts array in-place.
  */
 function reconcileToTarget(counts: { nationality: string; count: number }[], target: number): void {
+	if (counts.length === 0) return;
+
 	const currentSum = counts.reduce((sum, c) => sum + c.count, 0);
 	const diff = target - currentSum;
 
@@ -157,11 +159,21 @@ function distributeNonPs(input: NationalityInput): { nationality: string; count:
 		lateralWeights = new Map<string, string>(),
 	} = input;
 
+	// When no prior nationality data exists, fall back to equal split
+	const effectivePrior: NationalityWeight[] =
+		priorGradeNationality.length > 0
+			? priorGradeNationality
+			: [
+					{ nationality: 'Francais', weight: '0.3333', headcount: 0 },
+					{ nationality: 'Nationaux', weight: '0.3334', headcount: 0 },
+					{ nationality: 'Autres', weight: '0.3333', headcount: 0 },
+				];
+
 	const retention = new Decimal(retentionRate);
 	const lateralTotal = new Decimal(lateralCount);
 	const counts: { nationality: string; count: number }[] = [];
 
-	for (const prior of priorGradeNationality) {
+	for (const prior of effectivePrior) {
 		// Retained from prior grade: floor (conservative)
 		const retained = new Decimal(prior.headcount).times(retention).floor().toNumber();
 

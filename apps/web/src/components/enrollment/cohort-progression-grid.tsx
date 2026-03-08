@@ -60,9 +60,12 @@ export function CohortProgressionGrid({
 
 	const isLoading = headcountLoading || cohortLoading;
 
-	const gradeLevels = gradeLevelData?.gradeLevels ?? [];
-	const entries = headcountData?.entries ?? [];
-	const cohortEntries = cohortData?.entries ?? [];
+	const gradeLevels = useMemo(
+		() => gradeLevelData?.gradeLevels ?? [],
+		[gradeLevelData?.gradeLevels]
+	);
+	const entries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
+	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
 
 	const rows: CohortRow[] = useMemo(() => {
 		const ay1Map = new Map<string, number>();

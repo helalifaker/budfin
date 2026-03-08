@@ -44,7 +44,10 @@ export function CapacityGrid({
 	capacityResults,
 }: CapacityGridProps) {
 	const { data: gradeLevelData, isLoading: gradesLoading } = useGradeLevels();
-	const gradeLevels = gradeLevelData?.gradeLevels ?? [];
+	const gradeLevels = useMemo(
+		() => gradeLevelData?.gradeLevels ?? [],
+		[gradeLevelData?.gradeLevels]
+	);
 	const hasResults = capacityResults && capacityResults.length > 0;
 
 	const rows: CapRow[] = useMemo(() => {
