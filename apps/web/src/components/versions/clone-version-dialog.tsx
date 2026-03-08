@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
+import { getCurrentFiscalYear } from '../../lib/format-date';
 import { useCloneVersion } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { Checkbox } from '../ui/checkbox';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import {
 	Dialog,
 	DialogContent,
@@ -18,11 +21,17 @@ import {
 } from '../ui/dialog';
 
 const cloneSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(100, 'Name must be ≤ 100 characters'),
-	description: z.string().max(500).optional(),
+	name: z.string().min(1, 'Name is required').max(100, 'Name must be \u2264 100 characters'),
+	description: z.string().max(500),
+	fiscalYear: z.number().int().min(2000).max(2100),
+	includeEnrollment: z.boolean(),
+	includeSummaries: z.boolean(),
 });
 
 type CloneForm = z.infer<typeof cloneSchema>;
+
+const CURRENT_FY = getCurrentFiscalYear();
+const FY_OPTIONS = Array.from({ length: 5 }, (_, i) => CURRENT_FY - 2 + i);
 
 export type CloneVersionDialogProps = {
 	open: boolean;
@@ -37,12 +46,27 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 
 	const form = useForm<CloneForm>({
 		resolver: zodResolver(cloneSchema),
-		defaultValues: { name: '', description: '' },
+		defaultValues: {
+			name: '',
+			description: '',
+			fiscalYear: source?.fiscalYear ?? CURRENT_FY,
+			includeEnrollment: true,
+			includeSummaries: true,
+		},
 	});
+
+	const watchedFy = form.watch('fiscalYear');
+	const isCrossYear = source != null && watchedFy != null && watchedFy !== source.fiscalYear;
 
 	useEffect(() => {
 		if (open && source) {
-			form.reset({ name: `${source.name} Copy`, description: '' });
+			form.reset({
+				name: `${source.name} Copy`,
+				description: '',
+				fiscalYear: source.fiscalYear,
+				includeEnrollment: true,
+				includeSummaries: true,
+			});
 		}
 	}, [open, source, form]);
 
@@ -57,6 +81,9 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 				id: source.id,
 				name: data.name,
 				...(data.description ? { description: data.description } : {}),
+				...(data.fiscalYear ? { fiscalYear: data.fiscalYear } : {}),
+				includeEnrollment: data.includeEnrollment,
+				includeSummaries: data.includeSummaries,
 			});
 			onSuccess(data.name, source.name);
 		} finally {
@@ -140,6 +167,104 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 									{...form.register('description')}
 								/>
 							</div>
+
+							<div>
+								<label
+									htmlFor="clone-fy"
+									className="block text-[length:var(--text-sm)] font-medium"
+								>
+									Target Fiscal Year
+								</label>
+								<Controller
+									control={form.control}
+									name="fiscalYear"
+									render={({ field }) => (
+										<Select
+											value={String(field.value)}
+											onValueChange={(v) => field.onChange(Number(v))}
+										>
+											<SelectTrigger id="clone-fy" className="mt-1">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												{FY_OPTIONS.map((fy) => (
+													<SelectItem key={fy} value={String(fy)}>
+														FY{fy}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+								{isCrossYear && (
+									<div className="mt-2 rounded-[var(--radius-md)] bg-[var(--color-info-bg,var(--accent-50))] px-3 py-2 text-[length:var(--text-xs)] text-[var(--color-info,var(--accent-700))]">
+										Cross-year clone: data will be copied from FY{source.fiscalYear} to FY
+										{watchedFy}
+									</div>
+								)}
+							</div>
+
+							<fieldset className="space-y-3">
+								<legend className="text-[length:var(--text-sm)] font-medium">
+									Data to Include
+								</legend>
+
+								<Controller
+									control={form.control}
+									name="includeEnrollment"
+									render={({ field }) => (
+										<div className="flex items-start gap-2">
+											<Checkbox
+												id="clone-enrollment"
+												checked={field.value}
+												onCheckedChange={field.onChange}
+												className="mt-0.5"
+											/>
+											<div>
+												<label
+													htmlFor="clone-enrollment"
+													className="text-[length:var(--text-sm)] font-medium cursor-pointer"
+												>
+													Include Enrollment Data
+												</label>
+												<p className="text-[length:var(--text-xs)] text-[var(--text-muted)]">
+													Copy student enrollment counts and grade configurations
+												</p>
+											</div>
+										</div>
+									)}
+								/>
+
+								<Controller
+									control={form.control}
+									name="includeSummaries"
+									render={({ field }) => (
+										<div className="flex items-start gap-2">
+											<Checkbox
+												id="clone-summaries"
+												checked={field.value}
+												onCheckedChange={field.onChange}
+												className="mt-0.5"
+											/>
+											<div>
+												<label
+													htmlFor="clone-summaries"
+													className="text-[length:var(--text-sm)] font-medium cursor-pointer"
+												>
+													Include Budget Summaries
+												</label>
+												<p className="text-[length:var(--text-xs)] text-[var(--text-muted)]">
+													Copy revenue, cost, and P&L summary data
+												</p>
+											</div>
+										</div>
+									)}
+								/>
+							</fieldset>
+
+							<p className="text-[length:var(--text-xs)] italic text-[var(--text-muted)]">
+								Cloned versions start as Draft with all modules marked stale
+							</p>
 						</form>
 					</>
 				)}

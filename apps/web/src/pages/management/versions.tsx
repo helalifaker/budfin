@@ -7,9 +7,10 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import type { SortingState } from '@tanstack/react-table';
-import { Layers, MoreHorizontal } from 'lucide-react';
+import { Layers, MoreHorizontal, BarChart3 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
+import { useVersionPageStore } from '../../stores/version-page-store';
 import { useVersions } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
 import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
@@ -33,8 +34,8 @@ import {
 import { TableSkeleton } from '../../components/ui/skeleton';
 import { CreateVersionPanel } from '../../components/versions/create-version-panel';
 import { CloneVersionDialog } from '../../components/versions/clone-version-dialog';
-import { CompareDialog } from '../../components/versions/compare-dialog';
 import { VersionDetailPanel } from '../../components/versions/version-detail-panel';
+import { ComparisonView } from '../../components/versions/comparison-view';
 import {
 	PublishDialog,
 	LockDialog,
@@ -70,36 +71,66 @@ export function VersionsPage() {
 	const currentUser = useAuthStore((s) => s.user);
 	const canCreate = currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
 
-	// Filters
-	const [fiscalYear, setFiscalYear] = useState<number>(CURRENT_FISCAL_YEAR);
-	const [typeFilter, setTypeFilter] = useState('');
-	const [statusFilter, setStatusFilter] = useState('');
-	const [searchInput, setSearchInput] = useState('');
-	const [searchDebounced, setSearchDebounced] = useState('');
+	// Zustand store for persistent filter state
+	const store = useVersionPageStore();
+	const {
+		fiscalYear,
+		setFiscalYear,
+		typeFilter,
+		setTypeFilter,
+		statusFilter,
+		setStatusFilter,
+		searchQuery,
+		setSearchQuery,
+		isCompareMode,
+		toggleCompareMode,
+		compareVersionIds,
+		addCompareVersion,
+		removeCompareVersion,
+		clearCompareVersions,
+	} = store;
+
+	// Debounced search
+	const [searchInput, setSearchInput] = useState(searchQuery);
 	const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const handleSearchChange = useCallback((value: string) => {
-		setSearchInput(value);
-		if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-		searchTimerRef.current = setTimeout(() => setSearchDebounced(value), 300);
-	}, []);
+	const handleSearchChange = useCallback(
+		(value: string) => {
+			setSearchInput(value);
+			if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+			searchTimerRef.current = setTimeout(() => setSearchQuery(value), 300);
+		},
+		[setSearchQuery]
+	);
 
-	const { data, isLoading } = useVersions(fiscalYear, statusFilter || undefined);
+	const { data, isLoading } = useVersions(
+		fiscalYear ?? undefined,
+		statusFilter || undefined,
+		typeFilter || undefined
+	);
 
-	// A4: TanStack Table sorting state
 	const [sorting, setSorting] = useState<SortingState>([]);
 
 	const filteredRows = useMemo(() => {
 		let rows = data?.data ?? [];
-		if (typeFilter) {
-			rows = rows.filter((v) => v.type === typeFilter);
-		}
-		if (searchDebounced) {
-			const lower = searchDebounced.toLowerCase();
+		if (searchQuery) {
+			const lower = searchQuery.toLowerCase();
 			rows = rows.filter((v) => v.name.toLowerCase().includes(lower));
 		}
 		return rows;
-	}, [data, typeFilter, searchDebounced]);
+	}, [data, searchQuery]);
+
+	// Group rows by FY when "All Years" selected
+	const groupedRows = useMemo(() => {
+		if (fiscalYear !== null) return null;
+		const groups = new Map<number, BudgetVersion[]>();
+		for (const row of filteredRows) {
+			const fy = row.fiscalYear;
+			if (!groups.has(fy)) groups.set(fy, []);
+			groups.get(fy)!.push(row);
+		}
+		return new Map([...groups.entries()].sort((a, b) => b[0] - a[0]));
+	}, [filteredRows, fiscalYear]);
 
 	// Skeleton with 200ms delay
 	const [showSkeleton, setShowSkeleton] = useState(false);
@@ -120,7 +151,6 @@ export function VersionsPage() {
 
 	// --- Panel / Dialog state ---
 	const [createOpen, setCreateOpen] = useState(false);
-	const [compareOpen, setCompareOpen] = useState(false);
 	const [cloneSource, setCloneSource] = useState<BudgetVersion | null>(null);
 	const [detailVersion, setDetailVersion] = useState<BudgetVersion | null>(null);
 	const [publishTarget, setPublishTarget] = useState<BudgetVersion | null>(null);
@@ -128,9 +158,57 @@ export function VersionsPage() {
 	const [archiveTarget, setArchiveTarget] = useState<BudgetVersion | null>(null);
 	const [revertTarget, setRevertTarget] = useState<BudgetVersion | null>(null);
 	const [deleteTarget, setDeleteTarget] = useState<BudgetVersion | null>(null);
+	const [showComparison, setShowComparison] = useState(false);
 
-	const columns = useMemo(
-		() => [
+	const handleCompareToggle = useCallback(() => {
+		if (isCompareMode) {
+			clearCompareVersions();
+			setShowComparison(false);
+		} else {
+			toggleCompareMode();
+		}
+	}, [isCompareMode, clearCompareVersions, toggleCompareMode]);
+
+	const handleViewComparison = useCallback(() => {
+		setShowComparison(true);
+		toggleCompareMode();
+	}, [toggleCompareMode]);
+
+	const handleCloseComparison = useCallback(() => {
+		setShowComparison(false);
+		clearCompareVersions();
+	}, [clearCompareVersions]);
+
+	const columns = useMemo(() => {
+		const cols = [];
+
+		if (isCompareMode) {
+			cols.push(
+				columnHelper.display({
+					id: 'compare-select',
+					header: () => (
+						<span className="text-xs text-[var(--text-muted)]">{compareVersionIds.length}/3</span>
+					),
+					cell: ({ row }) => {
+						const id = row.original.id;
+						const checked = compareVersionIds.includes(id);
+						return (
+							<input
+								type="checkbox"
+								checked={checked}
+								disabled={!checked && compareVersionIds.length >= 3}
+								onChange={() => (checked ? removeCompareVersion(id) : addCompareVersion(id))}
+								className="h-4 w-4 rounded border-[var(--workspace-border)] accent-[var(--accent-600)]"
+								aria-label={`Select ${row.original.name} for comparison`}
+							/>
+						);
+					},
+					size: 48,
+				})
+			);
+		}
+
+		cols.push(
 			columnHelper.accessor('name', {
 				header: 'Name',
 				cell: ({ row, getValue }) => (
@@ -141,6 +219,14 @@ export function VersionsPage() {
 					>
 						{getValue()}
 					</button>
+				),
+			}),
+			columnHelper.accessor('fiscalYear', {
+				header: 'Fiscal Year',
+				cell: (info) => (
+					<span className="inline-flex rounded-[var(--radius-sm)] bg-[var(--workspace-bg-subtle)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
+						FY{info.getValue()}
+					</span>
 				),
 			}),
 			columnHelper.accessor('type', {
@@ -180,31 +266,27 @@ export function VersionsPage() {
 			}),
 			columnHelper.accessor('dataSource', {
 				header: 'Data Source',
-			}),
-			columnHelper.accessor('createdByEmail', {
-				header: 'Created By',
-				cell: (info) => info.getValue() ?? '\u2014',
-			}),
-			columnHelper.accessor('createdAt', {
-				header: 'Created At',
-				cell: (info) => formatDate(info.getValue()),
-			}),
-			columnHelper.accessor('modificationCount', {
-				header: 'Mods',
-				cell: (info) => info.getValue(),
-			}),
-			columnHelper.accessor('publishedAt', {
-				header: 'Published At',
 				cell: (info) => {
-					const v = info.getValue();
-					return v ? formatDate(v) : '\u2014';
+					const val = info.getValue();
+					return (
+						<span className="text-xs text-[var(--text-secondary)]">
+							{val === 'CALCULATED' ? 'CALC' : val === 'IMPORTED' ? 'IMPORT' : val}
+						</span>
+					);
 				},
 			}),
-			columnHelper.accessor('lockedAt', {
-				header: 'Locked At',
-				cell: (info) => {
-					const v = info.getValue();
-					return v ? formatDate(v) : '\u2014';
+			columnHelper.display({
+				id: 'created',
+				header: 'Created',
+				cell: ({ row }) => {
+					const v = row.original;
+					const email = v.createdByEmail ?? '\u2014';
+					const short = email.split('@')[0];
+					return (
+						<span className="text-xs text-[var(--text-secondary)]">
+							{short} / {formatDate(v.createdAt)?.replace(/\s\d{4}$/, '')}
+						</span>
+					);
 				},
 			}),
 			columnHelper.display({
@@ -229,25 +311,23 @@ export function VersionsPage() {
 			columnHelper.display({
 				id: 'actions',
 				header: '',
-				cell: ({ row }) => {
-					const version = row.original;
-					return (
-						<VersionActions
-							version={version}
-							onViewDetails={setDetailVersion}
-							onClone={setCloneSource}
-							onPublish={setPublishTarget}
-							onLock={setLockTarget}
-							onArchive={setArchiveTarget}
-							onRevert={setRevertTarget}
-							onDelete={setDeleteTarget}
-						/>
-					);
-				},
-			}),
-		],
-		[setDetailVersion]
-	);
+				cell: ({ row }) => (
+					<VersionActions
+						version={row.original}
+						onViewDetails={setDetailVersion}
+						onClone={setCloneSource}
+						onPublish={setPublishTarget}
+						onLock={setLockTarget}
+						onArchive={setArchiveTarget}
+						onRevert={setRevertTarget}
+						onDelete={setDeleteTarget}
+					/>
+				),
+			})
+		);
+
+		return cols;
+	}, [isCompareMode, compareVersionIds, addCompareVersion, removeCompareVersion, setDetailVersion]);
 
 	const table = useReactTable({
 		data: filteredRows,
@@ -264,20 +344,29 @@ export function VersionsPage() {
 			<div className="flex flex-wrap items-center gap-3 pb-4">
 				<h1 className="mr-auto text-xl font-semibold">Version Management</h1>
 
-				<Input
-					type="search"
-					placeholder="Search versions..."
-					value={searchInput}
-					onChange={(e) => handleSearchChange(e.target.value)}
-					className="w-[240px]"
-					aria-label="Search versions"
-				/>
+				<Button variant={isCompareMode ? 'primary' : 'secondary'} onClick={handleCompareToggle}>
+					<BarChart3 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+					{isCompareMode ? 'Cancel' : 'Compare'}
+				</Button>
 
-				<Select value={String(fiscalYear)} onValueChange={(v) => setFiscalYear(Number(v))}>
+				{canCreate && (
+					<Button variant="primary" onClick={() => setCreateOpen(true)}>
+						+ New Version
+					</Button>
+				)}
+			</div>
+
+			{/* Inline filter bar */}
+			<div className="flex flex-wrap items-center gap-3 border-b pb-4">
+				<Select
+					value={fiscalYear === null ? 'all' : String(fiscalYear)}
+					onValueChange={(v) => setFiscalYear(v === 'all' ? null : Number(v))}
+				>
 					<SelectTrigger className="w-[130px]" aria-label="Filter by fiscal year">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
+						<SelectItem value="all">All Years</SelectItem>
 						{fiscalYearOptions.map((fy) => (
 							<SelectItem key={fy} value={String(fy)}>
 								FY {fy}
@@ -295,9 +384,33 @@ export function VersionsPage() {
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value="all">All Types</SelectItem>
-						<SelectItem value="Budget">Budget</SelectItem>
-						<SelectItem value="Forecast">Forecast</SelectItem>
-						<SelectItem value="Actual">Actual</SelectItem>
+						<SelectItem value="Budget">
+							<span className="inline-flex items-center gap-1.5">
+								<span
+									className="h-2 w-2 rounded-full bg-[var(--version-budget)]"
+									aria-hidden="true"
+								/>
+								Budget
+							</span>
+						</SelectItem>
+						<SelectItem value="Forecast">
+							<span className="inline-flex items-center gap-1.5">
+								<span
+									className="h-2 w-2 rounded-full bg-[var(--version-forecast)]"
+									aria-hidden="true"
+								/>
+								Forecast
+							</span>
+						</SelectItem>
+						<SelectItem value="Actual">
+							<span className="inline-flex items-center gap-1.5">
+								<span
+									className="h-2 w-2 rounded-full bg-[var(--version-actual)]"
+									aria-hidden="true"
+								/>
+								Actual
+							</span>
+						</SelectItem>
 					</SelectContent>
 				</Select>
 
@@ -317,19 +430,32 @@ export function VersionsPage() {
 					</SelectContent>
 				</Select>
 
-				<Button variant="secondary" onClick={() => setCompareOpen(true)}>
-					Compare
-				</Button>
-
-				{canCreate && (
-					<Button variant="primary" onClick={() => setCreateOpen(true)}>
-						+ New Version
-					</Button>
-				)}
+				<Input
+					type="search"
+					placeholder="Search versions..."
+					value={searchInput}
+					onChange={(e) => handleSearchChange(e.target.value)}
+					className="w-[240px]"
+					aria-label="Search versions"
+				/>
 			</div>
 
+			{/* Compare mode indicator */}
+			{isCompareMode && (
+				<div className="mt-3 flex items-center gap-3 rounded-lg border border-[var(--accent-200)] bg-[var(--accent-50)] px-4 py-2">
+					<span className="text-sm text-[var(--accent-700)]">
+						Select 2-3 versions to compare ({compareVersionIds.length} of 3 selected)
+					</span>
+					{compareVersionIds.length >= 2 && (
+						<Button variant="primary" size="sm" onClick={handleViewComparison}>
+							View Comparison
+						</Button>
+					)}
+				</div>
+			)}
+
 			{/* Data table */}
-			<div className="overflow-x-auto rounded-lg border">
+			<div className="mt-4 overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-sm">
 					<thead className="border-b bg-[var(--workspace-bg-subtle)]">
 						{table.getHeaderGroups().map((hg) => (
@@ -346,8 +472,8 @@ export function VersionsPage() {
 												onClick={header.column.getToggleSortingHandler()}
 											>
 												{flexRender(header.column.columnDef.header, header.getContext())}
-												{header.column.getIsSorted() === 'asc' && ' ↑'}
-												{header.column.getIsSorted() === 'desc' && ' ↓'}
+												{header.column.getIsSorted() === 'asc' && ' \u2191'}
+												{header.column.getIsSorted() === 'desc' && ' \u2193'}
 											</button>
 										) : (
 											flexRender(header.column.columnDef.header, header.getContext())
@@ -368,33 +494,36 @@ export function VersionsPage() {
 								>
 									<EmptyState
 										fiscalYear={fiscalYear}
+										typeFilter={typeFilter}
+										statusFilter={statusFilter}
+										searchQuery={searchQuery}
 										canCreate={!!canCreate}
 										onCreateClick={() => setCreateOpen(true)}
 									/>
 								</td>
 							</tr>
+						) : fiscalYear === null && groupedRows ? (
+							<>
+								{[...groupedRows.entries()].map(([fy, rows]) => (
+									<FYGroup key={fy} fy={fy} rows={rows} table={table} colSpan={columns.length} />
+								))}
+							</>
 						) : (
-							table.getRowModel().rows.map((row) => (
-								<tr
-									key={row.id}
-									className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
-								>
-									{row.getVisibleCells().map((cell) => (
-										<td key={cell.id} role="cell" className="px-4 py-3">
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
-								</tr>
-							))
+							table.getRowModel().rows.map((row) => <VersionRow key={row.id} row={row} />)
 						)}
 					</tbody>
 				</table>
 			</div>
 
+			{/* Comparison View */}
+			{showComparison && compareVersionIds.length >= 2 && (
+				<ComparisonView versionIds={compareVersionIds} onClose={handleCloseComparison} />
+			)}
+
 			{/* Create Version Panel */}
 			<CreateVersionPanel
 				open={createOpen}
-				fiscalYear={fiscalYear}
+				fiscalYear={fiscalYear ?? CURRENT_FISCAL_YEAR}
 				onClose={() => setCreateOpen(false)}
 				onSuccess={(name) => {
 					setCreateOpen(false);
@@ -472,13 +601,6 @@ export function VersionsPage() {
 					setDeleteTarget(null);
 				}}
 			/>
-
-			{/* Compare Dialog */}
-			<CompareDialog
-				open={compareOpen}
-				fiscalYear={fiscalYear}
-				onClose={() => setCompareOpen(false)}
-			/>
 		</div>
 	);
 }
@@ -486,6 +608,58 @@ export function VersionsPage() {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
+
+function VersionRow({
+	row,
+}: {
+	row: ReturnType<ReturnType<typeof useReactTable<BudgetVersion>>['getRowModel']>['rows'][number];
+}) {
+	const isActual = row.original.type === 'Actual';
+	return (
+		<tr
+			className={cn(
+				'border-b last:border-0 transition-colors hover:bg-[var(--workspace-bg-subtle)]',
+				isActual && 'border-l-2 border-l-[var(--version-actual)]'
+			)}
+		>
+			{row.getVisibleCells().map((cell) => (
+				<td key={cell.id} role="cell" className="px-4 py-3">
+					{flexRender(cell.column.columnDef.cell, cell.getContext())}
+				</td>
+			))}
+		</tr>
+	);
+}
+
+function FYGroup({
+	fy,
+	rows: _rows,
+	table,
+	colSpan,
+}: {
+	fy: number;
+	rows: BudgetVersion[];
+	table: ReturnType<typeof useReactTable<BudgetVersion>>;
+	colSpan: number;
+}) {
+	const tableRows = table.getRowModel().rows.filter((r) => r.original.fiscalYear === fy);
+
+	return (
+		<>
+			<tr>
+				<td
+					colSpan={colSpan}
+					className="bg-[var(--workspace-bg-muted)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+				>
+					FY {fy}
+				</td>
+			</tr>
+			{tableRows.map((row) => (
+				<VersionRow key={row.id} row={row} />
+			))}
+		</>
+	);
+}
 
 type VersionActionsProps = {
 	version: BudgetVersion;
@@ -513,7 +687,7 @@ function VersionActions({
 	const isMutator = isAdmin || currentUser?.role === 'BudgetOwner';
 
 	const canPublish = isMutator && version.status === 'Draft';
-	const canLock = isMutator && version.status === 'Published';
+	const canLock = isAdmin && version.status === 'Published';
 	const canArchive = isAdmin && version.status === 'Locked';
 	const canRevert = isAdmin && (version.status === 'Published' || version.status === 'Locked');
 	const canDelete = isMutator && version.status === 'Draft';
@@ -567,26 +741,48 @@ function VersionActions({
 
 function EmptyState({
 	fiscalYear,
+	typeFilter,
+	statusFilter,
+	searchQuery,
 	canCreate,
 	onCreateClick,
 }: {
-	fiscalYear: number;
+	fiscalYear: number | null;
+	typeFilter: string;
+	statusFilter: string;
+	searchQuery: string;
 	canCreate: boolean;
 	onCreateClick: () => void;
 }) {
+	const hasFilters = typeFilter || statusFilter || searchQuery;
+	const fyLabel = fiscalYear ? `FY${fiscalYear}` : 'any year';
+
 	return (
 		<div className="flex flex-col items-center gap-3 py-4">
 			<Layers className="h-10 w-10 text-[var(--accent-400)]" strokeWidth={1.5} aria-hidden="true" />
-			<p className="text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]">
-				No versions for FY{fiscalYear}
-			</p>
-			<p className="text-[length:var(--text-sm)] text-[var(--text-secondary)]">
-				Create your first budget version to get started.
-			</p>
-			{canCreate && (
-				<Button variant="primary" onClick={onCreateClick}>
-					+ Create Version
-				</Button>
+			{hasFilters ? (
+				<>
+					<p className="text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]">
+						No versions match your filters
+					</p>
+					<p className="text-[length:var(--text-sm)] text-[var(--text-secondary)]">
+						Try adjusting your filters or search query.
+					</p>
+				</>
+			) : (
+				<>
+					<p className="text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]">
+						No versions for {fyLabel}
+					</p>
+					<p className="text-[length:var(--text-sm)] text-[var(--text-secondary)]">
+						Create your first budget version to get started.
+					</p>
+					{canCreate && (
+						<Button variant="primary" onClick={onCreateClick}>
+							+ Create Version
+						</Button>
+					)}
+				</>
 			)}
 		</div>
 	);

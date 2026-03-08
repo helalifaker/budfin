@@ -18,12 +18,18 @@ const cloneVersionSchema = z.object({
 	name: z.string().min(1).max(100),
 	description: z.string().max(500).optional(),
 	fiscalYear: z.number().int().min(2000).max(2100).optional(),
+	includeEnrollment: z.boolean().optional().default(true),
+	includeSummaries: z.boolean().optional().default(true),
 });
 
 const compareQuerySchema = z.object({
 	primary: z.coerce.number().int().positive(),
 	comparison: z.coerce.number().int().positive(),
 	month: z.coerce.number().int().min(1).max(12).optional(),
+});
+
+const compareMultiQuerySchema = z.object({
+	ids: z.string().regex(/^\d+(,\d+)*$/, 'Comma-separated numeric IDs required'),
 });
 
 // ── State machine ─────────────────────────────────────────────────────────────
@@ -84,8 +90,9 @@ const createVersionSchema = z.object({
 });
 
 const listQuerySchema = z.object({
-	fiscalYear: z.coerce.number().int(),
+	fiscalYear: z.coerce.number().int().optional(),
 	status: versionStatusEnum.optional(),
+	type: versionTypeEnum.optional(),
 	cursor: z.coerce.number().int().optional(),
 	limit: z.coerce.number().int().min(1).max(100).optional().default(50),
 });
@@ -144,13 +151,14 @@ export async function versionRoutes(app: FastifyInstance) {
 		schema: { querystring: listQuerySchema },
 		preHandler: [app.authenticate],
 		handler: async (request) => {
-			const { fiscalYear, status, cursor, limit } = request.query as z.infer<
+			const { fiscalYear, status, type, cursor, limit } = request.query as z.infer<
 				typeof listQuerySchema
 			>;
 
 			const countWhere: Prisma.BudgetVersionWhereInput = {};
 			if (fiscalYear) countWhere.fiscalYear = fiscalYear;
 			if (status) countWhere.status = status;
+			if (type) countWhere.type = type;
 
 			const where: Prisma.BudgetVersionWhereInput = { ...countWhere };
 			if (cursor) where.id = { lt: cursor };
@@ -337,6 +345,161 @@ export async function versionRoutes(app: FastifyInstance) {
 		},
 	});
 
+	// GET /compare-multi — Multi-version comparison (2-3 versions)
+	app.get('/compare-multi', {
+		schema: { querystring: compareMultiQuerySchema },
+		preHandler: [app.authenticate],
+		handler: async (request, reply) => {
+			const { ids } = request.query as z.infer<typeof compareMultiQuerySchema>;
+			const versionIds = ids.split(',').map(Number);
+
+			if (versionIds.length < 2 || versionIds.length > 3) {
+				return reply.status(400).send({
+					code: 'INVALID_VERSION_COUNT',
+					message: 'Provide 2 or 3 version IDs for comparison',
+				});
+			}
+
+			const versions = await prisma.budgetVersion.findMany({
+				where: { id: { in: versionIds } },
+				select: { id: true, name: true, type: true, fiscalYear: true, status: true },
+			});
+
+			if (versions.length !== versionIds.length) {
+				const found = new Set(versions.map((v) => v.id));
+				const missing = versionIds.filter((vid) => !found.has(vid));
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: `Version(s) ${missing.join(', ')} not found`,
+				});
+			}
+
+			// Preserve requested order
+			const orderedVersions = versionIds.map((vid) => versions.find((v) => v.id === vid)!);
+
+			const allSummaries = await prisma.monthlyBudgetSummary.findMany({
+				where: { versionId: { in: versionIds } },
+			});
+
+			type SummaryRow = {
+				versionId: number;
+				month: number;
+				revenueHt: unknown;
+				staffCosts: unknown;
+				netProfit: unknown;
+			};
+
+			const summaryMap = new Map<string, SummaryRow>();
+			for (const s of allSummaries as SummaryRow[]) {
+				summaryMap.set(`${s.versionId}:${s.month}`, s);
+			}
+
+			function toDecStr(val: unknown): string {
+				return new Decimal(String(val ?? 0)).toFixed(4);
+			}
+
+			function calcVariance(pVal: unknown, baseVal: unknown) {
+				const p = new Decimal(String(pVal ?? 0));
+				const b = new Decimal(String(baseVal ?? 0));
+				const abs = p.minus(b);
+				const pct = b.isZero()
+					? null
+					: abs.div(b.abs()).times(100).toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
+				return { abs: abs.toFixed(4), pct };
+			}
+
+			// Build monthly comparison — 12 months, each version's metrics + variance
+			const baseVersionId = versionIds[0];
+			const monthly = Array.from({ length: 12 }, (_, i) => {
+				const m = i + 1;
+				const values = orderedVersions.map((v) => {
+					const row = summaryMap.get(`${v.id}:${m}`);
+					const metrics = {
+						versionId: v.id,
+						totalRevenueHt: toDecStr(row?.revenueHt),
+						totalStaffCosts: toDecStr(row?.staffCosts),
+						netProfit: toDecStr(row?.netProfit),
+					};
+
+					if (v.id === baseVersionId) {
+						return { ...metrics, variance: null };
+					}
+
+					const baseRow = summaryMap.get(`${baseVersionId}:${m}`);
+					const revVar = calcVariance(row?.revenueHt, baseRow?.revenueHt);
+					const staffVar = calcVariance(row?.staffCosts, baseRow?.staffCosts);
+					const netVar = calcVariance(row?.netProfit, baseRow?.netProfit);
+
+					return {
+						...metrics,
+						variance: {
+							totalRevenueHt: { abs: revVar.abs, pct: revVar.pct },
+							totalStaffCosts: { abs: staffVar.abs, pct: staffVar.pct },
+							netProfit: { abs: netVar.abs, pct: netVar.pct },
+						},
+					};
+				});
+
+				return { month: m, values };
+			});
+
+			// Annual totals per version
+			const annualTotals = orderedVersions.map((v) => {
+				let revTotal = new Decimal(0);
+				let staffTotal = new Decimal(0);
+				let netTotal = new Decimal(0);
+
+				for (let m = 1; m <= 12; m++) {
+					const row = summaryMap.get(`${v.id}:${m}`);
+					revTotal = revTotal.plus(new Decimal(String(row?.revenueHt ?? 0)));
+					staffTotal = staffTotal.plus(new Decimal(String(row?.staffCosts ?? 0)));
+					netTotal = netTotal.plus(new Decimal(String(row?.netProfit ?? 0)));
+				}
+
+				const totals = {
+					versionId: v.id,
+					totalRevenueHt: revTotal.toFixed(4),
+					totalStaffCosts: staffTotal.toFixed(4),
+					netProfit: netTotal.toFixed(4),
+				};
+
+				if (v.id === baseVersionId) {
+					return { ...totals, variance: null };
+				}
+
+				// Base version annual totals for variance
+				let baseRevTotal = new Decimal(0);
+				let baseStaffTotal = new Decimal(0);
+				let baseNetTotal = new Decimal(0);
+				for (let m = 1; m <= 12; m++) {
+					const baseRow = summaryMap.get(`${baseVersionId}:${m}`);
+					baseRevTotal = baseRevTotal.plus(new Decimal(String(baseRow?.revenueHt ?? 0)));
+					baseStaffTotal = baseStaffTotal.plus(new Decimal(String(baseRow?.staffCosts ?? 0)));
+					baseNetTotal = baseNetTotal.plus(new Decimal(String(baseRow?.netProfit ?? 0)));
+				}
+
+				const revVar = calcVariance(revTotal, baseRevTotal);
+				const staffVar = calcVariance(staffTotal, baseStaffTotal);
+				const netVar = calcVariance(netTotal, baseNetTotal);
+
+				return {
+					...totals,
+					variance: {
+						totalRevenueHt: { abs: revVar.abs, pct: revVar.pct },
+						totalStaffCosts: { abs: staffVar.abs, pct: staffVar.pct },
+						netProfit: { abs: netVar.abs, pct: netVar.pct },
+					},
+				};
+			});
+
+			return {
+				versions: orderedVersions,
+				monthly,
+				annualTotals,
+			};
+		},
+	});
+
 	// GET /:id — Get single version with all metadata (AC-18)
 	app.get('/:id', {
 		schema: { params: idParamsSchema },
@@ -356,6 +519,39 @@ export async function versionRoutes(app: FastifyInstance) {
 			}
 
 			return formatVersion(version);
+		},
+	});
+
+	// GET /:id/import-logs — Import log history for a version
+	app.get('/:id/import-logs', {
+		schema: { params: idParamsSchema },
+		preHandler: [app.authenticate],
+		handler: async (request, reply) => {
+			const { id } = request.params as z.infer<typeof idParamsSchema>;
+
+			const version = await prisma.budgetVersion.findUnique({ where: { id } });
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: `Version ${id} not found`,
+				});
+			}
+
+			const logs = await prisma.actualsImportLog.findMany({
+				where: { versionId: id },
+				orderBy: { importedAt: 'desc' },
+				include: { importedBy: { select: { email: true } } },
+			});
+
+			return logs.map((l) => ({
+				id: l.id,
+				module: l.module,
+				sourceFile: l.sourceFile,
+				validationStatus: l.validationStatus,
+				rowsImported: l.rowsImported,
+				importedByEmail: l.importedBy.email,
+				importedAt: l.importedAt,
+			}));
 		},
 	});
 
@@ -640,37 +836,58 @@ export async function versionRoutes(app: FastifyInstance) {
 					});
 
 					// Copy enrollment headcount rows
-					const headcounts = await (tx as typeof prisma).enrollmentHeadcount.findMany({
-						where: { versionId: id },
-					});
-					if (headcounts.length > 0) {
-						await (tx as typeof prisma).enrollmentHeadcount.createMany({
-							data: headcounts.map((h) => ({
-								versionId: newVersion.id,
-								academicPeriod: h.academicPeriod,
-								gradeLevel: h.gradeLevel,
-								headcount: h.headcount,
-								createdBy: request.user.id,
-							})),
+					if (body.includeEnrollment !== false) {
+						const headcounts = await (tx as typeof prisma).enrollmentHeadcount.findMany({
+							where: { versionId: id },
 						});
+						if (headcounts.length > 0) {
+							await (tx as typeof prisma).enrollmentHeadcount.createMany({
+								data: headcounts.map((h) => ({
+									versionId: newVersion.id,
+									academicPeriod: h.academicPeriod,
+									gradeLevel: h.gradeLevel,
+									headcount: h.headcount,
+									createdBy: request.user.id,
+								})),
+							});
+						}
+
+						// Copy enrollment detail rows
+						const details = await (tx as typeof prisma).enrollmentDetail.findMany({
+							where: { versionId: id },
+						});
+						if (details.length > 0) {
+							await (tx as typeof prisma).enrollmentDetail.createMany({
+								data: details.map((d) => ({
+									versionId: newVersion.id,
+									academicPeriod: d.academicPeriod,
+									gradeLevel: d.gradeLevel,
+									nationality: d.nationality,
+									tariff: d.tariff,
+									headcount: d.headcount,
+									createdBy: request.user.id,
+								})),
+							});
+						}
 					}
 
-					// Copy enrollment detail rows
-					const details = await (tx as typeof prisma).enrollmentDetail.findMany({
-						where: { versionId: id },
-					});
-					if (details.length > 0) {
-						await (tx as typeof prisma).enrollmentDetail.createMany({
-							data: details.map((d) => ({
-								versionId: newVersion.id,
-								academicPeriod: d.academicPeriod,
-								gradeLevel: d.gradeLevel,
-								nationality: d.nationality,
-								tariff: d.tariff,
-								headcount: d.headcount,
-								createdBy: request.user.id,
-							})),
+					// Copy monthly budget summaries
+					if (body.includeSummaries !== false) {
+						const summaries = await (tx as typeof prisma).monthlyBudgetSummary.findMany({
+							where: { versionId: id },
 						});
+						if (summaries.length > 0) {
+							await (tx as typeof prisma).monthlyBudgetSummary.createMany({
+								data: summaries.map((s) => ({
+									versionId: newVersion.id,
+									month: s.month,
+									revenueHt: s.revenueHt,
+									staffCosts: s.staffCosts,
+									netProfit: s.netProfit,
+									calculatedAt: s.calculatedAt,
+								})),
+							});
+						}
 					}
 
 					await (tx as typeof prisma).auditEntry.create({

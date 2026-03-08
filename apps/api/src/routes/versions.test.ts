@@ -186,9 +186,19 @@ describe('GET /api/v1/versions', () => {
 		);
 	});
 
-	it('returns 400 without fiscalYear param', async () => {
-		const res = await app.inject({ method: 'GET', url: '/api/v1/versions' });
-		expect(res.statusCode).toBe(400);
+	it('returns versions without fiscalYear param (all years)', async () => {
+		const token = await makeToken();
+		mockPrisma.budgetVersion.findMany.mockResolvedValue([]);
+		mockPrisma.budgetVersion.count.mockResolvedValue(0);
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.data).toEqual([]);
+		expect(body.total).toBe(0);
 	});
 
 	it('returns 401 without token', async () => {

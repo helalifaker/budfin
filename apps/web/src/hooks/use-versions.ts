@@ -40,6 +40,8 @@ export interface CloneVersionInput {
 	name: string;
 	description?: string;
 	fiscalYear?: number;
+	includeEnrollment?: boolean;
+	includeSummaries?: boolean;
 }
 
 export interface PatchStatusInput {
@@ -118,14 +120,61 @@ export function useVersionAuditTrail(versionId: number | undefined) {
 	});
 }
 
-export function useVersions(fiscalYear?: number, status?: string) {
+export function useVersions(fiscalYear?: number, status?: string, type?: string) {
 	const params = new URLSearchParams();
 	if (fiscalYear) params.set('fiscalYear', String(fiscalYear));
 	if (status) params.set('status', status);
+	if (type) params.set('type', type);
 	const query = params.toString();
 
 	return useQuery({
-		queryKey: ['versions', { fiscalYear, status }],
+		queryKey: ['versions', { fiscalYear, status, type }],
 		queryFn: () => apiClient<VersionListResponse>(`/versions${query ? `?${query}` : ''}`),
+	});
+}
+
+export interface MultiCompareResponse {
+	versions: Array<{ id: number; name: string; type: string; fiscalYear: number }>;
+	monthly: Array<{
+		month: number;
+		values: Array<{
+			versionId: number;
+			revenueHt: string;
+			staffCosts: string;
+			netProfit: string;
+		}>;
+	}>;
+	annualTotals: Array<{
+		versionId: number;
+		revenueHt: string;
+		staffCosts: string;
+		netProfit: string;
+	}>;
+}
+
+export function useMultiCompare(ids: number[]) {
+	const idsStr = ids.sort((a, b) => a - b).join(',');
+	return useQuery({
+		queryKey: ['versions', 'compare-multi', idsStr],
+		queryFn: () => apiClient<MultiCompareResponse>(`/versions/compare-multi?ids=${idsStr}`),
+		enabled: ids.length >= 2,
+	});
+}
+
+export interface ImportLogEntry {
+	id: number;
+	module: string;
+	sourceFile: string;
+	validationStatus: string;
+	rowsImported: number;
+	importedByEmail: string;
+	importedAt: string;
+}
+
+export function useVersionImportLogs(versionId: number | undefined) {
+	return useQuery({
+		queryKey: ['version-import-logs', versionId],
+		queryFn: () => apiClient<ImportLogEntry[]>(`/versions/${versionId}/import-logs`),
+		enabled: !!versionId,
 	});
 }
