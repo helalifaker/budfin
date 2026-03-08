@@ -1,18 +1,13 @@
 import { useMemo, useCallback, useState } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
+import { PlanningGrid } from '../data-grid/planning-grid';
 import {
 	useNationalityBreakdown,
 	usePutNationalityBreakdown,
 } from '../../hooks/use-nationality-breakdown';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { EditableCell } from '../shared/editable-cell';
-import { TableSkeleton } from '../ui/skeleton';
 import type { NationalityBreakdownEntry } from '@budfin/types';
 
 export type NationalityDistributionGridProps = {
@@ -142,16 +137,6 @@ export function NationalityDistributionGrid({
 		},
 		[isReadOnly]
 	);
-
-	const bands = useMemo(() => {
-		const bandMap = new Map<string, NatRow[]>();
-		for (const row of rows) {
-			const existing = bandMap.get(row.band) ?? [];
-			existing.push(row);
-			bandMap.set(row.band, existing);
-		}
-		return bandMap;
-	}, [rows]);
 
 	const columns = useMemo(
 		() => [
@@ -287,99 +272,37 @@ export function NationalityDistributionGrid({
 		data: rows,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
+		enableColumnResizing: true,
+		columnResizeMode: 'onChange' as const,
 	});
 
 	return (
-		<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-			<table
-				role="grid"
-				className="w-full text-left text-[length:var(--text-sm)]"
-				aria-label="Nationality distribution"
-			>
-				<thead className="border-b bg-[var(--workspace-bg-muted)]">
-					{table.getHeaderGroups().map((hg) => (
-						<tr key={hg.id}>
-							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{isLoading ? (
-						<TableSkeleton rows={15} cols={columns.length} />
-					) : rows.length === 0 ? (
-						<tr>
-							<td
-								colSpan={columns.length}
-								className="px-4 py-6 text-center text-[var(--text-muted)]"
-							>
-								No nationality data available.
-							</td>
-						</tr>
-					) : (
-						[...bands.entries()].map(([band, bandRows]) => (
-							<NatBandGroup
-								key={band}
-								band={band}
-								bandRows={bandRows}
-								table={table}
-								colCount={columns.length}
-							/>
-						))
-					)}
-				</tbody>
-			</table>
-		</div>
-	);
-}
-
-function NatBandGroup({
-	band,
-	bandRows,
-	table,
-	colCount,
-}: {
-	band: string;
-	bandRows: NatRow[];
-	table: ReturnType<typeof useReactTable<NatRow>>;
-	colCount: number;
-}) {
-	return (
-		<>
-			<tr className="bg-[var(--workspace-bg-muted)]/50">
-				<td
-					colSpan={colCount}
-					className="px-4 py-1.5 text-[length:var(--text-xs)] font-semibold uppercase tracking-wider text-[var(--text-muted)]"
-				>
-					{BAND_LABELS[band] ?? band} ({bandRows.length} grades)
-				</td>
-			</tr>
-			{bandRows.map((row) => {
-				const tableRow = table
-					.getRowModel()
-					.rows.find((r) => r.original.gradeLevel === row.gradeLevel);
-				if (!tableRow) return null;
-				return (
-					<tr
-						key={tableRow.id}
-						className={cn(
-							'border-b transition-colors duration-[var(--duration-fast)] last:border-0',
-							row.isOverridden
-								? 'bg-[var(--cell-override-bg)]/30 hover:bg-[var(--cell-override-bg)]/50'
-								: 'hover:bg-[var(--accent-50)]'
-						)}
-					>
-						{tableRow.getVisibleCells().map((cell) => (
-							<td key={cell.id} className="px-4 py-2">
-								{flexRender(cell.column.columnDef.cell, cell.getContext())}
-							</td>
-						))}
-					</tr>
-				);
-			})}
-		</>
+		<PlanningGrid
+			table={table}
+			isLoading={isLoading}
+			bandGrouping={{
+				getBand: (row) => row.band,
+				bandLabels: BAND_LABELS,
+				bandStyles: {
+					MATERNELLE: { color: 'var(--badge-maternelle)', bg: 'var(--badge-maternelle-bg)' },
+					ELEMENTAIRE: { color: 'var(--badge-elementaire)', bg: 'var(--badge-elementaire-bg)' },
+					COLLEGE: { color: 'var(--badge-college)', bg: 'var(--badge-college-bg)' },
+					LYCEE: { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
+				},
+				collapsible: true,
+			}}
+			pinnedColumns={['gradeName']}
+			numericColumns={[
+				'francaisWt',
+				'francaisCnt',
+				'nationauxWt',
+				'nationauxCnt',
+				'autresWt',
+				'autresCnt',
+				'total',
+			]}
+			editableColumns={['francaisWt', 'nationauxWt', 'autresWt']}
+			ariaLabel="Nationality distribution"
+		/>
 	);
 }

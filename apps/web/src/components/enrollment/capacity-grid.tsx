@@ -1,14 +1,8 @@
 import { useMemo } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
-import { cn } from '../../lib/cn';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { AlertBadge, UtilizationCell } from './capacity-columns';
-import { TableSkeleton } from '../ui/skeleton';
+import { PlanningGrid } from '../data-grid/planning-grid';
 import type { CapacityResult, CapacityAlert } from '@budfin/types';
 
 export type CapacityGridProps = {
@@ -81,16 +75,6 @@ export function CapacityGrid({
 			});
 	}, [capacityResults, gradeLevels, bandFilter]);
 
-	const bands = useMemo(() => {
-		const bandMap = new Map<string, CapRow[]>();
-		for (const row of rows) {
-			const existing = bandMap.get(row.band) ?? [];
-			existing.push(row);
-			bandMap.set(row.band, existing);
-		}
-		return bandMap;
-	}, [rows]);
-
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('gradeName', {
@@ -131,100 +115,41 @@ export function CapacityGrid({
 	);
 
 	const table = useReactTable({
-		data: rows,
+		data: hasResults ? rows : [],
 		columns,
 		getCoreRowModel: getCoreRowModel(),
+		enableColumnResizing: true,
+		columnResizeMode: 'onChange' as const,
 	});
 
-	return (
-		<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-			<table
-				role="grid"
-				className="w-full text-left text-[length:var(--text-sm)]"
-				aria-label="Capacity planning"
-			>
-				<thead className="border-b bg-[var(--workspace-bg-muted)]">
-					{table.getHeaderGroups().map((hg) => (
-						<tr key={hg.id}>
-							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{gradesLoading ? (
-						<TableSkeleton rows={15} cols={columns.length} />
-					) : !hasResults ? (
-						<tr>
-							<td
-								colSpan={columns.length}
-								className="px-4 py-6 text-center text-[var(--text-muted)]"
-							>
-								Press Calculate to generate capacity results.
-							</td>
-						</tr>
-					) : (
-						[...bands.entries()].map(([band, bandRows]) => (
-							<CapBandGroup
-								key={band}
-								band={band}
-								bandRows={bandRows}
-								table={table}
-								colCount={columns.length}
-							/>
-						))
-					)}
-				</tbody>
-			</table>
-		</div>
-	);
-}
+	if (!gradesLoading && !hasResults) {
+		return (
+			<div className="rounded-[var(--radius-lg)] border border-[var(--workspace-border)] px-4 py-12 text-center">
+				<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
+					Press Calculate to generate capacity results.
+				</p>
+			</div>
+		);
+	}
 
-function CapBandGroup({
-	band,
-	bandRows,
-	table,
-	colCount,
-}: {
-	band: string;
-	bandRows: CapRow[];
-	table: ReturnType<typeof useReactTable<CapRow>>;
-	colCount: number;
-}) {
 	return (
-		<>
-			<tr className="bg-[var(--workspace-bg-muted)]/50">
-				<td
-					colSpan={colCount}
-					className="px-4 py-1.5 text-[length:var(--text-xs)] font-semibold uppercase tracking-wider text-[var(--text-muted)]"
-				>
-					{BAND_LABELS[band] ?? band} ({bandRows.length} grades)
-				</td>
-			</tr>
-			{bandRows.map((row) => {
-				const tableRow = table
-					.getRowModel()
-					.rows.find((r) => r.original.gradeLevel === row.gradeLevel);
-				if (!tableRow) return null;
-				return (
-					<tr
-						key={tableRow.id}
-						className={cn(
-							'border-b transition-colors duration-[var(--duration-fast)] last:border-0',
-							'hover:bg-[var(--accent-50)]'
-						)}
-					>
-						{tableRow.getVisibleCells().map((cell) => (
-							<td key={cell.id} className="px-4 py-2">
-								{flexRender(cell.column.columnDef.cell, cell.getContext())}
-							</td>
-						))}
-					</tr>
-				);
-			})}
-		</>
+		<PlanningGrid
+			table={table}
+			isLoading={gradesLoading}
+			bandGrouping={{
+				getBand: (row) => row.band,
+				bandLabels: BAND_LABELS,
+				bandStyles: {
+					MATERNELLE: { color: 'var(--badge-maternelle)', bg: 'var(--badge-maternelle-bg)' },
+					ELEMENTAIRE: { color: 'var(--badge-elementaire)', bg: 'var(--badge-elementaire-bg)' },
+					COLLEGE: { color: 'var(--badge-college)', bg: 'var(--badge-college-bg)' },
+					LYCEE: { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
+				},
+				collapsible: true,
+			}}
+			pinnedColumns={['gradeName']}
+			numericColumns={['ay2Total', 'maxClassSize', 'sectionsNeeded', 'utilization']}
+			ariaLabel="Capacity planning"
+		/>
 	);
 }

@@ -23,15 +23,16 @@ export function WorkspaceBoard({
 				className={cn(
 					'flex items-start justify-between gap-4',
 					'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
-					'bg-[var(--workspace-bg-card)] p-4 shadow-[var(--shadow-xs)]'
+					'border-t-[3px] border-t-[var(--accent-500)]',
+					'bg-[var(--workspace-bg-card)] p-5 shadow-[var(--shadow-card)]'
 				)}
 			>
 				<div className="min-w-0">
-					<h1 className="text-[length:var(--text-xl)] font-semibold text-[var(--text-primary)]">
+					<h1 className="text-[length:var(--text-2xl)] font-bold font-[family-name:var(--font-display)] text-[var(--text-primary)]">
 						{title}
 					</h1>
 					{description && (
-						<p className="mt-1 text-[length:var(--text-sm)] text-[var(--text-secondary)]">
+						<p className="mt-2 text-[length:var(--text-sm)] text-[var(--text-muted)]">
 							{description}
 						</p>
 					)}

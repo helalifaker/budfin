@@ -1,16 +1,11 @@
 import { useMemo, useCallback } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
+import { PlanningGrid } from '../data-grid/planning-grid';
 import { useHeadcount, usePutHeadcount } from '../../hooks/use-enrollment';
 import { useCohortParameters, usePutCohortParameters } from '../../hooks/use-cohort-parameters';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { EditableCell } from '../shared/editable-cell';
-import { TableSkeleton } from '../ui/skeleton';
 import type { HeadcountEntry, CohortParameterEntry } from '@budfin/types';
 
 export type CohortProgressionGridProps = {
@@ -138,16 +133,6 @@ export function CohortProgressionGrid({
 		[isReadOnly, cohortEntries, putCohortParams]
 	);
 
-	const bands = useMemo(() => {
-		const bandMap = new Map<string, CohortRow[]>();
-		for (const row of rows) {
-			const existing = bandMap.get(row.band) ?? [];
-			existing.push(row);
-			bandMap.set(row.band, existing);
-		}
-		return bandMap;
-	}, [rows]);
-
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('gradeName', {
@@ -262,94 +247,29 @@ export function CohortProgressionGrid({
 		data: rows,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
+		enableColumnResizing: true,
+		columnResizeMode: 'onChange' as const,
 	});
 
 	return (
-		<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-			<table
-				role="grid"
-				className="w-full text-left text-[length:var(--text-sm)]"
-				aria-label="Cohort progression"
-			>
-				<thead className="border-b bg-[var(--workspace-bg-muted)]">
-					{table.getHeaderGroups().map((hg) => (
-						<tr key={hg.id}>
-							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{isLoading ? (
-						<TableSkeleton rows={15} cols={columns.length} />
-					) : rows.length === 0 ? (
-						<tr>
-							<td
-								colSpan={columns.length}
-								className="px-4 py-6 text-center text-[var(--text-muted)]"
-							>
-								No cohort data available. Enter headcount to begin.
-							</td>
-						</tr>
-					) : (
-						[...bands.entries()].map(([band, bandRows]) => (
-							<BandGroup
-								key={band}
-								band={band}
-								bandRows={bandRows}
-								table={table}
-								colCount={columns.length}
-							/>
-						))
-					)}
-				</tbody>
-			</table>
-		</div>
-	);
-}
-
-function BandGroup({
-	band,
-	bandRows,
-	table,
-	colCount,
-}: {
-	band: string;
-	bandRows: CohortRow[];
-	table: ReturnType<typeof useReactTable<CohortRow>>;
-	colCount: number;
-}) {
-	return (
-		<>
-			<tr className="bg-[var(--workspace-bg-muted)]/50">
-				<td
-					colSpan={colCount}
-					className="px-4 py-1.5 text-[length:var(--text-xs)] font-semibold uppercase tracking-wider text-[var(--text-muted)]"
-				>
-					{BAND_LABELS[band] ?? band} ({bandRows.length} grades)
-				</td>
-			</tr>
-			{bandRows.map((row) => {
-				const tableRow = table
-					.getRowModel()
-					.rows.find((r) => r.original.gradeLevel === row.gradeLevel);
-				if (!tableRow) return null;
-				return (
-					<tr
-						key={tableRow.id}
-						className="border-b transition-colors duration-[var(--duration-fast)] last:border-0 hover:bg-[var(--accent-50)]"
-					>
-						{tableRow.getVisibleCells().map((cell) => (
-							<td key={cell.id} className="px-4 py-2">
-								{flexRender(cell.column.columnDef.cell, cell.getContext())}
-							</td>
-						))}
-					</tr>
-				);
-			})}
-		</>
+		<PlanningGrid
+			table={table}
+			isLoading={isLoading}
+			bandGrouping={{
+				getBand: (row) => row.band,
+				bandLabels: BAND_LABELS,
+				bandStyles: {
+					MATERNELLE: { color: 'var(--badge-maternelle)', bg: 'var(--badge-maternelle-bg)' },
+					ELEMENTAIRE: { color: 'var(--badge-elementaire)', bg: 'var(--badge-elementaire-bg)' },
+					COLLEGE: { color: 'var(--badge-college)', bg: 'var(--badge-college-bg)' },
+					LYCEE: { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
+				},
+				collapsible: true,
+			}}
+			pinnedColumns={['gradeName']}
+			numericColumns={['ay1Headcount', 'retentionRate', 'lateralEntry', 'ay2Total']}
+			editableColumns={['ay1Headcount', 'retentionRate', 'lateralEntry']}
+			ariaLabel="Cohort progression"
+		/>
 	);
 }

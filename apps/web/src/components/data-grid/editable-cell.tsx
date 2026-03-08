@@ -4,6 +4,7 @@ import { cn } from '../../lib/cn';
 interface EditableCellProps {
 	value: string | number;
 	onChange: (value: string) => void;
+	onNavigate?: (direction: 'up' | 'down' | 'left' | 'right') => void;
 	isReadOnly?: boolean;
 	type?: 'text' | 'number';
 	className?: string;
@@ -12,6 +13,7 @@ interface EditableCellProps {
 export function EditableCell({
 	value,
 	onChange,
+	onNavigate,
 	isReadOnly = false,
 	type = 'text',
 	className,
@@ -19,6 +21,7 @@ export function EditableCell({
 	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(String(value));
 	const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle');
+	const [showFlash, setShowFlash] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -32,26 +35,45 @@ export function EditableCell({
 		}
 	}, [isEditing]);
 
-	const handleBlur = useCallback(() => {
+	const commitEdit = useCallback(() => {
 		setIsEditing(false);
 		if (editValue !== String(value)) {
 			onChange(editValue);
 			setSaveState('saved');
+			setShowFlash(true);
 			setTimeout(() => setSaveState('idle'), 1500);
+			setTimeout(() => setShowFlash(false), 800);
 		}
 	}, [editValue, value, onChange]);
+
+	const handleBlur = useCallback(() => {
+		commitEdit();
+	}, [commitEdit]);
 
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent) => {
 			if (e.key === 'Enter') {
-				handleBlur();
+				commitEdit();
+				onNavigate?.('down');
 			} else if (e.key === 'Escape') {
 				setEditValue(String(value));
 				setIsEditing(false);
+			} else if (e.key === 'Tab') {
+				e.preventDefault();
+				commitEdit();
+				onNavigate?.(e.shiftKey ? 'left' : 'right');
+			} else if (e.key === 'ArrowUp') {
+				commitEdit();
+				onNavigate?.('up');
+			} else if (e.key === 'ArrowDown') {
+				commitEdit();
+				onNavigate?.('down');
 			}
 		},
-		[handleBlur, value]
+		[commitEdit, value, onNavigate]
 	);
+
+	const isNumber = type === 'number';
 
 	if (isReadOnly) {
 		return (
@@ -60,6 +82,7 @@ export function EditableCell({
 					'block px-2 py-1 text-[length:var(--text-xs)]',
 					'bg-[var(--cell-readonly-bg)] rounded-[var(--radius-sm)]',
 					'font-[family-name:var(--font-mono)]',
+					isNumber && 'text-right tabular-nums',
 					className
 				)}
 			>
@@ -86,6 +109,7 @@ export function EditableCell({
 					'font-[family-name:var(--font-mono)]',
 					'outline-none',
 					'transition-all duration-[var(--duration-fast)]',
+					isNumber && 'text-right tabular-nums',
 					className
 				)}
 			/>
@@ -103,11 +127,14 @@ export function EditableCell({
 				'font-[family-name:var(--font-mono)]',
 				'hover:border-[var(--accent-200)] hover:shadow-[var(--shadow-xs)]',
 				'border border-transparent',
+				'border-b border-dashed border-b-[var(--accent-200)]',
 				'transition-all duration-[var(--duration-fast)]',
 				'focus:border-[var(--cell-editable-focus)] focus:shadow-[var(--shadow-glow-accent)]',
 				'focus:outline-none',
+				isNumber && 'text-right tabular-nums',
 				saveState === 'saved' && 'bg-[var(--accent-50)]',
 				saveState === 'error' && 'border-[var(--color-error)] animate-shake',
+				showFlash && 'animate-cell-save',
 				className
 			)}
 		>

@@ -43,14 +43,16 @@ export function WorkspaceBlock({
 		<section
 			className={cn(
 				'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
-				'bg-[var(--workspace-bg-card)] shadow-[var(--shadow-md)]'
+				isOpen
+					? 'bg-[var(--workspace-bg-card)] shadow-[var(--shadow-card-hover)]'
+					: 'bg-[var(--workspace-bg-card)] shadow-[var(--shadow-card)]'
 			)}
 		>
 			{/* Header */}
 			<button
 				type="button"
 				className={cn(
-					'flex w-full items-center gap-3 px-4 py-3',
+					'flex w-full items-center gap-3 px-4 py-3.5',
 					'text-left transition-colors duration-[var(--duration-fast)]',
 					'hover:bg-[var(--workspace-bg-subtle)]',
 					'focus-visible:outline-none focus-visible:ring-2',
@@ -64,7 +66,8 @@ export function WorkspaceBlock({
 			>
 				<ChevronDown
 					className={cn(
-						'size-4 shrink-0 text-[var(--text-muted)]',
+						'size-4 shrink-0',
+						isOpen ? 'text-[var(--accent-500)]' : 'text-[var(--text-muted)]',
 						'transition-transform duration-[var(--duration-normal)]',
 						isOpen && 'rotate-0',
 						!isOpen && '-rotate-90'
@@ -78,8 +81,8 @@ export function WorkspaceBlock({
 					<span
 						className={cn(
 							'inline-flex items-center rounded-full',
-							'bg-[var(--workspace-bg-muted)] px-2 py-0.5',
-							'text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]'
+							'bg-[var(--accent-50)] px-2 py-0.5',
+							'text-[length:var(--text-xs)] font-medium text-[var(--accent-700)]'
 						)}
 					>
 						{count}
@@ -87,7 +90,10 @@ export function WorkspaceBlock({
 				)}
 				{isStale && (
 					<span className="ml-auto flex items-center gap-1.5">
-						<span className="size-2 rounded-full bg-[var(--color-stale)]" aria-hidden="true" />
+						<span
+							className="size-2 rounded-full bg-[var(--color-stale)] animate-pulse"
+							aria-hidden="true"
+						/>
 						<span className="text-[length:var(--text-xs)] font-medium text-[var(--color-stale)]">
 							Recalculate
 						</span>
@@ -100,9 +106,10 @@ export function WorkspaceBlock({
 				id={toggleId}
 				role="region"
 				aria-labelledby={toggleId}
-				className="overflow-hidden transition-[max-height] duration-[var(--duration-normal)] ease-[var(--ease-out-expo)]"
+				className="overflow-hidden transition-[max-height,opacity] duration-[var(--duration-normal)] ease-[var(--ease-out-expo)]"
 				style={{
 					maxHeight: isOpen ? (contentHeight ?? 'none') : 0,
+					opacity: isOpen ? 1 : 0,
 				}}
 			>
 				<div ref={contentRef} className="p-4">
