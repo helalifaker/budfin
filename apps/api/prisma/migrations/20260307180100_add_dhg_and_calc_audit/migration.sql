@@ -14,11 +14,11 @@ CREATE TABLE dhg_requirements (
   alert VARCHAR(10),
   recruitment_slots INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(version_id, academic_period, grade_level)
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_dhg_requirements_version ON dhg_requirements(version_id);
+CREATE UNIQUE INDEX uq_dhg_requirement ON dhg_requirements(version_id, academic_period, grade_level);
 
 -- Calculation Audit Log
 CREATE TABLE calculation_audit_log (

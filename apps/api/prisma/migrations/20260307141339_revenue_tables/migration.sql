@@ -1,12 +1,3 @@
--- DropForeignKey
-ALTER TABLE "calculation_audit_log" DROP CONSTRAINT "calculation_audit_log_triggered_by_fkey";
-
--- DropForeignKey
-ALTER TABLE "calculation_audit_log" DROP CONSTRAINT "calculation_audit_log_version_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "dhg_requirements" DROP CONSTRAINT "dhg_requirements_version_id_fkey";
-
 -- AlterTable
 ALTER TABLE "budget_versions" ALTER COLUMN "updated_at" DROP DEFAULT;
 
@@ -131,15 +122,6 @@ CREATE INDEX "idx_monthly_revenue_calculated_by" ON "monthly_revenue"("calculate
 CREATE UNIQUE INDEX "uq_monthly_revenue" ON "monthly_revenue"("version_id", "scenario_name", "academic_period", "grade_level", "nationality", "tariff", "month");
 
 -- AddForeignKey
-ALTER TABLE "dhg_requirements" ADD CONSTRAINT "dhg_requirements_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "budget_versions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "calculation_audit_log" ADD CONSTRAINT "calculation_audit_log_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "budget_versions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "calculation_audit_log" ADD CONSTRAINT "calculation_audit_log_triggered_by_fkey" FOREIGN KEY ("triggered_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "fee_grids" ADD CONSTRAINT "fee_grids_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "budget_versions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -171,6 +153,3 @@ ALTER TABLE "monthly_revenue" ADD CONSTRAINT "monthly_revenue_version_id_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "monthly_revenue" ADD CONSTRAINT "monthly_revenue_calculated_by_fkey" FOREIGN KEY ("calculated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- RenameIndex
-ALTER INDEX "dhg_requirements_version_id_academic_period_grade_level_key" RENAME TO "uq_dhg_requirement";

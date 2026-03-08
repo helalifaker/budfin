@@ -6,6 +6,8 @@ import {
 	shouldSkipRefresh,
 } from '../lib/tab-sync';
 
+const GENERIC_AUTH_ERROR = 'Unable to sign in right now. Please try again in a moment.';
+
 interface User {
 	id: number;
 	email: string;
@@ -26,6 +28,26 @@ interface AuthState {
 }
 
 let refreshPromise: Promise<boolean> | null = null;
+
+async function getLoginErrorMessage(response: Response): Promise<string> {
+	if (response.status >= 500) {
+		return GENERIC_AUTH_ERROR;
+	}
+
+	const contentType = response.headers.get('content-type') ?? '';
+	if (contentType.includes('application/json')) {
+		try {
+			const data = (await response.json()) as { message?: unknown };
+			if (typeof data.message === 'string' && data.message.trim().length > 0) {
+				return data.message;
+			}
+		} catch {
+			// Fall through to the generic fallback below.
+		}
+	}
+
+	return 'Login failed';
+}
 
 export const useAuthStore = create<AuthState>((set, get) => ({
 	accessToken: null,
@@ -51,15 +73,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 	},
 
 	login: async (email, password) => {
-		const response = await fetch('/api/v1/auth/login', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ email, password }),
-			credentials: 'include',
-		});
+		let response: Response;
+		try {
+			response = await fetch('/api/v1/auth/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email, password }),
+				credentials: 'include',
+			});
+		} catch {
+			throw new Error(GENERIC_AUTH_ERROR);
+		}
+
 		if (!response.ok) {
-			const data = await response.json();
-			throw new Error(data.message || 'Login failed');
+			throw new Error(await getLoginErrorMessage(response));
 		}
 		const data = await response.json();
 		get().setAuth(data.access_token, data.user);
