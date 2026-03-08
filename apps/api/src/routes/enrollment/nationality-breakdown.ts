@@ -49,6 +49,7 @@ export async function nationalityBreakdownRoutes(app: FastifyInstance) {
 
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
+				select: { id: true },
 			});
 
 			if (!version) {
@@ -63,7 +64,17 @@ export async function nationalityBreakdownRoutes(app: FastifyInstance) {
 				where.academicPeriod = academic_period;
 			}
 
-			const rows = await prisma.nationalityBreakdown.findMany({ where });
+			const rows = await prisma.nationalityBreakdown.findMany({
+				where,
+				select: {
+					gradeLevel: true,
+					academicPeriod: true,
+					nationality: true,
+					weight: true,
+					headcount: true,
+					isOverridden: true,
+				},
+			});
 
 			const entries = rows.map((r) => ({
 				gradeLevel: r.gradeLevel,
@@ -92,6 +103,7 @@ export async function nationalityBreakdownRoutes(app: FastifyInstance) {
 			// Version lock guard
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
+				select: { id: true, status: true, dataSource: true, staleModules: true },
 			});
 
 			if (!version) {

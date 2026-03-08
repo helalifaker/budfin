@@ -893,6 +893,14 @@ export async function versionRoutes(app: FastifyInstance) {
 					// Copy cohort parameters
 					const cohortParams = await (tx as typeof prisma).cohortParameter.findMany({
 						where: { versionId: id },
+						select: {
+							gradeLevel: true,
+							retentionRate: true,
+							lateralEntryCount: true,
+							lateralWeightFr: true,
+							lateralWeightNat: true,
+							lateralWeightAut: true,
+						},
 					});
 					if (cohortParams.length > 0) {
 						await (tx as typeof prisma).cohortParameter.createMany({
@@ -911,6 +919,14 @@ export async function versionRoutes(app: FastifyInstance) {
 					// Copy nationality breakdown
 					const natBreakdown = await (tx as typeof prisma).nationalityBreakdown.findMany({
 						where: { versionId: id },
+						select: {
+							academicPeriod: true,
+							gradeLevel: true,
+							nationality: true,
+							weight: true,
+							headcount: true,
+							isOverridden: true,
+						},
 					});
 					if (natBreakdown.length > 0) {
 						await (tx as typeof prisma).nationalityBreakdown.createMany({

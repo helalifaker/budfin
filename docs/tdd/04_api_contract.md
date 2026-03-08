@@ -793,6 +793,171 @@ Bulk CSV import of historical enrollment data (FR-ENR-002). Supports a two-phase
 
 ---
 
+#### GET /api/v1/versions/:versionId/enrollment/cohort-parameters
+
+Retrieve cohort progression parameters for all 15 grades (FR-ENR-010). Returns one row per grade with retention rate and lateral entry configuration. Grades without saved parameters return defaults (retention 0.97, zero lateral entries; PS has retention 0).
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "entries": [
+        {
+            "gradeLevel": "PS|MS|GS|...|Terminale",
+            "retentionRate": 0.97,
+            "lateralEntryCount": 0,
+            "lateralWeightFr": 0,
+            "lateralWeightNat": 0,
+            "lateralWeightAut": 0
+        }
+    ]
+}
+```
+
+**Error responses:**
+
+| Status | Code              | Condition              |
+| ------ | ----------------- | ---------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist |
+
+---
+
+#### PUT /api/v1/versions/:versionId/enrollment/cohort-parameters
+
+Bulk upsert cohort parameters for one or more grades (FR-ENR-010, FR-ENR-011). Marks all downstream modules (ENROLLMENT, REVENUE, DHG, STAFFING, PNL) as stale. Validates that lateral weights (Fr + Nat + Aut) sum to 1.0 when lateralEntryCount > 0.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Request body:**
+
+```json
+{
+    "entries": [
+        {
+            "gradeLevel": "MS",
+            "retentionRate": 0.97,
+            "lateralEntryCount": 5,
+            "lateralWeightFr": 0.6,
+            "lateralWeightNat": 0.3,
+            "lateralWeightAut": 0.1
+        }
+    ]
+}
+```
+
+**Response 200:**
+
+```json
+{
+    "updated": 1,
+    "staleModules": ["ENROLLMENT", "REVENUE", "DHG", "STAFFING", "PNL"]
+}
+```
+
+**Error responses:**
+
+| Status | Code                       | Condition                                                         |
+| ------ | -------------------------- | ----------------------------------------------------------------- |
+| 404    | VERSION_NOT_FOUND          | Version does not exist                                            |
+| 409    | VERSION_LOCKED             | Version is not in Draft status                                    |
+| 409    | IMPORTED_VERSION           | Cannot modify cohort parameters on imported versions              |
+| 422    | LATERAL_WEIGHT_SUM_INVALID | Lateral weights do not sum to 1.0 for grades with lateral entries |
+
+---
+
+#### GET /api/v1/versions/:versionId/enrollment/nationality-breakdown
+
+Retrieve nationality distribution breakdown for a version. Returns weight and headcount per grade per nationality, with an override flag indicating user-edited rows.
+
+**RBAC:** All authenticated.
+
+**Query parameters:**
+
+| Param             | Type   | Required | Default | Description                     |
+| ----------------- | ------ | -------- | ------- | ------------------------------- |
+| `academic_period` | string | No       | `both`  | Filter: `AY1`, `AY2`, or `both` |
+
+**Response 200:**
+
+```json
+{
+    "entries": [
+        {
+            "gradeLevel": "PS",
+            "academicPeriod": "AY1",
+            "nationality": "Francais|Nationaux|Autres",
+            "weight": 0.4,
+            "headcount": 26,
+            "isOverridden": false
+        }
+    ]
+}
+```
+
+**Error responses:**
+
+| Status | Code              | Condition              |
+| ------ | ----------------- | ---------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist |
+
+---
+
+#### PUT /api/v1/versions/:versionId/enrollment/nationality-breakdown
+
+Override nationality breakdown for one or more grades. Validates that nationality weights sum to 1.0 per grade and nationality headcounts sum to the grade total headcount. Marks all downstream modules as stale.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Request body:**
+
+```json
+{
+    "overrides": [
+        {
+            "gradeLevel": "PS",
+            "nationality": "Francais",
+            "weight": 0.4,
+            "headcount": 26
+        },
+        {
+            "gradeLevel": "PS",
+            "nationality": "Nationaux",
+            "weight": 0.35,
+            "headcount": 23
+        },
+        {
+            "gradeLevel": "PS",
+            "nationality": "Autres",
+            "weight": 0.25,
+            "headcount": 16
+        }
+    ]
+}
+```
+
+**Response 200:**
+
+```json
+{
+    "updated": 3,
+    "staleModules": ["ENROLLMENT", "REVENUE", "DHG", "STAFFING", "PNL"]
+}
+```
+
+**Error responses:**
+
+| Status | Code                           | Condition                                                |
+| ------ | ------------------------------ | -------------------------------------------------------- |
+| 404    | VERSION_NOT_FOUND              | Version does not exist                                   |
+| 409    | VERSION_LOCKED                 | Version is not in Draft status                           |
+| 409    | IMPORTED_VERSION               | Cannot modify nationality breakdown on imported versions |
+| 422    | NATIONALITY_WEIGHT_SUM_INVALID | Nationality weights do not sum to 1.0 per grade          |
+| 422    | NATIONALITY_HEADCOUNT_MISMATCH | Nationality headcounts do not sum to grade total         |
+
+---
+
 ### 6.3.4 Fee Grid Endpoints
 
 #### GET /api/v1/versions/:versionId/fee-grid

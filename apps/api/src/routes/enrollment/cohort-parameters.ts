@@ -44,6 +44,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
+				select: { id: true },
 			});
 
 			if (!version) {
@@ -56,6 +57,14 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 			// Fetch existing parameters
 			const params = await prisma.cohortParameter.findMany({
 				where: { versionId },
+				select: {
+					gradeLevel: true,
+					retentionRate: true,
+					lateralEntryCount: true,
+					lateralWeightFr: true,
+					lateralWeightNat: true,
+					lateralWeightAut: true,
+				},
 			});
 
 			const paramsMap = new Map(params.map((p) => [p.gradeLevel, p]));
@@ -105,6 +114,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 			// Version lock guard
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
+				select: { id: true, status: true, dataSource: true, staleModules: true },
 			});
 
 			if (!version) {

@@ -30,6 +30,7 @@ export async function calculateRoutes(app: FastifyInstance) {
 			// Fetch version
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
+				select: { id: true, dataSource: true, status: true, staleModules: true },
 			});
 
 			if (!version) {
@@ -58,6 +59,14 @@ export async function calculateRoutes(app: FastifyInstance) {
 			// ── Step 1: Fetch CohortParameter rows ──────────────────────────────
 			const cohortParamRows = await prisma.cohortParameter.findMany({
 				where: { versionId },
+				select: {
+					gradeLevel: true,
+					retentionRate: true,
+					lateralEntryCount: true,
+					lateralWeightFr: true,
+					lateralWeightNat: true,
+					lateralWeightAut: true,
+				},
 			});
 			const cohortParams = new Map<string, CohortParams>();
 			for (const cp of cohortParamRows) {
@@ -103,6 +112,7 @@ export async function calculateRoutes(app: FastifyInstance) {
 			// ── Step 6: Fetch AY1 nationality breakdown ─────────────────────────
 			const existingNatBreakdown = await prisma.nationalityBreakdown.findMany({
 				where: { versionId, academicPeriod: 'AY1' },
+				select: { gradeLevel: true, nationality: true, headcount: true, weight: true },
 			});
 			const ay1NatByGrade = new Map<string, typeof existingNatBreakdown>();
 			for (const nb of existingNatBreakdown) {
@@ -114,6 +124,7 @@ export async function calculateRoutes(app: FastifyInstance) {
 			// Fetch existing AY2 overrides to preserve them
 			const existingAy2Nat = await prisma.nationalityBreakdown.findMany({
 				where: { versionId, academicPeriod: 'AY2' },
+				select: { gradeLevel: true, isOverridden: true },
 			});
 			const ay2OverriddenGrades = new Set<string>();
 			for (const nb of existingAy2Nat) {
@@ -193,7 +204,9 @@ export async function calculateRoutes(app: FastifyInstance) {
 			const natResults = calculateNationalityDistribution(natInputs);
 
 			// Fetch grade level configs for capacity calculation
-			const gradeLevels = await prisma.gradeLevel.findMany();
+			const gradeLevels = await prisma.gradeLevel.findMany({
+				select: { gradeCode: true, maxClassSize: true, plafondPct: true },
+			});
 			const gradeConfigs = new Map<string, GradeConfig>();
 			for (const gl of gradeLevels) {
 				gradeConfigs.set(gl.gradeCode, {
@@ -264,6 +277,12 @@ export async function calculateRoutes(app: FastifyInstance) {
 						},
 					},
 				});
+
+				// N+1 note: Sequential upserts are bounded at ~90 ops max
+				// (15 grades × 1 headcount + 15 × 3 nationalities + 15 × 2 DHG).
+				// Acceptable for single-tenant, single-school app (EFIR).
+				// Prisma lacks batch upsert; deleteMany+createMany would lose
+				// concurrent audit trails. Revisit if multi-school support added.
 
 				// ── Step 5 (persist): Upsert AY2 headcount rows ────────────────
 				for (const row of cohortResults) {

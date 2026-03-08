@@ -114,8 +114,28 @@ export interface AuditTrailEntry {
 export function useVersionAuditTrail(versionId: number | undefined) {
 	return useQuery({
 		queryKey: ['version-audit-trail', versionId],
-		queryFn: () =>
-			apiClient<AuditTrailEntry[]>(`/audit?table_name=budget_versions&record_id=${versionId}`),
+		queryFn: async () => {
+			const res = await apiClient<{
+				entries: Array<{
+					id: number;
+					operation: string;
+					user_id: number | null;
+					new_values: Record<string, unknown> | null;
+					old_values: Record<string, unknown> | null;
+					ip_address: string | null;
+					created_at: string;
+				}>;
+			}>(`/audit?table_name=budget_versions&record_id=${versionId}`);
+			return res.entries.map((e) => ({
+				id: e.id,
+				operation: e.operation,
+				userId: e.user_id,
+				newValues: e.new_values,
+				oldValues: e.old_values,
+				ipAddress: e.ip_address,
+				createdAt: e.created_at,
+			}));
+		},
 		enabled: !!versionId,
 	});
 }
