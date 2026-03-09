@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import {
 	createColumnHelper,
 	flexRender,
@@ -133,16 +134,7 @@ export function VersionsPage() {
 		return new Map([...groups.entries()].sort((a, b) => b[0] - a[0]));
 	}, [filteredRows, fiscalYear]);
 
-	// Skeleton with 200ms delay
-	const [showSkeleton, setShowSkeleton] = useState(false);
-	useEffect(() => {
-		if (!isLoading) {
-			setShowSkeleton(false);
-			return;
-		}
-		const t = setTimeout(() => setShowSkeleton(true), 200);
-		return () => clearTimeout(t);
-	}, [isLoading]);
+	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	// Fiscal year options
 	const fiscalYearOptions = useMemo(() => {
@@ -341,7 +333,7 @@ export function VersionsPage() {
 		<div className="p-6">
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-xl font-semibold">Version Management</h1>
+				<h1 className="mr-auto text-(--text-xl) font-semibold">Version Management</h1>
 
 				<Button variant={isCompareMode ? 'primary' : 'secondary'} onClick={handleCompareToggle}>
 					<BarChart3 className="mr-1.5 h-4 w-4" aria-hidden="true" />
@@ -350,7 +342,7 @@ export function VersionsPage() {
 
 				{canCreate && (
 					<Button variant="primary" onClick={() => setCreateOpen(true)}>
-						+ New Version
+						+ Add Version
 					</Button>
 				)}
 			</div>
@@ -446,8 +438,8 @@ export function VersionsPage() {
 
 			{/* Data table */}
 			<div className="mt-4 overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-sm">
-					<thead className="border-b bg-(--workspace-bg-subtle)">
+				<table role="table" className="w-full text-left text-(--text-sm)">
+					<thead className="border-b bg-(--workspace-bg-muted)">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
@@ -487,7 +479,7 @@ export function VersionsPage() {
 							<tr>
 								<td
 									colSpan={columns.length}
-									className="px-4 py-12 text-center text-sm text-(--text-muted)"
+									className="px-4 py-12 text-center text-(--text-sm) text-(--text-muted)"
 								>
 									<EmptyState
 										fiscalYear={fiscalYear}
@@ -615,7 +607,7 @@ function VersionRow({
 	return (
 		<tr
 			className={cn(
-				'border-b last:border-0 transition-colors hover:bg-(--workspace-bg-subtle)',
+				'border-b last:border-0 transition-colors hover:bg-(--accent-50)',
 				isActual && 'border-l-2 border-l-(--version-actual)'
 			)}
 		>

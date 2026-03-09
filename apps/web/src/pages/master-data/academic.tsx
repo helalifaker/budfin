@@ -204,11 +204,11 @@ export function AcademicPage() {
 	});
 
 	return (
-		<div className="space-y-8 p-6">
+		<div className="space-y-6 p-6">
 			{/* Academic Years Section */}
 			<section>
 				<div className="flex items-center justify-between pb-4">
-					<h2 className="text-(--text-xl) font-semibold">Academic Years</h2>
+					<h1 className="text-(--text-xl) font-semibold">Academic Years</h1>
 					{isAdmin && (
 						<Button
 							type="button"
@@ -217,7 +217,7 @@ export function AcademicPage() {
 								setAyPanelOpen(true);
 							}}
 						>
-							+ Add New
+							+ Add Year
 						</Button>
 					)}
 				</div>
@@ -273,7 +273,7 @@ export function AcademicPage() {
 			{/* Grade Levels Section */}
 			<section>
 				<div className="pb-4">
-					<h2 className="text-(--text-xl) font-semibold">Grade Levels</h2>
+					<h1 className="text-(--text-xl) font-semibold">Grade Levels</h1>
 				</div>
 
 				<div className="overflow-x-auto rounded-lg border">

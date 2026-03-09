@@ -5,6 +5,7 @@ import { useCalculateRevenue } from '../../hooks/use-revenue';
 import { useVersions, type BudgetVersion } from '../../hooks/use-versions';
 import { WorkspaceBoard } from '../../components/shared/workspace-board';
 import { WorkspaceBlock } from '../../components/shared/workspace-block';
+import { PageTransition } from '../../components/shared/page-transition';
 import { RevenueKpiRibbon } from '../../components/revenue/kpi-ribbon';
 import { TariffAssignmentGrid } from '../../components/revenue/tariff-assignment-grid';
 import { FeeGridTab } from '../../components/revenue/fee-grid-tab';
@@ -53,91 +54,95 @@ export function RevenuePage() {
 
 	if (!versionId) {
 		return (
-			<div className="flex items-center justify-center h-64 text-(--text-muted)">
-				Select a version from the context bar to begin revenue planning.
-			</div>
+			<PageTransition>
+				<div className="flex items-center justify-center h-64 text-(--text-muted)">
+					Select a version from the context bar to begin revenue planning.
+				</div>
+			</PageTransition>
 		);
 	}
 
 	return (
-		<WorkspaceBoard
-			title="Revenue"
-			description="Plan tuition revenue, discounts, and other income streams."
-			actions={
-				<>
-					<ToggleGroup
-						type="single"
-						value={selectedPeriod}
-						onValueChange={(value) => setAcademicPeriod(value || 'both')}
-						aria-label="Academic period filter"
+		<PageTransition>
+			<WorkspaceBoard
+				title="Revenue"
+				description="Plan tuition revenue, discounts, and other income streams."
+				actions={
+					<>
+						<ToggleGroup
+							type="single"
+							value={selectedPeriod}
+							onValueChange={(value) => setAcademicPeriod(value || 'both')}
+							aria-label="Academic period filter"
+						>
+							<ToggleGroupItem value="both">FY2026</ToggleGroupItem>
+							<ToggleGroupItem value="AY1">AY1</ToggleGroupItem>
+							<ToggleGroupItem value="AY2">AY2</ToggleGroupItem>
+						</ToggleGroup>
+
+						{!isViewer && (
+							<Button size="sm" disabled={calculateMutation.isPending} onClick={handleCalculate}>
+								{calculateMutation.isPending ? 'Calculating...' : 'Calculate Revenue'}
+							</Button>
+						)}
+					</>
+				}
+				kpiRibbon={
+					<RevenueKpiRibbon
+						grossHt={kpiData.grossHt}
+						totalDiscounts={kpiData.totalDiscounts}
+						netRevenue={kpiData.netRevenue}
+						avgPerStudent={kpiData.avgPerStudent}
+						isStale={isStale}
+					/>
+				}
+			>
+				{/* Status feedback */}
+				{calculateMutation.isSuccess && (
+					<div
+						className="rounded-lg border border-(--color-success) bg-(--color-success-bg) px-4 py-2 text-sm text-(--color-success)"
+						role="status"
 					>
-						<ToggleGroupItem value="both">FY2026</ToggleGroupItem>
-						<ToggleGroupItem value="AY1">AY1</ToggleGroupItem>
-						<ToggleGroupItem value="AY2">AY2</ToggleGroupItem>
-					</ToggleGroup>
+						Revenue calculated successfully.
+					</div>
+				)}
+				{calculateMutation.isError && (
+					<div
+						className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
+						role="alert"
+					>
+						Calculation failed. Ensure fee grid and enrollment data are configured.
+					</div>
+				)}
 
-					{!isViewer && (
-						<Button size="sm" disabled={calculateMutation.isPending} onClick={handleCalculate}>
-							{calculateMutation.isPending ? 'Calculating...' : 'Calculate Revenue'}
-						</Button>
-					)}
-				</>
-			}
-			kpiRibbon={
-				<RevenueKpiRibbon
-					grossHt={kpiData.grossHt}
-					totalDiscounts={kpiData.totalDiscounts}
-					netRevenue={kpiData.netRevenue}
-					avgPerStudent={kpiData.avgPerStudent}
-					isStale={isStale}
-				/>
-			}
-		>
-			{/* Status feedback */}
-			{calculateMutation.isSuccess && (
-				<div
-					className="rounded-lg border border-(--color-success) bg-(--color-success-bg) px-4 py-2 text-sm text-(--color-success)"
-					role="status"
-				>
-					Revenue calculated successfully.
-				</div>
-			)}
-			{calculateMutation.isError && (
-				<div
-					className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
-					role="alert"
-				>
-					Calculation failed. Ensure fee grid and enrollment data are configured.
-				</div>
-			)}
+				<WorkspaceBlock title="Tariff Assignment" isStale={isStale}>
+					<TariffAssignmentGrid
+						versionId={versionId}
+						academicPeriod={selectedPeriod}
+						isReadOnly={isViewer}
+					/>
+				</WorkspaceBlock>
 
-			<WorkspaceBlock title="Tariff Assignment" isStale={isStale}>
-				<TariffAssignmentGrid
-					versionId={versionId}
-					academicPeriod={selectedPeriod}
-					isReadOnly={isViewer}
-				/>
-			</WorkspaceBlock>
+				<WorkspaceBlock title="Fee Grid & Assumptions">
+					<FeeGridTab versionId={versionId} academicPeriod={selectedPeriod} isReadOnly={isViewer} />
+				</WorkspaceBlock>
 
-			<WorkspaceBlock title="Fee Grid & Assumptions">
-				<FeeGridTab versionId={versionId} academicPeriod={selectedPeriod} isReadOnly={isViewer} />
-			</WorkspaceBlock>
+				<WorkspaceBlock title="Discounts">
+					<DiscountsTab versionId={versionId} isReadOnly={isViewer} />
+				</WorkspaceBlock>
 
-			<WorkspaceBlock title="Discounts">
-				<DiscountsTab versionId={versionId} isReadOnly={isViewer} />
-			</WorkspaceBlock>
+				<WorkspaceBlock title="Other Revenue" defaultOpen={false}>
+					<OtherRevenueTab versionId={versionId} isReadOnly={isViewer} />
+				</WorkspaceBlock>
 
-			<WorkspaceBlock title="Other Revenue" defaultOpen={false}>
-				<OtherRevenueTab versionId={versionId} isReadOnly={isViewer} />
-			</WorkspaceBlock>
+				<WorkspaceBlock title="Revenue Engine">
+					<RevenueEngineTab versionId={versionId} />
+				</WorkspaceBlock>
 
-			<WorkspaceBlock title="Revenue Engine">
-				<RevenueEngineTab versionId={versionId} />
-			</WorkspaceBlock>
-
-			<WorkspaceBlock title="Executive Summary">
-				<ForecastTab versionId={versionId} />
-			</WorkspaceBlock>
-		</WorkspaceBoard>
+				<WorkspaceBlock title="Executive Summary">
+					<ForecastTab versionId={versionId} />
+				</WorkspaceBlock>
+			</WorkspaceBoard>
+		</PageTransition>
 	);
 }

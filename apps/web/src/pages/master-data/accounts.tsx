@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import {
 	createColumnHelper,
 	flexRender,
@@ -112,16 +113,7 @@ export function AccountsPage() {
 	const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
 	const [deleteConfirmCode, setDeleteConfirmCode] = useState('');
 
-	// 200ms-delayed skeleton
-	const [showSkeleton, setShowSkeleton] = useState(false);
-	useEffect(() => {
-		if (!isLoading) {
-			setShowSkeleton(false);
-			return;
-		}
-		const t = setTimeout(() => setShowSkeleton(true), 200);
-		return () => clearTimeout(t);
-	}, [isLoading]);
+	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	const handleSave = useCallback(
 		(formData: Record<string, unknown>) => {
@@ -366,6 +358,7 @@ export function AccountsPage() {
 				{isAdmin && (
 					<Button
 						type="button"
+						variant="primary"
 						onClick={() => {
 							setEditingAccount(null);
 							setPanelOpen(true);

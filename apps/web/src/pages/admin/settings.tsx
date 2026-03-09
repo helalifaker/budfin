@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { SettingsCard } from '../../components/admin/settings-card';
@@ -127,15 +128,7 @@ export function SettingsPage() {
 		saveMutation.mutate(updates);
 	}, [changedKeys, values, saveMutation]);
 
-	const [showSkeleton, setShowSkeleton] = useState(false);
-	useEffect(() => {
-		if (!isLoading) {
-			const t = setTimeout(() => setShowSkeleton(false), 0);
-			return () => clearTimeout(t);
-		}
-		const t = setTimeout(() => setShowSkeleton(true), 200);
-		return () => clearTimeout(t);
-	}, [isLoading]);
+	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	if (isLoading && showSkeleton) {
 		return (
@@ -173,6 +166,7 @@ export function SettingsPage() {
 				<h1 className="text-(--text-xl) font-semibold">System Settings</h1>
 				<Button
 					type="button"
+					variant="primary"
 					disabled={!hasChanges}
 					loading={saveMutation.isPending}
 					onClick={handleSave}
