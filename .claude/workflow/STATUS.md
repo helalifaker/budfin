@@ -1,8 +1,8 @@
 # BudFin — Current Status
 
-**Phase**: 4 — SPECIFY
+**Phase**: 7 — REVIEW
 **Current Epic**: Epic 12 — Data Migration (#10)
-**Current Story**: Spec complete — ready for story decomposition
+**Current Story**: All 11 stories implemented — PR review phase
 **Last updated**: 2026-03-09
 **Note**: Epic 12 moved ahead of Epics 5, 6, 8, 9 to allow real-data testing of completed features (Enrollment, Revenue, Staffing, Staff Costs). P&L migration data deferred until Epic 5 is done.
 
@@ -48,6 +48,10 @@
 | 5 — TDD RED (Epic 4) | ✅ Complete | 2026-03-09 |
 | 6 — IMPLEMENT (Epic 4) | ✅ Complete | 2026-03-09 |
 | 7 — REVIEW (Epic 4) | ✅ Complete | 2026-03-09 |
+| 4 — SPECIFY (Epic 12) | ✅ Complete | 2026-03-09 |
+| 5 — TDD RED (Epic 12) | ✅ Complete | 2026-03-09 |
+| 6 — IMPLEMENT (Epic 12) | ✅ Complete | 2026-03-09 |
+| 7 — REVIEW (Epic 12) | ✅ Complete | 2026-03-09 |
 
 ## Feature Progress
 
@@ -64,7 +68,7 @@
 | 9 | Dashboard | 2 | Epic Created (#13) |
 | 10 | Version Management | DONE | All 13 stories complete (13/13), merged PR #63 + remediation PR #66 — 2026-03-06 |
 | 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) + remediation PR #98 -- 2026-03-06 |
-| 12 | Data Migration | 4 | Spec in progress (#10) |
+| 12 | Data Migration | DONE | All 11 stories complete (11/11), PR #183 — 2026-03-09 |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 | 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
 
