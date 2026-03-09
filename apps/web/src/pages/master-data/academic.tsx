@@ -204,7 +204,7 @@ export function AcademicPage() {
 	});
 
 	return (
-		<div className="space-y-8 p-6">
+		<div className="space-y-6 p-6">
 			{/* Academic Years Section */}
 			<section>
 				<div className="flex items-center justify-between pb-4">
@@ -217,7 +217,7 @@ export function AcademicPage() {
 								setAyPanelOpen(true);
 							}}
 						>
-							+ Add New
+							+ Add Year
 						</Button>
 					)}
 				</div>

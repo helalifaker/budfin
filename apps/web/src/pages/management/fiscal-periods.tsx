@@ -41,8 +41,8 @@ const MONTH_NAMES = [
 ] as const;
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
-	Draft: 'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-(--status-draft)',
-	Locked: 'bg-[color-mix(in_srgb,var(--status-locked)_15%,white)] text-(--status-locked)',
+	Draft: 'bg-(--status-draft-bg) text-(--status-draft)',
+	Locked: 'bg-(--status-locked-bg) text-(--status-locked)',
 };
 
 const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
@@ -94,8 +94,7 @@ export function FiscalPeriodsPage() {
 						<span
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-								STATUS_BADGE_COLORS[value] ??
-									'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-(--status-draft)'
+								STATUS_BADGE_COLORS[value] ?? 'bg-(--status-draft-bg) text-(--status-draft)'
 							)}
 							aria-label={`Status: ${value}`}
 						>
@@ -176,7 +175,7 @@ export function FiscalPeriodsPage() {
 			{/* Data table */}
 			{isLoading ? (
 				<div className="overflow-x-auto rounded-lg border">
-					<table role="table" className="w-full text-left text-sm">
+					<table role="table" className="w-full text-left text-(--text-sm)">
 						<tbody>
 							<TableSkeleton rows={6} cols={6} />
 						</tbody>
@@ -184,7 +183,7 @@ export function FiscalPeriodsPage() {
 				</div>
 			) : (
 				<div className="overflow-x-auto rounded-lg border">
-					<table role="table" className="w-full text-left text-sm">
+					<table role="table" className="w-full text-left text-(--text-sm)">
 						<thead className="border-b bg-(--workspace-bg-muted)">
 							{table.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
@@ -201,7 +200,7 @@ export function FiscalPeriodsPage() {
 								<tr>
 									<td
 										colSpan={columns.length}
-										className="px-4 py-12 text-center text-sm text-(--text-muted)"
+										className="px-4 py-12 text-center text-(--text-sm) text-(--text-muted)"
 									>
 										No fiscal periods for FY{fiscalYear}
 									</td>

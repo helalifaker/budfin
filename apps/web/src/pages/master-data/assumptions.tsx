@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import { useAuthStore } from '../../stores/auth-store';
 import { useAssumptions, useUpdateAssumptions, type Assumption } from '../../hooks/use-assumptions';
 import { ChevronRight, Calculator } from 'lucide-react';
@@ -183,17 +184,7 @@ export function AssumptionsPage() {
 		[saveStatuses]
 	);
 
-	// 200ms-delayed skeleton
-	const [showSkeleton, setShowSkeleton] = useState(false);
-	useEffect(() => {
-		if (!isLoading) {
-			// eslint-disable-next-line react-hooks/set-state-in-effect -- reset skeleton visibility to sync with loading prop; intentional
-			setShowSkeleton(false);
-			return;
-		}
-		const t = setTimeout(() => setShowSkeleton(true), 200);
-		return () => clearTimeout(t);
-	}, [isLoading]);
+	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	if (isLoading && !showSkeleton) {
 		return (

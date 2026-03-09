@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import type { Table as TanstackTable } from '@tanstack/react-table';
 import {
 	createColumnHelper,
@@ -614,16 +615,7 @@ export function ReferencePage() {
 				? tariffLoading
 				: deptLoading;
 
-	// 200ms-delayed skeleton
-	const [showSkeleton, setShowSkeleton] = useState(false);
-	useEffect(() => {
-		if (!isLoading) {
-			setShowSkeleton(false);
-			return;
-		}
-		const t = setTimeout(() => setShowSkeleton(true), 200);
-		return () => clearTimeout(t);
-	}, [isLoading]);
+	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	return (
 		<div className="p-6">
@@ -664,7 +656,7 @@ export function ReferencePage() {
 				className="mt-4"
 			>
 				{/* Toolbar */}
-				<div className="flex items-center justify-between pb-4">
+				<div className="flex flex-wrap items-center gap-3 pb-4">
 					<div>
 						<label htmlFor="ref-search" className="sr-only">
 							Search
@@ -680,7 +672,7 @@ export function ReferencePage() {
 					</div>
 					{isAdmin && (
 						<Button type="button" variant="primary" onClick={handleAddNew}>
-							+ Add New
+							+ Add Item
 						</Button>
 					)}
 				</div>

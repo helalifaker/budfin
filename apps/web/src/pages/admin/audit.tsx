@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import { useQuery } from '@tanstack/react-query';
 import {
 	createColumnHelper,
@@ -130,15 +131,7 @@ export function AuditPage() {
 
 	const totalPages = data ? Math.ceil(data.total / data.page_size) : 0;
 
-	const [showSkeleton, setShowSkeleton] = useState(false);
-	useEffect(() => {
-		if (!isLoading) {
-			const t = setTimeout(() => setShowSkeleton(false), 0);
-			return () => clearTimeout(t);
-		}
-		const t = setTimeout(() => setShowSkeleton(true), 200);
-		return () => clearTimeout(t);
-	}, [isLoading]);
+	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	return (
 		<div className="p-6">
