@@ -73,14 +73,29 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				cell: (info) => (info.getValue() ? 'Yes' : 'No'),
 			}),
 			...(isReadOnly
-				? []
+				? [
+						columnHelper.accessor('baseSalary', {
+							header: 'Base Salary',
+							size: 110,
+							cell: (info) => {
+								const val = info.getValue();
+								return val === null ? (
+									<span className="text-[var(--text-muted)]" aria-label="Salary data restricted">
+										--
+									</span>
+								) : (
+									`SAR ${Number(val).toLocaleString()}`
+								);
+							},
+						}),
+					]
 				: [
 						columnHelper.accessor('baseSalary', {
 							header: 'Base Salary',
 							size: 110,
 							cell: (info) => {
 								const val = info.getValue();
-								return val ? `SAR ${Number(val).toLocaleString()}` : '—';
+								return val ? `SAR ${Number(val).toLocaleString()}` : '\u2014';
 							},
 						}),
 					]),
@@ -98,6 +113,9 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 	});
+
+	const visibleColumnCount = columns.length;
+	const totalRowCount = table.getFilteredRowModel().rows.length + 1; // +1 for header row
 
 	return (
 		<div className="space-y-3">
@@ -117,11 +135,17 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 			/>
 
 			<div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--workspace-border)]">
-				<table className="w-full border-collapse text-sm" role="grid">
+				<table
+					className="w-full border-collapse text-sm"
+					role="grid"
+					aria-label="Employee roster"
+					aria-rowcount={totalRowCount}
+					aria-colcount={visibleColumnCount}
+				>
 					<thead>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<tr key={headerGroup.id} className="bg-[var(--workspace-bg-subtle)]">
-								{headerGroup.headers.map((header) => (
+								{headerGroup.headers.map((header, colIdx) => (
 									<th
 										key={header.id}
 										className={cn(
@@ -139,12 +163,13 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 													? 'descending'
 													: 'none'
 										}
+										aria-colindex={colIdx + 1}
 									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 										{header.column.getIsSorted() === 'asc'
-											? ' ↑'
+											? ' \u2191'
 											: header.column.getIsSorted() === 'desc'
-												? ' ↓'
+												? ' \u2193'
 												: ''}
 									</th>
 								))}
@@ -181,9 +206,12 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 										}
 									}}
 								>
-									{row.getVisibleCells().map((cell) => (
+									{row.getVisibleCells().map((cell, colIdx) => (
 										<td
 											key={cell.id}
+											role="gridcell"
+											aria-colindex={colIdx + 1}
+											aria-readonly={isReadOnly ? 'true' : undefined}
 											className={cn(
 												'px-3 py-2 text-[var(--text-primary)]',
 												'border-b border-[var(--workspace-border)]'
