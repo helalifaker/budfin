@@ -22,19 +22,17 @@ export function WorkspaceBoard({
 			<header
 				className={cn(
 					'flex items-start justify-between gap-4',
-					'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
-					'border-t-[3px] border-t-[var(--accent-500)]',
-					'bg-[var(--workspace-bg-card)] p-5 shadow-[var(--shadow-card)]'
+					'rounded-(--radius-lg) border border-(--workspace-border)',
+					'border-t-[3px] border-t-(--accent-500)',
+					'bg-(--workspace-bg-card) p-5 shadow-(--shadow-card)'
 				)}
 			>
 				<div className="min-w-0">
-					<h1 className="text-[length:var(--text-2xl)] font-bold font-[family-name:var(--font-display)] text-[var(--text-primary)]">
+					<h1 className="text-(--text-2xl) font-bold font-[family-name:var(--font-display)] text-(--text-primary)">
 						{title}
 					</h1>
 					{description && (
-						<p className="mt-2 text-[length:var(--text-sm)] text-[var(--text-muted)]">
-							{description}
-						</p>
+						<p className="mt-2 text-(--text-sm) text-(--text-muted)">{description}</p>
 					)}
 				</div>
 				{actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
@@ -45,8 +43,8 @@ export function WorkspaceBoard({
 				<div
 					className={cn(
 						'sticky top-0 z-10',
-						'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
-						'bg-white/80 px-4 py-3 shadow-[var(--shadow-sm)]',
+						'rounded-(--radius-lg) border border-(--workspace-border)',
+						'bg-white/80 px-4 py-3 shadow-(--shadow-sm)',
 						'backdrop-blur-md'
 					)}
 					role="region"

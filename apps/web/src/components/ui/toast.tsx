@@ -3,24 +3,24 @@ import { cn } from '../../lib/cn';
 import { subscribe } from './toast-state';
 
 const TOAST_STYLES = {
-	success: 'border-[var(--color-success)] bg-[var(--color-success-bg)] text-[var(--color-success)]',
-	error: 'border-[var(--color-error)] bg-[var(--color-error-bg)] text-[var(--color-error)]',
-	info: 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]',
-	warning: 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning)]',
+	success: 'border-(--color-success) bg-(--color-success-bg) text-(--color-success)',
+	error: 'border-(--color-error) bg-(--color-error-bg) text-(--color-error)',
+	info: 'border-(--color-info) bg-(--color-info-bg) text-(--color-info)',
+	warning: 'border-(--color-warning) bg-(--color-warning-bg) text-(--color-warning)',
 } as const;
 
 const TOAST_DOT = {
-	success: 'bg-[var(--color-success)]',
-	error: 'bg-[var(--color-error)]',
-	info: 'bg-[var(--color-info)]',
-	warning: 'bg-[var(--color-warning)]',
+	success: 'bg-(--color-success)',
+	error: 'bg-(--color-error)',
+	info: 'bg-(--color-info)',
+	warning: 'bg-(--color-warning)',
 } as const;
 
 const TOAST_PROGRESS = {
-	success: 'bg-[var(--color-success)]',
-	error: 'bg-[var(--color-error)]',
-	info: 'bg-[var(--color-info)]',
-	warning: 'bg-[var(--color-warning)]',
+	success: 'bg-(--color-success)',
+	error: 'bg-(--color-error)',
+	info: 'bg-(--color-info)',
+	warning: 'bg-(--color-warning)',
 } as const;
 
 export function Toaster() {
@@ -44,8 +44,8 @@ export function Toaster() {
 					role="status"
 					className={cn(
 						'relative flex items-start gap-2.5 overflow-hidden',
-						'rounded-[var(--radius-md)] border px-4 py-3',
-						'shadow-[var(--shadow-md)] text-[length:var(--text-sm)]',
+						'rounded-(--radius-md) border px-4 py-3',
+						'shadow-(--shadow-md) text-(--text-sm)',
 						'animate-toast-enter',
 						TOAST_STYLES[t.type]
 					)}

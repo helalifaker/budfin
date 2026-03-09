@@ -27,25 +27,25 @@ const MODULE_ROUTES: Record<string, string> = {
 };
 
 const STATUS_BADGE_COLORS: Record<BudgetVersion['status'], string> = {
-	Draft: 'bg-[var(--status-draft-bg)] text-[var(--text-primary)]',
-	Published: 'bg-[var(--status-published-bg)] text-[var(--status-published)]',
-	Locked: 'bg-[var(--status-locked-bg)] text-[var(--status-locked)]',
-	Archived: 'bg-[var(--status-archived-bg)] text-[var(--text-muted)]',
+	Draft: 'bg-(--status-draft-bg) text-(--text-primary)',
+	Published: 'bg-(--status-published-bg) text-(--status-published)',
+	Locked: 'bg-(--status-locked-bg) text-(--status-locked)',
+	Archived: 'bg-(--status-archived-bg) text-(--text-muted)',
 };
 
 const TYPE_DOT_COLORS: Record<BudgetVersion['type'], string> = {
-	Budget: 'bg-[var(--version-budget)]',
-	Forecast: 'bg-[var(--version-forecast)]',
-	Actual: 'bg-[var(--version-actual)]',
+	Budget: 'bg-(--version-budget)',
+	Forecast: 'bg-(--version-forecast)',
+	Actual: 'bg-(--version-actual)',
 };
 
 const OPERATION_DOT_COLORS: Record<string, string> = {
-	VERSION_CREATED: 'bg-[var(--status-draft)]',
-	VERSION_PUBLISHED: 'bg-[var(--status-published)]',
-	VERSION_LOCKED: 'bg-[var(--status-locked)]',
-	VERSION_ARCHIVED: 'bg-[var(--status-archived)]',
-	VERSION_REVERTED: 'bg-[var(--status-draft)]',
-	VERSION_CLONED: 'bg-[var(--status-draft)]',
+	VERSION_CREATED: 'bg-(--status-draft)',
+	VERSION_PUBLISHED: 'bg-(--status-published)',
+	VERSION_LOCKED: 'bg-(--status-locked)',
+	VERSION_ARCHIVED: 'bg-(--status-archived)',
+	VERSION_REVERTED: 'bg-(--status-draft)',
+	VERSION_CLONED: 'bg-(--status-draft)',
 };
 
 const OPERATION_VERBS: Record<string, string> = {
@@ -75,7 +75,7 @@ const TABS: { key: TabKey; label: string }[] = [
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
 	return (
-		<h3 className="mb-2 text-[length:var(--text-xs)] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+		<h3 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-wide text-(--text-muted)">
 			{children}
 		</h3>
 	);
@@ -84,10 +84,8 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div>
-			<dt className="text-[length:var(--text-sm)] text-[var(--text-muted)]">{label}</dt>
-			<dd className="text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]">
-				{children}
-			</dd>
+			<dt className="text-(--text-sm) text-(--text-muted)">{label}</dt>
+			<dd className="text-(--text-sm) font-medium text-(--text-primary)">{children}</dd>
 		</div>
 	);
 }
@@ -100,20 +98,18 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 			{/* Header info */}
 			<section>
 				<div className="flex items-center gap-3">
-					<h3 className="text-[length:var(--text-lg)] font-semibold text-[var(--text-primary)]">
-						{version.name}
-					</h3>
-					<span className="inline-flex items-center gap-1.5 text-[length:var(--text-sm)]">
+					<h3 className="text-(--text-lg) font-semibold text-(--text-primary)">{version.name}</h3>
+					<span className="inline-flex items-center gap-1.5 text-(--text-sm)">
 						<span
 							className={cn('h-2 w-2 rounded-full', TYPE_DOT_COLORS[version.type])}
 							aria-hidden="true"
 						/>
-						<span className="text-[var(--text-secondary)]">{TYPE_FULL_NAMES[version.type]}</span>
+						<span className="text-(--text-secondary)">{TYPE_FULL_NAMES[version.type]}</span>
 					</span>
 					<span
 						className={cn(
-							'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5',
-							'text-[length:var(--text-xs)] font-medium',
+							'inline-flex rounded-(--radius-sm) px-2 py-0.5',
+							'text-(--text-xs) font-medium',
 							STATUS_BADGE_COLORS[version.status]
 						)}
 					>
@@ -121,9 +117,7 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 					</span>
 				</div>
 				{version.description && (
-					<p className="mt-2 text-[length:var(--text-sm)] italic text-[var(--text-muted)]">
-						{version.description}
-					</p>
+					<p className="mt-2 text-(--text-sm) italic text-(--text-muted)">{version.description}</p>
 				)}
 			</section>
 
@@ -138,7 +132,7 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 					<Field label="Updated At">{formatDateTime(version.updatedAt)}</Field>
 					{version.sourceVersionId !== null && (
 						<Field label="Source">
-							<span className="text-[var(--color-link)]">
+							<span className="text-(--color-link)">
 								Cloned from version #{version.sourceVersionId}
 							</span>
 						</Field>
@@ -166,14 +160,14 @@ function LifecycleStateMachine({ currentStatus }: { currentStatus: BudgetVersion
 						<span
 							className={cn(
 								'inline-flex items-center justify-center rounded-full px-3 py-1',
-								'text-[length:var(--text-xs)] font-medium',
+								'text-(--text-xs) font-medium',
 								'transition-colors',
 								isCurrent
-									? 'bg-[var(--color-accent)] text-white'
+									? 'bg-(--color-accent) text-white'
 									: isPast
-										? 'bg-[var(--workspace-bg-subtle)] text-[var(--text-secondary)]'
-										: 'bg-[var(--workspace-bg-card)] text-[var(--text-muted)]' +
-											' border border-[var(--workspace-border)]'
+										? 'bg-(--workspace-bg-subtle) text-(--text-secondary)'
+										: 'bg-(--workspace-bg-card) text-(--text-muted)' +
+											' border border-(--workspace-border)'
 							)}
 						>
 							{state}
@@ -181,8 +175,8 @@ function LifecycleStateMachine({ currentStatus }: { currentStatus: BudgetVersion
 						{idx < LIFECYCLE_STATES.length - 1 && (
 							<span
 								className={cn(
-									'mx-1 text-[length:var(--text-sm)]',
-									isPast ? 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)]'
+									'mx-1 text-(--text-sm)',
+									isPast ? 'text-(--text-secondary)' : 'text-(--text-muted)'
 								)}
 								aria-hidden="true"
 							>
@@ -277,15 +271,13 @@ function LifecycleTab({
 			<section>
 				<SectionHeading>Audit Trail</SectionHeading>
 				{auditLoading ? (
-					<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">Loading...</p>
+					<p className="text-(--text-sm) text-(--text-muted)">Loading...</p>
 				) : !auditTrail || auditTrail.length === 0 ? (
-					<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
-						No history available
-					</p>
+					<p className="text-(--text-sm) text-(--text-muted)">No history available</p>
 				) : (
 					<div className="relative space-y-0">
 						{auditTrail.map((entry, idx) => {
-							const dotColor = OPERATION_DOT_COLORS[entry.operation] ?? 'bg-[var(--text-muted)]';
+							const dotColor = OPERATION_DOT_COLORS[entry.operation] ?? 'bg-(--text-muted)';
 							const verb = OPERATION_VERBS[entry.operation] ?? entry.operation;
 							const userEmail =
 								entry.newValues &&
@@ -306,10 +298,7 @@ function LifecycleTab({
 									{/* Vertical connector line */}
 									{!isLast && (
 										<div
-											className={cn(
-												'absolute left-[5px] top-3 w-0.5',
-												'bg-[var(--workspace-border)]'
-											)}
+											className={cn('absolute left-[5px] top-3 w-0.5', 'bg-(--workspace-border)')}
 											style={{ bottom: 0 }}
 											aria-hidden="true"
 										/>
@@ -321,17 +310,11 @@ function LifecycleTab({
 									/>
 									{/* Text */}
 									<div>
-										<p className="text-[length:var(--text-sm)] text-[var(--text-primary)]">
+										<p className="text-(--text-sm) text-(--text-primary)">
 											{verb} on {formatDate(entry.createdAt)}
-											{userEmail && (
-												<span className="text-[var(--text-muted)]"> by {userEmail}</span>
-											)}
+											{userEmail && <span className="text-(--text-muted)"> by {userEmail}</span>}
 										</p>
-										{note && (
-											<p className="text-[length:var(--text-xs)] italic text-[var(--text-muted)]">
-												{note}
-											</p>
-										)}
+										{note && <p className="text-(--text-xs) italic text-(--text-muted)">{note}</p>}
 									</div>
 								</div>
 							);
@@ -372,9 +355,9 @@ function DataTab({ version }: { version: BudgetVersion }) {
 								key={mod}
 								to={MODULE_ROUTES[mod] ?? '#'}
 								className={cn(
-									'inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1',
-									'text-[length:var(--text-xs)] font-medium',
-									'bg-[var(--color-warning-bg)] text-[var(--color-warning)]',
+									'inline-flex items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1',
+									'text-(--text-xs) font-medium',
+									'bg-(--color-warning-bg) text-(--color-warning)',
 									'hover:opacity-80 transition-opacity'
 								)}
 							>
@@ -384,7 +367,7 @@ function DataTab({ version }: { version: BudgetVersion }) {
 						))}
 					</div>
 				) : (
-					<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">No stale modules</p>
+					<p className="text-(--text-sm) text-(--text-muted)">No stale modules</p>
 				)}
 			</section>
 
@@ -392,23 +375,21 @@ function DataTab({ version }: { version: BudgetVersion }) {
 			<section>
 				<SectionHeading>Import Information</SectionHeading>
 				{!isActual ? (
-					<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
+					<p className="text-(--text-sm) text-(--text-muted)">
 						Import data is only available for Actual versions
 					</p>
 				) : importLoading ? (
-					<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">Loading...</p>
+					<p className="text-(--text-sm) text-(--text-muted)">Loading...</p>
 				) : !importLogs || importLogs.length === 0 ? (
-					<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
-						No imports recorded
-					</p>
+					<p className="text-(--text-sm) text-(--text-muted)">No imports recorded</p>
 				) : (
 					<div className="space-y-3">
 						{importLogs.map((log) => (
 							<div
 								key={log.id}
 								className={cn(
-									'rounded-[var(--radius-md)] border border-[var(--workspace-border)]',
-									'bg-[var(--workspace-bg-subtle)] p-3'
+									'rounded-(--radius-md) border border-(--workspace-border)',
+									'bg-(--workspace-bg-subtle) p-3'
 								)}
 							>
 								<dl className="grid grid-cols-2 gap-2">
@@ -418,11 +399,11 @@ function DataTab({ version }: { version: BudgetVersion }) {
 									<Field label="Validation">
 										<span
 											className={cn(
-												'inline-flex rounded-[var(--radius-sm)] px-1.5 py-0.5',
-												'text-[length:var(--text-xs)] font-medium',
+												'inline-flex rounded-(--radius-sm) px-1.5 py-0.5',
+												'text-(--text-xs) font-medium',
 												log.validationStatus === 'passed'
-													? 'bg-[var(--status-published-bg)] text-[var(--status-published)]'
-													: 'bg-[var(--color-warning-bg)] text-[var(--color-warning)]'
+													? 'bg-(--status-published-bg) text-(--status-published)'
+													: 'bg-(--color-warning-bg) text-(--color-warning)'
 											)}
 										>
 											{log.validationStatus}
@@ -515,7 +496,7 @@ export function VersionDetailPanel({
 				aria-labelledby={titleId}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[520px]',
-					'bg-[var(--workspace-bg-card)] shadow-xl',
+					'bg-(--workspace-bg-card) shadow-xl',
 					'flex flex-col',
 					'translate-x-0 transition-transform duration-200 ease-out'
 				)}
@@ -523,30 +504,27 @@ export function VersionDetailPanel({
 				{/* Header */}
 				<div className="border-b px-6 py-4">
 					<div className="flex items-center justify-between">
-						<h2
-							id={titleId}
-							className="text-[length:var(--text-lg)] font-semibold text-[var(--text-primary)]"
-						>
+						<h2 id={titleId} className="text-(--text-lg) font-semibold text-(--text-primary)">
 							Version Details
 						</h2>
 						<button
 							type="button"
 							onClick={onClose}
 							className={cn(
-								'inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)]',
-								'text-[var(--text-muted)] hover:bg-[var(--workspace-bg-subtle)]',
-								'hover:text-[var(--text-primary)] transition-colors'
+								'inline-flex h-8 w-8 items-center justify-center rounded-(--radius-sm)',
+								'text-(--text-muted) hover:bg-(--workspace-bg-subtle)',
+								'hover:text-(--text-primary) transition-colors'
 							)}
 							aria-label="Close panel"
 						>
-							<span aria-hidden="true" className="text-[length:var(--text-lg)]">
+							<span aria-hidden="true" className="text-(--text-lg)">
 								&times;
 							</span>
 						</button>
 					</div>
 
 					{/* Tab bar */}
-					<nav className="mt-3 flex gap-0 border-b border-[var(--workspace-border)]" role="tablist">
+					<nav className="mt-3 flex gap-0 border-b border-(--workspace-border)" role="tablist">
 						{TABS.map((tab) => (
 							<button
 								key={tab.key}
@@ -555,13 +533,13 @@ export function VersionDetailPanel({
 								aria-selected={activeTab === tab.key}
 								onClick={() => setActiveTab(tab.key)}
 								className={cn(
-									'px-4 pb-2 text-[length:var(--text-sm)] font-medium transition-colors',
+									'px-4 pb-2 text-(--text-sm) font-medium transition-colors',
 									'-mb-px border-b-2',
 									activeTab === tab.key
-										? 'border-[var(--color-accent)] text-[var(--color-accent)]'
-										: 'border-transparent text-[var(--text-muted)]' +
-												' hover:text-[var(--text-secondary)]' +
-												' hover:border-[var(--workspace-border)]'
+										? 'border-(--color-accent) text-(--color-accent)'
+										: 'border-transparent text-(--text-muted)' +
+												' hover:text-(--text-secondary)' +
+												' hover:border-(--workspace-border)'
 								)}
 							>
 								{tab.label}

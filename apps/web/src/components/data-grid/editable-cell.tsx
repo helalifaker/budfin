@@ -79,8 +79,8 @@ export function EditableCell({
 		return (
 			<span
 				className={cn(
-					'block px-2 py-1 text-[length:var(--text-xs)]',
-					'bg-[var(--cell-readonly-bg)] rounded-[var(--radius-sm)]',
+					'block px-2 py-1 text-(--text-xs)',
+					'bg-(--cell-readonly-bg) rounded-(--radius-sm)',
 					'font-[family-name:var(--font-mono)]',
 					isNumber && 'text-right tabular-nums',
 					className
@@ -101,14 +101,14 @@ export function EditableCell({
 				onBlur={handleBlur}
 				onKeyDown={handleKeyDown}
 				className={cn(
-					'w-full px-2 py-1 text-[length:var(--text-xs)]',
-					'rounded-[var(--radius-sm)]',
-					'border border-[var(--cell-editable-focus)]',
-					'shadow-[var(--shadow-glow-accent)]',
+					'w-full px-2 py-1 text-(--text-xs)',
+					'rounded-(--radius-sm)',
+					'border border-(--cell-editable-focus)',
+					'shadow-(--shadow-glow-accent)',
 					'bg-white scale-[1.02] origin-center',
 					'font-[family-name:var(--font-mono)]',
 					'outline-none',
-					'transition-all duration-[var(--duration-fast)]',
+					'transition-all duration-(--duration-fast)',
 					isNumber && 'text-right tabular-nums',
 					className
 				)}
@@ -121,19 +121,19 @@ export function EditableCell({
 			type="button"
 			onClick={() => setIsEditing(true)}
 			className={cn(
-				'block w-full text-left px-2 py-1 text-[length:var(--text-xs)]',
-				'rounded-[var(--radius-sm)] cursor-text',
-				'bg-[var(--cell-editable-bg)]',
+				'block w-full text-left px-2 py-1 text-(--text-xs)',
+				'rounded-(--radius-sm) cursor-text',
+				'bg-(--cell-editable-bg)',
 				'font-[family-name:var(--font-mono)]',
-				'hover:border-[var(--accent-200)] hover:shadow-[var(--shadow-xs)]',
+				'hover:border-(--accent-200) hover:shadow-(--shadow-xs)',
 				'border border-transparent',
-				'border-b border-dashed border-b-[var(--accent-200)]',
-				'transition-all duration-[var(--duration-fast)]',
-				'focus:border-[var(--cell-editable-focus)] focus:shadow-[var(--shadow-glow-accent)]',
+				'border-b border-dashed border-b-(--accent-200)',
+				'transition-all duration-(--duration-fast)',
+				'focus:border-(--cell-editable-focus) focus:shadow-(--shadow-glow-accent)',
 				'focus:outline-none',
 				isNumber && 'text-right tabular-nums',
-				saveState === 'saved' && 'bg-[var(--accent-50)]',
-				saveState === 'error' && 'border-[var(--color-error)] animate-shake',
+				saveState === 'saved' && 'bg-(--accent-50)',
+				saveState === 'error' && 'border-(--color-error) animate-shake',
 				showFlash && 'animate-cell-save',
 				className
 			)}
@@ -141,7 +141,7 @@ export function EditableCell({
 			{value === 0 || value === '0' ? '' : value}
 			{saveState === 'saved' && (
 				<svg
-					className="inline-block ml-1 h-3 w-3 text-[var(--color-success)]"
+					className="inline-block ml-1 h-3 w-3 text-(--color-success)"
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"
@@ -161,7 +161,7 @@ export function EditableCell({
 			)}
 			{saveState === 'error' && (
 				<svg
-					className="inline-block ml-1 h-3 w-3 text-[var(--color-error)]"
+					className="inline-block ml-1 h-3 w-3 text-(--color-error)"
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"

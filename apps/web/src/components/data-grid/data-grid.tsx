@@ -25,21 +25,21 @@ export function DataGrid<T>({
 		<div
 			className={cn(
 				'overflow-x-auto',
-				'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
-				'shadow-[var(--shadow-xs)]',
+				'rounded-(--radius-lg) border border-(--workspace-border)',
+				'shadow-(--shadow-xs)',
 				className
 			)}
 		>
-			<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-				<thead className="border-b border-[var(--workspace-border)] bg-[var(--workspace-bg-muted)]">
+			<table role="table" className="w-full text-left text-(--text-sm)">
+				<thead className="border-b border-(--workspace-border) bg-(--workspace-bg-muted)">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
 							{hg.headers.map((header) => (
 								<th
 									key={header.id}
 									className={cn(
-										'px-4 py-3 font-medium text-[var(--text-secondary)]',
-										'text-[length:var(--text-xs)] uppercase tracking-wide'
+										'px-4 py-3 font-medium text-(--text-secondary)',
+										'text-(--text-xs) uppercase tracking-wide'
 									)}
 								>
 									{render(header.column.columnDef.header, header.getContext())}
@@ -55,9 +55,7 @@ export function DataGrid<T>({
 						<tr>
 							<td colSpan={cols} className="px-4 py-12 text-center">
 								{emptyState ?? (
-									<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
-										No data available
-									</p>
+									<p className="text-(--text-sm) text-(--text-muted)">No data available</p>
 								)}
 							</td>
 						</tr>
@@ -66,9 +64,9 @@ export function DataGrid<T>({
 							<tr
 								key={row.id}
 								className={cn(
-									'border-b border-[var(--workspace-border)] last:border-0',
-									'transition-colors duration-[var(--duration-fast)]',
-									'hover:bg-[var(--accent-50)]',
+									'border-b border-(--workspace-border) last:border-0',
+									'transition-colors duration-(--duration-fast)',
+									'hover:bg-(--accent-50)',
 									'group',
 									'animate-fade-in'
 								)}
@@ -81,8 +79,8 @@ export function DataGrid<T>({
 										className={cn(
 											'px-4 py-3',
 											'border-l-2 border-l-transparent',
-											'group-hover:border-l-[var(--accent-200)]',
-											'transition-all duration-[var(--duration-fast)]'
+											'group-hover:border-l-(--accent-200)',
+											'transition-all duration-(--duration-fast)'
 										)}
 									>
 										{render(cell.column.columnDef.cell, cell.getContext())}

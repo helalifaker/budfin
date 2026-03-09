@@ -83,7 +83,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 			columnHelper.accessor('discountAmount', {
 				header: 'Discount Impact',
 				cell: (info) => (
-					<span className="tabular-nums text-[var(--color-error)]">
+					<span className="tabular-nums text-(--color-error)">
 						-{formatAmount(info.getValue())}
 					</span>
 				),
@@ -91,7 +91,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 			columnHelper.accessor('netRevenueHt', {
 				header: 'Net Tuition',
 				cell: (info) => (
-					<span className="tabular-nums font-medium text-[var(--text-primary)]">
+					<span className="tabular-nums font-medium text-(--text-primary)">
 						{formatAmount(info.getValue())}
 					</span>
 				),
@@ -99,9 +99,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 			columnHelper.accessor('vatAmount', {
 				header: 'VAT',
 				cell: (info) => (
-					<span className="tabular-nums text-[var(--text-muted)]">
-						{formatAmount(info.getValue())}
-					</span>
+					<span className="tabular-nums text-(--text-muted)">{formatAmount(info.getValue())}</span>
 				),
 			}),
 		],
@@ -116,7 +114,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 
 	if (isLoading) {
 		return (
-			<div className="flex h-32 items-center justify-center text-sm text-[var(--text-muted)]">
+			<div className="flex h-32 items-center justify-center text-sm text-(--text-muted)">
 				Loading executive summary...
 			</div>
 		);
@@ -127,43 +125,37 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 	return (
 		<div className="space-y-6">
 			<div className="grid gap-4 md:grid-cols-4">
-				<div className="rounded-lg border border-[var(--workspace-border)] bg-white p-4">
-					<div className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-						Tuition Fees
-					</div>
+				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+					<div className="text-xs uppercase tracking-wide text-(--text-muted)">Tuition Fees</div>
 					<div className="mt-2 text-lg font-semibold tabular-nums">
 						{formatAmount(data?.totals.grossRevenueHt ?? '0')}
 					</div>
 				</div>
-				<div className="rounded-lg border border-[var(--workspace-border)] bg-white p-4">
-					<div className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-						Discount Impact
-					</div>
-					<div className="mt-2 text-lg font-semibold tabular-nums text-[var(--color-error)]">
+				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+					<div className="text-xs uppercase tracking-wide text-(--text-muted)">Discount Impact</div>
+					<div className="mt-2 text-lg font-semibold tabular-nums text-(--color-error)">
 						-{formatAmount(data?.totals.discountAmount ?? '0')}
 					</div>
 				</div>
-				<div className="rounded-lg border border-[var(--workspace-border)] bg-white p-4">
-					<div className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-						Net Tuition
-					</div>
-					<div className="mt-2 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
+				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+					<div className="text-xs uppercase tracking-wide text-(--text-muted)">Net Tuition</div>
+					<div className="mt-2 text-lg font-semibold tabular-nums text-(--text-primary)">
 						{formatAmount(data?.totals.netRevenueHt ?? '0')}
 					</div>
 				</div>
-				<div className="rounded-lg border border-[var(--workspace-border)] bg-white p-4">
-					<div className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
+				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+					<div className="text-xs uppercase tracking-wide text-(--text-muted)">
 						Total Operating Revenue
 					</div>
-					<div className="mt-2 text-lg font-semibold tabular-nums text-[var(--color-success)]">
+					<div className="mt-2 text-lg font-semibold tabular-nums text-(--color-success)">
 						{formatAmount(data?.totals.totalOperatingRevenue ?? '0')}
 					</div>
 				</div>
 			</div>
 
-			<div className="rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-bg-subtle)] px-4 py-3 text-sm">
-				<div className="font-medium text-[var(--text-primary)]">Executive Summary Sheet</div>
-				<div className="text-[var(--text-muted)]">
+			<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-sm">
+				<div className="font-medium text-(--text-primary)">Executive Summary Sheet</div>
+				<div className="text-(--text-muted)">
 					The monthly matrix below mirrors the workbook&apos;s executive summary, while the lower
 					table keeps the detailed tuition drill-down by grouping.
 				</div>
@@ -178,15 +170,13 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 				{composition.map((item) => (
 					<div
 						key={item.label}
-						className="rounded-lg border border-[var(--workspace-border)] bg-white px-4 py-3"
+						className="rounded-lg border border-(--workspace-border) bg-white px-4 py-3"
 					>
-						<div className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-							{item.label}
-						</div>
+						<div className="text-xs uppercase tracking-wide text-(--text-muted)">{item.label}</div>
 						<div className="mt-2 text-base font-semibold tabular-nums">
 							{formatAmount(item.amount)}
 						</div>
-						<div className="text-xs text-[var(--text-muted)]">
+						<div className="text-xs text-(--text-muted)">
 							{(Number(item.percentageOfRevenue) * 100).toFixed(2)}% of revenue
 						</div>
 					</div>
@@ -195,7 +185,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 
 			<div className="space-y-3">
 				<div className="flex items-center gap-2">
-					<span className="text-sm text-[var(--text-secondary)]">Drill down by:</span>
+					<span className="text-sm text-(--text-secondary)">Drill down by:</span>
 					{(Object.keys(GROUP_LABELS) as GroupBy[]).map((option) => (
 						<Button
 							key={option}
@@ -212,7 +202,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 					table={table}
 					isLoading={isLoading}
 					emptyState={
-						<p className="text-sm text-[var(--text-muted)]">
+						<p className="text-sm text-(--text-muted)">
 							Run the revenue calculation to generate tuition detail rows.
 						</p>
 					}

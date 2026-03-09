@@ -91,9 +91,7 @@ export function ComparisonCharts({ data, metric }: ComparisonChartsProps) {
 			aria-label="Comparison charts"
 		>
 			<div className="min-w-0 flex-1">
-				<h3 className="mb-2 text-[length:var(--text-sm)] font-medium text-[var(--text-secondary)]">
-					Annual Totals
-				</h3>
+				<h3 className="mb-2 text-(--text-sm) font-medium text-(--text-secondary)">Annual Totals</h3>
 				<ResponsiveContainer width="100%" height={280}>
 					<BarChart data={barData}>
 						<CartesianGrid strokeDasharray="3 3" />
@@ -106,9 +104,7 @@ export function ComparisonCharts({ data, metric }: ComparisonChartsProps) {
 			</div>
 
 			<div className="min-w-0 flex-1">
-				<h3 className="mb-2 text-[length:var(--text-sm)] font-medium text-[var(--text-secondary)]">
-					Monthly Trend
-				</h3>
+				<h3 className="mb-2 text-(--text-sm) font-medium text-(--text-secondary)">Monthly Trend</h3>
 				<ResponsiveContainer width="100%" height={280}>
 					<LineChart data={lineData}>
 						<CartesianGrid strokeDasharray="3 3" />

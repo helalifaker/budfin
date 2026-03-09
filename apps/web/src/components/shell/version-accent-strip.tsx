@@ -15,7 +15,7 @@ export function VersionAccentStrip() {
 		<div
 			className={cn(
 				'h-[2px] w-full shrink-0',
-				'transition-[background] duration-[var(--duration-slow)]'
+				'transition-[background] duration-(--duration-slow)'
 			)}
 			style={{
 				background: gradient ?? 'var(--workspace-border)',

@@ -92,7 +92,7 @@ export function AuditPage() {
 			columnHelper.accessor('operation', {
 				header: 'Action',
 				cell: (info) => (
-					<span className="rounded-[var(--radius-sm)] bg-[var(--workspace-bg-muted)] px-2 py-0.5 text-[length:var(--text-xs)] font-mono">
+					<span className="rounded-(--radius-sm) bg-(--workspace-bg-muted) px-2 py-0.5 text-(--text-xs) font-mono">
 						{info.getValue()}
 					</span>
 				),
@@ -112,7 +112,7 @@ export function AuditPage() {
 					const nv = row.original.new_values;
 					if (!nv) return '-';
 					return (
-						<pre className="max-w-xs truncate text-[length:var(--text-xs)] text-[var(--text-muted)]">
+						<pre className="max-w-xs truncate text-(--text-xs) text-(--text-muted)">
 							{JSON.stringify(nv)}
 						</pre>
 					);
@@ -142,20 +142,17 @@ export function AuditPage() {
 
 	return (
 		<div className="p-6">
-			<h1 className="pb-4 text-[length:var(--text-xl)] font-semibold">Audit Trail</h1>
+			<h1 className="pb-4 text-(--text-xl) font-semibold">Audit Trail</h1>
 
 			<AuditFilters onFilterChange={handleFilterChange} />
 
-			<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-				<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-					<thead className="border-b bg-[var(--workspace-bg-muted)]">
+			<div className="overflow-x-auto rounded-(--radius-lg) border">
+				<table role="table" className="w-full text-left text-(--text-sm)">
+					<thead className="border-b bg-(--workspace-bg-muted)">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th
-										key={header.id}
-										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
-									>
+									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -169,7 +166,7 @@ export function AuditPage() {
 							table.getRowModel().rows.map((row) => (
 								<tr
 									key={row.id}
-									className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+									className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 								>
 									{row.getVisibleCells().map((cell) => (
 										<td key={cell.id} className="px-4 py-3">
@@ -184,8 +181,8 @@ export function AuditPage() {
 			</div>
 
 			{!isLoading && (
-				<div className="flex items-center justify-between pt-4 text-[length:var(--text-sm)]">
-					<span className="text-[var(--text-muted)]">{data?.total ?? 0} total entries</span>
+				<div className="flex items-center justify-between pt-4 text-(--text-sm)">
+					<span className="text-(--text-muted)">{data?.total ?? 0} total entries</span>
 					<div className="flex gap-2">
 						<Button
 							type="button"

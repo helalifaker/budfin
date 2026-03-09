@@ -80,7 +80,7 @@ export function CapacityGrid({
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
 				cell: (info) => (
-					<span className="font-medium text-[var(--text-primary)]">{info.getValue()}</span>
+					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
 				),
 			}),
 			columnHelper.accessor('ay2Total', {
@@ -98,7 +98,7 @@ export function CapacityGrid({
 					return val > 0 ? (
 						<span className="tabular-nums">{val}</span>
 					) : (
-						<span className="text-[var(--text-muted)]">-</span>
+						<span className="text-(--text-muted)">-</span>
 					);
 				},
 			}),
@@ -124,8 +124,8 @@ export function CapacityGrid({
 
 	if (!gradesLoading && !hasResults) {
 		return (
-			<div className="rounded-[var(--radius-lg)] border border-[var(--workspace-border)] px-4 py-12 text-center">
-				<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
+			<div className="rounded-(--radius-lg) border border-(--workspace-border) px-4 py-12 text-center">
+				<p className="text-(--text-sm) text-(--text-muted)">
 					Press Calculate to generate capacity results.
 				</p>
 			</div>

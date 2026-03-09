@@ -73,9 +73,9 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 						<div
 							className={cn(
 								'flex flex-col items-center gap-3 rounded-lg',
-								'border-2 border-dashed border-[var(--workspace-border)]',
-								'bg-[var(--workspace-bg-subtle)] p-8',
-								'cursor-pointer hover:border-[var(--accent-500)]',
+								'border-2 border-dashed border-(--workspace-border)',
+								'bg-(--workspace-bg-subtle) p-8',
+								'cursor-pointer hover:border-(--accent-500)',
 								'transition-colors'
 							)}
 							onClick={() => fileInputRef.current?.click()}
@@ -86,8 +86,8 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 							tabIndex={0}
 							aria-label="Select xlsx file"
 						>
-							<Upload className="h-8 w-8 text-[var(--text-muted)]" />
-							<span className="text-sm text-[var(--text-muted)]">
+							<Upload className="h-8 w-8 text-(--text-muted)" />
+							<span className="text-sm text-(--text-muted)">
 								{file ? file.name : 'Click to select .xlsx file'}
 							</span>
 							<input
@@ -102,7 +102,7 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 
 						{importMutation.isError && (
 							<div
-								className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]"
+								className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
 								role="alert"
 							>
 								{importMutation.error instanceof Error
@@ -129,30 +129,26 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 				{step === 'preview' && preview && (
 					<div className="space-y-4 pt-2">
 						<div className="grid grid-cols-3 gap-3 text-sm">
-							<div className="rounded-lg bg-[var(--workspace-bg-subtle)] p-3 text-center">
-								<div className="text-lg font-bold text-[var(--text-primary)]">
-									{preview.totalRows}
-								</div>
-								<div className="text-xs text-[var(--text-muted)]">Total Rows</div>
+							<div className="rounded-lg bg-(--workspace-bg-subtle) p-3 text-center">
+								<div className="text-lg font-bold text-(--text-primary)">{preview.totalRows}</div>
+								<div className="text-xs text-(--text-muted)">Total Rows</div>
 							</div>
-							<div className="rounded-lg bg-[var(--color-success-bg)] p-3 text-center">
-								<div className="text-lg font-bold text-[var(--color-success)]">
-									{preview.validRows}
-								</div>
-								<div className="text-xs text-[var(--text-muted)]">Valid</div>
+							<div className="rounded-lg bg-(--color-success-bg) p-3 text-center">
+								<div className="text-lg font-bold text-(--color-success)">{preview.validRows}</div>
+								<div className="text-xs text-(--text-muted)">Valid</div>
 							</div>
-							<div className="rounded-lg bg-[var(--color-error-bg)] p-3 text-center">
-								<div className="text-lg font-bold text-[var(--color-error)]">
+							<div className="rounded-lg bg-(--color-error-bg) p-3 text-center">
+								<div className="text-lg font-bold text-(--color-error)">
 									{preview.errors.length}
 								</div>
-								<div className="text-xs text-[var(--text-muted)]">Errors</div>
+								<div className="text-xs text-(--text-muted)">Errors</div>
 							</div>
 						</div>
 
 						{preview.errors.length > 0 && (
-							<div className="max-h-40 overflow-y-auto rounded-lg border border-[var(--color-error)] p-3 text-xs">
+							<div className="max-h-40 overflow-y-auto rounded-lg border border-(--color-error) p-3 text-xs">
 								{preview.errors.map((err, i) => (
-									<div key={i} className="text-[var(--color-error)]">
+									<div key={i} className="text-(--color-error)">
 										Row {err.row}, {err.field}: {err.message}
 									</div>
 								))}
@@ -161,7 +157,7 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 
 						{preview.conflictingCodes.length > 0 && (
 							<div
-								className="rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning-bg)] px-4 py-2 text-sm text-[var(--color-warning)]"
+								className="rounded-lg border border-(--color-warning) bg-(--color-warning-bg) px-4 py-2 text-sm text-(--color-warning)"
 								role="alert"
 							>
 								{preview.conflictingCodes.length} employee code(s) already exist:{' '}
@@ -170,7 +166,7 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 						)}
 
 						{preview.duplicateWarnings.length > 0 && (
-							<div className="rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning-bg)] px-4 py-2 text-sm text-[var(--color-warning)]">
+							<div className="rounded-lg border border-(--color-warning) bg-(--color-warning-bg) px-4 py-2 text-sm text-(--color-warning)">
 								{preview.duplicateWarnings.length} potential duplicate(s) detected
 							</div>
 						)}
@@ -179,7 +175,7 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 							<div className="max-h-48 overflow-y-auto">
 								<table className="w-full text-xs border-collapse">
 									<thead>
-										<tr className="bg-[var(--workspace-bg-subtle)]">
+										<tr className="bg-(--workspace-bg-subtle)">
 											<th className="px-2 py-1 text-left">Code</th>
 											<th className="px-2 py-1 text-left">Name</th>
 											<th className="px-2 py-1 text-left">Dept</th>
@@ -188,7 +184,7 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 									</thead>
 									<tbody>
 										{preview.preview.slice(0, 10).map((row, i) => (
-											<tr key={i} className="border-t border-[var(--workspace-border)]">
+											<tr key={i} className="border-t border-(--workspace-border)">
 												<td className="px-2 py-1">{row.employee_code}</td>
 												<td className="px-2 py-1">{row.name}</td>
 												<td className="px-2 py-1">{row.department}</td>
@@ -197,7 +193,7 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 										))}
 										{preview.preview.length > 10 && (
 											<tr>
-												<td colSpan={4} className="px-2 py-1 text-center text-[var(--text-muted)]">
+												<td colSpan={4} className="px-2 py-1 text-center text-(--text-muted)">
 													... and {preview.preview.length - 10} more
 												</td>
 											</tr>
@@ -209,7 +205,7 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 
 						{importMutation.isError && (
 							<div
-								className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]"
+								className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
 								role="alert"
 							>
 								{importMutation.error instanceof Error
@@ -249,8 +245,8 @@ export function EmployeeImportDialog({ open, onClose, versionId }: EmployeeImpor
 
 				{step === 'done' && (
 					<div className="space-y-4 pt-2 text-center">
-						<div className="text-lg font-semibold text-[var(--color-success)]">Import Complete</div>
-						<p className="text-sm text-[var(--text-muted)]">
+						<div className="text-lg font-semibold text-(--color-success)">Import Complete</div>
+						<p className="text-sm text-(--text-muted)">
 							Employees have been imported. The staffing module is now marked as stale — run
 							Calculate to update costs.
 						</p>

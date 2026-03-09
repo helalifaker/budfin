@@ -42,7 +42,7 @@ type InnerDialogProps = {
 function ErrorBanner({ message }: { message: string }) {
 	return (
 		<div
-			className="mt-3 rounded-[var(--radius-md)] bg-[var(--color-error-bg)] px-4 py-3 text-[length:var(--text-sm)] text-[var(--color-error)]"
+			className="mt-3 rounded-(--radius-md) bg-(--color-error-bg) px-4 py-3 text-(--text-sm) text-(--color-error)"
 			role="alert"
 		>
 			{message}
@@ -122,7 +122,7 @@ export function LockDialog({ open, version, onClose, onSuccess }: BaseDialogProp
 					<AlertDialogAction
 						onClick={handleConfirm}
 						disabled={isPending}
-						className="bg-[var(--status-locked)] hover:bg-[color-mix(in_srgb,var(--status-locked),black_15%)]"
+						className="bg-(--status-locked) hover:bg-[color-mix(in_srgb,var(--status-locked),black_15%)]"
 					>
 						{isPending ? 'Locking...' : 'Lock'}
 					</AlertDialogAction>
@@ -166,7 +166,7 @@ export function ArchiveDialog({ open, version, onClose, onSuccess }: BaseDialogP
 					<AlertDialogAction
 						onClick={handleConfirm}
 						disabled={isPending}
-						className="bg-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--text-secondary),black_15%)]"
+						className="bg-(--text-secondary) hover:bg-[color-mix(in_srgb,var(--text-secondary),black_15%)]"
 					>
 						{isPending ? 'Archiving...' : 'Archive'}
 					</AlertDialogAction>
@@ -214,12 +214,9 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 				{error && <ErrorBanner message={error} />}
 
 				<div>
-					<label
-						htmlFor="revert-audit-note"
-						className="block text-[length:var(--text-sm)] font-medium"
-					>
+					<label htmlFor="revert-audit-note" className="block text-(--text-sm) font-medium">
 						Audit Note (min 10 characters){' '}
-						<span aria-hidden="true" className="text-[var(--color-error)]">
+						<span aria-hidden="true" className="text-(--color-error)">
 							*
 						</span>
 					</label>
@@ -231,16 +228,14 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 						aria-describedby="revert-char-count"
 						value={auditNote}
 						onChange={(e) => setAuditNote(e.target.value)}
-						className={
-							'mt-1 ' + (noteLength > 0 && !isValid ? 'border-[var(--color-warning)]' : '')
-						}
+						className={'mt-1 ' + (noteLength > 0 && !isValid ? 'border-(--color-warning)' : '')}
 						placeholder="Explain the reason for reverting..."
 					/>
 					<p
 						id="revert-char-count"
 						className={
-							'mt-1 text-[length:var(--text-xs)] ' +
-							(isValid ? 'text-[var(--text-muted)]' : 'text-[var(--color-warning)]')
+							'mt-1 text-(--text-xs) ' +
+							(isValid ? 'text-(--text-muted)' : 'text-(--color-warning)')
 						}
 					>
 						{noteLength}/10 minimum characters
@@ -255,7 +250,7 @@ function RevertDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 						onClick={handleConfirm}
 						disabled={!isValid || isPending}
 						loading={isPending}
-						className="bg-[var(--color-warning)] hover:bg-[color-mix(in_srgb,var(--color-warning),black_15%)]"
+						className="bg-(--color-warning) hover:bg-[color-mix(in_srgb,var(--color-warning),black_15%)]"
 					>
 						Revert to Draft
 					</Button>
@@ -293,7 +288,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 		<AlertDialog open onOpenChange={(v) => !v && onClose()}>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle className="text-[var(--color-error)]">Delete Version</AlertDialogTitle>
+					<AlertDialogTitle className="text-(--color-error)">Delete Version</AlertDialogTitle>
 					<AlertDialogDescription>
 						This action is irreversible. All data associated with version &lsquo;
 						{version.name}&rsquo; will be permanently deleted.
@@ -303,10 +298,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 				{error && <ErrorBanner message={error} />}
 
 				<div>
-					<label
-						htmlFor="delete-confirm-input"
-						className="block text-[length:var(--text-sm)] font-medium"
-					>
+					<label htmlFor="delete-confirm-input" className="block text-(--text-sm) font-medium">
 						Type the version name to confirm deletion:
 					</label>
 					<Input
@@ -317,12 +309,12 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 						value={confirmText}
 						onChange={(e) => setConfirmText(e.target.value)}
 						className={
-							'mt-1 ' + (confirmText.length > 0 && !canDelete ? 'border-[var(--color-error)]' : '')
+							'mt-1 ' + (confirmText.length > 0 && !canDelete ? 'border-(--color-error)' : '')
 						}
 						placeholder={version.name}
 					/>
 					{confirmText.length > 0 && !canDelete && (
-						<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]" role="alert">
+						<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
 							Name does not match. Please type exactly:{' '}
 							<span className="font-medium">{version.name}</span>
 						</p>
@@ -334,7 +326,7 @@ function DeleteDialogContent({ version, onClose, onSuccess }: InnerDialogProps) 
 					<AlertDialogAction
 						onClick={handleConfirm}
 						disabled={!canDelete || isPending}
-						className="bg-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
+						className="bg-(--color-error) hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
 					>
 						{isPending ? 'Deleting...' : 'Delete Version'}
 					</AlertDialogAction>

@@ -58,7 +58,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 			<div>
 				<label
 					htmlFor="filter-from"
-					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+					className="block text-(--text-xs) font-medium text-(--text-secondary)"
 				>
 					From
 				</label>
@@ -72,7 +72,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 			<div>
 				<label
 					htmlFor="filter-to"
-					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+					className="block text-(--text-xs) font-medium text-(--text-secondary)"
 				>
 					To
 				</label>
@@ -86,7 +86,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 			<div>
 				<label
 					htmlFor="filter-user"
-					className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]"
+					className="block text-(--text-xs) font-medium text-(--text-secondary)"
 				>
 					User ID
 				</label>
@@ -99,9 +99,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				/>
 			</div>
 			<div>
-				<label className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]">
-					Action
-				</label>
+				<label className="block text-(--text-xs) font-medium text-(--text-secondary)">Action</label>
 				<Select
 					value={filters.operation || 'all'}
 					onValueChange={(v) => update('operation', v === 'all' ? '' : v)}
@@ -120,9 +118,7 @@ export function AuditFilters({ onFilterChange }: AuditFiltersProps) {
 				</Select>
 			</div>
 			<div>
-				<label className="block text-[length:var(--text-xs)] font-medium text-[var(--text-secondary)]">
-					Entity
-				</label>
+				<label className="block text-(--text-xs) font-medium text-(--text-secondary)">Entity</label>
 				<Select
 					value={filters.table_name || 'all'}
 					onValueChange={(v) => update('table_name', v === 'all' ? '' : v)}

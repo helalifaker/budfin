@@ -48,15 +48,15 @@ import { toast } from '../../components/ui/toast-state';
 const columnHelper = createColumnHelper<Account>();
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-	REVENUE: 'bg-[var(--badge-revenue-bg)] text-[var(--badge-revenue)]',
-	EXPENSE: 'bg-[var(--badge-expense-bg)] text-[var(--badge-expense)]',
-	ASSET: 'bg-[var(--badge-asset-bg)] text-[var(--badge-asset)]',
-	LIABILITY: 'bg-[var(--badge-liability-bg)] text-[var(--badge-liability)]',
+	REVENUE: 'bg-(--badge-revenue-bg) text-(--badge-revenue)',
+	EXPENSE: 'bg-(--badge-expense-bg) text-(--badge-expense)',
+	ASSET: 'bg-(--badge-asset-bg) text-(--badge-asset)',
+	LIABILITY: 'bg-(--badge-liability-bg) text-(--badge-liability)',
 };
 
 const CENTER_TYPE_BADGE_COLORS: Record<string, string> = {
-	PROFIT_CENTER: 'bg-[var(--badge-profit-center-bg)] text-[var(--badge-profit-center)]',
-	COST_CENTER: 'bg-[var(--badge-cost-center-bg)] text-[var(--badge-cost-center)]',
+	PROFIT_CENTER: 'bg-(--badge-profit-center-bg) text-(--badge-profit-center)',
+	COST_CENTER: 'bg-(--badge-cost-center-bg) text-(--badge-cost-center)',
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -205,7 +205,7 @@ export function AccountsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
+								'inline-flex rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
 								TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Type: ${TYPE_LABELS[value]}`}
@@ -225,7 +225,7 @@ export function AccountsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
+								'inline-flex rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
 								CENTER_TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Center type: ${CENTER_TYPE_LABELS[value]}`}
@@ -242,15 +242,13 @@ export function AccountsPage() {
 					const isActive = value === 'ACTIVE';
 					return (
 						<span
-							className={cn(
-								'inline-flex items-center gap-1.5 text-[length:var(--text-xs)] font-medium'
-							)}
+							className={cn('inline-flex items-center gap-1.5 text-(--text-xs) font-medium')}
 							aria-label={`Status: ${isActive ? 'Active' : 'Inactive'}`}
 						>
 							<span
 								className={cn(
 									'h-2 w-2 rounded-full',
-									isActive ? 'bg-[var(--color-success)]' : 'bg-[var(--text-muted)]'
+									isActive ? 'bg-(--color-success)' : 'bg-(--text-muted)'
 								)}
 							/>
 							{isActive ? 'Active' : 'Inactive'}
@@ -270,10 +268,10 @@ export function AccountsPage() {
 										<DropdownMenuTrigger asChild>
 											<button
 												type="button"
-												className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
+												className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
 												aria-label={`Actions for ${account.accountCode}`}
 											>
-												<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
+												<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
 											</button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent align="end">
@@ -310,7 +308,7 @@ export function AccountsPage() {
 		<div className="p-6">
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-[length:var(--text-xl)] font-semibold">Chart of Accounts</h1>
+				<h1 className="mr-auto text-(--text-xl) font-semibold">Chart of Accounts</h1>
 
 				<Input
 					type="search"
@@ -379,16 +377,13 @@ export function AccountsPage() {
 			</div>
 
 			{/* Data table */}
-			<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-				<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-					<thead className="border-b bg-[var(--workspace-bg-muted)]">
+			<div className="overflow-x-auto rounded-(--radius-lg) border">
+				<table role="table" className="w-full text-left text-(--text-sm)">
+					<thead className="border-b bg-(--workspace-bg-muted)">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th
-										key={header.id}
-										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
-									>
+									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
@@ -402,7 +397,7 @@ export function AccountsPage() {
 							<tr>
 								<td
 									colSpan={columns.length}
-									className="px-4 py-8 text-center text-[length:var(--text-sm)] text-[var(--text-muted)]"
+									className="px-4 py-8 text-center text-(--text-sm) text-(--text-muted)"
 								>
 									No accounts found
 								</td>
@@ -411,7 +406,7 @@ export function AccountsPage() {
 							table.getRowModel().rows.map((row) => (
 								<tr
 									key={row.id}
-									className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+									className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 								>
 									{row.getVisibleCells().map((cell) => (
 										<td key={cell.id} className="px-4 py-3">
@@ -478,7 +473,7 @@ export function AccountsPage() {
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
+							className="bg-(--color-error) hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
 							disabled={deleteConfirmCode !== deleteTarget?.accountCode || deleteMutation.isPending}
 							onClick={handleDelete}
 						>

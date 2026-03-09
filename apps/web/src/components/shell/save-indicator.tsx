@@ -13,9 +13,9 @@ export function SaveIndicator({ status, className }: SaveIndicatorProps) {
 		<div
 			className={cn(
 				'flex items-center gap-1.5 text-[11px] font-medium',
-				status === 'saving' && 'text-[var(--text-muted)] animate-pulse-save',
-				status === 'saved' && 'text-[var(--color-success)]',
-				status === 'unsaved' && 'text-[var(--color-warning)]',
+				status === 'saving' && 'text-(--text-muted) animate-pulse-save',
+				status === 'saved' && 'text-(--color-success)',
+				status === 'unsaved' && 'text-(--color-warning)',
 				className
 			)}
 			aria-live="polite"
@@ -29,7 +29,7 @@ export function SaveIndicator({ status, className }: SaveIndicatorProps) {
 			)}
 			{status === 'unsaved' && (
 				<span className="flex items-center gap-1">
-					<span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warning)]" aria-hidden="true" />
+					<span className="h-1.5 w-1.5 rounded-full bg-(--color-warning)" aria-hidden="true" />
 					Unsaved
 				</span>
 			)}

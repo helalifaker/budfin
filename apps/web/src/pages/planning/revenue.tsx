@@ -53,7 +53,7 @@ export function RevenuePage() {
 
 	if (!versionId) {
 		return (
-			<div className="flex items-center justify-center h-64 text-[var(--text-muted)]">
+			<div className="flex items-center justify-center h-64 text-(--text-muted)">
 				Select a version from the context bar to begin revenue planning.
 			</div>
 		);
@@ -96,7 +96,7 @@ export function RevenuePage() {
 			{/* Status feedback */}
 			{calculateMutation.isSuccess && (
 				<div
-					className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-bg)] px-4 py-2 text-sm text-[var(--color-success)]"
+					className="rounded-lg border border-(--color-success) bg-(--color-success-bg) px-4 py-2 text-sm text-(--color-success)"
 					role="status"
 				>
 					Revenue calculated successfully.
@@ -104,7 +104,7 @@ export function RevenuePage() {
 			)}
 			{calculateMutation.isError && (
 				<div
-					className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]"
+					className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
 					role="alert"
 				>
 					Calculation failed. Ensure fee grid and enrollment data are configured.

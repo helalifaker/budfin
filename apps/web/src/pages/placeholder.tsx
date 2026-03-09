@@ -12,15 +12,15 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
 			<div
 				className={cn(
 					'flex h-14 w-14 items-center justify-center',
-					'rounded-[var(--radius-xl)] bg-[var(--accent-50)]',
+					'rounded-(--radius-xl) bg-(--accent-50)',
 					'animate-slide-up'
 				)}
 			>
-				<Clock className="h-7 w-7 text-[var(--accent-500)]" strokeWidth={1.5} aria-hidden="true" />
+				<Clock className="h-7 w-7 text-(--accent-500)" strokeWidth={1.5} aria-hidden="true" />
 			</div>
 			<h1
 				className={cn(
-					'mt-5 text-[length:var(--text-xl)] font-semibold text-[var(--text-primary)]',
+					'mt-5 text-(--text-xl) font-semibold text-(--text-primary)',
 					'animate-slide-up'
 				)}
 				style={{ animationDelay: '100ms' }}
@@ -28,10 +28,7 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
 				{title}
 			</h1>
 			<p
-				className={cn(
-					'mt-2 max-w-sm text-[length:var(--text-sm)] text-[var(--text-secondary)]',
-					'animate-slide-up'
-				)}
+				className={cn('mt-2 max-w-sm text-(--text-sm) text-(--text-secondary)', 'animate-slide-up')}
 				style={{ animationDelay: '150ms' }}
 			>
 				{description}
@@ -39,8 +36,8 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
 			<div className="mt-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
 				<span
 					className={cn(
-						'inline-block text-[length:var(--text-sm)] font-medium',
-						'bg-gradient-to-r from-[var(--accent-400)] via-[var(--accent-600)] to-[var(--accent-400)]',
+						'inline-block text-(--text-sm) font-medium',
+						'bg-gradient-to-r from-(--accent-400) via-(--accent-600) to-(--accent-400)',
 						'bg-[length:200%_100%] bg-clip-text text-transparent',
 						'animate-shimmer'
 					)}

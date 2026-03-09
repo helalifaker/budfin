@@ -17,10 +17,10 @@ const columnHelper = createColumnHelper<Employee>();
 function StatusBadge({ status }: { status: string }) {
 	const color =
 		status === 'Existing'
-			? 'bg-[var(--color-success-bg)] text-[var(--color-success)]'
+			? 'bg-(--color-success-bg) text-(--color-success)'
 			: status === 'New'
-				? 'bg-[var(--accent-50)] text-[var(--accent-700)]'
-				: 'bg-[var(--color-error-bg)] text-[var(--color-error)]';
+				? 'bg-(--accent-50) text-(--accent-700)'
+				: 'bg-(--color-error-bg) text-(--color-error)';
 	return (
 		<span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-medium', color)}>
 			{status}
@@ -107,27 +107,27 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				value={globalFilter}
 				onChange={(e) => setGlobalFilter(e.target.value)}
 				className={cn(
-					'w-full max-w-xs rounded-[var(--radius-md)]',
-					'border border-[var(--workspace-border)] bg-[var(--workspace-bg)]',
-					'px-3 py-1.5 text-sm text-[var(--text-primary)]',
-					'placeholder:text-[var(--text-muted)]',
-					'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]'
+					'w-full max-w-xs rounded-(--radius-md)',
+					'border border-(--workspace-border) bg-(--workspace-bg)',
+					'px-3 py-1.5 text-sm text-(--text-primary)',
+					'placeholder:text-(--text-muted)',
+					'focus:outline-none focus:ring-2 focus:ring-(--accent-500)'
 				)}
 				aria-label="Search employees"
 			/>
 
-			<div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--workspace-border)]">
+			<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
 				<table className="w-full border-collapse text-sm" role="grid">
 					<thead>
 						{table.getHeaderGroups().map((headerGroup) => (
-							<tr key={headerGroup.id} className="bg-[var(--workspace-bg-subtle)]">
+							<tr key={headerGroup.id} className="bg-(--workspace-bg-subtle)">
 								{headerGroup.headers.map((header) => (
 									<th
 										key={header.id}
 										className={cn(
-											'px-3 py-2 text-left font-medium text-[var(--text-muted)]',
-											'text-[length:var(--text-xs)] uppercase tracking-wider',
-											'border-b border-[var(--workspace-border)]',
+											'px-3 py-2 text-left font-medium text-(--text-muted)',
+											'text-(--text-xs) uppercase tracking-wider',
+											'border-b border-(--workspace-border)',
 											header.column.getCanSort() && 'cursor-pointer select-none'
 										)}
 										style={{ width: header.getSize() }}
@@ -154,10 +154,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 					<tbody>
 						{table.getRowModel().rows.length === 0 ? (
 							<tr>
-								<td
-									colSpan={columns.length}
-									className="px-3 py-8 text-center text-[var(--text-muted)]"
-								>
+								<td colSpan={columns.length} className="px-3 py-8 text-center text-(--text-muted)">
 									No employees found. Add employees manually or import from xlsx.
 								</td>
 							</tr>
@@ -167,9 +164,8 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 									key={row.id}
 									className={cn(
 										'cursor-pointer transition-colors',
-										'hover:bg-[var(--workspace-bg-subtle)]',
-										row.original.id === selectedId &&
-											'bg-[var(--accent-50)] hover:bg-[var(--accent-50)]'
+										'hover:bg-(--workspace-bg-subtle)',
+										row.original.id === selectedId && 'bg-(--accent-50) hover:bg-(--accent-50)'
 									)}
 									onClick={() => onSelect(row.original)}
 									role="row"
@@ -185,8 +181,8 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 										<td
 											key={cell.id}
 											className={cn(
-												'px-3 py-2 text-[var(--text-primary)]',
-												'border-b border-[var(--workspace-border)]'
+												'px-3 py-2 text-(--text-primary)',
+												'border-b border-(--workspace-border)'
 											)}
 										>
 											{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -199,7 +195,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				</table>
 			</div>
 
-			<div className="text-[length:var(--text-xs)] text-[var(--text-muted)]">
+			<div className="text-(--text-xs) text-(--text-muted)">
 				{table.getFilteredRowModel().rows.length} employee(s)
 			</div>
 		</div>

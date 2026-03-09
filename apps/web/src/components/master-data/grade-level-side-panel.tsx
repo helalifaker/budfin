@@ -122,7 +122,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 
 	if (!open || !gradeLevel) return null;
 
-	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-[var(--color-error)]');
+	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-(--color-error)');
 
 	return (
 		<>
@@ -134,12 +134,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 				aria-label={`Edit Grade Level — ${gradeLevel.gradeName}`}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-[var(--workspace-bg-card)] shadow-xl',
+					'bg-(--workspace-bg-card) shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-[length:var(--text-lg)] font-semibold">
+					<h2 className="text-(--text-lg) font-semibold">
 						Edit Grade Level — {gradeLevel.gradeName}
 					</h2>
 				</div>
@@ -147,7 +147,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 				<div className="flex-1 overflow-y-auto px-6 py-4">
 					<form id="grade-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 						<div>
-							<label htmlFor="gl-code" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="gl-code" className="block text-(--text-sm) font-medium">
 								Grade Code
 							</label>
 							<Input
@@ -155,12 +155,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								type="text"
 								disabled
 								value={gradeLevel.gradeCode}
-								className="mt-1 bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]"
+								className="mt-1 bg-(--workspace-bg-muted) text-(--text-muted)"
 							/>
 						</div>
 
 						<div>
-							<label htmlFor="gl-name" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="gl-name" className="block text-(--text-sm) font-medium">
 								Grade Name
 							</label>
 							<Input
@@ -168,12 +168,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								type="text"
 								disabled
 								value={gradeLevel.gradeName}
-								className="mt-1 bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]"
+								className="mt-1 bg-(--workspace-bg-muted) text-(--text-muted)"
 							/>
 						</div>
 
 						<div>
-							<label htmlFor="gl-band" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="gl-band" className="block text-(--text-sm) font-medium">
 								Band
 							</label>
 							<Input
@@ -181,15 +181,12 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								type="text"
 								disabled
 								value={gradeLevel.band}
-								className="mt-1 bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]"
+								className="mt-1 bg-(--workspace-bg-muted) text-(--text-muted)"
 							/>
 						</div>
 
 						<div>
-							<label
-								htmlFor="maxClassSize"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="maxClassSize" className="block text-(--text-sm) font-medium">
 								Max Class Size
 							</label>
 							<Input
@@ -201,7 +198,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								{...register('maxClassSize')}
 							/>
 							{errors.maxClassSize && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{errors.maxClassSize.message}
 								</p>
 							)}
@@ -209,10 +206,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 
 						<div className="grid grid-cols-3 gap-3">
 							<div>
-								<label
-									htmlFor="plancherPct"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="plancherPct" className="block text-(--text-sm) font-medium">
 									Plancher %
 								</label>
 								<Input
@@ -225,16 +219,13 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 									{...register('plancherPct')}
 								/>
 								{errors.plancherPct && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.plancherPct.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label
-									htmlFor="ciblePct"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="ciblePct" className="block text-(--text-sm) font-medium">
 									Cible %
 								</label>
 								<Input
@@ -247,16 +238,13 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 									{...register('ciblePct')}
 								/>
 								{errors.ciblePct && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.ciblePct.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label
-									htmlFor="plafondPct"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="plafondPct" className="block text-(--text-sm) font-medium">
 									Plafond %
 								</label>
 								<Input
@@ -269,7 +257,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 									{...register('plafondPct')}
 								/>
 								{errors.plafondPct && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.plafondPct.message}
 									</p>
 								)}
@@ -277,10 +265,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 						</div>
 
 						<div>
-							<label
-								htmlFor="displayOrder"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="displayOrder" className="block text-(--text-sm) font-medium">
 								Display Order
 							</label>
 							<Input
@@ -291,7 +276,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 								{...register('displayOrder')}
 							/>
 							{errors.displayOrder && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{errors.displayOrder.message}
 								</p>
 							)}

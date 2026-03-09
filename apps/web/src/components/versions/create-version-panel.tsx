@@ -127,15 +127,15 @@ export function CreateVersionPanel({
 				aria-labelledby={titleId}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-[var(--workspace-bg-card)] shadow-xl',
+					'bg-(--workspace-bg-card) shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 id={titleId} className="text-[length:var(--text-lg)] font-semibold">
+					<h2 id={titleId} className="text-(--text-lg) font-semibold">
 						Create New Version
 					</h2>
-					<p className="mt-0.5 text-[length:var(--text-sm)] text-[var(--text-muted)]">
+					<p className="mt-0.5 text-(--text-sm) text-(--text-muted)">
 						Create a new budget or forecast version
 					</p>
 				</div>
@@ -159,9 +159,9 @@ export function CreateVersionPanel({
 						className="space-y-4"
 					>
 						<div>
-							<label htmlFor="cv-fy" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="cv-fy" className="block text-(--text-sm) font-medium">
 								Fiscal Year{' '}
-								<span aria-hidden="true" className="text-[var(--color-error)]">
+								<span aria-hidden="true" className="text-(--color-error)">
 									*
 								</span>
 							</label>
@@ -189,9 +189,9 @@ export function CreateVersionPanel({
 						</div>
 
 						<div>
-							<label htmlFor="cv-name" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="cv-name" className="block text-(--text-sm) font-medium">
 								Name{' '}
-								<span aria-hidden="true" className="text-[var(--color-error)]">
+								<span aria-hidden="true" className="text-(--color-error)">
 									*
 								</span>
 							</label>
@@ -200,23 +200,20 @@ export function CreateVersionPanel({
 								type="text"
 								aria-required="true"
 								maxLength={100}
-								className={cn('mt-1', form.formState.errors.name && 'border-[var(--color-error)]')}
+								className={cn('mt-1', form.formState.errors.name && 'border-(--color-error)')}
 								{...form.register('name')}
 							/>
 							{form.formState.errors.name && (
-								<p
-									className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]"
-									role="alert"
-								>
+								<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
 									{form.formState.errors.name.message}
 								</p>
 							)}
 						</div>
 
 						<div>
-							<label htmlFor="cv-type" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="cv-type" className="block text-(--text-sm) font-medium">
 								Type{' '}
-								<span aria-hidden="true" className="text-[var(--color-error)]">
+								<span aria-hidden="true" className="text-(--color-error)">
 									*
 								</span>
 							</label>
@@ -235,7 +232,7 @@ export function CreateVersionPanel({
 									</Select>
 								)}
 							/>
-							<div className="mt-1.5 space-y-0.5 text-[length:var(--text-xs)] text-[var(--text-muted)]">
+							<div className="mt-1.5 space-y-0.5 text-(--text-xs) text-(--text-muted)">
 								<p>
 									<span className="font-medium">Budget:</span> Annual operating plan
 								</p>
@@ -245,20 +242,14 @@ export function CreateVersionPanel({
 								<p className="italic">Actual versions are created automatically via data import</p>
 							</div>
 							{form.formState.errors.type && (
-								<p
-									className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]"
-									role="alert"
-								>
+								<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
 									{form.formState.errors.type.message}
 								</p>
 							)}
 						</div>
 
 						<div>
-							<label
-								htmlFor="cv-description"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="cv-description" className="block text-(--text-sm) font-medium">
 								Description
 							</label>
 							<Textarea
@@ -271,7 +262,7 @@ export function CreateVersionPanel({
 						</div>
 
 						<div>
-							<label htmlFor="cv-source" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="cv-source" className="block text-(--text-sm) font-medium">
 								Copy Data From
 							</label>
 							<Controller

@@ -38,7 +38,7 @@ export function AlertDialogContent({
 			<P.Content
 				className={cn(
 					'fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2',
-					'rounded-[var(--radius-lg)] bg-white p-6 shadow-[var(--shadow-lg)]',
+					'rounded-(--radius-lg) bg-white p-6 shadow-(--shadow-lg)',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 					'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -62,10 +62,7 @@ export function AlertDialogTitle({
 }: React.ComponentPropsWithoutRef<typeof P.Title>) {
 	return (
 		<P.Title
-			className={cn(
-				'text-[length:var(--text-lg)] font-semibold text-[var(--text-primary)]',
-				className
-			)}
+			className={cn('text-(--text-lg) font-semibold text-(--text-primary)', className)}
 			{...props}
 		/>
 	);
@@ -77,7 +74,7 @@ export function AlertDialogDescription({
 }: React.ComponentPropsWithoutRef<typeof P.Description>) {
 	return (
 		<P.Description
-			className={cn('text-[length:var(--text-sm)] text-[var(--text-secondary)]', className)}
+			className={cn('text-(--text-sm) text-(--text-secondary)', className)}
 			{...props}
 		/>
 	);
@@ -94,13 +91,13 @@ export function AlertDialogAction({
 	return (
 		<P.Action
 			className={cn(
-				'inline-flex h-9 items-center justify-center rounded-[var(--radius-md)]',
-				'border border-transparent bg-[var(--accent-500)] px-4',
-				'text-[length:var(--text-sm)] font-medium text-white',
-				'hover:bg-[var(--accent-600)]',
-				'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
+				'inline-flex h-9 items-center justify-center rounded-(--radius-md)',
+				'border border-transparent bg-(--accent-500) px-4',
+				'text-(--text-sm) font-medium text-white',
+				'hover:bg-(--accent-600)',
+				'focus:outline-none focus:ring-2 focus:ring-(--accent-500) focus:ring-offset-2',
 				'disabled:pointer-events-none disabled:opacity-50',
-				'transition-colors duration-[var(--duration-fast)]',
+				'transition-colors duration-(--duration-fast)',
 				className
 			)}
 			{...props}
@@ -115,13 +112,13 @@ export function AlertDialogCancel({
 	return (
 		<P.Cancel
 			className={cn(
-				'inline-flex h-9 items-center justify-center rounded-[var(--radius-md)]',
-				'border border-[var(--workspace-border)] bg-white px-4',
-				'text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]',
-				'hover:bg-[var(--workspace-bg-subtle)]',
-				'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
+				'inline-flex h-9 items-center justify-center rounded-(--radius-md)',
+				'border border-(--workspace-border) bg-white px-4',
+				'text-(--text-sm) font-medium text-(--text-primary)',
+				'hover:bg-(--workspace-bg-subtle)',
+				'focus:outline-none focus:ring-2 focus:ring-(--accent-500) focus:ring-offset-2',
 				'disabled:pointer-events-none disabled:opacity-50',
-				'transition-colors duration-[var(--duration-fast)]',
+				'transition-colors duration-(--duration-fast)',
 				className
 			)}
 			{...props}

@@ -144,12 +144,12 @@ export function AccountsSidePanel({
 				aria-labelledby={titleId}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-[var(--workspace-bg-card)] shadow-xl',
+					'bg-(--workspace-bg-card) shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 id={titleId} className="text-[length:var(--text-lg)] font-semibold">
+					<h2 id={titleId} className="text-(--text-lg) font-semibold">
 						{isEdit ? `Edit Account: ${account.accountCode}` : 'Add Account'}
 					</h2>
 				</div>
@@ -157,10 +157,7 @@ export function AccountsSidePanel({
 				<div className="flex-1 overflow-y-auto px-6 py-4">
 					<form id="account-form" onSubmit={handleFormSubmit} className="space-y-4">
 						<div>
-							<label
-								htmlFor="accountCode"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="accountCode" className="block text-(--text-sm) font-medium">
 								Account Code
 							</label>
 							<Input
@@ -169,23 +166,20 @@ export function AccountsSidePanel({
 								disabled={isEdit}
 								className={cn(
 									'mt-1',
-									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
-									form.formState.errors.accountCode && 'border-[var(--color-error)]'
+									isEdit && 'bg-(--workspace-bg-muted) text-(--text-muted)',
+									form.formState.errors.accountCode && 'border-(--color-error)'
 								)}
 								{...form.register('accountCode')}
 							/>
 							{form.formState.errors.accountCode && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{form.formState.errors.accountCode.message}
 								</p>
 							)}
 						</div>
 
 						<div>
-							<label
-								htmlFor="accountName"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="accountName" className="block text-(--text-sm) font-medium">
 								Account Name
 							</label>
 							<Input
@@ -193,19 +187,19 @@ export function AccountsSidePanel({
 								type="text"
 								className={cn(
 									'mt-1',
-									form.formState.errors.accountName && 'border-[var(--color-error)]'
+									form.formState.errors.accountName && 'border-(--color-error)'
 								)}
 								{...form.register('accountName')}
 							/>
 							{form.formState.errors.accountName && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{form.formState.errors.accountName.message}
 								</p>
 							)}
 						</div>
 
 						<div>
-							<label htmlFor="type" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="type" className="block text-(--text-sm) font-medium">
 								Type
 							</label>
 							<Controller
@@ -229,10 +223,7 @@ export function AccountsSidePanel({
 						</div>
 
 						<div>
-							<label
-								htmlFor="ifrsCategory"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="ifrsCategory" className="block text-(--text-sm) font-medium">
 								IFRS Category
 							</label>
 							<Input
@@ -240,22 +231,19 @@ export function AccountsSidePanel({
 								type="text"
 								className={cn(
 									'mt-1',
-									form.formState.errors.ifrsCategory && 'border-[var(--color-error)]'
+									form.formState.errors.ifrsCategory && 'border-(--color-error)'
 								)}
 								{...form.register('ifrsCategory')}
 							/>
 							{form.formState.errors.ifrsCategory && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{form.formState.errors.ifrsCategory.message}
 								</p>
 							)}
 						</div>
 
 						<div>
-							<label
-								htmlFor="centerType"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="centerType" className="block text-(--text-sm) font-medium">
 								Center Type
 							</label>
 							<Controller
@@ -279,10 +267,7 @@ export function AccountsSidePanel({
 						</div>
 
 						<div>
-							<label
-								htmlFor="description"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="description" className="block text-(--text-sm) font-medium">
 								Description
 							</label>
 							<Textarea
@@ -294,7 +279,7 @@ export function AccountsSidePanel({
 						</div>
 
 						<div>
-							<label htmlFor="status" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="status" className="block text-(--text-sm) font-medium">
 								Status
 							</label>
 							<Controller

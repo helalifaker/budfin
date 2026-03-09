@@ -118,9 +118,9 @@ export function EditableCell({
 				min={min}
 				className={cn(
 					'w-full rounded-sm border border-transparent',
-					'bg-[var(--cell-editable-bg)] px-2 py-1',
+					'bg-(--cell-editable-bg) px-2 py-1',
 					'text-right text-(length:--text-sm) tabular-nums',
-					'ring-2 ring-[var(--cell-editable-focus)]',
+					'ring-2 ring-(--cell-editable-focus)',
 					'focus:outline-none',
 					className
 				)}
@@ -139,9 +139,9 @@ export function EditableCell({
 				className={cn(
 					'inline-block w-full rounded-sm px-2 py-1',
 					'text-right text-(length:--text-sm) tabular-nums',
-					'transition-colors duration-[var(--duration-fast)]',
-					'bg-[var(--cell-readonly-bg)] text-[var(--text-secondary)]',
-					isError && 'border border-[var(--cell-error-border)]',
+					'transition-colors duration-(--duration-fast)',
+					'bg-(--cell-readonly-bg) text-(--text-secondary)',
+					isError && 'border border-(--cell-error-border)',
 					className
 				)}
 				title={isError && errorMessage ? errorMessage : undefined}
@@ -157,9 +157,9 @@ export function EditableCell({
 			className={cn(
 				'inline-block w-full rounded-sm px-2 py-1',
 				'text-right text-(length:--text-sm) tabular-nums',
-				'transition-colors duration-[var(--duration-fast)]',
-				'cursor-pointer bg-[var(--cell-editable-bg)] hover:bg-[var(--cell-editable-bg)]/80',
-				isError && 'border border-[var(--cell-error-border)]',
+				'transition-colors duration-(--duration-fast)',
+				'cursor-pointer bg-(--cell-editable-bg) hover:bg-(--cell-editable-bg)/80',
+				isError && 'border border-(--cell-error-border)',
 				className
 			)}
 			title={isError && errorMessage ? errorMessage : undefined}

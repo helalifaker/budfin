@@ -16,19 +16,17 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
 		<nav aria-label="Breadcrumb" className={cn('flex items-center gap-1', className)}>
 			{items.map((item, i) => (
 				<span key={i} className="flex items-center gap-1">
-					{i > 0 && (
-						<ChevronRight className="h-3.5 w-3.5 text-[var(--text-muted)]" aria-hidden="true" />
-					)}
+					{i > 0 && <ChevronRight className="h-3.5 w-3.5 text-(--text-muted)" aria-hidden="true" />}
 					{item.onClick ? (
 						<button
 							type="button"
 							onClick={item.onClick}
 							className={cn(
-								'text-[length:var(--text-sm)]',
+								'text-(--text-sm)',
 								i === items.length - 1
-									? 'font-medium text-[var(--text-primary)]'
-									: 'text-[var(--text-muted)] hover:text-[var(--text-primary)]',
-								'transition-colors duration-[var(--duration-fast)]'
+									? 'font-medium text-(--text-primary)'
+									: 'text-(--text-muted) hover:text-(--text-primary)',
+								'transition-colors duration-(--duration-fast)'
 							)}
 						>
 							{item.label}
@@ -36,10 +34,8 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
 					) : (
 						<span
 							className={cn(
-								'text-[length:var(--text-sm)]',
-								i === items.length - 1
-									? 'font-medium text-[var(--text-primary)]'
-									: 'text-[var(--text-muted)]'
+								'text-(--text-sm)',
+								i === items.length - 1 ? 'font-medium text-(--text-primary)' : 'text-(--text-muted)'
 							)}
 							aria-current={i === items.length - 1 ? 'page' : undefined}
 						>

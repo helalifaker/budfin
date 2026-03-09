@@ -61,15 +61,15 @@ export function EnrollmentKpiRibbon({
 							key={kpi.key}
 							className={cn(
 								'animate-kpi-enter relative overflow-hidden',
-								'rounded-[var(--radius-xl)]',
-								'border border-[var(--workspace-border)]',
-								'shadow-[var(--shadow-card)]',
-								'bg-[var(--workspace-bg-card)] p-3'
+								'rounded-(--radius-xl)',
+								'border border-(--workspace-border)',
+								'shadow-(--shadow-card)',
+								'bg-(--workspace-bg-card) p-3'
 							)}
 							style={{ animationDelay: `${i * 60}ms` }}
 						>
 							<span
-								className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-[var(--accent-500)]"
+								className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-(--accent-500)"
 								aria-hidden="true"
 							/>
 
@@ -77,31 +77,31 @@ export function EnrollmentKpiRibbon({
 								<span
 									className={cn(
 										'flex h-10 w-10 shrink-0 items-center justify-center',
-										'rounded-[var(--radius-lg)]',
-										hasAlerts && 'bg-[var(--color-warning-bg)]',
-										noAlerts && 'bg-[var(--color-success-bg)]',
-										!isAlert && 'bg-[var(--accent-50)]'
+										'rounded-(--radius-lg)',
+										hasAlerts && 'bg-(--color-warning-bg)',
+										noAlerts && 'bg-(--color-success-bg)',
+										!isAlert && 'bg-(--accent-50)'
 									)}
 								>
 									<Icon
 										className={cn(
 											'h-5 w-5',
-											hasAlerts && 'text-[var(--color-warning)]',
-											noAlerts && 'text-[var(--color-success)]',
-											!isAlert && 'text-[var(--accent-500)]'
+											hasAlerts && 'text-(--color-warning)',
+											noAlerts && 'text-(--color-success)',
+											!isAlert && 'text-(--accent-500)'
 										)}
 										aria-hidden="true"
 									/>
 								</span>
 
 								<div className="flex flex-col">
-									<span className="text-[length:var(--text-xs)] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+									<span className="text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
 										{kpi.label}
 									</span>
 									<Counter
 										value={value}
 										formatter={kpi.formatter}
-										className="text-[length:var(--text-2xl)] font-bold text-[var(--text-primary)] font-[family-name:var(--font-display)]"
+										className="text-(--text-2xl) font-bold text-(--text-primary) font-[family-name:var(--font-display)]"
 									/>
 								</div>
 							</div>
@@ -117,12 +117,10 @@ export function EnrollmentKpiRibbon({
 					aria-label="Data is stale, recalculation needed"
 				>
 					<span
-						className="size-2 animate-pulse rounded-full bg-[var(--color-stale)]"
+						className="size-2 animate-pulse rounded-full bg-(--color-stale)"
 						aria-hidden="true"
 					/>
-					<span className="text-[length:var(--text-xs)] font-medium text-[var(--color-stale)]">
-						Stale
-					</span>
+					<span className="text-(--text-xs) font-medium text-(--color-stale)">Stale</span>
 				</div>
 			)}
 		</>

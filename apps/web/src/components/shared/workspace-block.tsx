@@ -42,10 +42,10 @@ export function WorkspaceBlock({
 	return (
 		<section
 			className={cn(
-				'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
+				'rounded-(--radius-lg) border border-(--workspace-border)',
 				isOpen
-					? 'bg-[var(--workspace-bg-card)] shadow-[var(--shadow-card-hover)]'
-					: 'bg-[var(--workspace-bg-card)] shadow-[var(--shadow-card)]'
+					? 'bg-(--workspace-bg-card) shadow-(--shadow-card-hover)'
+					: 'bg-(--workspace-bg-card) shadow-(--shadow-card)'
 			)}
 		>
 			{/* Header */}
@@ -53,12 +53,12 @@ export function WorkspaceBlock({
 				type="button"
 				className={cn(
 					'flex w-full items-center gap-3 px-4 py-3.5',
-					'text-left transition-colors duration-[var(--duration-fast)]',
-					'hover:bg-[var(--workspace-bg-subtle)]',
+					'text-left transition-colors duration-(--duration-fast)',
+					'hover:bg-(--workspace-bg-subtle)',
 					'focus-visible:outline-none focus-visible:ring-2',
-					'focus-visible:ring-[var(--accent-500)] focus-visible:ring-inset',
-					!isOpen && 'rounded-[var(--radius-lg)]',
-					isOpen && 'rounded-t-[var(--radius-lg)] border-b border-[var(--workspace-border)]'
+					'focus-visible:ring-(--accent-500) focus-visible:ring-inset',
+					!isOpen && 'rounded-(--radius-lg)',
+					isOpen && 'rounded-t-(--radius-lg) border-b border-(--workspace-border)'
 				)}
 				onClick={() => setIsOpen((prev) => !prev)}
 				aria-expanded={isOpen}
@@ -67,22 +67,20 @@ export function WorkspaceBlock({
 				<ChevronDown
 					className={cn(
 						'size-4 shrink-0',
-						isOpen ? 'text-[var(--accent-500)]' : 'text-[var(--text-muted)]',
-						'transition-transform duration-[var(--duration-normal)]',
+						isOpen ? 'text-(--accent-500)' : 'text-(--text-muted)',
+						'transition-transform duration-(--duration-normal)',
 						isOpen && 'rotate-0',
 						!isOpen && '-rotate-90'
 					)}
 					aria-hidden="true"
 				/>
-				<span className="text-[length:var(--text-sm)] font-semibold text-[var(--text-primary)]">
-					{title}
-				</span>
+				<span className="text-(--text-sm) font-semibold text-(--text-primary)">{title}</span>
 				{count !== undefined && (
 					<span
 						className={cn(
 							'inline-flex items-center rounded-full',
-							'bg-[var(--accent-50)] px-2 py-0.5',
-							'text-[length:var(--text-xs)] font-medium text-[var(--accent-700)]'
+							'bg-(--accent-50) px-2 py-0.5',
+							'text-(--text-xs) font-medium text-(--accent-700)'
 						)}
 					>
 						{count}
@@ -91,12 +89,10 @@ export function WorkspaceBlock({
 				{isStale && (
 					<span className="ml-auto flex items-center gap-1.5">
 						<span
-							className="size-2 rounded-full bg-[var(--color-stale)] animate-pulse"
+							className="size-2 rounded-full bg-(--color-stale) animate-pulse"
 							aria-hidden="true"
 						/>
-						<span className="text-[length:var(--text-xs)] font-medium text-[var(--color-stale)]">
-							Recalculate
-						</span>
+						<span className="text-(--text-xs) font-medium text-(--color-stale)">Recalculate</span>
 					</span>
 				)}
 			</button>
@@ -106,7 +102,7 @@ export function WorkspaceBlock({
 				id={toggleId}
 				role="region"
 				aria-labelledby={toggleId}
-				className="overflow-hidden transition-[max-height,opacity] duration-[var(--duration-normal)] ease-[var(--ease-out-expo)]"
+				className="overflow-hidden transition-[max-height,opacity] duration-(--duration-normal) ease-(--ease-out-expo)"
 				style={{
 					maxHeight: isOpen ? (contentHeight ?? 'none') : 0,
 					opacity: isOpen ? 1 : 0,

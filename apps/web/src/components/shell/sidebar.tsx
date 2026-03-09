@@ -103,9 +103,9 @@ export function Sidebar() {
 		<aside
 			className={cn(
 				'flex flex-col shrink-0',
-				'bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)]',
-				'shadow-[var(--shadow-sidebar)]',
-				'transition-[width] duration-[var(--duration-normal)]',
+				'bg-(--sidebar-bg) border-r border-(--sidebar-border)',
+				'shadow-(--shadow-sidebar)',
+				'transition-[width] duration-(--duration-normal)',
 				'overflow-hidden'
 			)}
 			style={{
@@ -117,18 +117,18 @@ export function Sidebar() {
 			<div
 				className={cn(
 					'flex h-14 items-center shrink-0',
-					'border-b border-[var(--sidebar-border)]',
+					'border-b border-(--sidebar-border)',
 					isCollapsed ? 'justify-center px-2' : 'px-4 gap-3'
 				)}
 			>
-				<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--accent-500)]">
+				<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-(--radius-md) bg-(--accent-500)">
 					<span className="text-sm font-bold text-white">B</span>
 				</div>
 				{!isCollapsed && (
 					<span
 						className={cn(
-							'text-[length:var(--text-lg)] font-bold text-white',
-							'transition-opacity duration-[var(--duration-fast)]'
+							'text-(--text-lg) font-bold text-white',
+							'transition-opacity duration-(--duration-fast)'
 						)}
 					>
 						BudFin
@@ -151,8 +151,8 @@ export function Sidebar() {
 							<h2
 								className={cn(
 									'px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider',
-									'text-[var(--text-muted)]',
-									'transition-opacity duration-[var(--duration-fast)]'
+									'text-(--text-muted)',
+									'transition-opacity duration-(--duration-fast)'
 								)}
 							>
 								{group.label}
@@ -176,7 +176,7 @@ export function Sidebar() {
 			{/* Footer */}
 			<div
 				className={cn(
-					'border-t border-[var(--sidebar-border)] shrink-0',
+					'border-t border-(--sidebar-border) shrink-0',
 					isCollapsed ? 'px-2 py-3' : 'px-3 py-3',
 					'space-y-2'
 				)}
@@ -184,14 +184,12 @@ export function Sidebar() {
 				{/* User info */}
 				{!isCollapsed && user && (
 					<div className="flex items-center gap-3 px-3 py-2">
-						<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent-600)] text-xs font-medium text-white">
+						<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--accent-600) text-xs font-medium text-white">
 							{user.email.charAt(0).toUpperCase()}
 						</div>
 						<div className="min-w-0 flex-1">
-							<p className="truncate text-[length:var(--text-sm)] text-[var(--sidebar-text-active)]">
-								{user.email}
-							</p>
-							<p className="text-[11px] text-[var(--text-muted)]">{user.role}</p>
+							<p className="truncate text-(--text-sm) text-(--sidebar-text-active)">{user.email}</p>
+							<p className="text-[11px] text-(--text-muted)">{user.role}</p>
 						</div>
 					</div>
 				)}
@@ -201,10 +199,10 @@ export function Sidebar() {
 					type="button"
 					onClick={() => logout()}
 					className={cn(
-						'flex w-full items-center gap-3 rounded-[var(--radius-md)]',
-						'text-[length:var(--text-sm)] text-[var(--sidebar-text)]',
-						'hover:bg-[var(--sidebar-bg-hover)] hover:text-[var(--color-error)]',
-						'transition-colors duration-[var(--duration-fast)]',
+						'flex w-full items-center gap-3 rounded-(--radius-md)',
+						'text-(--text-sm) text-(--sidebar-text)',
+						'hover:bg-(--sidebar-bg-hover) hover:text-(--color-error)',
+						'transition-colors duration-(--duration-fast)',
 						isCollapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
 					)}
 				>
@@ -217,10 +215,10 @@ export function Sidebar() {
 					type="button"
 					onClick={isCollapsed ? handleExpand : handleToggle}
 					className={cn(
-						'flex w-full items-center gap-3 rounded-[var(--radius-md)]',
-						'text-[length:var(--text-sm)] text-[var(--sidebar-text)]',
-						'hover:bg-[var(--sidebar-bg-hover)] hover:text-[var(--sidebar-text-active)]',
-						'transition-colors duration-[var(--duration-fast)]',
+						'flex w-full items-center gap-3 rounded-(--radius-md)',
+						'text-(--text-sm) text-(--sidebar-text)',
+						'hover:bg-(--sidebar-bg-hover) hover:text-(--sidebar-text-active)',
+						'transition-colors duration-(--duration-fast)',
 						isCollapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
 					)}
 					aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -228,7 +226,7 @@ export function Sidebar() {
 					<ChevronsLeft
 						className={cn(
 							'h-[18px] w-[18px] shrink-0',
-							'transition-transform duration-[var(--duration-normal)]',
+							'transition-transform duration-(--duration-normal)',
 							isCollapsed && 'rotate-180'
 						)}
 						style={{ transitionTimingFunction: 'var(--ease-out-back)' }}

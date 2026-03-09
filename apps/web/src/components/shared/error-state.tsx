@@ -26,17 +26,13 @@ export function ErrorState({
 			<div
 				className={cn(
 					'flex h-12 w-12 items-center justify-center',
-					'rounded-[var(--radius-lg)] bg-[var(--color-error-bg)]'
+					'rounded-(--radius-lg) bg-(--color-error-bg)'
 				)}
 			>
-				<AlertTriangle className="h-6 w-6 text-[var(--color-error)]" aria-hidden="true" />
+				<AlertTriangle className="h-6 w-6 text-(--color-error)" aria-hidden="true" />
 			</div>
-			<h3 className="mt-4 text-[length:var(--text-base)] font-semibold text-[var(--text-primary)]">
-				{title}
-			</h3>
-			<p className="mt-1.5 max-w-sm text-[length:var(--text-sm)] text-[var(--text-secondary)]">
-				{message}
-			</p>
+			<h3 className="mt-4 text-(--text-base) font-semibold text-(--text-primary)">{title}</h3>
+			<p className="mt-1.5 max-w-sm text-(--text-sm) text-(--text-secondary)">{message}</p>
 			{onRetry && (
 				<Button variant="secondary" size="sm" onClick={onRetry} className="mt-4">
 					Try again

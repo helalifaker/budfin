@@ -22,10 +22,10 @@ const BAND_LABELS: Record<string, string> = {
 };
 
 const BAND_STYLES: Record<string, string> = {
-	MATERNELLE: 'bg-[var(--badge-maternelle-bg)] text-[var(--badge-maternelle)]',
-	ELEMENTAIRE: 'bg-[var(--badge-elementaire-bg)] text-[var(--badge-elementaire)]',
-	COLLEGE: 'bg-[var(--badge-college-bg)] text-[var(--badge-college)]',
-	LYCEE: 'bg-[var(--badge-lycee-bg)] text-[var(--badge-lycee)]',
+	MATERNELLE: 'bg-(--badge-maternelle-bg) text-(--badge-maternelle)',
+	ELEMENTAIRE: 'bg-(--badge-elementaire-bg) text-(--badge-elementaire)',
+	COLLEGE: 'bg-(--badge-college-bg) text-(--badge-college)',
+	LYCEE: 'bg-(--badge-lycee-bg) text-(--badge-lycee)',
 };
 
 interface CohortRow {
@@ -138,7 +138,7 @@ export function CohortProgressionGrid({
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
 				cell: (info) => (
-					<span className="font-medium text-[var(--text-primary)]">{info.getValue()}</span>
+					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
 				),
 			}),
 			columnHelper.accessor('band', {
@@ -148,8 +148,8 @@ export function CohortProgressionGrid({
 					return (
 						<span
 							className={cn(
-								'inline-block rounded-[var(--radius-sm)] px-2 py-0.5',
-								'text-[length:var(--text-xs)] font-medium',
+								'inline-block rounded-(--radius-sm) px-2 py-0.5',
+								'text-(--text-xs) font-medium',
 								BAND_STYLES[band] ?? ''
 							)}
 						>
@@ -174,7 +174,7 @@ export function CohortProgressionGrid({
 				cell: (info) => {
 					if (info.row.original.isPS) {
 						return (
-							<span className="inline-block w-full px-2 py-1 text-right text-[length:var(--text-sm)] text-[var(--text-muted)]">
+							<span className="inline-block w-full px-2 py-1 text-right text-(--text-sm) text-(--text-muted)">
 								-
 							</span>
 						);
@@ -196,7 +196,7 @@ export function CohortProgressionGrid({
 				cell: (info) => {
 					if (info.row.original.isPS) {
 						return (
-							<span className="inline-block w-full px-2 py-1 text-right text-[length:var(--text-sm)] text-[var(--text-muted)]">
+							<span className="inline-block w-full px-2 py-1 text-right text-(--text-sm) text-(--text-muted)">
 								-
 							</span>
 						);
@@ -230,8 +230,8 @@ export function CohortProgressionGrid({
 						<span
 							className={cn(
 								'inline-block w-full rounded-sm px-2 py-1',
-								'text-right text-[length:var(--text-sm)] tabular-nums',
-								'bg-[var(--cell-readonly-bg)] text-[var(--text-secondary)]'
+								'text-right text-(--text-sm) tabular-nums',
+								'bg-(--cell-readonly-bg) text-(--text-secondary)'
 							)}
 						>
 							{info.getValue().toLocaleString()}

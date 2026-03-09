@@ -154,7 +154,7 @@ export function TariffAssignmentGrid({
 
 	if (isLoading) {
 		return (
-			<div className="flex h-32 items-center justify-center text-[length:var(--text-sm)] text-[var(--text-muted)]">
+			<div className="flex h-32 items-center justify-center text-(--text-sm) text-(--text-muted)">
 				Loading tariff assignments...
 			</div>
 		);
@@ -162,7 +162,7 @@ export function TariffAssignmentGrid({
 
 	if (grades.length === 0) {
 		return (
-			<div className="flex h-32 items-center justify-center text-[length:var(--text-sm)] text-[var(--text-muted)]">
+			<div className="flex h-32 items-center justify-center text-(--text-sm) text-(--text-muted)">
 				No nationality breakdown data. Configure enrollment headcounts first.
 			</div>
 		);
@@ -172,14 +172,14 @@ export function TariffAssignmentGrid({
 		<div className="overflow-x-auto">
 			<table
 				role="grid"
-				className="w-full text-left text-[length:var(--text-sm)]"
+				className="w-full text-left text-(--text-sm)"
 				aria-label="Tariff assignment matrix"
 			>
-				<thead className="border-b border-[var(--workspace-border)] bg-[var(--workspace-bg-muted)]">
+				<thead className="border-b border-(--workspace-border) bg-(--workspace-bg-muted)">
 					<tr>
 						<th
 							rowSpan={2}
-							className="sticky left-0 z-10 bg-[var(--workspace-bg-muted)] px-4 py-3 align-bottom font-medium text-[var(--text-secondary)]"
+							className="sticky left-0 z-10 bg-(--workspace-bg-muted) px-4 py-3 align-bottom font-medium text-(--text-secondary)"
 						>
 							Grade
 						</th>
@@ -187,14 +187,14 @@ export function TariffAssignmentGrid({
 							<th
 								key={nat}
 								colSpan={3}
-								className="border-b border-l border-[var(--workspace-border)] px-4 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]"
+								className="border-b border-l border-(--workspace-border) px-4 py-1.5 text-center text-(--text-xs) font-medium text-(--text-muted)"
 							>
 								{nat}
 							</th>
 						))}
 						<th
 							rowSpan={2}
-							className="border-l border-[var(--workspace-border)] px-4 py-3 text-center align-bottom font-medium text-[var(--text-secondary)]"
+							className="border-l border-(--workspace-border) px-4 py-3 text-center align-bottom font-medium text-(--text-secondary)"
 						>
 							Total
 						</th>
@@ -205,8 +205,8 @@ export function TariffAssignmentGrid({
 								<th
 									key={`${nat}-${tariff}`}
 									className={cn(
-										'px-3 py-1.5 text-center text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]',
-										tariff === 'RP' && 'border-l border-[var(--workspace-border)]'
+										'px-3 py-1.5 text-center text-(--text-xs) font-medium text-(--text-muted)',
+										tariff === 'RP' && 'border-l border-(--workspace-border)'
 									)}
 								>
 									{tariff}
@@ -227,16 +227,14 @@ export function TariffAssignmentGrid({
 							<tr
 								key={grade}
 								className={cn(
-									'border-b border-[var(--workspace-border)] last:border-0',
-									'transition-colors duration-[var(--duration-fast)]',
-									'hover:bg-[var(--accent-50)]'
+									'border-b border-(--workspace-border) last:border-0',
+									'transition-colors duration-(--duration-fast)',
+									'hover:bg-(--accent-50)'
 								)}
 							>
 								<td className="sticky left-0 z-10 bg-white px-4 py-2 font-medium whitespace-nowrap">
 									{grade}{' '}
-									<span className="text-[length:var(--text-xs)] text-[var(--text-muted)]">
-										({totalHeadcount})
-									</span>
+									<span className="text-(--text-xs) text-(--text-muted)">({totalHeadcount})</span>
 								</td>
 								{NATIONALITIES.flatMap((nat) => {
 									const natTarget = natMap[grade]?.[nat] ?? 0;
@@ -252,7 +250,7 @@ export function TariffAssignmentGrid({
 												key={`${grade}-${nat}-${tariff}`}
 												className={cn(
 													'px-1 py-1',
-													tariff === 'RP' && 'border-l border-[var(--workspace-border)]'
+													tariff === 'RP' && 'border-l border-(--workspace-border)'
 												)}
 											>
 												<EditableCell
@@ -272,9 +270,9 @@ export function TariffAssignmentGrid({
 								})}
 								<td
 									className={cn(
-										'border-l border-[var(--workspace-border)] px-4 py-2',
+										'border-l border-(--workspace-border) px-4 py-2',
 										'text-center font-medium tabular-nums',
-										gradeTotal !== totalHeadcount && 'text-[var(--color-error)]'
+										gradeTotal !== totalHeadcount && 'text-(--color-error)'
 									)}
 								>
 									{gradeTotal}

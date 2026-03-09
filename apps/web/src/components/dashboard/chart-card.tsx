@@ -10,16 +10,14 @@ interface ChartCardProps {
 
 export function ChartCard({ title, children, className }: ChartCardProps) {
 	return (
-		<Card className={cn('hover:shadow-[var(--shadow-sm)] hover:-translate-y-px', className)}>
+		<Card className={cn('hover:shadow-(--shadow-sm) hover:-translate-y-px', className)}>
 			<CardHeader>
 				<CardTitle>{title}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				{children ?? (
-					<div className="flex h-48 items-center justify-center rounded-[var(--radius-md)] bg-[var(--workspace-bg-subtle)]">
-						<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
-							Chart data not available
-						</p>
+					<div className="flex h-48 items-center justify-center rounded-(--radius-md) bg-(--workspace-bg-subtle)">
+						<p className="text-(--text-sm) text-(--text-muted)">Chart data not available</p>
 					</div>
 				)}
 			</CardContent>

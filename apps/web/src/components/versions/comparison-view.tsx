@@ -19,18 +19,16 @@ export function ComparisonView({ versionIds, onClose }: ComparisonViewProps) {
 
 	if (isLoading) {
 		return (
-			<div className="rounded-lg border border-[var(--workspace-border)] bg-[var(--bg-card)] p-6">
-				<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
-					Loading comparison data...
-				</p>
+			<div className="rounded-lg border border-(--workspace-border) bg-(--bg-card) p-6">
+				<p className="text-(--text-sm) text-(--text-muted)">Loading comparison data...</p>
 			</div>
 		);
 	}
 
 	if (isError || !data) {
 		return (
-			<div className="rounded-lg border border-[var(--workspace-border)] bg-[var(--bg-card)] p-6">
-				<p className="text-[length:var(--text-sm)] text-red-600">Failed to load comparison data.</p>
+			<div className="rounded-lg border border-(--workspace-border) bg-(--bg-card) p-6">
+				<p className="text-(--text-sm) text-red-600">Failed to load comparison data.</p>
 			</div>
 		);
 	}
@@ -40,13 +38,11 @@ export function ComparisonView({ versionIds, onClose }: ComparisonViewProps) {
 
 	return (
 		<section
-			className="rounded-lg border border-[var(--workspace-border)] bg-[var(--bg-card)]"
+			className="rounded-lg border border-(--workspace-border) bg-(--bg-card)"
 			aria-label="Version comparison"
 		>
-			<div className="flex items-center justify-between border-b border-[var(--workspace-border)] px-4 py-3">
-				<h2 className="text-[length:var(--text-base)] font-semibold text-[var(--text-primary)]">
-					{headerLabel}
-				</h2>
+			<div className="flex items-center justify-between border-b border-(--workspace-border) px-4 py-3">
+				<h2 className="text-(--text-base) font-semibold text-(--text-primary)">{headerLabel}</h2>
 				<Button variant="ghost" size="icon" onClick={onClose} aria-label="Close comparison">
 					<X className="h-4 w-4" />
 				</Button>

@@ -52,11 +52,9 @@ function Field({
 }) {
 	return (
 		<div className="space-y-1">
-			<label className="text-[length:var(--text-xs)] font-medium text-[var(--text-muted)]">
-				{label}
-			</label>
+			<label className="text-(--text-xs) font-medium text-(--text-muted)">{label}</label>
 			{children}
-			{error && <p className="text-[length:var(--text-xs)] text-[var(--color-error)]">{error}</p>}
+			{error && <p className="text-(--text-xs) text-(--color-error)">{error}</p>}
 		</div>
 	);
 }
@@ -130,10 +128,10 @@ export function EmployeeForm({
 	}, [employee, reset]);
 
 	const inputClass = cn(
-		'w-full rounded-[var(--radius-md)]',
-		'border border-[var(--workspace-border)] bg-[var(--workspace-bg)]',
-		'px-3 py-1.5 text-sm text-[var(--text-primary)]',
-		'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]',
+		'w-full rounded-(--radius-md)',
+		'border border-(--workspace-border) bg-(--workspace-bg)',
+		'px-3 py-1.5 text-sm text-(--text-primary)',
+		'focus:outline-none focus:ring-2 focus:ring-(--accent-500)',
 		'disabled:opacity-50 disabled:cursor-not-allowed'
 	);
 
@@ -242,7 +240,7 @@ export function EmployeeForm({
 					{/* Salary Fields */}
 					{!isReadOnly && (
 						<>
-							<h3 className="text-[length:var(--text-sm)] font-semibold text-[var(--text-primary)] border-b border-[var(--workspace-border)] pb-1">
+							<h3 className="text-(--text-sm) font-semibold text-(--text-primary) border-b border-(--workspace-border) pb-1">
 								Compensation
 							</h3>
 							<div className="grid grid-cols-2 gap-3">
@@ -304,7 +302,7 @@ export function EmployeeForm({
 								</Field>
 							</div>
 
-							<h3 className="text-[length:var(--text-sm)] font-semibold text-[var(--text-primary)] border-b border-[var(--workspace-border)] pb-1">
+							<h3 className="text-(--text-sm) font-semibold text-(--text-primary) border-b border-(--workspace-border) pb-1">
 								Ajeer
 							</h3>
 							<div className="grid grid-cols-2 gap-3">
@@ -330,7 +328,7 @@ export function EmployeeForm({
 
 					{/* Actions */}
 					{!isReadOnly && (
-						<div className="flex items-center gap-2 pt-4 border-t border-[var(--workspace-border)]">
+						<div className="flex items-center gap-2 pt-4 border-t border-(--workspace-border)">
 							<Button type="submit" size="sm" disabled={isPending}>
 								{isPending ? 'Saving...' : isNew ? 'Create' : 'Update'}
 							</Button>

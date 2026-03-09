@@ -41,8 +41,8 @@ const MONTH_NAMES = [
 ] as const;
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
-	Draft: 'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-[var(--status-draft)]',
-	Locked: 'bg-[color-mix(in_srgb,var(--status-locked)_15%,white)] text-[var(--status-locked)]',
+	Draft: 'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-(--status-draft)',
+	Locked: 'bg-[color-mix(in_srgb,var(--status-locked)_15%,white)] text-(--status-locked)',
 };
 
 const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
@@ -95,7 +95,7 @@ export function FiscalPeriodsPage() {
 							className={cn(
 								'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
 								STATUS_BADGE_COLORS[value] ??
-									'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-[var(--status-draft)]'
+									'bg-[color-mix(in_srgb,var(--status-draft)_15%,white)] text-(--status-draft)'
 							)}
 							aria-label={`Status: ${value}`}
 						>
@@ -108,7 +108,7 @@ export function FiscalPeriodsPage() {
 				header: 'Actual Version',
 				cell: (info) => {
 					const value = info.getValue();
-					if (value == null) return <span className="text-[var(--text-muted)]">—</span>;
+					if (value == null) return <span className="text-(--text-muted)">—</span>;
 					// Find the version name if available
 					const version = lockedActualVersions.find((v: BudgetVersion) => v.id === value);
 					return <span>{version ? `${version.name} (#${value})` : `#${value}`}</span>;
@@ -118,7 +118,7 @@ export function FiscalPeriodsPage() {
 				header: 'Locked At',
 				cell: (info) => {
 					const iso = info.getValue();
-					if (!iso) return <span className="text-[var(--text-muted)]">—</span>;
+					if (!iso) return <span className="text-(--text-muted)">—</span>;
 					return formatDate(iso);
 				},
 			}),
@@ -126,7 +126,7 @@ export function FiscalPeriodsPage() {
 				header: 'Locked By',
 				cell: (info) => {
 					const value = info.getValue();
-					if (value == null) return <span className="text-[var(--text-muted)]">—</span>;
+					if (value == null) return <span className="text-(--text-muted)">—</span>;
 					return <span>User #{value}</span>;
 				},
 			}),
@@ -185,14 +185,11 @@ export function FiscalPeriodsPage() {
 			) : (
 				<div className="overflow-x-auto rounded-lg border">
 					<table role="table" className="w-full text-left text-sm">
-						<thead className="border-b bg-[var(--workspace-bg-subtle)]">
+						<thead className="border-b bg-(--workspace-bg-subtle)">
 							{table.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											className="px-4 py-3 font-medium text-[var(--text-secondary)]"
-										>
+										<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
@@ -204,7 +201,7 @@ export function FiscalPeriodsPage() {
 								<tr>
 									<td
 										colSpan={columns.length}
-										className="px-4 py-12 text-center text-sm text-[var(--text-muted)]"
+										className="px-4 py-12 text-center text-sm text-(--text-muted)"
 									>
 										No fiscal periods for FY{fiscalYear}
 									</td>
@@ -213,7 +210,7 @@ export function FiscalPeriodsPage() {
 								table.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
-										className="border-b last:border-0 hover:bg-[var(--workspace-bg-subtle)]"
+										className="border-b last:border-0 hover:bg-(--workspace-bg-subtle)"
 									>
 										{row.getVisibleCells().map((cell) => (
 											<td key={cell.id} role="cell" className="px-4 py-3">

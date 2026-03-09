@@ -131,12 +131,12 @@ export function UserSidePanel({
 				aria-label={mode === 'create' ? 'Add User' : 'Edit User'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-[var(--workspace-bg-card)] shadow-xl',
+					'bg-(--workspace-bg-card) shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-[length:var(--text-lg)] font-semibold">
+					<h2 className="text-(--text-lg) font-semibold">
 						{mode === 'create' ? 'Add User' : `Edit ${user?.email ?? 'User'}`}
 					</h2>
 				</div>
@@ -149,7 +149,7 @@ export function UserSidePanel({
 							className="space-y-4"
 						>
 							<div>
-								<label htmlFor="email" className="block text-[length:var(--text-sm)] font-medium">
+								<label htmlFor="email" className="block text-(--text-sm) font-medium">
 									Email
 								</label>
 								<Input
@@ -157,21 +157,18 @@ export function UserSidePanel({
 									type="email"
 									className={cn(
 										'mt-1',
-										createForm.formState.errors.email && 'border-[var(--color-error)]'
+										createForm.formState.errors.email && 'border-(--color-error)'
 									)}
 									{...createForm.register('email')}
 								/>
 								{createForm.formState.errors.email && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{createForm.formState.errors.email.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label
-									htmlFor="password"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="password" className="block text-(--text-sm) font-medium">
 									Password
 								</label>
 								<Input
@@ -179,18 +176,18 @@ export function UserSidePanel({
 									type="password"
 									className={cn(
 										'mt-1',
-										createForm.formState.errors.password && 'border-[var(--color-error)]'
+										createForm.formState.errors.password && 'border-(--color-error)'
 									)}
 									{...createForm.register('password')}
 								/>
 								{createForm.formState.errors.password && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{createForm.formState.errors.password.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label htmlFor="role" className="block text-[length:var(--text-sm)] font-medium">
+								<label htmlFor="role" className="block text-(--text-sm) font-medium">
 									Role
 								</label>
 								<Controller
@@ -220,10 +217,7 @@ export function UserSidePanel({
 							className="space-y-4"
 						>
 							<div>
-								<label
-									htmlFor="edit-role"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="edit-role" className="block text-(--text-sm) font-medium">
 									Role
 								</label>
 								<Controller
@@ -255,7 +249,7 @@ export function UserSidePanel({
 											checked={field.value}
 											onCheckedChange={field.onChange}
 										/>
-										<label htmlFor="is-active" className="text-[length:var(--text-sm)] font-medium">
+										<label htmlFor="is-active" className="text-(--text-sm) font-medium">
 											Active
 										</label>
 									</div>
@@ -271,10 +265,7 @@ export function UserSidePanel({
 											checked={field.value}
 											onCheckedChange={field.onChange}
 										/>
-										<label
-											htmlFor="force-reset"
-											className="text-[length:var(--text-sm)] font-medium"
-										>
+										<label htmlFor="force-reset" className="text-(--text-sm) font-medium">
 											Force Password Reset
 										</label>
 									</div>

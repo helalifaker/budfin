@@ -17,22 +17,22 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const VARIANT_STYLES: Record<string, string> = {
 	primary: [
-		'bg-[var(--accent-500)] text-white border-transparent',
-		'hover:bg-[var(--accent-600)] hover:shadow-md hover:-translate-y-px',
-		'active:bg-[var(--accent-700)] active:scale-[0.98] active:translate-y-0',
+		'bg-(--accent-500) text-white border-transparent',
+		'hover:bg-(--accent-600) hover:shadow-md hover:-translate-y-px',
+		'active:bg-(--accent-700) active:scale-[0.98] active:translate-y-0',
 	].join(' '),
 	secondary: [
-		'bg-white text-[var(--accent-600)] border-[var(--accent-300)]',
-		'hover:bg-[var(--accent-50)]',
-		'active:bg-[var(--accent-100)]',
+		'bg-white text-(--accent-600) border-(--accent-300)',
+		'hover:bg-(--accent-50)',
+		'active:bg-(--accent-100)',
 	].join(' '),
 	ghost: [
-		'bg-transparent text-[var(--text-secondary)] border-transparent',
-		'hover:bg-[var(--accent-50)]',
-		'active:bg-[var(--accent-100)]',
+		'bg-transparent text-(--text-secondary) border-transparent',
+		'hover:bg-(--accent-50)',
+		'active:bg-(--accent-100)',
 	].join(' '),
 	destructive: [
-		'bg-[var(--color-error)] text-white border-transparent',
+		'bg-(--color-error) text-white border-transparent',
 		'hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]',
 		'active:bg-[color-mix(in_srgb,var(--color-error),black_25%)] active:scale-[0.98]',
 	].join(' '),
@@ -62,10 +62,10 @@ export function Button({
 			disabled={disabled || loading}
 			className={cn(
 				'inline-flex items-center justify-center font-medium',
-				'rounded-[var(--radius-md)] border',
-				'transition-all duration-[var(--duration-fast)]',
+				'rounded-(--radius-md) border',
+				'transition-all duration-(--duration-fast)',
 				'focus-visible:outline-none focus-visible:ring-2',
-				'focus-visible:ring-[var(--accent-500)] focus-visible:ring-offset-2',
+				'focus-visible:ring-(--accent-500) focus-visible:ring-offset-2',
 				'disabled:pointer-events-none disabled:opacity-50',
 				VARIANT_STYLES[variant],
 				SIZE[size],

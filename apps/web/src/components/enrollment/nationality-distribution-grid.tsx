@@ -143,7 +143,7 @@ export function NationalityDistributionGrid({
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
 				cell: (info) => (
-					<span className="font-medium text-[var(--text-primary)]">{info.getValue()}</span>
+					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
 				),
 			}),
 			columnHelper.accessor('francaisWt', {
@@ -167,8 +167,8 @@ export function NationalityDistributionGrid({
 					<span
 						className={cn(
 							'inline-block w-full rounded-sm px-2 py-1',
-							'text-right text-[length:var(--text-sm)] tabular-nums',
-							'bg-[var(--cell-readonly-bg)] text-[var(--text-secondary)]'
+							'text-right text-(--text-sm) tabular-nums',
+							'bg-(--cell-readonly-bg) text-(--text-secondary)'
 						)}
 					>
 						{info.getValue()}
@@ -196,8 +196,8 @@ export function NationalityDistributionGrid({
 					<span
 						className={cn(
 							'inline-block w-full rounded-sm px-2 py-1',
-							'text-right text-[length:var(--text-sm)] tabular-nums',
-							'bg-[var(--cell-readonly-bg)] text-[var(--text-secondary)]'
+							'text-right text-(--text-sm) tabular-nums',
+							'bg-(--cell-readonly-bg) text-(--text-secondary)'
 						)}
 					>
 						{info.getValue()}
@@ -225,8 +225,8 @@ export function NationalityDistributionGrid({
 					<span
 						className={cn(
 							'inline-block w-full rounded-sm px-2 py-1',
-							'text-right text-[length:var(--text-sm)] tabular-nums',
-							'bg-[var(--cell-readonly-bg)] text-[var(--text-secondary)]'
+							'text-right text-(--text-sm) tabular-nums',
+							'bg-(--cell-readonly-bg) text-(--text-secondary)'
 						)}
 					>
 						{info.getValue()}
@@ -246,12 +246,12 @@ export function NationalityDistributionGrid({
 						<button
 							type="button"
 							className={cn(
-								'rounded-[var(--radius-sm)] px-2 py-1',
-								'text-[length:var(--text-xs)] font-medium',
-								'transition-colors duration-[var(--duration-fast)]',
+								'rounded-(--radius-sm) px-2 py-1',
+								'text-(--text-xs) font-medium',
+								'transition-colors duration-(--duration-fast)',
 								info.getValue()
-									? 'bg-[var(--cell-override-bg)] text-[var(--badge-lycee)]'
-									: 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
+									? 'bg-(--cell-override-bg) text-(--badge-lycee)'
+									: 'bg-(--workspace-bg-muted) text-(--text-muted)',
 								isReadOnly && 'pointer-events-none opacity-50'
 							)}
 							onClick={() => handleOverrideToggle(row.gradeLevel)}

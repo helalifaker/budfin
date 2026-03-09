@@ -11,9 +11,6 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run"
 	},
-	"prisma": {
-		"seed": "tsx prisma/seed.ts"
-	},
 	"dependencies": {
 		"@date-fns/tz": "^1.0.0",
 		"@fastify/cookie": "^11.0.0",

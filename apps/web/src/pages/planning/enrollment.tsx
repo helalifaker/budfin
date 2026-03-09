@@ -75,7 +75,7 @@ export function EnrollmentPage() {
 
 	if (!versionId) {
 		return (
-			<div className="flex h-64 items-center justify-center text-[var(--text-muted)]">
+			<div className="flex h-64 items-center justify-center text-(--text-muted)">
 				Select a version from the context bar to begin enrollment planning.
 			</div>
 		);

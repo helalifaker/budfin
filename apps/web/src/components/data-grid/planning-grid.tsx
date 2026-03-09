@@ -62,7 +62,7 @@ function ResizeHandle<T>({ header }: { header: Header<T, unknown> }) {
 			className={cn(
 				'absolute right-0 top-0 bottom-0 w-1 cursor-col-resize',
 				'opacity-0 hover:opacity-100 transition-opacity',
-				'bg-[var(--grid-resize-handle)]'
+				'bg-(--grid-resize-handle)'
 			)}
 		/>
 	);
@@ -202,8 +202,8 @@ export function PlanningGrid<T>({
 			<div
 				className={cn(
 					'overflow-x-auto',
-					'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
-					'shadow-[var(--shadow-xs)]',
+					'rounded-(--radius-lg) border border-(--workspace-border)',
+					'shadow-(--shadow-xs)',
 					className
 				)}
 			>
@@ -229,12 +229,12 @@ export function PlanningGrid<T>({
 							role="columnheader"
 							style={{ width: header.getSize() }}
 							className={cn(
-								'relative px-[var(--grid-cell-px)] py-3',
-								'font-medium text-[var(--text-secondary)]',
-								'text-[length:var(--text-xs)] uppercase tracking-[0.05em]',
+								'relative px-(--grid-cell-px) py-3',
+								'font-medium text-(--text-secondary)',
+								'text-(--text-xs) uppercase tracking-[0.05em]',
 								numeric && 'text-right',
-								pinned && 'sticky left-0 z-[1] bg-[var(--grid-header-bg)]',
-								lastPin && 'shadow-[var(--grid-pinned-shadow)]'
+								pinned && 'sticky left-0 z-[1] bg-(--grid-header-bg)',
+								lastPin && 'shadow-(--grid-pinned-shadow)'
 							)}
 						>
 							{flexRender(header.column.columnDef.header, header.getContext())}
@@ -267,13 +267,12 @@ export function PlanningGrid<T>({
 				onClick={() => handleCellClick(rowIndex, colIndex)}
 				style={{ width: cell.column.getSize() }}
 				className={cn(
-					'px-[var(--grid-cell-px)] py-[var(--grid-cell-py)]',
-					'transition-all duration-[var(--duration-fast)]',
+					'px-(--grid-cell-px) py-(--grid-cell-py)',
+					'transition-all duration-(--duration-fast)',
 					numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
-					pinned && 'sticky left-0 z-[1] bg-[var(--workspace-bg-card)]',
-					lastPin && 'shadow-[var(--grid-pinned-shadow)]',
-					isActive &&
-						'ring-2 ring-[var(--accent-400)] ring-inset shadow-[var(--shadow-glow-accent)]'
+					pinned && 'sticky left-0 z-[1] bg-(--workspace-bg-card)',
+					lastPin && 'shadow-(--grid-pinned-shadow)',
+					isActive && 'ring-2 ring-(--accent-400) ring-inset shadow-(--shadow-glow-accent)'
 				)}
 			>
 				{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -295,12 +294,12 @@ export function PlanningGrid<T>({
 				key={row.id}
 				role="row"
 				className={cn(
-					'border-b border-[var(--workspace-border)] last:border-0',
-					'transition-colors duration-[var(--duration-fast)]',
-					rowIndex % 2 === 1 && 'bg-[var(--grid-row-stripe)]',
-					'hover:bg-[var(--grid-row-hover)]',
-					isActiveRow && 'bg-[var(--grid-active-row)]',
-					isFirstInBand && bandGrouping && 'border-t-2 border-t-[var(--workspace-border-strong)]',
+					'border-b border-(--workspace-border) last:border-0',
+					'transition-colors duration-(--duration-fast)',
+					rowIndex % 2 === 1 && 'bg-(--grid-row-stripe)',
+					'hover:bg-(--grid-row-hover)',
+					isActiveRow && 'bg-(--grid-active-row)',
+					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
 					rowAnimation && 'animate-row-enter'
 				)}
 				style={
@@ -319,13 +318,10 @@ export function PlanningGrid<T>({
 		const isCollapsed = collapsedBands.has(band);
 
 		return (
-			<tr key={`band-${band}`} role="row" className="border-b border-[var(--workspace-border)]">
+			<tr key={`band-${band}`} role="row" className="border-b border-(--workspace-border)">
 				<td
 					colSpan={cols}
-					className={cn(
-						'px-[var(--grid-cell-px)] py-2',
-						'font-medium text-[length:var(--text-xs)]'
-					)}
+					className={cn('px-(--grid-cell-px) py-2', 'font-medium text-(--text-xs)')}
 					style={{
 						borderLeft: style ? `var(--grid-band-accent-width) solid ${style.color}` : undefined,
 						background: style ? `color-mix(in srgb, ${style.bg} 30%, white)` : undefined,
@@ -340,14 +336,14 @@ export function PlanningGrid<T>({
 								aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${label}`}
 								className={cn(
 									'inline-flex items-center justify-center',
-									'h-5 w-5 rounded-[var(--radius-sm)]',
-									'hover:bg-[var(--workspace-bg-muted)]',
-									'transition-transform duration-[var(--duration-fast)]'
+									'h-5 w-5 rounded-(--radius-sm)',
+									'hover:bg-(--workspace-bg-muted)',
+									'transition-transform duration-(--duration-fast)'
 								)}
 							>
 								<ChevronDown
 									className={cn(
-										'h-3.5 w-3.5 transition-transform duration-[var(--duration-fast)]',
+										'h-3.5 w-3.5 transition-transform duration-(--duration-fast)',
 										isCollapsed && '-rotate-90'
 									)}
 									aria-hidden="true"
@@ -359,7 +355,7 @@ export function PlanningGrid<T>({
 							className={cn(
 								'inline-flex items-center justify-center',
 								'min-w-5 rounded-full px-1.5 py-0.5',
-								'text-[length:var(--text-xs)] font-medium'
+								'text-(--text-xs) font-medium'
 							)}
 							style={{
 								backgroundColor: style?.bg,
@@ -379,9 +375,7 @@ export function PlanningGrid<T>({
 			return (
 				<tr>
 					<td colSpan={cols} className="px-4 py-12 text-center">
-						<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
-							No data available
-						</p>
+						<p className="text-(--text-sm) text-(--text-muted)">No data available</p>
 					</td>
 				</tr>
 			);
@@ -418,8 +412,8 @@ export function PlanningGrid<T>({
 						key={i}
 						role="row"
 						className={cn(
-							'border-t border-[var(--workspace-border)]',
-							fr.type === 'grandtotal' && 'font-bold bg-[var(--grid-footer-bg)]',
+							'border-t border-(--workspace-border)',
+							fr.type === 'grandtotal' && 'font-bold bg-(--grid-footer-bg)',
 							fr.type === 'subtotal' && 'font-normal'
 						)}
 					>
@@ -434,11 +428,11 @@ export function PlanningGrid<T>({
 									key={header.id}
 									role="gridcell"
 									className={cn(
-										'px-[var(--grid-cell-px)] py-[var(--grid-cell-py)]',
+										'px-(--grid-cell-px) py-(--grid-cell-py)',
 										numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
 										pinned && 'sticky left-0 z-[1]',
-										lastPin && 'shadow-[var(--grid-pinned-shadow)]',
-										fr.type === 'grandtotal' && 'bg-[var(--grid-footer-bg)]',
+										lastPin && 'shadow-(--grid-pinned-shadow)',
+										fr.type === 'grandtotal' && 'bg-(--grid-footer-bg)',
 										fr.type === 'subtotal' && colIdx === 0 && 'pl-8'
 									)}
 								>
@@ -460,8 +454,8 @@ export function PlanningGrid<T>({
 		<div
 			className={cn(
 				'overflow-x-auto',
-				'rounded-[var(--radius-lg)] border border-[var(--workspace-border)]',
-				'shadow-[var(--shadow-xs)]',
+				'rounded-(--radius-lg) border border-(--workspace-border)',
+				'shadow-(--shadow-xs)',
 				className
 			)}
 		>
@@ -471,13 +465,13 @@ export function PlanningGrid<T>({
 				aria-label={ariaLabel}
 				onKeyDown={handleKeyDown}
 				tabIndex={keyboardNavigation ? 0 : undefined}
-				className="w-full text-left text-[length:var(--text-sm)]"
+				className="w-full text-left text-(--text-sm)"
 			>
 				<thead
 					className={cn(
 						'sticky top-0 z-[2]',
-						'bg-[var(--grid-header-bg)]',
-						'border-b-2 border-b-[var(--grid-header-border)]',
+						'bg-(--grid-header-bg)',
+						'border-b-2 border-b-(--grid-header-border)',
 						'backdrop-blur-sm'
 					)}
 				>

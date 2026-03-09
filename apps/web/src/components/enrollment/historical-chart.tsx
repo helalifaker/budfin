@@ -89,27 +89,27 @@ export function HistoricalChart() {
 
 	if (isLoading) {
 		return (
-			<div className="rounded-[var(--radius-lg)] border p-6">
-				<div className="h-64 animate-pulse rounded bg-[var(--workspace-bg-muted)]" />
+			<div className="rounded-(--radius-lg) border p-6">
+				<div className="h-64 animate-pulse rounded bg-(--workspace-bg-muted)" />
 			</div>
 		);
 	}
 
 	if (chartData.length === 0) {
 		return (
-			<div className="rounded-[var(--radius-lg)] border p-6 text-center text-[length:var(--text-sm)] text-[var(--text-muted)]">
+			<div className="rounded-(--radius-lg) border p-6 text-center text-(--text-sm) text-(--text-muted)">
 				No historical enrollment data available. Import CSV data to see trends.
 			</div>
 		);
 	}
 
 	return (
-		<div className="rounded-[var(--radius-lg)] border p-4">
-			<h3 className="mb-4 text-[length:var(--text-sm)] font-semibold text-[var(--text-primary)]">
+		<div className="rounded-(--radius-lg) border p-4">
+			<h3 className="mb-4 text-(--text-sm) font-semibold text-(--text-primary)">
 				Historical Enrollment Trends
 			</h3>
 			{data?.cagrByBand && (
-				<div className="mb-3 flex gap-4 text-[length:var(--text-xs)] text-[var(--text-muted)]">
+				<div className="mb-3 flex gap-4 text-(--text-xs) text-(--text-muted)">
 					{Object.entries(data.cagrByBand).map(([band, cagr]) => (
 						<span key={band}>
 							{BAND_LABELS[band] ?? band}: CAGR {cagr}%

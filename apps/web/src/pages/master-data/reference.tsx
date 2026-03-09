@@ -80,9 +80,7 @@ function DeleteConfirmDialog({
 		<AlertDialog open={open} onOpenChange={(v) => !v && onCancel()}>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle className="text-[var(--color-error)]">
-						Delete {entityType}
-					</AlertDialogTitle>
+					<AlertDialogTitle className="text-(--color-error)">Delete {entityType}</AlertDialogTitle>
 					<AlertDialogDescription>
 						This action cannot be undone. Type <strong className="font-mono">{entityCode}</strong>{' '}
 						to confirm deletion.
@@ -104,7 +102,7 @@ function DeleteConfirmDialog({
 				<AlertDialogFooter>
 					<AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
 					<AlertDialogAction
-						className="bg-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
+						className="bg-(--color-error) hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
 						disabled={confirmText !== entityCode || loading}
 						onClick={onConfirm}
 					>
@@ -119,18 +117,18 @@ function DeleteConfirmDialog({
 // --- Band Mapping Badge ---
 
 const BAND_COLORS: Record<BandMapping, string> = {
-	MATERNELLE: 'bg-[var(--badge-maternelle-bg)] text-[var(--badge-maternelle)]',
-	ELEMENTAIRE: 'bg-[var(--badge-elementaire-bg)] text-[var(--badge-elementaire)]',
-	COLLEGE: 'bg-[var(--badge-college-bg)] text-[var(--badge-college)]',
-	LYCEE: 'bg-[var(--badge-lycee-bg)] text-[var(--badge-lycee)]',
-	NON_ACADEMIC: 'bg-[var(--workspace-bg-muted)] text-[var(--text-primary)]',
+	MATERNELLE: 'bg-(--badge-maternelle-bg) text-(--badge-maternelle)',
+	ELEMENTAIRE: 'bg-(--badge-elementaire-bg) text-(--badge-elementaire)',
+	COLLEGE: 'bg-(--badge-college-bg) text-(--badge-college)',
+	LYCEE: 'bg-(--badge-lycee-bg) text-(--badge-lycee)',
+	NON_ACADEMIC: 'bg-(--workspace-bg-muted) text-(--text-primary)',
 };
 
 function BandBadge({ band }: { band: BandMapping }) {
 	return (
 		<span
 			className={cn(
-				'inline-block rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
+				'inline-block rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
 				BAND_COLORS[band]
 			)}
 		>
@@ -167,13 +165,13 @@ function DataGrid<T>({
 	showSkeleton: boolean;
 }) {
 	return (
-		<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-			<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-				<thead className="border-b bg-[var(--workspace-bg-muted)]">
+		<div className="overflow-x-auto rounded-(--radius-lg) border">
+			<table role="table" className="w-full text-left text-(--text-sm)">
+				<thead className="border-b bg-(--workspace-bg-muted)">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
 							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-[var(--text-secondary)]">
+								<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
 									{flexRender(header.column.columnDef.header, header.getContext())}
 								</th>
 							))}
@@ -187,7 +185,7 @@ function DataGrid<T>({
 						<tr>
 							<td
 								colSpan={table.getAllColumns().length}
-								className="px-4 py-8 text-center text-[length:var(--text-sm)] text-[var(--text-muted)]"
+								className="px-4 py-8 text-center text-(--text-sm) text-(--text-muted)"
 							>
 								No records found.
 							</td>
@@ -196,7 +194,7 @@ function DataGrid<T>({
 						table.getRowModel().rows.map((row) => (
 							<tr
 								key={row.id}
-								className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+								className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 							>
 								{row.getVisibleCells().map((cell) => (
 									<td key={cell.id} className="px-4 py-3">
@@ -256,10 +254,10 @@ export function ReferencePage() {
 				cell: (info) => (
 					<span
 						className={cn(
-							'inline-block rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
+							'inline-block rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
 							info.getValue()
-								? 'bg-[var(--color-success-bg)] text-[var(--color-success)]'
-								: 'bg-[var(--workspace-bg-muted)] text-[var(--text-secondary)]'
+								? 'bg-(--color-success-bg) text-(--color-success)'
+								: 'bg-(--workspace-bg-muted) text-(--text-secondary)'
 						)}
 					>
 						{info.getValue() ? 'Yes' : 'No'}
@@ -277,10 +275,10 @@ export function ReferencePage() {
 							<DropdownMenuTrigger asChild>
 								<button
 									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
 									aria-label={`Actions for ${item.code}`}
 								>
-									<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
+									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
 								</button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
@@ -351,10 +349,10 @@ export function ReferencePage() {
 							<DropdownMenuTrigger asChild>
 								<button
 									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
 									aria-label={`Actions for ${item.code}`}
 								>
-									<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
+									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
 								</button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
@@ -425,10 +423,10 @@ export function ReferencePage() {
 							<DropdownMenuTrigger asChild>
 								<button
 									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
 									aria-label={`Actions for ${item.code}`}
 								>
-									<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
+									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
 								</button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
@@ -629,13 +627,13 @@ export function ReferencePage() {
 
 	return (
 		<div className="p-6">
-			<h1 className="text-[length:var(--text-xl)] font-semibold">Reference Data</h1>
+			<h1 className="text-(--text-xl) font-semibold">Reference Data</h1>
 
 			{/* Tab Navigation */}
 			<div
 				role="tablist"
 				aria-label="Reference data categories"
-				className="mt-4 flex border-b border-[var(--workspace-border)]"
+				className="mt-4 flex border-b border-(--workspace-border)"
 			>
 				{TABS.map((tab) => (
 					<button
@@ -647,10 +645,10 @@ export function ReferencePage() {
 						aria-controls={`panel-${tab.key}`}
 						onClick={() => setActiveTab(tab.key)}
 						className={cn(
-							'px-4 py-2 text-[length:var(--text-sm)] font-medium -mb-px border-b-2',
+							'px-4 py-2 text-(--text-sm) font-medium -mb-px border-b-2',
 							activeTab === tab.key
-								? 'border-[var(--accent-500)] text-[var(--accent-600)]'
-								: 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+								? 'border-(--accent-500) text-(--accent-600)'
+								: 'border-transparent text-(--text-muted) hover:text-(--text-primary)'
 						)}
 					>
 						{tab.label}

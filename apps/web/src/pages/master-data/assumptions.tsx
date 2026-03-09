@@ -167,10 +167,10 @@ export function AssumptionsPage() {
 				<span
 					aria-live="polite"
 					className={cn(
-						'text-[length:var(--text-xs)]',
-						cellStatus.status === 'saving' && 'text-[var(--text-muted)]',
-						cellStatus.status === 'saved' && 'text-[var(--color-success)]',
-						cellStatus.status === 'error' && 'text-[var(--color-error)]'
+						'text-(--text-xs)',
+						cellStatus.status === 'saving' && 'text-(--text-muted)',
+						cellStatus.status === 'saved' && 'text-(--color-success)',
+						cellStatus.status === 'error' && 'text-(--color-error)'
 					)}
 				>
 					{cellStatus.status === 'saving' && 'Saving...'}
@@ -197,7 +197,7 @@ export function AssumptionsPage() {
 	if (isLoading && !showSkeleton) {
 		return (
 			<div className="p-6">
-				<h1 className="text-[length:var(--text-xl)] font-semibold">Assumptions &amp; Parameters</h1>
+				<h1 className="text-(--text-xl) font-semibold">Assumptions &amp; Parameters</h1>
 			</div>
 		);
 	}
@@ -205,23 +205,15 @@ export function AssumptionsPage() {
 	if (isLoading && showSkeleton) {
 		return (
 			<div className="p-6">
-				<h1 className="text-[length:var(--text-xl)] font-semibold pb-4">
-					Assumptions &amp; Parameters
-				</h1>
-				<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-					<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-						<thead className="border-b bg-[var(--workspace-bg-muted)]">
+				<h1 className="text-(--text-xl) font-semibold pb-4">Assumptions &amp; Parameters</h1>
+				<div className="overflow-x-auto rounded-(--radius-lg) border">
+					<table role="table" className="w-full text-left text-(--text-sm)">
+						<thead className="border-b bg-(--workspace-bg-muted)">
 							<tr>
-								<th className="w-[40%] px-4 py-3 font-medium text-[var(--text-secondary)]">
-									Label
-								</th>
-								<th className="w-[30%] px-4 py-3 font-medium text-[var(--text-secondary)]">
-									Value
-								</th>
-								<th className="w-[15%] px-4 py-3 font-medium text-[var(--text-secondary)]">Unit</th>
-								<th className="w-[15%] px-4 py-3 font-medium text-[var(--text-secondary)]">
-									Status
-								</th>
+								<th className="w-[40%] px-4 py-3 font-medium text-(--text-secondary)">Label</th>
+								<th className="w-[30%] px-4 py-3 font-medium text-(--text-secondary)">Value</th>
+								<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Unit</th>
+								<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Status</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -235,18 +227,16 @@ export function AssumptionsPage() {
 
 	return (
 		<div className="p-6">
-			<h1 className="text-[length:var(--text-xl)] font-semibold pb-4">
-				Assumptions &amp; Parameters
-			</h1>
+			<h1 className="text-(--text-xl) font-semibold pb-4">Assumptions &amp; Parameters</h1>
 
-			<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-				<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-					<thead className="border-b bg-[var(--workspace-bg-muted)]">
+			<div className="overflow-x-auto rounded-(--radius-lg) border">
+				<table role="table" className="w-full text-left text-(--text-sm)">
+					<thead className="border-b bg-(--workspace-bg-muted)">
 						<tr>
-							<th className="w-[40%] px-4 py-3 font-medium text-[var(--text-secondary)]">Label</th>
-							<th className="w-[30%] px-4 py-3 font-medium text-[var(--text-secondary)]">Value</th>
-							<th className="w-[15%] px-4 py-3 font-medium text-[var(--text-secondary)]">Unit</th>
-							<th className="w-[15%] px-4 py-3 font-medium text-[var(--text-secondary)]">Status</th>
+							<th className="w-[40%] px-4 py-3 font-medium text-(--text-secondary)">Label</th>
+							<th className="w-[30%] px-4 py-3 font-medium text-(--text-secondary)">Value</th>
+							<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Unit</th>
+							<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Status</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -319,7 +309,7 @@ function SectionGroup({
 	return (
 		<>
 			<tr
-				className="cursor-pointer bg-[var(--workspace-bg-muted)] hover:bg-[var(--accent-100)] transition-colors duration-[var(--duration-fast)]"
+				className="cursor-pointer bg-(--workspace-bg-muted) hover:bg-(--accent-100) transition-colors duration-(--duration-fast)"
 				onClick={onToggle}
 				onKeyDown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') {
@@ -330,10 +320,10 @@ function SectionGroup({
 				tabIndex={0}
 				aria-expanded={!isCollapsed}
 			>
-				<td colSpan={4} className="px-4 py-2 font-semibold text-[var(--text-primary)]">
+				<td colSpan={4} className="px-4 py-2 font-semibold text-(--text-primary)">
 					<svg
 						className={cn(
-							'mr-2 inline-block h-4 w-4 transition-transform duration-[var(--duration-fast)]',
+							'mr-2 inline-block h-4 w-4 transition-transform duration-(--duration-fast)',
 							!isCollapsed && 'rotate-90'
 						)}
 						viewBox="0 0 24 24"
@@ -354,11 +344,11 @@ function SectionGroup({
 				assumptions.map((assumption) => (
 					<tr
 						key={assumption.key}
-						className="border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+						className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 					>
-						<td className="px-4 py-3 text-[var(--text-primary)]">{assumption.label}</td>
+						<td className="px-4 py-3 text-(--text-primary)">{assumption.label}</td>
 						<td
-							className={cn('px-4 py-3', canEdit && 'cursor-pointer bg-[var(--cell-editable-bg)]')}
+							className={cn('px-4 py-3', canEdit && 'cursor-pointer bg-(--cell-editable-bg)')}
 							onClick={() => onStartEdit(assumption)}
 						>
 							{editingKey === assumption.key ? (
@@ -369,29 +359,29 @@ function SectionGroup({
 									onChange={(e) => onEditValueChange(e.target.value)}
 									onKeyDown={(e) => onKeyDown(e, assumption)}
 									onBlur={() => onBlur(assumption)}
-									className="h-8 border-[var(--accent-400)] focus:ring-[var(--accent-300)]"
+									className="h-8 border-(--accent-400) focus:ring-(--accent-300)"
 									aria-label={`Edit ${assumption.label}`}
 								/>
 							) : (
 								<span>{assumption.value}</span>
 							)}
 						</td>
-						<td className="px-4 py-3 text-[var(--text-muted)]">{assumption.unit}</td>
+						<td className="px-4 py-3 text-(--text-muted)">{assumption.unit}</td>
 						<td className="px-4 py-3">{renderSaveStatus(assumption.key)}</td>
 					</tr>
 				))}
 
 			{!isCollapsed && gosiRateTotal !== undefined && (
 				<tr className="border-b last:border-0">
-					<td className="px-4 py-3 bg-[var(--workspace-bg-muted)] font-medium text-[var(--text-primary)]">
+					<td className="px-4 py-3 bg-(--workspace-bg-muted) font-medium text-(--text-primary)">
 						<span className="inline-flex items-center gap-2">
 							<CalculatorIcon />
 							GOSI Total Rate
 						</span>
 					</td>
-					<td className="px-4 py-3 bg-[var(--workspace-bg-muted)] font-medium">{gosiRateTotal}</td>
-					<td className="px-4 py-3 bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]">%</td>
-					<td className="px-4 py-3 bg-[var(--workspace-bg-muted)]" />
+					<td className="px-4 py-3 bg-(--workspace-bg-muted) font-medium">{gosiRateTotal}</td>
+					<td className="px-4 py-3 bg-(--workspace-bg-muted) text-(--text-muted)">%</td>
+					<td className="px-4 py-3 bg-(--workspace-bg-muted)" />
 				</tr>
 			)}
 		</>
@@ -404,7 +394,7 @@ function CalculatorIcon() {
 			xmlns="http://www.w3.org/2000/svg"
 			viewBox="0 0 20 20"
 			fill="currentColor"
-			className="h-4 w-4 text-[var(--text-muted)]"
+			className="h-4 w-4 text-(--text-muted)"
 			aria-hidden="true"
 		>
 			<path

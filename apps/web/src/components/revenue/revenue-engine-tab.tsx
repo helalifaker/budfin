@@ -10,7 +10,7 @@ export function RevenueEngineTab({ versionId }: RevenueEngineTabProps) {
 
 	if (isLoading) {
 		return (
-			<div className="flex h-32 items-center justify-center text-sm text-[var(--text-muted)]">
+			<div className="flex h-32 items-center justify-center text-sm text-(--text-muted)">
 				Loading revenue engine...
 			</div>
 		);
@@ -18,9 +18,9 @@ export function RevenueEngineTab({ versionId }: RevenueEngineTabProps) {
 
 	return (
 		<div className="space-y-4">
-			<div className="rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-bg-subtle)] px-4 py-3 text-sm">
-				<div className="font-medium text-[var(--text-primary)]">Revenue Engine Sheet</div>
-				<div className="text-[var(--text-muted)]">
+			<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-sm">
+				<div className="font-medium text-(--text-primary)">Revenue Engine Sheet</div>
+				<div className="text-(--text-muted)">
 					This view mirrors the workbook&apos;s calculated revenue engine, including the
 					workbook&apos;s registration subtotals and discount disclosure logic.
 				</div>

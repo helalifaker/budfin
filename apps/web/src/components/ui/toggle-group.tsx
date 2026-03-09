@@ -14,8 +14,8 @@ export function ToggleGroup({ className, ...props }: ToggleGroupProps) {
 		<RadixRoot
 			{...props}
 			className={cn(
-				'flex rounded-[var(--radius-md)] border border-[var(--workspace-border)]',
-				'bg-[var(--workspace-bg-subtle)]',
+				'flex rounded-(--radius-md) border border-(--workspace-border)',
+				'bg-(--workspace-bg-subtle)',
 				className
 			)}
 		/>
@@ -32,14 +32,14 @@ export function ToggleGroupItem({ className, ...props }: ToggleGroupItemProps) {
 			{...props}
 			className={cn(
 				'px-3 py-1.5 text-xs font-medium',
-				'first:rounded-l-[var(--radius-md)] last:rounded-r-[var(--radius-md)]',
-				'bg-transparent text-[var(--text-secondary)]',
-				'hover:text-[var(--text-primary)]',
-				'data-[state=on]:bg-[var(--accent-500)] data-[state=on]:text-white',
-				'data-[state=on]:shadow-[var(--shadow-sm)]',
+				'first:rounded-l-(--radius-md) last:rounded-r-(--radius-md)',
+				'bg-transparent text-(--text-secondary)',
+				'hover:text-(--text-primary)',
+				'data-[state=on]:bg-(--accent-500) data-[state=on]:text-white',
+				'data-[state=on]:shadow-(--shadow-sm)',
 				'focus-visible:outline-none focus-visible:ring-2',
-				'focus-visible:ring-[var(--accent-500)] focus-visible:ring-offset-2',
-				'transition-all duration-[var(--duration-fast)]',
+				'focus-visible:ring-(--accent-500) focus-visible:ring-offset-2',
+				'transition-all duration-(--duration-fast)',
 				className
 			)}
 		/>

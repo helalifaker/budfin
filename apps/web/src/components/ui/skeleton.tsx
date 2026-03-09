@@ -2,10 +2,7 @@ import { cn } from '../../lib/cn';
 
 export function Skeleton({ className }: { className?: string }) {
 	return (
-		<div
-			className={cn('rounded-[var(--radius-md)] animate-shimmer', className)}
-			aria-hidden="true"
-		/>
+		<div className={cn('rounded-(--radius-md) animate-shimmer', className)} aria-hidden="true" />
 	);
 }
 

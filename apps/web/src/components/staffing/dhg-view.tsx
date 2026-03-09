@@ -8,7 +8,7 @@ export type DhgGrilleViewProps = {
 export function DhgGrilleView({ grilles }: DhgGrilleViewProps) {
 	if (grilles.length === 0) {
 		return (
-			<div className="py-6 text-center text-sm text-[var(--text-muted)]">
+			<div className="py-6 text-center text-sm text-(--text-muted)">
 				No DHG grille configuration found. Configure grilles in Master Data.
 			</div>
 		);
@@ -26,20 +26,20 @@ export function DhgGrilleView({ grilles }: DhgGrilleViewProps) {
 		<div className="space-y-4">
 			{[...grouped.entries()].map(([grade, entries]) => (
 				<div key={grade}>
-					<h4 className="text-[length:var(--text-xs)] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
+					<h4 className="text-(--text-xs) font-semibold uppercase tracking-wider text-(--text-muted) mb-2">
 						{grade}
 					</h4>
-					<div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--workspace-border)]">
+					<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
 						<table className="w-full border-collapse text-sm" role="grid">
 							<thead>
-								<tr className="bg-[var(--workspace-bg-subtle)]">
-									<th className="px-3 py-2 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+								<tr className="bg-(--workspace-bg-subtle)">
+									<th className="px-3 py-2 text-left text-xs font-medium text-(--text-muted) uppercase tracking-wider">
 										Subject
 									</th>
-									<th className="px-3 py-2 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+									<th className="px-3 py-2 text-left text-xs font-medium text-(--text-muted) uppercase tracking-wider">
 										Type
 									</th>
-									<th className="px-3 py-2 text-right text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+									<th className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider">
 										Hrs/Wk/Section
 									</th>
 								</tr>
@@ -49,13 +49,13 @@ export function DhgGrilleView({ grilles }: DhgGrilleViewProps) {
 									<tr
 										key={`${e.subject}-${i}`}
 										className={cn(
-											'border-t border-[var(--workspace-border)]',
-											'hover:bg-[var(--workspace-bg-subtle)]'
+											'border-t border-(--workspace-border)',
+											'hover:bg-(--workspace-bg-subtle)'
 										)}
 									>
-										<td className="px-3 py-1.5 text-[var(--text-primary)]">{e.subject}</td>
-										<td className="px-3 py-1.5 text-[var(--text-muted)]">{e.dhgType}</td>
-										<td className="px-3 py-1.5 text-right font-mono text-[var(--text-primary)]">
+										<td className="px-3 py-1.5 text-(--text-primary)">{e.subject}</td>
+										<td className="px-3 py-1.5 text-(--text-muted)">{e.dhgType}</td>
+										<td className="px-3 py-1.5 text-right font-mono text-(--text-primary)">
 											{e.hoursPerWeekPerSection}
 										</td>
 									</tr>
@@ -76,7 +76,7 @@ export type DhgRequirementsViewProps = {
 export function DhgRequirementsView({ requirements }: DhgRequirementsViewProps) {
 	if (requirements.length === 0) {
 		return (
-			<div className="py-6 text-center text-sm text-[var(--text-muted)]">
+			<div className="py-6 text-center text-sm text-(--text-muted)">
 				No DHG requirements calculated yet. Run Calculate to generate requirements.
 			</div>
 		);
@@ -88,10 +88,10 @@ export function DhgRequirementsView({ requirements }: DhgRequirementsViewProps) 
 
 	return (
 		<div className="space-y-3">
-			<div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--workspace-border)]">
+			<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
 				<table className="w-full border-collapse text-sm" role="grid">
 					<thead>
-						<tr className="bg-[var(--workspace-bg-subtle)]">
+						<tr className="bg-(--workspace-bg-subtle)">
 							{[
 								'Grade',
 								'Students',
@@ -104,7 +104,7 @@ export function DhgRequirementsView({ requirements }: DhgRequirementsViewProps) 
 								<th
 									key={h}
 									className={cn(
-										'px-3 py-2 text-xs font-medium text-[var(--text-muted)]',
+										'px-3 py-2 text-xs font-medium text-(--text-muted)',
 										'uppercase tracking-wider',
 										h !== 'Grade' ? 'text-right' : 'text-left'
 									)}
@@ -119,45 +119,41 @@ export function DhgRequirementsView({ requirements }: DhgRequirementsViewProps) 
 							<tr
 								key={r.gradeLevel}
 								className={cn(
-									'border-t border-[var(--workspace-border)]',
-									'hover:bg-[var(--workspace-bg-subtle)]'
+									'border-t border-(--workspace-border)',
+									'hover:bg-(--workspace-bg-subtle)'
 								)}
 							>
-								<td className="px-3 py-1.5 font-medium text-[var(--text-primary)]">
-									{r.gradeLevel}
-								</td>
-								<td className="px-3 py-1.5 text-right text-[var(--text-primary)]">{r.headcount}</td>
-								<td className="px-3 py-1.5 text-right text-[var(--text-muted)]">
-									{r.maxClassSize}
-								</td>
-								<td className="px-3 py-1.5 text-right font-medium text-[var(--text-primary)]">
+								<td className="px-3 py-1.5 font-medium text-(--text-primary)">{r.gradeLevel}</td>
+								<td className="px-3 py-1.5 text-right text-(--text-primary)">{r.headcount}</td>
+								<td className="px-3 py-1.5 text-right text-(--text-muted)">{r.maxClassSize}</td>
+								<td className="px-3 py-1.5 text-right font-medium text-(--text-primary)">
 									{r.sectionsNeeded}
 								</td>
-								<td className="px-3 py-1.5 text-right font-mono text-[var(--text-primary)]">
+								<td className="px-3 py-1.5 text-right font-mono text-(--text-primary)">
 									{Number(r.totalWeeklyHours).toFixed(1)}
 								</td>
-								<td className="px-3 py-1.5 text-right font-mono text-[var(--text-primary)]">
+								<td className="px-3 py-1.5 text-right font-mono text-(--text-primary)">
 									{Number(r.totalAnnualHours).toFixed(1)}
 								</td>
-								<td className="px-3 py-1.5 text-right font-mono font-medium text-[var(--accent-700)]">
+								<td className="px-3 py-1.5 text-right font-mono font-medium text-(--accent-700)">
 									{Number(r.fte).toFixed(2)}
 								</td>
 							</tr>
 						))}
 					</tbody>
 					<tfoot>
-						<tr className="border-t-2 border-[var(--workspace-border)] bg-[var(--workspace-bg-subtle)]">
-							<td className="px-3 py-2 font-semibold text-[var(--text-primary)]">Total</td>
-							<td className="px-3 py-2 text-right font-semibold text-[var(--text-primary)]">
+						<tr className="border-t-2 border-(--workspace-border) bg-(--workspace-bg-subtle)">
+							<td className="px-3 py-2 font-semibold text-(--text-primary)">Total</td>
+							<td className="px-3 py-2 text-right font-semibold text-(--text-primary)">
 								{totalStudents}
 							</td>
 							<td className="px-3 py-2" />
-							<td className="px-3 py-2 text-right font-semibold text-[var(--text-primary)]">
+							<td className="px-3 py-2 text-right font-semibold text-(--text-primary)">
 								{totalSections}
 							</td>
 							<td className="px-3 py-2" />
 							<td className="px-3 py-2" />
-							<td className="px-3 py-2 text-right font-mono font-bold text-[var(--accent-700)]">
+							<td className="px-3 py-2 text-right font-mono font-bold text-(--accent-700)">
 								{totalFte.toFixed(2)}
 							</td>
 						</tr>

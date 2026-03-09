@@ -102,7 +102,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 				</DialogHeader>
 
 				{isActual && (
-					<div className="rounded-[var(--radius-md)] bg-[var(--color-warning-bg)] px-4 py-3 text-[length:var(--text-sm)] text-[var(--color-warning)]">
+					<div className="rounded-(--radius-md) bg-(--color-warning-bg) px-4 py-3 text-(--text-sm) text-(--color-warning)">
 						Actual versions cannot be cloned.
 					</div>
 				)}
@@ -111,23 +111,18 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 					<>
 						{progress && (
 							<div>
-								<p className="mb-1 text-[length:var(--text-xs)] text-[var(--text-muted)]">
-									Copying version data...
-								</p>
-								<div className="h-1.5 w-full overflow-hidden rounded-[var(--radius-sm)] bg-[var(--workspace-border)]">
-									<div className="h-full animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-[var(--radius-sm)] bg-[var(--accent-500)]" />
+								<p className="mb-1 text-(--text-xs) text-(--text-muted)">Copying version data...</p>
+								<div className="h-1.5 w-full overflow-hidden rounded-(--radius-sm) bg-(--workspace-border)">
+									<div className="h-full animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-(--radius-sm) bg-(--accent-500)" />
 								</div>
 							</div>
 						)}
 
 						<form id="clone-version-form" onSubmit={handleSubmit} className="space-y-4">
 							<div>
-								<label
-									htmlFor="clone-name"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="clone-name" className="block text-(--text-sm) font-medium">
 									Name{' '}
-									<span aria-hidden="true" className="text-[var(--color-error)]">
+									<span aria-hidden="true" className="text-(--color-error)">
 										*
 									</span>
 								</label>
@@ -136,27 +131,18 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 									type="text"
 									aria-required="true"
 									maxLength={100}
-									className={cn(
-										'mt-1',
-										form.formState.errors.name && 'border-[var(--color-error)]'
-									)}
+									className={cn('mt-1', form.formState.errors.name && 'border-(--color-error)')}
 									{...form.register('name')}
 								/>
 								{form.formState.errors.name && (
-									<p
-										className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]"
-										role="alert"
-									>
+									<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
 										{form.formState.errors.name.message}
 									</p>
 								)}
 							</div>
 
 							<div>
-								<label
-									htmlFor="clone-description"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="clone-description" className="block text-(--text-sm) font-medium">
 									Description
 								</label>
 								<Textarea
@@ -169,10 +155,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 							</div>
 
 							<div>
-								<label
-									htmlFor="clone-fy"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="clone-fy" className="block text-(--text-sm) font-medium">
 									Target Fiscal Year
 								</label>
 								<Controller
@@ -197,7 +180,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 									)}
 								/>
 								{isCrossYear && (
-									<div className="mt-2 rounded-[var(--radius-md)] bg-[var(--color-info-bg,var(--accent-50))] px-3 py-2 text-[length:var(--text-xs)] text-[var(--color-info,var(--accent-700))]">
+									<div className="mt-2 rounded-(--radius-md) bg-[var(--color-info-bg,var(--accent-50))] px-3 py-2 text-(--text-xs) text-[var(--color-info,var(--accent-700))]">
 										Cross-year clone: data will be copied from FY{source.fiscalYear} to FY
 										{watchedFy}
 									</div>
@@ -205,9 +188,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 							</div>
 
 							<fieldset className="space-y-3">
-								<legend className="text-[length:var(--text-sm)] font-medium">
-									Data to Include
-								</legend>
+								<legend className="text-(--text-sm) font-medium">Data to Include</legend>
 
 								<Controller
 									control={form.control}
@@ -223,11 +204,11 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 											<div>
 												<label
 													htmlFor="clone-enrollment"
-													className="text-[length:var(--text-sm)] font-medium cursor-pointer"
+													className="text-(--text-sm) font-medium cursor-pointer"
 												>
 													Include Enrollment Data
 												</label>
-												<p className="text-[length:var(--text-xs)] text-[var(--text-muted)]">
+												<p className="text-(--text-xs) text-(--text-muted)">
 													Copy student enrollment counts and grade configurations
 												</p>
 											</div>
@@ -249,11 +230,11 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 											<div>
 												<label
 													htmlFor="clone-summaries"
-													className="text-[length:var(--text-sm)] font-medium cursor-pointer"
+													className="text-(--text-sm) font-medium cursor-pointer"
 												>
 													Include Budget Summaries
 												</label>
-												<p className="text-[length:var(--text-xs)] text-[var(--text-muted)]">
+												<p className="text-(--text-xs) text-(--text-muted)">
 													Copy revenue, cost, and P&L summary data
 												</p>
 											</div>
@@ -262,7 +243,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 								/>
 							</fieldset>
 
-							<p className="text-[length:var(--text-xs)] italic text-[var(--text-muted)]">
+							<p className="text-(--text-xs) italic text-(--text-muted)">
 								Cloned versions start as Draft with all modules marked stale
 							</p>
 						</form>

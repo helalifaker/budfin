@@ -23,10 +23,10 @@ function formatDate(iso: string): string {
 }
 
 const BAND_STYLES: Record<GradeBand, string> = {
-	MATERNELLE: 'bg-[var(--badge-maternelle-bg)] text-[var(--badge-maternelle)]',
-	ELEMENTAIRE: 'bg-[var(--badge-elementaire-bg)] text-[var(--badge-elementaire)]',
-	COLLEGE: 'bg-[var(--badge-college-bg)] text-[var(--badge-college)]',
-	LYCEE: 'bg-[var(--badge-lycee-bg)] text-[var(--badge-lycee)]',
+	MATERNELLE: 'bg-(--badge-maternelle-bg) text-(--badge-maternelle)',
+	ELEMENTAIRE: 'bg-(--badge-elementaire-bg) text-(--badge-elementaire)',
+	COLLEGE: 'bg-(--badge-college-bg) text-(--badge-college)',
+	LYCEE: 'bg-(--badge-lycee-bg) text-(--badge-lycee)',
 };
 
 const ayColumnHelper = createColumnHelper<AcademicYear>();
@@ -114,7 +114,7 @@ export function AcademicPage() {
 							setAyPanelOpen(true);
 						}}
 					>
-						<Pencil className="h-4 w-4 text-[var(--text-muted)]" />
+						<Pencil className="h-4 w-4 text-(--text-muted)" />
 					</Button>
 				),
 			}),
@@ -139,7 +139,7 @@ export function AcademicPage() {
 					return (
 						<span
 							className={cn(
-								'inline-block rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
+								'inline-block rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
 								BAND_STYLES[band]
 							)}
 							aria-label={`Band: ${band}`}
@@ -183,7 +183,7 @@ export function AcademicPage() {
 							setGlPanelOpen(true);
 						}}
 					>
-						<Pencil className="h-4 w-4 text-[var(--text-muted)]" />
+						<Pencil className="h-4 w-4 text-(--text-muted)" />
 					</Button>
 				),
 			}),
@@ -208,7 +208,7 @@ export function AcademicPage() {
 			{/* Academic Years Section */}
 			<section>
 				<div className="flex items-center justify-between pb-4">
-					<h2 className="text-[length:var(--text-xl)] font-semibold">Academic Years</h2>
+					<h2 className="text-(--text-xl) font-semibold">Academic Years</h2>
 					{isAdmin && (
 						<Button
 							type="button"
@@ -222,16 +222,13 @@ export function AcademicPage() {
 					)}
 				</div>
 
-				<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-					<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-						<thead className="border-b bg-[var(--workspace-bg-muted)]">
+				<div className="overflow-x-auto rounded-(--radius-lg) border">
+					<table role="table" className="w-full text-left text-(--text-sm)">
+						<thead className="border-b bg-(--workspace-bg-muted)">
 							{ayTable.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											className="px-4 py-3 font-medium text-[var(--text-secondary)]"
-										>
+										<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
@@ -245,7 +242,7 @@ export function AcademicPage() {
 								<tr>
 									<td
 										colSpan={ayColumns.length}
-										className="px-4 py-6 text-center text-[var(--text-muted)]"
+										className="px-4 py-6 text-center text-(--text-muted)"
 									>
 										No academic years found
 									</td>
@@ -254,7 +251,7 @@ export function AcademicPage() {
 								ayTable.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
-										className="cursor-pointer border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+										className="cursor-pointer border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 										onClick={() => {
 											setEditingAy(row.original);
 											setAyPanelOpen(true);
@@ -276,19 +273,16 @@ export function AcademicPage() {
 			{/* Grade Levels Section */}
 			<section>
 				<div className="pb-4">
-					<h2 className="text-[length:var(--text-xl)] font-semibold">Grade Levels</h2>
+					<h2 className="text-(--text-xl) font-semibold">Grade Levels</h2>
 				</div>
 
-				<div className="overflow-x-auto rounded-[var(--radius-lg)] border">
-					<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
-						<thead className="border-b bg-[var(--workspace-bg-muted)]">
+				<div className="overflow-x-auto rounded-(--radius-lg) border">
+					<table role="table" className="w-full text-left text-(--text-sm)">
+						<thead className="border-b bg-(--workspace-bg-muted)">
 							{glTable.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
-										<th
-											key={header.id}
-											className="px-4 py-3 font-medium text-[var(--text-secondary)]"
-										>
+										<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</th>
 									))}
@@ -302,7 +296,7 @@ export function AcademicPage() {
 								<tr>
 									<td
 										colSpan={glColumns.length}
-										className="px-4 py-6 text-center text-[var(--text-muted)]"
+										className="px-4 py-6 text-center text-(--text-muted)"
 									>
 										No grade levels found
 									</td>
@@ -311,7 +305,7 @@ export function AcademicPage() {
 								glTable.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
-										className="cursor-pointer border-b last:border-0 hover:bg-[var(--accent-50)] transition-colors duration-[var(--duration-fast)]"
+										className="cursor-pointer border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 										onClick={() => {
 											setEditingGl(row.original);
 											setGlPanelOpen(true);

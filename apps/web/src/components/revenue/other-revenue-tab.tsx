@@ -134,7 +134,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 				header: 'Distribution',
 				cell: (info) =>
 					isReadOnly ? (
-						<span className="text-xs text-[var(--text-secondary)]">{info.getValue()}</span>
+						<span className="text-xs text-(--text-secondary)">{info.getValue()}</span>
 					) : (
 						<Select
 							value={info.getValue()}
@@ -191,9 +191,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 					}
 
 					return (
-						<span className="text-xs text-[var(--text-secondary)]">
-							{buildDistributionPreview(row)}
-						</span>
+						<span className="text-xs text-(--text-secondary)">{buildDistributionPreview(row)}</span>
 					);
 				},
 			}),
@@ -201,7 +199,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 				header: 'Category',
 				cell: (info) =>
 					isReadOnly ? (
-						<span className="text-xs text-[var(--text-secondary)]">{info.getValue()}</span>
+						<span className="text-xs text-(--text-secondary)">{info.getValue()}</span>
 					) : (
 						<Select
 							value={info.getValue()}
@@ -229,7 +227,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 				id: 'preview',
 				header: 'Monthly Preview',
 				cell: (info) => (
-					<span className="text-xs text-[var(--text-muted)]">
+					<span className="text-xs text-(--text-muted)">
 						{buildDistributionPreview(info.row.original)}
 					</span>
 				),
@@ -246,10 +244,10 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-bg-subtle)] px-4 py-3 text-sm">
+			<div className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-sm">
 				<div>
-					<div className="font-medium text-[var(--text-primary)]">Other Revenue Drivers</div>
-					<div className="text-[var(--text-muted)]">
+					<div className="font-medium text-(--text-primary)">Other Revenue Drivers</div>
+					<div className="text-(--text-muted)">
 						Custom weights accept relative values like the workbook. Example: `1, 1` means a 50/50
 						split.
 					</div>
@@ -270,7 +268,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 				isLoading={isLoading}
 				showSkeleton
 				emptyState={
-					<p className="text-sm text-[var(--text-muted)]">
+					<p className="text-sm text-(--text-muted)">
 						No non-tuition revenue lines are configured for this version.
 					</p>
 				}

@@ -30,15 +30,15 @@ export function EmptyState({
 			<div
 				className={cn(
 					'flex h-12 w-12 items-center justify-center',
-					'rounded-[var(--radius-lg)] bg-[var(--accent-50)]',
+					'rounded-(--radius-lg) bg-(--accent-50)',
 					'animate-slide-up'
 				)}
 			>
-				<Icon className="h-6 w-6 text-[var(--accent-500)]" strokeWidth={1.5} aria-hidden="true" />
+				<Icon className="h-6 w-6 text-(--accent-500)" strokeWidth={1.5} aria-hidden="true" />
 			</div>
 			<h3
 				className={cn(
-					'mt-4 text-[length:var(--text-base)] font-semibold text-[var(--text-primary)]',
+					'mt-4 text-(--text-base) font-semibold text-(--text-primary)',
 					'animate-slide-up'
 				)}
 				style={{ animationDelay: '100ms' }}
@@ -48,7 +48,7 @@ export function EmptyState({
 			{description && (
 				<p
 					className={cn(
-						'mt-1.5 max-w-sm text-[length:var(--text-sm)] text-[var(--text-secondary)]',
+						'mt-1.5 max-w-sm text-(--text-sm) text-(--text-secondary)',
 						'animate-slide-up'
 					)}
 					style={{ animationDelay: '150ms' }}

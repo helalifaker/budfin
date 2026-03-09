@@ -47,8 +47,8 @@ const SheetContent = React.forwardRef<
 		<SheetPrimitive.Content
 			ref={ref}
 			className={cn(
-				'fixed z-50 flex flex-col bg-white shadow-[var(--shadow-lg)]',
-				'transition-transform duration-[var(--duration-normal)]',
+				'fixed z-50 flex flex-col bg-white shadow-(--shadow-lg)',
+				'transition-transform duration-(--duration-normal)',
 				'data-[state=open]:animate-in data-[state=closed]:animate-out',
 				sheetVariants[side],
 				className
@@ -57,10 +57,10 @@ const SheetContent = React.forwardRef<
 		>
 			<SheetPrimitive.Close
 				className={cn(
-					'absolute right-4 top-4 rounded-[var(--radius-sm)]',
+					'absolute right-4 top-4 rounded-(--radius-sm)',
 					'opacity-70 hover:opacity-100',
-					'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:ring-offset-2',
-					'transition-opacity duration-[var(--duration-fast)]'
+					'focus:outline-none focus:ring-2 focus:ring-(--accent-500) focus:ring-offset-2',
+					'transition-opacity duration-(--duration-fast)'
 				)}
 			>
 				<X className="h-4 w-4" />
@@ -77,7 +77,7 @@ function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 		<div
 			className={cn(
 				'flex flex-col gap-1.5 px-6 pt-6 pb-4',
-				'border-b border-[var(--workspace-border)]',
+				'border-b border-(--workspace-border)',
 				className
 			)}
 			{...props}
@@ -90,7 +90,7 @@ function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 		<div
 			className={cn(
 				'flex justify-end gap-3 px-6 py-4',
-				'border-t border-[var(--workspace-border)]',
+				'border-t border-(--workspace-border)',
 				className
 			)}
 			{...props}
@@ -104,10 +104,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
 	<SheetPrimitive.Title
 		ref={ref}
-		className={cn(
-			'text-[length:var(--text-lg)] font-semibold text-[var(--text-primary)]',
-			className
-		)}
+		className={cn('text-(--text-lg) font-semibold text-(--text-primary)', className)}
 		{...props}
 	/>
 ));
@@ -119,7 +116,7 @@ const SheetDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
 	<SheetPrimitive.Description
 		ref={ref}
-		className={cn('text-[length:var(--text-sm)] text-[var(--text-secondary)]', className)}
+		className={cn('text-(--text-sm) text-(--text-secondary)', className)}
 		{...props}
 	/>
 ));

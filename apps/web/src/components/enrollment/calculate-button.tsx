@@ -18,8 +18,8 @@ export function CalculateButton({
 }: CalculateButtonProps) {
 	const getIcon = () => {
 		if (isPending) return <Loader2 className="h-4 w-4 animate-spin" />;
-		if (isSuccess) return <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />;
-		if (isError) return <AlertTriangle className="h-4 w-4 text-[var(--color-error)]" />;
+		if (isSuccess) return <CheckCircle className="h-4 w-4 text-(--color-success)" />;
+		if (isError) return <AlertTriangle className="h-4 w-4 text-(--color-error)" />;
 		return <Calculator className="h-4 w-4" />;
 	};
 

@@ -42,7 +42,7 @@ export function LoginPage() {
 			>
 				{/* Logo */}
 				<div className="flex items-center justify-center gap-3 mb-8">
-					<div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--accent-500)]">
+					<div className="flex h-10 w-10 items-center justify-center rounded-(--radius-lg) bg-(--accent-500)">
 						<span className="text-lg font-bold text-white">B</span>
 					</div>
 					<span className="text-2xl font-bold text-white">BudFin</span>
@@ -53,23 +53,21 @@ export function LoginPage() {
 					role="form"
 					onSubmit={handleSubmit}
 					className={cn(
-						'rounded-[var(--radius-2xl)] p-8 space-y-5',
+						'rounded-(--radius-2xl) p-8 space-y-5',
 						'bg-white/10 backdrop-blur-xl',
 						'border border-white/20',
-						'shadow-[var(--shadow-lg)]'
+						'shadow-(--shadow-lg)'
 					)}
 				>
 					<div className="text-center mb-6">
-						<h1 className="text-[length:var(--text-xl)] font-semibold text-white">Welcome back</h1>
-						<p className="mt-1 text-[length:var(--text-sm)] text-white/60">
-							Sign in to your account
-						</p>
+						<h1 className="text-(--text-xl) font-semibold text-white">Welcome back</h1>
+						<p className="mt-1 text-(--text-sm) text-white/60">Sign in to your account</p>
 					</div>
 
 					<div>
 						<label
 							htmlFor="email"
-							className="block text-[length:var(--text-sm)] font-medium text-white/80 mb-1.5"
+							className="block text-(--text-sm) font-medium text-white/80 mb-1.5"
 						>
 							Email
 						</label>
@@ -83,7 +81,7 @@ export function LoginPage() {
 							className={cn(
 								'bg-white/10 border-white/20 text-white',
 								'placeholder:text-white/40',
-								'focus:border-[var(--accent-400)] focus:shadow-[var(--shadow-glow-accent)]'
+								'focus:border-(--accent-400) focus:shadow-(--shadow-glow-accent)'
 							)}
 							placeholder="you@example.com"
 						/>
@@ -92,7 +90,7 @@ export function LoginPage() {
 					<div>
 						<label
 							htmlFor="password"
-							className="block text-[length:var(--text-sm)] font-medium text-white/80 mb-1.5"
+							className="block text-(--text-sm) font-medium text-white/80 mb-1.5"
 						>
 							Password
 						</label>
@@ -106,7 +104,7 @@ export function LoginPage() {
 							className={cn(
 								'bg-white/10 border-white/20 text-white',
 								'placeholder:text-white/40',
-								'focus:border-[var(--accent-400)] focus:shadow-[var(--shadow-glow-accent)]'
+								'focus:border-(--accent-400) focus:shadow-(--shadow-glow-accent)'
 							)}
 							placeholder="Enter your password"
 						/>
@@ -116,9 +114,9 @@ export function LoginPage() {
 						<div
 							role="alert"
 							className={cn(
-								'rounded-[var(--radius-md)] px-3 py-2',
-								'bg-[var(--color-error)]/15 border border-[var(--color-error)]/30',
-								'text-[length:var(--text-sm)] text-white',
+								'rounded-(--radius-md) px-3 py-2',
+								'bg-(--color-error)/15 border border-(--color-error)/30',
+								'text-(--text-sm) text-white',
 								'animate-shake'
 							)}
 						>
@@ -133,9 +131,9 @@ export function LoginPage() {
 						loading={loading}
 						className={cn(
 							'w-full h-10',
-							'bg-[var(--accent-500)] hover:bg-[var(--accent-600)]',
+							'bg-(--accent-500) hover:bg-(--accent-600)',
 							'active:scale-[0.98]',
-							'transition-all duration-[var(--duration-fast)]'
+							'transition-all duration-(--duration-fast)'
 						)}
 					>
 						{loading ? 'Signing in...' : 'Sign in'}

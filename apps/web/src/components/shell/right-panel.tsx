@@ -17,19 +17,17 @@ function DetailsTabContent() {
 
 	if (!versionId) {
 		return (
-			<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
-				Select a version to view details.
-			</p>
+			<p className="text-(--text-sm) text-(--text-muted)">Select a version to view details.</p>
 		);
 	}
 
 	return (
 		<div className="space-y-4">
 			<div>
-				<h3 className="text-[length:var(--text-xs)] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+				<h3 className="text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
 					Enrollment Summary
 				</h3>
-				<p className="mt-2 text-[length:var(--text-sm)] text-[var(--text-secondary)]">
+				<p className="mt-2 text-(--text-sm) text-(--text-secondary)">
 					Version {versionId} selected. Enrollment details will appear here.
 				</p>
 			</div>
@@ -69,8 +67,8 @@ export function RightPanel() {
 	return (
 		<div
 			className={cn(
-				'flex shrink-0 border-l-2 border-l-[var(--accent-100)]',
-				'bg-[var(--workspace-bg)] shadow-[var(--shadow-sm)]',
+				'flex shrink-0 border-l-2 border-l-(--accent-100)',
+				'bg-(--workspace-bg) shadow-(--shadow-sm)',
 				'animate-slide-up'
 			)}
 			style={{
@@ -84,8 +82,8 @@ export function RightPanel() {
 			<div
 				className={cn(
 					'w-1 cursor-col-resize shrink-0',
-					'hover:bg-[var(--accent-300)] active:bg-[var(--accent-400)]',
-					'transition-colors duration-[var(--duration-fast)]'
+					'hover:bg-(--accent-300) active:bg-(--accent-400)',
+					'transition-colors duration-(--duration-fast)'
 				)}
 				onPointerDown={handleResizeStart}
 				role="separator"
@@ -96,7 +94,7 @@ export function RightPanel() {
 			{/* Panel content */}
 			<div className="flex flex-1 flex-col overflow-hidden">
 				{/* Header */}
-				<div className="flex h-12 items-center justify-between border-b border-[var(--workspace-border)] bg-white/80 backdrop-blur-md px-4">
+				<div className="flex h-12 items-center justify-between border-b border-(--workspace-border) bg-white/80 backdrop-blur-md px-4">
 					<div className="flex items-center gap-1" role="tablist">
 						{TABS.map((tab) => (
 							<button
@@ -104,11 +102,11 @@ export function RightPanel() {
 								type="button"
 								onClick={() => setTab(tab.id)}
 								className={cn(
-									'px-2.5 py-1.5 text-[length:var(--text-sm)] font-medium',
-									'transition-colors duration-[var(--duration-fast)]',
+									'px-2.5 py-1.5 text-(--text-sm) font-medium',
+									'transition-colors duration-(--duration-fast)',
 									activeTab === tab.id
-										? 'text-[var(--accent-600)] border-b-2 border-b-[var(--accent-500)] rounded-none'
-										: 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+										? 'text-(--accent-600) border-b-2 border-b-(--accent-500) rounded-none'
+										: 'text-(--text-muted) hover:text-(--text-primary)'
 								)}
 								aria-selected={activeTab === tab.id}
 								role="tab"
@@ -121,10 +119,10 @@ export function RightPanel() {
 						type="button"
 						onClick={close}
 						className={cn(
-							'rounded-[var(--radius-sm)] p-1',
-							'text-[var(--text-muted)] hover:text-[var(--text-primary)]',
-							'hover:bg-[var(--workspace-bg-muted)]',
-							'transition-colors duration-[var(--duration-fast)]'
+							'rounded-(--radius-sm) p-1',
+							'text-(--text-muted) hover:text-(--text-primary)',
+							'hover:bg-(--workspace-bg-muted)',
+							'transition-colors duration-(--duration-fast)'
 						)}
 						aria-label="Close panel"
 					>
@@ -133,20 +131,20 @@ export function RightPanel() {
 				</div>
 
 				{/* Tab content */}
-				<div className="flex-1 overflow-y-auto p-4 scrollbar-thin bg-[var(--workspace-bg-subtle)]">
+				<div className="flex-1 overflow-y-auto p-4 scrollbar-thin bg-(--workspace-bg-subtle)">
 					{activeTab === 'details' && <DetailsTabContent />}
 					{activeTab === 'activity' && (
-						<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
+						<p className="text-(--text-sm) text-(--text-muted)">
 							Recent activity will appear here.
 						</p>
 					)}
 					{activeTab === 'audit' && (
-						<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
+						<p className="text-(--text-sm) text-(--text-muted)">
 							Audit log entries for the selected item.
 						</p>
 					)}
 					{activeTab === 'help' && (
-						<p className="text-[length:var(--text-sm)] text-[var(--text-muted)]">
+						<p className="text-(--text-sm) text-(--text-muted)">
 							Contextual help for the current module.
 						</p>
 					)}

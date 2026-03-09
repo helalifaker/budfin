@@ -27,15 +27,15 @@ const SCENARIOS = [
 ] as const;
 
 const VERSION_TYPE_BORDER: Record<string, string> = {
-	Budget: 'border-l-[var(--version-budget)]',
-	Forecast: 'border-l-[var(--version-forecast)]',
-	Actual: 'border-l-[var(--version-actual)]',
+	Budget: 'border-l-(--version-budget)',
+	Forecast: 'border-l-(--version-forecast)',
+	Actual: 'border-l-(--version-actual)',
 };
 
 const VERSION_TYPE_DOT: Record<string, string> = {
-	Budget: 'bg-[var(--version-budget)]',
-	Forecast: 'bg-[var(--version-forecast)]',
-	Actual: 'bg-[var(--version-actual)]',
+	Budget: 'bg-(--version-budget)',
+	Forecast: 'bg-(--version-forecast)',
+	Actual: 'bg-(--version-actual)',
 };
 
 const MODULE_LABELS: Record<string, string> = {
@@ -147,8 +147,8 @@ export function ContextBar() {
 			className={cn(
 				'grid h-16 shrink-0 items-center gap-4 px-4',
 				'grid-cols-[auto_1fr_auto]',
-				'border-b border-[var(--workspace-border)]',
-				'frosted-glass shadow-[var(--shadow-xs)]',
+				'border-b border-(--workspace-border)',
+				'frosted-glass shadow-(--shadow-xs)',
 				'animate-context-bar-enter'
 			)}
 		>
@@ -166,7 +166,7 @@ export function ContextBar() {
 							id="ctx-fiscal-year"
 							aria-label="Fiscal year"
 							className={cn(
-								'h-9 w-32 text-[length:var(--text-sm)]',
+								'h-9 w-32 text-(--text-sm)',
 								glowKey === 'fy' && 'animate-selector-glow'
 							)}
 						>
@@ -194,11 +194,9 @@ export function ContextBar() {
 							id="ctx-version"
 							aria-label="Budget version"
 							className={cn(
-								'h-10 w-60 text-[length:var(--text-sm)] font-medium',
+								'h-10 w-60 text-(--text-sm) font-medium',
 								'border-l-[3px]',
-								versionType
-									? VERSION_TYPE_BORDER[versionType]
-									: 'border-l-[var(--workspace-border)]',
+								versionType ? VERSION_TYPE_BORDER[versionType] : 'border-l-(--workspace-border)',
 								glowKey === 'version' && 'animate-selector-glow'
 							)}
 						>
@@ -227,12 +225,12 @@ export function ContextBar() {
 							if (!next) setComparisonVersion(null);
 						}}
 						className={cn(
-							'flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)]',
-							'border border-[var(--workspace-border)]',
-							'transition-colors duration-[var(--duration-fast)]',
+							'flex h-9 w-9 items-center justify-center rounded-(--radius-md)',
+							'border border-(--workspace-border)',
+							'transition-colors duration-(--duration-fast)',
 							showCompare
-								? 'bg-[var(--accent-50)] text-[var(--accent-600)] border-[var(--accent-200)]'
-								: 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--workspace-bg-subtle)]'
+								? 'bg-(--accent-50) text-(--accent-600) border-(--accent-200)'
+								: 'text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--workspace-bg-subtle)'
 						)}
 						aria-label="Toggle comparison version"
 						aria-pressed={showCompare}
@@ -249,7 +247,7 @@ export function ContextBar() {
 									id="ctx-compare"
 									aria-label="Comparison version"
 									className={cn(
-										'h-9 w-48 text-[length:var(--text-sm)]',
+										'h-9 w-48 text-(--text-sm)',
 										glowKey === 'compare' && 'animate-selector-glow'
 									)}
 								>
@@ -300,7 +298,7 @@ export function ContextBar() {
 							<SelectTrigger
 								id="ctx-scenario"
 								aria-label="Scenario"
-								className="h-9 w-36 text-[length:var(--text-sm)]"
+								className="h-9 w-36 text-(--text-sm)"
 							>
 								<SelectValue />
 							</SelectTrigger>
@@ -328,12 +326,12 @@ export function ContextBar() {
 					type="button"
 					onClick={togglePanel}
 					className={cn(
-						'flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)]',
-						'border border-[var(--workspace-border)]',
-						'transition-colors duration-[var(--duration-fast)]',
+						'flex h-9 w-9 items-center justify-center rounded-(--radius-md)',
+						'border border-(--workspace-border)',
+						'transition-colors duration-(--duration-fast)',
 						isPanelOpen
-							? 'bg-[var(--accent-50)] text-[var(--accent-600)] border-[var(--accent-200)]'
-							: 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--workspace-bg-subtle)]'
+							? 'bg-(--accent-50) text-(--accent-600) border-(--accent-200)'
+							: 'text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--workspace-bg-subtle)'
 					)}
 					aria-label={isPanelOpen ? 'Close details panel' : 'Open details panel'}
 					aria-pressed={isPanelOpen}
@@ -346,7 +344,7 @@ export function ContextBar() {
 }
 
 function Divider() {
-	return <div className="h-6 w-px bg-[var(--workspace-border)]" aria-hidden="true" />;
+	return <div className="h-6 w-px bg-(--workspace-border)" aria-hidden="true" />;
 }
 
 function SelectorGroup({
@@ -364,7 +362,7 @@ function SelectorGroup({
 				htmlFor={htmlFor}
 				className={cn(
 					'text-[11px] font-semibold uppercase tracking-wider',
-					'text-[var(--text-muted)] whitespace-nowrap'
+					'text-(--text-muted) whitespace-nowrap'
 				)}
 			>
 				{label}
@@ -382,7 +380,7 @@ function VersionOption({ version }: { version: BudgetVersion }) {
 				aria-hidden="true"
 			/>
 			{version.name}
-			<span className="text-[var(--text-muted)]">({version.status})</span>
+			<span className="text-(--text-muted)">({version.status})</span>
 		</span>
 	);
 }

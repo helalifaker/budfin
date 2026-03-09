@@ -30,7 +30,7 @@ export function PlanningShell() {
 				<main
 					className={cn(
 						'flex flex-1 flex-col overflow-y-auto scrollbar-thin',
-						'min-w-[480px] px-6 pt-4 bg-[var(--workspace-bg)]'
+						'min-w-[480px] px-6 pt-4 bg-(--workspace-bg)'
 					)}
 				>
 					<Outlet />

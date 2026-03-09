@@ -8,7 +8,7 @@ export function DashboardPage() {
 	return (
 		<PageTransition>
 			<div className="p-6 space-y-6">
-				<h1 className="text-[length:var(--text-xl)] font-semibold text-[var(--text-primary)]">
+				<h1 className="text-(--text-xl) font-semibold text-(--text-primary)">
 					Budget Planning Dashboard
 				</h1>
 

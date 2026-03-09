@@ -50,7 +50,7 @@ function varianceClass(variance: number | null, metric: MetricKey): string {
 	// For costs, negative variance is favorable (costs went down)
 	const isCost = metric === 'staffCosts';
 	const isFavorable = isCost ? variance < 0 : variance > 0;
-	return isFavorable ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]';
+	return isFavorable ? 'text-(--color-success)' : 'text-(--color-error)';
 }
 
 function formatVariance(a: number, b: number, metric: MetricKey): { text: string; cls: string } {
@@ -91,25 +91,18 @@ export function ComparisonTable({ data, metric }: ComparisonTableProps) {
 
 	return (
 		<div className="mt-6 overflow-x-auto" role="region" aria-label="Comparison table">
-			<table className="w-full text-[length:var(--text-sm)]">
+			<table className="w-full text-(--text-sm)">
 				<thead>
-					<tr className="border-b border-[var(--workspace-border)] text-left">
-						<th className="px-3 py-2 font-medium text-[var(--text-secondary)]">Month</th>
+					<tr className="border-b border-(--workspace-border) text-left">
+						<th className="px-3 py-2 font-medium text-(--text-secondary)">Month</th>
 						{versions.map((v) => (
-							<th
-								key={v.id}
-								className="px-3 py-2 text-right font-medium text-[var(--text-secondary)]"
-							>
+							<th key={v.id} className="px-3 py-2 text-right font-medium text-(--text-secondary)">
 								{v.name}
 							</th>
 						))}
-						<th className="px-3 py-2 text-right font-medium text-[var(--text-secondary)]">
-							Var 1-2
-						</th>
+						<th className="px-3 py-2 text-right font-medium text-(--text-secondary)">Var 1-2</th>
 						{hasThird && (
-							<th className="px-3 py-2 text-right font-medium text-[var(--text-secondary)]">
-								Var 1-3
-							</th>
+							<th className="px-3 py-2 text-right font-medium text-(--text-secondary)">Var 1-3</th>
 						)}
 					</tr>
 				</thead>
@@ -124,13 +117,13 @@ export function ComparisonTable({ data, metric }: ComparisonTableProps) {
 						return (
 							<tr
 								key={row.label}
-								className="border-b border-[var(--workspace-border)] hover:bg-[var(--bg-hover)]"
+								className="border-b border-(--workspace-border) hover:bg-(--bg-hover)"
 							>
-								<td className="px-3 py-2 text-[var(--text-primary)]">{row.label}</td>
+								<td className="px-3 py-2 text-(--text-primary)">{row.label}</td>
 								{row.values.map((val, i) => (
 									<td
 										key={versions[i]?.id ?? i}
-										className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-[var(--text-primary)]"
+										className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-(--text-primary)"
 									>
 										{intFmt.format(val)}
 									</td>
@@ -151,12 +144,12 @@ export function ComparisonTable({ data, metric }: ComparisonTableProps) {
 						);
 					})}
 
-					<tr className="border-t-2 border-[var(--workspace-border)] font-bold">
-						<td className="px-3 py-2 text-[var(--text-primary)]">Total</td>
+					<tr className="border-t-2 border-(--workspace-border) font-bold">
+						<td className="px-3 py-2 text-(--text-primary)">Total</td>
 						{totals.map((val, i) => (
 							<td
 								key={versions[i]?.id ?? i}
-								className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-[var(--text-primary)]"
+								className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-(--text-primary)"
 							>
 								{intFmt.format(val)}
 							</td>

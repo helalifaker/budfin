@@ -41,8 +41,7 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 			}),
 			columnHelper.accessor('nationality', {
 				header: 'Nationality',
-				cell: (info) =>
-					info.getValue() ?? <span className="italic text-[var(--text-muted)]">All</span>,
+				cell: (info) => info.getValue() ?? <span className="italic text-(--text-muted)">All</span>,
 			}),
 			columnHelper.accessor('discountRate', {
 				header: 'Rate',
@@ -55,7 +54,7 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 							type="number"
 							className="max-w-[88px]"
 						/>
-						<span className="text-xs text-[var(--text-muted)]">
+						<span className="text-xs text-(--text-muted)">
 							({(Number(info.getValue()) * 100).toFixed(2)}%)
 						</span>
 					</div>
@@ -68,7 +67,7 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 					const rate = Number(info.row.original.discountRate);
 					const kept = ((1 - rate) * 100).toFixed(2);
 					return (
-						<span className="text-xs text-[var(--text-secondary)]">
+						<span className="text-xs text-(--text-secondary)">
 							Students are billed at {kept}% of Plein tuition.
 						</span>
 					);
@@ -86,10 +85,10 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-bg-subtle)] px-4 py-3 text-sm">
+			<div className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-sm">
 				<div>
-					<div className="font-medium text-[var(--text-primary)]">Discount Matrix</div>
-					<div className="text-[var(--text-muted)]">
+					<div className="font-medium text-(--text-primary)">Discount Matrix</div>
+					<div className="text-(--text-muted)">
 						The revenue engine converts these rates into effective tariff tuition, exactly like the
 						workbook.
 					</div>
@@ -110,7 +109,7 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 				isLoading={isLoading}
 				showSkeleton
 				emptyState={
-					<p className="text-sm text-[var(--text-muted)]">
+					<p className="text-sm text-(--text-muted)">
 						No discount policies are configured for this version.
 					</p>
 				}

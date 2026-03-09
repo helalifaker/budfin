@@ -26,13 +26,13 @@ type KpiCardProps = {
 function KpiCard({ label, value, variant = 'default' }: KpiCardProps) {
 	return (
 		<div className="flex flex-col gap-0.5">
-			<span className="text-[length:var(--text-xs)] text-[var(--text-muted)]">{label}</span>
+			<span className="text-(--text-xs) text-(--text-muted)">{label}</span>
 			<span
 				className={cn(
-					'text-[length:var(--text-lg)] font-semibold tabular-nums',
-					variant === 'default' && 'text-[var(--text-primary)]',
-					variant === 'negative' && 'text-[var(--color-error)]',
-					variant === 'accent' && 'text-[var(--color-success)]'
+					'text-(--text-lg) font-semibold tabular-nums',
+					variant === 'default' && 'text-(--text-primary)',
+					variant === 'negative' && 'text-(--color-error)',
+					variant === 'accent' && 'text-(--color-success)'
 				)}
 			>
 				{value}
@@ -53,30 +53,24 @@ export function RevenueKpiRibbon({
 			<div role="listitem">
 				<KpiCard label="Gross HT" value={formatSar(grossHt)} />
 			</div>
-			<div className="h-8 w-px bg-[var(--workspace-border)]" role="separator" aria-hidden="true" />
+			<div className="h-8 w-px bg-(--workspace-border)" role="separator" aria-hidden="true" />
 			<div role="listitem">
 				<KpiCard label="Discounts" value={formatSar(totalDiscounts)} variant="negative" />
 			</div>
-			<div className="h-8 w-px bg-[var(--workspace-border)]" role="separator" aria-hidden="true" />
+			<div className="h-8 w-px bg-(--workspace-border)" role="separator" aria-hidden="true" />
 			<div role="listitem">
 				<KpiCard label="Net Revenue" value={formatSar(netRevenue)} variant="accent" />
 			</div>
-			<div className="h-8 w-px bg-[var(--workspace-border)]" role="separator" aria-hidden="true" />
+			<div className="h-8 w-px bg-(--workspace-border)" role="separator" aria-hidden="true" />
 			<div role="listitem">
 				<KpiCard label="Avg/Student" value={formatSar(avgPerStudent)} />
 			</div>
 			{isStale && (
 				<>
-					<div
-						className="h-8 w-px bg-[var(--workspace-border)]"
-						role="separator"
-						aria-hidden="true"
-					/>
+					<div className="h-8 w-px bg-(--workspace-border)" role="separator" aria-hidden="true" />
 					<div className="flex items-center gap-1.5" role="listitem">
-						<span className="size-2.5 rounded-full bg-[var(--color-stale)]" aria-hidden="true" />
-						<span className="text-[length:var(--text-xs)] font-medium text-[var(--color-stale)]">
-							Stale
-						</span>
+						<span className="size-2.5 rounded-full bg-(--color-stale)" aria-hidden="true" />
+						<span className="text-(--text-xs) font-medium text-(--color-stale)">Stale</span>
 					</div>
 				</>
 			)}

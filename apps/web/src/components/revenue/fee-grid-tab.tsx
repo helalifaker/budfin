@@ -37,7 +37,7 @@ export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTab
 			columnHelper.accessor('academicPeriod', {
 				header: 'Period',
 				cell: (info) => (
-					<span className="inline-flex rounded-full bg-[var(--workspace-bg-subtle)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
+					<span className="inline-flex rounded-full bg-(--workspace-bg-subtle) px-2 py-0.5 text-xs font-medium text-(--text-secondary)">
 						{info.getValue()}
 					</span>
 				),
@@ -166,10 +166,10 @@ export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTab
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-bg-subtle)] px-4 py-3 text-sm">
+			<div className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-sm">
 				<div>
-					<div className="font-medium text-[var(--text-primary)]">Fee Grid</div>
-					<div className="text-[var(--text-muted)]">
+					<div className="font-medium text-(--text-primary)">Fee Grid</div>
+					<div className="text-(--text-muted)">
 						Edit tariff-level fees directly in the grid. The workbook logic still derives discounts
 						separately.
 					</div>
@@ -190,7 +190,7 @@ export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTab
 				isLoading={isLoading}
 				showSkeleton
 				emptyState={
-					<p className="text-sm text-[var(--text-muted)]">
+					<p className="text-sm text-(--text-muted)">
 						No fee grid data is available for this period.
 					</p>
 				}

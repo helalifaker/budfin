@@ -101,12 +101,12 @@ export function NationalitySidePanel({
 				aria-label={isEdit ? 'Edit Nationality' : 'Add Nationality'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-[var(--workspace-bg-card)] shadow-xl',
+					'bg-(--workspace-bg-card) shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-[length:var(--text-lg)] font-semibold">
+					<h2 className="text-(--text-lg) font-semibold">
 						{isEdit ? `Edit ${nationality.code}` : 'Add Nationality'}
 					</h2>
 				</div>
@@ -118,7 +118,7 @@ export function NationalitySidePanel({
 						className="space-y-4"
 					>
 						<div>
-							<label htmlFor="nat-code" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="nat-code" className="block text-(--text-sm) font-medium">
 								Code
 							</label>
 							<Input
@@ -127,29 +127,29 @@ export function NationalitySidePanel({
 								disabled={isEdit}
 								className={cn(
 									'mt-1 uppercase',
-									isEdit && 'bg-[var(--workspace-bg-muted)] text-[var(--text-muted)]',
-									form.formState.errors.code && 'border-[var(--color-error)]'
+									isEdit && 'bg-(--workspace-bg-muted) text-(--text-muted)',
+									form.formState.errors.code && 'border-(--color-error)'
 								)}
 								{...form.register('code')}
 							/>
 							{form.formState.errors.code && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{form.formState.errors.code.message}
 								</p>
 							)}
 						</div>
 						<div>
-							<label htmlFor="nat-label" className="block text-[length:var(--text-sm)] font-medium">
+							<label htmlFor="nat-label" className="block text-(--text-sm) font-medium">
 								Label
 							</label>
 							<Input
 								id="nat-label"
 								type="text"
-								className={cn('mt-1', form.formState.errors.label && 'border-[var(--color-error)]')}
+								className={cn('mt-1', form.formState.errors.label && 'border-(--color-error)')}
 								{...form.register('label')}
 							/>
 							{form.formState.errors.label && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{form.formState.errors.label.message}
 								</p>
 							)}
@@ -164,10 +164,7 @@ export function NationalitySidePanel({
 										checked={field.value}
 										onCheckedChange={field.onChange}
 									/>
-									<label
-										htmlFor="nat-vat-exempt"
-										className="text-[length:var(--text-sm)] font-medium"
-									>
+									<label htmlFor="nat-vat-exempt" className="text-(--text-sm) font-medium">
 										VAT Exempt
 									</label>
 								</div>

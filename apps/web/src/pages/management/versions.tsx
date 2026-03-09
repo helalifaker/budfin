@@ -47,10 +47,10 @@ import {
 const columnHelper = createColumnHelper<BudgetVersion>();
 
 const STATUS_BADGE_COLORS: Record<BudgetVersion['status'], string> = {
-	Draft: 'bg-[var(--status-draft-bg)] text-[var(--status-draft)]',
-	Published: 'bg-[var(--status-published-bg)] text-[var(--status-published)]',
-	Locked: 'bg-[var(--status-locked-bg)] text-[var(--status-locked)]',
-	Archived: 'bg-[var(--status-archived-bg)] text-[var(--status-archived)]',
+	Draft: 'bg-(--status-draft-bg) text-(--status-draft)',
+	Published: 'bg-(--status-published-bg) text-(--status-published)',
+	Locked: 'bg-(--status-locked-bg) text-(--status-locked)',
+	Archived: 'bg-(--status-archived-bg) text-(--status-archived)',
 };
 
 const TYPE_LABELS: Record<BudgetVersion['type'], string> = {
@@ -60,9 +60,9 @@ const TYPE_LABELS: Record<BudgetVersion['type'], string> = {
 };
 
 const TYPE_DOT_COLORS: Record<BudgetVersion['type'], string> = {
-	Budget: 'bg-[var(--version-budget)]',
-	Forecast: 'bg-[var(--version-forecast)]',
-	Actual: 'bg-[var(--version-actual)]',
+	Budget: 'bg-(--version-budget)',
+	Forecast: 'bg-(--version-forecast)',
+	Actual: 'bg-(--version-actual)',
 };
 
 const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
@@ -187,7 +187,7 @@ export function VersionsPage() {
 				columnHelper.display({
 					id: 'compare-select',
 					header: () => (
-						<span className="text-xs text-[var(--text-muted)]">{compareVersionIds.length}/3</span>
+						<span className="text-xs text-(--text-muted)">{compareVersionIds.length}/3</span>
 					),
 					cell: ({ row }) => {
 						const id = row.original.id;
@@ -198,7 +198,7 @@ export function VersionsPage() {
 								checked={checked}
 								disabled={!checked && compareVersionIds.length >= 3}
 								onChange={() => (checked ? removeCompareVersion(id) : addCompareVersion(id))}
-								className="h-4 w-4 rounded border-[var(--workspace-border)] accent-[var(--accent-600)]"
+								className="h-4 w-4 rounded border-(--workspace-border) accent-(--accent-600)"
 								aria-label={`Select ${row.original.name} for comparison`}
 							/>
 						);
@@ -214,7 +214,7 @@ export function VersionsPage() {
 				cell: ({ row, getValue }) => (
 					<button
 						type="button"
-						className="font-medium text-[var(--accent-700)] hover:underline"
+						className="font-medium text-(--accent-700) hover:underline"
 						onClick={() => setDetailVersion(row.original)}
 					>
 						{getValue()}
@@ -224,7 +224,7 @@ export function VersionsPage() {
 			columnHelper.accessor('fiscalYear', {
 				header: 'Fiscal Year',
 				cell: (info) => (
-					<span className="inline-flex rounded-[var(--radius-sm)] bg-[var(--workspace-bg-subtle)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
+					<span className="inline-flex rounded-(--radius-sm) bg-(--workspace-bg-subtle) px-2 py-0.5 text-xs font-medium text-(--text-secondary)">
 						FY{info.getValue()}
 					</span>
 				),
@@ -254,7 +254,7 @@ export function VersionsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-[var(--radius-sm)] px-2 py-0.5 text-xs font-medium',
+								'inline-flex rounded-(--radius-sm) px-2 py-0.5 text-xs font-medium',
 								STATUS_BADGE_COLORS[value]
 							)}
 							aria-label={`Status: ${value}`}
@@ -269,7 +269,7 @@ export function VersionsPage() {
 				cell: (info) => {
 					const val = info.getValue();
 					return (
-						<span className="text-xs text-[var(--text-secondary)]">
+						<span className="text-xs text-(--text-secondary)">
 							{val === 'CALCULATED' ? 'CALC' : val === 'IMPORTED' ? 'IMPORT' : val}
 						</span>
 					);
@@ -283,7 +283,7 @@ export function VersionsPage() {
 					const email = v.createdByEmail ?? '\u2014';
 					const short = email.split('@')[0];
 					return (
-						<span className="text-xs text-[var(--text-secondary)]">
+						<span className="text-xs text-(--text-secondary)">
 							{short} / {formatDate(v.createdAt)?.replace(/\s\d{4}$/, '')}
 						</span>
 					);
@@ -298,7 +298,7 @@ export function VersionsPage() {
 					return (
 						<button
 							type="button"
-							className="inline-flex cursor-pointer rounded-[var(--radius-sm)] bg-[var(--color-warning-bg)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)] hover:opacity-80"
+							className="inline-flex cursor-pointer rounded-(--radius-sm) bg-(--color-warning-bg) px-2 py-0.5 text-xs font-medium text-(--color-warning) hover:opacity-80"
 							title={stale.join(', ')}
 							aria-label={`Stale modules: ${stale.join(', ')}`}
 							onClick={() => setDetailVersion(row.original)}
@@ -386,28 +386,19 @@ export function VersionsPage() {
 						<SelectItem value="all">All Types</SelectItem>
 						<SelectItem value="Budget">
 							<span className="inline-flex items-center gap-1.5">
-								<span
-									className="h-2 w-2 rounded-full bg-[var(--version-budget)]"
-									aria-hidden="true"
-								/>
+								<span className="h-2 w-2 rounded-full bg-(--version-budget)" aria-hidden="true" />
 								Budget
 							</span>
 						</SelectItem>
 						<SelectItem value="Forecast">
 							<span className="inline-flex items-center gap-1.5">
-								<span
-									className="h-2 w-2 rounded-full bg-[var(--version-forecast)]"
-									aria-hidden="true"
-								/>
+								<span className="h-2 w-2 rounded-full bg-(--version-forecast)" aria-hidden="true" />
 								Forecast
 							</span>
 						</SelectItem>
 						<SelectItem value="Actual">
 							<span className="inline-flex items-center gap-1.5">
-								<span
-									className="h-2 w-2 rounded-full bg-[var(--version-actual)]"
-									aria-hidden="true"
-								/>
+								<span className="h-2 w-2 rounded-full bg-(--version-actual)" aria-hidden="true" />
 								Actual
 							</span>
 						</SelectItem>
@@ -442,8 +433,8 @@ export function VersionsPage() {
 
 			{/* Compare mode indicator */}
 			{isCompareMode && (
-				<div className="mt-3 flex items-center gap-3 rounded-lg border border-[var(--accent-200)] bg-[var(--accent-50)] px-4 py-2">
-					<span className="text-sm text-[var(--accent-700)]">
+				<div className="mt-3 flex items-center gap-3 rounded-lg border border-(--accent-200) bg-(--accent-50) px-4 py-2">
+					<span className="text-sm text-(--accent-700)">
 						Select 2-3 versions to compare ({compareVersionIds.length} of 3 selected)
 					</span>
 					{compareVersionIds.length >= 2 && (
@@ -457,14 +448,11 @@ export function VersionsPage() {
 			{/* Data table */}
 			<div className="mt-4 overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-sm">
-					<thead className="border-b bg-[var(--workspace-bg-subtle)]">
+					<thead className="border-b bg-(--workspace-bg-subtle)">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th
-										key={header.id}
-										className="px-4 py-3 font-medium text-[var(--text-secondary)]"
-									>
+									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
 										{header.column.getCanSort() ? (
 											<button
 												type="button"
@@ -490,7 +478,7 @@ export function VersionsPage() {
 							<tr>
 								<td
 									colSpan={columns.length}
-									className="px-4 py-12 text-center text-sm text-[var(--text-muted)]"
+									className="px-4 py-12 text-center text-sm text-(--text-muted)"
 								>
 									<EmptyState
 										fiscalYear={fiscalYear}
@@ -618,8 +606,8 @@ function VersionRow({
 	return (
 		<tr
 			className={cn(
-				'border-b last:border-0 transition-colors hover:bg-[var(--workspace-bg-subtle)]',
-				isActual && 'border-l-2 border-l-[var(--version-actual)]'
+				'border-b last:border-0 transition-colors hover:bg-(--workspace-bg-subtle)',
+				isActual && 'border-l-2 border-l-(--version-actual)'
 			)}
 		>
 			{row.getVisibleCells().map((cell) => (
@@ -649,7 +637,7 @@ function FYGroup({
 			<tr>
 				<td
 					colSpan={colSpan}
-					className="bg-[var(--workspace-bg-muted)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+					className="bg-(--workspace-bg-muted) px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-(--text-muted)"
 				>
 					FY {fy}
 				</td>
@@ -698,11 +686,11 @@ function VersionActions({
 			<DropdownMenuTrigger asChild>
 				<button
 					type="button"
-					className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--workspace-bg-muted)]"
+					className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
 					aria-label={`Actions for ${version.name}`}
 					aria-haspopup="menu"
 				>
-					<MoreHorizontal className="h-4 w-4 text-[var(--text-muted)]" />
+					<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
 				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
@@ -759,22 +747,22 @@ function EmptyState({
 
 	return (
 		<div className="flex flex-col items-center gap-3 py-4">
-			<Layers className="h-10 w-10 text-[var(--accent-400)]" strokeWidth={1.5} aria-hidden="true" />
+			<Layers className="h-10 w-10 text-(--accent-400)" strokeWidth={1.5} aria-hidden="true" />
 			{hasFilters ? (
 				<>
-					<p className="text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]">
+					<p className="text-(--text-sm) font-medium text-(--text-primary)">
 						No versions match your filters
 					</p>
-					<p className="text-[length:var(--text-sm)] text-[var(--text-secondary)]">
+					<p className="text-(--text-sm) text-(--text-secondary)">
 						Try adjusting your filters or search query.
 					</p>
 				</>
 			) : (
 				<>
-					<p className="text-[length:var(--text-sm)] font-medium text-[var(--text-primary)]">
+					<p className="text-(--text-sm) font-medium text-(--text-primary)">
 						No versions for {fyLabel}
 					</p>
-					<p className="text-[length:var(--text-sm)] text-[var(--text-secondary)]">
+					<p className="text-(--text-sm) text-(--text-secondary)">
 						Create your first budget version to get started.
 					</p>
 					{canCreate && (

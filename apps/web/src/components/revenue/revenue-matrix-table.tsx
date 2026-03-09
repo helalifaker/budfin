@@ -41,32 +41,32 @@ interface RevenueMatrixTableProps {
 export function RevenueMatrixTable({ rows, ariaLabel }: RevenueMatrixTableProps) {
 	if (rows.length === 0) {
 		return (
-			<div className="rounded-lg border border-[var(--workspace-border)] px-4 py-12 text-center text-sm text-[var(--text-muted)]">
+			<div className="rounded-lg border border-(--workspace-border) px-4 py-12 text-center text-sm text-(--text-muted)">
 				Run the revenue calculation to populate this sheet.
 			</div>
 		);
 	}
 
 	return (
-		<div className="overflow-x-auto rounded-lg border border-[var(--workspace-border)] shadow-[var(--shadow-xs)]">
+		<div className="overflow-x-auto rounded-lg border border-(--workspace-border) shadow-(--shadow-xs)">
 			<table role="table" aria-label={ariaLabel} className="min-w-[1120px] w-full text-sm">
-				<thead className="border-b border-[var(--workspace-border)] bg-[var(--workspace-bg-muted)]">
+				<thead className="border-b border-(--workspace-border) bg-(--workspace-bg-muted)">
 					<tr>
-						<th className="sticky left-0 z-10 min-w-[220px] border-r border-[var(--workspace-border)] bg-[var(--workspace-bg-muted)] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+						<th className="sticky left-0 z-10 min-w-[220px] border-r border-(--workspace-border) bg-(--workspace-bg-muted) px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-(--text-secondary)">
 							Line Item
 						</th>
 						{MONTH_NAMES.map((month) => (
 							<th
 								key={month}
-								className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]"
+								className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wide text-(--text-secondary)"
 							>
 								{month}
 							</th>
 						))}
-						<th className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+						<th className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wide text-(--text-secondary)">
 							FY2026
 						</th>
-						<th className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+						<th className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wide text-(--text-secondary)">
 							% Rev
 						</th>
 					</tr>
@@ -81,24 +81,24 @@ export function RevenueMatrixTable({ rows, ariaLabel }: RevenueMatrixTableProps)
 								{sectionChanged && (
 									<tr
 										key={`${row.section}-heading`}
-										className="border-b border-[var(--workspace-border)]"
+										className="border-b border-(--workspace-border)"
 									>
 										<td
 											colSpan={15}
-											className="bg-[var(--workspace-bg-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]"
+											className="bg-(--workspace-bg-subtle) px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-(--text-secondary)"
 										>
 											{row.section}
 										</td>
 									</tr>
 								)}
 								<tr
-									className={`border-b border-[var(--workspace-border)] last:border-0 ${
+									className={`border-b border-(--workspace-border) last:border-0 ${
 										row.isTotal
-											? 'bg-[var(--workspace-bg-subtle)] font-semibold'
-											: 'hover:bg-[var(--accent-50)]'
+											? 'bg-(--workspace-bg-subtle) font-semibold'
+											: 'hover:bg-(--accent-50)'
 									}`}
 								>
-									<td className="sticky left-0 z-10 border-r border-[var(--workspace-border)] bg-inherit px-4 py-3 text-left">
+									<td className="sticky left-0 z-10 border-r border-(--workspace-border) bg-inherit px-4 py-3 text-left">
 										{row.label}
 									</td>
 									{row.monthlyAmounts.map((amount, index) => {
@@ -107,7 +107,7 @@ export function RevenueMatrixTable({ rows, ariaLabel }: RevenueMatrixTableProps)
 											<td
 												key={`${row.label}-${MONTH_NAMES[index]}`}
 												className={`px-3 py-3 text-right tabular-nums ${
-													numeric < 0 ? 'text-[var(--color-error)]' : ''
+													numeric < 0 ? 'text-(--color-error)' : ''
 												}`}
 											>
 												{formatAmount(amount)}
@@ -116,12 +116,12 @@ export function RevenueMatrixTable({ rows, ariaLabel }: RevenueMatrixTableProps)
 									})}
 									<td
 										className={`px-3 py-3 text-right tabular-nums ${
-											Number(row.annualTotal) < 0 ? 'text-[var(--color-error)]' : ''
+											Number(row.annualTotal) < 0 ? 'text-(--color-error)' : ''
 										}`}
 									>
 										{formatAmount(row.annualTotal)}
 									</td>
-									<td className="px-3 py-3 text-right tabular-nums text-[var(--text-muted)]">
+									<td className="px-3 py-3 text-right tabular-nums text-(--text-muted)">
 										{formatPercent(row.percentageOfRevenue)}
 									</td>
 								</tr>

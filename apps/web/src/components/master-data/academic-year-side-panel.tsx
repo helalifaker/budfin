@@ -172,7 +172,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 
 	if (!open) return null;
 
-	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-[var(--color-error)]');
+	const inputClass = (hasError: boolean) => cn('mt-1', hasError && 'border-(--color-error)');
 
 	return (
 		<>
@@ -184,12 +184,12 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 				aria-label={isEdit ? 'Edit Academic Year' : 'Add Academic Year'}
 				className={cn(
 					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-[var(--workspace-bg-card)] shadow-xl',
+					'bg-(--workspace-bg-card) shadow-xl',
 					'flex flex-col'
 				)}
 			>
 				<div className="border-b px-6 py-4">
-					<h2 className="text-[length:var(--text-lg)] font-semibold">
+					<h2 className="text-(--text-lg) font-semibold">
 						{isEdit ? `Edit Academic Year — ${academicYear.fiscalYear}` : 'Add Academic Year'}
 					</h2>
 				</div>
@@ -197,10 +197,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 				<div className="flex-1 overflow-y-auto px-6 py-4">
 					<form id="ay-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 						<div>
-							<label
-								htmlFor="fiscalYear"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="fiscalYear" className="block text-(--text-sm) font-medium">
 								Fiscal Year
 							</label>
 							<Input
@@ -211,7 +208,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								{...register('fiscalYear')}
 							/>
 							{errors.fiscalYear && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{errors.fiscalYear.message}
 								</p>
 							)}
@@ -219,10 +216,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label
-									htmlFor="ay1Start"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="ay1Start" className="block text-(--text-sm) font-medium">
 									AY1 Start
 								</label>
 								<Input
@@ -232,13 +226,13 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 									{...register('ay1Start')}
 								/>
 								{errors.ay1Start && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.ay1Start.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label htmlFor="ay1End" className="block text-[length:var(--text-sm)] font-medium">
+								<label htmlFor="ay1End" className="block text-(--text-sm) font-medium">
 									AY1 End
 								</label>
 								<Input
@@ -248,7 +242,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 									{...register('ay1End')}
 								/>
 								{errors.ay1End && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.ay1End.message}
 									</p>
 								)}
@@ -257,10 +251,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label
-									htmlFor="summerStart"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="summerStart" className="block text-(--text-sm) font-medium">
 									Summer Start
 								</label>
 								<Input
@@ -270,16 +261,13 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 									{...register('summerStart')}
 								/>
 								{errors.summerStart && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.summerStart.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label
-									htmlFor="summerEnd"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="summerEnd" className="block text-(--text-sm) font-medium">
 									Summer End
 								</label>
 								<Input
@@ -289,7 +277,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 									{...register('summerEnd')}
 								/>
 								{errors.summerEnd && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.summerEnd.message}
 									</p>
 								)}
@@ -298,10 +286,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label
-									htmlFor="ay2Start"
-									className="block text-[length:var(--text-sm)] font-medium"
-								>
+								<label htmlFor="ay2Start" className="block text-(--text-sm) font-medium">
 									AY2 Start
 								</label>
 								<Input
@@ -311,13 +296,13 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 									{...register('ay2Start')}
 								/>
 								{errors.ay2Start && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.ay2Start.message}
 									</p>
 								)}
 							</div>
 							<div>
-								<label htmlFor="ay2End" className="block text-[length:var(--text-sm)] font-medium">
+								<label htmlFor="ay2End" className="block text-(--text-sm) font-medium">
 									AY2 End
 								</label>
 								<Input
@@ -327,7 +312,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 									{...register('ay2End')}
 								/>
 								{errors.ay2End && (
-									<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+									<p className="mt-1 text-(--text-xs) text-(--color-error)">
 										{errors.ay2End.message}
 									</p>
 								)}
@@ -335,10 +320,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 						</div>
 
 						<div>
-							<label
-								htmlFor="academicWeeks"
-								className="block text-[length:var(--text-sm)] font-medium"
-							>
+							<label htmlFor="academicWeeks" className="block text-(--text-sm) font-medium">
 								Academic Weeks
 							</label>
 							<Input
@@ -350,7 +332,7 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 								{...register('academicWeeks')}
 							/>
 							{errors.academicWeeks && (
-								<p className="mt-1 text-[length:var(--text-xs)] text-[var(--color-error)]">
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{errors.academicWeeks.message}
 								</p>
 							)}
