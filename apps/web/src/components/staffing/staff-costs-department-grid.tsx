@@ -81,6 +81,12 @@ function formatPercentage(val: string | null): string {
 	return `${pct}%`;
 }
 
+function computeSharePercent(departmentTotal: string, grandTotal: string): string {
+	const gt = new Decimal(grandTotal);
+	if (gt.isZero()) return '0.0';
+	return new Decimal(departmentTotal).div(gt).mul(100).toFixed(1);
+}
+
 // ── Pinned column widths ───────────────────────────────────────────────────
 
 const PINNED_COL_WIDTHS = [100, 160, 140]; // Employee Code, Name, Function/Role
@@ -535,6 +541,14 @@ export function StaffCostsDepartmentGrid({
 		[isReadOnly, onSelectEmployee]
 	);
 
+	const grandTotalValue = useMemo(() => {
+		let total = new Decimal(0);
+		for (const g of groups) {
+			total = total.plus(g.departmentTotal);
+		}
+		return total.toFixed(2);
+	}, [groups]);
+
 	if (isLoading) {
 		return <DepartmentGridSkeleton />;
 	}
@@ -593,6 +607,7 @@ export function StaffCostsDepartmentGrid({
 							<DepartmentSection
 								key={group.department}
 								group={group}
+								grandTotal={grandTotalValue}
 								isExpanded={isExpanded}
 								isReadOnly={isReadOnly}
 								onToggle={toggleDepartment}
@@ -606,7 +621,7 @@ export function StaffCostsDepartmentGrid({
 				</tbody>
 
 				{/* Grand total footer */}
-				<tfoot className="sticky bottom-0 z-20 border-t-2 border-(--workspace-border)">
+				<tfoot className="sticky bottom-0 z-20 border-t-2 border-(--workspace-border) shadow-[0_-2px_4px_rgba(0,0,0,0.06)]">
 					<GrandTotalRow groups={groups} isReadOnly={isReadOnly} />
 				</tfoot>
 			</table>
@@ -618,6 +633,7 @@ export function StaffCostsDepartmentGrid({
 
 function DepartmentSection({
 	group,
+	grandTotal,
 	isExpanded,
 	isReadOnly,
 	onToggle,
@@ -627,6 +643,7 @@ function DepartmentSection({
 	employeeColCount,
 }: {
 	group: DepartmentGroup;
+	grandTotal: string;
 	isExpanded: boolean;
 	isReadOnly: boolean;
 	onToggle: (dept: string) => void;
@@ -635,6 +652,7 @@ function DepartmentSection({
 	employeeColumns: ColumnDef<EmployeeDetailRow>[];
 	employeeColCount: number;
 }) {
+	const sharePercent = computeSharePercent(group.departmentTotal, grandTotal);
 	return (
 		<>
 			{/* Department summary row */}
@@ -727,7 +745,17 @@ function DepartmentSection({
 					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] font-bold text-(--accent-700)"
 					style={{ width: 140 }}
 				>
-					{isReadOnly ? '--' : formatCurrency(group.departmentTotal)}
+					<div className="flex flex-col items-end">
+						<span>{isReadOnly ? '--' : formatCurrency(group.departmentTotal)}</span>
+						{!isReadOnly && (
+							<span
+								className="text-(--text-xs) font-normal text-(--text-muted)"
+								aria-label={`${sharePercent}% of grand total`}
+							>
+								{sharePercent}%
+							</span>
+						)}
+					</div>
 				</td>
 			</tr>
 

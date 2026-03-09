@@ -92,6 +92,7 @@ model User {
   createdEmployees     Employee[]         @relation("EmployeeCreator")
   updatedEmployees     Employee[]         @relation("EmployeeUpdater")
   costCalculations     MonthlyStaffCost[] @relation("CostCalculator")
+  categoryCostCalculations CategoryMonthlyCost[] @relation("CategoryCostCalculator")
 
   @@map("users")
 }
@@ -378,6 +379,9 @@ model BudgetVersion {
   employees          Employee[]
   monthlyStaffCosts  MonthlyStaffCost[]
   eosProvisions      EosProvision[]
+
+  // Staff Costs — Category Level (Epic 8)
+  categoryMonthlyCosts CategoryMonthlyCost[]
 
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
@@ -804,4 +808,25 @@ model EosProvision {
   @@unique([versionId, employeeId], map: "uq_eos_provision")
   @@index([versionId], map: "idx_eos_provisions_version")
   @@map("eos_provisions")
+}
+
+// ── Category Monthly Costs (Epic 8 — Contrats Locaux & Residents) ────────────
+
+model CategoryMonthlyCost {
+  id           Int      @id @default(autoincrement())
+  versionId    Int      @map("version_id")
+  month        Int      @db.SmallInt
+  category     String   @db.VarChar(40)
+  amount       Decimal  @db.Decimal(15, 4)
+  calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  calculatedBy Int?     @map("calculated_by")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  calculator User?         @relation("CategoryCostCalculator", fields: [calculatedBy], references: [id])
+
+  @@unique([versionId, month, category], map: "uq_category_monthly_cost")
+  @@index([versionId], map: "idx_category_monthly_costs_version")
+  @@map("category_monthly_costs")
 }

@@ -13,6 +13,10 @@ import {
 	calculateEmployeeAnnualCost,
 	type EmployeeCostInput,
 } from '../../services/staffing/cost-engine.js';
+import {
+	calculateCategoryMonthlyCosts,
+	type CategoryCostConfig,
+} from '../../services/staffing/category-cost-engine.js';
 
 const versionIdParams = z.object({
 	versionId: z.coerce.number().int().positive(),
@@ -174,10 +178,15 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 			const asOfDate = new Date(Date.UTC(version.fiscalYear, 11, 31));
 
 			let totalAnnualStaffCosts = new Decimal(0);
+			const monthlyAdjustedGrossTotals = new Map<number, Decimal>();
+			for (let m = 1; m <= 12; m++) {
+				monthlyAdjustedGrossTotals.set(m, new Decimal(0));
+			}
 
 			// Clear previous calculations
 			await prisma.monthlyStaffCost.deleteMany({ where: { versionId } });
 			await prisma.eosProvision.deleteMany({ where: { versionId } });
+			await prisma.categoryMonthlyCost.deleteMany({ where: { versionId } });
 
 			for (const emp of rawEmployees) {
 				const costInput: EmployeeCostInput = {
@@ -232,11 +241,51 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					},
 				});
 
-				// Sum annual cost
+				// Sum annual cost and accumulate monthly adjusted gross subtotals
 				for (const m of months) {
 					totalAnnualStaffCosts = totalAnnualStaffCosts.plus(m.totalCost);
+					const prev = monthlyAdjustedGrossTotals.get(m.month) ?? new Decimal(0);
+					monthlyAdjustedGrossTotals.set(m.month, prev.plus(m.adjustedGross));
 				}
 			}
+
+			// ── Category Costs (Contrats Locaux & Residents) ────────────────
+			const configKeys = [
+				'remplacements_rate',
+				'formation_rate',
+				'resident_salary_annual',
+				'resident_logement_annual',
+			];
+			const configRows = await prisma.systemConfig.findMany({
+				where: { key: { in: configKeys } },
+			});
+			const configMap = new Map(configRows.map((c) => [c.key, c.value]));
+
+			const categoryConfig: CategoryCostConfig = {
+				remplacementsRate: configMap.get('remplacements_rate') ?? '0',
+				formationRate: configMap.get('formation_rate') ?? '0',
+				residentSalaryAnnual: configMap.get('resident_salary_annual') ?? '0',
+				residentLogementAnnual: configMap.get('resident_logement_annual') ?? '0',
+			};
+
+			const categoryCosts = calculateCategoryMonthlyCosts(
+				monthlyAdjustedGrossTotals,
+				categoryConfig
+			);
+
+			let totalCategoryCosts = new Decimal(0);
+			await prisma.categoryMonthlyCost.createMany({
+				data: categoryCosts.map((c) => {
+					totalCategoryCosts = totalCategoryCosts.plus(c.amount);
+					return {
+						versionId,
+						month: c.month,
+						category: c.category,
+						amount: c.amount.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+						calculatedBy: request.user.id,
+					};
+				}),
+			});
 
 			// Compute total FTE
 			const totalFte = dhgResults.reduce((sum, r) => sum.plus(r.fte), new Decimal(0));
@@ -266,6 +315,9 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					outputSummary: {
 						total_fte: totalFte.toFixed(4),
 						total_annual_staff_costs: totalAnnualStaffCosts.toFixed(4),
+						total_category_costs: totalCategoryCosts
+							.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+							.toFixed(4),
 					},
 					triggeredBy: request.user.id,
 				},
@@ -277,6 +329,9 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 				summary: {
 					total_fte: totalFte.toFixed(4),
 					total_annual_staff_costs: totalAnnualStaffCosts.toFixed(4),
+					total_category_costs: totalCategoryCosts
+						.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+						.toFixed(4),
 				},
 			};
 		},

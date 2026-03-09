@@ -21,6 +21,7 @@ import { EmployeeForm, type EmployeeFormData } from '../../components/staffing/e
 import { EmployeeImportDialog } from '../../components/staffing/employee-import-dialog';
 import { DhgGrilleView, DhgRequirementsView } from '../../components/staffing/dhg-view';
 import { MonthlyCostGrid } from '../../components/staffing/monthly-cost-grid';
+import { StaffCostsDepartmentGrid } from '../../components/staffing/staff-costs-department-grid';
 import { Button } from '../../components/ui/button';
 import { PageTransition } from '../../components/shared/page-transition';
 
@@ -32,12 +33,10 @@ export function StaffingPage() {
 	const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 	const [formOpen, setFormOpen] = useState(false);
 	const [importOpen, setImportOpen] = useState(false);
-	const costGroupBy: 'month' | 'department' | 'employee' = 'month';
-
 	// Data hooks
 	const { data: employeesData } = useEmployees(versionId);
 	const { data: dhgData } = useDhgData(versionId);
-	const { data: costData } = useStaffCosts(versionId, costGroupBy);
+	const { data: monthlyCostData } = useStaffCosts(versionId, 'month');
 	const { data: breakdownData, isLoading: isBreakdownLoading } = useStaffCosts(
 		versionId,
 		'employee',
@@ -207,10 +206,21 @@ export function StaffingPage() {
 					<DhgGrilleView grilles={dhgData?.grilles ?? []} />
 				</WorkspaceBlock>
 
+				<WorkspaceBlock title="Staff Costs by Department">
+					<StaffCostsDepartmentGrid
+						employees={employees}
+						breakdown={breakdownData?.breakdown ?? null}
+						isLoading={isBreakdownLoading}
+						isReadOnly={isViewer}
+						onSelectEmployee={handleSelectEmployee}
+						selectedEmployeeId={selectedEmployee?.id ?? null}
+					/>
+				</WorkspaceBlock>
+
 				<WorkspaceBlock title="Monthly Cost Budget">
 					<MonthlyCostGrid
-						data={costData?.data ?? []}
-						totals={costData?.totals ?? null}
+						data={monthlyCostData?.data ?? []}
+						totals={monthlyCostData?.totals ?? null}
 						isRedacted={isViewer}
 					/>
 				</WorkspaceBlock>

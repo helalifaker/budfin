@@ -84,8 +84,8 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div>
-			<dt className="text-(--text-sm) text-(--text-muted)">{label}</dt>
-			<dd className="text-(--text-sm) font-medium text-(--text-primary)">{children}</dd>
+			<div className="text-(--text-sm) text-(--text-muted)">{label}</div>
+			<div className="text-(--text-sm) font-medium text-(--text-primary)">{children}</div>
 		</div>
 	);
 }
@@ -124,7 +124,7 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 			{/* Metadata grid */}
 			<section>
 				<SectionHeading>Details</SectionHeading>
-				<dl className="grid grid-cols-2 gap-4">
+				<div className="grid grid-cols-2 gap-4">
 					<Field label="Fiscal Year">FY{version.fiscalYear}</Field>
 					<Field label="Data Source">{version.dataSource}</Field>
 					<Field label="Created By">{version.createdByEmail ?? '\u2014'}</Field>
@@ -137,7 +137,7 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 							</span>
 						</Field>
 					)}
-				</dl>
+				</div>
 			</section>
 		</div>
 	);
@@ -392,7 +392,7 @@ function DataTab({ version }: { version: BudgetVersion }) {
 									'bg-(--workspace-bg-subtle) p-3'
 								)}
 							>
-								<dl className="grid grid-cols-2 gap-2">
+								<div className="grid grid-cols-2 gap-2">
 									<Field label="Module">{log.module}</Field>
 									<Field label="Source File">{log.sourceFile}</Field>
 									<Field label="Rows Imported">{log.rowsImported}</Field>
@@ -411,7 +411,7 @@ function DataTab({ version }: { version: BudgetVersion }) {
 									</Field>
 									<Field label="Imported At">{formatDateTime(log.importedAt)}</Field>
 									<Field label="Imported By">{log.importedByEmail}</Field>
-								</dl>
+								</div>
 							</div>
 						))}
 					</div>
@@ -531,6 +531,7 @@ export function VersionDetailPanel({
 								type="button"
 								role="tab"
 								aria-selected={activeTab === tab.key}
+								aria-controls={`tabpanel-${tab.key}`}
 								onClick={() => setActiveTab(tab.key)}
 								className={cn(
 									'px-4 pb-2 text-(--text-sm) font-medium transition-colors',
