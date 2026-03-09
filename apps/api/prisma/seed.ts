@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { gradeLevels } from '../src/lib/seed-data.js';
+import { staffCostConfigs } from '../src/services/staffing/seed-config.js';
 
 const prisma = new PrismaClient();
 
@@ -79,7 +80,9 @@ async function main() {
 		},
 	];
 
-	for (const config of configDefaults) {
+	const allConfigs = [...configDefaults, ...staffCostConfigs];
+
+	for (const config of allConfigs) {
 		await prisma.systemConfig.upsert({
 			where: { key: config.key },
 			update: {},
@@ -87,7 +90,7 @@ async function main() {
 		});
 	}
 
-	console.log('Seeded 8 system_config defaults.');
+	console.log(`Seeded ${allConfigs.length} system_config defaults.`);
 
 	for (const grade of gradeLevels) {
 		await prisma.gradeLevel.upsert({

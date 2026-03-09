@@ -35,6 +35,13 @@ export async function staffingResultRoutes(app: FastifyInstance) {
 				});
 			}
 
+			if (version.staleModules.includes('STAFFING')) {
+				return reply.status(409).send({
+					code: 'STALE_DATA',
+					message: 'Staffing has not been (re)calculated since last input change',
+				});
+			}
+
 			const costs = await prisma.monthlyStaffCost.findMany({
 				where: { versionId },
 				include: { employee: true },
@@ -158,6 +165,13 @@ export async function staffingResultRoutes(app: FastifyInstance) {
 				return reply.status(404).send({
 					code: 'VERSION_NOT_FOUND',
 					message: `Version ${versionId} not found`,
+				});
+			}
+
+			if (version.staleModules.includes('STAFFING')) {
+				return reply.status(409).send({
+					code: 'STALE_DATA',
+					message: 'Staffing has not been (re)calculated since last input change',
 				});
 			}
 
