@@ -312,4 +312,36 @@ describe('EmployeeGrid department grouping', () => {
 		const grid = screen.getByRole('grid');
 		expect(grid.getAttribute('aria-label')).toBe('Employee roster');
 	});
+
+	it('has aria-rowcount and aria-colcount on the grid', () => {
+		render(
+			<EmployeeGrid
+				employees={EMPLOYEES}
+				isReadOnly={false}
+				onSelect={() => {}}
+				selectedId={null}
+			/>
+		);
+
+		const grid = screen.getByRole('grid');
+		expect(grid.getAttribute('aria-rowcount')).toBeTruthy();
+		expect(grid.getAttribute('aria-colcount')).toBeTruthy();
+	});
+
+	it('has aria-readonly on the grid when isReadOnly is true', () => {
+		render(
+			<EmployeeGrid employees={EMPLOYEES} isReadOnly={true} onSelect={() => {}} selectedId={null} />
+		);
+
+		const grid = screen.getByRole('grid');
+		expect(grid.getAttribute('aria-readonly')).toBe('true');
+	});
+
+	it('hides salary column for read-only (Viewer) users', () => {
+		render(
+			<EmployeeGrid employees={EMPLOYEES} isReadOnly={true} onSelect={() => {}} selectedId={null} />
+		);
+
+		expect(screen.queryByText('Base Salary')).toBeNull();
+	});
 });

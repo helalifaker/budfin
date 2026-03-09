@@ -16,10 +16,10 @@ const columnHelper = createColumnHelper<Employee>();
 function StatusBadge({ status }: { status: string }) {
 	const color =
 		status === 'Existing'
-			? 'bg-[var(--color-success-bg)] text-[var(--color-success)]'
+			? 'bg-(--color-success-bg) text-(--color-success)'
 			: status === 'New'
-				? 'bg-[var(--accent-50)] text-[var(--accent-700)]'
-				: 'bg-[var(--color-error-bg)] text-[var(--color-error)]';
+				? 'bg-(--accent-50) text-(--accent-700)'
+				: 'bg-(--color-error-bg) text-(--color-error)';
 	return (
 		<span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-medium', color)}>
 			{status}
@@ -200,30 +200,37 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				value={globalFilter}
 				onChange={(e) => setGlobalFilter(e.target.value)}
 				className={cn(
-					'w-full max-w-xs rounded-[var(--radius-md)]',
-					'border border-[var(--workspace-border)] bg-[var(--workspace-bg)]',
-					'px-3 py-1.5 text-sm text-[var(--text-primary)]',
-					'placeholder:text-[var(--text-muted)]',
-					'focus:outline-none focus:ring-2 focus:ring-[var(--accent-500)]'
+					'w-full max-w-xs rounded-(--radius-md)',
+					'border border-(--workspace-border) bg-(--workspace-bg)',
+					'px-3 py-1.5 text-sm text-(--text-primary)',
+					'placeholder:text-(--text-muted)',
+					'focus:outline-none focus:ring-2 focus:ring-(--accent-500)'
 				)}
 				aria-label="Search employees"
 			/>
 
 			<div
 				className={cn(
-					'overflow-x-auto rounded-[var(--radius-md)]',
-					'border border-[var(--workspace-border)]'
+					'overflow-x-auto rounded-(--radius-md)',
+					'border border-(--workspace-border)'
 				)}
 			>
-				<table className="w-full border-collapse text-sm" role="grid" aria-label="Employee roster">
+				<table
+					className="w-full border-collapse text-sm"
+					role="grid"
+					aria-label="Employee roster"
+					aria-readonly={isReadOnly ? 'true' : undefined}
+					aria-rowcount={filteredRows.length + departmentGroups.length + 1}
+					aria-colcount={colCount}
+				>
 					<thead>
-						<tr className="bg-[var(--workspace-bg-subtle)]">
+						<tr className="bg-(--workspace-bg-subtle)">
 							<th
 								className={cn(
 									'w-9 px-2 py-2 text-left font-medium',
-									'text-[var(--text-muted)]',
+									'text-(--text-muted)',
 									'text-[length:var(--text-xs)] uppercase tracking-wider',
-									'border-b border-[var(--workspace-border)]'
+									'border-b border-(--workspace-border)'
 								)}
 								aria-label="Expand or collapse"
 							/>
@@ -231,9 +238,9 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 								<th
 									key={header.id}
 									className={cn(
-										'px-3 py-2 text-left font-medium text-[var(--text-muted)]',
+										'px-3 py-2 text-left font-medium text-(--text-muted)',
 										'text-[length:var(--text-xs)] uppercase tracking-wider',
-										'border-b border-[var(--workspace-border)]',
+										'border-b border-(--workspace-border)',
 										header.column.getCanSort() && 'cursor-pointer select-none'
 									)}
 									style={{ width: header.getSize() }}
@@ -259,7 +266,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 					<tbody>
 						{departmentGroups.length === 0 ? (
 							<tr>
-								<td colSpan={colCount} className="px-3 py-8 text-center text-[var(--text-muted)]">
+								<td colSpan={colCount} className="px-3 py-8 text-center text-(--text-muted)">
 									No employees found. Add employees manually or import from xlsx.
 								</td>
 							</tr>
@@ -286,7 +293,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				</table>
 			</div>
 
-			<div className="text-[length:var(--text-xs)] text-[var(--text-muted)]">
+			<div className="text-[length:var(--text-xs)] text-(--text-muted)">
 				{table.getFilteredRowModel().rows.length} employee(s) in {departmentGroups.length}{' '}
 				department(s)
 			</div>
@@ -322,8 +329,8 @@ function DepartmentRows({
 			{/* Department group row */}
 			<tr
 				className={cn(
-					'cursor-pointer select-none bg-[var(--workspace-bg-muted)]',
-					'hover:bg-[var(--workspace-bg-subtle)]',
+					'cursor-pointer select-none bg-(--workspace-bg-muted)',
+					'hover:bg-(--workspace-bg-subtle)',
 					'transition-colors'
 				)}
 				role="row"
@@ -333,11 +340,11 @@ function DepartmentRows({
 				onKeyDown={onKeyDown}
 				data-department={group.department}
 			>
-				<td className="w-9 px-2 py-2 border-b border-[var(--workspace-border)]">
+				<td className="w-9 px-2 py-2 border-b border-(--workspace-border)">
 					<span
 						className={cn(
 							'inline-flex h-5 w-5 items-center justify-center',
-							'text-[var(--text-muted)] transition-transform',
+							'text-(--text-muted) transition-transform',
 							isExpanded && 'rotate-90'
 						)}
 						aria-hidden="true"
@@ -348,16 +355,16 @@ function DepartmentRows({
 				<td
 					colSpan={colCount - 1}
 					className={cn(
-						'px-3 py-2 font-semibold text-[var(--text-primary)]',
-						'border-b border-[var(--workspace-border)]'
+						'px-3 py-2 font-semibold text-(--text-primary)',
+						'border-b border-(--workspace-border)'
 					)}
 				>
 					{group.department}
 					<span
 						className={cn(
 							'ml-2 inline-flex items-center rounded-full',
-							'bg-[var(--accent-50)] px-2 py-0.5',
-							'text-[length:var(--text-xs)] font-medium text-[var(--accent-700)]'
+							'bg-(--accent-50) px-2 py-0.5',
+							'text-[length:var(--text-xs)] font-medium text-(--accent-700)'
 						)}
 					>
 						{group.employees.length}
@@ -372,8 +379,8 @@ function DepartmentRows({
 						key={emp.id}
 						className={cn(
 							'cursor-pointer transition-colors',
-							'hover:bg-[var(--workspace-bg-subtle)]',
-							emp.id === selectedId && 'bg-[var(--accent-50)] hover:bg-[var(--accent-50)]'
+							'hover:bg-(--workspace-bg-subtle)',
+							emp.id === selectedId && 'bg-(--accent-50) hover:bg-(--accent-50)'
 						)}
 						role="row"
 						aria-level={2}
@@ -386,46 +393,46 @@ function DepartmentRows({
 							}
 						}}
 					>
-						<td className="w-9 border-b border-[var(--workspace-border)]" />
+						<td className="w-9 border-b border-(--workspace-border)" />
 						<td
 							className={cn(
-								'px-3 py-2 pl-6 text-[var(--text-primary)]',
-								'border-b border-[var(--workspace-border)]'
+								'px-3 py-2 pl-6 text-(--text-primary)',
+								'border-b border-(--workspace-border)'
 							)}
 						>
 							{emp.employeeCode}
 						</td>
 						<td
 							className={cn(
-								'px-3 py-2 text-[var(--text-primary)]',
-								'border-b border-[var(--workspace-border)]'
+								'px-3 py-2 text-(--text-primary)',
+								'border-b border-(--workspace-border)'
 							)}
 						>
 							{emp.name}
 						</td>
 						<td
 							className={cn(
-								'px-3 py-2 text-[var(--text-primary)]',
-								'border-b border-[var(--workspace-border)]'
+								'px-3 py-2 text-(--text-primary)',
+								'border-b border-(--workspace-border)'
 							)}
 						>
 							{emp.functionRole}
 						</td>
-						<td className={cn('px-3 py-2', 'border-b border-[var(--workspace-border)]')}>
+						<td className={cn('px-3 py-2', 'border-b border-(--workspace-border)')}>
 							<StatusBadge status={emp.status} />
 						</td>
 						<td
 							className={cn(
-								'px-3 py-2 text-[var(--text-primary)]',
-								'border-b border-[var(--workspace-border)]'
+								'px-3 py-2 text-(--text-primary)',
+								'border-b border-(--workspace-border)'
 							)}
 						>
 							{emp.isSaudi ? 'Yes' : 'No'}
 						</td>
 						<td
 							className={cn(
-								'px-3 py-2 text-[var(--text-primary)]',
-								'border-b border-[var(--workspace-border)]'
+								'px-3 py-2 text-(--text-primary)',
+								'border-b border-(--workspace-border)'
 							)}
 						>
 							{emp.isTeaching ? 'Yes' : 'No'}
@@ -433,8 +440,8 @@ function DepartmentRows({
 						{!isReadOnly && (
 							<td
 								className={cn(
-									'px-3 py-2 text-[var(--text-primary)]',
-									'border-b border-[var(--workspace-border)]'
+									'px-3 py-2 text-(--text-primary)',
+									'border-b border-(--workspace-border)'
 								)}
 							>
 								{emp.baseSalary ? `SAR ${Number(emp.baseSalary).toLocaleString()}` : '\u2014'}

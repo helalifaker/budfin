@@ -15,7 +15,7 @@ export type MonthlyCostGridProps = {
 };
 
 function formatSar(val: string | null): string {
-	if (val === null) return '—';
+	if (val === null) return '\u2014';
 	return `SAR ${Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
@@ -23,6 +23,9 @@ type GroupBy = 'month' | 'department' | 'employee';
 
 export function MonthlyCostGrid({ data, totals, isRedacted }: MonthlyCostGridProps) {
 	const [groupBy, setGroupBy] = useState<GroupBy>('month');
+
+	const visibleColCount = isRedacted ? 3 : 5;
+	const totalRowCount = data.length + 1 + (totals ? 1 : 0);
 
 	if (data.length === 0) {
 		return (
@@ -51,10 +54,20 @@ export function MonthlyCostGrid({ data, totals, isRedacted }: MonthlyCostGridPro
 			</div>
 
 			<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
-				<table className="w-full border-collapse text-sm" role="grid">
+				<table
+					className="w-full border-collapse text-sm"
+					role="grid"
+					aria-label="Monthly staff costs"
+					aria-readonly="true"
+					aria-rowcount={totalRowCount}
+					aria-colcount={visibleColCount}
+				>
 					<thead>
 						<tr className="bg-(--workspace-bg-subtle)">
-							<th className="px-3 py-2 text-left text-xs font-medium text-(--text-muted) uppercase tracking-wider">
+							<th
+								className="px-3 py-2 text-left text-xs font-medium text-(--text-muted) uppercase tracking-wider"
+								aria-colindex={1}
+							>
 								{groupBy === 'month'
 									? 'Month'
 									: groupBy === 'department'
@@ -63,50 +76,87 @@ export function MonthlyCostGrid({ data, totals, isRedacted }: MonthlyCostGridPro
 							</th>
 							{!isRedacted && (
 								<>
-									<th className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider">
+									<th
+										className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider"
+										aria-colindex={2}
+									>
 										Gross Salary
 									</th>
-									<th className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider">
+									<th
+										className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider"
+										aria-colindex={3}
+									>
 										Allowances
 									</th>
 								</>
 							)}
-							<th className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider">
+							<th
+								className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider"
+								aria-colindex={isRedacted ? 2 : 4}
+							>
 								Social Charges
 							</th>
-							<th className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider">
+							<th
+								className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider"
+								aria-colindex={isRedacted ? 3 : 5}
+							>
 								Total Cost
 							</th>
 						</tr>
 					</thead>
 					<tbody>
-						{data.map((row) => (
-							<tr
-								key={row.group_key}
-								className={cn(
-									'border-t border-(--workspace-border)',
-									'hover:bg-(--workspace-bg-subtle)'
-								)}
-							>
-								<td className="px-3 py-1.5 font-medium text-(--text-primary)">{row.group_key}</td>
-								{!isRedacted && (
-									<>
-										<td className="px-3 py-1.5 text-right font-mono text-(--text-primary)">
-											{formatSar(row.total_gross_salary)}
-										</td>
-										<td className="px-3 py-1.5 text-right font-mono text-(--text-primary)">
-											{formatSar(row.total_allowances)}
-										</td>
-									</>
-								)}
-								<td className="px-3 py-1.5 text-right font-mono text-(--text-primary)">
-									{formatSar(row.total_social_charges)}
-								</td>
-								<td className="px-3 py-1.5 text-right font-mono font-medium text-(--accent-700)">
-									{formatSar(row.total_staff_cost)}
-								</td>
-							</tr>
-						))}
+						{data.map((row) => {
+							let colIdx = 0;
+							return (
+								<tr
+									key={row.group_key}
+									className={cn(
+										'border-t border-(--workspace-border)',
+										'hover:bg-(--workspace-bg-subtle)'
+									)}
+								>
+									<td
+										role="gridcell"
+										aria-colindex={++colIdx}
+										className="px-3 py-1.5 font-medium text-(--text-primary)"
+									>
+										{row.group_key}
+									</td>
+									{!isRedacted && (
+										<>
+											<td
+												role="gridcell"
+												aria-colindex={++colIdx}
+												className="px-3 py-1.5 text-right font-mono text-(--text-primary)"
+											>
+												{formatSar(row.total_gross_salary)}
+											</td>
+											<td
+												role="gridcell"
+												aria-colindex={++colIdx}
+												className="px-3 py-1.5 text-right font-mono text-(--text-primary)"
+											>
+												{formatSar(row.total_allowances)}
+											</td>
+										</>
+									)}
+									<td
+										role="gridcell"
+										aria-colindex={++colIdx}
+										className="px-3 py-1.5 text-right font-mono text-(--text-primary)"
+									>
+										{formatSar(row.total_social_charges)}
+									</td>
+									<td
+										role="gridcell"
+										aria-colindex={++colIdx}
+										className="px-3 py-1.5 text-right font-mono font-medium text-(--accent-700)"
+									>
+										{formatSar(row.total_staff_cost)}
+									</td>
+								</tr>
+							);
+						})}
 					</tbody>
 					{totals && (
 						<tfoot>

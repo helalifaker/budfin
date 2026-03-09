@@ -92,6 +92,29 @@ export interface StaffCostResponse {
 	breakdown: StaffCostBreakdown[] | null;
 }
 
+export interface CategoryMonthCategory {
+	category: string;
+	label: string;
+	parent: string | null;
+	values: (string | null)[];
+}
+
+export interface CategoryMonthData {
+	months: number[];
+	categories: CategoryMonthCategory[];
+	annual_totals: Record<string, string | null>;
+}
+
+export interface CategoryCostEntry {
+	month: number;
+	[category: string]: string | number;
+}
+
+export interface CategoryCostData {
+	data: CategoryCostEntry[];
+	grand_total: string;
+}
+
 export interface StaffingSummaryResponse {
 	totalFTE: string;
 	totalSalaryCost: string;
@@ -246,6 +269,23 @@ export function useStaffingSummary(versionId: number | null) {
 	return useQuery({
 		queryKey: ['staffing', 'summary', versionId],
 		queryFn: () => apiClient<StaffingSummaryResponse>(`/versions/${versionId}/staffing-summary`),
+		enabled: versionId !== null,
+	});
+}
+
+export function useStaffCostsByCategory(versionId: number | null) {
+	return useQuery({
+		queryKey: ['staffing', 'costs', versionId, 'category_month'],
+		queryFn: () =>
+			apiClient<CategoryMonthData>(`/versions/${versionId}/staff-costs?group_by=category_month`),
+		enabled: versionId !== null,
+	});
+}
+
+export function useCategoryCosts(versionId: number | null) {
+	return useQuery({
+		queryKey: ['staffing', 'category-costs', versionId],
+		queryFn: () => apiClient<CategoryCostData>(`/versions/${versionId}/category-costs`),
 		enabled: versionId !== null,
 	});
 }

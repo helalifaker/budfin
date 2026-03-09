@@ -9,6 +9,8 @@ import {
 	useCalculateStaffing,
 	useDhgData,
 	useStaffCosts,
+	useStaffCostsByCategory,
+	useCategoryCosts,
 	useStaffingSummary,
 	type Employee,
 } from '../../hooks/use-staffing';
@@ -21,6 +23,7 @@ import { EmployeeForm, type EmployeeFormData } from '../../components/staffing/e
 import { EmployeeImportDialog } from '../../components/staffing/employee-import-dialog';
 import { DhgGrilleView, DhgRequirementsView } from '../../components/staffing/dhg-view';
 import { MonthlyCostGrid } from '../../components/staffing/monthly-cost-grid';
+import { MonthlyCostBudgetGrid } from '../../components/staffing/monthly-cost-budget-grid';
 import { StaffCostsDepartmentGrid } from '../../components/staffing/staff-costs-department-grid';
 import { Button } from '../../components/ui/button';
 import { PageTransition } from '../../components/shared/page-transition';
@@ -43,6 +46,9 @@ export function StaffingPage() {
 		true
 	);
 	const { data: summaryData, isLoading: isSummaryLoading } = useStaffingSummary(versionId);
+	const { data: categoryMonthData, isLoading: isCategoryMonthLoading } =
+		useStaffCostsByCategory(versionId);
+	const { data: categoryCostData, isLoading: isCategoryCostLoading } = useCategoryCosts(versionId);
 	const { data: versionsData } = useVersions(fiscalYear);
 
 	// Mutations
@@ -217,11 +223,19 @@ export function StaffingPage() {
 					/>
 				</WorkspaceBlock>
 
-				<WorkspaceBlock title="Monthly Cost Budget">
+				<WorkspaceBlock title="Monthly Cost Summary">
 					<MonthlyCostGrid
 						data={monthlyCostData?.data ?? []}
 						totals={monthlyCostData?.totals ?? null}
 						isRedacted={isViewer}
+					/>
+				</WorkspaceBlock>
+
+				<WorkspaceBlock title="Monthly Cost Budget (Tab C)">
+					<MonthlyCostBudgetGrid
+						staffCostData={categoryMonthData ?? null}
+						categoryCostData={categoryCostData ?? null}
+						isLoading={isCategoryMonthLoading || isCategoryCostLoading}
 					/>
 				</WorkspaceBlock>
 
