@@ -1,10 +1,10 @@
 # BudFin — Current Status
 
-**Phase**: 6 — IMPLEMENT
+**Phase**: 7 — REVIEW
 **Current Epic**: Epic 4 — Staff Costs (#8)
-**Current Story**: Wave 2 in progress (#158, #160, #164, #165, #168)
+**Current Story**: All 13 stories complete
 **Last updated**: 2026-03-09
-**Note**: Wave 1 complete (5/13): #157, #159, #163, #166, #167. Wave 2 running (5/13).
+**Note**: All 13 stories (#157-#169) implemented and closed. Epic complete.
 
 ## Phase History
 
@@ -46,6 +46,7 @@
 | 7 — REVIEW (Epic 3) | ✅ Complete | 2026-03-09 |
 | 4 — SPECIFY (Epic 4) | ✅ Complete | 2026-03-09 |
 | 5 — TDD RED (Epic 4) | ✅ Complete | 2026-03-09 |
+| 6 — IMPLEMENT (Epic 4) | ✅ Complete | 2026-03-09 |
 
 ## Feature Progress
 
@@ -54,7 +55,7 @@
 | 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07 |
 | 2 | Revenue | DONE | All 12 stories complete (12/12), merged PR #113 — 2026-03-07 |
 | 3 | Staffing (DHG) | DONE | All 18 stories complete (18/18), merged PR #156 — 2026-03-09 |
-| 4 | Staff Costs | 6 | Wave 1 done (5/13), Wave 2 in progress |
+| 4 | Staff Costs | DONE | All 13 stories complete (13/13) — 2026-03-09 |
 | 5 | P&L Reporting | 2 | Epic Created (#11) |
 | 6 | Scenario Modeling | 2 | Epic Created (#12) |
 | 7 | Master Data Management | DONE | All 12 stories complete (12/12), merged PR #49 — 2026-03-06 |
