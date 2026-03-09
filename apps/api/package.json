@@ -9,7 +9,9 @@
 		"build": "tsc",
 		"lint": "eslint src",
 		"typecheck": "tsc --noEmit",
-		"test": "vitest run"
+		"test": "vitest run",
+		"migrate": "tsx src/migration/index.ts",
+		"parse:staff-costs": "tsx src/migration/parse-staff-costs-excel.ts"
 	},
 	"dependencies": {
 		"@date-fns/tz": "^1.0.0",
