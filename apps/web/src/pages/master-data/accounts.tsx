@@ -366,6 +366,7 @@ export function AccountsPage() {
 				{isAdmin && (
 					<Button
 						type="button"
+						variant="primary"
 						onClick={() => {
 							setEditingAccount(null);
 							setPanelOpen(true);

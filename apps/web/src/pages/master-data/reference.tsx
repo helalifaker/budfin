@@ -166,7 +166,7 @@ function DataGrid<T>({
 }) {
 	return (
 		<div className="overflow-x-auto rounded-lg border">
-			<table role="table" className="w-full text-left text-(length:--text-sm)">
+			<table role="table" className="w-full text-left text-(--text-sm)">
 				<thead className="border-b bg-(--workspace-bg-muted)">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
@@ -185,7 +185,7 @@ function DataGrid<T>({
 						<tr>
 							<td
 								colSpan={table.getAllColumns().length}
-								className="px-4 py-8 text-center text-(length:--text-sm) text-(--text-muted)"
+								className="px-4 py-8 text-center text-(--text-sm) text-(--text-muted)"
 							>
 								No records found.
 							</td>
@@ -645,7 +645,7 @@ export function ReferencePage() {
 						aria-controls={`panel-${tab.key}`}
 						onClick={() => setActiveTab(tab.key)}
 						className={cn(
-							'px-4 py-2 text-(length:--text-sm) font-medium -mb-px border-b-2',
+							'px-4 py-2 text-(--text-sm) font-medium -mb-px border-b-2',
 							activeTab === tab.key
 								? 'border-(--accent-500) text-(--accent-600)'
 								: 'border-transparent text-(--text-muted) hover:text-(--text-primary)'
@@ -679,7 +679,7 @@ export function ReferencePage() {
 						/>
 					</div>
 					{isAdmin && (
-						<Button type="button" onClick={handleAddNew}>
+						<Button type="button" variant="primary" onClick={handleAddNew}>
 							+ Add New
 						</Button>
 					)}

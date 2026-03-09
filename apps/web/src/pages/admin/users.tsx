@@ -233,6 +233,7 @@ export function UsersPage() {
 				<h1 className="text-(--text-xl) font-semibold">User Management</h1>
 				<Button
 					type="button"
+					variant="primary"
 					onClick={() => {
 						setEditingUser(null);
 						setPanelMode('create');

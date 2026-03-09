@@ -173,6 +173,7 @@ export function SettingsPage() {
 				<h1 className="text-(--text-xl) font-semibold">System Settings</h1>
 				<Button
 					type="button"
+					variant="primary"
 					disabled={!hasChanges}
 					loading={saveMutation.isPending}
 					onClick={handleSave}

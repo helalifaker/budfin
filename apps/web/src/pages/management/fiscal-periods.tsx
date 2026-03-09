@@ -157,7 +157,7 @@ export function FiscalPeriodsPage() {
 		<div className="p-6">
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-xl font-semibold">Fiscal Period Management</h1>
+				<h1 className="mr-auto text-(--text-xl) font-semibold">Fiscal Period Management</h1>
 
 				<Select value={String(fiscalYear)} onValueChange={(v) => setFiscalYear(Number(v))}>
 					<SelectTrigger className="w-[130px]" aria-label="Filter by fiscal year">
@@ -185,7 +185,7 @@ export function FiscalPeriodsPage() {
 			) : (
 				<div className="overflow-x-auto rounded-lg border">
 					<table role="table" className="w-full text-left text-sm">
-						<thead className="border-b bg-(--workspace-bg-subtle)">
+						<thead className="border-b bg-(--workspace-bg-muted)">
 							{table.getHeaderGroups().map((hg) => (
 								<tr key={hg.id}>
 									{hg.headers.map((header) => (
@@ -210,7 +210,7 @@ export function FiscalPeriodsPage() {
 								table.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
-										className="border-b last:border-0 hover:bg-(--workspace-bg-subtle)"
+										className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
 									>
 										{row.getVisibleCells().map((cell) => (
 											<td key={cell.id} role="cell" className="px-4 py-3">

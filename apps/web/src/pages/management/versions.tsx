@@ -341,7 +341,7 @@ export function VersionsPage() {
 		<div className="p-6">
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-xl font-semibold">Version Management</h1>
+				<h1 className="mr-auto text-(--text-xl) font-semibold">Version Management</h1>
 
 				<Button variant={isCompareMode ? 'primary' : 'secondary'} onClick={handleCompareToggle}>
 					<BarChart3 className="mr-1.5 h-4 w-4" aria-hidden="true" />
@@ -447,7 +447,7 @@ export function VersionsPage() {
 			{/* Data table */}
 			<div className="mt-4 overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-sm">
-					<thead className="border-b bg-(--workspace-bg-subtle)">
+					<thead className="border-b bg-(--workspace-bg-muted)">
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
@@ -615,7 +615,7 @@ function VersionRow({
 	return (
 		<tr
 			className={cn(
-				'border-b last:border-0 transition-colors hover:bg-(--workspace-bg-subtle)',
+				'border-b last:border-0 transition-colors hover:bg-(--accent-50)',
 				isActual && 'border-l-2 border-l-(--version-actual)'
 			)}
 		>
