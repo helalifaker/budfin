@@ -57,7 +57,7 @@ const SheetContent = React.forwardRef<
 		>
 			<SheetPrimitive.Close
 				className={cn(
-					'absolute right-4 top-4 rounded-(--radius-sm)',
+					'absolute right-4 top-4 rounded-sm',
 					'opacity-70 hover:opacity-100',
 					'focus:outline-none focus:ring-2 focus:ring-(--accent-500) focus:ring-offset-2',
 					'transition-opacity duration-(--duration-fast)'

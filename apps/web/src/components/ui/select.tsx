@@ -28,7 +28,7 @@ export function SelectTrigger({ className, children, ...props }: SelectTriggerPr
 		<SelectPrimitive.Trigger
 			className={cn(
 				'flex h-9 w-full items-center justify-between',
-				'rounded-(--radius-md) border border-(--workspace-border)',
+				'rounded-md border border-(--workspace-border)',
 				'bg-white px-3 py-2 text-(--text-sm)',
 				'shadow-(--shadow-xs)',
 				'placeholder:text-(--text-muted)',
@@ -92,7 +92,7 @@ export function SelectContent({
 			<SelectPrimitive.Content
 				className={cn(
 					'relative z-50 max-h-96 min-w-[8rem] overflow-hidden',
-					'rounded-(--radius-md) border border-(--workspace-border)',
+					'rounded-md border border-(--workspace-border)',
 					'bg-white text-(--text-primary) shadow-(--shadow-lg)',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
@@ -141,7 +141,7 @@ export function SelectItem({ className, children, ...props }: SelectItemProps) {
 		<SelectPrimitive.Item
 			className={cn(
 				'relative flex w-full cursor-default select-none items-center',
-				'rounded-(--radius-sm) py-1.5 pl-8 pr-2 text-(--text-sm) outline-none',
+				'rounded-sm py-1.5 pl-8 pr-2 text-(--text-sm) outline-none',
 				'focus:bg-(--accent-50) focus:text-(--text-primary)',
 				'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
 				'transition-colors duration-(--duration-fast)',

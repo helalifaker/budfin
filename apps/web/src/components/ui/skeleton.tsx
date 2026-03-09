@@ -1,9 +1,7 @@
 import { cn } from '../../lib/cn';
 
 export function Skeleton({ className }: { className?: string }) {
-	return (
-		<div className={cn('rounded-(--radius-md) animate-shimmer', className)} aria-hidden="true" />
-	);
+	return <div className={cn('rounded-md animate-shimmer', className)} aria-hidden="true" />;
 }
 
 export function TableSkeleton({ rows = 10, cols }: { rows?: number; cols: number }) {

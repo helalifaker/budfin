@@ -14,7 +14,7 @@ export function ToggleGroup({ className, ...props }: ToggleGroupProps) {
 		<RadixRoot
 			{...props}
 			className={cn(
-				'flex rounded-(--radius-md) border border-(--workspace-border)',
+				'flex rounded-md border border-(--workspace-border)',
 				'bg-(--workspace-bg-subtle)',
 				className
 			)}

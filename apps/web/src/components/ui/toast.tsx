@@ -44,7 +44,7 @@ export function Toaster() {
 					role="status"
 					className={cn(
 						'relative flex items-start gap-2.5 overflow-hidden',
-						'rounded-(--radius-md) border px-4 py-3',
+						'rounded-md border px-4 py-3',
 						'shadow-(--shadow-md) text-(--text-sm)',
 						'animate-toast-enter',
 						TOAST_STYLES[t.type]

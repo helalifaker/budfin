@@ -38,7 +38,7 @@ export function AlertDialogContent({
 			<P.Content
 				className={cn(
 					'fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2',
-					'rounded-(--radius-lg) bg-white p-6 shadow-(--shadow-lg)',
+					'rounded-lg bg-white p-6 shadow-(--shadow-lg)',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 					'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -91,7 +91,7 @@ export function AlertDialogAction({
 	return (
 		<P.Action
 			className={cn(
-				'inline-flex h-9 items-center justify-center rounded-(--radius-md)',
+				'inline-flex h-9 items-center justify-center rounded-md',
 				'border border-transparent bg-(--accent-500) px-4',
 				'text-(--text-sm) font-medium text-white',
 				'hover:bg-(--accent-600)',
@@ -112,7 +112,7 @@ export function AlertDialogCancel({
 	return (
 		<P.Cancel
 			className={cn(
-				'inline-flex h-9 items-center justify-center rounded-(--radius-md)',
+				'inline-flex h-9 items-center justify-center rounded-md',
 				'border border-(--workspace-border) bg-white px-4',
 				'text-(--text-sm) font-medium text-(--text-primary)',
 				'hover:bg-(--workspace-bg-subtle)',
