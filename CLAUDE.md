@@ -40,9 +40,17 @@ Husky pre-commit hooks run `lint-staged`: prettier + eslint --fix on TS/JS files
 
 ### Environment setup
 
-Copy `.env.example` to `.env` before first run. The API requires a `DATABASE_URL` (PostgreSQL)
+Copy `.env.example` to `apps/api/.env` before first run. The API requires a `DATABASE_URL` (PostgreSQL)
 and `SALARY_ENCRYPTION_KEY` (salary field encryption). In Docker Compose, the key is mounted as
 a Docker secret at `/run/secrets/salary_encryption_key`.
+
+For local development, start PostgreSQL via Docker:
+
+```bash
+docker compose up db -d
+```
+
+The API auto-applies Prisma migrations and seeds default data on startup (`pnpm dev`).
 
 ## Architecture
 
