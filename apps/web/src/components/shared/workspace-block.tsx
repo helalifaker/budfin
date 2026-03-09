@@ -42,7 +42,7 @@ export function WorkspaceBlock({
 	return (
 		<section
 			className={cn(
-				'rounded-(--radius-lg) border border-(--workspace-border)',
+				'rounded-lg border border-(--workspace-border)',
 				isOpen
 					? 'bg-(--workspace-bg-card) shadow-(--shadow-card-hover)'
 					: 'bg-(--workspace-bg-card) shadow-(--shadow-card)'
@@ -57,7 +57,7 @@ export function WorkspaceBlock({
 					'hover:bg-(--workspace-bg-subtle)',
 					'focus-visible:outline-none focus-visible:ring-2',
 					'focus-visible:ring-(--accent-500) focus-visible:ring-inset',
-					!isOpen && 'rounded-(--radius-lg)',
+					!isOpen && 'rounded-lg',
 					isOpen && 'rounded-t-(--radius-lg) border-b border-(--workspace-border)'
 				)}
 				onClick={() => setIsOpen((prev) => !prev)}

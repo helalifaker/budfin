@@ -16,7 +16,7 @@ export function KpiCard({ title, value, formatter, icon: Icon, trend, className 
 		<div
 			className={cn(
 				'relative overflow-hidden',
-				'rounded-(--radius-xl) border border-(--workspace-border)',
+				'rounded-xl border border-(--workspace-border)',
 				'bg-(--workspace-bg-card) shadow-(--shadow-xs)',
 				'p-5',
 				'transition-shadow duration-(--duration-fast)',
@@ -48,7 +48,7 @@ export function KpiCard({ title, value, formatter, icon: Icon, trend, className 
 				<div
 					className={cn(
 						'flex h-10 w-10 items-center justify-center',
-						'rounded-(--radius-lg) bg-(--accent-50)'
+						'rounded-lg bg-(--accent-50)'
 					)}
 				>
 					<Icon className="h-5 w-5 text-(--accent-500)" aria-hidden="true" />

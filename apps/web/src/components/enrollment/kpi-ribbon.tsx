@@ -61,7 +61,7 @@ export function EnrollmentKpiRibbon({
 							key={kpi.key}
 							className={cn(
 								'animate-kpi-enter relative overflow-hidden',
-								'rounded-(--radius-xl)',
+								'rounded-xl',
 								'border border-(--workspace-border)',
 								'shadow-(--shadow-card)',
 								'bg-(--workspace-bg-card) p-3'
@@ -77,7 +77,7 @@ export function EnrollmentKpiRibbon({
 								<span
 									className={cn(
 										'flex h-10 w-10 shrink-0 items-center justify-center',
-										'rounded-(--radius-lg)',
+										'rounded-lg',
 										hasAlerts && 'bg-(--color-warning-bg)',
 										noAlerts && 'bg-(--color-success-bg)',
 										!isAlert && 'bg-(--accent-50)'

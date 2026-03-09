@@ -246,7 +246,7 @@ export function NationalityDistributionGrid({
 						<button
 							type="button"
 							className={cn(
-								'rounded-(--radius-sm) px-2 py-1',
+								'rounded-sm px-2 py-1',
 								'text-(--text-xs) font-medium',
 								'transition-colors duration-(--duration-fast)',
 								info.getValue()

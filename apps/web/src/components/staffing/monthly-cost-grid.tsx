@@ -53,7 +53,7 @@ export function MonthlyCostGrid({ data, totals, isRedacted }: MonthlyCostGridPro
 				</ToggleGroup>
 			</div>
 
-			<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
+			<div className="overflow-x-auto rounded-md border border-(--workspace-border)">
 				<table
 					className="w-full border-collapse text-sm"
 					role="grid"

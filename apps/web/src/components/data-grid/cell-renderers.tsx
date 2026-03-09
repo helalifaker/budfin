@@ -12,7 +12,7 @@ export function BadgeCell({ value, colorMap, className }: BadgeCellProps) {
 	return (
 		<span
 			className={cn(
-				'inline-flex rounded-(--radius-sm) px-2 py-0.5',
+				'inline-flex rounded-sm px-2 py-0.5',
 				'text-(--text-xs) font-medium',
 				colorClass,
 				className

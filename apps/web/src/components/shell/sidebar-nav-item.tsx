@@ -15,7 +15,7 @@ export function SidebarNavItem({ to, label, icon: Icon, isCollapsed }: SidebarNa
 			to={to}
 			className={({ isActive }) =>
 				cn(
-					'group relative flex items-center gap-3 rounded-(--radius-md)',
+					'group relative flex items-center gap-3 rounded-md',
 					'text-(--text-sm) font-medium',
 					'transition-all duration-(--duration-fast)',
 					isCollapsed ? 'justify-center px-2 py-2' : 'px-3 py-2',
@@ -52,7 +52,7 @@ export function SidebarNavItem({ to, label, icon: Icon, isCollapsed }: SidebarNa
 						<span
 							className={cn(
 								'absolute left-full ml-2 z-50',
-								'rounded-(--radius-sm) bg-(--sidebar-bg)',
+								'rounded-sm bg-(--sidebar-bg)',
 								'px-2.5 py-1.5 text-xs text-(--sidebar-text-active)',
 								'shadow-(--shadow-md) border border-(--sidebar-border)',
 								'opacity-0 group-hover:opacity-100',

@@ -89,7 +89,7 @@ export function HistoricalChart() {
 
 	if (isLoading) {
 		return (
-			<div className="rounded-(--radius-lg) border p-6">
+			<div className="rounded-lg border p-6">
 				<div className="h-64 animate-pulse rounded bg-(--workspace-bg-muted)" />
 			</div>
 		);
@@ -97,14 +97,14 @@ export function HistoricalChart() {
 
 	if (chartData.length === 0) {
 		return (
-			<div className="rounded-(--radius-lg) border p-6 text-center text-(--text-sm) text-(--text-muted)">
+			<div className="rounded-lg border p-6 text-center text-(--text-sm) text-(--text-muted)">
 				No historical enrollment data available. Import CSV data to see trends.
 			</div>
 		);
 	}
 
 	return (
-		<div className="rounded-(--radius-lg) border p-4">
+		<div className="rounded-lg border p-4">
 			<h3 className="mb-4 text-(--text-sm) font-semibold text-(--text-primary)">
 				Historical Enrollment Trends
 			</h3>

@@ -72,7 +72,7 @@ export function GrossTooltip({ data, children }: GrossTooltipProps) {
 				<TooltipContent
 					side="top"
 					align="end"
-					className="w-[280px] space-y-0.5 p-3 text-[length:var(--text-xs)]"
+					className="w-[280px] space-y-0.5 p-3 text-(length:--text-xs)"
 					aria-label="Monthly gross calculation breakdown"
 				>
 					<div className="mb-1.5 font-semibold">Monthly Gross Breakdown</div>

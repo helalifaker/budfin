@@ -25,7 +25,7 @@ export function DataGrid<T>({
 		<div
 			className={cn(
 				'overflow-x-auto',
-				'rounded-(--radius-lg) border border-(--workspace-border)',
+				'rounded-lg border border-(--workspace-border)',
 				'shadow-(--shadow-xs)',
 				className
 			)}

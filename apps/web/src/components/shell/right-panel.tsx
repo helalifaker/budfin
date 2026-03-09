@@ -119,7 +119,7 @@ export function RightPanel() {
 						type="button"
 						onClick={close}
 						className={cn(
-							'rounded-(--radius-sm) p-1',
+							'rounded-sm p-1',
 							'text-(--text-muted) hover:text-(--text-primary)',
 							'hover:bg-(--workspace-bg-muted)',
 							'transition-colors duration-(--duration-fast)'

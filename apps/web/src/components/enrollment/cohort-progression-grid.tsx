@@ -148,7 +148,7 @@ export function CohortProgressionGrid({
 					return (
 						<span
 							className={cn(
-								'inline-block rounded-(--radius-sm) px-2 py-0.5',
+								'inline-block rounded-sm px-2 py-0.5',
 								'text-(--text-xs) font-medium',
 								BAND_STYLES[band] ?? ''
 							)}

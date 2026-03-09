@@ -80,7 +80,7 @@ export function EditableCell({
 			<span
 				className={cn(
 					'block px-2 py-1 text-(--text-xs)',
-					'bg-(--cell-readonly-bg) rounded-(--radius-sm)',
+					'bg-(--cell-readonly-bg) rounded-sm',
 					'font-[family-name:var(--font-mono)]',
 					isNumber && 'text-right tabular-nums',
 					className
@@ -102,7 +102,7 @@ export function EditableCell({
 				onKeyDown={handleKeyDown}
 				className={cn(
 					'w-full px-2 py-1 text-(--text-xs)',
-					'rounded-(--radius-sm)',
+					'rounded-sm',
 					'border border-(--cell-editable-focus)',
 					'shadow-(--shadow-glow-accent)',
 					'bg-white scale-[1.02] origin-center',
@@ -122,7 +122,7 @@ export function EditableCell({
 			onClick={() => setIsEditing(true)}
 			className={cn(
 				'block w-full text-left px-2 py-1 text-(--text-xs)',
-				'rounded-(--radius-sm) cursor-text',
+				'rounded-sm cursor-text',
 				'bg-(--cell-editable-bg)',
 				'font-[family-name:var(--font-mono)]',
 				'hover:border-(--accent-200) hover:shadow-(--shadow-xs)',

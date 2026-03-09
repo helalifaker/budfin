@@ -157,12 +157,12 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 	return (
 		<div>
 			{mismatchCount > 0 && (
-				<div className="mb-2 flex items-center gap-2 rounded-(--radius-md) bg-(--color-warning-bg) px-3 py-2 text-(--text-sm) text-(--color-warning)">
+				<div className="mb-2 flex items-center gap-2 rounded-md bg-(--color-warning-bg) px-3 py-2 text-(--text-sm) text-(--color-warning)">
 					<AlertTriangle className="h-4 w-4" />
 					{mismatchCount} grade{mismatchCount > 1 ? 's' : ''} with nationality total mismatch
 				</div>
 			)}
-			<div className="overflow-x-auto rounded-(--radius-lg) border">
+			<div className="overflow-x-auto rounded-lg border">
 				<table
 					role="table"
 					className="w-full text-left text-(--text-sm)"

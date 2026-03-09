@@ -121,7 +121,7 @@ export function Sidebar() {
 					isCollapsed ? 'justify-center px-2' : 'px-4 gap-3'
 				)}
 			>
-				<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-(--radius-md) bg-(--accent-500)">
+				<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-(--accent-500)">
 					<span className="text-sm font-bold text-white">B</span>
 				</div>
 				{!isCollapsed && (
@@ -199,7 +199,7 @@ export function Sidebar() {
 					type="button"
 					onClick={() => logout()}
 					className={cn(
-						'flex w-full items-center gap-3 rounded-(--radius-md)',
+						'flex w-full items-center gap-3 rounded-md',
 						'text-(--text-sm) text-(--sidebar-text)',
 						'hover:bg-(--sidebar-bg-hover) hover:text-(--color-error)',
 						'transition-colors duration-(--duration-fast)',
@@ -215,7 +215,7 @@ export function Sidebar() {
 					type="button"
 					onClick={isCollapsed ? handleExpand : handleToggle}
 					className={cn(
-						'flex w-full items-center gap-3 rounded-(--radius-md)',
+						'flex w-full items-center gap-3 rounded-md',
 						'text-(--text-sm) text-(--sidebar-text)',
 						'hover:bg-(--sidebar-bg-hover) hover:text-(--sidebar-text-active)',
 						'transition-colors duration-(--duration-fast)',

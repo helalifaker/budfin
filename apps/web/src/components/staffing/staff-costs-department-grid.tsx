@@ -344,7 +344,7 @@ function DepartmentGridSkeleton() {
 			{Array.from({ length: 5 }).map((_, i) => (
 				<div
 					key={i}
-					className="flex items-center gap-2 rounded-(--radius-md) bg-(--workspace-bg-muted) px-3 py-3"
+					className="flex items-center gap-2 rounded-md bg-(--workspace-bg-muted) px-3 py-3"
 				>
 					<Skeleton className="h-4 w-4" />
 					<Skeleton className="h-4 w-32" />
@@ -566,7 +566,7 @@ export function StaffCostsDepartmentGrid({
 
 	return (
 		<div
-			className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)"
+			className="overflow-x-auto rounded-md border border-(--workspace-border)"
 			role="region"
 			aria-label="Staff costs by department"
 		>

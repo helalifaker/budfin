@@ -202,7 +202,7 @@ export function PlanningGrid<T>({
 			<div
 				className={cn(
 					'overflow-x-auto',
-					'rounded-(--radius-lg) border border-(--workspace-border)',
+					'rounded-lg border border-(--workspace-border)',
 					'shadow-(--shadow-xs)',
 					className
 				)}
@@ -336,7 +336,7 @@ export function PlanningGrid<T>({
 								aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${label}`}
 								className={cn(
 									'inline-flex items-center justify-center',
-									'h-5 w-5 rounded-(--radius-sm)',
+									'h-5 w-5 rounded-sm',
 									'hover:bg-(--workspace-bg-muted)',
 									'transition-transform duration-(--duration-fast)'
 								)}
@@ -454,7 +454,7 @@ export function PlanningGrid<T>({
 		<div
 			className={cn(
 				'overflow-x-auto',
-				'rounded-(--radius-lg) border border-(--workspace-border)',
+				'rounded-lg border border-(--workspace-border)',
 				'shadow-(--shadow-xs)',
 				className
 			)}

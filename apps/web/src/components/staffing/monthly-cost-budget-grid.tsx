@@ -265,7 +265,7 @@ export function MonthlyCostBudgetGrid({
 
 	if (isLoading) {
 		return (
-			<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
+			<div className="overflow-x-auto rounded-md border border-(--workspace-border)">
 				<table className="w-full border-collapse text-sm">
 					<tbody>
 						{Array.from({ length: 6 }).map((_, i) => (
@@ -309,7 +309,7 @@ export function MonthlyCostBudgetGrid({
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between">
-				<span className="text-[length:var(--text-xs)] font-medium text-(--text-muted)">
+				<span className="text-(length:--text-xs) font-medium text-(--text-muted)">
 					Academic Period:
 				</span>
 				<ToggleGroup
@@ -327,7 +327,7 @@ export function MonthlyCostBudgetGrid({
 				</ToggleGroup>
 			</div>
 
-			<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
+			<div className="overflow-x-auto rounded-md border border-(--workspace-border)">
 				<TooltipProvider>
 					<table
 						className="w-full border-collapse text-sm"

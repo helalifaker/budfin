@@ -16,7 +16,7 @@ export function ChartCard({ title, children, className }: ChartCardProps) {
 			</CardHeader>
 			<CardContent>
 				{children ?? (
-					<div className="flex h-48 items-center justify-center rounded-(--radius-md) bg-(--workspace-bg-subtle)">
+					<div className="flex h-48 items-center justify-center rounded-md bg-(--workspace-bg-subtle)">
 						<p className="text-(--text-sm) text-(--text-muted)">Chart data not available</p>
 					</div>
 				)}

@@ -29,7 +29,7 @@ export function DhgGrilleView({ grilles }: DhgGrilleViewProps) {
 					<h4 className="text-(--text-xs) font-semibold uppercase tracking-wider text-(--text-muted) mb-2">
 						{grade}
 					</h4>
-					<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
+					<div className="overflow-x-auto rounded-md border border-(--workspace-border)">
 						<table className="w-full border-collapse text-sm" role="grid">
 							<thead>
 								<tr className="bg-(--workspace-bg-subtle)">
@@ -88,7 +88,7 @@ export function DhgRequirementsView({ requirements }: DhgRequirementsViewProps) 
 
 	return (
 		<div className="space-y-3">
-			<div className="overflow-x-auto rounded-(--radius-md) border border-(--workspace-border)">
+			<div className="overflow-x-auto rounded-md border border-(--workspace-border)">
 				<table className="w-full border-collapse text-sm" role="grid">
 					<thead>
 						<tr className="bg-(--workspace-bg-subtle)">

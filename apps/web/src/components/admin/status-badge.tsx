@@ -12,7 +12,7 @@ export function StatusBadge({ isActive, className }: StatusBadgeProps) {
 		>
 			<span
 				className={cn(
-					'h-2 w-2 rounded-(--radius-sm)',
+					'h-2 w-2 rounded-sm',
 					isActive ? 'bg-(--color-success)' : 'bg-(--text-muted)'
 				)}
 			/>

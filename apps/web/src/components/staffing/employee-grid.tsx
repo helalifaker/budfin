@@ -200,7 +200,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				value={globalFilter}
 				onChange={(e) => setGlobalFilter(e.target.value)}
 				className={cn(
-					'w-full max-w-xs rounded-(--radius-md)',
+					'w-full max-w-xs rounded-md',
 					'border border-(--workspace-border) bg-(--workspace-bg)',
 					'px-3 py-1.5 text-sm text-(--text-primary)',
 					'placeholder:text-(--text-muted)',
@@ -209,12 +209,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				aria-label="Search employees"
 			/>
 
-			<div
-				className={cn(
-					'overflow-x-auto rounded-(--radius-md)',
-					'border border-(--workspace-border)'
-				)}
-			>
+			<div className={cn('overflow-x-auto rounded-md', 'border border-(--workspace-border)')}>
 				<table
 					className="w-full border-collapse text-sm"
 					role="grid"
@@ -229,7 +224,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 								className={cn(
 									'w-9 px-2 py-2 text-left font-medium',
 									'text-(--text-muted)',
-									'text-[length:var(--text-xs)] uppercase tracking-wider',
+									'text-(length:--text-xs) uppercase tracking-wider',
 									'border-b border-(--workspace-border)'
 								)}
 								aria-label="Expand or collapse"
@@ -239,7 +234,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 									key={header.id}
 									className={cn(
 										'px-3 py-2 text-left font-medium text-(--text-muted)',
-										'text-[length:var(--text-xs)] uppercase tracking-wider',
+										'text-(length:--text-xs) uppercase tracking-wider',
 										'border-b border-(--workspace-border)',
 										header.column.getCanSort() && 'cursor-pointer select-none'
 									)}
@@ -293,7 +288,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 				</table>
 			</div>
 
-			<div className="text-[length:var(--text-xs)] text-(--text-muted)">
+			<div className="text-(length:--text-xs) text-(--text-muted)">
 				{table.getFilteredRowModel().rows.length} employee(s) in {departmentGroups.length}{' '}
 				department(s)
 			</div>
@@ -364,7 +359,7 @@ function DepartmentRows({
 						className={cn(
 							'ml-2 inline-flex items-center rounded-full',
 							'bg-(--accent-50) px-2 py-0.5',
-							'text-[length:var(--text-xs)] font-medium text-(--accent-700)'
+							'text-(length:--text-xs) font-medium text-(--accent-700)'
 						)}
 					>
 						{group.employees.length}

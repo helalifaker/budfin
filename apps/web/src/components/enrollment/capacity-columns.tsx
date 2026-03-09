@@ -42,7 +42,7 @@ export function AlertBadge({ alert }: AlertBadgeProps) {
 	return (
 		<span
 			className={cn(
-				'inline-flex items-center gap-1 rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
+				'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
 				config.className
 			)}
 			role="status"

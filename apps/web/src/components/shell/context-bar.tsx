@@ -225,7 +225,7 @@ export function ContextBar() {
 							if (!next) setComparisonVersion(null);
 						}}
 						className={cn(
-							'flex h-9 w-9 items-center justify-center rounded-(--radius-md)',
+							'flex h-9 w-9 items-center justify-center rounded-md',
 							'border border-(--workspace-border)',
 							'transition-colors duration-(--duration-fast)',
 							showCompare
@@ -326,7 +326,7 @@ export function ContextBar() {
 					type="button"
 					onClick={togglePanel}
 					className={cn(
-						'flex h-9 w-9 items-center justify-center rounded-(--radius-md)',
+						'flex h-9 w-9 items-center justify-center rounded-md',
 						'border border-(--workspace-border)',
 						'transition-colors duration-(--duration-fast)',
 						isPanelOpen

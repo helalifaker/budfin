@@ -124,7 +124,7 @@ export function CapacityGrid({
 
 	if (!gradesLoading && !hasResults) {
 		return (
-			<div className="rounded-(--radius-lg) border border-(--workspace-border) px-4 py-12 text-center">
+			<div className="rounded-lg border border-(--workspace-border) px-4 py-12 text-center">
 				<p className="text-(--text-sm) text-(--text-muted)">
 					Press Calculate to generate capacity results.
 				</p>

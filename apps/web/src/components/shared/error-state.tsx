@@ -26,7 +26,7 @@ export function ErrorState({
 			<div
 				className={cn(
 					'flex h-12 w-12 items-center justify-center',
-					'rounded-(--radius-lg) bg-(--color-error-bg)'
+					'rounded-lg bg-(--color-error-bg)'
 				)}
 			>
 				<AlertTriangle className="h-6 w-6 text-(--color-error)" aria-hidden="true" />

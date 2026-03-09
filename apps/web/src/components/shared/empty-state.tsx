@@ -30,7 +30,7 @@ export function EmptyState({
 			<div
 				className={cn(
 					'flex h-12 w-12 items-center justify-center',
-					'rounded-(--radius-lg) bg-(--accent-50)',
+					'rounded-lg bg-(--accent-50)',
 					'animate-slide-up'
 				)}
 			>

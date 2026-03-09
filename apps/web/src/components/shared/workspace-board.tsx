@@ -22,7 +22,7 @@ export function WorkspaceBoard({
 			<header
 				className={cn(
 					'flex items-start justify-between gap-4',
-					'rounded-(--radius-lg) border border-(--workspace-border)',
+					'rounded-lg border border-(--workspace-border)',
 					'border-t-[3px] border-t-(--accent-500)',
 					'bg-(--workspace-bg-card) p-5 shadow-(--shadow-card)'
 				)}
@@ -43,7 +43,7 @@ export function WorkspaceBoard({
 				<div
 					className={cn(
 						'sticky top-0 z-10',
-						'rounded-(--radius-lg) border border-(--workspace-border)',
+						'rounded-lg border border-(--workspace-border)',
 						'bg-white/80 px-4 py-3 shadow-(--shadow-sm)',
 						'backdrop-blur-md'
 					)}

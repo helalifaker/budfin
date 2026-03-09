@@ -128,7 +128,7 @@ export function EmployeeForm({
 	}, [employee, reset]);
 
 	const inputClass = cn(
-		'w-full rounded-(--radius-md)',
+		'w-full rounded-md',
 		'border border-(--workspace-border) bg-(--workspace-bg)',
 		'px-3 py-1.5 text-sm text-(--text-primary)',
 		'focus:outline-none focus:ring-2 focus:ring-(--accent-500)',

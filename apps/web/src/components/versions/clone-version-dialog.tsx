@@ -102,7 +102,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 				</DialogHeader>
 
 				{isActual && (
-					<div className="rounded-(--radius-md) bg-(--color-warning-bg) px-4 py-3 text-(--text-sm) text-(--color-warning)">
+					<div className="rounded-md bg-(--color-warning-bg) px-4 py-3 text-(--text-sm) text-(--color-warning)">
 						Actual versions cannot be cloned.
 					</div>
 				)}
@@ -112,8 +112,8 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 						{progress && (
 							<div>
 								<p className="mb-1 text-(--text-xs) text-(--text-muted)">Copying version data...</p>
-								<div className="h-1.5 w-full overflow-hidden rounded-(--radius-sm) bg-(--workspace-border)">
-									<div className="h-full animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-(--radius-sm) bg-(--accent-500)" />
+								<div className="h-1.5 w-full overflow-hidden rounded-sm bg-(--workspace-border)">
+									<div className="h-full animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-sm bg-(--accent-500)" />
 								</div>
 							</div>
 						)}
@@ -180,7 +180,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 									)}
 								/>
 								{isCrossYear && (
-									<div className="mt-2 rounded-(--radius-md) bg-(--color-info-bg,var(--accent-50)) px-3 py-2 text-(--text-xs) text-(--color-info,var(--accent-700))">
+									<div className="mt-2 rounded-md bg-(--color-info-bg,var(--accent-50)) px-3 py-2 text-(--text-xs) text-(--color-info,var(--accent-700))">
 										Cross-year clone: data will be copied from FY{source.fiscalYear} to FY
 										{watchedFy}
 									</div>

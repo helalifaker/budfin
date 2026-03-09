@@ -13,7 +13,7 @@ export function StaleIndicator({ staleModules, className }: StaleIndicatorProps)
 		<div
 			className={cn(
 				'flex items-center gap-1.5',
-				'rounded-(--radius-sm) bg-(--color-warning-bg) px-2 py-1',
+				'rounded-sm bg-(--color-warning-bg) px-2 py-1',
 				'text-[11px] font-medium text-(--color-warning)',
 				className
 			)}

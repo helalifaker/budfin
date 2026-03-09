@@ -72,7 +72,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 					<div>
 						<label
 							htmlFor="import-year"
-							className="mb-1 block text-[length:var(--text-sm)] font-medium text-(--text-primary)"
+							className="mb-1 block text-(length:--text-sm) font-medium text-(--text-primary)"
 						>
 							Academic Year
 						</label>
@@ -94,7 +94,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 					<div>
 						<label
 							htmlFor="csv-file"
-							className="mb-1 block text-[length:var(--text-sm)] font-medium text-(--text-primary)"
+							className="mb-1 block text-(length:--text-sm) font-medium text-(--text-primary)"
 						>
 							CSV File
 						</label>
@@ -104,10 +104,10 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 							type="file"
 							accept=".csv"
 							onChange={handleFileChange}
-							className="block w-full text-[length:var(--text-sm)] text-(--text-muted) file:mr-4 file:rounded-(--radius-sm) file:border-0 file:bg-(--workspace-bg-muted) file:px-4 file:py-2 file:text-[length:var(--text-sm)] file:font-medium file:text-(--text-primary) hover:file:bg-(--workspace-bg-muted)"
+							className="block w-full text-(length:--text-sm) text-(--text-muted) file:mr-4 file:rounded-sm file:border-0 file:bg-(--workspace-bg-muted) file:px-4 file:py-2 file:text-(length:--text-sm) file:font-medium file:text-(--text-primary) hover:file:bg-(--workspace-bg-muted)"
 						/>
 						{file && (
-							<p className="mt-1 text-[length:var(--text-xs)] text-(--text-muted)">
+							<p className="mt-1 text-(length:--text-xs) text-(--text-muted)">
 								Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
 							</p>
 						)}
@@ -126,7 +126,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 						{validationResult && validationResult.validRows > 0 && (
 							<>
 								{validationResult.errors.length > 0 && (
-									<p className="text-[length:var(--text-xs)] text-(--color-warning)">
+									<p className="text-(length:--text-xs) text-(--color-warning)">
 										{validationResult.errors.length} row(s) will be skipped
 									</p>
 								)}
@@ -141,8 +141,8 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 					{/* Validation results */}
 					{validationResult && (
-						<div className="rounded-(--radius-lg) border p-4 space-y-3">
-							<div className="flex items-center gap-2 text-[length:var(--text-sm)]">
+						<div className="rounded-lg border p-4 space-y-3">
+							<div className="flex items-center gap-2 text-(length:--text-sm)">
 								{validationResult.errors.length === 0 ? (
 									<>
 										<Check className="h-4 w-4 text-(--color-success)" />
@@ -163,8 +163,8 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 							{/* Preview table */}
 							{validationResult.preview.length > 0 && (
-								<div className="max-h-48 overflow-y-auto rounded-(--radius-md) border">
-									<table className="w-full text-[length:var(--text-xs)]">
+								<div className="max-h-48 overflow-y-auto rounded-md border">
+									<table className="w-full text-(length:--text-xs)">
 										<thead className="bg-(--workspace-bg-muted)">
 											<tr>
 												<th className="px-3 py-1.5 text-left font-medium">Grade</th>
@@ -185,7 +185,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 							{/* Error list */}
 							{validationResult.errors.length > 0 && (
-								<div className="max-h-32 overflow-y-auto text-[length:var(--text-xs)] text-(--color-error)">
+								<div className="max-h-32 overflow-y-auto text-(length:--text-xs) text-(--color-error)">
 									{validationResult.errors.map((err, i) => (
 										<div key={i} className="py-0.5">
 											Row {err.row}: {err.field} — {err.message}
@@ -198,7 +198,7 @@ export function CsvImportPanel({ open, onClose }: CsvImportPanelProps) {
 
 					{/* Success */}
 					{importSuccess && (
-						<div className="flex items-center gap-2 rounded-(--radius-lg) bg-(--color-success-bg) px-4 py-3 text-[length:var(--text-sm)] text-(--color-success)">
+						<div className="flex items-center gap-2 rounded-lg bg-(--color-success-bg) px-4 py-3 text-(length:--text-sm) text-(--color-success)">
 							<Check className="h-4 w-4" />
 							Import completed successfully
 						</div>

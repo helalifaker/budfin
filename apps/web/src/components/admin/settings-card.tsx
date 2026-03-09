@@ -17,7 +17,7 @@ interface SettingsCardProps {
 
 export function SettingsCard({ title, description, fields }: SettingsCardProps) {
 	return (
-		<div className="rounded-(--radius-lg) border border-(--workspace-border) bg-(--workspace-bg-card) p-6">
+		<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-6">
 			<h3 className="text-base font-semibold">{title}</h3>
 			<p className="mt-1 text-(--text-sm) text-(--text-muted)">{description}</p>
 			<div className="mt-4 space-y-3">
@@ -26,7 +26,7 @@ export function SettingsCard({ title, description, fields }: SettingsCardProps) 
 						key={field.key}
 						className={cn(
 							'flex items-center justify-between',
-							'rounded-(--radius-md) border-l-4 px-3 py-2',
+							'rounded-md border-l-4 px-3 py-2',
 							field.changed ? 'border-l-(--accent-500) bg-(--accent-50)/50' : 'border-l-transparent'
 						)}
 					>
