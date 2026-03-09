@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Data migration pipeline for importing FY2026 budget data from Excel workbooks and historical enrollment CSVs into BudFin, enabling staff to verify and work with real financial data immediately after go-live (#10)
+- Staff Costs Excel parser that reads the EFIR Staff Costs workbook and produces a validated JSON fixture, handling formula errors and dirty data with structured warnings (#10)
+- Master data seeding for nationalities, tariffs, departments, academic years, and chart of accounts as part of the migration pipeline (#10)
+- Historical enrollment import covering 5 academic years (2021-22 through 2025-26) with exact headcount verification against source CSVs (#10)
+- 6-step automated validation suite that verifies migrated data integrity: row counts, checksums, revenue totals (+/- 1 SAR), staff cost totals (+/- 1 SAR), and enrollment exact match (#10)
+- Pre-migration database backup is automatically created before any data changes, restorable within 5 minutes (#10)
+- Migration audit trail records one log entry per module execution with source file, row counts, and validation status (#10)
+- CLI commands `pnpm --filter @budfin/api migrate` and `pnpm --filter @budfin/api parse:staff-costs` for running the migration pipeline (#10)
+
 - Cohort progression modeling: AY2 headcounts are automatically computed from AY1 using per-grade retention rates and lateral entry counts, replacing manual AY2 data entry with a transparent formula-driven approach (#137)
 - Nationality distribution engine: AY2 nationality breakdowns (Francais, Nationaux, Autres) are computed from prior-grade retention and lateral entry weights, with manual override support per grade (#137)
 - Enrollment workspace redesigned as a Continuous Planning Board with three stacked sections (Cohort Progression, Nationality Distribution, Capacity Planning) visible simultaneously instead of hidden behind tabs (#137)

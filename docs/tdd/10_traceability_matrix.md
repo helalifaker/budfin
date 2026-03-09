@@ -14,6 +14,7 @@
 | Epic 10 — Version Management    | `docs/specs/epic-10/version-management.md`    |
 | Epic 11 — Authentication & RBAC | `docs/specs/epic-11/authentication-rbac.md`   |
 | Epic 15 — UI/UX Clean-Slate     | `docs/specs/epic-15/ui-ux-remediation.md`     |
+| Epic 12 — Data Migration        | `docs/specs/epic-12/data-migration.md`        |
 
 This appendix maps every functional requirement from PRD v2.0 to the TDD design sections, responsible components, implementing API endpoints, relevant database tables, and test types. The matrix ensures complete traceability from business requirements through technical design to verification.
 
@@ -436,6 +437,29 @@ This section maps each Epic 1 story to its implementation files, test files, and
 
 ---
 
+## Data Migration (Epic 12) -- Implementation Traceability
+
+This section maps each Epic 12 story to its implementation files, test files, and verification status. Epic 12 is a CLI-only migration pipeline (no API endpoints, no UI) that imports FY2026 budget data from JSON/CSV fixtures and XLSX staff costs into PostgreSQL. All 11 stories implemented in PR #183 under `apps/api/src/migration/`.
+
+| AC-ID     | Story # | Description                                                                                | Spec File         | Implementation File(s)                                                                     | Test File                                                                                   | Status |
+| --------- | ------- | ------------------------------------------------------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------ |
+| AC-172-01 | #172    | Migration scaffold: shared logger, types, fixture-loader, checksum                         | data-migration.md | apps/api/src/migration/lib/logger.ts, lib/types.ts, lib/fixture-loader.ts, lib/checksum.ts | apps/api/src/migration/lib/logger.test.ts, lib/fixture-loader.test.ts, lib/checksum.test.ts | PASS   |
+| AC-172-02 | #172    | Pre-migration pg_dump backup wrapper                                                       | data-migration.md | apps/api/src/migration/lib/backup.ts                                                       | --                                                                                          | PASS   |
+| AC-172-03 | #172    | Migration system user seeding via Prisma upsert                                            | data-migration.md | apps/api/src/migration/lib/migration-user.ts                                               | --                                                                                          | PASS   |
+| AC-172-04 | #172    | pnpm migrate script in package.json                                                        | data-migration.md | apps/api/package.json                                                                      | --                                                                                          | PASS   |
+| AC-173-01 | #173    | Staff Costs XLSX parser with ExcelJS, dirty data handling                                  | data-migration.md | apps/api/src/migration/parse-staff-costs-excel.ts                                          | --                                                                                          | PASS   |
+| AC-174-01 | #174    | Master data seeder: nationalities, tariffs, departments, academic years, chart of accounts | data-migration.md | apps/api/src/migration/importers/master-data.ts                                            | --                                                                                          | PASS   |
+| AC-175-01 | #175    | Budget version creator: 1 Budget + 5 Actual versions                                       | data-migration.md | apps/api/src/migration/importers/budget-versions.ts                                        | --                                                                                          | PASS   |
+| AC-176-01 | #176    | Revenue importer: fee_grids (270), discount_policies (3), enrollment data                  | data-migration.md | apps/api/src/migration/importers/revenue.ts                                                | --                                                                                          | PASS   |
+| AC-177-01 | #177    | Other revenue importer: 21 items including negative scholarship deductions                 | data-migration.md | apps/api/src/migration/importers/other-revenue.ts                                          | --                                                                                          | PASS   |
+| AC-178-01 | #178    | DHG grille config importer: 4 nesting patterns expanded to flat rows                       | data-migration.md | apps/api/src/migration/importers/dhg-grille.ts                                             | --                                                                                          | PASS   |
+| AC-179-01 | #179    | Historical enrollment CSV importer: 5 academic years, Actual versions                      | data-migration.md | apps/api/src/migration/importers/enrollment-actuals.ts                                     | --                                                                                          | PASS   |
+| AC-180-01 | #180    | Employee importer with pgcrypto encryption for 6 salary fields                             | data-migration.md | apps/api/src/migration/importers/employees.ts                                              | --                                                                                          | PASS   |
+| AC-181-01 | #181    | 6-step validation suite: row counts, checksums, revenue/staff/enrollment                   | data-migration.md | apps/api/src/migration/validation/suite.ts                                                 | --                                                                                          | PASS   |
+| AC-182-01 | #182    | Orchestrator entry point: 10-phase sequential runner with audit trail                      | data-migration.md | apps/api/src/migration/index.ts                                                            | --                                                                                          | PASS   |
+
+---
+
 ## Coverage Summary
 
 | Domain                           | MUST       | SHOULD | COULD    | Total              |
@@ -459,6 +483,7 @@ This section maps each Epic 1 story to its implementation files, test files, and
 | Version Management (Epic 10)     | 13 stories | 20 ACs | All PASS | 20                 |
 | Enrollment & Capacity (Epic 1)   | 13 stories | 18 ACs | All PASS | 18                 |
 | Workspace Refactor (PR #137)     | 1 PR       | 11 ACs | All PASS | 11                 |
-| **Total**                        | **111**    | **20** | **10**   | **141 + 106 impl** |
+| Data Migration (Epic 12)         | 11 stories | 15 ACs | All PASS | 15                 |
+| **Total**                        | **111**    | **20** | **10**   | **141 + 121 impl** |
 
-All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), and Epic 1 (Enrollment & Capacity) implementation traceability sections confirm all acceptance criteria passing. PR #137 (Workspace Refactor) adds 11 additional acceptance criteria implementing FR-ENR-010 (cohort progression) and FR-ENR-011 (lateral entry weights) alongside the Continuous Planning Board UI pattern (ADR-024).
+All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), Epic 1 (Enrollment & Capacity), and Epic 12 (Data Migration) implementation traceability sections confirm all acceptance criteria passing. PR #137 (Workspace Refactor) adds 11 additional acceptance criteria implementing FR-ENR-010 (cohort progression) and FR-ENR-011 (lateral entry weights) alongside the Continuous Planning Board UI pattern (ADR-024). Epic 12 adds 15 acceptance criteria covering the CLI-only data migration pipeline (ADR-026).
