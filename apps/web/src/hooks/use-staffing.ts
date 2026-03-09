@@ -92,6 +92,23 @@ export interface StaffCostResponse {
 	breakdown: StaffCostBreakdown[] | null;
 }
 
+export interface CategoryMonthEntry {
+	key: string;
+	label: string;
+	monthly_amounts: string[];
+	annual_total: string;
+}
+
+export interface CategoryMonthData {
+	months: number[];
+	categories: CategoryMonthEntry[];
+	annual_totals: Record<string, string>;
+}
+
+export interface CategoryCostData {
+	categories: CategoryMonthEntry[];
+}
+
 export interface StaffingSummaryResponse {
 	totalFTE: string;
 	totalSalaryCost: string;
