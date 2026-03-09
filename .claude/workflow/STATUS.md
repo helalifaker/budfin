@@ -1,10 +1,10 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 4 — Staff Costs (#8)
-**Current Story**: All 13 stories complete
+**Phase**: 4 — SPECIFY
+**Current Epic**: Epic 12 — Data Migration (#10)
+**Current Story**: Spec complete — ready for story decomposition
 **Last updated**: 2026-03-09
-**Note**: All 13 stories (#157-#169) implemented and closed. Epic complete.
+**Note**: Epic 12 moved ahead of Epics 5, 6, 8, 9 to allow real-data testing of completed features (Enrollment, Revenue, Staffing, Staff Costs). P&L migration data deferred until Epic 5 is done.
 
 ## Phase History
 
@@ -47,6 +47,7 @@
 | 4 — SPECIFY (Epic 4) | ✅ Complete | 2026-03-09 |
 | 5 — TDD RED (Epic 4) | ✅ Complete | 2026-03-09 |
 | 6 — IMPLEMENT (Epic 4) | ✅ Complete | 2026-03-09 |
+| 7 — REVIEW (Epic 4) | ✅ Complete | 2026-03-09 |
 
 ## Feature Progress
 
@@ -63,7 +64,7 @@
 | 9 | Dashboard | 2 | Epic Created (#13) |
 | 10 | Version Management | DONE | All 13 stories complete (13/13), merged PR #63 + remediation PR #66 — 2026-03-06 |
 | 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) + remediation PR #98 -- 2026-03-06 |
-| 12 | Data Migration | 2 | Epic Created (#10) |
+| 12 | Data Migration | 4 | Spec in progress (#10) |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 | 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
 

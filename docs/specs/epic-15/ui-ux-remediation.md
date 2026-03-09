@@ -61,8 +61,9 @@ lib utilities) while replacing every layout, component, and page file.
 - `stores/sidebar-store.ts` -- sidebar collapsed/expanded state
 - `stores/right-panel-store.ts` -- right panel state, width, tab
 - `stores/ui-store.ts` -- toast queue, dialog state
-- `@fontsource-variable/inter` -- font package
-- `@fontsource-variable/jetbrains-mono` -- font package
+- `@fontsource-variable/dm-sans` -- font package
+- `@fontsource-variable/plus-jakarta-sans` -- font package
+- `geist/font/mono` -- monospace font package
 
 ---
 
@@ -71,7 +72,7 @@ lib utilities) while replacing every layout, component, and page file.
 Full design system defined in `docs/plans/2026-03-07-ui-ux-remediation-design.md` Section 2:
 
 - **Color palette:** Brand teal (#14B8A6 family), sidebar dark carbon, workspace light, semantic colors, version type colors, status colors, editable cell colors
-- **Typography:** Inter Variable (primary), JetBrains Mono Variable (numeric), 8 size tokens (11px-36px)
+- **Typography:** DM Sans Variable (primary), Plus Jakarta Sans Variable (headings), Geist Mono (numeric), 8 size tokens (11px-36px)
 - **Shadows:** 6 levels (xs through lg + sidebar + glow-accent)
 - **Animation tokens:** 4 easing curves, 5 duration levels, stagger delay
 - **Border radii:** 6 levels (none through 2xl)
@@ -122,7 +123,7 @@ RootLayout (Sidebar + Outlet)
 
 - Context bar (56px, frosted glass): breadcrumb, FY/version/compare/period selectors, save/stale indicators
 - Module toolbar (48px): title, filters, action buttons
-- Workspace content (flex:1, min 480px): cross-fades on module switch
+- Workspace content (flex:1, min 480px): slide-up animation on module switch
 - Docked right panel (280px-50%, default 400px): resizable, tabs (Details, Activity, Audit, Help, Form)
 
 ### 4.4 ManagementShell
@@ -145,7 +146,7 @@ RootLayout (Sidebar + Outlet)
 ### 5.2 Design System
 
 - [ ] AC-05: All color tokens from Section 2.1 defined as CSS custom properties in `index.css`
-- [ ] AC-06: Inter Variable and JetBrains Mono Variable fonts installed and applied
+- [ ] AC-06: DM Sans Variable, Plus Jakarta Sans Variable, and Geist Mono fonts installed and applied
 - [ ] AC-07: Typography tokens (11px-36px) enforced via CSS custom properties
 - [ ] AC-08: Shadow, animation, radius, and spacing tokens defined and used consistently
 - [ ] AC-09: Components use CSS variables for themed values, not raw Tailwind classes
@@ -181,7 +182,7 @@ RootLayout (Sidebar + Outlet)
 
 ### 5.6 Animations (30+ points)
 
-- [ ] AC-30: Page transitions: cross-fade with directional slide
+- [ ] AC-30: Page transitions: slide-up animation
 - [ ] AC-31: Loading: diagonal shimmer skeletons + staggered reveal
 - [ ] AC-32: Sidebar expand/collapse choreography (width, labels, chevron)
 - [ ] AC-33: Right panel slide-in/out with workspace resize

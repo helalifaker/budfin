@@ -110,7 +110,7 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 					</span>
 					<span
 						className={cn(
-							'inline-flex rounded-sm px-2 py-0.5',
+							'inline-flex rounded-(--radius-sm) px-2 py-0.5',
 							'text-(length:--text-xs) font-medium',
 							STATUS_BADGE_COLORS[version.status]
 						)}

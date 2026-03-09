@@ -116,8 +116,8 @@ export interface CategoryCostData {
 }
 
 export interface StaffingSummaryResponse {
-	totalFTE: string;
-	totalSalaryCost: string;
+	fte: string;
+	cost: string;
 	byDepartment: Array<{
 		department: string;
 		total_cost: string;

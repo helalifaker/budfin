@@ -151,8 +151,7 @@ export function useRevenueResults(
 
 	return useQuery({
 		queryKey: ['revenue', 'results', versionId, groupBy],
-		queryFn: () =>
-			apiClient<RevenueResultsResponse>(`/versions/${versionId}/revenue-results?${query}`),
+		queryFn: () => apiClient<RevenueResultsResponse>(`/versions/${versionId}/revenue?${query}`),
 		enabled: versionId !== null,
 	});
 }

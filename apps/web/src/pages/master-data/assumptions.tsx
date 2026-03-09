@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuthStore } from '../../stores/auth-store';
 import { useAssumptions, useUpdateAssumptions, type Assumption } from '../../hooks/use-assumptions';
+import { ChevronRight, Calculator } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { Input } from '../../components/ui/input';
 import { TableSkeleton } from '../../components/ui/skeleton';
@@ -321,21 +322,13 @@ function SectionGroup({
 				aria-expanded={!isCollapsed}
 			>
 				<td colSpan={4} className="px-4 py-2 font-semibold text-(--text-primary)">
-					<svg
+					<ChevronRight
 						className={cn(
 							'mr-2 inline-block h-4 w-4 transition-transform duration-(--duration-fast)',
 							!isCollapsed && 'rotate-90'
 						)}
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
 						aria-hidden="true"
-					>
-						<path d="M9 18l6-6-6-6" />
-					</svg>
+					/>
 					{SECTION_LABELS[section] ?? section}
 				</td>
 			</tr>
@@ -389,19 +382,5 @@ function SectionGroup({
 }
 
 function CalculatorIcon() {
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 20 20"
-			fill="currentColor"
-			className="h-4 w-4 text-(--text-muted)"
-			aria-hidden="true"
-		>
-			<path
-				fillRule="evenodd"
-				d="M10 1a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 1zM5.05 3.05a.75.75 0 011.06 0l1.062 1.06a.75.75 0 11-1.06 1.061L5.05 4.111a.75.75 0 010-1.06zm9.9 0a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 01-1.061-1.06l1.06-1.06a.75.75 0 011.06 0zM3 8a7 7 0 1114 0A7 7 0 013 8zm8 1a1 1 0 11-2 0 1 1 0 012 0zM7.084 8.71a.75.75 0 10-1.168-.94 5.526 5.526 0 00-.502.847.75.75 0 001.326.702 4.026 4.026 0 01.344-.609zm6.832-.94a.75.75 0 10-1.168.94c.142.177.26.38.344.61a.75.75 0 101.326-.702 5.527 5.527 0 00-.502-.848z"
-				clipRule="evenodd"
-			/>
-		</svg>
-	);
+	return <Calculator className="h-4 w-4 text-(--text-muted)" aria-hidden="true" />;
 }

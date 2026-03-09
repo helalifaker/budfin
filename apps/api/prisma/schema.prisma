@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Models will be defined during feature implementation.
@@ -99,7 +100,7 @@ model User {
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  tokenHash String   @map("token_hash") @db.VarChar(255)
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
   familyId  String   @map("family_id") @db.Uuid
   isRevoked Boolean  @default(false) @map("is_revoked")
   expiresAt DateTime @map("expires_at") @db.Timestamptz
@@ -109,6 +110,7 @@ model RefreshToken {
 
   @@index([familyId], map: "idx_refresh_tokens_family")
   @@index([userId, isRevoked], map: "idx_refresh_tokens_user_active")
+  @@index([expiresAt], map: "idx_refresh_tokens_expires")
   @@map("refresh_tokens")
 }
 
@@ -143,6 +145,8 @@ model AuditEntry {
 
   @@index([createdAt], map: "idx_audit_entries_created")
   @@index([userId], map: "idx_audit_entries_user")
+  @@index([tableName, recordId], map: "idx_audit_entries_table_record")
+  @@index([operation], map: "idx_audit_entries_operation")
   @@map("audit_entries")
 }
 
@@ -385,6 +389,9 @@ model BudgetVersion {
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
   @@index([status], map: "idx_budget_versions_status")
+  @@index([sourceVersionId], map: "idx_budget_versions_source")
+  @@index([createdById], map: "idx_budget_versions_created_by")
+  @@index([updatedById], map: "idx_budget_versions_updated_by")
   @@map("budget_versions")
 }
 
@@ -405,6 +412,10 @@ model FiscalPeriod {
   updatedBy     User?          @relation("FiscalPeriodUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@unique([fiscalYear, month], map: "uq_fiscal_period")
+  @@index([fiscalYear], map: "idx_fiscal_periods_fiscal_year")
+  @@index([actualVersionId], map: "idx_fiscal_periods_actual_version")
+  @@index([lockedById], map: "idx_fiscal_periods_locked_by")
+  @@index([updatedById], map: "idx_fiscal_periods_updated_by")
   @@map("fiscal_periods")
 }
 
@@ -514,7 +525,7 @@ model DhgRequirement {
 
 model CalculationAuditLog {
   id            Int       @id @default(autoincrement())
-  versionId     Int       @map("version_id")
+  versionId     Int?      @map("version_id")
   runId         String    @map("run_id") @db.Uuid
   module        String    @default("ENROLLMENT") @db.VarChar(20)
   status        String    @default("STARTED") @db.VarChar(20)
@@ -525,10 +536,13 @@ model CalculationAuditLog {
   outputSummary Json?     @map("output_summary") @db.JsonB
   triggeredBy   Int?      @map("triggered_by")
 
-  version   BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  version   BudgetVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
   triggerer User?         @relation("CalculationTriggeredBy", fields: [triggeredBy], references: [id])
 
   @@index([versionId], map: "idx_calc_audit_version")
+  @@index([runId], map: "idx_calc_audit_run_id")
+  @@index([module, status], map: "idx_calc_audit_module_status")
+  @@index([triggeredBy], map: "idx_calc_audit_triggered_by")
   @@map("calculation_audit_log")
 }
 
@@ -785,6 +799,7 @@ model MonthlyStaffCost {
   @@unique([versionId, employeeId, month], map: "uq_monthly_staff_cost")
   @@index([versionId], map: "idx_monthly_staff_costs_version")
   @@index([employeeId], map: "idx_monthly_staff_costs_employee")
+  @@index([versionId, month], map: "idx_monthly_staff_costs_version_month")
   @@map("monthly_staff_costs")
 }
 

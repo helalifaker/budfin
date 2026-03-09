@@ -388,7 +388,7 @@ CREATE TABLE employees (
   joining_date                      DATE            NOT NULL,
   payment_method                    TEXT            NOT NULL,
   is_saudi                          BOOLEAN         NOT NULL DEFAULT FALSE,
-  is_ajeer                          BOOLEAN         NOT NULL DEFAULT TRUE,
+  is_ajeer                          BOOLEAN         NOT NULL DEFAULT FALSE,
   hourly_percentage                 DECIMAL(5,4)    NOT NULL DEFAULT 1.0000,
   base_salary_encrypted             BYTEA           NOT NULL,
   housing_allowance_encrypted       BYTEA           NOT NULL,

@@ -20,7 +20,7 @@ type GroupBy = z.infer<typeof getQuerySchema>['group_by'];
 // ── Routes ────────────────────────────────────────────────────────────────────
 
 export async function revenueResultsRoutes(app: FastifyInstance) {
-	app.get('/revenue-results', {
+	app.get('/revenue', {
 		schema: {
 			params: versionIdParamsSchema,
 			querystring: getQuerySchema,

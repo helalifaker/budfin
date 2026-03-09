@@ -81,7 +81,7 @@ export async function userRoutes(app: FastifyInstance) {
 			});
 			if (existing) {
 				return reply.status(409).send({
-					code: 'CONFLICT',
+					code: 'EMAIL_EXISTS',
 					message: 'A user with this email already exists',
 				});
 			}

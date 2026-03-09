@@ -68,7 +68,7 @@ export function StaffingPage() {
 	const kpiData = useMemo(() => {
 		const activeEmployees = employees.filter((e) => e.status !== 'Departed');
 		const totalHeadcount = activeEmployees.length;
-		const totalAnnualStaffCost = Number(summaryData?.totalSalaryCost ?? 0);
+		const totalAnnualStaffCost = Number(summaryData?.cost ?? 0);
 		const avgMonthlyCostPerEmployee =
 			totalHeadcount > 0 ? Math.round(totalAnnualStaffCost / totalHeadcount / 12) : 0;
 

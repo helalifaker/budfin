@@ -47,15 +47,6 @@ const employeeBody = z.object({
 
 // ── Salary field encryption/decryption helpers ───────────────────────────────
 
-const SALARY_FIELDS = [
-	'base_salary',
-	'housing_allowance',
-	'transport_allowance',
-	'responsibility_premium',
-	'hsa_amount',
-	'augmentation',
-] as const;
-
 interface DecryptedEmployee {
 	id: number;
 	version_id: number;
@@ -124,6 +115,40 @@ async function addStaleFlag(versionId: number): Promise<void> {
 	`;
 }
 
+function buildDecryptSelect(key: string): Prisma.Sql {
+	return Prisma.sql`
+		pgp_sym_decrypt(e.base_salary, ${key}) as base_salary,
+		pgp_sym_decrypt(e.housing_allowance, ${key}) as housing_allowance,
+		pgp_sym_decrypt(e.transport_allowance, ${key}) as transport_allowance,
+		pgp_sym_decrypt(e.responsibility_premium, ${key}) as responsibility_premium,
+		pgp_sym_decrypt(e.hsa_amount, ${key}) as hsa_amount,
+		pgp_sym_decrypt(e.augmentation, ${key}) as augmentation
+	`;
+}
+
+const REDACTED_SALARY_SELECT = Prisma.sql`
+	NULL as base_salary,
+	NULL as housing_allowance,
+	NULL as transport_allowance,
+	NULL as responsibility_premium,
+	NULL as hsa_amount,
+	NULL as augmentation
+`;
+
+function buildEmployeeSelect(salaryFragment: Prisma.Sql): Prisma.Sql {
+	return Prisma.sql`
+		e.id, e.version_id, e.employee_code, e.name,
+		e.function_role, e.department, e.status, e.joining_date,
+		e.payment_method, e.is_saudi, e.is_ajeer, e.is_teaching,
+		e.hourly_percentage::text as hourly_percentage,
+		${salaryFragment},
+		e.augmentation_effective_date,
+		e.ajeer_annual_levy::text as ajeer_annual_levy,
+		e.ajeer_monthly_fee::text as ajeer_monthly_fee,
+		e.created_at, e.updated_at, e.created_by, e.updated_by
+	`;
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 export async function employeeRoutes(app: FastifyInstance) {
@@ -154,35 +179,31 @@ export async function employeeRoutes(app: FastifyInstance) {
 			const key = redactSalary ? '' : getEncryptionKey();
 			const offset = (page - 1) * page_size;
 
-			// Build WHERE conditions
-			const conditions = [`e.version_id = ${versionId}`];
-			if (department) conditions.push(`e.department = '${department}'`);
-			if (status) conditions.push(`e.status = '${status}'`);
-			const whereClause = conditions.join(' AND ');
+			const salaryFragment = redactSalary ? REDACTED_SALARY_SELECT : buildDecryptSelect(key);
 
-			const salarySelect = redactSalary
-				? SALARY_FIELDS.map((f) => `NULL as ${f}`).join(', ')
-				: SALARY_FIELDS.map((f) => `pgp_sym_decrypt(e.${f}, '${key}') as ${f}`).join(', ');
+			const selectCols = buildEmployeeSelect(salaryFragment);
 
-			const employees = await prisma.$queryRawUnsafe<DecryptedEmployee[]>(`
-				SELECT e.id, e.version_id, e.employee_code, e.name,
-					e.function_role, e.department, e.status, e.joining_date,
-					e.payment_method, e.is_saudi, e.is_ajeer, e.is_teaching,
-					e.hourly_percentage::text as hourly_percentage,
-					${salarySelect},
-					e.augmentation_effective_date,
-					e.ajeer_annual_levy::text as ajeer_annual_levy,
-					e.ajeer_monthly_fee::text as ajeer_monthly_fee,
-					e.created_at, e.updated_at, e.created_by, e.updated_by
+			// Build WHERE conditions dynamically
+			const conditions: Prisma.Sql[] = [Prisma.sql`e.version_id = ${versionId}`];
+			if (department) {
+				conditions.push(Prisma.sql`e.department = ${department}`);
+			}
+			if (status) {
+				conditions.push(Prisma.sql`e.status = ${status}`);
+			}
+			const whereClause = Prisma.join(conditions, ' AND ');
+
+			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
+				SELECT ${selectCols}
 				FROM employees e
 				WHERE ${whereClause}
 				ORDER BY e.department, e.name
 				LIMIT ${page_size} OFFSET ${offset}
-			`);
+			`;
 
-			const countResult = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
-				`SELECT COUNT(*) as count FROM employees e WHERE ${whereClause}`
-			);
+			const countResult = await prisma.$queryRaw<[{ count: bigint }]>`
+				SELECT COUNT(*) as count FROM employees e WHERE ${whereClause}
+			`;
 			const total = Number(countResult[0]?.count ?? 0);
 
 			return {
@@ -206,23 +227,15 @@ export async function employeeRoutes(app: FastifyInstance) {
 			const redactSalary = request.user.role === 'Viewer';
 			const key = redactSalary ? '' : getEncryptionKey();
 
-			const salarySelect = redactSalary
-				? SALARY_FIELDS.map((f) => `NULL as ${f}`).join(', ')
-				: SALARY_FIELDS.map((f) => `pgp_sym_decrypt(e.${f}, '${key}') as ${f}`).join(', ');
+			const salaryFragment = redactSalary ? REDACTED_SALARY_SELECT : buildDecryptSelect(key);
 
-			const employees = await prisma.$queryRawUnsafe<DecryptedEmployee[]>(`
-				SELECT e.id, e.version_id, e.employee_code, e.name,
-					e.function_role, e.department, e.status, e.joining_date,
-					e.payment_method, e.is_saudi, e.is_ajeer, e.is_teaching,
-					e.hourly_percentage::text as hourly_percentage,
-					${salarySelect},
-					e.augmentation_effective_date,
-					e.ajeer_annual_levy::text as ajeer_annual_levy,
-					e.ajeer_monthly_fee::text as ajeer_monthly_fee,
-					e.created_at, e.updated_at, e.created_by, e.updated_by
+			const selectCols = buildEmployeeSelect(salaryFragment);
+
+			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
+				SELECT ${selectCols}
 				FROM employees e
 				WHERE e.version_id = ${versionId} AND e.id = ${id}
-			`);
+			`;
 
 			if (employees.length === 0) {
 				return reply.status(404).send({
@@ -281,8 +294,12 @@ export async function employeeRoutes(app: FastifyInstance) {
 
 			const key = getEncryptionKey();
 
+			const augEffDate = body.augmentationEffectiveDate
+				? Prisma.sql`${body.augmentationEffectiveDate}::date`
+				: Prisma.sql`NULL`;
+
 			// Insert with pgcrypto encryption for salary fields
-			const result = await prisma.$queryRawUnsafe<[{ id: number }]>(`
+			const result = await prisma.$queryRaw<[{ id: number }]>`
 				INSERT INTO employees (
 					version_id, employee_code, name, function_role, department,
 					status, joining_date, payment_method, is_saudi, is_ajeer,
@@ -292,24 +309,24 @@ export async function employeeRoutes(app: FastifyInstance) {
 					ajeer_annual_levy, ajeer_monthly_fee,
 					created_by, created_at, updated_at
 				) VALUES (
-					${versionId}, '${body.employeeCode}', '${body.name.replace(/'/g, "''")}',
-					'${body.functionRole.replace(/'/g, "''")}', '${body.department.replace(/'/g, "''")}',
-					'${body.status}', '${body.joiningDate}'::date,
-					'${body.paymentMethod.replace(/'/g, "''")}',
+					${versionId}, ${body.employeeCode}, ${body.name},
+					${body.functionRole}, ${body.department},
+					${body.status}, ${body.joiningDate}::date,
+					${body.paymentMethod},
 					${body.isSaudi}, ${body.isAjeer}, ${body.isTeaching},
-					${body.hourlyPercentage},
-					pgp_sym_encrypt('${body.baseSalary}', '${key}'),
-					pgp_sym_encrypt('${body.housingAllowance}', '${key}'),
-					pgp_sym_encrypt('${body.transportAllowance}', '${key}'),
-					pgp_sym_encrypt('${body.responsibilityPremium}', '${key}'),
-					pgp_sym_encrypt('${body.hsaAmount}', '${key}'),
-					pgp_sym_encrypt('${body.augmentation}', '${key}'),
-					${body.augmentationEffectiveDate ? `'${body.augmentationEffectiveDate}'::date` : 'NULL'},
-					${body.ajeerAnnualLevy}, ${body.ajeerMonthlyFee},
+					${Number(body.hourlyPercentage)},
+					pgp_sym_encrypt(${body.baseSalary}, ${key}),
+					pgp_sym_encrypt(${body.housingAllowance}, ${key}),
+					pgp_sym_encrypt(${body.transportAllowance}, ${key}),
+					pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
+					pgp_sym_encrypt(${body.hsaAmount}, ${key}),
+					pgp_sym_encrypt(${body.augmentation}, ${key}),
+					${augEffDate},
+					${Number(body.ajeerAnnualLevy)}, ${Number(body.ajeerMonthlyFee)},
 					${request.user.id}, NOW(), NOW()
 				)
 				RETURNING id
-			`);
+			`;
 
 			await addStaleFlag(versionId);
 
@@ -331,22 +348,13 @@ export async function employeeRoutes(app: FastifyInstance) {
 			});
 
 			// Return the created employee
-			const salarySelect = SALARY_FIELDS.map(
-				(f) => `pgp_sym_decrypt(e.${f}, '${key}') as ${f}`
-			).join(', ');
+			const salaryFragment = buildDecryptSelect(key);
+			const selectCols = buildEmployeeSelect(salaryFragment);
 
-			const employees = await prisma.$queryRawUnsafe<DecryptedEmployee[]>(`
-				SELECT e.id, e.version_id, e.employee_code, e.name,
-					e.function_role, e.department, e.status, e.joining_date,
-					e.payment_method, e.is_saudi, e.is_ajeer, e.is_teaching,
-					e.hourly_percentage::text as hourly_percentage,
-					${salarySelect},
-					e.augmentation_effective_date,
-					e.ajeer_annual_levy::text as ajeer_annual_levy,
-					e.ajeer_monthly_fee::text as ajeer_monthly_fee,
-					e.created_at, e.updated_at, e.created_by, e.updated_by
+			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
+				SELECT ${selectCols}
 				FROM employees e WHERE e.id = ${result[0]!.id}
-			`);
+			`;
 
 			return reply.status(201).send(formatEmployee(employees[0]!, false));
 		},
@@ -423,32 +431,36 @@ export async function employeeRoutes(app: FastifyInstance) {
 
 			const key = getEncryptionKey();
 
-			await prisma.$executeRawUnsafe(`
+			const augEffDate = body.augmentationEffectiveDate
+				? Prisma.sql`${body.augmentationEffectiveDate}::date`
+				: Prisma.sql`NULL`;
+
+			await prisma.$executeRaw`
 				UPDATE employees SET
-					employee_code = '${body.employeeCode}',
-					name = '${body.name.replace(/'/g, "''")}',
-					function_role = '${body.functionRole.replace(/'/g, "''")}',
-					department = '${body.department.replace(/'/g, "''")}',
-					status = '${body.status}',
-					joining_date = '${body.joiningDate}'::date,
-					payment_method = '${body.paymentMethod.replace(/'/g, "''")}',
+					employee_code = ${body.employeeCode},
+					name = ${body.name},
+					function_role = ${body.functionRole},
+					department = ${body.department},
+					status = ${body.status},
+					joining_date = ${body.joiningDate}::date,
+					payment_method = ${body.paymentMethod},
 					is_saudi = ${body.isSaudi},
 					is_ajeer = ${body.isAjeer},
 					is_teaching = ${body.isTeaching},
-					hourly_percentage = ${body.hourlyPercentage},
-					base_salary = pgp_sym_encrypt('${body.baseSalary}', '${key}'),
-					housing_allowance = pgp_sym_encrypt('${body.housingAllowance}', '${key}'),
-					transport_allowance = pgp_sym_encrypt('${body.transportAllowance}', '${key}'),
-					responsibility_premium = pgp_sym_encrypt('${body.responsibilityPremium}', '${key}'),
-					hsa_amount = pgp_sym_encrypt('${body.hsaAmount}', '${key}'),
-					augmentation = pgp_sym_encrypt('${body.augmentation}', '${key}'),
-					augmentation_effective_date = ${body.augmentationEffectiveDate ? `'${body.augmentationEffectiveDate}'::date` : 'NULL'},
-					ajeer_annual_levy = ${body.ajeerAnnualLevy},
-					ajeer_monthly_fee = ${body.ajeerMonthlyFee},
+					hourly_percentage = ${Number(body.hourlyPercentage)},
+					base_salary = pgp_sym_encrypt(${body.baseSalary}, ${key}),
+					housing_allowance = pgp_sym_encrypt(${body.housingAllowance}, ${key}),
+					transport_allowance = pgp_sym_encrypt(${body.transportAllowance}, ${key}),
+					responsibility_premium = pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
+					hsa_amount = pgp_sym_encrypt(${body.hsaAmount}, ${key}),
+					augmentation = pgp_sym_encrypt(${body.augmentation}, ${key}),
+					augmentation_effective_date = ${augEffDate},
+					ajeer_annual_levy = ${Number(body.ajeerAnnualLevy)},
+					ajeer_monthly_fee = ${Number(body.ajeerMonthlyFee)},
 					updated_by = ${request.user.id},
 					updated_at = NOW()
 				WHERE id = ${id} AND version_id = ${versionId}
-			`);
+			`;
 
 			await addStaleFlag(versionId);
 
@@ -469,22 +481,13 @@ export async function employeeRoutes(app: FastifyInstance) {
 			});
 
 			// Return updated
-			const salarySelect = SALARY_FIELDS.map(
-				(f) => `pgp_sym_decrypt(e.${f}, '${key}') as ${f}`
-			).join(', ');
+			const salaryFragment = buildDecryptSelect(key);
+			const selectCols = buildEmployeeSelect(salaryFragment);
 
-			const employees = await prisma.$queryRawUnsafe<DecryptedEmployee[]>(`
-				SELECT e.id, e.version_id, e.employee_code, e.name,
-					e.function_role, e.department, e.status, e.joining_date,
-					e.payment_method, e.is_saudi, e.is_ajeer, e.is_teaching,
-					e.hourly_percentage::text as hourly_percentage,
-					${salarySelect},
-					e.augmentation_effective_date,
-					e.ajeer_annual_levy::text as ajeer_annual_levy,
-					e.ajeer_monthly_fee::text as ajeer_monthly_fee,
-					e.created_at, e.updated_at, e.created_by, e.updated_by
+			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
+				SELECT ${selectCols}
 				FROM employees e WHERE e.id = ${id}
-			`);
+			`;
 
 			return formatEmployee(employees[0]!, false);
 		},

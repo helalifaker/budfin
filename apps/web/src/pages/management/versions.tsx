@@ -31,6 +31,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
+import { Checkbox } from '../../components/ui/checkbox';
 import { TableSkeleton } from '../../components/ui/skeleton';
 import { CreateVersionPanel } from '../../components/versions/create-version-panel';
 import { CloneVersionDialog } from '../../components/versions/clone-version-dialog';
@@ -193,12 +194,10 @@ export function VersionsPage() {
 						const id = row.original.id;
 						const checked = compareVersionIds.includes(id);
 						return (
-							<input
-								type="checkbox"
+							<Checkbox
 								checked={checked}
 								disabled={!checked && compareVersionIds.length >= 3}
-								onChange={() => (checked ? removeCompareVersion(id) : addCompareVersion(id))}
-								className="h-4 w-4 rounded border-(--workspace-border) accent-(--accent-600)"
+								onCheckedChange={() => (checked ? removeCompareVersion(id) : addCompareVersion(id))}
 								aria-label={`Select ${row.original.name} for comparison`}
 							/>
 						);
@@ -254,7 +253,7 @@ export function VersionsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-sm px-2 py-0.5 text-xs font-medium',
+								'inline-flex rounded-(--radius-sm) px-2 py-0.5 text-xs font-medium',
 								STATUS_BADGE_COLORS[value]
 							)}
 							aria-label={`Status: ${value}`}
@@ -452,7 +451,17 @@ export function VersionsPage() {
 						{table.getHeaderGroups().map((hg) => (
 							<tr key={hg.id}>
 								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
+									<th
+										key={header.id}
+										className="px-4 py-3 font-medium text-(--text-secondary)"
+										aria-sort={
+											header.column.getIsSorted() === 'asc'
+												? 'ascending'
+												: header.column.getIsSorted() === 'desc'
+													? 'descending'
+													: undefined
+										}
+									>
 										{header.column.getCanSort() ? (
 											<button
 												type="button"

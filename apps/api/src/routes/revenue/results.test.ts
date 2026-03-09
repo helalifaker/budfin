@@ -44,7 +44,7 @@ async function makeToken(role = 'Viewer') {
 		sub: 1,
 		email: 'viewer@budfin.app',
 		role,
-		sessionId: 'revenue-results-session',
+		sessionId: 'revenue-session',
 	});
 }
 
@@ -71,7 +71,7 @@ beforeEach(async () => {
 	await app.ready();
 });
 
-describe('GET /revenue-results', () => {
+describe('GET /revenue', () => {
 	it('returns workbook-style reporting views and excludes non-executive lines from totals', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			id: 1,
@@ -138,7 +138,7 @@ describe('GET /revenue-results', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'GET',
-			url: `${URL_PREFIX}/revenue-results`,
+			url: `${URL_PREFIX}/revenue`,
 			headers: authHeader(token),
 		});
 
@@ -188,7 +188,7 @@ describe('GET /revenue-results', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'GET',
-			url: `${URL_PREFIX}/revenue-results?academic_period=AY1&group_by=grade`,
+			url: `${URL_PREFIX}/revenue?academic_period=AY1&group_by=grade`,
 			headers: authHeader(token),
 		});
 
@@ -218,7 +218,7 @@ describe('GET /revenue-results', () => {
 		const token = await makeToken();
 		const res = await app.inject({
 			method: 'GET',
-			url: `${URL_PREFIX}/revenue-results`,
+			url: `${URL_PREFIX}/revenue`,
 			headers: authHeader(token),
 		});
 
@@ -229,7 +229,7 @@ describe('GET /revenue-results', () => {
 	it('returns 401 without authentication', async () => {
 		const res = await app.inject({
 			method: 'GET',
-			url: `${URL_PREFIX}/revenue-results`,
+			url: `${URL_PREFIX}/revenue`,
 		});
 
 		expect(res.statusCode).toBe(401);

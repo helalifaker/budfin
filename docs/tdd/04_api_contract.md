@@ -225,7 +225,7 @@ List budget versions for a fiscal year.
 
 ```json
 {
-    "versions": [
+    "data": [
         {
             "id": "number",
             "name": "string",
@@ -334,7 +334,7 @@ Transition version through lifecycle states (FR-VER-003).
 
 Valid transitions: `Draft -> Published -> Locked -> Archived`. Reverting from `Published` or `Locked` back to `Draft` requires an `audit_note`.
 
-**RBAC:** Admin, BudgetOwner (publishing); Admin only (locking, archiving).
+**RBAC:** Admin, BudgetOwner (publishing); Admin only (locking); Admin only (archiving).
 
 **Path params:** `id` (integer, required).
 
@@ -1269,6 +1269,8 @@ Run P&L consolidation. Aggregates revenue and staff cost results into IFRS-align
 
 #### GET /api/v1/versions/:versionId/stale-flags
 
+> **Status: Deferred to Epic 5.** This endpoint is not yet implemented.
+
 Check which modules have stale calculated data for a version.
 
 **RBAC:** All authenticated.
@@ -1427,7 +1429,7 @@ Create a new employee record (FR-STC-001). Marks STAFFING module as stale. Sensi
     "joining_date": "YYYY-MM-DD (required)",
     "payment_method": "string (required)",
     "is_saudi": "boolean (required)",
-    "is_ajeer": "boolean (required)",
+    "is_ajeer": "boolean (optional, default false)",
     "hourly_percentage": "number (required, 0.01-1.0)",
     "base_salary": "string (decimal, required)",
     "housing_allowance": "string (decimal, required)",
@@ -1972,6 +1974,8 @@ Retrieve the audit log with filters (FR-AUD-003).
 ---
 
 #### GET /api/v1/audit/calculation
+
+> **Status: Deferred to Epic 5.** This endpoint is not yet implemented.
 
 Retrieve calculation run history (NFR 11.12).
 

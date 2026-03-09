@@ -224,8 +224,8 @@ export async function staffingResultRoutes(app: FastifyInstance) {
 			}));
 
 			return {
-				totalFTE,
-				totalSalaryCost: totalSalaryCost.toFixed(4),
+				fte: totalFTE,
+				cost: totalSalaryCost.toFixed(4),
 				byDepartment,
 			};
 		},

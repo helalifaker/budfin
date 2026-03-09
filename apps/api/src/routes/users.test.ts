@@ -344,7 +344,7 @@ describe('GET /api/v1/context', () => {
 });
 
 describe('POST /api/v1/users — duplicate email', () => {
-	it('returns 409 CONFLICT for existing email', async () => {
+	it('returns 409 EMAIL_EXISTS for existing email', async () => {
 		vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
 		const token = await makeToken({ role: 'Admin' });
 		const res = await app.inject({
@@ -358,7 +358,7 @@ describe('POST /api/v1/users — duplicate email', () => {
 			},
 		});
 		expect(res.statusCode).toBe(409);
-		expect(res.json().code).toBe('CONFLICT');
+		expect(res.json().code).toBe('EMAIL_EXISTS');
 	});
 });
 
