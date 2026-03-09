@@ -38,40 +38,44 @@ export async function createBudgetVersions(
 	const versions = new Map<string, number>();
 
 	try {
-		// Delete existing migration versions for idempotency (pattern from seed-fy2026.ts)
-		for (const def of ALL_VERSIONS) {
-			const existing = await prisma.budgetVersion.findFirst({
-				where: { name: def.name, fiscalYear: def.fiscalYear },
-			});
-			if (existing) {
-				logger.warn({
-					code: 'VERSION_EXISTS',
-					message: `Deleting existing version: "${def.name}" (id=${existing.id})`,
+		// Delete-and-recreate in a transaction for atomicity.
+		// WARNING: Cascade-deletes all child data under these versions.
+		// This is intentional for a one-time migration — not safe for production data.
+		await prisma.$transaction(async (tx) => {
+			for (const def of ALL_VERSIONS) {
+				const existing = await tx.budgetVersion.findFirst({
+					where: { name: def.name, fiscalYear: def.fiscalYear },
+					select: { id: true },
 				});
-				await prisma.budgetVersion.delete({ where: { id: existing.id } });
+				if (existing) {
+					logger.warn({
+						code: 'VERSION_EXISTS',
+						message: `Deleting existing version: "${def.name}" (id=${existing.id})`,
+					});
+					await tx.budgetVersion.delete({ where: { id: existing.id } });
+				}
 			}
-		}
 
-		// Create all versions
-		for (const def of ALL_VERSIONS) {
-			const lockedAt = def.status === 'Locked' ? new Date() : null;
+			for (const def of ALL_VERSIONS) {
+				const lockedAt = def.status === 'Locked' ? new Date() : null;
 
-			const version = await prisma.budgetVersion.create({
-				data: {
-					fiscalYear: def.fiscalYear,
-					name: def.name,
-					type: def.type,
-					status: def.status,
-					dataSource: 'IMPORTED',
-					createdById: userId,
-					modificationCount: 0,
-					staleModules: [],
-					lockedAt,
-				},
-			});
+				const version = await tx.budgetVersion.create({
+					data: {
+						fiscalYear: def.fiscalYear,
+						name: def.name,
+						type: def.type,
+						status: def.status,
+						dataSource: 'IMPORTED',
+						createdById: userId,
+						modificationCount: 0,
+						staleModules: [],
+						lockedAt,
+					},
+				});
 
-			versions.set(def.name, version.id);
-		}
+				versions.set(def.name, version.id);
+			}
+		});
 
 		logger.addRowCount('budget_versions', ALL_VERSIONS.length);
 		return { log: logger.complete('SUCCESS'), versions };

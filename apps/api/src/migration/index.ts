@@ -156,14 +156,14 @@ async function main(): Promise<void> {
 				module: log.module.slice(0, 12),
 				sourceFile: log.module,
 				validationStatus: log.status === 'SUCCESS' ? 'PASS' : 'FAIL',
-				rowsImported: Object.values(log.rowCounts).reduce((a, b) => a + b, 0),
+				rowsImported: Object.values(log.rowCounts).reduce((a: number, b: number) => a + b, 0),
 				importedById: userId,
 			},
 		});
 	}
 
 	const totalRows = allLogs.reduce(
-		(sum, l) => sum + Object.values(l.rowCounts).reduce((a, b) => a + b, 0),
+		(sum, l) => sum + Object.values(l.rowCounts).reduce((a: number, b: number) => a + b, 0),
 		0
 	);
 	const totalWarnings = allLogs.reduce((sum, l) => sum + l.warnings.length, 0);
@@ -187,7 +187,7 @@ async function main(): Promise<void> {
 				modules: allLogs.map((l) => ({
 					module: l.module,
 					status: l.status,
-					rows: Object.values(l.rowCounts).reduce((a, b) => a + b, 0),
+					rows: Object.values(l.rowCounts).reduce((a: number, b: number) => a + b, 0),
 					warnings: l.warnings.length,
 					durationMs: l.durationMs,
 				})),
@@ -208,7 +208,7 @@ async function main(): Promise<void> {
 }
 
 function printLogSummary(log: MigrationLog): void {
-	const rows = Object.values(log.rowCounts).reduce((a, b) => a + b, 0);
+	const rows = Object.values(log.rowCounts).reduce((a: number, b: number) => a + b, 0);
 	const warns = log.warnings.length;
 	// eslint-disable-next-line no-console
 	console.log(

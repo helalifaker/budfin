@@ -16,9 +16,11 @@ export function createBackup(databaseUrl: string): string {
 	const filename = `pre-migration-${timestamp}.sql.gz`;
 	const filepath = resolve(BACKUP_DIR, filename);
 
-	execSync(`pg_dump "${databaseUrl}" | gzip > "${filepath}"`, {
+	// Pass databaseUrl via env var to avoid shell injection
+	execSync('pg_dump "$BACKUP_DB_URL" | gzip > "$BACKUP_FILEPATH"', {
 		stdio: 'pipe',
 		timeout: 300_000,
+		env: { ...process.env, BACKUP_DB_URL: databaseUrl, BACKUP_FILEPATH: filepath },
 	});
 
 	return filepath;
