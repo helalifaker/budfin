@@ -92,7 +92,7 @@ export function AuditPage() {
 			columnHelper.accessor('operation', {
 				header: 'Action',
 				cell: (info) => (
-					<span className="rounded-(--radius-sm) bg-(--workspace-bg-muted) px-2 py-0.5 text-(--text-xs) font-mono">
+					<span className="rounded-sm bg-(--workspace-bg-muted) px-2 py-0.5 text-(--text-xs) font-mono">
 						{info.getValue()}
 					</span>
 				),
@@ -146,7 +146,7 @@ export function AuditPage() {
 
 			<AuditFilters onFilterChange={handleFilterChange} />
 
-			<div className="overflow-x-auto rounded-(--radius-lg) border">
+			<div className="overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-(--text-sm)">
 					<thead className="border-b bg-(--workspace-bg-muted)">
 						{table.getHeaderGroups().map((hg) => (

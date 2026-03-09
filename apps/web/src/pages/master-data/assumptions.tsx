@@ -206,7 +206,7 @@ export function AssumptionsPage() {
 		return (
 			<div className="p-6">
 				<h1 className="text-(--text-xl) font-semibold pb-4">Assumptions &amp; Parameters</h1>
-				<div className="overflow-x-auto rounded-(--radius-lg) border">
+				<div className="overflow-x-auto rounded-lg border">
 					<table role="table" className="w-full text-left text-(--text-sm)">
 						<thead className="border-b bg-(--workspace-bg-muted)">
 							<tr>
@@ -229,7 +229,7 @@ export function AssumptionsPage() {
 		<div className="p-6">
 			<h1 className="text-(--text-xl) font-semibold pb-4">Assumptions &amp; Parameters</h1>
 
-			<div className="overflow-x-auto rounded-(--radius-lg) border">
+			<div className="overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-(--text-sm)">
 					<thead className="border-b bg-(--workspace-bg-muted)">
 						<tr>

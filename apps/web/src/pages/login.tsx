@@ -42,7 +42,7 @@ export function LoginPage() {
 			>
 				{/* Logo */}
 				<div className="flex items-center justify-center gap-3 mb-8">
-					<div className="flex h-10 w-10 items-center justify-center rounded-(--radius-lg) bg-(--accent-500)">
+					<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-(--accent-500)">
 						<span className="text-lg font-bold text-white">B</span>
 					</div>
 					<span className="text-2xl font-bold text-white">BudFin</span>
@@ -53,7 +53,7 @@ export function LoginPage() {
 					role="form"
 					onSubmit={handleSubmit}
 					className={cn(
-						'rounded-(--radius-2xl) p-8 space-y-5',
+						'rounded-2xl p-8 space-y-5',
 						'bg-white/10 backdrop-blur-xl',
 						'border border-white/20',
 						'shadow-(--shadow-lg)'
@@ -114,7 +114,7 @@ export function LoginPage() {
 						<div
 							role="alert"
 							className={cn(
-								'rounded-(--radius-md) px-3 py-2',
+								'rounded-md px-3 py-2',
 								'bg-(--color-error)/15 border border-(--color-error)/30',
 								'text-(--text-sm) text-white',
 								'animate-shake'

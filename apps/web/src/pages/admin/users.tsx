@@ -174,7 +174,7 @@ export function UsersPage() {
 								<button
 									type="button"
 									className="inline-flex h-8 w-8 items-center justify-center
-										rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
+										rounded-md hover:bg-(--workspace-bg-muted)"
 									aria-label={`Actions for ${user.email}`}
 								>
 									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
@@ -243,7 +243,7 @@ export function UsersPage() {
 				</Button>
 			</div>
 
-			<div className="overflow-x-auto rounded-(--radius-lg) border">
+			<div className="overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-(--text-sm)">
 					<thead className="border-b bg-(--workspace-bg-muted)">
 						{table.getHeaderGroups().map((hg) => (

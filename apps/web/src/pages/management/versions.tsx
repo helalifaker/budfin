@@ -224,7 +224,7 @@ export function VersionsPage() {
 			columnHelper.accessor('fiscalYear', {
 				header: 'Fiscal Year',
 				cell: (info) => (
-					<span className="inline-flex rounded-(--radius-sm) bg-(--workspace-bg-subtle) px-2 py-0.5 text-xs font-medium text-(--text-secondary)">
+					<span className="inline-flex rounded-sm bg-(--workspace-bg-subtle) px-2 py-0.5 text-xs font-medium text-(--text-secondary)">
 						FY{info.getValue()}
 					</span>
 				),
@@ -254,7 +254,7 @@ export function VersionsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-(--radius-sm) px-2 py-0.5 text-xs font-medium',
+								'inline-flex rounded-sm px-2 py-0.5 text-xs font-medium',
 								STATUS_BADGE_COLORS[value]
 							)}
 							aria-label={`Status: ${value}`}
@@ -298,7 +298,7 @@ export function VersionsPage() {
 					return (
 						<button
 							type="button"
-							className="inline-flex cursor-pointer rounded-(--radius-sm) bg-(--color-warning-bg) px-2 py-0.5 text-xs font-medium text-(--color-warning) hover:opacity-80"
+							className="inline-flex cursor-pointer rounded-sm bg-(--color-warning-bg) px-2 py-0.5 text-xs font-medium text-(--color-warning) hover:opacity-80"
 							title={stale.join(', ')}
 							aria-label={`Stale modules: ${stale.join(', ')}`}
 							onClick={() => setDetailVersion(row.original)}
@@ -686,7 +686,7 @@ function VersionActions({
 			<DropdownMenuTrigger asChild>
 				<button
 					type="button"
-					className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
+					className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
 					aria-label={`Actions for ${version.name}`}
 					aria-haspopup="menu"
 				>

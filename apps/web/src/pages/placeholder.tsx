@@ -12,7 +12,7 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
 			<div
 				className={cn(
 					'flex h-14 w-14 items-center justify-center',
-					'rounded-(--radius-xl) bg-(--accent-50)',
+					'rounded-xl bg-(--accent-50)',
 					'animate-slide-up'
 				)}
 			>

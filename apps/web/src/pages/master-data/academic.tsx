@@ -139,7 +139,7 @@ export function AcademicPage() {
 					return (
 						<span
 							className={cn(
-								'inline-block rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
+								'inline-block rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
 								BAND_STYLES[band]
 							)}
 							aria-label={`Band: ${band}`}
@@ -222,7 +222,7 @@ export function AcademicPage() {
 					)}
 				</div>
 
-				<div className="overflow-x-auto rounded-(--radius-lg) border">
+				<div className="overflow-x-auto rounded-lg border">
 					<table role="table" className="w-full text-left text-(--text-sm)">
 						<thead className="border-b bg-(--workspace-bg-muted)">
 							{ayTable.getHeaderGroups().map((hg) => (
@@ -276,7 +276,7 @@ export function AcademicPage() {
 					<h2 className="text-(--text-xl) font-semibold">Grade Levels</h2>
 				</div>
 
-				<div className="overflow-x-auto rounded-(--radius-lg) border">
+				<div className="overflow-x-auto rounded-lg border">
 					<table role="table" className="w-full text-left text-(--text-sm)">
 						<thead className="border-b bg-(--workspace-bg-muted)">
 							{glTable.getHeaderGroups().map((hg) => (

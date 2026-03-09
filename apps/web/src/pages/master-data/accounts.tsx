@@ -205,7 +205,7 @@ export function AccountsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
+								'inline-flex rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
 								TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Type: ${TYPE_LABELS[value]}`}
@@ -225,7 +225,7 @@ export function AccountsPage() {
 					return (
 						<span
 							className={cn(
-								'inline-flex rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
+								'inline-flex rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
 								CENTER_TYPE_BADGE_COLORS[value]
 							)}
 							aria-label={`Center type: ${CENTER_TYPE_LABELS[value]}`}
@@ -268,7 +268,7 @@ export function AccountsPage() {
 										<DropdownMenuTrigger asChild>
 											<button
 												type="button"
-												className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
+												className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
 												aria-label={`Actions for ${account.accountCode}`}
 											>
 												<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
@@ -377,7 +377,7 @@ export function AccountsPage() {
 			</div>
 
 			{/* Data table */}
-			<div className="overflow-x-auto rounded-(--radius-lg) border">
+			<div className="overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-(--text-sm)">
 					<thead className="border-b bg-(--workspace-bg-muted)">
 						{table.getHeaderGroups().map((hg) => (

@@ -128,7 +128,7 @@ function BandBadge({ band }: { band: BandMapping }) {
 	return (
 		<span
 			className={cn(
-				'inline-block rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
+				'inline-block rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
 				BAND_COLORS[band]
 			)}
 		>
@@ -165,8 +165,8 @@ function DataGrid<T>({
 	showSkeleton: boolean;
 }) {
 	return (
-		<div className="overflow-x-auto rounded-(--radius-lg) border">
-			<table role="table" className="w-full text-left text-[length:var(--text-sm)]">
+		<div className="overflow-x-auto rounded-lg border">
+			<table role="table" className="w-full text-left text-(length:--text-sm)">
 				<thead className="border-b bg-(--workspace-bg-muted)">
 					{table.getHeaderGroups().map((hg) => (
 						<tr key={hg.id}>
@@ -185,7 +185,7 @@ function DataGrid<T>({
 						<tr>
 							<td
 								colSpan={table.getAllColumns().length}
-								className="px-4 py-8 text-center text-[length:var(--text-sm)] text-(--text-muted)"
+								className="px-4 py-8 text-center text-(length:--text-sm) text-(--text-muted)"
 							>
 								No records found.
 							</td>
@@ -254,7 +254,7 @@ export function ReferencePage() {
 				cell: (info) => (
 					<span
 						className={cn(
-							'inline-block rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
+							'inline-block rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
 							info.getValue()
 								? 'bg-(--color-success-bg) text-(--color-success)'
 								: 'bg-(--workspace-bg-muted) text-(--text-secondary)'
@@ -275,7 +275,7 @@ export function ReferencePage() {
 							<DropdownMenuTrigger asChild>
 								<button
 									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
 									aria-label={`Actions for ${item.code}`}
 								>
 									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
@@ -349,7 +349,7 @@ export function ReferencePage() {
 							<DropdownMenuTrigger asChild>
 								<button
 									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
 									aria-label={`Actions for ${item.code}`}
 								>
 									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
@@ -423,7 +423,7 @@ export function ReferencePage() {
 							<DropdownMenuTrigger asChild>
 								<button
 									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) hover:bg-(--workspace-bg-muted)"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
 									aria-label={`Actions for ${item.code}`}
 								>
 									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
@@ -645,7 +645,7 @@ export function ReferencePage() {
 						aria-controls={`panel-${tab.key}`}
 						onClick={() => setActiveTab(tab.key)}
 						className={cn(
-							'px-4 py-2 text-[length:var(--text-sm)] font-medium -mb-px border-b-2',
+							'px-4 py-2 text-(length:--text-sm) font-medium -mb-px border-b-2',
 							activeTab === tab.key
 								? 'border-(--accent-500) text-(--accent-600)'
 								: 'border-transparent text-(--text-muted) hover:text-(--text-primary)'

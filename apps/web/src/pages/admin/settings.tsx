@@ -148,7 +148,7 @@ export function SettingsPage() {
 					{Array.from({ length: 3 }).map((_, i) => (
 						<div
 							key={i}
-							className="rounded-(--radius-lg) border border-(--workspace-border) bg-(--workspace-bg-card) p-6"
+							className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-6"
 						>
 							<Skeleton className="h-5 w-24" />
 							<Skeleton className="mt-2 h-4 w-48" />
