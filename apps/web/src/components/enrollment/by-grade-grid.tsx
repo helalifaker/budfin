@@ -62,7 +62,7 @@ const columnHelper = createColumnHelper<GridRow>();
 function DeltaCell({ delta, isNew }: { delta: number | null; isNew: boolean }) {
 	if (isNew) {
 		return (
-			<span className="inline-flex items-center rounded-(--radius-sm) bg-(--accent-50) px-2 py-0.5 text-(--text-xs) font-medium text-(--badge-elementaire)">
+			<span className="inline-flex items-center rounded-(--radius-sm) bg-(--accent-50) px-2 py-0.5 font-medium text-(--badge-elementaire)">
 				New
 			</span>
 		);
@@ -76,7 +76,7 @@ function DeltaCell({ delta, isNew }: { delta: number | null; isNew: boolean }) {
 	return (
 		<span
 			className={cn(
-				'text-(--text-sm) tabular-nums',
+				'text-[length:var(--text-sm)] tabular-nums',
 				isLarge ? 'font-medium text-(--color-error)' : 'text-(--text-secondary)'
 			)}
 		>
@@ -214,7 +214,7 @@ export function ByGradeGrid({
 					return (
 						<span
 							className={cn(
-								'inline-block rounded-(--radius-sm) px-2 py-0.5 text-(--text-xs) font-medium',
+								'inline-block rounded-(--radius-sm) px-2 py-0.5 text-[length:var(--text-xs)] font-medium',
 								BAND_STYLES[band] ?? ''
 							)}
 						>
@@ -290,7 +290,7 @@ export function ByGradeGrid({
 		<div className="overflow-x-auto rounded-(--radius-lg) border">
 			<table
 				role="grid"
-				className="w-full text-left text-(--text-sm)"
+				className="w-full text-left text-[length:var(--text-sm)]"
 				aria-label="Enrollment by grade"
 			>
 				<thead className="border-b bg-(--workspace-bg-muted)">
@@ -321,8 +321,8 @@ export function ByGradeGrid({
 									<tr className="bg-(--workspace-bg-muted)/50">
 										<td
 											colSpan={columns.length}
-											className="px-4 py-1.5 text-(--text-xs) font-semibold text-(--text-muted) uppercase tracking-wider"
-											aria-expanded="true"
+											className="px-4 py-1.5 text-[length:var(--text-xs)] font-semibold text-(--text-muted) uppercase tracking-wider"
+											aria-expanded={true}
 										>
 											{BAND_LABELS[band] ?? band} ({bandRows.length} grades)
 										</td>

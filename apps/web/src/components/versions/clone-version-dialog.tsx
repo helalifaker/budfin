@@ -180,7 +180,7 @@ export function CloneVersionDialog({ open, source, onClose, onSuccess }: CloneVe
 									)}
 								/>
 								{isCrossYear && (
-									<div className="mt-2 rounded-(--radius-md) bg-[var(--color-info-bg,var(--accent-50))] px-3 py-2 text-(--text-xs) text-[var(--color-info,var(--accent-700))]">
+									<div className="mt-2 rounded-(--radius-md) bg-(--color-info-bg,var(--accent-50)) px-3 py-2 text-(--text-xs) text-(--color-info,var(--accent-700))">
 										Cross-year clone: data will be copied from FY{source.fiscalYear} to FY
 										{watchedFy}
 									</div>

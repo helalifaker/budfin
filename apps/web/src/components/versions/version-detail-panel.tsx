@@ -75,7 +75,7 @@ const TABS: { key: TabKey; label: string }[] = [
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
 	return (
-		<h3 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-wide text-(--text-muted)">
+		<h3 className="mb-2 text-[length:var(--text-xs)] font-semibold uppercase tracking-wide text-(--text-muted)">
 			{children}
 		</h3>
 	);
@@ -84,8 +84,10 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div>
-			<div className="text-(--text-sm) text-(--text-muted)">{label}</div>
-			<div className="text-(--text-sm) font-medium text-(--text-primary)">{children}</div>
+			<div className="text-[length:var(--text-sm)] text-(--text-muted)">{label}</div>
+			<div className="text-[length:var(--text-sm)] font-medium text-(--text-primary)">
+				{children}
+			</div>
 		</div>
 	);
 }
@@ -98,8 +100,10 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 			{/* Header info */}
 			<section>
 				<div className="flex items-center gap-3">
-					<h3 className="text-(--text-lg) font-semibold text-(--text-primary)">{version.name}</h3>
-					<span className="inline-flex items-center gap-1.5 text-(--text-sm)">
+					<h3 className="text-[length:var(--text-lg)] font-semibold text-(--text-primary)">
+						{version.name}
+					</h3>
+					<span className="inline-flex items-center gap-1.5 text-[length:var(--text-sm)]">
 						<span
 							className={cn('h-2 w-2 rounded-full', TYPE_DOT_COLORS[version.type])}
 							aria-hidden="true"
@@ -109,7 +113,7 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 					<span
 						className={cn(
 							'inline-flex rounded-(--radius-sm) px-2 py-0.5',
-							'text-(--text-xs) font-medium',
+							'text-[length:var(--text-xs)] font-medium',
 							STATUS_BADGE_COLORS[version.status]
 						)}
 					>
@@ -117,7 +121,9 @@ function OverviewTab({ version }: { version: BudgetVersion }) {
 					</span>
 				</div>
 				{version.description && (
-					<p className="mt-2 text-(--text-sm) italic text-(--text-muted)">{version.description}</p>
+					<p className="mt-2 text-[length:var(--text-sm)] italic text-(--text-muted)">
+						{version.description}
+					</p>
 				)}
 			</section>
 
@@ -160,7 +166,7 @@ function LifecycleStateMachine({ currentStatus }: { currentStatus: BudgetVersion
 						<span
 							className={cn(
 								'inline-flex items-center justify-center rounded-full px-3 py-1',
-								'text-(--text-xs) font-medium',
+								'text-[length:var(--text-xs)] font-medium',
 								'transition-colors',
 								isCurrent
 									? 'bg-(--color-accent) text-white'
@@ -175,7 +181,7 @@ function LifecycleStateMachine({ currentStatus }: { currentStatus: BudgetVersion
 						{idx < LIFECYCLE_STATES.length - 1 && (
 							<span
 								className={cn(
-									'mx-1 text-(--text-sm)',
+									'mx-1 text-[length:var(--text-sm)]',
 									isPast ? 'text-(--text-secondary)' : 'text-(--text-muted)'
 								)}
 								aria-hidden="true"
@@ -271,9 +277,9 @@ function LifecycleTab({
 			<section>
 				<SectionHeading>Audit Trail</SectionHeading>
 				{auditLoading ? (
-					<p className="text-(--text-sm) text-(--text-muted)">Loading...</p>
+					<p className="text-[length:var(--text-sm)] text-(--text-muted)">Loading...</p>
 				) : !auditTrail || auditTrail.length === 0 ? (
-					<p className="text-(--text-sm) text-(--text-muted)">No history available</p>
+					<p className="text-[length:var(--text-sm)] text-(--text-muted)">No history available</p>
 				) : (
 					<div className="relative space-y-0">
 						{auditTrail.map((entry, idx) => {
@@ -310,11 +316,15 @@ function LifecycleTab({
 									/>
 									{/* Text */}
 									<div>
-										<p className="text-(--text-sm) text-(--text-primary)">
+										<p className="text-[length:var(--text-sm)] text-(--text-primary)">
 											{verb} on {formatDate(entry.createdAt)}
 											{userEmail && <span className="text-(--text-muted)"> by {userEmail}</span>}
 										</p>
-										{note && <p className="text-(--text-xs) italic text-(--text-muted)">{note}</p>}
+										{note && (
+											<p className="text-[length:var(--text-xs)] italic text-(--text-muted)">
+												{note}
+											</p>
+										)}
 									</div>
 								</div>
 							);
@@ -356,7 +366,7 @@ function DataTab({ version }: { version: BudgetVersion }) {
 								to={MODULE_ROUTES[mod] ?? '#'}
 								className={cn(
 									'inline-flex items-center gap-1.5 rounded-(--radius-sm) px-2.5 py-1',
-									'text-(--text-xs) font-medium',
+									'text-[length:var(--text-xs)] font-medium',
 									'bg-(--color-warning-bg) text-(--color-warning)',
 									'hover:opacity-80 transition-opacity'
 								)}
@@ -367,7 +377,7 @@ function DataTab({ version }: { version: BudgetVersion }) {
 						))}
 					</div>
 				) : (
-					<p className="text-(--text-sm) text-(--text-muted)">No stale modules</p>
+					<p className="text-[length:var(--text-sm)] text-(--text-muted)">No stale modules</p>
 				)}
 			</section>
 
@@ -375,13 +385,13 @@ function DataTab({ version }: { version: BudgetVersion }) {
 			<section>
 				<SectionHeading>Import Information</SectionHeading>
 				{!isActual ? (
-					<p className="text-(--text-sm) text-(--text-muted)">
+					<p className="text-[length:var(--text-sm)] text-(--text-muted)">
 						Import data is only available for Actual versions
 					</p>
 				) : importLoading ? (
-					<p className="text-(--text-sm) text-(--text-muted)">Loading...</p>
+					<p className="text-[length:var(--text-sm)] text-(--text-muted)">Loading...</p>
 				) : !importLogs || importLogs.length === 0 ? (
-					<p className="text-(--text-sm) text-(--text-muted)">No imports recorded</p>
+					<p className="text-[length:var(--text-sm)] text-(--text-muted)">No imports recorded</p>
 				) : (
 					<div className="space-y-3">
 						{importLogs.map((log) => (
@@ -400,7 +410,7 @@ function DataTab({ version }: { version: BudgetVersion }) {
 										<span
 											className={cn(
 												'inline-flex rounded-(--radius-sm) px-1.5 py-0.5',
-												'text-(--text-xs) font-medium',
+												'text-[length:var(--text-xs)] font-medium',
 												log.validationStatus === 'passed'
 													? 'bg-(--status-published-bg) text-(--status-published)'
 													: 'bg-(--color-warning-bg) text-(--color-warning)'
@@ -504,7 +514,10 @@ export function VersionDetailPanel({
 				{/* Header */}
 				<div className="border-b px-6 py-4">
 					<div className="flex items-center justify-between">
-						<h2 id={titleId} className="text-(--text-lg) font-semibold text-(--text-primary)">
+						<h2
+							id={titleId}
+							className="text-[length:var(--text-lg)] font-semibold text-(--text-primary)"
+						>
 							Version Details
 						</h2>
 						<button
@@ -517,7 +530,7 @@ export function VersionDetailPanel({
 							)}
 							aria-label="Close panel"
 						>
-							<span aria-hidden="true" className="text-(--text-lg)">
+							<span aria-hidden="true" className="text-[length:var(--text-lg)]">
 								&times;
 							</span>
 						</button>
@@ -534,7 +547,7 @@ export function VersionDetailPanel({
 								aria-controls={`tabpanel-${tab.key}`}
 								onClick={() => setActiveTab(tab.key)}
 								className={cn(
-									'px-4 pb-2 text-(--text-sm) font-medium transition-colors',
+									'px-4 pb-2 text-[length:var(--text-sm)] font-medium transition-colors',
 									'-mb-px border-b-2',
 									activeTab === tab.key
 										? 'border-(--color-accent) text-(--color-accent)'
