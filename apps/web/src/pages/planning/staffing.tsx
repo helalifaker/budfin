@@ -38,7 +38,12 @@ export function StaffingPage() {
 	const { data: employeesData } = useEmployees(versionId);
 	const { data: dhgData } = useDhgData(versionId);
 	const { data: costData } = useStaffCosts(versionId, costGroupBy);
-	const { data: summaryData } = useStaffingSummary(versionId);
+	const { data: breakdownData, isLoading: isBreakdownLoading } = useStaffCosts(
+		versionId,
+		'employee',
+		true
+	);
+	const { data: summaryData, isLoading: isSummaryLoading } = useStaffingSummary(versionId);
 	const { data: versionsData } = useVersions(fiscalYear);
 
 	// Mutations
@@ -56,18 +61,34 @@ export function StaffingPage() {
 	const employees = employeesData?.data ?? [];
 
 	const kpiData = useMemo(() => {
-		const totalFte = Number(summaryData?.totalFTE ?? 0);
-		const totalStaffCost = Number(summaryData?.totalSalaryCost ?? 0);
-		const costPerFte = totalFte > 0 ? Math.round(totalStaffCost / totalFte) : 0;
+		const activeEmployees = employees.filter((e) => e.status !== 'Departed');
+		const totalHeadcount = activeEmployees.length;
+		const totalAnnualStaffCost = Number(summaryData?.totalSalaryCost ?? 0);
+		const avgMonthlyCostPerEmployee =
+			totalHeadcount > 0 ? Math.round(totalAnnualStaffCost / totalHeadcount / 12) : 0;
+
+		// Sum GOSI, Ajeer, EoS from breakdown rows (API-provided values)
+		const breakdown = breakdownData?.breakdown ?? [];
+		let gosiTotal = 0;
+		let ajeerTotal = 0;
+		let eosTotal = 0;
+		for (const row of breakdown) {
+			gosiTotal += Number(row.gosi_amount);
+			ajeerTotal += Number(row.ajeer_amount);
+			eosTotal += Number(row.eos_monthly_accrual);
+		}
 
 		return {
-			totalFte,
-			totalEmployees: employees.length,
-			totalStaffCost,
-			costPerFte,
+			totalHeadcount,
+			totalAnnualStaffCost,
+			avgMonthlyCostPerEmployee,
+			gosiTotal: Math.round(gosiTotal),
+			ajeerTotal: Math.round(ajeerTotal),
+			eosTotal: Math.round(eosTotal),
 			isStale,
+			isLoading: isSummaryLoading || isBreakdownLoading,
 		};
-	}, [summaryData, employees.length, isStale]);
+	}, [summaryData, breakdownData, employees, isStale, isSummaryLoading, isBreakdownLoading]);
 
 	const handleSelectEmployee = useCallback((emp: Employee) => {
 		setSelectedEmployee(emp);
