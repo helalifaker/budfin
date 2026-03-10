@@ -9,8 +9,6 @@ import {
 	useCalculateStaffing,
 	useDhgData,
 	useStaffCosts,
-	useStaffCostsByCategory,
-	useCategoryCosts,
 	useStaffingSummary,
 	type Employee,
 } from '../../hooks/use-staffing';
@@ -23,8 +21,6 @@ import { EmployeeForm, type EmployeeFormData } from '../../components/staffing/e
 import { EmployeeImportDialog } from '../../components/staffing/employee-import-dialog';
 import { DhgGrilleView, DhgRequirementsView } from '../../components/staffing/dhg-view';
 import { MonthlyCostGrid } from '../../components/staffing/monthly-cost-grid';
-import { MonthlyCostBudgetGrid } from '../../components/staffing/monthly-cost-budget-grid';
-import { StaffCostsDepartmentGrid } from '../../components/staffing/staff-costs-department-grid';
 import { Button } from '../../components/ui/button';
 import { PageTransition } from '../../components/shared/page-transition';
 
@@ -36,19 +32,18 @@ export function StaffingPage() {
 	const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 	const [formOpen, setFormOpen] = useState(false);
 	const [importOpen, setImportOpen] = useState(false);
+	const costGroupBy: 'month' | 'department' | 'employee' = 'month';
+
 	// Data hooks
 	const { data: employeesData } = useEmployees(versionId);
 	const { data: dhgData } = useDhgData(versionId);
-	const { data: monthlyCostData } = useStaffCosts(versionId, 'month');
+	const { data: costData } = useStaffCosts(versionId, costGroupBy);
 	const { data: breakdownData, isLoading: isBreakdownLoading } = useStaffCosts(
 		versionId,
 		'employee',
 		true
 	);
 	const { data: summaryData, isLoading: isSummaryLoading } = useStaffingSummary(versionId);
-	const { data: categoryMonthData, isLoading: isCategoryMonthLoading } =
-		useStaffCostsByCategory(versionId);
-	const { data: categoryCostData, isLoading: isCategoryCostLoading } = useCategoryCosts(versionId);
 	const { data: versionsData } = useVersions(fiscalYear);
 
 	// Mutations
@@ -63,12 +58,12 @@ export function StaffingPage() {
 	}, [versionId, versionsData]);
 
 	const isStale = currentVersion?.staleModules?.includes('STAFFING') ?? false;
-	const employees = useMemo(() => employeesData?.data ?? [], [employeesData?.data]);
+	const employees = employeesData?.data ?? [];
 
 	const kpiData = useMemo(() => {
 		const activeEmployees = employees.filter((e) => e.status !== 'Departed');
 		const totalHeadcount = activeEmployees.length;
-		const totalAnnualStaffCost = Number(summaryData?.cost ?? 0);
+		const totalAnnualStaffCost = Number(summaryData?.totalSalaryCost ?? 0);
 		const avgMonthlyCostPerEmployee =
 			totalHeadcount > 0 ? Math.round(totalAnnualStaffCost / totalHeadcount / 12) : 0;
 
@@ -139,7 +134,7 @@ export function StaffingPage() {
 
 	if (!versionId) {
 		return (
-			<div className="flex h-64 items-center justify-center text-(--text-muted)">
+			<div className="flex h-64 items-center justify-center text-[var(--text-muted)]">
 				Select a version from the context bar to begin staffing planning.
 			</div>
 		);
@@ -176,7 +171,7 @@ export function StaffingPage() {
 				{/* Status feedback */}
 				{calculateMutation.isSuccess && (
 					<div
-						className="rounded-lg border border-(--color-success) bg-(--color-success-bg) px-4 py-2 text-sm text-(--color-success)"
+						className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-bg)] px-4 py-2 text-sm text-[var(--color-success)]"
 						role="status"
 					>
 						Staffing calculated successfully.
@@ -184,7 +179,7 @@ export function StaffingPage() {
 				)}
 				{calculateMutation.isError && (
 					<div
-						className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
+						className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]"
 						role="alert"
 					>
 						Calculation failed. Ensure enrollment and employee data are configured.
@@ -212,30 +207,11 @@ export function StaffingPage() {
 					<DhgGrilleView grilles={dhgData?.grilles ?? []} />
 				</WorkspaceBlock>
 
-				<WorkspaceBlock title="Staff Costs by Department">
-					<StaffCostsDepartmentGrid
-						employees={employees}
-						breakdown={breakdownData?.breakdown ?? null}
-						isLoading={isBreakdownLoading}
-						isReadOnly={isViewer}
-						onSelectEmployee={handleSelectEmployee}
-						selectedEmployeeId={selectedEmployee?.id ?? null}
-					/>
-				</WorkspaceBlock>
-
-				<WorkspaceBlock title="Monthly Cost Summary">
+				<WorkspaceBlock title="Monthly Cost Budget">
 					<MonthlyCostGrid
-						data={monthlyCostData?.data ?? []}
-						totals={monthlyCostData?.totals ?? null}
+						data={costData?.data ?? []}
+						totals={costData?.totals ?? null}
 						isRedacted={isViewer}
-					/>
-				</WorkspaceBlock>
-
-				<WorkspaceBlock title="Monthly Cost Budget (Tab C)">
-					<MonthlyCostBudgetGrid
-						staffCostData={categoryMonthData ?? null}
-						categoryCostData={categoryCostData ?? null}
-						isLoading={isCategoryMonthLoading || isCategoryCostLoading}
 					/>
 				</WorkspaceBlock>
 

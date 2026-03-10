@@ -94,17 +94,17 @@ export function StaffingKpiRibbon({
 							key={kpi.key}
 							className={cn(
 								'animate-kpi-enter relative overflow-hidden',
-								'rounded-xl',
-								'border border-(--workspace-border)',
-								'shadow-(--shadow-card)',
-								'bg-(--workspace-bg-card) p-3'
+								'rounded-[var(--radius-xl)]',
+								'border border-[var(--workspace-border)]',
+								'shadow-[var(--shadow-card)]',
+								'bg-[var(--workspace-bg-card)] p-3'
 							)}
 							style={{ animationDelay: `${i * 60}ms` }}
 						>
 							<span
 								className={cn(
 									'absolute left-0 top-2 bottom-2 w-[3px] rounded-full',
-									'bg-(--accent-500)'
+									'bg-[var(--accent-500)]'
 								)}
 								aria-hidden="true"
 							/>
@@ -113,15 +113,15 @@ export function StaffingKpiRibbon({
 								<span
 									className={cn(
 										'flex h-10 w-10 shrink-0 items-center justify-center',
-										'rounded-lg',
-										'bg-(--accent-50)'
+										'rounded-[var(--radius-lg)]',
+										'bg-[var(--accent-50)]'
 									)}
 								>
-									<Icon className="h-5 w-5 text-(--accent-500)" aria-hidden="true" />
+									<Icon className="h-5 w-5 text-[var(--accent-500)]" aria-hidden="true" />
 								</span>
 
 								<div className="flex min-w-0 flex-col">
-									<span className="text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									<span className="text-[length:var(--text-xs)] font-medium uppercase tracking-wider text-[var(--text-muted)]">
 										{kpi.label}
 									</span>
 									{isLoading ? (
@@ -131,8 +131,8 @@ export function StaffingKpiRibbon({
 											value={value}
 											formatter={kpi.formatter}
 											className={cn(
-												'truncate text-(--text-xl)',
-												'font-bold text-(--text-primary)',
+												'truncate text-[length:var(--text-xl)]',
+												'font-bold text-[var(--text-primary)]',
 												'font-[family-name:var(--font-display)]',
 												kpi.key !== 'totalHeadcount' && 'font-[family-name:var(--font-mono)]'
 											)}
@@ -152,10 +152,10 @@ export function StaffingKpiRibbon({
 					aria-label="Data is stale, recalculation needed"
 				>
 					<span
-						className="size-2 animate-pulse rounded-full bg-(--color-stale)"
+						className="size-2 animate-pulse rounded-full bg-[var(--color-stale)]"
 						aria-hidden="true"
 					/>
-					<span className="text-(--text-xs) font-medium text-(--color-stale)">
+					<span className="text-[length:var(--text-xs)] font-medium text-[var(--color-stale)]">
 						Stale — recalculate to refresh
 					</span>
 				</div>
