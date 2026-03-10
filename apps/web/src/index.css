@@ -139,6 +139,31 @@
 	--glass-border: rgba(255, 255, 255, 0.6);
 	--glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 
+	/* ── Chart Tokens ── */
+	--chart-maternelle: var(--badge-maternelle);
+	--chart-elementaire: var(--badge-elementaire);
+	--chart-college: var(--badge-college);
+	--chart-lycee: var(--badge-lycee);
+	--chart-total: var(--text-primary);
+	--chart-grid: var(--workspace-border);
+	--chart-axis: var(--text-muted);
+	--chart-tooltip-border: var(--workspace-border);
+
+	/* ── Glass Tokens (Extended) ── */
+	--glass-bg-strong: rgba(255, 255, 255, 0.92);
+	--glass-bg-subtle: rgba(255, 255, 255, 0.6);
+	--glass-blur-sm: 4px;
+	--glass-blur-md: 12px;
+	--glass-blur-lg: 20px;
+
+	/* ── Selection Tokens ── */
+	--grid-selected-row: color-mix(in srgb, var(--accent-100) 70%, white);
+	--grid-selected-row-border: var(--accent-300);
+
+	/* ── Inspector Tokens ── */
+	--inspector-bg: var(--glass-bg-strong);
+	--inspector-section-border: var(--workspace-border);
+
 	/* ── Grid Tokens ── */
 	--grid-header-bg: #f0f2f7;
 	--grid-header-border: #dde1ea;
@@ -486,6 +511,65 @@ body {
 	}
 }
 
+@keyframes inspector-slide-in {
+	from {
+		transform: translateX(24px);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes inspector-crossfade {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes selection-highlight {
+	0% {
+		background-color: var(--accent-200);
+	}
+	100% {
+		background-color: var(--accent-50);
+	}
+}
+
+@keyframes sparkline-draw {
+	from {
+		stroke-dashoffset: var(--sparkline-length, 200);
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes validation-pulse {
+	0%,
+	100% {
+		border-color: var(--color-error);
+	}
+	50% {
+		border-color: transparent;
+	}
+}
+
+@keyframes seed-cascade {
+	0% {
+		background-color: var(--color-success-bg);
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
 /* ── Utility animation classes ── */
 .animate-shimmer {
 	background: linear-gradient(
@@ -562,6 +646,30 @@ body {
 .animate-expand-width {
 	animation: expand-width var(--duration-normal) var(--ease-out-expo) both;
 	overflow: hidden;
+}
+
+.animate-inspector-slide-in {
+	animation: inspector-slide-in 300ms var(--ease-out-expo) both;
+}
+
+.animate-inspector-crossfade {
+	animation: inspector-crossfade 200ms var(--ease-out-expo) both;
+}
+
+.animate-selection-highlight {
+	animation: selection-highlight var(--duration-slow) var(--ease-in-out) both;
+}
+
+.animate-sparkline-draw {
+	animation: sparkline-draw 800ms var(--ease-out-expo) both;
+}
+
+.animate-validation-pulse {
+	animation: validation-pulse 300ms var(--ease-in-out) 2;
+}
+
+.animate-seed-cascade {
+	animation: seed-cascade 400ms var(--ease-out-expo) both;
 }
 
 /* ── Frosted glass ── */

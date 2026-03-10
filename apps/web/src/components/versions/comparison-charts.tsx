@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import type { MultiCompareResponse } from '../../hooks/use-versions';
 import type { MetricKey } from './comparison-view';
+import { useChartColors } from '../../hooks/use-chart-colors';
 
 export type ComparisonChartsProps = {
 	data: MultiCompareResponse;
@@ -34,18 +35,6 @@ const MONTH_NAMES = [
 	'Dec',
 ];
 
-// Colors match CSS tokens: --version-budget, --version-forecast, --version-actual
-// Recharts SVG stroke/fill cannot use CSS var() directly, so values are kept in sync here.
-const VERSION_TYPE_COLORS: Record<string, string> = {
-	Budget: '#2563eb',
-	Forecast: '#ea580c',
-	Actual: '#16a34a',
-};
-
-function getVersionColor(type: string): string {
-	return VERSION_TYPE_COLORS[type] ?? '#6b7280';
-}
-
 function formatAxisValue(value: number): string {
 	if (value === 0) return '0';
 	const k = value / 1000;
@@ -58,6 +47,21 @@ function formatTooltipValue(value: number | string | undefined): string {
 }
 
 export function ComparisonCharts({ data, metric }: ComparisonChartsProps) {
+	const chartColors = useChartColors();
+
+	function getVersionColor(type: string): string {
+		switch (type) {
+			case 'Budget':
+				return chartColors.versionBudget;
+			case 'Forecast':
+				return chartColors.versionForecast;
+			case 'Actual':
+				return chartColors.versionActual;
+			default:
+				return chartColors.fallback;
+		}
+	}
+
 	const barData = useMemo(() => {
 		return data.annualTotals.map((total) => {
 			const version = data.versions.find((v) => v.id === total.versionId);
@@ -67,7 +71,8 @@ export function ComparisonCharts({ data, metric }: ComparisonChartsProps) {
 				fill: getVersionColor(version?.type ?? 'Budget'),
 			};
 		});
-	}, [data, metric]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [data, metric, chartColors]);
 
 	const lineData = useMemo(() => {
 		return MONTH_NAMES.map((monthName, idx) => {

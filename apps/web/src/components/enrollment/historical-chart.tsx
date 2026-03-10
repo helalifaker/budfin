@@ -10,14 +10,7 @@ import {
 	ResponsiveContainer,
 } from 'recharts';
 import { useHistorical } from '../../hooks/use-enrollment';
-
-const BAND_COLORS: Record<string, string> = {
-	MATERNELLE: '#EC4899',
-	ELEMENTAIRE: '#3B82F6',
-	COLLEGE: '#22C55E',
-	LYCEE: '#A855F7',
-	TOTAL: '#1E293B',
-};
+import { useChartColors } from '../../hooks/use-chart-colors';
 
 const BAND_LABELS: Record<string, string> = {
 	MATERNELLE: 'Maternelle',
@@ -56,6 +49,18 @@ const GRADE_BAND_MAP: Record<string, string> = {
 
 export function HistoricalChart() {
 	const { data, isLoading } = useHistorical(5);
+	const chartColors = useChartColors();
+
+	const bandColors: Record<string, string> = useMemo(
+		() => ({
+			MATERNELLE: chartColors.maternelle,
+			ELEMENTAIRE: chartColors.elementaire,
+			COLLEGE: chartColors.college,
+			LYCEE: chartColors.lycee,
+			TOTAL: chartColors.total,
+		}),
+		[chartColors]
+	);
 
 	const chartData: ChartDataPoint[] = useMemo(() => {
 		if (!data?.data) return [];
@@ -89,7 +94,7 @@ export function HistoricalChart() {
 
 	if (isLoading) {
 		return (
-			<div className="rounded-lg border p-6">
+			<div className="glass-card rounded-lg p-6">
 				<div className="h-64 animate-pulse rounded bg-(--workspace-bg-muted)" />
 			</div>
 		);
@@ -97,14 +102,14 @@ export function HistoricalChart() {
 
 	if (chartData.length === 0) {
 		return (
-			<div className="rounded-lg border p-6 text-center text-(--text-sm) text-(--text-muted)">
+			<div className="glass-card rounded-lg p-6 text-center text-(--text-sm) text-(--text-muted)">
 				No historical enrollment data available. Import CSV data to see trends.
 			</div>
 		);
 	}
 
 	return (
-		<div className="rounded-lg border p-4">
+		<div className="glass-card rounded-lg p-4">
 			<h3 className="mb-4 text-(--text-sm) font-semibold text-(--text-primary)">
 				Historical Enrollment Trends
 			</h3>
@@ -119,21 +124,21 @@ export function HistoricalChart() {
 			)}
 			<ResponsiveContainer width="100%" height={300}>
 				<LineChart data={chartData}>
-					<CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-					<XAxis dataKey="year" tick={{ fontSize: 12 }} stroke="#94A3B8" />
-					<YAxis tick={{ fontSize: 12 }} stroke="#94A3B8" />
+					<CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+					<XAxis dataKey="year" tick={{ fontSize: 12 }} stroke={chartColors.axis} />
+					<YAxis tick={{ fontSize: 12 }} stroke={chartColors.axis} />
 					<Tooltip
 						contentStyle={{
 							fontSize: 12,
 							borderRadius: 8,
-							border: '1px solid #E2E8F0',
+							border: `1px solid ${chartColors.tooltipBorder}`,
 						}}
 					/>
 					<Legend
 						wrapperStyle={{ fontSize: 12 }}
 						formatter={(value: string) => BAND_LABELS[value] ?? value}
 					/>
-					{Object.entries(BAND_COLORS).map(([band, color]) => (
+					{Object.entries(bandColors).map(([band, color]) => (
 						<Line
 							key={band}
 							type="monotone"

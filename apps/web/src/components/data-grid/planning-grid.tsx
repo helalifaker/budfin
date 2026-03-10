@@ -35,6 +35,8 @@ export interface PlanningGridProps<T> {
 	rowAnimation?: boolean;
 	onCellEdit?: (rowIndex: number, columnId: string, value: number) => void;
 	onActiveRowChange?: (rowIndex: number) => void;
+	onRowSelect?: (rowData: T) => void;
+	selectedRowPredicate?: (row: T) => boolean;
 	className?: string;
 	ariaLabel?: string;
 }
@@ -80,6 +82,8 @@ export function PlanningGrid<T>({
 	rowAnimation = true,
 	onCellEdit: _onCellEdit,
 	onActiveRowChange,
+	onRowSelect,
+	selectedRowPredicate,
 	className,
 	ariaLabel,
 }: PlanningGridProps<T>) {
@@ -185,17 +189,33 @@ export function PlanningGrid<T>({
 					setActiveCell({ rowIndex, colIndex });
 					break;
 				}
+				case 'Enter': {
+					if (onRowSelect && activeCell) {
+						const row = rows[activeCell.rowIndex];
+						if (row) onRowSelect(row.original);
+					}
+					break;
+				}
 				case 'Escape':
 					setActiveCell(null);
 					break;
 			}
 		},
-		[keyboardNavigation, activeCell, rows.length, cols, editableColumns, headerGroups]
+		[keyboardNavigation, activeCell, rows.length, cols, editableColumns, headerGroups, onRowSelect]
 	);
 
 	const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
 		setActiveCell({ rowIndex, colIndex });
 	}, []);
+
+	const handleRowClick = useCallback(
+		(row: (typeof rows)[number]) => {
+			if (onRowSelect) {
+				onRowSelect(row.original);
+			}
+		},
+		[onRowSelect]
+	);
 
 	if (isLoading) {
 		return (
@@ -258,6 +278,7 @@ export function PlanningGrid<T>({
 		const lastPin = isLastPinned(columnId, pinnedColumns);
 		const numeric = isNumeric(columnId, numericColumns);
 		const isActive = activeCell?.rowIndex === rowIndex && activeCell?.colIndex === colIndex;
+		const isRowSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
 
 		return (
 			<td
@@ -270,7 +291,9 @@ export function PlanningGrid<T>({
 					'px-(--grid-cell-px) py-(--grid-cell-py)',
 					'transition-all duration-(--duration-fast)',
 					numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
-					pinned && 'sticky left-0 z-[1] bg-(--workspace-bg-card)',
+					pinned && 'sticky left-0 z-[1]',
+					pinned && !isRowSelected && 'bg-(--workspace-bg-card)',
+					pinned && isRowSelected && 'bg-(--grid-selected-row)',
 					lastPin && 'shadow-(--grid-pinned-shadow)',
 					isActive && 'ring-2 ring-(--accent-400) ring-inset shadow-(--shadow-glow-accent)'
 				)}
@@ -287,20 +310,25 @@ export function PlanningGrid<T>({
 		isFirstInBand: boolean
 	) => {
 		const isActiveRow = activeCell?.rowIndex === rowIndex;
+		const isSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
 		const headers = headerGroups[0]?.headers ?? [];
 
 		return (
 			<tr
 				key={row.id}
 				role="row"
+				aria-selected={isSelected || undefined}
+				onClick={() => handleRowClick(row)}
 				className={cn(
 					'border-b border-(--workspace-border) last:border-0',
 					'transition-colors duration-(--duration-fast)',
 					rowIndex % 2 === 1 && 'bg-(--grid-row-stripe)',
 					'hover:bg-(--grid-row-hover)',
 					isActiveRow && 'bg-(--grid-active-row)',
+					isSelected && 'bg-(--grid-selected-row) border-l-[3px] border-l-(--accent-500)',
 					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
-					rowAnimation && 'animate-row-enter'
+					rowAnimation && 'animate-row-enter',
+					onRowSelect && 'cursor-pointer'
 				)}
 				style={
 					rowAnimation ? { animationDelay: `${Math.min(animationIndex, 20) * 25}ms` } : undefined

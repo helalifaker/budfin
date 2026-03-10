@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
-import { useHeadcount, useCalculateEnrollment } from '../../hooks/use-enrollment';
+import { useRightPanelStore } from '../../stores/right-panel-store';
+import { useEnrollmentSelectionStore } from '../../stores/enrollment-selection-store';
+import { useHeadcount, useCalculateEnrollment, useHistorical } from '../../hooks/use-enrollment';
 import { useVersions } from '../../hooks/use-versions';
 import { Button } from '../../components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
@@ -15,6 +17,8 @@ import { HistoricalChart } from '../../components/enrollment/historical-chart';
 import { CsvImportPanel } from '../../components/enrollment/csv-import-panel';
 import { CalculateButton } from '../../components/enrollment/calculate-button';
 import { PageTransition } from '../../components/shared/page-transition';
+import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
+import '../../components/enrollment/enrollment-inspector';
 import type { AcademicPeriod } from '@budfin/types';
 
 const BAND_FILTERS: Array<{ value: string; label: string }> = [
@@ -26,9 +30,29 @@ const BAND_FILTERS: Array<{ value: string; label: string }> = [
 ];
 
 export function EnrollmentPage() {
-	const { versionId, fiscalYear, academicPeriod } = useWorkspaceContext();
+	const { versionId, fiscalYear, academicPeriod, versionStatus, versionName } =
+		useWorkspaceContext();
 	const user = useAuthStore((s) => s.user);
 	const isViewer = user?.role === 'Viewer';
+	const isReadOnly = isViewer || (versionStatus !== 'Draft' && versionStatus !== undefined);
+
+	const setActivePage = useRightPanelStore((s) => s.setActivePage);
+	const isOpen = useRightPanelStore((s) => s.isOpen);
+	const clearSelection = useEnrollmentSelectionStore((s) => s.clearSelection);
+
+	useEffect(() => {
+		setActivePage('enrollment');
+		return () => {
+			setActivePage(null);
+			clearSelection();
+		};
+	}, [setActivePage, clearSelection]);
+
+	useEffect(() => {
+		if (!isOpen) {
+			clearSelection();
+		}
+	}, [isOpen, clearSelection]);
 
 	const [bandFilter, setBandFilter] = useState('ALL');
 	const [importOpen, setImportOpen] = useState(false);
@@ -37,6 +61,7 @@ export function EnrollmentPage() {
 	const { data: headcountData } = useHeadcount(versionId, academicPeriod as AcademicPeriod | null);
 	const calculateMutation = useCalculateEnrollment(versionId);
 	const { data: versionsData } = useVersions(fiscalYear);
+	const { data: historicalData } = useHistorical(5);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId || !versionsData?.data) return null;
@@ -44,6 +69,20 @@ export function EnrollmentPage() {
 	}, [versionId, versionsData]);
 
 	const isStale = currentVersion?.staleModules?.includes('ENROLLMENT') ?? false;
+
+	const historicalTotals = useMemo(() => {
+		if (!historicalData?.data) return undefined;
+		const yearMap = new Map<number, number>();
+		for (const dp of historicalData.data) {
+			yearMap.set(dp.academicYear, (yearMap.get(dp.academicYear) ?? 0) + dp.headcount);
+		}
+		return [...yearMap.entries()].sort(([a], [b]) => a - b).map(([, total]) => total);
+	}, [historicalData]);
+
+	const previousYearTotal =
+		historicalTotals && historicalTotals.length >= 2
+			? (historicalTotals[historicalTotals.length - 1] ?? undefined)
+			: undefined;
 
 	const kpiData = useMemo(() => {
 		const entries = headcountData?.entries ?? [];
@@ -83,6 +122,9 @@ export function EnrollmentPage() {
 
 	return (
 		<PageTransition>
+			{isReadOnly && versionStatus && versionStatus !== 'Draft' && (
+				<VersionLockBanner status={versionStatus} versionName={versionName ?? undefined} />
+			)}
 			<WorkspaceBoard
 				title="Enrollment & Capacity"
 				description="Configure cohort progression, nationality distribution, and capacity planning."
@@ -103,7 +145,7 @@ export function EnrollmentPage() {
 							))}
 						</ToggleGroup>
 
-						{!isViewer && (
+						{!isReadOnly && (
 							<>
 								<CalculateButton
 									versionId={versionId}
@@ -123,7 +165,13 @@ export function EnrollmentPage() {
 						</Button>
 					</>
 				}
-				kpiRibbon={<EnrollmentKpiRibbon {...kpiData} />}
+				kpiRibbon={
+					<EnrollmentKpiRibbon
+						{...kpiData}
+						historicalTotals={historicalTotals}
+						previousYearTotal={previousYearTotal}
+					/>
+				}
 			>
 				<WorkspaceBlock
 					title="Cohort Progression (AY1 → AY2)"
@@ -133,7 +181,7 @@ export function EnrollmentPage() {
 					<CohortProgressionGrid
 						versionId={versionId}
 						bandFilter={bandFilter}
-						isReadOnly={isViewer}
+						isReadOnly={isReadOnly}
 					/>
 				</WorkspaceBlock>
 
@@ -141,7 +189,7 @@ export function EnrollmentPage() {
 					<NationalityDistributionGrid
 						versionId={versionId}
 						bandFilter={bandFilter}
-						isReadOnly={isViewer}
+						isReadOnly={isReadOnly}
 					/>
 				</WorkspaceBlock>
 
