@@ -13,7 +13,7 @@ import { calculateEoSProvision } from './cost-engine.js';
 
 /** Helper: create a UTC date from YYYY-MM-DD string */
 function utcDate(iso: string): Date {
-	const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
+	const [y, m, d] = iso.split('-').map(Number);
 	return new Date(Date.UTC(y, m - 1, d));
 }
 
