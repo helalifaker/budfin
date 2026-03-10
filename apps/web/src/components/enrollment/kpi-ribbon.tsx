@@ -1,6 +1,7 @@
 import { AlertTriangle, BarChart3, UserPlus, Users } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { Counter } from '../shared/counter';
+import { Sparkline } from '../shared/sparkline';
 
 export type EnrollmentKpiRibbonProps = {
 	totalAy1: number;
@@ -8,6 +9,8 @@ export type EnrollmentKpiRibbonProps = {
 	utilizationPct: number;
 	alertCount: number;
 	isStale: boolean;
+	historicalTotals?: number[] | undefined;
+	previousYearTotal?: number | undefined;
 };
 
 const kpiDefs = [
@@ -43,6 +46,8 @@ export function EnrollmentKpiRibbon({
 	utilizationPct,
 	alertCount,
 	isStale,
+	historicalTotals,
+	previousYearTotal,
 }: EnrollmentKpiRibbonProps) {
 	const values = { totalAy1, totalAy2, utilizationPct, alertCount };
 
@@ -56,6 +61,12 @@ export function EnrollmentKpiRibbon({
 					const hasAlerts = isAlert && alertCount > 0;
 					const noAlerts = isAlert && alertCount === 0;
 
+					const isUtilization = kpi.key === 'utilizationPct';
+					const showSparkline =
+						historicalTotals &&
+						historicalTotals.length >= 2 &&
+						(kpi.key === 'totalAy1' || kpi.key === 'totalAy2');
+
 					return (
 						<div
 							key={kpi.key}
@@ -64,14 +75,35 @@ export function EnrollmentKpiRibbon({
 								'rounded-xl',
 								'border border-(--workspace-border)',
 								'shadow-(--shadow-card)',
-								'bg-(--workspace-bg-card) p-3'
+								'bg-(--workspace-bg-card) p-3',
+								isUtilization && utilizationPct > 100 && 'border-l-[3px] border-l-(--color-error)',
+								isUtilization &&
+									utilizationPct > 95 &&
+									utilizationPct <= 100 &&
+									'border-l-[3px] border-l-(--color-warning)',
+								isUtilization &&
+									utilizationPct > 0 &&
+									utilizationPct <= 95 &&
+									'border-l-[3px] border-l-(--color-success)'
 							)}
 							style={{ animationDelay: `${i * 60}ms` }}
 						>
-							<span
-								className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-(--accent-500)"
-								aria-hidden="true"
-							/>
+							{!isUtilization && (
+								<span
+									className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-(--accent-500)"
+									aria-hidden="true"
+								/>
+							)}
+
+							{showSparkline && (
+								<Sparkline
+									data={historicalTotals}
+									width={64}
+									height={20}
+									color="var(--accent-500)"
+									className="absolute right-3 top-3 opacity-60"
+								/>
+							)}
 
 							<div className="flex items-center gap-3 pl-3">
 								<span
@@ -103,6 +135,21 @@ export function EnrollmentKpiRibbon({
 										formatter={kpi.formatter}
 										className="text-(--text-2xl) font-bold text-(--text-primary) font-[family-name:var(--font-display)]"
 									/>
+									{kpi.key === 'totalAy2' &&
+										previousYearTotal !== undefined &&
+										previousYearTotal > 0 && (
+											<span
+												className={cn(
+													'text-(--text-xs) font-medium tabular-nums',
+													totalAy2 >= previousYearTotal
+														? 'text-(--color-success)'
+														: 'text-(--color-error)'
+												)}
+											>
+												{totalAy2 >= previousYearTotal ? '+' : ''}
+												{totalAy2 - previousYearTotal} vs last year
+											</span>
+										)}
 								</div>
 							</div>
 						</div>

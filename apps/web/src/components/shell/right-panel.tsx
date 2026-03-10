@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import { getPanelContent } from '../../lib/right-panel-registry';
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import type { RightPanelTab } from '../../stores/right-panel-store';
@@ -12,7 +13,7 @@ const TABS: Array<{ id: RightPanelTab; label: string }> = [
 	{ id: 'help', label: 'Help' },
 ];
 
-function DetailsTabContent() {
+function DefaultDetailsContent() {
 	const { versionId } = useWorkspaceContext();
 
 	if (!versionId) {
@@ -33,6 +34,13 @@ function DetailsTabContent() {
 			</div>
 		</div>
 	);
+}
+
+function DelegatedDetailsContent() {
+	const activePage = useRightPanelStore((s) => s.activePage);
+	const renderer = activePage ? getPanelContent(activePage) : undefined;
+	if (renderer) return <>{renderer()}</>;
+	return <DefaultDetailsContent />;
 }
 
 export function RightPanel() {
@@ -132,7 +140,7 @@ export function RightPanel() {
 
 				{/* Tab content */}
 				<div className="flex-1 overflow-y-auto p-4 scrollbar-thin bg-(--workspace-bg-subtle)">
-					{activeTab === 'details' && <DetailsTabContent />}
+					{activeTab === 'details' && <DelegatedDetailsContent />}
 					{activeTab === 'activity' && (
 						<p className="text-(--text-sm) text-(--text-muted)">
 							Recent activity will appear here.

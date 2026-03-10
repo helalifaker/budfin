@@ -7,11 +7,13 @@ interface RightPanelState {
 	isOpen: boolean;
 	activeTab: RightPanelTab;
 	width: number;
+	activePage: string | null;
 	open: (tab?: RightPanelTab) => void;
 	close: () => void;
 	toggle: () => void;
 	setTab: (tab: RightPanelTab) => void;
 	setWidth: (width: number) => void;
+	setActivePage: (page: string | null) => void;
 }
 
 const MIN_WIDTH = 280;
@@ -27,6 +29,7 @@ export const useRightPanelStore = create<RightPanelState>((set) => ({
 	isOpen: false,
 	activeTab: 'details',
 	width: DEFAULT_WIDTH,
+	activePage: null,
 
 	open: (tab) =>
 		set((state) => {
@@ -50,4 +53,6 @@ export const useRightPanelStore = create<RightPanelState>((set) => ({
 	setTab: (tab) => set({ activeTab: tab }),
 
 	setWidth: (width) => set({ width: clampWidth(width) }),
+
+	setActivePage: (page) => set({ activePage: page }),
 }));
