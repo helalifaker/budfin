@@ -20,22 +20,22 @@ const __dirname = dirname(__filename);
 const FIXTURES = resolve(__dirname, '..', '..', '..', '..', 'data', 'fixtures');
 const PARITY_TOLERANCE = new Decimal('0.05');
 const WORKBOOK_TOTALS = {
-	tuitionFees: new Decimal('58972253.7283'),
-	discountImpact: new Decimal('2333712.7065'),
-	netTuition: new Decimal('56638541.0217'),
-	totalOperatingRevenue: new Decimal('68156191.0217'),
+	tuitionFees: new Decimal('32743360.0000'),
+	discountImpact: new Decimal('1231800.0000'),
+	netTuition: new Decimal('31511560.0000'),
+	totalOperatingRevenue: new Decimal('38031060.0000'),
 };
 const WORKBOOK_MONTHLY_NET_TUITION: Record<number, Decimal> = {
-	1: new Decimal('5602363.7543'),
-	2: new Decimal('5602363.7543'),
-	3: new Decimal('5602363.7543'),
-	4: new Decimal('5602363.7543'),
-	5: new Decimal('5602363.7543'),
-	6: new Decimal('5602363.7543'),
-	9: new Decimal('5756089.6239'),
-	10: new Decimal('5756089.6239'),
-	11: new Decimal('5756089.6239'),
-	12: new Decimal('5756089.6239'),
+	1: new Decimal('3674700.0000'),
+	2: new Decimal('3674700.0000'),
+	3: new Decimal('3674700.0000'),
+	4: new Decimal('3674700.0000'),
+	5: new Decimal('3674700.0000'),
+	6: new Decimal('3674700.0000'),
+	9: new Decimal('2365840.0000'),
+	10: new Decimal('2365840.0000'),
+	11: new Decimal('2365840.0000'),
+	12: new Decimal('2365840.0000'),
 };
 
 // ── Fixture types ────────────────────────────────────────────────────────────
@@ -148,11 +148,7 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 
 		it('should have 3 discount policies (Plein, RP, R3+)', () => {
 			expect(discounts).toHaveLength(3);
-			expect(discounts.map((d) => d.tariff).sort()).toEqual([
-				'Plein',
-				'Reduit 3+',
-				'Reduit Personnel',
-			]);
+			expect(discounts.map((d) => d.tariff).sort()).toEqual(['Plein', 'R3+', 'RP']);
 		});
 
 		it('should have other revenue items', () => {
@@ -234,14 +230,14 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 				(sum, row) => sum.plus(new Decimal(row.grossRevenueHt)),
 				new Decimal(0)
 			);
-			const expectedTotal = new Decimal('34952375.6283');
+			const expectedTotal = new Decimal('22969440.0000');
 			expect(monthlyAY1.minus(expectedTotal).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 	});
 
 	describe('Discount Validation', () => {
-		it('should apply 25% discount for Reduit Personnel tariff', () => {
-			const rpRows = result.tuitionRevenue.filter((r) => r.tariff === 'Reduit Personnel');
+		it('should apply 25% discount for RP tariff', () => {
+			const rpRows = result.tuitionRevenue.filter((r) => r.tariff === 'RP');
 			if (rpRows.length === 0) return; // skip if no RP enrollment
 
 			const rpGross = rpRows.reduce(
@@ -257,8 +253,8 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 			expect(rpDiscount.minus(expectedDiscount).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 
-		it('should apply 25% discount for Reduit 3+ tariff', () => {
-			const r3Rows = result.tuitionRevenue.filter((r) => r.tariff === 'Reduit 3+');
+		it('should apply 10% discount for R3+ tariff', () => {
+			const r3Rows = result.tuitionRevenue.filter((r) => r.tariff === 'R3+');
 			if (r3Rows.length === 0) return;
 
 			const r3Gross = r3Rows.reduce(
@@ -270,7 +266,7 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 				new Decimal(0)
 			);
 
-			const expectedDiscount = r3Gross.plus(r3Discount).mul(new Decimal('0.25'));
+			const expectedDiscount = r3Gross.plus(r3Discount).mul(new Decimal('0.10'));
 			expect(r3Discount.minus(expectedDiscount).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 
@@ -292,29 +288,27 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 
 		it('should distribute academic items across 10 months', () => {
 			const apsRows = result.otherRevenue.filter(
-				(r) => r.lineItemName === 'After-School Activities (APS)'
+				(r) => r.lineItemName === 'After-School Activities'
 			);
 			expect(apsRows).toHaveLength(10);
 			const total = apsRows.reduce((sum, r) => sum.plus(new Decimal(r.amount)), new Decimal(0));
-			expect(total.toFixed(4)).toBe('1230000.0000');
+			expect(total.toFixed(4)).toBe('280000.0000');
 		});
 
 		it('should distribute year-round items across 12 months', () => {
 			const psgRows = result.otherRevenue.filter((r) => r.lineItemName === 'PSG Academy Rental');
 			expect(psgRows).toHaveLength(12);
 			const total = psgRows.reduce((sum, r) => sum.plus(new Decimal(r.amount)), new Decimal(0));
-			expect(total.toFixed(4)).toBe('51230.0000');
+			expect(total.toFixed(4)).toBe('120000.0000');
 		});
 
 		it('should distribute specific-period items to specified months only', () => {
-			const dossierRows = result.otherRevenue.filter(
-				(r) => r.lineItemName === 'Frais de Dossier - Francais'
-			);
-			// Distribution: May-Jun (months 5, 6)
-			expect(dossierRows).toHaveLength(2);
-			expect(dossierRows.map((r) => r.month).sort((a, b) => a - b)).toEqual([5, 6]);
+			const dossierRows = result.otherRevenue.filter((r) => r.lineItemName === 'Frais de Dossier');
+			// Distribution: months 3, 4, 5
+			expect(dossierRows).toHaveLength(3);
+			expect(dossierRows.map((r) => r.month).sort((a, b) => a - b)).toEqual([3, 4, 5]);
 			const total = dossierRows.reduce((sum, r) => sum.plus(new Decimal(r.amount)), new Decimal(0));
-			expect(total.toFixed(4)).toBe('106000.0000');
+			expect(total.toFixed(4)).toBe('350000.0000');
 		});
 
 		it('should handle negative amounts (Bourses/scholarships)', () => {

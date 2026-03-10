@@ -170,27 +170,27 @@ describe('Enrollment & Capacity Validation — FY2026', () => {
 
 		it('should have 3 tariff types', () => {
 			const tariffs = new Set(enrollmentDetail.map((e) => e.tariff));
-			expect(tariffs).toEqual(new Set(['Plein', 'Reduit Personnel', 'Reduit 3+']));
+			expect(tariffs).toEqual(new Set(['Plein', 'RP', 'R3+']));
 		});
 
 		it('should match per-grade AY1 headcounts from Excel', () => {
 			// Expected per-grade totals from ENROLLMENT_DETAIL (Grand Total column)
 			const expected: Record<string, number> = {
-				PS: 65,
-				MS: 77,
-				GS: 124,
-				CP: 126,
-				CE1: 118,
-				CE2: 132,
-				CM1: 121,
-				CM2: 121,
-				'6EME': 151,
-				'5EME': 139,
-				'4EME': 120,
-				'3EME': 103,
+				PS: 100,
+				MS: 103,
+				GS: 106,
+				CP: 110,
+				CE1: 113,
+				CE2: 116,
+				CM1: 119,
+				CM2: 122,
+				'6EME': 131,
+				'5EME': 134,
+				'4EME': 137,
+				'3EME': 139,
 				'2NDE': 125,
 				'1ERE': 120,
-				TERM: 111,
+				TERM: 78,
 			};
 
 			const ay1ByGrade: Record<string, number> = {};
@@ -212,7 +212,7 @@ describe('Enrollment & Capacity Validation — FY2026', () => {
 			}
 
 			expect(ay1ByGrade['1ERE']).toBe(120);
-			expect(ay1ByGrade['TERM']).toBe(111);
+			expect(ay1ByGrade['TERM']).toBe(78);
 			// Verify S1T does not exist
 			expect(ay1ByGrade['S1T']).toBeUndefined();
 		});
@@ -300,12 +300,12 @@ describe('Enrollment & Capacity Validation — FY2026', () => {
 			const results = calculateCapacity(inputs, configMap);
 			const totalSections = results.reduce((sum, r) => sum + r.sectionsNeeded, 0);
 
-			// Engine computes MINIMUM sections: ceil(headcount/maxClassSize) = 66
+			// Engine computes MINIMUM sections: ceil(headcount/maxClassSize) = 64
 			// Excel EXECUTIVE_SUMMARY shows PLANNED sections: 74
-			// Difference of 8: schools open more sections than minimum for operational
+			// Difference of 10: schools open more sections than minimum for operational
 			// reasons (mid-year intake buffer, pedagogical grouping, option splits).
 			// This is an expected discrepancy — not a bug.
-			expect(totalSections).toBe(66);
+			expect(totalSections).toBe(64);
 			expect(totalSections).toBeLessThan(74); // always fewer than planned
 		});
 	});

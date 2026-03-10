@@ -132,7 +132,7 @@ const GRADE_INFO: Record<string, { name: string; band: string; feeBand: string }
 	'3EME': { name: 'Troisieme', band: 'COLLEGE', feeBand: 'College' },
 	'2NDE': { name: 'Seconde', band: 'LYCEE', feeBand: 'Lycee' },
 	'1ERE': { name: 'Premiere', band: 'LYCEE', feeBand: 'Lycee' },
-	TERM: { name: 'Terminale', band: 'LYCEE', feeBand: 'Lycee' },
+	TERM: { name: 'TERM', band: 'LYCEE', feeBand: 'Lycee' },
 };
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -756,7 +756,7 @@ function parseExpectedRevenue(workbook: ExcelJS.Workbook): ExpectedRevenueEntry[
 	}
 
 	// Filter out months with all zeros (Jul/Aug)
-	return results.filter((r) => r.totalOperatingRevenue !== '0.0000' || r.tuitionFees !== '0.0000');
+	return results;
 }
 
 // ── Grade Code Mapping Builder ───────────────────────────────────────────────

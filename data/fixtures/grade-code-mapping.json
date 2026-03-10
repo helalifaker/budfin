@@ -4,104 +4,104 @@
 		"appCode": "PS",
 		"gradeName": "Petite Section",
 		"band": "MATERNELLE",
-		"feeBand": "Maternelle PS"
+		"feeBand": "MATERNELLE"
 	},
 	{
 		"excelCode": "MS",
 		"appCode": "MS",
 		"gradeName": "Moyenne Section",
 		"band": "MATERNELLE",
-		"feeBand": "Maternelle"
+		"feeBand": "MATERNELLE"
 	},
 	{
 		"excelCode": "GS",
 		"appCode": "GS",
 		"gradeName": "Grande Section",
 		"band": "MATERNELLE",
-		"feeBand": "Maternelle"
+		"feeBand": "MATERNELLE"
 	},
 	{
 		"excelCode": "CP",
 		"appCode": "CP",
 		"gradeName": "Cours Preparatoire",
 		"band": "ELEMENTAIRE",
-		"feeBand": "Elementaire"
+		"feeBand": "ELEMENTAIRE"
 	},
 	{
 		"excelCode": "CE1",
 		"appCode": "CE1",
 		"gradeName": "Cours Elementaire 1",
 		"band": "ELEMENTAIRE",
-		"feeBand": "Elementaire"
+		"feeBand": "ELEMENTAIRE"
 	},
 	{
 		"excelCode": "CE2",
 		"appCode": "CE2",
 		"gradeName": "Cours Elementaire 2",
 		"band": "ELEMENTAIRE",
-		"feeBand": "Elementaire"
+		"feeBand": "ELEMENTAIRE"
 	},
 	{
 		"excelCode": "CM1",
 		"appCode": "CM1",
 		"gradeName": "Cours Moyen 1",
 		"band": "ELEMENTAIRE",
-		"feeBand": "Elementaire"
+		"feeBand": "ELEMENTAIRE"
 	},
 	{
 		"excelCode": "CM2",
 		"appCode": "CM2",
 		"gradeName": "Cours Moyen 2",
 		"band": "ELEMENTAIRE",
-		"feeBand": "Elementaire"
+		"feeBand": "ELEMENTAIRE"
 	},
 	{
 		"excelCode": "6EME",
 		"appCode": "6EME",
 		"gradeName": "Sixieme",
 		"band": "COLLEGE",
-		"feeBand": "College"
+		"feeBand": "COLLEGE"
 	},
 	{
 		"excelCode": "5EME",
 		"appCode": "5EME",
 		"gradeName": "Cinquieme",
 		"band": "COLLEGE",
-		"feeBand": "College"
+		"feeBand": "COLLEGE"
 	},
 	{
 		"excelCode": "4EME",
 		"appCode": "4EME",
 		"gradeName": "Quatrieme",
 		"band": "COLLEGE",
-		"feeBand": "College"
+		"feeBand": "COLLEGE"
 	},
 	{
 		"excelCode": "3EME",
 		"appCode": "3EME",
 		"gradeName": "Troisieme",
 		"band": "COLLEGE",
-		"feeBand": "College"
+		"feeBand": "COLLEGE"
 	},
 	{
 		"excelCode": "2NDE",
 		"appCode": "2NDE",
 		"gradeName": "Seconde",
 		"band": "LYCEE",
-		"feeBand": "Lycee"
+		"feeBand": "LYCEE"
 	},
 	{
 		"excelCode": "1ERE",
 		"appCode": "1ERE",
 		"gradeName": "Premiere",
 		"band": "LYCEE",
-		"feeBand": "Lycee"
+		"feeBand": "LYCEE"
 	},
 	{
 		"excelCode": "TERM",
 		"appCode": "TERM",
 		"gradeName": "Terminale",
 		"band": "LYCEE",
-		"feeBand": "Lycee"
+		"feeBand": "LYCEE"
 	}
 ]

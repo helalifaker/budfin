@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router';
 import { useWorkspaceContextStore } from '../stores/workspace-context-store';
 
 const PARAM_MAP = {
@@ -25,39 +26,44 @@ function parseUrlParams(): Record<string, string | null> {
 
 export function useWorkspaceUrlSync() {
 	const hydrate = useWorkspaceContextStore((s) => s.hydrate);
-	const hasHydrated = useRef(false);
+	const location = useLocation();
+	const isHydrating = useRef(false);
 
-	// Hydrate store from URL on mount
+	// Hydrate store from URL on every location.search change
 	useEffect(() => {
-		if (hasHydrated.current) return;
-		hasHydrated.current = true;
-
 		const raw = parseUrlParams();
 		const patch: Record<string, unknown> = {};
+		const current = useWorkspaceContextStore.getState();
 
 		if (raw.fy) {
 			const fy = Number(raw.fy);
-			if (!Number.isNaN(fy)) patch.fiscalYear = fy;
+			if (!Number.isNaN(fy) && fy !== current.fiscalYear) patch.fiscalYear = fy;
 		}
 		if (raw.version) {
 			const v = Number(raw.version);
-			if (!Number.isNaN(v)) patch.versionId = v;
+			if (!Number.isNaN(v) && v !== current.versionId) patch.versionId = v;
 		}
 		if (raw.compare) {
 			const c = Number(raw.compare);
-			if (!Number.isNaN(c)) patch.comparisonVersionId = c;
+			if (!Number.isNaN(c) && c !== current.comparisonVersionId) patch.comparisonVersionId = c;
 		}
-		if (raw.period) patch.academicPeriod = raw.period;
-		if (raw.scenario) patch.scenarioId = raw.scenario;
+		if (raw.period && raw.period !== current.academicPeriod) patch.academicPeriod = raw.period;
+		if (raw.scenario && raw.scenario !== current.scenarioId) patch.scenarioId = raw.scenario;
 
 		if (Object.keys(patch).length > 0) {
+			isHydrating.current = true;
 			hydrate(patch);
+			queueMicrotask(() => {
+				isHydrating.current = false;
+			});
 		}
-	}, [hydrate]);
+	}, [hydrate, location.search]);
 
-	// Sync store changes to URL via replaceState (no React Router dependency)
+	// Sync store changes to URL via replaceState
 	useEffect(() => {
 		const unsubscribe = useWorkspaceContextStore.subscribe((state) => {
+			if (isHydrating.current) return;
+
 			const params = new URLSearchParams(window.location.search);
 
 			for (const key of SYNC_KEYS) {

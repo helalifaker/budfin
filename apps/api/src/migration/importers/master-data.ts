@@ -13,7 +13,7 @@ const NATIONALITIES = [
 // ── Tariff seed data ────────────────────────────────────────────────────────
 
 const TARIFFS = [
-	{ code: 'Plein', label: 'Plein Tarif' },
+	{ code: 'PLEIN', label: 'Plein Tarif' },
 	{ code: 'RP', label: 'Reduit Personnel' },
 	{ code: 'R3P', label: 'Reduit 3+' },
 ] as const;

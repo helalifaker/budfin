@@ -33,6 +33,9 @@ export interface FeeGridFixture {
 	tuitionTtc: string;
 	tuitionHt: string;
 	dai: string;
+	term1Amount: string;
+	term2Amount: string;
+	term3Amount: string;
 }
 
 export interface DiscountFixture {

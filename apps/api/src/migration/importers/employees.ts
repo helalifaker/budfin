@@ -59,7 +59,7 @@ export async function importEmployees(
 				) VALUES (
 					$1, $2, $3, $4, $5,
 					$6, $7, $8,
-					$9, $10, $11, $12,
+					$9, $10, $11, $12::numeric,
 					pgp_sym_encrypt($13, $14),
 					pgp_sym_encrypt($15, $14),
 					pgp_sym_encrypt($16, $14),
@@ -67,7 +67,7 @@ export async function importEmployees(
 					pgp_sym_encrypt($18, $14),
 					pgp_sym_encrypt($19, $14),
 					$20,
-					$21, $22,
+					$21::numeric, $22::numeric,
 					$23, NOW(), NOW()
 				)
 				ON CONFLICT (version_id, employee_code)

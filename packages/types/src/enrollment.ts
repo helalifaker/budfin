@@ -19,13 +19,13 @@ export const GRADE_CODES = [
 	'CE2',
 	'CM1',
 	'CM2',
-	'6eme',
-	'5eme',
-	'4eme',
-	'3eme',
-	'2nde',
-	'1ere',
-	'Terminale',
+	'6EME',
+	'5EME',
+	'4EME',
+	'3EME',
+	'2NDE',
+	'1ERE',
+	'TERM',
 ] as const;
 export type GradeCode = (typeof GRADE_CODES)[number];
 

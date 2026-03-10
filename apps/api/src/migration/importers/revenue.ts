@@ -100,12 +100,77 @@ export async function importRevenue(
 		}
 		logger.addRowCount('enrollment_detail', detailCount);
 
+		// 3.5 Seed nationality breakdown from enrollment detail
+		const breakdownMap = new Map<
+			string,
+			{ period: string; grade: string; nationality: string; headcount: number }
+		>();
+		for (const e of enrollmentDetail) {
+			const key = `${e.academicPeriod}|${e.gradeLevel}|${e.nationality}`;
+			const cur = breakdownMap.get(key);
+			if (cur) {
+				cur.headcount += e.headcount;
+			} else {
+				breakdownMap.set(key, {
+					period: e.academicPeriod,
+					grade: e.gradeLevel,
+					nationality: e.nationality,
+					headcount: e.headcount,
+				});
+			}
+		}
+
+		// Compute grade totals for weight calculation
+		const gradeTotalMap = new Map<string, number>();
+		for (const [, entry] of breakdownMap) {
+			const gradeKey = `${entry.period}|${entry.grade}`;
+			gradeTotalMap.set(gradeKey, (gradeTotalMap.get(gradeKey) ?? 0) + entry.headcount);
+		}
+
+		let breakdownCount = 0;
+		for (const [, entry] of breakdownMap) {
+			const gradeKey = `${entry.period}|${entry.grade}`;
+			const gradeTotal = gradeTotalMap.get(gradeKey) ?? 1;
+			const weight = new Decimal(entry.headcount)
+				.dividedBy(gradeTotal)
+				.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+
+			await prisma.nationalityBreakdown.upsert({
+				where: {
+					versionId_academicPeriod_gradeLevel_nationality: {
+						versionId,
+						academicPeriod: entry.period,
+						gradeLevel: entry.grade,
+						nationality: entry.nationality,
+					},
+				},
+				update: {
+					weight: weight.toNumber(),
+					headcount: entry.headcount,
+				},
+				create: {
+					versionId,
+					academicPeriod: entry.period,
+					gradeLevel: entry.grade,
+					nationality: entry.nationality,
+					weight: weight.toNumber(),
+					headcount: entry.headcount,
+					isOverridden: false,
+				},
+			});
+			breakdownCount++;
+		}
+		logger.addRowCount('nationality_breakdown', breakdownCount);
+
 		// 4. Insert fee grid — ALL rows (AY1 + AY2), not just AY1
 		let feeCount = 0;
 		for (const f of feeGrid) {
 			const tuitionTtc = new Decimal(f.tuitionTtc);
 			const tuitionHt = new Decimal(f.tuitionHt);
 			const dai = new Decimal(f.dai);
+			const term1Amount = new Decimal(f.term1Amount);
+			const term2Amount = new Decimal(f.term2Amount);
+			const term3Amount = new Decimal(f.term3Amount);
 
 			await prisma.feeGrid.upsert({
 				where: {
@@ -121,6 +186,9 @@ export async function importRevenue(
 					tuitionTtc: tuitionTtc.toNumber(),
 					tuitionHt: tuitionHt.toNumber(),
 					dai: dai.toNumber(),
+					term1Amount: term1Amount.toNumber(),
+					term2Amount: term2Amount.toNumber(),
+					term3Amount: term3Amount.toNumber(),
 					updatedBy: userId,
 				},
 				create: {
@@ -132,6 +200,9 @@ export async function importRevenue(
 					tuitionTtc: tuitionTtc.toNumber(),
 					tuitionHt: tuitionHt.toNumber(),
 					dai: dai.toNumber(),
+					term1Amount: term1Amount.toNumber(),
+					term2Amount: term2Amount.toNumber(),
+					term3Amount: term3Amount.toNumber(),
 					createdBy: userId,
 				},
 			});

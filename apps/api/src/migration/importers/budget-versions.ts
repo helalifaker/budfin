@@ -9,6 +9,7 @@ interface VersionDef {
 	fiscalYear: number;
 	type: string;
 	status: string;
+	dataSource: string;
 }
 
 const BUDGET_VERSION: VersionDef = {
@@ -16,14 +17,45 @@ const BUDGET_VERSION: VersionDef = {
 	fiscalYear: 2026,
 	type: 'Budget',
 	status: 'Draft',
+	dataSource: 'MANUAL',
 };
 
 const ACTUAL_VERSIONS: VersionDef[] = [
-	{ name: 'Actual FY2022', fiscalYear: 2022, type: 'Actual', status: 'Locked' },
-	{ name: 'Actual FY2023', fiscalYear: 2023, type: 'Actual', status: 'Locked' },
-	{ name: 'Actual FY2024', fiscalYear: 2024, type: 'Actual', status: 'Locked' },
-	{ name: 'Actual FY2025', fiscalYear: 2025, type: 'Actual', status: 'Locked' },
-	{ name: 'Actual FY2026', fiscalYear: 2026, type: 'Actual', status: 'Locked' },
+	{
+		name: 'Actual FY2022',
+		fiscalYear: 2022,
+		type: 'Actual',
+		status: 'Locked',
+		dataSource: 'IMPORTED',
+	},
+	{
+		name: 'Actual FY2023',
+		fiscalYear: 2023,
+		type: 'Actual',
+		status: 'Locked',
+		dataSource: 'IMPORTED',
+	},
+	{
+		name: 'Actual FY2024',
+		fiscalYear: 2024,
+		type: 'Actual',
+		status: 'Locked',
+		dataSource: 'IMPORTED',
+	},
+	{
+		name: 'Actual FY2025',
+		fiscalYear: 2025,
+		type: 'Actual',
+		status: 'Locked',
+		dataSource: 'IMPORTED',
+	},
+	{
+		name: 'Actual FY2026',
+		fiscalYear: 2026,
+		type: 'Actual',
+		status: 'Locked',
+		dataSource: 'IMPORTED',
+	},
 ];
 
 const ALL_VERSIONS = [BUDGET_VERSION, ...ACTUAL_VERSIONS];
@@ -65,7 +97,7 @@ export async function createBudgetVersions(
 						name: def.name,
 						type: def.type,
 						status: def.status,
-						dataSource: 'IMPORTED',
+						dataSource: def.dataSource,
 						createdById: userId,
 						modificationCount: 0,
 						staleModules: [],

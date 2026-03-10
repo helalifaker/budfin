@@ -45,13 +45,13 @@ const GRADE_BAND_MAP: Record<string, string> = {
 	CE2: 'ELEMENTAIRE',
 	CM1: 'ELEMENTAIRE',
 	CM2: 'ELEMENTAIRE',
-	'6eme': 'COLLEGE',
-	'5eme': 'COLLEGE',
-	'4eme': 'COLLEGE',
-	'3eme': 'COLLEGE',
-	'2nde': 'LYCEE',
-	'1ere': 'LYCEE',
-	Terminale: 'LYCEE',
+	'6EME': 'COLLEGE',
+	'5EME': 'COLLEGE',
+	'4EME': 'COLLEGE',
+	'3EME': 'COLLEGE',
+	'2NDE': 'LYCEE',
+	'1ERE': 'LYCEE',
+	TERM: 'LYCEE',
 };
 
 export function HistoricalChart() {

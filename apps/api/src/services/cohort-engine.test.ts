@@ -274,17 +274,17 @@ describe('Cohort Progression Engine', () => {
 		});
 	});
 
-	describe('Terminale (exit grade)', () => {
-		it('Terminale uses 1ere as prior grade', () => {
-			const ay1 = new Map<string, number>([['1ere', 22]]);
-			const params = new Map<string, CohortParams>([['Terminale', makeParams('0.95', 1)]]);
+	describe('TERM (exit grade)', () => {
+		it('TERM uses 1ERE as prior grade', () => {
+			const ay1 = new Map<string, number>([['1ERE', 22]]);
+			const params = new Map<string, CohortParams>([['TERM', makeParams('0.95', 1)]]);
 
 			const results = calculateCohortProgression(
 				makeInput({ ay1Headcounts: ay1, cohortParams: params, psAy2Headcount: 0 })
 			);
 
-			// Terminale: floor(22 * 0.95) = floor(20.9) = 20, + 1 lateral = 21
-			const terminale = results.find((r) => r.gradeLevel === 'Terminale')!;
+			// TERM: floor(22 * 0.95) = floor(20.9) = 20, + 1 lateral = 21
+			const terminale = results.find((r) => r.gradeLevel === 'TERM')!;
 			expect(terminale.retainedFromPrior).toBe(20);
 			expect(terminale.lateralEntry).toBe(1);
 			expect(terminale.ay2Headcount).toBe(21);

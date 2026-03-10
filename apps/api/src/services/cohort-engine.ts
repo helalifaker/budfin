@@ -3,7 +3,7 @@
 
 import { Decimal } from 'decimal.js';
 
-// Grade progression order (PS is entry, Terminale is exit)
+// Grade progression order (PS is entry, TERM is exit)
 export const GRADE_PROGRESSION = [
 	'PS',
 	'MS',
@@ -13,13 +13,13 @@ export const GRADE_PROGRESSION = [
 	'CE2',
 	'CM1',
 	'CM2',
-	'6eme',
-	'5eme',
-	'4eme',
-	'3eme',
-	'2nde',
-	'1ere',
-	'Terminale',
+	'6EME',
+	'5EME',
+	'4EME',
+	'3EME',
+	'2NDE',
+	'1ERE',
+	'TERM',
 ] as const;
 
 export type ProgressionGrade = (typeof GRADE_PROGRESSION)[number];

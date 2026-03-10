@@ -54,6 +54,15 @@
 		"totalOperatingRevenue": "10564888.7543"
 	},
 	{
+		"month": 7,
+		"tuitionFees": "0.0000",
+		"discountImpact": "0.0000",
+		"registrationFees": "0.0000",
+		"activitiesServices": "0.0000",
+		"examinationFees": "0.0000",
+		"totalOperatingRevenue": "0.0000"
+	},
+	{
 		"month": 8,
 		"tuitionFees": "5728363.7543",
 		"discountImpact": "0.0000",

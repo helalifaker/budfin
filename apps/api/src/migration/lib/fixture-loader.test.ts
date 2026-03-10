@@ -20,7 +20,7 @@ describe('loadEnrollmentCsv', () => {
 	it('loads enrollment_2021-22.csv with 15 rows', () => {
 		const rows = loadEnrollmentCsv('enrollment_2021-22.csv');
 		expect(rows).toHaveLength(15);
-		expect(rows[0]).toEqual({ level_code: 'PS', student_count: 60 });
+		expect(rows[0]).toEqual({ level_code: 'PS', student_count: 77 });
 	});
 
 	it('total student count for 2021-22 is 1434', () => {

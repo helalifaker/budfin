@@ -133,7 +133,9 @@ async function validateChecksums(
 		orderBy: { id: 'asc' },
 	});
 
-	const dbChecksum = columnChecksum(feeGrids.map((f) => f.tuitionHt.toString()));
+	const dbChecksum = columnChecksum(
+		feeGrids.map((f) => new Decimal(f.tuitionHt.toString()).toFixed(4))
+	);
 
 	const fixture = loadFixture<FeeGridFixture[]>('fy2026-fee-grid.json');
 	const fixtureChecksum = columnChecksum(fixture.map((f) => new Decimal(f.tuitionHt).toFixed(4)));
