@@ -30,7 +30,7 @@ const putBodySchema = z.object({
 		.min(1),
 });
 
-const HEADCOUNT_STALE_MODULES = ['REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+const HEADCOUNT_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -143,6 +143,13 @@ export async function headcountRoutes(app: FastifyInstance) {
 				return reply.status(409).send({
 					code: 'VERSION_LOCKED',
 					message: `Version is ${version.status} and cannot be modified`,
+				});
+			}
+
+			if (version.dataSource === 'IMPORTED') {
+				return reply.status(409).send({
+					code: 'IMPORTED_VERSION',
+					message: 'Cannot modify enrollment headcount on imported versions',
 				});
 			}
 

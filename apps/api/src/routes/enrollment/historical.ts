@@ -61,7 +61,10 @@ export async function historicalRoutes(app: FastifyInstance) {
 
 			// Fetch all headcounts for those versions
 			const headcounts = await prisma.enrollmentHeadcount.findMany({
-				where: { versionId: { in: versionIds } },
+				where: {
+					versionId: { in: versionIds },
+					academicPeriod: 'AY1',
+				},
 			});
 
 			// Build per-year per-grade data

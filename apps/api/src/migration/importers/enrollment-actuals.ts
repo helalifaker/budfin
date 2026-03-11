@@ -1,25 +1,12 @@
 import type { PrismaClient } from '@prisma/client';
 import type { MigrationLog, GradeCodeMapping } from '../lib/types.js';
 import { MigrationLogger } from '../lib/logger.js';
-import { loadFixture, loadEnrollmentCsv } from '../lib/fixture-loader.js';
-
-// ── CSV filename to version name mapping ────────────────────────────────────
-
-const YEAR_MAP: Record<string, string> = {
-	'2021-22': 'Actual FY2022',
-	'2022-23': 'Actual FY2023',
-	'2023-24': 'Actual FY2024',
-	'2024-25': 'Actual FY2025',
-	'2025-26': 'Actual FY2026',
-};
-
-const CSV_FILES = [
-	'enrollment_2021-22.csv',
-	'enrollment_2022-23.csv',
-	'enrollment_2023-24.csv',
-	'enrollment_2024-25.csv',
-	'enrollment_2025-26.csv',
-] as const;
+import { hasEnrollmentCsv, loadFixture, loadEnrollmentCsv } from '../lib/fixture-loader.js';
+import {
+	getActualVersionName,
+	getHistoricalEnrollmentSourcesForFiscalYear,
+	HISTORICAL_ENROLLMENT_FISCAL_YEARS,
+} from '../../lib/enrollment-history.js';
 
 // ── Main export ─────────────────────────────────────────────────────────────
 
@@ -34,23 +21,12 @@ export async function importEnrollmentActuals(
 		// Load grade code mapping for validation
 		const gradeMappings = loadFixture<GradeCodeMapping[]>('grade-code-mapping.json');
 		const validGrades = new Set(gradeMappings.map((g) => g.appCode));
+		const csvCache = new Map<string, Array<{ level_code: string; student_count: number }>>();
 
 		let totalCount = 0;
 
-		for (const filename of CSV_FILES) {
-			// Extract academic year from filename: "enrollment_2021-22.csv" -> "2021-22"
-			const yearKey = filename.replace('enrollment_', '').replace('.csv', '');
-			const versionName = YEAR_MAP[yearKey];
-
-			if (!versionName) {
-				logger.error({
-					code: 'UNKNOWN_YEAR',
-					message: `No version mapping for year key: "${yearKey}"`,
-					fatal: false,
-				});
-				continue;
-			}
-
+		for (const fiscalYear of HISTORICAL_ENROLLMENT_FISCAL_YEARS) {
+			const versionName = getActualVersionName(fiscalYear);
 			const versionId = versions.get(versionName);
 			if (versionId === undefined) {
 				logger.error({
@@ -61,46 +37,64 @@ export async function importEnrollmentActuals(
 				continue;
 			}
 
-			const rows = loadEnrollmentCsv(filename);
-			let fileCount = 0;
+			const periodSources = getHistoricalEnrollmentSourcesForFiscalYear(fiscalYear);
 
-			for (const row of rows) {
-				// Validate grade code against mapping
-				if (!validGrades.has(row.level_code)) {
+			for (const source of periodSources) {
+				if (!hasEnrollmentCsv(source.filename)) {
 					logger.warn({
-						code: 'INVALID_GRADE',
-						message: `Unknown grade code "${row.level_code}" in ${filename}`,
-						field: 'level_code',
-						value: row.level_code,
+						code: 'MISSING_PERIOD_SOURCE',
+						message: `Skipping ${versionName} ${source.academicPeriod}: source file "${source.filename}" not found`,
+						field: 'academic_period',
+						value: source.academicPeriod,
 					});
 					continue;
 				}
 
-				await prisma.enrollmentHeadcount.upsert({
-					where: {
-						versionId_academicPeriod_gradeLevel: {
-							versionId,
-							academicPeriod: 'AY1',
-							gradeLevel: row.level_code,
-						},
-					},
-					update: {
-						headcount: row.student_count,
-						updatedBy: userId,
-					},
-					create: {
-						versionId,
-						academicPeriod: 'AY1',
-						gradeLevel: row.level_code,
-						headcount: row.student_count,
-						createdBy: userId,
-					},
-				});
-				fileCount++;
-			}
+				const rows = csvCache.get(source.filename) ?? loadEnrollmentCsv(source.filename);
+				csvCache.set(source.filename, rows);
 
-			logger.addRowCount(`enrollment_headcount:${yearKey}`, fileCount);
-			totalCount += fileCount;
+				let periodCount = 0;
+
+				for (const row of rows) {
+					if (!validGrades.has(row.level_code)) {
+						logger.warn({
+							code: 'INVALID_GRADE',
+							message: `Unknown grade code "${row.level_code}" in ${source.filename}`,
+							field: 'level_code',
+							value: row.level_code,
+						});
+						continue;
+					}
+
+					await prisma.enrollmentHeadcount.upsert({
+						where: {
+							versionId_academicPeriod_gradeLevel: {
+								versionId,
+								academicPeriod: source.academicPeriod,
+								gradeLevel: row.level_code,
+							},
+						},
+						update: {
+							headcount: row.student_count,
+							updatedBy: userId,
+						},
+						create: {
+							versionId,
+							academicPeriod: source.academicPeriod,
+							gradeLevel: row.level_code,
+							headcount: row.student_count,
+							createdBy: userId,
+						},
+					});
+					periodCount++;
+				}
+
+				logger.addRowCount(
+					`enrollment_headcount:FY${fiscalYear}:${source.academicPeriod}`,
+					periodCount
+				);
+				totalCount += periodCount;
+			}
 		}
 
 		logger.addRowCount('enrollment_headcount:total', totalCount);

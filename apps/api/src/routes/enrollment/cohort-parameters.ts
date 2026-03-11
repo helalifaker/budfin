@@ -4,6 +4,8 @@ import { Decimal } from 'decimal.js';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { GRADE_PROGRESSION } from '../../services/cohort-engine.js';
+import { getHistoricalCohortRecommendations } from '../../services/cohort-recommendations.js';
+import { normalizeCohortMutations } from '../../services/enrollment-workspace.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -44,7 +46,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
-				select: { id: true },
+				select: { id: true, fiscalYear: true },
 			});
 
 			if (!version) {
@@ -68,11 +70,17 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 			});
 
 			const paramsMap = new Map(params.map((p) => [p.gradeLevel, p]));
+			const recommendationMap = new Map(
+				(await getHistoricalCohortRecommendations(prisma, version.fiscalYear)).map(
+					(recommendation) => [recommendation.gradeLevel, recommendation] as const
+				)
+			);
 
 			// Build response: one row per grade, with defaults for missing grades
 			const entries = GRADE_PROGRESSION.map((grade) => {
 				const existing = paramsMap.get(grade);
 				const isPs = grade === 'PS';
+				const recommendation = recommendationMap.get(grade);
 
 				if (existing) {
 					return {
@@ -82,17 +90,37 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 						lateralWeightFr: Number(existing.lateralWeightFr),
 						lateralWeightNat: Number(existing.lateralWeightNat),
 						lateralWeightAut: Number(existing.lateralWeightAut),
+						isPersisted: true,
+						recommendedRetentionRate: recommendation?.recommendedRetentionRate ?? (isPs ? 0 : 0.97),
+						recommendedLateralEntryCount: recommendation?.recommendedLateralEntryCount ?? 0,
+						recommendationConfidence: recommendation?.confidence ?? 'low',
+						recommendationObservationCount: recommendation?.observationCount ?? 0,
+						recommendationSourceFiscalYear: recommendation?.sourceFiscalYear ?? null,
+						recommendationRolloverRatio: recommendation?.rolloverRatio ?? null,
+						recommendationRule:
+							recommendation?.rule ?? (isPs ? 'direct-entry' : 'fallback-default'),
 					};
 				}
 
-				// Defaults: PS has retentionRate=0 (direct entry), others=0.97
+				const defaultRetentionRate = recommendation?.recommendedRetentionRate ?? (isPs ? 0 : 0.97);
+				const defaultLateralEntryCount = recommendation?.recommendedLateralEntryCount ?? 0;
+
+				// Defaults: PS has retentionRate=0 (direct entry), others use the latest historical recommendation.
 				return {
 					gradeLevel: grade,
-					retentionRate: isPs ? 0 : 0.97,
-					lateralEntryCount: 0,
+					retentionRate: defaultRetentionRate,
+					lateralEntryCount: defaultLateralEntryCount,
 					lateralWeightFr: 0,
 					lateralWeightNat: 0,
 					lateralWeightAut: 0,
+					isPersisted: false,
+					recommendedRetentionRate: defaultRetentionRate,
+					recommendedLateralEntryCount: defaultLateralEntryCount,
+					recommendationConfidence: recommendation?.confidence ?? 'low',
+					recommendationObservationCount: recommendation?.observationCount ?? 0,
+					recommendationSourceFiscalYear: recommendation?.sourceFiscalYear ?? null,
+					recommendationRolloverRatio: recommendation?.rolloverRatio ?? null,
+					recommendationRule: recommendation?.rule ?? (isPs ? 'direct-entry' : 'fallback-default'),
 				};
 			});
 
@@ -110,6 +138,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParamsSchema>;
 			const { entries } = request.body as z.infer<typeof putBodySchema>;
+			const normalizedEntries = normalizeCohortMutations(entries);
 
 			// Version lock guard
 			const version = await prisma.budgetVersion.findUnique({
@@ -144,7 +173,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 				weightSum: number;
 			}> = [];
 
-			for (const entry of entries) {
+			for (const entry of normalizedEntries) {
 				if (entry.lateralEntryCount > 0) {
 					const weightSum = new Decimal(entry.lateralWeightFr)
 						.plus(entry.lateralWeightNat)
@@ -173,7 +202,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 			const result = await prisma.$transaction(async (tx) => {
 				const txPrisma = tx as typeof prisma;
 
-				for (const entry of entries) {
+				for (const entry of normalizedEntries) {
 					await txPrisma.cohortParameter.upsert({
 						where: {
 							versionId_gradeLevel: {
@@ -222,7 +251,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 						recordId: versionId,
 						ipAddress: request.ip,
 						newValues: {
-							entries: entries.map((e) => ({
+							entries: normalizedEntries.map((e) => ({
 								gradeLevel: e.gradeLevel,
 								retentionRate: e.retentionRate,
 								lateralEntryCount: e.lateralEntryCount,
@@ -234,7 +263,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 					},
 				});
 
-				return { updated: entries.length, staleModules };
+				return { updated: normalizedEntries.length, staleModules };
 			});
 
 			return result;

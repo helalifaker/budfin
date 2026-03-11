@@ -98,15 +98,16 @@ async function validateRowCounts(
 		);
 	}
 
-	// Historical enrollment: 75 rows total across 5 actual versions
+	// Historical enrollment: 9 period slices from the 5 CSVs.
+	// FY2022-FY2025 have AY1 and AY2, FY2026 only has AY1 because 2026-27 is unavailable.
 	let totalHistorical = 0;
 	for (const [, vId] of actualVersionIds) {
 		totalHistorical += await prisma.enrollmentHeadcount.count({
 			where: { versionId: vId },
 		});
 	}
-	if (totalHistorical !== 75) {
-		errors.push(`historical enrollment_headcount: expected 75, got ${totalHistorical}`);
+	if (totalHistorical !== 135) {
+		errors.push(`historical enrollment_headcount: expected 135, got ${totalHistorical}`);
 	}
 
 	// Budget versions: 6 total
@@ -230,12 +231,26 @@ async function validateEnrollmentExactMatch(
 	prisma: PrismaClient,
 	actualVersionIds: Map<string, number>
 ): Promise<ValidationResult> {
-	const expectedTotals: Record<string, number> = {
-		'Actual FY2022': 1434,
-		'Actual FY2023': 1499,
-		'Actual FY2024': 1587,
-		'Actual FY2025': 1794,
-		'Actual FY2026': 1747,
+	const expectedTotals: Record<string, Partial<Record<'AY1' | 'AY2', number>>> = {
+		'Actual FY2022': {
+			AY1: 1434,
+			AY2: 1499,
+		},
+		'Actual FY2023': {
+			AY1: 1499,
+			AY2: 1587,
+		},
+		'Actual FY2024': {
+			AY1: 1587,
+			AY2: 1794,
+		},
+		'Actual FY2025': {
+			AY1: 1794,
+			AY2: 1747,
+		},
+		'Actual FY2026': {
+			AY1: 1747,
+		},
 	};
 
 	const errors: string[] = [];
@@ -243,13 +258,26 @@ async function validateEnrollmentExactMatch(
 	for (const [versionName, versionId] of actualVersionIds) {
 		const headcounts = await prisma.enrollmentHeadcount.findMany({
 			where: { versionId },
-			select: { headcount: true },
+			select: { academicPeriod: true, headcount: true },
 		});
-		const dbTotal = headcounts.reduce((sum, h) => sum + h.headcount, 0);
-		const expected = expectedTotals[versionName];
+		const totalsByPeriod = new Map<'AY1' | 'AY2', number>();
+		for (const row of headcounts) {
+			const period = row.academicPeriod as 'AY1' | 'AY2';
+			totalsByPeriod.set(period, (totalsByPeriod.get(period) ?? 0) + row.headcount);
+		}
 
-		if (expected !== undefined && dbTotal !== expected) {
-			errors.push(`${versionName}: expected ${expected}, got ${dbTotal}`);
+		const expected = expectedTotals[versionName];
+		if (!expected) {
+			continue;
+		}
+
+		for (const [period, expectedTotal] of Object.entries(expected) as Array<
+			['AY1' | 'AY2', number]
+		>) {
+			const actualTotal = totalsByPeriod.get(period) ?? 0;
+			if (actualTotal !== expectedTotal) {
+				errors.push(`${versionName} ${period}: expected ${expectedTotal}, got ${actualTotal}`);
+			}
 		}
 	}
 

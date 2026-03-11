@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -46,4 +46,9 @@ export function loadEnrollmentCsv(
 	}
 
 	return rows;
+}
+
+export function hasEnrollmentCsv(filename: string) {
+	const path = resolve(ENROLLMENT_DIR, filename);
+	return existsSync(path);
 }

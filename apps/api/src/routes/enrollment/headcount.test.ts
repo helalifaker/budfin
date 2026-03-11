@@ -240,7 +240,7 @@ describe('PUT /headcount', () => {
 		const body = res.json();
 		expect(body.updated).toBe(2);
 		expect(body.staleModules).toEqual(
-			expect.arrayContaining(['REVENUE', 'DHG', 'STAFFING', 'PNL'])
+			expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'])
 		);
 
 		// Verify upsert was called for each entry
@@ -251,7 +251,7 @@ describe('PUT /headcount', () => {
 			expect.objectContaining({
 				where: { id: 1 },
 				data: {
-					staleModules: expect.arrayContaining(['REVENUE', 'DHG', 'STAFFING', 'PNL']),
+					staleModules: expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL']),
 				},
 			})
 		);
@@ -287,6 +287,7 @@ describe('PUT /headcount', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.staleModules).toContain('SOME_OTHER');
+		expect(body.staleModules).toContain('ENROLLMENT');
 		expect(body.staleModules).toContain('REVENUE');
 		expect(body.staleModules).toContain('DHG');
 	});

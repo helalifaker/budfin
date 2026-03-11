@@ -3,11 +3,16 @@ import { z } from 'zod';
 import { Decimal } from 'decimal.js';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
+import { VALID_GRADE_CODES } from '../../lib/enrollment-constants.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
+});
+
+const versionIdGradeParamsSchema = versionIdParamsSchema.extend({
+	gradeLevel: z.enum(VALID_GRADE_CODES as [string, ...string[]]),
 });
 
 const nationalityEnum = z.enum(['Francais', 'Nationaux', 'Autres']);
@@ -17,7 +22,7 @@ const getQuerySchema = z.object({
 });
 
 const overrideEntrySchema = z.object({
-	gradeLevel: z.string().min(1),
+	gradeLevel: z.enum(VALID_GRADE_CODES as [string, ...string[]]),
 	nationality: nationalityEnum,
 	weight: z.number().min(0).max(1),
 	headcount: z.number().int().min(0),
@@ -144,6 +149,7 @@ export async function nationalityBreakdownRoutes(app: FastifyInstance) {
 				headcountMap.set(`${h.gradeLevel}:${h.academicPeriod}`, h.headcount);
 			}
 
+			const trioErrors: Array<{ gradeLevel: string; nationalities: string[] }> = [];
 			const weightErrors: Array<{ gradeLevel: string; weightSum: number }> = [];
 			const headcountErrors: Array<{
 				gradeLevel: string;
@@ -152,32 +158,46 @@ export async function nationalityBreakdownRoutes(app: FastifyInstance) {
 			}> = [];
 
 			for (const [gradeLevel, gradeOverrides] of byGrade) {
-				// Validate: 3 nationality weights must sum to 1.0
-				if (gradeOverrides.length === NATIONALITIES.length) {
-					const weightSum = gradeOverrides.reduce(
-						(sum, o) => new Decimal(sum).plus(o.weight).toNumber(),
-						0
-					);
-					if (Math.abs(weightSum - 1.0) > WEIGHT_SUM_TOLERANCE) {
-						weightErrors.push({ gradeLevel, weightSum });
-					}
+				const nationalitySet = new Set(gradeOverrides.map((override) => override.nationality));
+				if (
+					gradeOverrides.length !== NATIONALITIES.length ||
+					nationalitySet.size !== NATIONALITIES.length
+				) {
+					trioErrors.push({
+						gradeLevel,
+						nationalities: [...nationalitySet].sort(),
+					});
+					continue;
 				}
 
-				// Validate: nationality headcounts sum to grade total
-				// Look up in AY2 first, then AY1 as fallback
+				const weightSum = gradeOverrides.reduce(
+					(sum, o) => new Decimal(sum).plus(o.weight).toNumber(),
+					0
+				);
+				if (Math.abs(weightSum - 1.0) > WEIGHT_SUM_TOLERANCE) {
+					weightErrors.push({ gradeLevel, weightSum });
+				}
+
+				// Look up in AY2 first, then AY1 as fallback.
 				const expectedHeadcount =
 					headcountMap.get(`${gradeLevel}:AY2`) ?? headcountMap.get(`${gradeLevel}:AY1`) ?? 0;
 
-				if (gradeOverrides.length === NATIONALITIES.length) {
-					const actualSum = gradeOverrides.reduce((sum, o) => sum + o.headcount, 0);
-					if (actualSum !== expectedHeadcount) {
-						headcountErrors.push({
-							gradeLevel,
-							expected: expectedHeadcount,
-							actual: actualSum,
-						});
-					}
+				const actualSum = gradeOverrides.reduce((sum, o) => sum + o.headcount, 0);
+				if (actualSum !== expectedHeadcount) {
+					headcountErrors.push({
+						gradeLevel,
+						expected: expectedHeadcount,
+						actual: actualSum,
+					});
 				}
+			}
+
+			if (trioErrors.length > 0) {
+				return reply.status(422).send({
+					code: 'NATIONALITY_TRIO_REQUIRED',
+					message: 'Each nationality override must submit Francais, Nationaux, and Autres rows',
+					errors: trioErrors,
+				});
 			}
 
 			if (weightErrors.length > 0) {
@@ -264,6 +284,87 @@ export async function nationalityBreakdownRoutes(app: FastifyInstance) {
 			});
 
 			return result;
+		},
+	});
+
+	app.delete('/nationality-breakdown/:gradeLevel', {
+		schema: {
+			params: versionIdGradeParamsSchema,
+		},
+		preHandler: [app.authenticate, app.requireRole('Admin', 'BudgetOwner', 'Editor')],
+		handler: async (request, reply) => {
+			const { versionId, gradeLevel } = request.params as z.infer<
+				typeof versionIdGradeParamsSchema
+			>;
+
+			const version = await prisma.budgetVersion.findUnique({
+				where: { id: versionId },
+				select: { id: true, status: true, dataSource: true, staleModules: true },
+			});
+
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: `Version ${versionId} not found`,
+				});
+			}
+
+			if (version.status !== 'Draft') {
+				return reply.status(409).send({
+					code: 'VERSION_LOCKED',
+					message: `Version is ${version.status} and cannot be modified`,
+				});
+			}
+
+			if (version.dataSource === 'IMPORTED') {
+				return reply.status(409).send({
+					code: 'IMPORTED_VERSION',
+					message: 'Cannot modify nationality breakdown on imported versions',
+				});
+			}
+
+			const result = await prisma.$transaction(async (tx) => {
+				const txPrisma = tx as typeof prisma;
+
+				const deleted = await txPrisma.nationalityBreakdown.deleteMany({
+					where: {
+						versionId,
+						academicPeriod: 'AY2',
+						gradeLevel,
+						isOverridden: true,
+					},
+				});
+
+				const currentStale = new Set(version.staleModules);
+				for (const moduleName of NATIONALITY_STALE_MODULES) {
+					currentStale.add(moduleName);
+				}
+				const staleModules = [...currentStale];
+
+				await txPrisma.budgetVersion.update({
+					where: { id: versionId },
+					data: { staleModules },
+				});
+
+				await txPrisma.auditEntry.create({
+					data: {
+						userId: request.user.id,
+						userEmail: request.user.email,
+						operation: 'NATIONALITY_BREAKDOWN_RESET',
+						tableName: 'nationality_breakdown',
+						recordId: versionId,
+						ipAddress: request.ip,
+						newValues: {
+							gradeLevel,
+							deletedRows: deleted.count,
+						} as unknown as Prisma.InputJsonValue,
+					},
+				});
+
+				return { deleted: deleted.count, staleModules };
+			});
+
+			return reply.send(result);
 		},
 	});
 }

@@ -23,6 +23,7 @@ vi.mock('../../lib/prisma.js', () => {
 		nationalityBreakdown: {
 			findMany: vi.fn(),
 			upsert: vi.fn().mockResolvedValue({}),
+			deleteMany: vi.fn().mockResolvedValue({ count: 3 }),
 		},
 		enrollmentHeadcount: {
 			findMany: vi.fn(),
@@ -52,6 +53,7 @@ const mockPrisma = prisma as unknown as {
 	nationalityBreakdown: {
 		findMany: ReturnType<typeof vi.fn>;
 		upsert: ReturnType<typeof vi.fn>;
+		deleteMany: ReturnType<typeof vi.fn>;
 	};
 	enrollmentHeadcount: {
 		findMany: ReturnType<typeof vi.fn>;
@@ -350,6 +352,29 @@ describe('PUT /nationality-breakdown', () => {
 		expect(res.json().errors[0].gradeLevel).toBe('CP');
 	});
 
+	it('returns 422 when an override grade does not include the full nationality trio', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+		mockPrisma.enrollmentHeadcount.findMany.mockResolvedValue([
+			{ gradeLevel: 'CP', academicPeriod: 'AY2', headcount: 28 },
+		]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/nationality-breakdown`,
+			headers: authHeader(token),
+			payload: {
+				overrides: [
+					{ gradeLevel: 'CP', nationality: 'Francais', weight: 0.5, headcount: 14 },
+					{ gradeLevel: 'CP', nationality: 'Nationaux', weight: 0.5, headcount: 14 },
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(422);
+		expect(res.json().code).toBe('NATIONALITY_TRIO_REQUIRED');
+	});
+
 	it('returns 422 when nationality headcounts do not sum to grade total', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
 		mockPrisma.enrollmentHeadcount.findMany.mockResolvedValue([
@@ -474,6 +499,55 @@ describe('PUT /nationality-breakdown', () => {
 							}),
 						]),
 					}),
+				}),
+			})
+		);
+	});
+});
+
+describe('DELETE /nationality-breakdown/:gradeLevel', () => {
+	it('returns 409 for imported versions', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			...mockDraftVersion,
+			dataSource: 'IMPORTED',
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'DELETE',
+			url: `${URL_PREFIX}/nationality-breakdown/CP`,
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('IMPORTED_VERSION');
+	});
+
+	it('deletes overridden AY2 rows and records an audit entry', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'DELETE',
+			url: `${URL_PREFIX}/nationality-breakdown/CP`,
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(res.json().deleted).toBe(3);
+		expect(mockPrisma.nationalityBreakdown.deleteMany).toHaveBeenCalledWith({
+			where: {
+				versionId: 1,
+				academicPeriod: 'AY2',
+				gradeLevel: 'CP',
+				isOverridden: true,
+			},
+		});
+		expect(mockPrisma.auditEntry.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({
+					operation: 'NATIONALITY_BREAKDOWN_RESET',
+					recordId: 1,
 				}),
 			})
 		);

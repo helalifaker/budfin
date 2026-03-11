@@ -4,13 +4,14 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"db:bootstrap": "prisma migrate deploy && prisma db seed",
+		"db:bootstrap": "set -a && . .env && set +a && prisma migrate deploy && prisma db seed",
 		"dev": "pnpm run db:bootstrap && tsx watch --env-file=.env src/index.ts",
 		"build": "tsc",
 		"lint": "eslint src",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"migrate": "tsx src/migration/index.ts",
+		"backfill:enrollment-history": "tsx --env-file=.env src/migration/backfill-enrollment-history.ts",
 		"parse:staff-costs": "tsx src/migration/parse-staff-costs-excel.ts"
 	},
 	"dependencies": {

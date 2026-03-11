@@ -14,6 +14,41 @@ import { setKeys, signAccessToken } from '../../services/token.js';
 import { auth } from '../../plugins/auth.js';
 import { cohortParameterRoutes } from './cohort-parameters.js';
 
+vi.mock('../../services/cohort-recommendations.js', () => ({
+	getHistoricalCohortRecommendations: vi.fn().mockResolvedValue([
+		{
+			gradeLevel: 'PS',
+			recommendedRetentionRate: 0,
+			recommendedLateralEntryCount: 0,
+			confidence: 'low',
+			observationCount: 0,
+			sourceFiscalYear: null,
+			rolloverRatio: null,
+			rule: 'direct-entry',
+		},
+		{
+			gradeLevel: 'CP',
+			recommendedRetentionRate: 1,
+			recommendedLateralEntryCount: 2,
+			confidence: 'high',
+			observationCount: 4,
+			sourceFiscalYear: 2025,
+			rolloverRatio: 1.0189,
+			rule: 'historical-rollover',
+		},
+		{
+			gradeLevel: 'MS',
+			recommendedRetentionRate: 1,
+			recommendedLateralEntryCount: 3,
+			confidence: 'high',
+			observationCount: 4,
+			sourceFiscalYear: 2025,
+			rolloverRatio: 1.0309,
+			rule: 'historical-rollover',
+		},
+	]),
+}));
+
 vi.mock('../../lib/prisma.js', () => {
 	const mockPrisma = {
 		budgetVersion: {
@@ -149,12 +184,15 @@ describe('GET /cohort-parameters', () => {
 		expect(ps.lateralWeightFr).toBe(0);
 		expect(ps.lateralWeightNat).toBe(0);
 		expect(ps.lateralWeightAut).toBe(0);
+		expect(ps.isPersisted).toBe(false);
 
 		// Non-PS defaults: retentionRate=0.97
 		const cp = body.entries.find((e: Record<string, unknown>) => e.gradeLevel === 'CP');
 		expect(cp).toBeDefined();
-		expect(cp.retentionRate).toBe(0.97);
-		expect(cp.lateralEntryCount).toBe(0);
+		expect(cp.retentionRate).toBe(1);
+		expect(cp.lateralEntryCount).toBe(2);
+		expect(cp.isPersisted).toBe(false);
+		expect(cp.recommendationSourceFiscalYear).toBe(2025);
 	});
 
 	it('returns existing parameters for a version', async () => {
@@ -196,11 +234,14 @@ describe('GET /cohort-parameters', () => {
 		expect(cp.lateralWeightFr).toBe(0.5);
 		expect(cp.lateralWeightNat).toBe(0.3);
 		expect(cp.lateralWeightAut).toBe(0.2);
+		expect(cp.isPersisted).toBe(true);
 
 		// MS should be defaults (not stored)
 		const ms = body.entries.find((e: Record<string, unknown>) => e.gradeLevel === 'MS');
-		expect(ms.retentionRate).toBe(0.97);
-		expect(ms.lateralEntryCount).toBe(0);
+		expect(ms.retentionRate).toBe(1);
+		expect(ms.lateralEntryCount).toBe(3);
+		expect(ms.isPersisted).toBe(false);
+		expect(ms.recommendationRule).toBe('historical-rollover');
 	});
 });
 

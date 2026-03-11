@@ -14,6 +14,10 @@ import { setKeys, signAccessToken } from '../../services/token.js';
 import { auth } from '../../plugins/auth.js';
 import { calculateRoutes } from './calculate.js';
 
+vi.mock('../../services/cohort-recommendations.js', () => ({
+	getHistoricalCohortRecommendations: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock('../../lib/prisma.js', () => {
 	const mockPrisma = {
 		budgetVersion: {
