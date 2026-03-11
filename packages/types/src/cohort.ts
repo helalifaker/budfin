@@ -7,6 +7,18 @@ export interface CohortParameterEntry {
 	lateralWeightFr: number;
 	lateralWeightNat: number;
 	lateralWeightAut: number;
+	isPersisted?: boolean;
+	recommendedRetentionRate?: number;
+	recommendedLateralEntryCount?: number;
+	recommendationConfidence?: 'high' | 'medium' | 'low';
+	recommendationObservationCount?: number;
+	recommendationSourceFiscalYear?: number | null;
+	recommendationRolloverRatio?: number | null;
+	recommendationRule?:
+		| 'direct-entry'
+		| 'fixed-97-growth'
+		| 'historical-rollover'
+		| 'fallback-default';
 }
 
 export interface NationalityBreakdownEntry {
