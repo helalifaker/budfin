@@ -4,7 +4,8 @@ import { InspectorDefaultView } from './inspector-default-view';
 import { InspectorActiveView } from './inspector-active-view';
 
 function EnrollmentInspectorContent() {
-	const selectedGrade = useEnrollmentSelectionStore((s) => s.selectedGrade);
+	const selection = useEnrollmentSelectionStore((state) => state.selection);
+	const selectedGrade = selection?.type === 'GRADE' ? selection.id : null;
 
 	return (
 		<div className="relative min-h-full">

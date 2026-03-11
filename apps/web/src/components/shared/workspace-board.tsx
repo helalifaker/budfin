@@ -44,7 +44,7 @@ export function WorkspaceBoard({
 					className={cn(
 						'sticky top-0 z-10',
 						'rounded-lg border border-(--workspace-border)',
-						'bg-white/80 px-4 py-3 shadow-(--shadow-sm)',
+						'bg-(--glass-bg-strong) px-4 py-3 shadow-(--shadow-sm)',
 						'backdrop-blur-md'
 					)}
 					role="region"

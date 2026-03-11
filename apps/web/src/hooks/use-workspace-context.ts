@@ -27,6 +27,7 @@ export function useWorkspaceContext() {
 		versionType: store.versionType,
 		versionName: store.versionName,
 		versionStatus: store.versionStatus,
+		versionDataSource: store.versionDataSource,
 		versionStaleModules: store.versionStaleModules,
 		setFiscalYear: store.setFiscalYear,
 		setVersion,

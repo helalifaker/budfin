@@ -1,14 +1,19 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn } from '../../lib/cn';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
-import { useHistorical } from '../../hooks/use-enrollment';
 import { useCohortParameters, usePutCohortParameters } from '../../hooks/use-cohort-parameters';
-import { useGradeLevels } from '../../hooks/use-grade-levels';
-import { calculateBaselineRetention } from '../../lib/enrollment-seeding';
-import type { SeedResult, ConfidenceLevel } from '../../lib/enrollment-seeding';
 import type { CohortParameterEntry } from '@budfin/types';
 import { toast } from '../ui/toast-state';
 import { Sparkles, X, Check } from 'lucide-react';
+
+type ConfidenceLevel = 'high' | 'medium' | 'low';
+
+type SeedResult = {
+	gradeLevel: string;
+	suggestedRetention: number;
+	suggestedLaterals: number;
+	confidence: ConfidenceLevel;
+};
 
 export type SeedPreviewDialogProps = {
 	open: boolean;
@@ -23,23 +28,17 @@ const CONFIDENCE_STYLES: Record<ConfidenceLevel, { label: string; className: str
 
 export function SeedPreviewDialog({ open, onClose }: SeedPreviewDialogProps) {
 	const { versionId } = useWorkspaceContext();
-	const { data: historicalData } = useHistorical(5);
 	const { data: cohortData } = useCohortParameters(versionId);
-	const { data: gradeLevelData } = useGradeLevels();
 	const putCohortParams = usePutCohortParameters(versionId);
 
-	const grades = useMemo(
-		() =>
-			(gradeLevelData?.gradeLevels ?? [])
-				.sort((a, b) => a.displayOrder - b.displayOrder)
-				.map((gl) => gl.gradeCode),
-		[gradeLevelData]
-	);
-
 	const seedResults: SeedResult[] = useMemo(() => {
-		if (!historicalData?.data) return [];
-		return calculateBaselineRetention(historicalData.data, grades);
-	}, [historicalData, grades]);
+		return (cohortData?.entries ?? []).map((entry) => ({
+			gradeLevel: entry.gradeLevel,
+			suggestedRetention: entry.recommendedRetentionRate ?? entry.retentionRate,
+			suggestedLaterals: entry.recommendedLateralEntryCount ?? entry.lateralEntryCount,
+			confidence: entry.recommendationConfidence ?? 'low',
+		}));
+	}, [cohortData?.entries]);
 
 	// Track user deselections rather than full accepted set to avoid setState in render
 	const [deselected, setDeselected] = useState<Set<string>>(new Set());

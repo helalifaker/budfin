@@ -147,6 +147,26 @@ export function CapacityGrid({
 				},
 				collapsible: true,
 			}}
+			footerRows={[
+				{
+					label: 'Grand total',
+					type: 'grandtotal',
+					values: {
+						ay2Total: rows.reduce((sum, row) => sum + row.ay2Total, 0),
+						maxClassSize: '—',
+						sectionsNeeded: rows.reduce((sum, row) => sum + row.sectionsNeeded, 0),
+						utilization:
+							rows.length > 0
+								? `${(rows.reduce((sum, row) => sum + row.utilization, 0) / rows.length).toFixed(
+										1
+									)}%`
+								: '—',
+						alert: rows.some((row) => row.alert === 'OVER' || row.alert === 'NEAR_CAP')
+							? 'Review'
+							: 'Stable',
+					},
+				},
+			]}
 			pinnedColumns={['gradeName']}
 			numericColumns={['ay2Total', 'maxClassSize', 'sectionsNeeded', 'utilization']}
 			ariaLabel="Capacity planning"

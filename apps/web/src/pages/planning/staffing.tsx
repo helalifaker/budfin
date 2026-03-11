@@ -58,7 +58,7 @@ export function StaffingPage() {
 	}, [versionId, versionsData]);
 
 	const isStale = currentVersion?.staleModules?.includes('STAFFING') ?? false;
-	const employees = employeesData?.data ?? [];
+	const employees = useMemo(() => employeesData?.data ?? [], [employeesData?.data]);
 
 	const kpiData = useMemo(() => {
 		const activeEmployees = employees.filter((e) => e.status !== 'Departed');

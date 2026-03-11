@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
 import { getCurrentFiscalYear } from '../../lib/format-date';
-import { useCreateVersion, useVersions } from '../../hooks/use-versions';
+import { useCreateVersion, useVersions, type BudgetVersion } from '../../hooks/use-versions';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
@@ -48,16 +50,18 @@ export function CreateVersionPanel({
 	const titleId = 'create-version-panel-title';
 	const { mutateAsync, isPending } = useCreateVersion();
 	const { data: allVersionsData } = useVersions();
+	const navigate = useNavigate();
+	const [createdVersion, setCreatedVersion] = useState<BudgetVersion | null>(null);
 
 	const sourceVersionsByFy = useMemo(() => {
-		const versions = (allVersionsData?.data ?? []).filter((v) => v.type !== 'Actual');
+		const versions = (allVersionsData?.data ?? []).filter((version) => version.type !== 'Actual');
 		const grouped = new Map<number, typeof versions>();
-		for (const v of versions) {
-			const list = grouped.get(v.fiscalYear) ?? [];
-			list.push(v);
-			grouped.set(v.fiscalYear, list);
+		for (const version of versions) {
+			const list = grouped.get(version.fiscalYear) ?? [];
+			list.push(version);
+			grouped.set(version.fiscalYear, list);
 		}
-		return Array.from(grouped.entries()).sort(([a], [b]) => b - a);
+		return Array.from(grouped.entries()).sort(([left], [right]) => right - left);
 	}, [allVersionsData]);
 
 	const form = useForm<CreateForm>({
@@ -71,11 +75,15 @@ export function CreateVersionPanel({
 		},
 	});
 
-	// Focus trap + Escape
 	useEffect(() => {
-		if (!open) return;
+		if (!open) {
+			return;
+		}
+
 		const panel = panelRef.current;
-		if (!panel) return;
+		if (!panel) {
+			return;
+		}
 
 		const focusable = panel.querySelectorAll<HTMLElement>(
 			'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
@@ -84,17 +92,19 @@ export function CreateVersionPanel({
 		const last = focusable[focusable.length - 1];
 		first?.focus();
 
-		function handleKeyDown(e: KeyboardEvent) {
-			if (e.key === 'Escape') {
+		function handleKeyDown(event: KeyboardEvent) {
+			if (event.key === 'Escape') {
 				onClose();
 				return;
 			}
-			if (e.key !== 'Tab') return;
-			if (e.shiftKey && document.activeElement === first) {
-				e.preventDefault();
+			if (event.key !== 'Tab') {
+				return;
+			}
+			if (event.shiftKey && document.activeElement === first) {
+				event.preventDefault();
 				last?.focus();
-			} else if (!e.shiftKey && document.activeElement === last) {
-				e.preventDefault();
+			} else if (!event.shiftKey && document.activeElement === last) {
+				event.preventDefault();
 				first?.focus();
 			}
 		}
@@ -104,7 +114,12 @@ export function CreateVersionPanel({
 	}, [open, onClose]);
 
 	useEffect(() => {
-		if (open) {
+		if (!open) {
+			return;
+		}
+
+		const frameId = window.requestAnimationFrame(() => {
+			setCreatedVersion(null);
 			form.reset({
 				fiscalYear,
 				name: '',
@@ -112,10 +127,13 @@ export function CreateVersionPanel({
 				description: '',
 				sourceVersionId: '',
 			});
-		}
-	}, [open, form, fiscalYear]);
+		});
+		return () => window.cancelAnimationFrame(frameId);
+	}, [fiscalYear, form, open]);
 
-	if (!open) return null;
+	if (!open) {
+		return null;
+	}
 
 	return (
 		<>
@@ -126,9 +144,8 @@ export function CreateVersionPanel({
 				aria-modal="true"
 				aria-labelledby={titleId}
 				className={cn(
-					'fixed right-0 top-0 z-50 h-full w-[480px]',
-					'bg-(--workspace-bg-card) shadow-xl',
-					'flex flex-col'
+					'fixed right-0 top-0 z-50 flex h-full w-[480px] flex-col',
+					'bg-(--workspace-bg-card) shadow-xl'
 				)}
 			>
 				<div className="border-b px-6 py-4">
@@ -141,168 +158,227 @@ export function CreateVersionPanel({
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-6 py-4">
-					<form
-						id="create-version-form"
-						onSubmit={form.handleSubmit(async (data) => {
-							const parsedSourceId = data.sourceVersionId
-								? Number(data.sourceVersionId)
-								: undefined;
-							await mutateAsync({
-								name: data.name,
-								type: data.type,
-								fiscalYear: data.fiscalYear,
-								...(data.description ? { description: data.description } : {}),
-								...(parsedSourceId ? { sourceVersionId: parsedSourceId } : {}),
-							});
-							onSuccess(data.name);
-						})}
-						className="space-y-4"
-					>
-						<div>
-							<label htmlFor="cv-fy" className="block text-(--text-sm) font-medium">
-								Fiscal Year{' '}
-								<span aria-hidden="true" className="text-(--color-error)">
-									*
-								</span>
-							</label>
-							<Controller
-								control={form.control}
-								name="fiscalYear"
-								render={({ field }) => (
-									<Select
-										value={String(field.value)}
-										onValueChange={(v) => field.onChange(Number(v))}
-									>
-										<SelectTrigger id="cv-fy" aria-required="true" className="mt-1">
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											{FY_OPTIONS.map((fy) => (
-												<SelectItem key={fy} value={String(fy)}>
-													FY{fy}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								)}
-							/>
-						</div>
-
-						<div>
-							<label htmlFor="cv-name" className="block text-(--text-sm) font-medium">
-								Name{' '}
-								<span aria-hidden="true" className="text-(--color-error)">
-									*
-								</span>
-							</label>
-							<Input
-								id="cv-name"
-								type="text"
-								aria-required="true"
-								maxLength={100}
-								className={cn('mt-1', form.formState.errors.name && 'border-(--color-error)')}
-								{...form.register('name')}
-							/>
-							{form.formState.errors.name && (
-								<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
-									{form.formState.errors.name.message}
-								</p>
-							)}
-						</div>
-
-						<div>
-							<label htmlFor="cv-type" className="block text-(--text-sm) font-medium">
-								Type{' '}
-								<span aria-hidden="true" className="text-(--color-error)">
-									*
-								</span>
-							</label>
-							<Controller
-								control={form.control}
-								name="type"
-								render={({ field }) => (
-									<Select value={field.value} onValueChange={field.onChange}>
-										<SelectTrigger id="cv-type" aria-required="true" className="mt-1">
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="Budget">Budget</SelectItem>
-											<SelectItem value="Forecast">Forecast</SelectItem>
-										</SelectContent>
-									</Select>
-								)}
-							/>
-							<div className="mt-1.5 space-y-0.5 text-(--text-xs) text-(--text-muted)">
-								<p>
-									<span className="font-medium">Budget:</span> Annual operating plan
-								</p>
-								<p>
-									<span className="font-medium">Forecast:</span> Mid-year revision
-								</p>
-								<p className="italic">Actual versions are created automatically via data import</p>
+					{createdVersion ? (
+						<div className="space-y-5">
+							<div className="rounded-2xl border border-(--accent-200) bg-(--accent-50) p-5">
+								<div className="flex items-start gap-3">
+									<span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-(--workspace-bg-card)">
+										<CheckCircle2 className="h-5 w-5 text-(--color-success)" aria-hidden="true" />
+									</span>
+									<div className="space-y-1">
+										<h3 className="text-(--text-lg) font-semibold text-(--text-primary)">
+											Version ready
+										</h3>
+										<p className="text-(--text-sm) text-(--text-secondary)">
+											{createdVersion.name} was created as a Draft. Opening Enrollment now will
+											launch the guided setup wizard for the first validation pass.
+										</p>
+									</div>
+								</div>
 							</div>
-							{form.formState.errors.type && (
-								<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
-									{form.formState.errors.type.message}
+
+							<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
+								<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+									Next step
 								</p>
-							)}
+								<p className="mt-2 text-(--text-sm) text-(--text-secondary)">
+									The Enrollment wizard reviews prior-year actuals, validates workbook imports, and
+									applies AY1 plus cohort assumptions atomically before the user lands in the grid.
+								</p>
+							</div>
 						</div>
+					) : (
+						<form
+							id="create-version-form"
+							onSubmit={form.handleSubmit(async (data) => {
+								const parsedSourceId = data.sourceVersionId
+									? Number(data.sourceVersionId)
+									: undefined;
+								const created = await mutateAsync({
+									name: data.name,
+									type: data.type,
+									fiscalYear: data.fiscalYear,
+									...(data.description ? { description: data.description } : {}),
+									...(parsedSourceId ? { sourceVersionId: parsedSourceId } : {}),
+								});
+								setCreatedVersion(created);
+							})}
+							className="space-y-4"
+						>
+							<div>
+								<label htmlFor="cv-fy" className="block text-(--text-sm) font-medium">
+									Fiscal Year{' '}
+									<span aria-hidden="true" className="text-(--color-error)">
+										*
+									</span>
+								</label>
+								<Controller
+									control={form.control}
+									name="fiscalYear"
+									render={({ field }) => (
+										<Select
+											value={String(field.value)}
+											onValueChange={(value) => field.onChange(Number(value))}
+										>
+											<SelectTrigger id="cv-fy" aria-required="true" className="mt-1">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												{FY_OPTIONS.map((fy) => (
+													<SelectItem key={fy} value={String(fy)}>
+														FY{fy}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+							</div>
 
-						<div>
-							<label htmlFor="cv-description" className="block text-(--text-sm) font-medium">
-								Description
-							</label>
-							<Textarea
-								id="cv-description"
-								rows={3}
-								maxLength={500}
-								className="mt-1"
-								{...form.register('description')}
-							/>
-						</div>
-
-						<div>
-							<label htmlFor="cv-source" className="block text-(--text-sm) font-medium">
-								Copy Data From
-							</label>
-							<Controller
-								control={form.control}
-								name="sourceVersionId"
-								render={({ field }) => (
-									<Select
-										value={field.value || 'none'}
-										onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
-									>
-										<SelectTrigger id="cv-source" className="mt-1">
-											<SelectValue placeholder="None (start empty)" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="none">None (start empty)</SelectItem>
-											{sourceVersionsByFy.map(([fy, versions]) => (
-												<SelectGroup key={fy}>
-													<SelectLabel>FY{fy}</SelectLabel>
-													{versions.map((v) => (
-														<SelectItem key={v.id} value={String(v.id)}>
-															{v.name} ({v.type}) - FY{v.fiscalYear}
-														</SelectItem>
-													))}
-												</SelectGroup>
-											))}
-										</SelectContent>
-									</Select>
+							<div>
+								<label htmlFor="cv-name" className="block text-(--text-sm) font-medium">
+									Name{' '}
+									<span aria-hidden="true" className="text-(--color-error)">
+										*
+									</span>
+								</label>
+								<Input
+									id="cv-name"
+									type="text"
+									aria-required="true"
+									maxLength={100}
+									className={cn('mt-1', form.formState.errors.name && 'border-(--color-error)')}
+									{...form.register('name')}
+								/>
+								{form.formState.errors.name && (
+									<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
+										{form.formState.errors.name.message}
+									</p>
 								)}
-							/>
-						</div>
-					</form>
+							</div>
+
+							<div>
+								<label htmlFor="cv-type" className="block text-(--text-sm) font-medium">
+									Type{' '}
+									<span aria-hidden="true" className="text-(--color-error)">
+										*
+									</span>
+								</label>
+								<Controller
+									control={form.control}
+									name="type"
+									render={({ field }) => (
+										<Select value={field.value} onValueChange={field.onChange}>
+											<SelectTrigger id="cv-type" aria-required="true" className="mt-1">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="Budget">Budget</SelectItem>
+												<SelectItem value="Forecast">Forecast</SelectItem>
+											</SelectContent>
+										</Select>
+									)}
+								/>
+								<div className="mt-1.5 space-y-0.5 text-(--text-xs) text-(--text-muted)">
+									<p>
+										<span className="font-medium">Budget:</span> Annual operating plan
+									</p>
+									<p>
+										<span className="font-medium">Forecast:</span> Mid-year revision
+									</p>
+									<p className="italic">
+										Actual versions are created automatically via data import
+									</p>
+								</div>
+								{form.formState.errors.type && (
+									<p className="mt-1 text-(--text-xs) text-(--color-error)" role="alert">
+										{form.formState.errors.type.message}
+									</p>
+								)}
+							</div>
+
+							<div>
+								<label htmlFor="cv-description" className="block text-(--text-sm) font-medium">
+									Description
+								</label>
+								<Textarea
+									id="cv-description"
+									rows={3}
+									maxLength={500}
+									className="mt-1"
+									{...form.register('description')}
+								/>
+							</div>
+
+							<div>
+								<label htmlFor="cv-source" className="block text-(--text-sm) font-medium">
+									Copy Data From
+								</label>
+								<Controller
+									control={form.control}
+									name="sourceVersionId"
+									render={({ field }) => (
+										<Select
+											value={field.value || 'none'}
+											onValueChange={(value) => field.onChange(value === 'none' ? '' : value)}
+										>
+											<SelectTrigger id="cv-source" className="mt-1">
+												<SelectValue placeholder="None (start empty)" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="none">None (start empty)</SelectItem>
+												{sourceVersionsByFy.map(([fy, versions]) => (
+													<SelectGroup key={fy}>
+														<SelectLabel>FY{fy}</SelectLabel>
+														{versions.map((version) => (
+															<SelectItem key={version.id} value={String(version.id)}>
+																{version.name} ({version.type}) - FY{version.fiscalYear}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+							</div>
+						</form>
+					)}
 				</div>
 
 				<div className="flex items-center justify-end gap-3 border-t px-6 py-4">
-					<Button variant="outline" onClick={onClose} disabled={isPending}>
-						Cancel
-					</Button>
-					<Button type="submit" form="create-version-form" loading={isPending}>
-						Create Version
-					</Button>
+					{createdVersion ? (
+						<>
+							<Button
+								variant="outline"
+								onClick={() => {
+									onSuccess(createdVersion.name);
+								}}
+							>
+								Done
+							</Button>
+							<Button
+								onClick={() => {
+									onSuccess(createdVersion.name);
+									navigate(
+										`/planning/enrollment?fy=${createdVersion.fiscalYear}&version=${createdVersion.id}`
+									);
+								}}
+							>
+								Open Enrollment Setup
+								<ArrowRight className="h-4 w-4" aria-hidden="true" />
+							</Button>
+						</>
+					) : (
+						<>
+							<Button variant="outline" onClick={onClose} disabled={isPending}>
+								Cancel
+							</Button>
+							<Button type="submit" form="create-version-form" loading={isPending}>
+								Create Version
+							</Button>
+						</>
+					)}
 				</div>
 			</div>
 		</>

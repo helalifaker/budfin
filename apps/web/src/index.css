@@ -76,9 +76,9 @@
 	--status-archived-bg: color-mix(in srgb, var(--status-archived) 15%, white);
 
 	/* ── Editable Cell Colors ── */
-	--cell-editable-bg: #fefce8;
+	--cell-editable-bg: #f8f4e6;
 	--cell-editable-focus: #2563eb;
-	--cell-readonly-bg: #f8fafc;
+	--cell-readonly-bg: #f4f7fb;
 	--cell-error-border: #dc2626;
 	--cell-override-bg: #f5f3ff;
 
@@ -165,17 +165,17 @@
 	--inspector-section-border: var(--workspace-border);
 
 	/* ── Grid Tokens ── */
-	--grid-header-bg: #f0f2f7;
-	--grid-header-border: #dde1ea;
-	--grid-row-stripe: rgba(0, 0, 0, 0.015);
-	--grid-row-hover: var(--accent-50);
+	--grid-header-bg: #f6f8fb;
+	--grid-header-border: #e2e8f0;
+	--grid-row-stripe: #fafbfd;
+	--grid-row-hover: color-mix(in srgb, var(--accent-50) 75%, white);
 	--grid-band-accent-width: 3px;
 	--grid-cell-px: 14px;
 	--grid-cell-py: 10px;
 	--grid-resize-handle: var(--accent-300);
-	--grid-active-row: color-mix(in srgb, var(--accent-100) 50%, white);
-	--grid-footer-bg: #f5f7fa;
-	--grid-pinned-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.06);
+	--grid-active-row: color-mix(in srgb, var(--accent-100) 40%, white);
+	--grid-footer-bg: #f7f9fc;
+	--grid-pinned-shadow: 8px 0 16px -12px rgba(15, 23, 42, 0.22);
 
 	/* ── Band/Department Badge Colors ── */
 	--badge-maternelle: #be185d;

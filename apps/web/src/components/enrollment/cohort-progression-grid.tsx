@@ -1,5 +1,6 @@
-import { useMemo, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import type { CohortParameterEntry, GradeCode } from '@budfin/types';
 import { cn } from '../../lib/cn';
 import { PlanningGrid } from '../data-grid/planning-grid';
 import { useHeadcount, usePutHeadcount } from '../../hooks/use-enrollment';
@@ -8,7 +9,13 @@ import { useNationalityBreakdown } from '../../hooks/use-nationality-breakdown';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useEnrollmentSelectionStore } from '../../stores/enrollment-selection-store';
 import { EditableCell } from '../shared/editable-cell';
-import type { HeadcountEntry, CohortParameterEntry } from '@budfin/types';
+import {
+	buildAy1HeadcountMap,
+	buildCohortProjectionRows,
+	getPsAy2Headcount,
+	BAND_LABELS,
+	type CohortProjectionRow,
+} from '../../lib/enrollment-workspace';
 
 export type CohortProgressionGridProps = {
 	versionId: number;
@@ -16,33 +23,47 @@ export type CohortProgressionGridProps = {
 	isReadOnly: boolean;
 };
 
-const BAND_LABELS: Record<string, string> = {
-	MATERNELLE: 'Maternelle',
-	ELEMENTAIRE: 'Elementaire',
-	COLLEGE: 'College',
-	LYCEE: 'Lycee',
+type CohortRow = CohortProjectionRow & {
+	frPct: number;
+	natPct: number;
+	autPct: number;
 };
-
-const BAND_STYLES: Record<string, string> = {
-	MATERNELLE: 'bg-(--badge-maternelle-bg) text-(--badge-maternelle)',
-	ELEMENTAIRE: 'bg-(--badge-elementaire-bg) text-(--badge-elementaire)',
-	COLLEGE: 'bg-(--badge-college-bg) text-(--badge-college)',
-	LYCEE: 'bg-(--badge-lycee-bg) text-(--badge-lycee)',
-};
-
-interface CohortRow {
-	gradeLevel: string;
-	gradeName: string;
-	band: string;
-	displayOrder: number;
-	ay1Headcount: number;
-	retentionRate: number;
-	lateralEntry: number;
-	ay2Total: number;
-	isPS: boolean;
-}
 
 const columnHelper = createColumnHelper<CohortRow>();
+
+function buildBandFooterRow(rows: CohortRow[], band: string) {
+	if (rows.length === 0) {
+		return null;
+	}
+
+	const ay1Total = rows.reduce((sum, row) => sum + row.ay1Headcount, 0);
+	const lateralTotal = rows.reduce((sum, row) => sum + row.lateralEntry, 0);
+	const ay2Total = rows.reduce((sum, row) => sum + row.ay2Headcount, 0);
+
+	return {
+		label: `${BAND_LABELS[band] ?? band} subtotal`,
+		type: 'subtotal' as const,
+		values: {
+			band: '',
+			ay1Headcount: ay1Total,
+			retentionRate: '—',
+			lateralEntry: lateralTotal,
+			ay2Headcount: ay2Total,
+			frPct:
+				ay2Total > 0
+					? `${Math.round(rows.reduce((sum, row) => sum + row.frPct * row.ay2Headcount, 0) / ay2Total || 0)}%`
+					: '—',
+			natPct:
+				ay2Total > 0
+					? `${Math.round(rows.reduce((sum, row) => sum + row.natPct * row.ay2Headcount, 0) / ay2Total || 0)}%`
+					: '—',
+			autPct:
+				ay2Total > 0
+					? `${Math.round(rows.reduce((sum, row) => sum + row.autPct * row.ay2Headcount, 0) / ay2Total || 0)}%`
+					: '—',
+		},
+	};
+}
 
 export function CohortProgressionGrid({
 	versionId,
@@ -55,100 +76,116 @@ export function CohortProgressionGrid({
 	const { data: gradeLevelData } = useGradeLevels();
 	const putHeadcount = usePutHeadcount(versionId);
 	const putCohortParams = usePutCohortParameters(versionId);
-	const selectGrade = useEnrollmentSelectionStore((s) => s.selectGrade);
-	const selectedGrade = useEnrollmentSelectionStore((s) => s.selectedGrade);
+	const selectGrade = useEnrollmentSelectionStore((state) => state.selectGrade);
+	const selectedGrade = useEnrollmentSelectionStore((state) =>
+		state.selection?.type === 'GRADE' ? state.selection.id : null
+	);
 
 	const isLoading = headcountLoading || cohortLoading;
-
+	const headcountEntries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
+	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
+	const natEntries = useMemo(() => natData?.entries ?? [], [natData?.entries]);
 	const gradeLevels = useMemo(
 		() => gradeLevelData?.gradeLevels ?? [],
 		[gradeLevelData?.gradeLevels]
 	);
-	const entries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
-	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
-	const natEntries = useMemo(() => natData?.entries ?? [], [natData?.entries]);
 
-	const natSummaryMap = useMemo(() => {
-		const map = new Map<string, { frPct: number; natPct: number; autPct: number }>();
-		for (const e of natEntries) {
-			if (!map.has(e.gradeLevel)) {
-				map.set(e.gradeLevel, { frPct: 0, natPct: 0, autPct: 0 });
+	const projectionRows = useMemo(() => {
+		const ay1HeadcountMap = buildAy1HeadcountMap(headcountEntries);
+		const psAy2Headcount = getPsAy2Headcount(headcountEntries, ay1HeadcountMap);
+		return buildCohortProjectionRows({
+			gradeLevels,
+			ay1HeadcountMap,
+			cohortEntries,
+			psAy2Headcount,
+		});
+	}, [headcountEntries, gradeLevels, cohortEntries]);
+
+	const nationalityByGrade = useMemo(() => {
+		const summary = new Map<string, { frPct: number; natPct: number; autPct: number }>();
+		for (const entry of natEntries) {
+			if (entry.academicPeriod !== 'AY2') {
+				continue;
 			}
-			const summary = map.get(e.gradeLevel)!;
-			if (e.nationality === 'Francais') summary.frPct = Math.round(e.weight * 100);
-			if (e.nationality === 'Nationaux') summary.natPct = Math.round(e.weight * 100);
-			if (e.nationality === 'Autres') summary.autPct = Math.round(e.weight * 100);
+
+			const current = summary.get(entry.gradeLevel) ?? { frPct: 0, natPct: 0, autPct: 0 };
+			if (entry.nationality === 'Francais') {
+				current.frPct = Math.round(entry.weight * 100);
+			}
+			if (entry.nationality === 'Nationaux') {
+				current.natPct = Math.round(entry.weight * 100);
+			}
+			if (entry.nationality === 'Autres') {
+				current.autPct = Math.round(entry.weight * 100);
+			}
+			summary.set(entry.gradeLevel, current);
 		}
-		return map;
+		return summary;
 	}, [natEntries]);
 
-	const rows: CohortRow[] = useMemo(() => {
-		const ay1Map = new Map<string, number>();
-		const ay2Map = new Map<string, number>();
-		for (const e of entries) {
-			if (e.academicPeriod === 'AY1') ay1Map.set(e.gradeLevel, e.headcount);
-			if (e.academicPeriod === 'AY2') ay2Map.set(e.gradeLevel, e.headcount);
-		}
+	const rows = useMemo(() => {
+		const filteredRows =
+			bandFilter === 'ALL'
+				? projectionRows
+				: projectionRows.filter((row) => row.band === bandFilter);
 
-		const cohortMap = new Map<string, CohortParameterEntry>();
-		for (const c of cohortEntries) {
-			cohortMap.set(c.gradeLevel, c);
-		}
-
-		const filtered =
-			bandFilter === 'ALL' ? gradeLevels : gradeLevels.filter((gl) => gl.band === bandFilter);
-
-		return filtered
-			.sort((a, b) => a.displayOrder - b.displayOrder)
-			.map((gl) => {
-				const ay1 = ay1Map.get(gl.gradeCode) ?? 0;
-				const cohort = cohortMap.get(gl.gradeCode);
-				const isPS = gl.gradeCode === 'PS';
-				const retRate = cohort?.retentionRate ?? 0;
-				const lateral = cohort?.lateralEntryCount ?? 0;
-				const ay2 = isPS ? (ay2Map.get(gl.gradeCode) ?? 0) : Math.round(ay1 * retRate + lateral);
-
-				return {
-					gradeLevel: gl.gradeCode,
-					gradeName: gl.gradeName,
-					band: gl.band,
-					displayOrder: gl.displayOrder,
-					ay1Headcount: ay1,
-					retentionRate: retRate,
-					lateralEntry: lateral,
-					ay2Total: ay2,
-					isPS,
-				};
-			});
-	}, [entries, cohortEntries, gradeLevels, bandFilter]);
+		return filteredRows.map((row) => {
+			const nationality = nationalityByGrade.get(row.gradeLevel) ?? {
+				frPct: 0,
+				natPct: 0,
+				autPct: 0,
+			};
+			return {
+				...row,
+				frPct: nationality.frPct,
+				natPct: nationality.natPct,
+				autPct: nationality.autPct,
+			};
+		});
+	}, [bandFilter, projectionRows, nationalityByGrade]);
 
 	const handleHeadcountChange = useCallback(
-		(gradeLevel: string, period: 'AY1' | 'AY2', value: number) => {
-			if (isReadOnly) return;
-			const entry: HeadcountEntry = {
-				gradeLevel: gradeLevel as HeadcountEntry['gradeLevel'],
-				academicPeriod: period,
-				headcount: Math.round(value),
-			};
-			putHeadcount.mutate([entry]);
+		(gradeLevel: GradeCode, period: 'AY1' | 'AY2', value: number) => {
+			if (isReadOnly) {
+				return;
+			}
+			putHeadcount.mutate([
+				{
+					gradeLevel,
+					academicPeriod: period,
+					headcount: Math.max(0, Math.round(value)),
+				},
+			]);
 		},
 		[isReadOnly, putHeadcount]
 	);
 
 	const handleCohortChange = useCallback(
-		(gradeLevel: string, field: 'retentionRate' | 'lateralEntryCount', value: number) => {
-			if (isReadOnly) return;
-			const existing = cohortEntries.find((c) => c.gradeLevel === gradeLevel);
-			const entry: CohortParameterEntry = {
-				gradeLevel: gradeLevel as CohortParameterEntry['gradeLevel'],
-				retentionRate: existing?.retentionRate ?? 0,
+		(
+			gradeLevel: GradeCode,
+			field: keyof Pick<CohortParameterEntry, 'retentionRate' | 'lateralEntryCount'>,
+			value: number
+		) => {
+			if (isReadOnly) {
+				return;
+			}
+
+			const existing = cohortEntries.find((entry) => entry.gradeLevel === gradeLevel);
+			const baseEntry: CohortParameterEntry = {
+				gradeLevel,
+				retentionRate: existing?.retentionRate ?? 0.97,
 				lateralEntryCount: existing?.lateralEntryCount ?? 0,
 				lateralWeightFr: existing?.lateralWeightFr ?? 0,
 				lateralWeightNat: existing?.lateralWeightNat ?? 0,
 				lateralWeightAut: existing?.lateralWeightAut ?? 0,
-				[field]: value,
 			};
-			putCohortParams.mutate([entry]);
+
+			putCohortParams.mutate([
+				{
+					...baseEntry,
+					[field]: field === 'retentionRate' ? value : Math.max(0, Math.round(value)),
+				},
+			]);
 		},
 		[isReadOnly, cohortEntries, putCohortParams]
 	);
@@ -158,148 +195,113 @@ export function CohortProgressionGrid({
 			columnHelper.accessor('gradeName', {
 				header: 'Grade',
 				cell: (info) => (
-					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
+					<div className="min-w-0">
+						<span className="block font-medium text-(--text-primary)">{info.getValue()}</span>
+						<span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+							{info.row.original.gradeLevel}
+						</span>
+					</div>
 				),
 			}),
-			columnHelper.accessor('band', {
-				header: 'Band',
-				cell: (info) => {
-					const band = info.getValue();
-					return (
-						<span
-							className={cn(
-								'inline-block rounded-sm px-2 py-0.5',
-								'text-(--text-xs) font-medium',
-								BAND_STYLES[band] ?? ''
-							)}
-						>
-							{BAND_LABELS[band] ?? band}
-						</span>
-					);
-				},
-			}),
 			columnHelper.accessor('ay1Headcount', {
-				header: 'AY1 Hdc',
+				header: 'AY1',
 				cell: (info) => (
 					<EditableCell
 						value={info.getValue()}
-						onChange={(val) => handleHeadcountChange(info.row.original.gradeLevel, 'AY1', val)}
+						onChange={(value) => handleHeadcountChange(info.row.original.gradeLevel, 'AY1', value)}
 						type="number"
 						isReadOnly={isReadOnly}
+						className="px-3 py-1.5"
 					/>
 				),
 			}),
 			columnHelper.accessor('retentionRate', {
 				header: 'Ret %',
-				cell: (info) => {
-					if (info.row.original.isPS) {
-						return (
-							<span className="inline-block w-full px-2 py-1 text-right text-(--text-sm) text-(--text-muted)">
-								-
-							</span>
-						);
-					}
-					return (
+				cell: (info) =>
+					info.row.original.isPS ? (
+						<span className="inline-block w-full px-2 py-1 text-right text-(--text-sm) text-(--text-muted)">
+							—
+						</span>
+					) : (
 						<EditableCell
 							value={Math.round(info.getValue() * 100)}
-							onChange={(val) =>
-								handleCohortChange(info.row.original.gradeLevel, 'retentionRate', val)
+							onChange={(value) =>
+								handleCohortChange(info.row.original.gradeLevel, 'retentionRate', value)
 							}
 							type="percentage"
 							isReadOnly={isReadOnly}
+							className="px-3 py-1.5"
 						/>
-					);
-				},
+					),
 			}),
 			columnHelper.accessor('lateralEntry', {
-				header: 'Lat.Ent',
-				cell: (info) => {
-					if (info.row.original.isPS) {
-						return (
-							<span className="inline-block w-full px-2 py-1 text-right text-(--text-sm) text-(--text-muted)">
-								-
-							</span>
-						);
-					}
-					return (
+				header: 'Laterals',
+				cell: (info) =>
+					info.row.original.isPS ? (
+						<span className="inline-block w-full px-2 py-1 text-right text-(--text-sm) text-(--text-muted)">
+							—
+						</span>
+					) : (
 						<EditableCell
 							value={info.getValue()}
-							onChange={(val) =>
-								handleCohortChange(info.row.original.gradeLevel, 'lateralEntryCount', val)
+							onChange={(value) =>
+								handleCohortChange(info.row.original.gradeLevel, 'lateralEntryCount', value)
+							}
+							type="number"
+							isReadOnly={isReadOnly}
+							className="px-3 py-1.5"
+						/>
+					),
+			}),
+			columnHelper.accessor('ay2Headcount', {
+				header: 'AY2',
+				cell: (info) =>
+					info.row.original.isPS ? (
+						<EditableCell
+							value={info.getValue()}
+							onChange={(value) =>
+								handleHeadcountChange(info.row.original.gradeLevel, 'AY2', value)
 							}
 							type="number"
 							isReadOnly={isReadOnly}
 						/>
-					);
-				},
-			}),
-			columnHelper.accessor('ay2Total', {
-				header: 'AY2 Tot',
-				cell: (info) => {
-					if (info.row.original.isPS) {
-						return (
-							<EditableCell
-								value={info.getValue()}
-								onChange={(val) => handleHeadcountChange(info.row.original.gradeLevel, 'AY2', val)}
-								type="number"
-								isReadOnly={isReadOnly}
-							/>
-						);
-					}
-					return (
+					) : (
 						<span
 							className={cn(
-								'inline-block w-full rounded-sm px-2 py-1',
-								'text-right text-(--text-sm) tabular-nums',
-								'bg-(--cell-readonly-bg) text-(--text-secondary)'
+								'inline-block w-full rounded-md border border-transparent px-3 py-1.5 text-right',
+								'bg-(--cell-readonly-bg) font-medium text-(--text-secondary) tabular-nums'
 							)}
 						>
-							{info.getValue().toLocaleString()}
+							{info.getValue()}
 						</span>
-					);
-				},
+					),
 			}),
-			columnHelper.accessor('gradeLevel', {
-				id: 'frPct',
+			columnHelper.accessor('frPct', {
 				header: 'Fr%',
-				size: 50,
-				cell: (info) => {
-					const summary = natSummaryMap.get(info.getValue());
-					return (
-						<span className="text-(--text-xs) text-(--text-muted) tabular-nums">
-							{summary ? `${summary.frPct}%` : '--'}
-						</span>
-					);
-				},
+				cell: (info) => (
+					<span className="inline-flex w-full justify-end text-(--text-xs) font-medium tabular-nums text-(--text-muted)">
+						{info.getValue() || 0}%
+					</span>
+				),
 			}),
-			columnHelper.accessor('gradeLevel', {
-				id: 'natPct',
+			columnHelper.accessor('natPct', {
 				header: 'Nat%',
-				size: 50,
-				cell: (info) => {
-					const summary = natSummaryMap.get(info.getValue());
-					return (
-						<span className="text-(--text-xs) text-(--text-muted) tabular-nums">
-							{summary ? `${summary.natPct}%` : '--'}
-						</span>
-					);
-				},
+				cell: (info) => (
+					<span className="inline-flex w-full justify-end text-(--text-xs) font-medium tabular-nums text-(--text-muted)">
+						{info.getValue() || 0}%
+					</span>
+				),
 			}),
-			columnHelper.accessor('gradeLevel', {
-				id: 'autPct',
+			columnHelper.accessor('autPct', {
 				header: 'Aut%',
-				size: 50,
-				cell: (info) => {
-					const summary = natSummaryMap.get(info.getValue());
-					return (
-						<span className="text-(--text-xs) text-(--text-muted) tabular-nums">
-							{summary ? `${summary.autPct}%` : '--'}
-						</span>
-					);
-				},
+				cell: (info) => (
+					<span className="inline-flex w-full justify-end text-(--text-xs) font-medium tabular-nums text-(--text-muted)">
+						{info.getValue() || 0}%
+					</span>
+				),
 			}),
 		],
-		[isReadOnly, handleHeadcountChange, handleCohortChange, natSummaryMap]
+		[handleCohortChange, handleHeadcountChange, isReadOnly]
 	);
 
 	const table = useReactTable({
@@ -307,13 +309,15 @@ export function CohortProgressionGrid({
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		enableColumnResizing: true,
-		columnResizeMode: 'onChange' as const,
+		columnResizeMode: 'onChange',
 	});
 
 	return (
 		<PlanningGrid
 			table={table}
 			isLoading={isLoading}
+			onRowSelect={(row) => selectGrade(row.gradeLevel)}
+			selectedRowPredicate={(row) => row.gradeLevel === selectedGrade}
 			bandGrouping={{
 				getBand: (row) => row.band,
 				bandLabels: BAND_LABELS,
@@ -324,21 +328,24 @@ export function CohortProgressionGrid({
 					LYCEE: { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
 				},
 				collapsible: true,
+				footerBuilder: buildBandFooterRow,
 			}}
-			pinnedColumns={['gradeName']}
-			numericColumns={[
-				'ay1Headcount',
-				'retentionRate',
-				'lateralEntry',
-				'ay2Total',
-				'frPct',
-				'natPct',
-				'autPct',
+			footerRows={[
+				{
+					label: 'Grand total',
+					type: 'grandtotal',
+					values: {
+						ay1Headcount: rows.reduce((sum, row) => sum + row.ay1Headcount, 0),
+						retentionRate: '—',
+						lateralEntry: rows.reduce((sum, row) => sum + row.lateralEntry, 0),
+						ay2Headcount: rows.reduce((sum, row) => sum + row.ay2Headcount, 0),
+					},
+				},
 			]}
-			editableColumns={['ay1Headcount', 'retentionRate', 'lateralEntry']}
+			pinnedColumns={['gradeName']}
+			numericColumns={['ay1Headcount', 'retentionRate', 'lateralEntry', 'ay2Headcount']}
+			editableColumns={['ay1Headcount', 'retentionRate', 'lateralEntry', 'ay2Headcount']}
 			ariaLabel="Cohort progression"
-			onRowSelect={(row) => selectGrade(row.gradeLevel)}
-			selectedRowPredicate={(row) => row.gradeLevel === selectedGrade}
 		/>
 	);
 }

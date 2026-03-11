@@ -117,9 +117,9 @@ export function EditableCell({
 				type="number"
 				min={min}
 				className={cn(
-					'w-full rounded-sm border border-transparent',
-					'bg-(--cell-editable-bg) px-2 py-1',
-					'text-right text-(length:--text-sm) tabular-nums',
+					'w-full rounded-md border border-[color-mix(in_srgb,var(--workspace-border),white_35%)]',
+					'bg-(--cell-editable-bg) px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',
+					'text-right text-(length:--text-sm) font-medium tabular-nums',
 					'ring-2 ring-(--cell-editable-focus)',
 					'focus:outline-none',
 					className
@@ -137,9 +137,9 @@ export function EditableCell({
 		return (
 			<span
 				className={cn(
-					'inline-block w-full rounded-sm px-2 py-1',
-					'text-right text-(length:--text-sm) tabular-nums',
-					'transition-colors duration-(--duration-fast)',
+					'inline-block w-full rounded-md border border-transparent px-2.5 py-1.5',
+					'text-right text-(length:--text-sm) font-medium tabular-nums',
+					'transition-[background-color,border-color] duration-(--duration-fast)',
 					'bg-(--cell-readonly-bg) text-(--text-secondary)',
 					isError && 'border border-(--cell-error-border)',
 					className
@@ -155,10 +155,12 @@ export function EditableCell({
 		<button
 			type="button"
 			className={cn(
-				'inline-block w-full rounded-sm px-2 py-1',
-				'text-right text-(length:--text-sm) tabular-nums',
-				'transition-colors duration-(--duration-fast)',
-				'cursor-pointer bg-(--cell-editable-bg) hover:bg-(--cell-editable-bg)/80',
+				'inline-block w-full rounded-md border border-transparent px-2.5 py-1.5',
+				'text-right text-(length:--text-sm) font-medium tabular-nums',
+				'transition-[background-color,border-color,box-shadow] duration-(--duration-fast)',
+				'cursor-pointer bg-(--cell-editable-bg) shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]',
+				'hover:border-(--accent-200) hover:bg-[color-mix(in_srgb,var(--cell-editable-bg),white_20%)]',
+				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-400)',
 				isError && 'border border-(--cell-error-border)',
 				className
 			)}

@@ -5,6 +5,7 @@ export interface VersionMeta {
 	type: 'Budget' | 'Forecast' | 'Actual';
 	name: string;
 	status: 'Draft' | 'Published' | 'Locked' | 'Archived';
+	dataSource?: string;
 	staleModules?: string[];
 }
 
@@ -17,6 +18,7 @@ export interface WorkspaceContextState {
 	versionType: 'Budget' | 'Forecast' | 'Actual' | null;
 	versionName: string | null;
 	versionStatus: 'Draft' | 'Published' | 'Locked' | 'Archived' | null;
+	versionDataSource: string | null;
 	versionStaleModules: string[];
 	setFiscalYear: (fy: number) => void;
 	setVersion: (id: number | null, meta?: VersionMeta) => void;
@@ -40,6 +42,7 @@ export const useWorkspaceContextStore = create<WorkspaceContextState>((set) => (
 	versionType: null,
 	versionName: null,
 	versionStatus: null,
+	versionDataSource: null,
 	versionStaleModules: [],
 
 	setFiscalYear: (fy) =>
@@ -53,6 +56,7 @@ export const useWorkspaceContextStore = create<WorkspaceContextState>((set) => (
 			versionType: meta?.type ?? null,
 			versionName: meta?.name ?? null,
 			versionStatus: meta?.status ?? null,
+			versionDataSource: meta?.dataSource ?? null,
 			versionStaleModules: meta?.staleModules ?? [],
 		}),
 

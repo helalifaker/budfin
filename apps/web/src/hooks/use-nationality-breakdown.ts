@@ -51,3 +51,24 @@ export function usePutNationalityBreakdown(versionId: number | null) {
 			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
+
+export function useResetNationalityBreakdown(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (gradeLevel: string) =>
+			apiClient<{ deleted: number }>(
+				`/versions/${versionId}/enrollment/nationality-breakdown/${gradeLevel}`,
+				{
+					method: 'DELETE',
+				}
+			),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['enrollment', 'nationality-breakdown', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
+	});
+}

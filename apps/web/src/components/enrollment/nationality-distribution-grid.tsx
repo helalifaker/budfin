@@ -1,14 +1,9 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
 import { PlanningGrid } from '../data-grid/planning-grid';
-import {
-	useNationalityBreakdown,
-	usePutNationalityBreakdown,
-} from '../../hooks/use-nationality-breakdown';
+import { useNationalityBreakdown } from '../../hooks/use-nationality-breakdown';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
-import { EditableCell } from '../shared/editable-cell';
-import type { NationalityBreakdownEntry } from '@budfin/types';
 
 export type NationalityDistributionGridProps = {
 	versionId: number;
@@ -36,20 +31,48 @@ interface NatRow {
 	autresCnt: number;
 	total: number;
 	isOverridden: boolean;
-	isPS: boolean;
 }
 
 const columnHelper = createColumnHelper<NatRow>();
 
+function buildBandFooterRow(rows: NatRow[], band: string) {
+	if (rows.length === 0) {
+		return null;
+	}
+
+	const total = rows.reduce((sum, row) => sum + row.total, 0);
+	return {
+		label: `${BAND_LABELS[band] ?? band} subtotal`,
+		type: 'subtotal' as const,
+		values: {
+			francaisWt:
+				total > 0
+					? `${Math.round((rows.reduce((sum, row) => sum + row.francaisCnt, 0) / total) * 100)}%`
+					: '—',
+			francaisCnt: rows.reduce((sum, row) => sum + row.francaisCnt, 0),
+			nationauxWt:
+				total > 0
+					? `${Math.round((rows.reduce((sum, row) => sum + row.nationauxCnt, 0) / total) * 100)}%`
+					: '—',
+			nationauxCnt: rows.reduce((sum, row) => sum + row.nationauxCnt, 0),
+			autresWt:
+				total > 0
+					? `${Math.round((rows.reduce((sum, row) => sum + row.autresCnt, 0) / total) * 100)}%`
+					: '—',
+			autresCnt: rows.reduce((sum, row) => sum + row.autresCnt, 0),
+			total,
+			isOverridden: rows.some((row) => row.isOverridden) ? 'Mixed' : 'Computed',
+		},
+	};
+}
+
 export function NationalityDistributionGrid({
 	versionId,
 	bandFilter,
-	isReadOnly,
+	isReadOnly: _isReadOnly,
 }: NationalityDistributionGridProps) {
 	const { data: natData, isLoading } = useNationalityBreakdown(versionId, 'AY2');
 	const { data: gradeLevelData } = useGradeLevels();
-	const putNationality = usePutNationalityBreakdown(versionId);
-	const [localOverrides, setLocalOverrides] = useState<Set<string>>(new Set());
 
 	const gradeLevels = useMemo(
 		() => gradeLevelData?.gradeLevels ?? [],
@@ -57,86 +80,46 @@ export function NationalityDistributionGrid({
 	);
 	const natEntries = useMemo(() => natData?.entries ?? [], [natData?.entries]);
 
-	const rows: NatRow[] = useMemo(() => {
-		const natMap = new Map<string, Map<string, NationalityBreakdownEntry>>();
-		for (const e of natEntries) {
-			if (!natMap.has(e.gradeLevel)) natMap.set(e.gradeLevel, new Map());
-			natMap.get(e.gradeLevel)!.set(e.nationality, e);
+	const rows = useMemo(() => {
+		const entryMap = new Map<string, Map<string, (typeof natEntries)[number]>>();
+		for (const entry of natEntries) {
+			const existing = entryMap.get(entry.gradeLevel) ?? new Map();
+			existing.set(entry.nationality, entry);
+			entryMap.set(entry.gradeLevel, existing);
 		}
 
-		const filtered =
-			bandFilter === 'ALL' ? gradeLevels : gradeLevels.filter((gl) => gl.band === bandFilter);
+		const filteredLevels =
+			bandFilter === 'ALL'
+				? gradeLevels
+				: gradeLevels.filter((gradeLevel) => gradeLevel.band === bandFilter);
 
-		return filtered
-			.sort((a, b) => a.displayOrder - b.displayOrder)
-			.map((gl) => {
-				const gradeNats = natMap.get(gl.gradeCode);
-				const fr = gradeNats?.get('Francais');
-				const nat = gradeNats?.get('Nationaux');
-				const aut = gradeNats?.get('Autres');
-
-				const isOverridden =
-					fr?.isOverridden ||
-					nat?.isOverridden ||
-					aut?.isOverridden ||
-					localOverrides.has(gl.gradeCode) ||
-					false;
-
-				const francaisCnt = fr?.headcount ?? 0;
-				const nationauxCnt = nat?.headcount ?? 0;
-				const autresCnt = aut?.headcount ?? 0;
-				const total = francaisCnt + nationauxCnt + autresCnt;
+		return [...filteredLevels]
+			.sort((left, right) => left.displayOrder - right.displayOrder)
+			.map((gradeLevel) => {
+				const nationalityMap = entryMap.get(gradeLevel.gradeCode);
+				const francais = nationalityMap?.get('Francais');
+				const nationaux = nationalityMap?.get('Nationaux');
+				const autres = nationalityMap?.get('Autres');
+				const total =
+					(francais?.headcount ?? 0) + (nationaux?.headcount ?? 0) + (autres?.headcount ?? 0);
 
 				return {
-					gradeLevel: gl.gradeCode,
-					gradeName: gl.gradeName,
-					band: gl.band,
-					displayOrder: gl.displayOrder,
-					francaisWt: fr?.weight ?? 0,
-					francaisCnt,
-					nationauxWt: nat?.weight ?? 0,
-					nationauxCnt,
-					autresWt: aut?.weight ?? 0,
-					autresCnt,
+					gradeLevel: gradeLevel.gradeCode,
+					gradeName: gradeLevel.gradeName,
+					band: gradeLevel.band,
+					displayOrder: gradeLevel.displayOrder,
+					francaisWt: Math.round((francais?.weight ?? 0) * 100),
+					francaisCnt: francais?.headcount ?? 0,
+					nationauxWt: Math.round((nationaux?.weight ?? 0) * 100),
+					nationauxCnt: nationaux?.headcount ?? 0,
+					autresWt: Math.round((autres?.weight ?? 0) * 100),
+					autresCnt: autres?.headcount ?? 0,
 					total,
-					isOverridden,
-					isPS: gl.gradeCode === 'PS',
+					isOverridden:
+						francais?.isOverridden || nationaux?.isOverridden || autres?.isOverridden || false,
 				};
 			});
-	}, [natEntries, gradeLevels, bandFilter, localOverrides]);
-
-	const handleWeightChange = useCallback(
-		(gradeLevel: string, nationality: string, weight: number) => {
-			if (isReadOnly) return;
-			const row = rows.find((r) => r.gradeLevel === gradeLevel);
-			if (!row) return;
-			putNationality.mutate([
-				{
-					gradeLevel,
-					nationality,
-					weight,
-					headcount: Math.round(row.total * weight),
-				},
-			]);
-		},
-		[isReadOnly, rows, putNationality]
-	);
-
-	const handleOverrideToggle = useCallback(
-		(gradeLevel: string) => {
-			if (isReadOnly) return;
-			setLocalOverrides((prev) => {
-				const next = new Set(prev);
-				if (next.has(gradeLevel)) {
-					next.delete(gradeLevel);
-				} else {
-					next.add(gradeLevel);
-				}
-				return next;
-			});
-		},
-		[isReadOnly]
-	);
+	}, [bandFilter, gradeLevels, natEntries]);
 
 	const columns = useMemo(
 		() => [
@@ -147,125 +130,52 @@ export function NationalityDistributionGrid({
 				),
 			}),
 			columnHelper.accessor('francaisWt', {
-				header: 'Francais Wt%',
-				cell: (info) => {
-					const row = info.row.original;
-					const canEdit = row.isPS || row.isOverridden;
-					return (
-						<EditableCell
-							value={Math.round(info.getValue() * 100)}
-							onChange={(val) => handleWeightChange(row.gradeLevel, 'Francais', val)}
-							type="percentage"
-							isReadOnly={isReadOnly || !canEdit}
-						/>
-					);
-				},
+				header: 'Fr %',
+				cell: (info) => <span className="text-(--text-secondary)">{info.getValue()}%</span>,
 			}),
 			columnHelper.accessor('francaisCnt', {
-				header: 'Francais Cnt',
-				cell: (info) => (
-					<span
-						className={cn(
-							'inline-block w-full rounded-sm px-2 py-1',
-							'text-right text-(--text-sm) tabular-nums',
-							'bg-(--cell-readonly-bg) text-(--text-secondary)'
-						)}
-					>
-						{info.getValue()}
-					</span>
-				),
+				header: 'Fr Cnt',
+				cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('nationauxWt', {
-				header: 'Nationaux Wt%',
-				cell: (info) => {
-					const row = info.row.original;
-					const canEdit = row.isPS || row.isOverridden;
-					return (
-						<EditableCell
-							value={Math.round(info.getValue() * 100)}
-							onChange={(val) => handleWeightChange(row.gradeLevel, 'Nationaux', val)}
-							type="percentage"
-							isReadOnly={isReadOnly || !canEdit}
-						/>
-					);
-				},
+				header: 'Nat %',
+				cell: (info) => <span className="text-(--text-secondary)">{info.getValue()}%</span>,
 			}),
 			columnHelper.accessor('nationauxCnt', {
-				header: 'Nationaux Cnt',
-				cell: (info) => (
-					<span
-						className={cn(
-							'inline-block w-full rounded-sm px-2 py-1',
-							'text-right text-(--text-sm) tabular-nums',
-							'bg-(--cell-readonly-bg) text-(--text-secondary)'
-						)}
-					>
-						{info.getValue()}
-					</span>
-				),
+				header: 'Nat Cnt',
+				cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('autresWt', {
-				header: 'Autres Wt%',
-				cell: (info) => {
-					const row = info.row.original;
-					const canEdit = row.isPS || row.isOverridden;
-					return (
-						<EditableCell
-							value={Math.round(info.getValue() * 100)}
-							onChange={(val) => handleWeightChange(row.gradeLevel, 'Autres', val)}
-							type="percentage"
-							isReadOnly={isReadOnly || !canEdit}
-						/>
-					);
-				},
+				header: 'Aut %',
+				cell: (info) => <span className="text-(--text-secondary)">{info.getValue()}%</span>,
 			}),
 			columnHelper.accessor('autresCnt', {
-				header: 'Autres Cnt',
-				cell: (info) => (
-					<span
-						className={cn(
-							'inline-block w-full rounded-sm px-2 py-1',
-							'text-right text-(--text-sm) tabular-nums',
-							'bg-(--cell-readonly-bg) text-(--text-secondary)'
-						)}
-					>
-						{info.getValue()}
-					</span>
-				),
+				header: 'Aut Cnt',
+				cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('total', {
 				header: 'Total',
-				cell: (info) => <span className="font-medium tabular-nums">{info.getValue()}</span>,
+				cell: (info) => (
+					<span className="font-medium tabular-nums text-(--text-primary)">{info.getValue()}</span>
+				),
 			}),
 			columnHelper.accessor('isOverridden', {
-				header: 'Override',
-				cell: (info) => {
-					const row = info.row.original;
-					if (row.isPS) return null;
-					return (
-						<button
-							type="button"
-							className={cn(
-								'rounded-sm px-2 py-1',
-								'text-(--text-xs) font-medium',
-								'transition-colors duration-(--duration-fast)',
-								info.getValue()
-									? 'bg-(--cell-override-bg) text-(--badge-lycee)'
-									: 'bg-(--workspace-bg-muted) text-(--text-muted)',
-								isReadOnly && 'pointer-events-none opacity-50'
-							)}
-							onClick={() => handleOverrideToggle(row.gradeLevel)}
-							disabled={isReadOnly}
-							aria-pressed={info.getValue()}
-							aria-label={`${info.getValue() ? 'Disable' : 'Enable'} override for ${row.gradeName}`}
-						>
-							{info.getValue() ? 'On' : 'Off'}
-						</button>
-					);
-				},
+				header: 'Source',
+				cell: (info) => (
+					<span
+						className={cn(
+							'inline-flex rounded-full px-2 py-0.5 text-(--text-xs) font-semibold',
+							info.getValue()
+								? 'bg-(--color-warning-bg) text-(--color-warning)'
+								: 'bg-(--workspace-bg-subtle) text-(--text-muted)'
+						)}
+					>
+						{info.getValue() ? 'Override' : 'Computed'}
+					</span>
+				),
 			}),
 		],
-		[isReadOnly, handleWeightChange, handleOverrideToggle]
+		[]
 	);
 
 	const table = useReactTable({
@@ -273,7 +183,7 @@ export function NationalityDistributionGrid({
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		enableColumnResizing: true,
-		columnResizeMode: 'onChange' as const,
+		columnResizeMode: 'onChange',
 	});
 
 	return (
@@ -290,7 +200,20 @@ export function NationalityDistributionGrid({
 					LYCEE: { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
 				},
 				collapsible: true,
+				footerBuilder: buildBandFooterRow,
 			}}
+			footerRows={[
+				{
+					label: 'Grand total',
+					type: 'grandtotal',
+					values: {
+						francaisCnt: rows.reduce((sum, row) => sum + row.francaisCnt, 0),
+						nationauxCnt: rows.reduce((sum, row) => sum + row.nationauxCnt, 0),
+						autresCnt: rows.reduce((sum, row) => sum + row.autresCnt, 0),
+						total: rows.reduce((sum, row) => sum + row.total, 0),
+					},
+				},
+			]}
 			pinnedColumns={['gradeName']}
 			numericColumns={[
 				'francaisWt',
@@ -301,7 +224,6 @@ export function NationalityDistributionGrid({
 				'autresCnt',
 				'total',
 			]}
-			editableColumns={['francaisWt', 'nationauxWt', 'autresWt']}
 			ariaLabel="Nationality distribution"
 		/>
 	);

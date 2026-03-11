@@ -10,6 +10,7 @@ interface BandGrouping<T> {
 	bandLabels: Record<string, string>;
 	bandStyles: Record<string, { color: string; bg: string }>;
 	collapsible?: boolean;
+	footerBuilder?: (rows: T[], band: string) => FooterRow | null;
 }
 
 interface FooterRow {
@@ -201,7 +202,7 @@ export function PlanningGrid<T>({
 					break;
 			}
 		},
-		[keyboardNavigation, activeCell, rows.length, cols, editableColumns, headerGroups, onRowSelect]
+		[keyboardNavigation, activeCell, rows, cols, editableColumns, headerGroups, onRowSelect]
 	);
 
 	const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
@@ -222,8 +223,8 @@ export function PlanningGrid<T>({
 			<div
 				className={cn(
 					'overflow-x-auto',
-					'rounded-lg border border-(--workspace-border)',
-					'shadow-(--shadow-xs)',
+					'rounded-[18px] border border-(--workspace-border) bg-(--workspace-bg-card)',
+					'shadow-(--shadow-card)',
 					className
 				)}
 			>
@@ -249,9 +250,8 @@ export function PlanningGrid<T>({
 							role="columnheader"
 							style={{ width: header.getSize() }}
 							className={cn(
-								'relative px-(--grid-cell-px) py-3',
-								'font-medium text-(--text-secondary)',
-								'text-(--text-xs) uppercase tracking-[0.05em]',
+								'relative px-(--grid-cell-px) py-4 align-middle',
+								'text-[11px] font-semibold uppercase tracking-[0.12em] text-(--text-muted)',
 								numeric && 'text-right',
 								pinned && 'sticky left-0 z-[1] bg-(--grid-header-bg)',
 								lastPin && 'shadow-(--grid-pinned-shadow)'
@@ -279,6 +279,11 @@ export function PlanningGrid<T>({
 		const numeric = isNumeric(columnId, numericColumns);
 		const isActive = activeCell?.rowIndex === rowIndex && activeCell?.colIndex === colIndex;
 		const isRowSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
+		const pinnedBackgroundClass = isRowSelected
+			? 'bg-(--grid-selected-row)'
+			: rowIndex % 2 === 1
+				? 'bg-(--grid-row-stripe)'
+				: 'bg-(--workspace-bg-card)';
 
 		return (
 			<td
@@ -288,12 +293,15 @@ export function PlanningGrid<T>({
 				onClick={() => handleCellClick(rowIndex, colIndex)}
 				style={{ width: cell.column.getSize() }}
 				className={cn(
-					'px-(--grid-cell-px) py-(--grid-cell-py)',
-					'transition-all duration-(--duration-fast)',
-					numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
+					'px-(--grid-cell-px) py-(--grid-cell-py) align-middle',
+					'text-(--text-sm)',
+					'transition-[background-color,box-shadow,transform] duration-(--duration-fast)',
+					numeric &&
+						'text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
 					pinned && 'sticky left-0 z-[1]',
-					pinned && !isRowSelected && 'bg-(--workspace-bg-card)',
-					pinned && isRowSelected && 'bg-(--grid-selected-row)',
+					pinned && pinnedBackgroundClass,
+					pinned && 'group-hover:bg-(--grid-row-hover)',
+					pinned && isRowSelected && 'group-hover:bg-(--grid-selected-row)',
 					lastPin && 'shadow-(--grid-pinned-shadow)',
 					isActive && 'ring-2 ring-(--accent-400) ring-inset shadow-(--shadow-glow-accent)'
 				)}
@@ -320,12 +328,12 @@ export function PlanningGrid<T>({
 				aria-selected={isSelected || undefined}
 				onClick={() => handleRowClick(row)}
 				className={cn(
-					'border-b border-(--workspace-border) last:border-0',
+					'group border-b border-(--workspace-border) last:border-0',
 					'transition-colors duration-(--duration-fast)',
 					rowIndex % 2 === 1 && 'bg-(--grid-row-stripe)',
 					'hover:bg-(--grid-row-hover)',
 					isActiveRow && 'bg-(--grid-active-row)',
-					isSelected && 'bg-(--grid-selected-row) border-l-[3px] border-l-(--accent-500)',
+					isSelected && 'border-l-[3px] border-l-(--accent-500) bg-(--grid-selected-row)',
 					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
 					rowAnimation && 'animate-row-enter',
 					onRowSelect && 'cursor-pointer'
@@ -349,7 +357,7 @@ export function PlanningGrid<T>({
 			<tr key={`band-${band}`} role="row" className="border-b border-(--workspace-border)">
 				<td
 					colSpan={cols}
-					className={cn('px-(--grid-cell-px) py-2', 'font-medium text-(--text-xs)')}
+					className={cn('px-(--grid-cell-px) py-3', 'text-(--text-xs) font-semibold')}
 					style={{
 						borderLeft: style ? `var(--grid-band-accent-width) solid ${style.color}` : undefined,
 						background: style ? `color-mix(in srgb, ${style.bg} 30%, white)` : undefined,
@@ -378,12 +386,17 @@ export function PlanningGrid<T>({
 								/>
 							</button>
 						)}
-						<span style={{ color: style?.color }}>{label}</span>
+						<span
+							className="font-[family-name:var(--font-display)] uppercase tracking-[0.08em]"
+							style={{ color: style?.color }}
+						>
+							{label}
+						</span>
 						<span
 							className={cn(
 								'inline-flex items-center justify-center',
-								'min-w-5 rounded-full px-1.5 py-0.5',
-								'text-(--text-xs) font-medium'
+								'min-w-6 rounded-full px-2 py-0.5',
+								'text-[11px] font-semibold'
 							)}
 							style={{
 								backgroundColor: style?.bg,
@@ -394,6 +407,55 @@ export function PlanningGrid<T>({
 						</span>
 					</span>
 				</td>
+			</tr>
+		);
+	};
+
+	const renderSummaryRow = (summaryRow: FooterRow, key: string) => {
+		const headers = headerGroups[0]?.headers ?? [];
+
+		return (
+			<tr
+				key={key}
+				role="row"
+				className={cn(
+					'border-t border-(--workspace-border)',
+					summaryRow.type === 'grandtotal' && 'font-semibold bg-(--grid-footer-bg)',
+					summaryRow.type === 'subtotal' && 'bg-(--workspace-bg-subtle)'
+				)}
+			>
+				{headers.map((header, colIdx) => {
+					const numeric = isNumeric(header.id, numericColumns);
+					const pinned = isPinned(header.id, pinnedColumns);
+					const lastPin = isLastPinned(header.id, pinnedColumns);
+					const cellValue = summaryRow.values[header.id];
+
+					return (
+						<td
+							key={`${key}-${header.id}`}
+							role="gridcell"
+							className={cn(
+								'px-(--grid-cell-px) py-(--grid-cell-py) align-middle',
+								'text-(--text-sm)',
+								numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
+								pinned && 'sticky left-0 z-[1]',
+								lastPin && 'shadow-(--grid-pinned-shadow)',
+								summaryRow.type === 'grandtotal' && 'bg-(--grid-footer-bg)',
+								summaryRow.type === 'subtotal' && pinned && 'bg-(--workspace-bg-subtle)',
+								summaryRow.type === 'grandtotal' && pinned && 'bg-(--grid-footer-bg)',
+								summaryRow.type === 'subtotal' && colIdx === 0 && 'pl-8',
+								summaryRow.type === 'grandtotal' && 'font-semibold text-(--text-primary)',
+								summaryRow.type === 'subtotal' && 'text-(--text-secondary)'
+							)}
+						>
+							{colIdx === 0 && cellValue === undefined
+								? summaryRow.label
+								: cellValue !== undefined
+									? String(cellValue)
+									: ''}
+						</td>
+					);
+				})}
 			</tr>
 		);
 	};
@@ -415,12 +477,19 @@ export function PlanningGrid<T>({
 				const isCollapsed = collapsedBands.has(group.band);
 				const elements = [renderBandHeader(group.band, group.rowIndices.length)];
 				if (!isCollapsed) {
+					const groupRows = group.rowIndices
+						.map((rowIndex) => rows[rowIndex]?.original)
+						.filter(Boolean) as T[];
 					group.rowIndices.forEach((rowIndex, i) => {
 						const row = rows[rowIndex];
 						if (row) {
 							elements.push(renderDataRow(row, rowIndex, animIdx++, i === 0));
 						}
 					});
+					const footerRow = bandGrouping?.footerBuilder?.(groupRows, group.band);
+					if (footerRow) {
+						elements.push(renderSummaryRow(footerRow, `band-summary-${group.band}`));
+					}
 				}
 				return elements;
 			});
@@ -431,49 +500,10 @@ export function PlanningGrid<T>({
 
 	const renderFooter = () => {
 		if (!footerRows?.length) return null;
-		const headers = headerGroups[0]?.headers ?? [];
 
 		return (
 			<tfoot>
-				{footerRows.map((fr, i) => (
-					<tr
-						key={i}
-						role="row"
-						className={cn(
-							'border-t border-(--workspace-border)',
-							fr.type === 'grandtotal' && 'font-bold bg-(--grid-footer-bg)',
-							fr.type === 'subtotal' && 'font-normal'
-						)}
-					>
-						{headers.map((header, colIdx) => {
-							const numeric = isNumeric(header.id, numericColumns);
-							const pinned = isPinned(header.id, pinnedColumns);
-							const lastPin = isLastPinned(header.id, pinnedColumns);
-							const cellValue = fr.values[header.id];
-
-							return (
-								<td
-									key={header.id}
-									role="gridcell"
-									className={cn(
-										'px-(--grid-cell-px) py-(--grid-cell-py)',
-										numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
-										pinned && 'sticky left-0 z-[1]',
-										lastPin && 'shadow-(--grid-pinned-shadow)',
-										fr.type === 'grandtotal' && 'bg-(--grid-footer-bg)',
-										fr.type === 'subtotal' && colIdx === 0 && 'pl-8'
-									)}
-								>
-									{colIdx === 0 && cellValue === undefined
-										? fr.label
-										: cellValue !== undefined
-											? String(cellValue)
-											: ''}
-								</td>
-							);
-						})}
-					</tr>
-				))}
+				{footerRows.map((footerRow, index) => renderSummaryRow(footerRow, `footer-${index}`))}
 			</tfoot>
 		);
 	};
@@ -482,8 +512,8 @@ export function PlanningGrid<T>({
 		<div
 			className={cn(
 				'overflow-x-auto',
-				'rounded-lg border border-(--workspace-border)',
-				'shadow-(--shadow-xs)',
+				'rounded-[18px] border border-(--workspace-border) bg-(--workspace-bg-card)',
+				'shadow-(--shadow-card)',
 				className
 			)}
 		>
@@ -493,7 +523,7 @@ export function PlanningGrid<T>({
 				aria-label={ariaLabel}
 				onKeyDown={handleKeyDown}
 				tabIndex={keyboardNavigation ? 0 : undefined}
-				className="w-full text-left text-(--text-sm)"
+				className="w-full min-w-[980px] text-left text-(--text-sm)"
 			>
 				<thead
 					className={cn(

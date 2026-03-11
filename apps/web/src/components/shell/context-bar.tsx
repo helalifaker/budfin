@@ -99,6 +99,7 @@ export function ContextBar() {
 				type: first.type,
 				name: first.name,
 				status: first.status,
+				dataSource: first.dataSource,
 				staleModules: first.staleModules,
 			});
 		}
@@ -115,6 +116,7 @@ export function ContextBar() {
 				type: selected.type,
 				name: selected.name,
 				status: selected.status,
+				dataSource: selected.dataSource,
 				staleModules: selected.staleModules,
 			});
 		}

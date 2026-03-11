@@ -1,25 +1,31 @@
+import type { GradeCode } from '@budfin/types';
 import { create } from 'zustand';
 import { useRightPanelStore } from './right-panel-store';
 
+export interface EnrollmentSelection {
+	type: 'GRADE';
+	id: GradeCode;
+}
+
 interface EnrollmentSelectionState {
-	selectedGrade: string | null;
-	selectGrade: (grade: string) => void;
+	selection: EnrollmentSelection | null;
+	selectGrade: (grade: GradeCode) => void;
 	clearSelection: () => void;
 }
 
 export const useEnrollmentSelectionStore = create<EnrollmentSelectionState>((set, get) => ({
-	selectedGrade: null,
+	selection: null,
 
 	selectGrade: (grade) => {
-		const current = get().selectedGrade;
-		if (current === grade) {
-			set({ selectedGrade: null });
+		const current = get().selection;
+		if (current?.type === 'GRADE' && current.id === grade) {
+			set({ selection: null });
 			useRightPanelStore.getState().close();
 			return;
 		}
-		set({ selectedGrade: grade });
+		set({ selection: { type: 'GRADE', id: grade } });
 		useRightPanelStore.getState().open('details');
 	},
 
-	clearSelection: () => set({ selectedGrade: null }),
+	clearSelection: () => set({ selection: null }),
 }));
