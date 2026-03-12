@@ -93,6 +93,20 @@ describe('GET /planning-rules', () => {
 			cappedRetention: 0.99,
 		});
 	});
+
+	it('returns 404 VERSION_NOT_FOUND when version does not exist', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/versions/999/enrollment/planning-rules',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
+	});
 });
 
 describe('PUT /planning-rules', () => {
@@ -137,5 +151,73 @@ describe('PUT /planning-rules', () => {
 			cappedRetention: 0.99,
 			staleModules: ['REVENUE', 'ENROLLMENT', 'DHG', 'STAFFING', 'PNL'],
 		});
+	});
+
+	it('returns 404 VERSION_NOT_FOUND when version does not exist', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: '/api/v1/versions/999/enrollment/planning-rules',
+			headers: authHeader(token),
+			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
+	});
+
+	it('returns 409 VERSION_LOCKED when version is not Draft', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
+			id: 1,
+			status: 'Published',
+			dataSource: 'MANUAL',
+			staleModules: [],
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/planning-rules`,
+			headers: authHeader(token),
+			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('VERSION_LOCKED');
+	});
+
+	it('returns 409 IMPORTED_VERSION on imported data source', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
+			id: 1,
+			status: 'Draft',
+			dataSource: 'IMPORTED',
+			staleModules: [],
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/planning-rules`,
+			headers: authHeader(token),
+			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('IMPORTED_VERSION');
+	});
+
+	it('returns 403 FORBIDDEN for Viewer role', async () => {
+		const token = await makeToken({ role: 'Viewer' });
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/planning-rules`,
+			headers: authHeader(token),
+			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+		});
+
+		expect(res.statusCode).toBe(403);
+		expect(res.json().code).toBe('FORBIDDEN');
 	});
 });

@@ -26,6 +26,17 @@ import type {
 	PlanningRules,
 } from '@budfin/types';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '../ui/alert-dialog';
 import { cn } from '../../lib/cn';
 import {
 	useApplyEnrollmentSetup,
@@ -335,7 +346,7 @@ function GroupedHeadcountTable({
 												{row.headcount}
 											</span>
 										) : (
-											<input
+											<Input
 												type="number"
 												min={0}
 												value={row.headcount}
@@ -457,6 +468,8 @@ export function EnrollmentSetupWizard({
 		null
 	);
 	const [initialCohortRows, setInitialCohortRows] = useState<CohortParameterEntry[] | null>(null);
+	const [pendingStep, setPendingStep] = useState<number | null>(null);
+	const [confirmResetDialogOpen, setConfirmResetDialogOpen] = useState(false);
 
 	useEffect(() => {
 		if (!open) {
@@ -747,11 +760,9 @@ export function EnrollmentSetupWizard({
 			}
 
 			if (activeStep === 1 && step === 0 && cohortRowsModifiedInStep2) {
-				const confirmed = window.confirm(
-					'Changing the source will reset parameter selections. Continue?'
-				);
-				if (!confirmed) return;
-				setPreAcceptCohortRows(null);
+				setPendingStep(step);
+				setConfirmResetDialogOpen(true);
+				return;
 			}
 
 			setTransitionDirection(step > activeStep ? 'forward' : 'backward');
@@ -1212,7 +1223,7 @@ export function EnrollmentSetupWizard({
 												Adjust Petite Section separately when AY2 intake differs from AY1.
 											</p>
 										</div>
-										<input
+										<Input
 											type="number"
 											min={0}
 											step={1}
@@ -1253,7 +1264,7 @@ export function EnrollmentSetupWizard({
 												When actual rollover exceeds this ratio, retention is capped and excess
 												students become laterals.
 											</p>
-											<input
+											<Input
 												type="number"
 												min={0.5}
 												max={2}
@@ -1281,7 +1292,7 @@ export function EnrollmentSetupWizard({
 											<p className="mt-1 text-(--text-xs) text-(--text-muted)">
 												Default retention applied to growth scenarios above the threshold.
 											</p>
-											<input
+											<Input
 												type="number"
 												min={0.5}
 												max={1}
@@ -1363,7 +1374,7 @@ export function EnrollmentSetupWizard({
 																{isPS ? (
 																	<span className="text-(--text-muted)">--</span>
 																) : (
-																	<input
+																	<Input
 																		type="number"
 																		min={0}
 																		max={100}
@@ -1389,7 +1400,7 @@ export function EnrollmentSetupWizard({
 																{isPS ? (
 																	<span className="text-(--text-muted)">--</span>
 																) : (
-																	<input
+																	<Input
 																		type="number"
 																		min={0}
 																		step={1}
@@ -1696,6 +1707,34 @@ export function EnrollmentSetupWizard({
 					</footer>
 				</div>
 			</div>
+			<AlertDialog open={confirmResetDialogOpen} onOpenChange={setConfirmResetDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Reset parameter selections?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Changing the source will reset parameter selections. Continue?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={() => setPendingStep(null)}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (pendingStep !== null) {
+									setPreAcceptCohortRows(null);
+									setTransitionDirection(pendingStep > activeStep ? 'forward' : 'backward');
+									startTransition(() => {
+										setActiveStep(pendingStep);
+									});
+									setPendingStep(null);
+								}
+								setConfirmResetDialogOpen(false);
+							}}
+						>
+							Continue
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>,
 		document.body
 	);

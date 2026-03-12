@@ -221,11 +221,14 @@ export function deriveRecommendationFromObservation({
 		};
 	}
 
-	const rolloverRatio = ay2Headcount / priorAy1Headcount;
-	const roundedRolloverRatio = Number(rolloverRatio.toFixed(4));
+	const rolloverRatioD = new Decimal(ay2Headcount).div(priorAy1Headcount);
+	const roundedRolloverRatio = rolloverRatioD.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toNumber();
 
-	if (rolloverRatio > planningRules.rolloverThreshold) {
-		const retainedAtCappedRate = Math.floor(priorAy1Headcount * planningRules.cappedRetention);
+	if (rolloverRatioD.toNumber() > planningRules.rolloverThreshold) {
+		const retainedAtCappedRate = new Decimal(priorAy1Headcount)
+			.times(planningRules.cappedRetention)
+			.floor()
+			.toNumber();
 		return {
 			recommendedRetentionRate: planningRules.cappedRetention,
 			recommendedLateralEntryCount: Math.max(0, ay2Headcount - retainedAtCappedRate),
@@ -234,11 +237,14 @@ export function deriveRecommendationFromObservation({
 		};
 	}
 
-	const roundedHistoricalRetention = Math.min(roundUpToFourDecimals(rolloverRatio), 1);
-	const retainedFromHistoricalRate = Math.floor(priorAy1Headcount * roundedHistoricalRetention);
+	const roundedHistoricalRetention = Math.min(roundUpToFourDecimals(rolloverRatioD.toNumber()), 1);
+	const retainedFromHistoricalRate = new Decimal(priorAy1Headcount)
+		.times(roundedHistoricalRetention)
+		.floor()
+		.toNumber();
 
 	return {
-		recommendedRetentionRate: Number(roundedHistoricalRetention.toFixed(4)),
+		recommendedRetentionRate: roundedHistoricalRetention,
 		recommendedLateralEntryCount: Math.max(0, ay2Headcount - retainedFromHistoricalRate),
 		rolloverRatio: roundedRolloverRatio,
 		rule: 'historical-rollover' as const,
@@ -564,7 +570,11 @@ export function buildCapacityPreviewRow({
 
 	const sectionsNeeded = Math.ceil(headcount / maxClassSize);
 	const totalCapacity = sectionsNeeded * maxClassSize;
-	const utilization = Number(((headcount / totalCapacity) * 100).toFixed(1));
+	const utilization = new Decimal(headcount)
+		.div(totalCapacity)
+		.times(100)
+		.toDecimalPlaces(1, Decimal.ROUND_HALF_UP)
+		.toNumber();
 	let alert: CapacityAlert | null = null;
 	if (utilization > 100) {
 		alert = 'OVER';

@@ -256,8 +256,8 @@ export function EnrollmentMasterGrid({
 	});
 
 	const getRowClassName = useCallback((row: EnrollmentMasterGridRow) => {
-		if (row.alert === 'OVER') return 'bg-red-50/50 dark:bg-red-950/30';
-		if (row.alert === 'NEAR_CAP') return 'bg-amber-50/50 dark:bg-amber-950/30';
+		if (row.alert === 'OVER') return 'bg-(--color-error-bg)';
+		if (row.alert === 'NEAR_CAP') return 'bg-(--color-warning-bg)';
 		return undefined;
 	}, []);
 
