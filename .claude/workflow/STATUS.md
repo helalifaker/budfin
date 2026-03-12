@@ -57,7 +57,7 @@
 
 | Epic # | Feature | Phase | Status |
 | -------- | --------- | ------- | -------- |
-| 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07 |
+| 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07; enrollment planning workspace redesign PR #184 in review — 2026-03-12 |
 | 2 | Revenue | DONE | All 12 stories complete (12/12), merged PR #113 — 2026-03-07 |
 | 3 | Staffing (DHG) | DONE | All 18 stories complete (18/18), merged PR #156 — 2026-03-09 |
 | 4 | Staff Costs | DONE | All 13 stories complete (13/13) — 2026-03-09 |

@@ -1,5 +1,6 @@
 import {
 	startTransition,
+	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
@@ -8,9 +9,34 @@ import {
 	type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle2, ChevronRight, FileSpreadsheet, Sparkles, Upload, X } from 'lucide-react';
-import type { CohortParameterEntry, GradeCode, NationalityType } from '@budfin/types';
+import {
+	AlertTriangle,
+	CheckCircle2,
+	ChevronRight,
+	FileSpreadsheet,
+	Sparkles,
+	Undo2,
+	Upload,
+	X,
+} from 'lucide-react';
+import type {
+	CohortParameterEntry,
+	GradeCode,
+	NationalityType,
+	PlanningRules,
+} from '@budfin/types';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '../ui/alert-dialog';
 import { cn } from '../../lib/cn';
 import {
 	useApplyEnrollmentSetup,
@@ -22,15 +48,17 @@ import { useCohortParameters } from '../../hooks/use-cohort-parameters';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useNationalityBreakdown } from '../../hooks/use-nationality-breakdown';
 import {
+	applyPlanningRulesToCohortEntries,
 	buildAy1HeadcountMap,
 	buildCapacityPreviewRows,
 	buildCohortProjectionRows,
 	buildNationalityPreviewRows,
+	DEFAULT_PLANNING_RULES,
 	getPsAy2Headcount,
 	type EnrollmentEditability,
 } from '../../lib/enrollment-workspace';
 
-type WizardStepId = 'baseline' | 'import' | 'review' | 'cohort' | 'preview';
+type WizardStepId = 'intake' | 'rules' | 'preview';
 
 type WizardRow = {
 	gradeLevel: string;
@@ -48,7 +76,7 @@ type RecommendedCohortDefault = {
 	observationCount: number;
 	sourceFiscalYear: number | null;
 	rolloverRatio: number | null;
-	rule: 'direct-entry' | 'fixed-97-growth' | 'historical-rollover' | 'fallback-default';
+	rule: 'direct-entry' | 'capped-retention-growth' | 'historical-rollover' | 'fallback-default';
 };
 
 type EnrollmentSetupWizardProps = {
@@ -67,7 +95,18 @@ function normalizeWholeNumber(value: number) {
 	return Math.max(0, Math.round(value));
 }
 
-function buildInitialWorkingRows(
+function buildBaselineWorkingRows(
+	baselineRows: Array<
+		Pick<WizardRow, 'gradeLevel' | 'gradeName' | 'band' | 'displayOrder' | 'baselineHeadcount'>
+	>
+) {
+	return baselineRows.map((entry) => ({
+		...entry,
+		headcount: entry.baselineHeadcount,
+	}));
+}
+
+function buildSavedWorkingRows(
 	baselineRows: Array<
 		Pick<WizardRow, 'gradeLevel' | 'gradeName' | 'band' | 'displayOrder' | 'baselineHeadcount'>
 	>,
@@ -87,29 +126,19 @@ function buildInitialWorkingRows(
 
 const WIZARD_STEPS: Array<{ id: WizardStepId; title: string; description: string }> = [
 	{
-		id: 'baseline',
-		title: 'Baseline Source',
-		description: 'Review the prior-year actual AY2 baseline before making changes.',
+		id: 'intake',
+		title: 'Intake',
+		description: 'Review the baseline, compare imports, and finalize AY1 intake.',
 	},
 	{
-		id: 'import',
-		title: 'Import Compare',
-		description: 'Validate an optional workbook and compare it against the baseline.',
-	},
-	{
-		id: 'review',
-		title: 'AY1 Review',
-		description: 'Resolve the final AY1 headcount dataset before anything is committed.',
-	},
-	{
-		id: 'cohort',
-		title: 'Retention & Laterals',
-		description: 'Confirm progression assumptions with recommended defaults and manual control.',
+		id: 'rules',
+		title: 'Rules & Assumptions',
+		description: 'Tune planning rules and confirm retention and lateral assumptions.',
 	},
 	{
 		id: 'preview',
-		title: 'Preview & Validate',
-		description: 'Inspect AY2, capacity, and nationality projections before applying.',
+		title: 'Preview & Confirm',
+		description: 'Inspect AY2, capacity, and nationality projections before calculating.',
 	},
 ];
 
@@ -317,7 +346,7 @@ function GroupedHeadcountTable({
 												{row.headcount}
 											</span>
 										) : (
-											<input
+											<Input
 												type="number"
 												min={0}
 												value={row.headcount}
@@ -424,11 +453,23 @@ export function EnrollmentSetupWizard({
 
 	const isEditable = editability === 'editable';
 	const [activeStep, setActiveStep] = useState(0);
+	const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward' | null>(
+		null
+	);
+	const [showSuccess, setShowSuccess] = useState(false);
 	const [baselineWorkingRows, setBaselineWorkingRows] = useState<WizardRow[]>([]);
+	const [savedWorkingRows, setSavedWorkingRows] = useState<WizardRow[]>([]);
 	const [workingRows, setWorkingRows] = useState<WizardRow[]>([]);
 	const [cohortRows, setCohortRows] = useState<CohortParameterEntry[]>([]);
 	const [psAy2Headcount, setPsAy2Headcount] = useState(0);
-	const [importMode, setImportMode] = useState<'baseline' | 'imported'>('baseline');
+	const [planningRules, setPlanningRules] = useState<PlanningRules>(DEFAULT_PLANNING_RULES);
+	const [sourceMode, setSourceMode] = useState<'baseline' | 'saved' | 'imported'>('baseline');
+	const [preAcceptCohortRows, setPreAcceptCohortRows] = useState<CohortParameterEntry[] | null>(
+		null
+	);
+	const [initialCohortRows, setInitialCohortRows] = useState<CohortParameterEntry[] | null>(null);
+	const [pendingStep, setPendingStep] = useState<number | null>(null);
+	const [confirmResetDialogOpen, setConfirmResetDialogOpen] = useState(false);
 
 	useEffect(() => {
 		if (!open) {
@@ -448,28 +489,32 @@ export function EnrollmentSetupWizard({
 		}
 
 		const frameId = window.requestAnimationFrame(() => {
-			const initialWorkingRows = buildInitialWorkingRows(
-				baselineData.entries,
-				headcountData.entries
-			);
-			setBaselineWorkingRows(initialWorkingRows);
-			setWorkingRows(initialWorkingRows);
-			setCohortRows(
-				cohortData.entries
-					.map((entry) => ({ ...entry }))
-					.sort(
-						(left, right) =>
-							(gradeLevelData.gradeLevels.find((grade) => grade.gradeCode === left.gradeLevel)
-								?.displayOrder ?? 0) -
-							(gradeLevelData.gradeLevels.find((grade) => grade.gradeCode === right.gradeLevel)
-								?.displayOrder ?? 0)
-					)
-			);
+			const initialBaselineRows = buildBaselineWorkingRows(baselineData.entries);
+			const initialSavedRows = buildSavedWorkingRows(baselineData.entries, headcountData.entries);
+			setBaselineWorkingRows(initialBaselineRows);
+			setSavedWorkingRows(initialSavedRows);
+			setWorkingRows(initialBaselineRows);
+			const sortedCohortEntries = cohortData.entries
+				.map((entry) => ({ ...entry }))
+				.sort(
+					(left, right) =>
+						(gradeLevelData.gradeLevels.find((grade) => grade.gradeCode === left.gradeLevel)
+							?.displayOrder ?? 0) -
+						(gradeLevelData.gradeLevels.find((grade) => grade.gradeCode === right.gradeLevel)
+							?.displayOrder ?? 0)
+				);
+			setCohortRows(sortedCohortEntries);
+			setInitialCohortRows(sortedCohortEntries.map((entry) => ({ ...entry })));
+			setPlanningRules(cohortData.planningRules ?? DEFAULT_PLANNING_RULES);
 
 			const ay1Map = buildAy1HeadcountMap(headcountData.entries);
-			setPsAy2Headcount(getPsAy2Headcount(headcountData.entries, ay1Map));
-			setImportMode('baseline');
+			const psDefaultAy2Intake =
+				gradeLevelData.gradeLevels.find((gradeLevel) => gradeLevel.gradeCode === 'PS')
+					?.defaultAy2Intake ?? null;
+			setPsAy2Headcount(getPsAy2Headcount(headcountData.entries, ay1Map, null, psDefaultAy2Intake));
+			setSourceMode('baseline');
 			setActiveStep(0);
+			setPreAcceptCohortRows(null);
 			initializedVersionRef.current = versionId;
 		});
 
@@ -500,7 +545,7 @@ export function EnrollmentSetupWizard({
 	const recommendedMap = useMemo(
 		() =>
 			new Map(
-				(cohortData?.entries ?? []).map((entry) => [
+				applyPlanningRulesToCohortEntries(cohortData?.entries ?? [], planningRules).map((entry) => [
 					entry.gradeLevel,
 					{
 						suggestedRetention: entry.recommendedRetentionRate ?? entry.retentionRate,
@@ -513,7 +558,7 @@ export function EnrollmentSetupWizard({
 					} satisfies RecommendedCohortDefault,
 				])
 			),
-		[cohortData?.entries]
+		[cohortData?.entries, planningRules]
 	);
 
 	const ay1Map = useMemo(
@@ -530,8 +575,9 @@ export function EnrollmentSetupWizard({
 			ay1HeadcountMap: ay1Map,
 			cohortEntries: cohortRows,
 			psAy2Headcount,
+			planningRules,
 		});
-	}, [gradeLevelData, ay1Map, cohortRows, psAy2Headcount]);
+	}, [gradeLevelData, ay1Map, cohortRows, planningRules, psAy2Headcount]);
 
 	const capacityRows = useMemo(() => {
 		if (!gradeLevelData?.gradeLevels.length) {
@@ -564,6 +610,10 @@ export function EnrollmentSetupWizard({
 		() => validateImport.data?.preview.some((row) => row.importedHeadcount !== null) ?? false,
 		[validateImport.data]
 	);
+	const hasSavedAy1Rows = useMemo(
+		() => headcountData?.entries.some((entry) => entry.academicPeriod === 'AY1') ?? false,
+		[headcountData]
+	);
 	const isWizardInitialized =
 		baselineWorkingRows.length > 0 && workingRows.length > 0 && cohortRows.length > 0;
 	const previewDependenciesReady = ay1NationalityData !== undefined;
@@ -595,37 +645,45 @@ export function EnrollmentSetupWizard({
 				row.lateralEntryCount >= 0
 			);
 		});
-	const canAccessStep = (step: number) => {
-		if (step <= activeStep) {
-			return true;
-		}
+	const canAccessStep = useCallback(
+		(step: number) => {
+			if (step <= activeStep) {
+				return true;
+			}
 
-		if (!isWizardInitialized) {
+			if (!isWizardInitialized) {
+				return false;
+			}
+
+			if (step === 1) {
+				return reviewStepValid && psAy2StepValid;
+			}
+
+			if (step === 2) {
+				return reviewStepValid && psAy2StepValid && cohortStepValid && previewDependenciesReady;
+			}
+
+			if (step <= 0) {
+				return true;
+			}
+
 			return false;
-		}
-
-		if (step <= 2) {
-			return true;
-		}
-
-		if (step === 3) {
-			return reviewStepValid && psAy2StepValid;
-		}
-
-		if (step === 4) {
-			return reviewStepValid && psAy2StepValid && cohortStepValid && previewDependenciesReady;
-		}
-
-		return false;
-	};
+		},
+		[
+			activeStep,
+			isWizardInitialized,
+			reviewStepValid,
+			psAy2StepValid,
+			cohortStepValid,
+			previewDependenciesReady,
+		]
+	);
 	const isCurrentStepValid =
-		activeStep <= 1
-			? isWizardInitialized
-			: activeStep === 2
-				? reviewStepValid && psAy2StepValid
-				: activeStep === 3
-					? cohortStepValid && previewDependenciesReady
-					: previewDependenciesReady;
+		activeStep === 0
+			? isWizardInitialized && reviewStepValid && psAy2StepValid
+			: activeStep === 1
+				? cohortStepValid && previewDependenciesReady
+				: previewDependenciesReady;
 	const previewSummary = useMemo(
 		() => ({
 			ay1Total: workingRows.reduce((sum, row) => sum + row.headcount, 0),
@@ -637,15 +695,83 @@ export function EnrollmentSetupWizard({
 		[workingRows, projectionRows, capacityRows]
 	);
 
-	const handleStepChange = (step: number) => {
-		if (!canAccessStep(step)) {
-			return;
+	const validationIssues = useMemo(() => {
+		const issues: Array<{ message: string; blocking: boolean }> = [];
+
+		const missingAy1Grades = workingRows
+			.filter((row) => row.headcount === 0)
+			.map((row) => row.gradeName);
+		if (missingAy1Grades.length > 0) {
+			issues.push({
+				message: `Missing AY1 data: ${missingAy1Grades.join(', ')}`,
+				blocking: true,
+			});
 		}
 
-		startTransition(() => {
-			setActiveStep(step);
+		const psGrade = gradeLevelData?.gradeLevels.find((gl) => gl.gradeCode === 'PS');
+		if (psAy2Headcount === 0 && !psGrade?.defaultAy2Intake) {
+			issues.push({
+				message: 'Missing PS intake: PS AY2 headcount is 0 with no default intake configured',
+				blocking: false,
+			});
+		}
+
+		const missingCapacityGrades = (gradeLevelData?.gradeLevels ?? [])
+			.filter((gl) => !gl.maxClassSize || gl.maxClassSize === 0)
+			.map((gl) => gl.gradeName);
+		if (missingCapacityGrades.length > 0) {
+			issues.push({
+				message: `Missing capacity config: ${missingCapacityGrades.join(', ')}`,
+				blocking: false,
+			});
+		}
+
+		const invalidCohortGrades = cohortRows
+			.filter((row) => row.gradeLevel !== 'PS')
+			.filter((row) => row.retentionRate === 0 || row.lateralEntryCount < 0);
+		if (invalidCohortGrades.length > 0) {
+			issues.push({
+				message: `Invalid cohort entries: ${invalidCohortGrades.map((r) => r.gradeLevel).join(', ')} (zero retention or negative laterals)`,
+				blocking: false,
+			});
+		}
+
+		return issues;
+	}, [workingRows, psAy2Headcount, gradeLevelData, cohortRows]);
+
+	const hasBlockingValidationIssues = validationIssues.some((issue) => issue.blocking);
+
+	const cohortRowsModifiedInStep2 = useMemo(() => {
+		if (!initialCohortRows) return false;
+		return cohortRows.some((row) => {
+			const initial = initialCohortRows?.find((r) => r.gradeLevel === row.gradeLevel);
+			if (!initial) return false;
+			return (
+				row.retentionRate !== initial.retentionRate ||
+				row.lateralEntryCount !== initial.lateralEntryCount
+			);
 		});
-	};
+	}, [cohortRows, initialCohortRows]);
+
+	const handleStepChange = useCallback(
+		(step: number) => {
+			if (!canAccessStep(step)) {
+				return;
+			}
+
+			if (activeStep === 1 && step === 0 && cohortRowsModifiedInStep2) {
+				setPendingStep(step);
+				setConfirmResetDialogOpen(true);
+				return;
+			}
+
+			setTransitionDirection(step > activeStep ? 'forward' : 'backward');
+			startTransition(() => {
+				setActiveStep(step);
+			});
+		},
+		[activeStep, canAccessStep, cohortRowsModifiedInStep2]
+	);
 
 	const handleWorkingHeadcountChange = (gradeLevel: string, value: number) => {
 		setWorkingRows((currentRows) =>
@@ -665,6 +791,7 @@ export function EnrollmentSetupWizard({
 		field: keyof Pick<CohortParameterEntry, 'retentionRate' | 'lateralEntryCount'>,
 		value: number
 	) => {
+		setPreAcceptCohortRows(null);
 		setCohortRows((currentRows) =>
 			currentRows.map((row) =>
 				row.gradeLevel === gradeLevel
@@ -677,7 +804,24 @@ export function EnrollmentSetupWizard({
 		);
 	};
 
+	const acceptAllDiffCount = useMemo(() => {
+		let count = 0;
+		for (const row of cohortRows) {
+			if (row.gradeLevel === 'PS') continue;
+			const suggested = recommendedMap.get(row.gradeLevel);
+			if (!suggested) continue;
+			if (
+				row.retentionRate !== suggested.suggestedRetention ||
+				row.lateralEntryCount !== suggested.suggestedLaterals
+			) {
+				count++;
+			}
+		}
+		return count;
+	}, [cohortRows, recommendedMap]);
+
 	const applyRecommendedDefaults = () => {
+		setPreAcceptCohortRows(cohortRows.map((row) => ({ ...row })));
 		setCohortRows((currentRows) =>
 			currentRows.map((row) => {
 				const suggested = recommendedMap.get(row.gradeLevel);
@@ -692,6 +836,13 @@ export function EnrollmentSetupWizard({
 				};
 			})
 		);
+	};
+
+	const undoAcceptAll = () => {
+		if (preAcceptCohortRows) {
+			setCohortRows(preAcceptCohortRows);
+			setPreAcceptCohortRows(null);
+		}
 	};
 
 	const applyImportedDataset = () => {
@@ -710,7 +861,7 @@ export function EnrollmentSetupWizard({
 				};
 			})
 		);
-		setImportMode('imported');
+		setSourceMode('imported');
 	};
 
 	const handleImportFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -734,19 +885,37 @@ export function EnrollmentSetupWizard({
 			return;
 		}
 
-		await applySetup.mutateAsync({
-			ay1Entries: workingRows.map((row) => ({
-				gradeLevel: row.gradeLevel,
-				headcount: normalizeWholeNumber(row.headcount),
-			})),
-			cohortEntries: cohortRows.map((row) => ({
-				...row,
-				lateralEntryCount: normalizeWholeNumber(row.lateralEntryCount),
-			})),
-			psAy2Headcount: normalizeWholeNumber(psAy2Headcount),
-		});
-		onClose();
+		try {
+			await applySetup.mutateAsync({
+				ay1Entries: workingRows.map((row) => ({
+					gradeLevel: row.gradeLevel,
+					headcount: normalizeWholeNumber(row.headcount),
+				})),
+				cohortEntries: cohortRows.map((row) => ({
+					...row,
+					lateralEntryCount: normalizeWholeNumber(row.lateralEntryCount),
+				})),
+				psAy2Headcount: normalizeWholeNumber(psAy2Headcount),
+				planningRules,
+			});
+			setShowSuccess(true);
+		} catch {
+			// Error is handled by the mutation state — do not show success overlay
+		}
 	};
+
+	useEffect(() => {
+		if (!showSuccess) {
+			return;
+		}
+
+		const timer = setTimeout(() => {
+			setShowSuccess(false);
+			onClose();
+		}, 1500);
+
+		return () => clearTimeout(timer);
+	}, [showSuccess, onClose]);
 
 	if (!open) {
 		return null;
@@ -808,10 +977,48 @@ export function EnrollmentSetupWizard({
 								canAccessStep={canAccessStep}
 							/>
 						</div>
+						<div className="mt-3 h-[3px] w-full overflow-hidden rounded-full bg-(--workspace-border)">
+							<div
+								className="h-full rounded-full bg-(--accent-500)"
+								style={{
+									width: `${((activeStep + 1) / WIZARD_STEPS.length) * 100}%`,
+									transition: 'width 350ms ease-out',
+								}}
+							/>
+						</div>
 					</header>
 
+					{showSuccess && (
+						<div className="animate-wizard-success absolute inset-0 z-20 flex items-center justify-center bg-(--workspace-bg)/95">
+							<div className="flex flex-col items-center gap-4">
+								<svg
+									className="animate-wizard-checkmark h-16 w-16 text-(--color-success)"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<circle cx="12" cy="12" r="10" />
+									<path d="m9 12 2 2 4-4" />
+								</svg>
+								<h3 className="text-(--text-xl) font-semibold text-(--text-primary)">
+									Setup applied successfully
+								</h3>
+							</div>
+						</div>
+					)}
+
 					<div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-						<div className="space-y-5">
+						<div
+							key={activeStep}
+							className={cn(
+								'space-y-5',
+								transitionDirection === 'forward' && 'animate-wizard-step-right',
+								transitionDirection === 'backward' && 'animate-wizard-step-left'
+							)}
+						>
 							{!isWizardInitialized && (
 								<SectionCard
 									title="Loading setup data"
@@ -849,15 +1056,15 @@ export function EnrollmentSetupWizard({
 										/>
 									</div>
 									<SectionCard
-										title="Baseline by grade"
-										description="The working copy starts from persisted AY1 values when they exist; otherwise it falls back to the prior-year Actual AY2 baseline."
+										title="Selected source by grade"
+										description="The wizard stages the prior-year Actual AY2 baseline first so you can restart from scratch. Switch to saved AY1 only when you want to resume the last committed setup."
 									>
 										<GroupedHeadcountTable rows={workingRows} readOnly />
 									</SectionCard>
 								</>
 							)}
 
-							{isWizardInitialized && activeStep === 1 && (
+							{isWizardInitialized && activeStep === 0 && (
 								<>
 									<SectionCard
 										title="Validate an optional workbook"
@@ -885,13 +1092,27 @@ export function EnrollmentSetupWizard({
 												variant="ghost"
 												onClick={() => {
 													setWorkingRows(baselineWorkingRows);
-													setImportMode('baseline');
+													setSourceMode('baseline');
 												}}
 												className={cn(
-													importMode === 'baseline' && 'bg-(--accent-50) text-(--accent-700)'
+													sourceMode === 'baseline' && 'bg-(--accent-50) text-(--accent-700)'
 												)}
 											>
-												Keep baseline
+												Use baseline
+											</Button>
+											<Button
+												type="button"
+												variant="ghost"
+												onClick={() => {
+													setWorkingRows(savedWorkingRows);
+													setSourceMode('saved');
+												}}
+												disabled={!hasSavedAy1Rows}
+												className={cn(
+													sourceMode === 'saved' && 'bg-(--accent-50) text-(--accent-700)'
+												)}
+											>
+												Use saved AY1
 											</Button>
 											<Button
 												type="button"
@@ -899,7 +1120,7 @@ export function EnrollmentSetupWizard({
 												onClick={applyImportedDataset}
 												disabled={!hasImportableRows}
 												className={cn(
-													importMode === 'imported' && 'bg-(--accent-50) text-(--accent-700)'
+													sourceMode === 'imported' && 'bg-(--accent-50) text-(--accent-700)'
 												)}
 											>
 												<FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
@@ -959,10 +1180,10 @@ export function EnrollmentSetupWizard({
 								</>
 							)}
 
-							{isWizardInitialized && activeStep === 2 && (
+							{isWizardInitialized && activeStep === 0 && (
 								<SectionCard
 									title="Finalize AY1 headcounts"
-									description="This review stays local to the wizard until the final validation step. Use the table below to resolve any grade-level differences."
+									description="This review stays local to the wizard until confirmation. Use the table below to resolve grade-level differences and set the direct PS AY2 intake."
 								>
 									<div className="mb-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 										<MetricCard
@@ -1002,7 +1223,7 @@ export function EnrollmentSetupWizard({
 												Adjust Petite Section separately when AY2 intake differs from AY1.
 											</p>
 										</div>
-										<input
+										<Input
 											type="number"
 											min={0}
 											step={1}
@@ -1029,25 +1250,91 @@ export function EnrollmentSetupWizard({
 								</SectionCard>
 							)}
 
-							{isWizardInitialized && activeStep === 3 && (
+							{isWizardInitialized && activeStep === 1 && (
 								<SectionCard
-									title="Retention and lateral entries"
-									description="These assumptions drive the AY2 projection. Suggested defaults come from the latest completed Actual AY1 to AY2 rollover, with older Actual years used for confidence."
+									title="Planning rules and cohort assumptions"
+									description="Tune the version-wide recommendation rules, then confirm retention and laterals using locally refreshed suggestions from the latest completed Actual cohort observation."
 								>
+									<div className="mb-4 grid gap-4 md:grid-cols-2">
+										<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3">
+											<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												Rollover threshold
+											</p>
+											<p className="mt-1 text-(--text-xs) text-(--text-muted)">
+												When actual rollover exceeds this ratio, retention is capped and excess
+												students become laterals.
+											</p>
+											<Input
+												type="number"
+												min={0.5}
+												max={2}
+												step={0.01}
+												value={planningRules.rolloverThreshold}
+												onChange={(event) =>
+													setPlanningRules((current) => ({
+														...current,
+														rolloverThreshold: Number(event.target.value),
+													}))
+												}
+												disabled={!isEditable}
+												className={cn(
+													'mt-3 w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5',
+													'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
+													'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
+													!isEditable && 'bg-(--cell-readonly-bg)'
+												)}
+											/>
+										</div>
+										<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3">
+											<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												Capped retention
+											</p>
+											<p className="mt-1 text-(--text-xs) text-(--text-muted)">
+												Default retention applied to growth scenarios above the threshold.
+											</p>
+											<Input
+												type="number"
+												min={0.5}
+												max={1}
+												step={0.01}
+												value={planningRules.cappedRetention}
+												onChange={(event) =>
+													setPlanningRules((current) => ({
+														...current,
+														cappedRetention: Number(event.target.value),
+													}))
+												}
+												disabled={!isEditable}
+												className={cn(
+													'mt-3 w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5',
+													'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
+													'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
+													!isEditable && 'bg-(--cell-readonly-bg)'
+												)}
+											/>
+										</div>
+									</div>
 									<div className="mb-4 flex flex-wrap items-center gap-3">
 										<Button
 											type="button"
 											variant="outline"
 											onClick={applyRecommendedDefaults}
-											disabled={!isEditable}
+											disabled={!isEditable || acceptAllDiffCount === 0}
 										>
 											<Sparkles className="h-4 w-4" aria-hidden="true" />
-											Apply suggested defaults
+											{acceptAllDiffCount > 0
+												? `Accept All (${acceptAllDiffCount} grades)`
+												: 'Apply suggested defaults'}
 										</Button>
+										{preAcceptCohortRows && (
+											<Button type="button" variant="ghost" onClick={undoAcceptAll}>
+												<Undo2 className="h-4 w-4" aria-hidden="true" />
+												Undo
+											</Button>
+										)}
 										<p className="text-(--text-xs) text-(--text-muted)">
-											Retention uses prior-grade AY1 with floor rounding. If a historical rollover
-											reached 105% or more, the default retention stays at 97% and the excess is
-											stored as laterals.
+											Suggestions update immediately in the wizard using the same source observation
+											data the server will use on confirm.
 										</p>
 									</div>
 									<div className="overflow-hidden rounded-xl border border-(--workspace-border)">
@@ -1087,7 +1374,7 @@ export function EnrollmentSetupWizard({
 																{isPS ? (
 																	<span className="text-(--text-muted)">--</span>
 																) : (
-																	<input
+																	<Input
 																		type="number"
 																		min={0}
 																		max={100}
@@ -1113,7 +1400,7 @@ export function EnrollmentSetupWizard({
 																{isPS ? (
 																	<span className="text-(--text-muted)">--</span>
 																) : (
-																	<input
+																	<Input
 																		type="number"
 																		min={0}
 																		step={1}
@@ -1174,7 +1461,7 @@ export function EnrollmentSetupWizard({
 								</SectionCard>
 							)}
 
-							{isWizardInitialized && activeStep === 4 && (
+							{isWizardInitialized && activeStep === 2 && (
 								<>
 									{!previewDependenciesReady && (
 										<div className="rounded-xl border border-(--color-info) bg-(--color-info-bg) px-4 py-3">
@@ -1345,6 +1632,29 @@ export function EnrollmentSetupWizard({
 											</div>
 										</SectionCard>
 									</div>
+									{validationIssues.length > 0 && (
+										<div className="rounded-xl border border-(--color-warning) bg-(--color-warning-bg) px-4 py-3">
+											<div className="flex items-center gap-2">
+												<AlertTriangle
+													className="h-4 w-4 shrink-0 text-(--color-warning)"
+													aria-hidden="true"
+												/>
+												<p className="text-sm font-semibold text-(--color-warning)">
+													{hasBlockingValidationIssues
+														? 'Blocking issues must be resolved before applying'
+														: 'Warnings to review before applying'}
+												</p>
+											</div>
+											<ul className="mt-2 space-y-1 text-xs text-(--text-secondary)">
+												{validationIssues.map((issue) => (
+													<li key={issue.message}>
+														{issue.blocking ? '[Blocking] ' : '[Warning] '}
+														{issue.message}
+													</li>
+												))}
+											</ul>
+										</div>
+									)}
 								</>
 							)}
 						</div>
@@ -1386,16 +1696,45 @@ export function EnrollmentSetupWizard({
 										!isWizardInitialized ||
 										!reviewStepValid ||
 										!psAy2StepValid ||
-										!cohortStepValid
+										!cohortStepValid ||
+										hasBlockingValidationIssues
 									}
 								>
-									Validate and Apply
+									Confirm and Calculate
 								</Button>
 							)}
 						</div>
 					</footer>
 				</div>
 			</div>
+			<AlertDialog open={confirmResetDialogOpen} onOpenChange={setConfirmResetDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Reset parameter selections?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Changing the source will reset parameter selections. Continue?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={() => setPendingStep(null)}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (pendingStep !== null) {
+									setPreAcceptCohortRows(null);
+									setTransitionDirection(pendingStep > activeStep ? 'forward' : 'backward');
+									startTransition(() => {
+										setActiveStep(pendingStep);
+									});
+									setPendingStep(null);
+								}
+								setConfirmResetDialogOpen(false);
+							}}
+						>
+							Continue
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>,
 		document.body
 	);

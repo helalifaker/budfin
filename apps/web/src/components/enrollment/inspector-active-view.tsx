@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { CohortParameterEntry, GradeCode } from '@budfin/types';
 import { cn } from '../../lib/cn';
+import { Input } from '../ui/input';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useEnrollmentSelectionStore } from '../../stores/enrollment-selection-store';
@@ -30,8 +31,10 @@ import {
 	buildAy1HeadcountMap,
 	buildCapacityPreviewRow,
 	buildCohortProjectionRows,
+	DEFAULT_PLANNING_RULES,
 	deriveEnrollmentEditability,
 	getPsAy2Headcount,
+	isCohortEntryOverridden,
 	BAND_LABELS,
 } from '../../lib/enrollment-workspace';
 
@@ -78,6 +81,7 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 	const chartColors = useChartColors();
 	const headcountEntries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
 	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
+	const planningRules = cohortData?.planningRules ?? DEFAULT_PLANNING_RULES;
 	const gradeLevels = useMemo(
 		() => gradeLevelData?.gradeLevels ?? [],
 		[gradeLevelData?.gradeLevels]
@@ -107,9 +111,10 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 		[cohortEntries, gradeLevel]
 	);
 	const ay1HeadcountMap = useMemo(() => buildAy1HeadcountMap(headcountEntries), [headcountEntries]);
+	const defaultAy2Intake = gradeInfo?.defaultAy2Intake ?? null;
 	const psAy2Headcount = useMemo(
-		() => getPsAy2Headcount(headcountEntries, ay1HeadcountMap),
-		[ay1HeadcountMap, headcountEntries]
+		() => getPsAy2Headcount(headcountEntries, ay1HeadcountMap, null, defaultAy2Intake),
+		[ay1HeadcountMap, defaultAy2Intake, headcountEntries]
 	);
 	const projectionRow = useMemo(() => {
 		if (gradeLevels.length === 0) {
@@ -122,14 +127,19 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 				ay1HeadcountMap,
 				cohortEntries,
 				psAy2Headcount,
+				planningRules,
 			}).find((entry) => entry.gradeLevel === gradeLevel) ?? null
 		);
-	}, [ay1HeadcountMap, cohortEntries, gradeLevel, gradeLevels, psAy2Headcount]);
+	}, [ay1HeadcountMap, cohortEntries, gradeLevel, gradeLevels, planningRules, psAy2Headcount]);
 
 	const ay1Headcount = projectionRow?.ay1Headcount ?? 0;
 	const projectedAy2 = projectionRow?.ay2Headcount ?? 0;
 	const retentionRate = cohortEntry?.retentionRate ?? projectionRow?.retentionRate ?? 0;
 	const lateralEntry = cohortEntry?.lateralEntryCount ?? projectionRow?.lateralEntry ?? 0;
+	const recommendedRetention =
+		cohortEntry?.recommendedRetentionRate ?? planningRules.cappedRetention;
+	const recommendedLaterals = cohortEntry?.recommendedLateralEntryCount ?? 0;
+	const isManualOverride = cohortEntry ? isCohortEntryOverridden(cohortEntry) : false;
 	const maxClassSize = gradeInfo?.maxClassSize ?? 0;
 	const baselineHeadcount =
 		baselineData?.entries.find((entry) => entry.gradeLevel === gradeLevel)?.baselineHeadcount ??
@@ -187,21 +197,23 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 
 			const baseEntry: CohortParameterEntry = {
 				gradeLevel: gradeLevel as CohortParameterEntry['gradeLevel'],
-				retentionRate: cohortEntry?.retentionRate ?? 0.97,
+				retentionRate: cohortEntry?.retentionRate ?? planningRules.cappedRetention,
 				lateralEntryCount: cohortEntry?.lateralEntryCount ?? 0,
 				lateralWeightFr: cohortEntry?.lateralWeightFr ?? 0,
 				lateralWeightNat: cohortEntry?.lateralWeightNat ?? 0,
 				lateralWeightAut: cohortEntry?.lateralWeightAut ?? 0,
 			};
 
-			putCohortParams.mutate([
-				{
-					...baseEntry,
-					[field]: field === 'retentionRate' ? value : Math.max(0, Math.round(value)),
-				},
-			]);
+			putCohortParams.mutate({
+				entries: [
+					{
+						...baseEntry,
+						[field]: field === 'retentionRate' ? value : Math.max(0, Math.round(value)),
+					},
+				],
+			});
 		},
-		[cohortEntry, gradeLevel, isReadOnly, putCohortParams, versionId]
+		[cohortEntry, gradeLevel, isReadOnly, planningRules.cappedRetention, putCohortParams, versionId]
 	);
 
 	const handlePsAy2Change = useCallback(
@@ -251,6 +263,11 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 				<span className="rounded-full bg-(--workspace-bg-subtle) px-2 py-0.5 text-(--text-xs) font-semibold text-(--text-muted)">
 					{gradeLevel}
 				</span>
+				{isManualOverride && (
+					<span className="rounded-full bg-(--accent-50) px-2 py-0.5 text-(--text-xs) font-semibold text-(--accent-700)">
+						Manual override
+					</span>
+				)}
 			</div>
 
 			<div className="grid gap-3 md:grid-cols-2">
@@ -345,14 +362,22 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 									Petite Section bypasses retention and uses a direct AY2 entry.
 								</p>
 							</div>
-							<div className="w-22">
-								<EditableCell
-									value={projectedAy2}
-									onChange={handlePsAy2Change}
-									type="number"
-									isReadOnly={isReadOnly}
-								/>
-							</div>
+							<Input
+								type="number"
+								min={0}
+								step={1}
+								inputMode="numeric"
+								value={projectedAy2 > 0 ? projectedAy2 : ''}
+								placeholder={defaultAy2Intake ? String(defaultAy2Intake) : 'Enter AY2'}
+								onChange={(event) => handlePsAy2Change(Number(event.target.value))}
+								disabled={isReadOnly}
+								className={cn(
+									'w-24 rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5 text-right',
+									'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
+									'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
+									isReadOnly && 'bg-(--cell-readonly-bg)'
+								)}
+							/>
 						</div>
 					) : (
 						<>
@@ -382,6 +407,12 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 								<span className="text-(--text-sm) text-(--text-secondary)">Prior grade AY1</span>
 								<span className="font-[family-name:var(--font-mono)] text-(--text-sm) tabular-nums text-(--text-primary)">
 									{priorGrade ? `${priorGrade.gradeName} · ${priorGradeAy1}` : '—'}
+								</span>
+							</div>
+							<div className="flex items-center justify-between">
+								<span className="text-(--text-sm) text-(--text-secondary)">Suggested</span>
+								<span className="font-[family-name:var(--font-mono)] text-(--text-sm) tabular-nums text-(--text-muted)">
+									{Math.round(recommendedRetention * 100)}% · {recommendedLaterals}
 								</span>
 							</div>
 						</>
@@ -415,6 +446,13 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 							<p className="text-(--text-xs) text-(--text-muted)">
 								The grid, wizard preview, and backend calculation now use the same cohort rule set.
 							</p>
+							{cohortEntry?.recommendationSourceFiscalYear && (
+								<p className="text-(--text-xs) text-(--text-muted)">
+									Source: FY{cohortEntry.recommendationSourceFiscalYear} ·{' '}
+									{cohortEntry.recommendationPriorAy1Headcount ?? 0} prior AY1 to{' '}
+									{cohortEntry.recommendationAy2Headcount ?? 0} AY2
+								</p>
+							)}
 						</div>
 					</div>
 				</div>

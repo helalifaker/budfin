@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma.js';
 import { calculateAndPersistEnrollmentWorkspace } from '../../services/enrollment-workspace.js';
+import { resolveEnrollmentPlanningRules } from '../../services/planning-rules.js';
 
 const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
@@ -22,6 +23,8 @@ export async function calculateRoutes(app: FastifyInstance) {
 					dataSource: true,
 					status: true,
 					staleModules: true,
+					rolloverThreshold: true,
+					cappedRetention: true,
 				},
 			});
 
@@ -54,6 +57,7 @@ export async function calculateRoutes(app: FastifyInstance) {
 						id: version.id,
 						fiscalYear: version.fiscalYear,
 						staleModules: version.staleModules,
+						...resolveEnrollmentPlanningRules(version),
 					},
 					actor: {
 						userId: request.user.id,
@@ -62,6 +66,11 @@ export async function calculateRoutes(app: FastifyInstance) {
 					},
 				})
 			);
+
+			await prisma.budgetVersion.update({
+				where: { id: versionId },
+				data: { lastCalculatedAt: new Date() },
+			});
 
 			return result;
 		},

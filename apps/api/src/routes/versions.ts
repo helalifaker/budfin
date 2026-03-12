@@ -114,7 +114,10 @@ function formatVersion(v: {
 	sourceVersionId: number | null;
 	modificationCount: number;
 	staleModules: string[];
+	rolloverThreshold: Decimal.Value;
+	cappedRetention: Decimal.Value;
 	createdById: number;
+	lastCalculatedAt: Date | null;
 	publishedAt: Date | null;
 	lockedAt: Date | null;
 	archivedAt: Date | null;
@@ -133,8 +136,11 @@ function formatVersion(v: {
 		sourceVersionId: v.sourceVersionId,
 		modificationCount: v.modificationCount,
 		staleModules: v.staleModules,
+		rolloverThreshold: new Decimal(String(v.rolloverThreshold)).toNumber(),
+		cappedRetention: new Decimal(String(v.cappedRetention)).toNumber(),
 		createdById: v.createdById,
 		createdByEmail: v.createdBy?.email ?? null,
+		lastCalculatedAt: v.lastCalculatedAt,
 		publishedAt: v.publishedAt,
 		lockedAt: v.lockedAt,
 		archivedAt: v.archivedAt,
@@ -656,6 +662,26 @@ export async function versionRoutes(app: FastifyInstance) {
 
 			try {
 				const version = await prisma.$transaction(async (tx) => {
+					const sourceVersion = body.sourceVersionId
+						? await (tx as typeof prisma).budgetVersion.findUnique({
+								where: { id: body.sourceVersionId },
+							})
+						: null;
+
+					if (body.sourceVersionId && !sourceVersion) {
+						throw Object.assign(new Error('Source version not found'), {
+							statusCode: 404,
+							code: 'SOURCE_NOT_FOUND',
+						});
+					}
+
+					if (sourceVersion?.type === 'Actual') {
+						throw Object.assign(new Error('Cannot copy from Actual version'), {
+							statusCode: 409,
+							code: 'ACTUAL_COPY_PROHIBITED',
+						});
+					}
+
 					const created = await (tx as typeof prisma).budgetVersion.create({
 						data: {
 							name: body.name,
@@ -668,30 +694,18 @@ export async function versionRoutes(app: FastifyInstance) {
 							staleModules: [],
 							status: 'Draft',
 							dataSource: 'CALCULATED',
+							...(sourceVersion
+								? {
+										rolloverThreshold: sourceVersion.rolloverThreshold,
+										cappedRetention: sourceVersion.cappedRetention,
+									}
+								: {}),
 						},
 						include: { createdBy: { select: { email: true } } },
 					});
 
 					// Clone data from source version if specified
 					if (body.sourceVersionId) {
-						const source = await (tx as typeof prisma).budgetVersion.findUnique({
-							where: { id: body.sourceVersionId },
-						});
-
-						if (!source) {
-							throw Object.assign(new Error('Source version not found'), {
-								statusCode: 404,
-								code: 'SOURCE_NOT_FOUND',
-							});
-						}
-
-						if (source.type === 'Actual') {
-							throw Object.assign(new Error('Cannot copy from Actual version'), {
-								statusCode: 409,
-								code: 'ACTUAL_COPY_PROHIBITED',
-							});
-						}
-
 						const summaries = await (tx as typeof prisma).monthlyBudgetSummary.findMany({
 							where: { versionId: body.sourceVersionId },
 						});
@@ -831,6 +845,8 @@ export async function versionRoutes(app: FastifyInstance) {
 							staleModules: ['ENROLLMENT'],
 							status: 'Draft',
 							dataSource: source.dataSource,
+							rolloverThreshold: source.rolloverThreshold,
+							cappedRetention: source.cappedRetention,
 						},
 						include: { createdBy: { select: { email: true } } },
 					});
@@ -912,6 +928,21 @@ export async function versionRoutes(app: FastifyInstance) {
 								lateralWeightFr: cp.lateralWeightFr,
 								lateralWeightNat: cp.lateralWeightNat,
 								lateralWeightAut: cp.lateralWeightAut,
+							})),
+						});
+					}
+
+					// Copy capacity config overrides
+					const capacityConfigs = await (tx as typeof prisma).versionCapacityConfig.findMany({
+						where: { versionId: id },
+						select: { gradeLevel: true, maxClassSize: true },
+					});
+					if (capacityConfigs.length > 0) {
+						await (tx as typeof prisma).versionCapacityConfig.createMany({
+							data: capacityConfigs.map((cc) => ({
+								versionId: newVersion.id,
+								gradeLevel: cc.gradeLevel,
+								maxClassSize: cc.maxClassSize,
 							})),
 						});
 					}

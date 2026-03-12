@@ -102,6 +102,8 @@ const mockVersion = {
 	sourceVersionId: null,
 	modificationCount: 0,
 	staleModules: [],
+	rolloverThreshold: 1,
+	cappedRetention: 0.98,
 	createdById: 1,
 	publishedAt: null,
 	lockedAt: null,
@@ -237,6 +239,8 @@ describe('GET /api/v1/versions/:id', () => {
 			dataSource: 'CALCULATED',
 			modificationCount: 0,
 			staleModules: [],
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
 			createdByEmail: 'admin@budfin.app',
 		});
 	});
@@ -275,6 +279,8 @@ describe('POST /api/v1/versions', () => {
 		expect(body.status).toBe('Draft');
 		expect(body.modificationCount).toBe(0);
 		expect(body.staleModules).toEqual([]);
+		expect(body.rolloverThreshold).toBe(1);
+		expect(body.cappedRetention).toBe(0.98);
 	});
 
 	it('AC-01: BudgetOwner creates Forecast version successfully', async () => {
@@ -366,7 +372,14 @@ describe('POST /api/v1/versions', () => {
 	});
 
 	it('creates version with sourceVersionId and clones data', async () => {
-		const sourceVersion = { ...mockVersion, id: 5, type: 'Budget', status: 'Published' };
+		const sourceVersion = {
+			...mockVersion,
+			id: 5,
+			type: 'Budget',
+			status: 'Published',
+			rolloverThreshold: 1.04,
+			cappedRetention: 0.99,
+		};
 		mockPrisma.budgetVersion.create.mockResolvedValue(mockVersion);
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(sourceVersion);
 		mockPrisma.monthlyBudgetSummary.findMany.mockResolvedValue([
@@ -383,6 +396,14 @@ describe('POST /api/v1/versions', () => {
 		});
 
 		expect(res.statusCode).toBe(201);
+		expect(mockPrisma.budgetVersion.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({
+					rolloverThreshold: 1.04,
+					cappedRetention: 0.99,
+				}),
+			})
+		);
 		expect(mockPrisma.monthlyBudgetSummary.createMany).toHaveBeenCalled();
 	});
 

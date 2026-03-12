@@ -10,6 +10,7 @@ import { toast } from '../ui/toast-state';
 
 const baseGradeLevelSchema = z.object({
 	maxClassSize: z.coerce.number().int().min(1).max(50),
+	defaultAy2Intake: z.coerce.number().int().min(0).max(200).nullable(),
 	plancherPct: z.coerce.number().min(0).max(1),
 	ciblePct: z.coerce.number().min(0).max(1),
 	plafondPct: z.coerce.number().min(0).max(1),
@@ -46,6 +47,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 		resolver: zodResolver(gradeLevelSchema) as any,
 		defaultValues: {
 			maxClassSize: 25,
+			defaultAy2Intake: null,
 			plancherPct: 0,
 			ciblePct: 0,
 			plafondPct: 0,
@@ -57,6 +59,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 		if (!open || !gradeLevel) return;
 		reset({
 			maxClassSize: gradeLevel.maxClassSize,
+			defaultAy2Intake: gradeLevel.defaultAy2Intake,
 			plancherPct: Number(gradeLevel.plancherPct),
 			ciblePct: Number(gradeLevel.ciblePct),
 			plafondPct: Number(gradeLevel.plafondPct),
@@ -103,6 +106,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 				id: gradeLevel.id,
 				version: gradeLevel.version,
 				maxClassSize: data.maxClassSize,
+				defaultAy2Intake: data.defaultAy2Intake,
 				plancherPct: String(data.plancherPct),
 				ciblePct: String(data.ciblePct),
 				plafondPct: String(data.plafondPct),
@@ -200,6 +204,29 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							{errors.maxClassSize && (
 								<p className="mt-1 text-(--text-xs) text-(--color-error)">
 									{errors.maxClassSize.message}
+								</p>
+							)}
+						</div>
+
+						<div>
+							<label htmlFor="defaultAy2Intake" className="block text-(--text-sm) font-medium">
+								Default AY2 Intake
+							</label>
+							<Input
+								id="defaultAy2Intake"
+								type="number"
+								min={0}
+								max={200}
+								placeholder="Optional"
+								className={inputClass(!!errors.defaultAy2Intake)}
+								{...register('defaultAy2Intake', {
+									setValueAs: (value) =>
+										value === '' || value === null || value === undefined ? null : Number(value),
+								})}
+							/>
+							{errors.defaultAy2Intake && (
+								<p className="mt-1 text-(--text-xs) text-(--color-error)">
+									{errors.defaultAy2Intake.message}
 								</p>
 							)}
 						</div>

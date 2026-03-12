@@ -1,33 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import type { AcademicPeriod } from '@budfin/types';
+import type { GradeCode } from '@budfin/types';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useEnrollmentSelectionStore } from '../../stores/enrollment-selection-store';
+import { useDirtyRowsStore } from '../../stores/dirty-rows-store';
 import {
-	useHeadcount,
 	useCalculateEnrollment,
 	useEnrollmentCapacityResults,
-	useHistorical,
+	useHeadcount,
+	usePutHeadcount,
 } from '../../hooks/use-enrollment';
 import { useVersions } from '../../hooks/use-versions';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
-import { useCohortParameters } from '../../hooks/use-cohort-parameters';
+import { useCohortParameters, usePutCohortParameters } from '../../hooks/use-cohort-parameters';
 import { Button } from '../../components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
-import { WorkspaceBoard } from '../../components/shared/workspace-board';
-import { WorkspaceBlock } from '../../components/shared/workspace-block';
 import { EnrollmentKpiRibbon } from '../../components/enrollment/kpi-ribbon';
-import { CohortProgressionGrid } from '../../components/enrollment/cohort-progression-grid';
-import { NationalityDistributionGrid } from '../../components/enrollment/nationality-distribution-grid';
-import { CapacityGrid } from '../../components/enrollment/capacity-grid';
-import { HistoricalChart } from '../../components/enrollment/historical-chart';
+import { EnrollmentStatusStrip } from '../../components/enrollment/enrollment-status-strip';
+import { EnrollmentMasterGrid } from '../../components/enrollment/enrollment-master-grid';
+import { ExportButton } from '../../components/enrollment/export-button';
+import {
+	ExceptionFilterMenu,
+	type ExceptionFilterValue,
+} from '../../components/enrollment/exception-filter-menu';
 import { CalculateButton } from '../../components/enrollment/calculate-button';
 import { PageTransition } from '../../components/shared/page-transition';
 import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
 import { EnrollmentSetupWizard } from '../../components/enrollment/setup-wizard';
-import { deriveEnrollmentEditability } from '../../lib/enrollment-workspace';
+import {
+	buildAy1HeadcountMap,
+	buildCapacityPreviewRows,
+	buildCohortProjectionRows,
+	buildMasterGridRows,
+	DEFAULT_PLANNING_RULES,
+	deriveEnrollmentEditability,
+	getPsAy2Headcount,
+} from '../../lib/enrollment-workspace';
 import '../../components/enrollment/enrollment-inspector';
 
 const BAND_FILTERS: Array<{ value: string; label: string }> = [
@@ -39,27 +49,34 @@ const BAND_FILTERS: Array<{ value: string; label: string }> = [
 ];
 
 export function EnrollmentPage() {
-	const { versionId, fiscalYear, academicPeriod, versionStatus, versionName, versionDataSource } =
+	const { versionId, fiscalYear, versionStatus, versionName, versionDataSource } =
 		useWorkspaceContext();
 	const user = useAuthStore((state) => state.user);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
 	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
 	const clearSelection = useEnrollmentSelectionStore((state) => state.clearSelection);
+	const selectGrade = useEnrollmentSelectionStore((state) => state.selectGrade);
+	const selectedGrade =
+		useEnrollmentSelectionStore((state) =>
+			state.selection?.type === 'GRADE' ? state.selection.id : null
+		) ?? null;
 	const navigate = useNavigate();
+	const dirtyCount = useDirtyRowsStore((state) => state.dirtyCount);
 
 	const [bandFilter, setBandFilter] = useState('ALL');
-	const [historyOpen, setHistoryOpen] = useState(false);
+	const [exceptionFilter, setExceptionFilter] = useState<ExceptionFilterValue>('all');
+	const [quickEdit, setQuickEdit] = useState(false);
 	const [wizardOpen, setWizardOpen] = useState(false);
 	const autoPromptedVersionRef = useRef<number | null>(null);
 
-	const { data: headcountData } = useHeadcount(versionId, academicPeriod as AcademicPeriod | null);
-	const { data: setupHeadcountData } = useHeadcount(versionId);
+	const { data: headcountData } = useHeadcount(versionId);
 	const { data: gradeLevelsData } = useGradeLevels();
 	const { data: cohortData } = useCohortParameters(versionId);
 	const { data: capacityResultsData } = useEnrollmentCapacityResults(versionId);
 	const calculateMutation = useCalculateEnrollment(versionId);
+	const putHeadcount = usePutHeadcount(versionId);
+	const putCohortParameters = usePutCohortParameters(versionId);
 	const { data: versionsData } = useVersions(fiscalYear);
-	const { data: historicalData } = useHistorical(5);
 
 	useEffect(() => {
 		setActivePage('enrollment');
@@ -67,18 +84,19 @@ export function EnrollmentPage() {
 			setActivePage(null);
 			clearSelection();
 		};
-	}, [setActivePage, clearSelection]);
+	}, [clearSelection, setActivePage]);
 
 	useEffect(() => {
 		if (!isPanelOpen) {
 			clearSelection();
 		}
-	}, [isPanelOpen, clearSelection]);
+	}, [clearSelection, isPanelOpen]);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId || !versionsData?.data) {
 			return null;
 		}
+
 		return versionsData.data.find((version) => version.id === versionId) ?? null;
 	}, [versionId, versionsData]);
 
@@ -93,20 +111,120 @@ export function EnrollmentPage() {
 	const isViewer = editability === 'viewer';
 	const isStale = currentVersion?.staleModules?.includes('ENROLLMENT') ?? false;
 
-	const expectedGradeCount = gradeLevelsData?.gradeLevels.length ?? 0;
-	const ay1Entries = useMemo(
-		() => setupHeadcountData?.entries.filter((entry) => entry.academicPeriod === 'AY1') ?? [],
-		[setupHeadcountData]
+	const gradeLevels = useMemo(
+		() => gradeLevelsData?.gradeLevels ?? [],
+		[gradeLevelsData?.gradeLevels]
 	);
+	const headcountEntries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
+	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
+	const planningRules = cohortData?.planningRules ?? DEFAULT_PLANNING_RULES;
+
+	const expectedGradeCount = gradeLevels.length;
+	const ay1HeadcountMap = useMemo(() => buildAy1HeadcountMap(headcountEntries), [headcountEntries]);
+	const psDefaultAy2Intake =
+		gradeLevels.find((gradeLevel) => gradeLevel.gradeCode === 'PS')?.defaultAy2Intake ?? null;
+	const psAy2Headcount = getPsAy2Headcount(
+		headcountEntries,
+		ay1HeadcountMap,
+		null,
+		psDefaultAy2Intake
+	);
+
+	const projectionRows = useMemo(
+		() =>
+			buildCohortProjectionRows({
+				gradeLevels,
+				ay1HeadcountMap,
+				cohortEntries,
+				psAy2Headcount,
+				planningRules,
+			}),
+		[ay1HeadcountMap, cohortEntries, gradeLevels, planningRules, psAy2Headcount]
+	);
+	const capacityPreviewRows = useMemo(
+		() =>
+			buildCapacityPreviewRows({
+				gradeLevels,
+				ay1HeadcountMap,
+				projectionRows,
+			}),
+		[ay1HeadcountMap, gradeLevels, projectionRows]
+	);
+	const masterGridRows = useMemo(
+		() =>
+			buildMasterGridRows({
+				gradeLevels,
+				ay1HeadcountMap,
+				cohortEntries,
+				psAy2Headcount,
+				capacityResults: capacityPreviewRows,
+				planningRules,
+			}),
+		[
+			ay1HeadcountMap,
+			capacityPreviewRows,
+			cohortEntries,
+			gradeLevels,
+			planningRules,
+			psAy2Headcount,
+		]
+	);
+	const cohortMap = useMemo(
+		() => new Map(cohortEntries.map((entry) => [entry.gradeLevel, entry])),
+		[cohortEntries]
+	);
+
+	const filteredRows = useMemo(
+		() =>
+			masterGridRows.filter((row) => {
+				if (bandFilter !== 'ALL' && row.band !== bandFilter) {
+					return false;
+				}
+
+				if (exceptionFilter === 'all') {
+					return true;
+				}
+
+				const tags = row.issueTags ?? [];
+				return tags.includes(exceptionFilter);
+			}),
+		[bandFilter, exceptionFilter, masterGridRows]
+	);
+
+	const kpiData = useMemo(() => {
+		const totalAy1 = masterGridRows.reduce((sum, row) => sum + row.ay1Headcount, 0);
+		const totalAy2 = masterGridRows.reduce((sum, row) => sum + row.ay2Headcount, 0);
+		const utilizationPct =
+			masterGridRows.length > 0
+				? masterGridRows.reduce((sum, row) => sum + row.utilization, 0) / masterGridRows.length
+				: 0;
+
+		return {
+			totalAy1,
+			totalAy2,
+			utilizationPct,
+			alertCount: masterGridRows.filter((row) => row.alert === 'OVER' || row.alert === 'NEAR_CAP')
+				.length,
+			isStale,
+		};
+	}, [isStale, masterGridRows]);
+
 	const ay1EntryCount = useMemo(
-		() => new Set(ay1Entries.map((entry) => entry.gradeLevel)).size,
-		[ay1Entries]
+		() =>
+			new Set(
+				headcountEntries
+					.filter((entry) => entry.academicPeriod === 'AY1')
+					.map((entry) => entry.gradeLevel)
+			).size,
+		[headcountEntries]
 	);
 	const hasCompleteAy1 = expectedGradeCount > 0 && ay1EntryCount === expectedGradeCount;
 	const hasPersistedCohorts =
-		cohortData?.entries
+		cohortEntries
 			.filter((entry) => entry.gradeLevel !== 'PS')
-			.every((entry) => entry.isPersisted) ?? false;
+			.every((entry) => entry.isPersisted) &&
+		cohortEntries.filter((entry) => entry.gradeLevel !== 'PS').length ===
+			gradeLevels.filter((gradeLevel) => gradeLevel.gradeCode !== 'PS').length;
 	const isSetupComplete = hasCompleteAy1 && hasPersistedCohorts;
 
 	useEffect(() => {
@@ -131,56 +249,39 @@ export function EnrollmentPage() {
 			setWizardOpen(true);
 		});
 		return () => window.cancelAnimationFrame(frameId);
-	}, [versionId, editability, isSetupComplete]);
+	}, [editability, isSetupComplete, versionId]);
 
-	const historicalTotals = useMemo(() => {
-		if (!historicalData?.data) {
-			return undefined;
+	function buildEditableCohortEntry(gradeLevel: GradeCode) {
+		const existing = cohortMap.get(gradeLevel);
+		if (existing) {
+			return existing;
 		}
-		const totalsByYear = new Map<number, number>();
-		for (const point of historicalData.data) {
-			totalsByYear.set(
-				point.academicYear,
-				(totalsByYear.get(point.academicYear) ?? 0) + point.headcount
-			);
-		}
-		return [...totalsByYear.entries()]
-			.sort(([leftYear], [rightYear]) => leftYear - rightYear)
-			.map(([, total]) => total);
-	}, [historicalData]);
-
-	const previousYearTotal =
-		historicalTotals && historicalTotals.length >= 2
-			? historicalTotals[historicalTotals.length - 1]
-			: undefined;
-
-	const capacityResults = useMemo(
-		() => capacityResultsData?.results ?? calculateMutation.data?.results ?? [],
-		[calculateMutation.data?.results, capacityResultsData?.results]
-	);
-
-	const kpiData = useMemo(() => {
-		const ay1Total = ay1Entries.reduce((sum, entry) => sum + entry.headcount, 0);
-		const ay2Total = (headcountData?.entries ?? [])
-			.filter((entry) => entry.academicPeriod === 'AY2')
-			.reduce((sum, entry) => sum + entry.headcount, 0);
-		const alertCount = capacityResults.filter(
-			(result) => result.alert === 'OVER' || result.alert === 'NEAR_CAP'
-		).length;
-		const utilizationPct =
-			capacityResults.length > 0
-				? capacityResults.reduce((sum, result) => sum + result.utilization, 0) /
-					capacityResults.length
-				: 0;
 
 		return {
-			totalAy1: ay1Total,
-			totalAy2: ay2Total,
-			utilizationPct,
-			alertCount,
-			isStale,
+			gradeLevel,
+			retentionRate: gradeLevel === 'PS' ? 0 : planningRules.cappedRetention,
+			lateralEntryCount: 0,
+			lateralWeightFr: 0,
+			lateralWeightNat: 0,
+			lateralWeightAut: 0,
 		};
-	}, [ay1Entries, headcountData, capacityResults, isStale]);
+	}
+
+	const baselineSource = useMemo(() => {
+		const ds = currentVersion?.dataSource;
+		if (ds === 'CALCULATED') return 'Calculated';
+		if (ds === 'IMPORTED') return 'Imported';
+		return ds ?? null;
+	}, [currentVersion?.dataSource]);
+
+	const activeFilters = useMemo(() => {
+		const filters: string[] = [];
+		if (bandFilter !== 'ALL') filters.push(`Band: ${bandFilter}`);
+		if (exceptionFilter !== 'all') filters.push(`Exception: ${exceptionFilter}`);
+		return filters;
+	}, [bandFilter, exceptionFilter]);
+
+	const isFiltered = bandFilter !== 'ALL' || exceptionFilter !== 'all';
 
 	if (!versionId) {
 		return (
@@ -192,18 +293,19 @@ export function EnrollmentPage() {
 
 	return (
 		<PageTransition>
-			<div className="space-y-4">
+			<div className="flex h-full min-h-0 flex-col overflow-hidden">
+				{/* Conditional banners */}
 				{isLocked && versionStatus && (
 					<VersionLockBanner status={versionStatus} versionName={versionName ?? undefined} />
 				)}
 				{isImported && (
-					<div className="rounded-xl border border-(--color-warning) bg-(--color-warning-bg) px-4 py-3">
-						<p className="text-(--text-sm) font-semibold text-(--color-warning)">
+					<div className="shrink-0 border-b border-(--color-warning) bg-(--color-warning-bg) px-4 py-3">
+						<p className="text-sm font-semibold text-(--color-warning)">
 							Imported versions are review-only for Enrollment.
 						</p>
-						<p className="mt-1 text-(--text-sm) text-(--text-secondary)">
-							Use the wizard on an editable Budget or Forecast version to validate baseline data
-							before applying changes.
+						<p className="mt-1 text-sm text-(--text-secondary)">
+							Use the setup wizard on an editable Budget or Forecast version to validate intake and
+							planning rules before applying changes.
 						</p>
 						<div className="mt-3">
 							<Button
@@ -218,21 +320,24 @@ export function EnrollmentPage() {
 					</div>
 				)}
 				{isViewer && (
-					<div className="rounded-xl border border-(--color-info) bg-(--color-info-bg) px-4 py-3">
-						<p className="text-(--text-sm) font-semibold text-(--color-info)">
+					<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-4 py-3">
+						<p className="text-sm font-semibold text-(--color-info)">
 							Viewer access keeps this workspace in review mode.
 						</p>
-						<p className="mt-1 text-(--text-sm) text-(--text-secondary)">
+						<p className="mt-1 text-sm text-(--text-secondary)">
 							You can inspect assumptions and results, but edits and calculations are disabled.
 						</p>
 					</div>
 				)}
 
-				<WorkspaceBoard
-					title="Enrollment Control Workspace"
-					description="Validate baseline data, confirm cohort assumptions, and keep the grid reserved for smaller operational edits."
-					actions={
-						<>
+				{/* Header zone */}
+				<header className="shrink-0 border-b border-(--workspace-border) px-6 py-3">
+					<div className="flex items-center justify-between">
+						<div>
+							<h1 className="text-lg font-semibold">Enrollment Planning</h1>
+							<p className="text-xs text-(--text-muted)">{versionName}</p>
+						</div>
+						<div className="flex items-center gap-2">
 							<ToggleGroup
 								type="single"
 								value={bandFilter}
@@ -249,6 +354,23 @@ export function EnrollmentPage() {
 									</ToggleGroupItem>
 								))}
 							</ToggleGroup>
+							<ExceptionFilterMenu value={exceptionFilter} onChange={setExceptionFilter} />
+							<Button
+								type="button"
+								variant={quickEdit ? 'default' : 'outline'}
+								size="sm"
+								onClick={() => setQuickEdit((current) => !current)}
+								aria-pressed={quickEdit}
+							>
+								{quickEdit ? 'Quick Edit On' : 'Quick Edit'}
+							</Button>
+							<ExportButton
+								rows={filteredRows}
+								versionName={versionName ?? 'enrollment'}
+								activeFilters={activeFilters}
+								isFiltered={isFiltered}
+								dirtyCount={dirtyCount}
+							/>
 							<Button type="button" variant="outline" size="sm" onClick={() => setWizardOpen(true)}>
 								{isSetupComplete ? 'Reopen Setup Wizard' : 'Resume Setup Wizard'}
 							</Button>
@@ -261,50 +383,65 @@ export function EnrollmentPage() {
 									isError={calculateMutation.isError}
 								/>
 							)}
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onClick={() => setHistoryOpen((current) => !current)}
-							>
-								{historyOpen ? 'Hide History' : 'Show History'}
-							</Button>
-						</>
+						</div>
+					</div>
+				</header>
+
+				{/* KPI ribbon */}
+				<EnrollmentKpiRibbon {...kpiData} />
+
+				{/* Status strip */}
+				<EnrollmentStatusStrip
+					baselineSource={baselineSource}
+					lastCalculatedAt={
+						currentVersion?.lastCalculatedAt ?? capacityResultsData?.lastCalculatedAt ?? null
 					}
-					kpiRibbon={
-						<EnrollmentKpiRibbon
-							{...kpiData}
-							historicalTotals={historicalTotals}
-							previousYearTotal={previousYearTotal}
-						/>
-					}
-				>
-					<WorkspaceBlock
-						title="Cohort Progression"
-						count={headcountData?.entries.length ?? 0}
-						isStale={isStale}
-					>
-						<CohortProgressionGrid
-							versionId={versionId}
-							bandFilter={bandFilter}
+					dirtyCount={dirtyCount}
+					staleModules={currentVersion?.staleModules ?? []}
+				/>
+
+				{/* Grid zone — flex-1, owns its own scroll */}
+				<div className="flex-1 min-h-0 overflow-hidden px-6 py-3">
+					<div className="h-full overflow-y-auto rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card)">
+						<EnrollmentMasterGrid
+							rows={filteredRows}
+							selectedGradeLevel={selectedGrade}
 							isReadOnly={isReadOnly}
+							quickEditEnabled={quickEdit}
+							isFiltered={isFiltered}
+							onSelectGrade={selectGrade}
+							onEditAy1Headcount={(gradeLevel, value) =>
+								putHeadcount.mutate([
+									{
+										gradeLevel,
+										academicPeriod: 'AY1',
+										headcount: Math.max(0, Math.round(value)),
+									},
+								])
+							}
+							onEditRetentionRate={(gradeLevel, value) =>
+								putCohortParameters.mutate({
+									entries: [
+										{
+											...buildEditableCohortEntry(gradeLevel),
+											retentionRate: value,
+										},
+									],
+								})
+							}
+							onEditLateralEntry={(gradeLevel, value) =>
+								putCohortParameters.mutate({
+									entries: [
+										{
+											...buildEditableCohortEntry(gradeLevel),
+											lateralEntryCount: Math.max(0, Math.round(value)),
+										},
+									],
+								})
+							}
 						/>
-					</WorkspaceBlock>
-
-					<WorkspaceBlock title="Nationality Distribution" isStale={isStale}>
-						<NationalityDistributionGrid versionId={versionId} bandFilter={bandFilter} isReadOnly />
-					</WorkspaceBlock>
-
-					<WorkspaceBlock title="Capacity Planning" count={capacityResults.length}>
-						<CapacityGrid
-							versionId={versionId}
-							bandFilter={bandFilter}
-							capacityResults={capacityResults}
-						/>
-					</WorkspaceBlock>
-
-					{historyOpen && <HistoricalChart />}
-				</WorkspaceBoard>
+					</div>
+				</div>
 			</div>
 
 			<EnrollmentSetupWizard

@@ -38,6 +38,7 @@ export interface PlanningGridProps<T> {
 	onActiveRowChange?: (rowIndex: number) => void;
 	onRowSelect?: (rowData: T) => void;
 	selectedRowPredicate?: (row: T) => boolean;
+	getRowClassName?: (row: T) => string | undefined;
 	className?: string;
 	ariaLabel?: string;
 }
@@ -85,6 +86,7 @@ export function PlanningGrid<T>({
 	onActiveRowChange,
 	onRowSelect,
 	selectedRowPredicate,
+	getRowClassName,
 	className,
 	ariaLabel,
 }: PlanningGridProps<T>) {
@@ -95,6 +97,9 @@ export function PlanningGrid<T>({
 	const cols = table.getAllColumns().length;
 	const rows = table.getRowModel().rows;
 	const headerGroups = table.getHeaderGroups();
+	const isEditable = (editableColumns?.length ?? 0) > 0;
+	const tableRole = isEditable ? 'grid' : 'table';
+	const cellRole = isEditable ? 'gridcell' : 'cell';
 
 	// Build band groups when bandGrouping is provided
 	const bandedRows = useMemo(() => {
@@ -228,7 +233,7 @@ export function PlanningGrid<T>({
 					className
 				)}
 			>
-				<table role="grid" aria-label={ariaLabel} className="w-full text-left">
+				<table role={tableRole} aria-label={ariaLabel} className="w-full text-left">
 					<tbody>
 						<GridSkeleton rows={10} cols={cols} />
 					</tbody>
@@ -288,7 +293,7 @@ export function PlanningGrid<T>({
 		return (
 			<td
 				key={cell.id}
-				role="gridcell"
+				role={cellRole}
 				aria-selected={isActive}
 				onClick={() => handleCellClick(rowIndex, colIndex)}
 				style={{ width: cell.column.getSize() }}
@@ -320,6 +325,7 @@ export function PlanningGrid<T>({
 		const isActiveRow = activeCell?.rowIndex === rowIndex;
 		const isSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
 		const headers = headerGroups[0]?.headers ?? [];
+		const customRowClass = getRowClassName?.(row.original);
 
 		return (
 			<tr
@@ -336,7 +342,8 @@ export function PlanningGrid<T>({
 					isSelected && 'border-l-[3px] border-l-(--accent-500) bg-(--grid-selected-row)',
 					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
 					rowAnimation && 'animate-row-enter',
-					onRowSelect && 'cursor-pointer'
+					onRowSelect && 'cursor-pointer',
+					customRowClass
 				)}
 				style={
 					rowAnimation ? { animationDelay: `${Math.min(animationIndex, 20) * 25}ms` } : undefined
@@ -433,7 +440,7 @@ export function PlanningGrid<T>({
 					return (
 						<td
 							key={`${key}-${header.id}`}
-							role="gridcell"
+							role={cellRole}
 							className={cn(
 								'px-(--grid-cell-px) py-(--grid-cell-py) align-middle',
 								'text-(--text-sm)',
@@ -519,7 +526,7 @@ export function PlanningGrid<T>({
 		>
 			<table
 				ref={tableRef}
-				role="grid"
+				role={tableRole}
 				aria-label={ariaLabel}
 				onKeyDown={handleKeyDown}
 				tabIndex={keyboardNavigation ? 0 : undefined}

@@ -17,6 +17,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Migration audit trail records one log entry per module execution with source file, row counts, and validation status (#10)
 - CLI commands `pnpm --filter @budfin/api migrate` and `pnpm --filter @budfin/api parse:staff-costs` for running the migration pipeline (#10)
 
+- Enrollment planning workspace redesigned as a fixed-viewport master grid with a contextual sidebar inspector, replacing the scrollable three-section continuous board; the grid never scrolls the page — only the grid body scrolls internally, matching the behaviour of tools like Excel and Anaplan (#184)
+- Version-scoped enrollment planning rules: each budget version stores its own rollover threshold (default 1.00) and capped retention rate (default 0.98), editable from both the setup wizard and the sidebar; changes mark the enrollment module stale so recalculation is required (#184)
+- PS grade default AY2 intake: a `defaultAy2Intake` field on the grade level record (admin-configurable, seeded to 66 for PS) provides a reliable baseline when no manual AY2 override is set, eliminating the previous need to guess the PS new-intake number (#184)
+- Exception filter menu on the enrollment master grid for narrowing to grades that are over-capacity, near-capacity, stale, or have outstanding warnings (#184)
+- CSV export button on the enrollment master grid exports the current headcount and capacity data to a downloadable spreadsheet (#184)
+- Last-calculated timestamp on each budget version: the API now records when enrollment was last calculated and returns it in version metadata, enabling the UI to surface "last calculated N minutes ago" trust cues alongside stale indicators (#184)
+- Wizard recommendation previews are now exact: the setup wizard shows the computed AY2 headcount that would result from applying the currently configured planning rules before the user commits, matching the actual calculation output (#184)
 - Cohort progression modeling: AY2 headcounts are automatically computed from AY1 using per-grade retention rates and lateral entry counts, replacing manual AY2 data entry with a transparent formula-driven approach (#137)
 - Nationality distribution engine: AY2 nationality breakdowns (Francais, Nationaux, Autres) are computed from prior-grade retention and lateral entry weights, with manual override support per grade (#137)
 - Enrollment workspace redesigned as a Continuous Planning Board with three stacked sections (Cohort Progression, Nationality Distribution, Capacity Planning) visible simultaneously instead of hidden behind tabs (#137)
@@ -116,6 +123,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Enrollment planning rules thresholds corrected: rollover threshold changed from 1.05 to 1.00 and capped retention from 0.97 to 0.98 to match EFIR workbook conventions; existing versions receive these corrected defaults via the database migration (#184)
+- Version cloning now carries planning rules forward: when a budget version is cloned, the source version's rollover threshold and capped retention are copied to the new version instead of reverting to system defaults (#184)
+- Grade Levels configuration now exposes a "Default AY2 Intake" field per grade, allowing administrators to set the expected new PS cohort intake without editing enrollment data directly (#184)
 - Enrollment page restructured from tabbed layout (By Grade / By Nationality / By Tariff tabs) to a Continuous Planning Board with three stacked, simultaneously visible sections; tariff assignment moved to the Revenue module where it logically belongs (#137)
 - Revenue page restructured from tabbed layout to a Continuous Planning Board with six stacked sections, eliminating context-switching between revenue planning steps (#137)
 - Enrollment calculation now automatically computes AY2 headcounts via cohort progression instead of requiring manual AY2 entry for each grade (#137)

@@ -6,6 +6,11 @@ import { prisma } from '../../lib/prisma.js';
 import { GRADE_PROGRESSION } from '../../services/cohort-engine.js';
 import { getHistoricalCohortRecommendations } from '../../services/cohort-recommendations.js';
 import { normalizeCohortMutations } from '../../services/enrollment-workspace.js';
+import {
+	buildEnrollmentPlanningRulesUpdateData,
+	ENROLLMENT_RULES_STALE_MODULES,
+	resolveEnrollmentPlanningRules,
+} from '../../services/planning-rules.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -24,11 +29,15 @@ const cohortParameterEntrySchema = z.object({
 	lateralWeightAut: z.number().min(0).max(1),
 });
 
-const putBodySchema = z.object({
-	entries: z.array(cohortParameterEntrySchema).min(1),
+const planningRulesSchema = z.object({
+	rolloverThreshold: z.number().min(0.5).max(2),
+	cappedRetention: z.number().min(0.5).max(1),
 });
 
-const COHORT_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+const putBodySchema = z.object({
+	entries: z.array(cohortParameterEntrySchema).min(1),
+	planningRules: planningRulesSchema.optional(),
+});
 
 const WEIGHT_SUM_TOLERANCE = 0.0001;
 
@@ -46,7 +55,12 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
-				select: { id: true, fiscalYear: true },
+				select: {
+					id: true,
+					fiscalYear: true,
+					rolloverThreshold: true,
+					cappedRetention: true,
+				},
 			});
 
 			if (!version) {
@@ -55,6 +69,8 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 					message: `Version ${versionId} not found`,
 				});
 			}
+
+			const planningRules = resolveEnrollmentPlanningRules(version);
 
 			// Fetch existing parameters
 			const params = await prisma.cohortParameter.findMany({
@@ -71,7 +87,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 
 			const paramsMap = new Map(params.map((p) => [p.gradeLevel, p]));
 			const recommendationMap = new Map(
-				(await getHistoricalCohortRecommendations(prisma, version.fiscalYear)).map(
+				(await getHistoricalCohortRecommendations(prisma, version.fiscalYear, planningRules)).map(
 					(recommendation) => [recommendation.gradeLevel, recommendation] as const
 				)
 			);
@@ -91,18 +107,24 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 						lateralWeightNat: Number(existing.lateralWeightNat),
 						lateralWeightAut: Number(existing.lateralWeightAut),
 						isPersisted: true,
-						recommendedRetentionRate: recommendation?.recommendedRetentionRate ?? (isPs ? 0 : 0.97),
+						recommendedRetentionRate:
+							recommendation?.recommendedRetentionRate ??
+							(isPs ? 0 : planningRules.cappedRetention),
 						recommendedLateralEntryCount: recommendation?.recommendedLateralEntryCount ?? 0,
 						recommendationConfidence: recommendation?.confidence ?? 'low',
 						recommendationObservationCount: recommendation?.observationCount ?? 0,
 						recommendationSourceFiscalYear: recommendation?.sourceFiscalYear ?? null,
 						recommendationRolloverRatio: recommendation?.rolloverRatio ?? null,
+						recommendationPriorAy1Headcount:
+							recommendation?.recommendationPriorAy1Headcount ?? null,
+						recommendationAy2Headcount: recommendation?.recommendationAy2Headcount ?? null,
 						recommendationRule:
 							recommendation?.rule ?? (isPs ? 'direct-entry' : 'fallback-default'),
 					};
 				}
 
-				const defaultRetentionRate = recommendation?.recommendedRetentionRate ?? (isPs ? 0 : 0.97);
+				const defaultRetentionRate =
+					recommendation?.recommendedRetentionRate ?? (isPs ? 0 : planningRules.cappedRetention);
 				const defaultLateralEntryCount = recommendation?.recommendedLateralEntryCount ?? 0;
 
 				// Defaults: PS has retentionRate=0 (direct entry), others use the latest historical recommendation.
@@ -120,11 +142,13 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 					recommendationObservationCount: recommendation?.observationCount ?? 0,
 					recommendationSourceFiscalYear: recommendation?.sourceFiscalYear ?? null,
 					recommendationRolloverRatio: recommendation?.rolloverRatio ?? null,
+					recommendationPriorAy1Headcount: recommendation?.recommendationPriorAy1Headcount ?? null,
+					recommendationAy2Headcount: recommendation?.recommendationAy2Headcount ?? null,
 					recommendationRule: recommendation?.rule ?? (isPs ? 'direct-entry' : 'fallback-default'),
 				};
 			});
 
-			return { entries };
+			return { entries, planningRules };
 		},
 	});
 
@@ -137,7 +161,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 		preHandler: [app.authenticate, app.requireRole('Admin', 'BudgetOwner', 'Editor')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParamsSchema>;
-			const { entries } = request.body as z.infer<typeof putBodySchema>;
+			const { entries, planningRules } = request.body as z.infer<typeof putBodySchema>;
 			const normalizedEntries = normalizeCohortMutations(entries);
 
 			// Version lock guard
@@ -231,14 +255,17 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 
 				// Update stale modules
 				const currentStale = new Set(version.staleModules);
-				for (const m of COHORT_STALE_MODULES) {
+				for (const m of ENROLLMENT_RULES_STALE_MODULES) {
 					currentStale.add(m);
 				}
 				const staleModules = [...currentStale];
 
 				await txPrisma.budgetVersion.update({
 					where: { id: versionId },
-					data: { staleModules },
+					data: {
+						...(planningRules ? buildEnrollmentPlanningRulesUpdateData(planningRules) : {}),
+						staleModules,
+					},
 				});
 
 				// Audit log
@@ -259,6 +286,7 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 								lateralWeightNat: e.lateralWeightNat,
 								lateralWeightAut: e.lateralWeightAut,
 							})),
+							planningRules,
 						} as unknown as Prisma.InputJsonValue,
 					},
 				});

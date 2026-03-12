@@ -6,15 +6,16 @@
 
 ## Related Specifications
 
-| Epic                            | Spec File                                     |
-| ------------------------------- | --------------------------------------------- |
-| Epic 1 — Enrollment & Capacity  | `docs/specs/epic-1/enrollment-capacity.md`    |
-| Epic 2 — Revenue                | `docs/specs/epic-2/revenue.md`                |
-| Epic 7 — Master Data Management | `docs/specs/epic-7/master-data-management.md` |
-| Epic 10 — Version Management    | `docs/specs/epic-10/version-management.md`    |
-| Epic 11 — Authentication & RBAC | `docs/specs/epic-11/authentication-rbac.md`   |
-| Epic 15 — UI/UX Clean-Slate     | `docs/specs/epic-15/ui-ux-remediation.md`     |
-| Epic 12 — Data Migration        | `docs/specs/epic-12/data-migration.md`        |
+| Epic                            | Spec File                                           |
+| ------------------------------- | --------------------------------------------------- |
+| Epic 1 — Enrollment & Capacity  | `docs/specs/epic-1/enrollment-capacity.md`          |
+| Epic 2 — Revenue                | `docs/specs/epic-2/revenue.md`                      |
+| Epic 7 — Master Data Management | `docs/specs/epic-7/master-data-management.md`       |
+| Epic 10 — Version Management    | `docs/specs/epic-10/version-management.md`          |
+| Epic 11 — Authentication & RBAC | `docs/specs/epic-11/authentication-rbac.md`         |
+| Epic 15 — UI/UX Clean-Slate     | `docs/specs/epic-15/ui-ux-remediation.md`           |
+| Epic 12 — Data Migration        | `docs/specs/epic-12/data-migration.md`              |
+| PR #184 — Enrollment Redesign   | `docs/plans/2026-03-11-enrollment-page-redesign.md` |
 
 This appendix maps every functional requirement from PRD v2.0 to the TDD design sections, responsible components, implementing API endpoints, relevant database tables, and test types. The matrix ensures complete traceability from business requirements through technical design to verification.
 
@@ -437,6 +438,27 @@ This section maps each Epic 1 story to its implementation files, test files, and
 
 ---
 
+### Enrollment Planning Workspace Redesign (PR #184) -- Additional Implementation
+
+| AC-ID     | Story # | Description                                                                                                                                      | Spec File                   | Implementation File(s)                                                                                           | Test File                                                | Status |
+| --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------ |
+| AC-184-01 | #184    | version-scoped planning rules: rollover_threshold + capped_retention on budget_versions; GET/PUT API                                             | enrollment-page-redesign.md | apps/api/src/services/planning-rules.ts, apps/api/src/routes/enrollment/planning-rules.ts                        | apps/api/src/routes/enrollment/planning-rules.test.ts    | PASS   |
+| AC-184-02 | #184    | DB migration: rollover_threshold, capped_retention on budget_versions; default_ay2_intake on grade_levels; last_calculated_at on budget_versions | enrollment-page-redesign.md | apps/api/prisma/schema.prisma, apps/api/prisma/migrations/20260311103000_enrollment_redesign_rules/migration.sql | --                                                       | PASS   |
+| AC-184-03 | #184    | Setup wizard persists planning rules atomically alongside enrollment headcounts                                                                  | enrollment-page-redesign.md | apps/api/src/routes/enrollment/setup.ts                                                                          | apps/api/src/routes/enrollment/setup.test.ts             | PASS   |
+| AC-184-04 | #184    | Calculate endpoint records last_calculated_at on version after each successful enrollment run                                                    | enrollment-page-redesign.md | apps/api/src/routes/enrollment/calculate.ts                                                                      | apps/api/src/routes/enrollment/capacity-results.test.ts  | PASS   |
+| AC-184-05 | #184    | Version clone copies rollover_threshold and capped_retention from source version                                                                 | enrollment-page-redesign.md | apps/api/src/routes/versions.ts                                                                                  | apps/api/src/routes/versions-clone.test.ts               | PASS   |
+| AC-184-06 | #184    | Grade level edit API accepts and persists defaultAy2Intake field                                                                                 | enrollment-page-redesign.md | apps/api/src/routes/master-data/grade-levels.ts                                                                  | apps/api/src/routes/master-data/grade-levels.test.ts     | PASS   |
+| AC-184-07 | #184    | Enrollment master grid: single fixed-viewport grid replacing the 3-section continuous planning board                                             | enrollment-page-redesign.md | apps/web/src/pages/planning/enrollment.tsx, apps/web/src/components/enrollment/enrollment-master-grid.tsx        | apps/web/src/pages/planning/enrollment.test.tsx          | PASS   |
+| AC-184-08 | #184    | Status strip showing version-level KPIs and last-calculated trust indicator                                                                      | enrollment-page-redesign.md | apps/web/src/components/enrollment/enrollment-status-strip.tsx                                                   | --                                                       | PASS   |
+| AC-184-09 | #184    | Exception filter menu for narrowing grid to over-capacity, near-capacity, stale, or warning grades                                               | enrollment-page-redesign.md | apps/web/src/components/enrollment/exception-filter-menu.tsx                                                     | --                                                       | PASS   |
+| AC-184-10 | #184    | CSV export button for enrollment master grid data                                                                                                | enrollment-page-redesign.md | apps/web/src/components/enrollment/export-button.tsx                                                             | --                                                       | PASS   |
+| AC-184-11 | #184    | Sidebar inspector: default portfolio view + active per-grade editing view                                                                        | enrollment-page-redesign.md | apps/web/src/components/enrollment/inspector-default-view.tsx, inspector-active-view.tsx                         | --                                                       | PASS   |
+| AC-184-12 | #184    | Guide tab in sidebar renders enrollment-specific planning process content                                                                        | enrollment-page-redesign.md | apps/web/src/components/enrollment/enrollment-guide-content.tsx                                                  | --                                                       | PASS   |
+| AC-184-13 | #184    | Setup wizard: exact recommendation preview using stored planning rules before commit                                                             | enrollment-page-redesign.md | apps/web/src/components/enrollment/setup-wizard.tsx, apps/web/src/components/enrollment/seed-preview-dialog.tsx  | apps/web/src/components/enrollment/setup-wizard.test.tsx | PASS   |
+| AC-184-14 | #184    | usePlanningRules hook: GET/PUT planning rules with optimistic update                                                                             | enrollment-page-redesign.md | apps/web/src/hooks/use-planning-rules.ts                                                                         | --                                                       | PASS   |
+
+---
+
 ## Data Migration (Epic 12) -- Implementation Traceability
 
 This section maps each Epic 12 story to its implementation files, test files, and verification status. Epic 12 is a CLI-only migration pipeline (no API endpoints, no UI) that imports FY2026 budget data from JSON/CSV fixtures and XLSX staff costs into PostgreSQL. All 11 stories implemented in PR #183 under `apps/api/src/migration/`.
@@ -484,6 +506,7 @@ This section maps each Epic 12 story to its implementation files, test files, an
 | Enrollment & Capacity (Epic 1)   | 13 stories | 18 ACs | All PASS | 18                 |
 | Workspace Refactor (PR #137)     | 1 PR       | 11 ACs | All PASS | 11                 |
 | Data Migration (Epic 12)         | 11 stories | 15 ACs | All PASS | 15                 |
-| **Total**                        | **111**    | **20** | **10**   | **141 + 121 impl** |
+| Enrollment Redesign (PR #184)    | 1 PR       | 14 ACs | All PASS | 14                 |
+| **Total**                        | **111**    | **20** | **10**   | **141 + 135 impl** |
 
-All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), Epic 1 (Enrollment & Capacity), and Epic 12 (Data Migration) implementation traceability sections confirm all acceptance criteria passing. PR #137 (Workspace Refactor) adds 11 additional acceptance criteria implementing FR-ENR-010 (cohort progression) and FR-ENR-011 (lateral entry weights) alongside the Continuous Planning Board UI pattern (ADR-024). Epic 12 adds 15 acceptance criteria covering the CLI-only data migration pipeline (ADR-026).
+All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), Epic 1 (Enrollment & Capacity), and Epic 12 (Data Migration) implementation traceability sections confirm all acceptance criteria passing. PR #137 (Workspace Refactor) adds 11 additional acceptance criteria implementing FR-ENR-010 (cohort progression) and FR-ENR-011 (lateral entry weights) alongside the Continuous Planning Board UI pattern (ADR-024). Epic 12 adds 15 acceptance criteria covering the CLI-only data migration pipeline (ADR-026). PR #184 (Enrollment Planning Workspace Redesign) adds 14 acceptance criteria introducing version-scoped planning rules (ADR-027), PS grade default AY2 intake, last-calculated metadata, exception filtering, CSV export, and the fixed-viewport master grid replacing the continuous planning board for enrollment.

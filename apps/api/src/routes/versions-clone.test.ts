@@ -48,6 +48,10 @@ vi.mock('../lib/prisma.js', () => {
 			findMany: vi.fn().mockResolvedValue([]),
 			createMany: vi.fn().mockResolvedValue({ count: 0 }),
 		},
+		versionCapacityConfig: {
+			findMany: vi.fn().mockResolvedValue([]),
+			createMany: vi.fn().mockResolvedValue({ count: 0 }),
+		},
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
 				budgetVersion: mockPrisma.budgetVersion,
@@ -57,6 +61,7 @@ vi.mock('../lib/prisma.js', () => {
 				auditEntry: mockPrisma.auditEntry,
 				cohortParameter: mockPrisma.cohortParameter,
 				nationalityBreakdown: mockPrisma.nationalityBreakdown,
+				versionCapacityConfig: mockPrisma.versionCapacityConfig,
 			})
 		),
 	};
@@ -91,6 +96,10 @@ const mockPrisma = prisma as unknown as {
 		findMany: ReturnType<typeof vi.fn>;
 		createMany: ReturnType<typeof vi.fn>;
 	};
+	versionCapacityConfig: {
+		findMany: ReturnType<typeof vi.fn>;
+		createMany: ReturnType<typeof vi.fn>;
+	};
 	$transaction: ReturnType<typeof vi.fn>;
 };
 
@@ -122,6 +131,8 @@ function makeVersion(overrides: Record<string, unknown> = {}) {
 		sourceVersionId: null,
 		modificationCount: 0,
 		staleModules: [],
+		rolloverThreshold: '1.0000',
+		cappedRetention: '0.9800',
 		createdById: 1,
 		publishedAt: null,
 		lockedAt: null,
@@ -462,5 +473,75 @@ describe('POST /api/v1/versions/:id/clone', () => {
 
 		expect(res.statusCode).toBe(403);
 		expect(res.json().code).toBe('FORBIDDEN');
+	});
+
+	it('AC-11: clone carries rolloverThreshold and cappedRetention from source version', async () => {
+		const source = makeVersion({
+			id: 1,
+			rolloverThreshold: '1.0500',
+			cappedRetention: '0.9700',
+		});
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Threshold Clone',
+			sourceVersionId: 1,
+			rolloverThreshold: '1.0500',
+			cappedRetention: '0.9700',
+			createdBy: { email: 'admin@budfin.app' },
+		});
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
+		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
+
+		const token = await makeToken({ role: 'Admin' });
+		await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions/1/clone',
+			headers: authHeader(token),
+			payload: { name: 'Threshold Clone' },
+		});
+
+		expect(mockPrisma.budgetVersion.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({
+					rolloverThreshold: '1.0500',
+					cappedRetention: '0.9700',
+				}),
+			})
+		);
+	});
+
+	it('clone copies capacity config overrides', async () => {
+		const source = makeVersion({ id: 1 });
+		const capacityConfigs = [
+			{ gradeLevel: 'PS', maxClassSize: 24 },
+			{ gradeLevel: 'CP', maxClassSize: 22 },
+		];
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Capacity Clone',
+			sourceVersionId: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		});
+
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
+		mockPrisma.versionCapacityConfig.findMany.mockResolvedValue(capacityConfigs);
+		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
+
+		const token = await makeToken({ role: 'Admin' });
+		await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions/1/clone',
+			headers: authHeader(token),
+			payload: { name: 'Capacity Clone' },
+		});
+
+		expect(mockPrisma.versionCapacityConfig.createMany).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.arrayContaining([
+					expect.objectContaining({ gradeLevel: 'PS', maxClassSize: 24, versionId: 2 }),
+					expect.objectContaining({ gradeLevel: 'CP', maxClassSize: 22, versionId: 2 }),
+				]),
+			})
+		);
 	});
 });

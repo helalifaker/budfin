@@ -6,6 +6,7 @@ import { prisma } from '../../lib/prisma.js';
 const updateGradeLevelSchema = z
 	.object({
 		maxClassSize: z.number().int().min(1).max(50),
+		defaultAy2Intake: z.number().int().min(0).max(200).nullable().optional(),
 		plancherPct: z.number().min(0).max(1),
 		ciblePct: z.number().min(0).max(1),
 		plafondPct: z.number().min(0).max(1),
@@ -67,6 +68,7 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 
 			const oldValues = {
 				maxClassSize: existing.maxClassSize,
+				defaultAy2Intake: existing.defaultAy2Intake,
 				plancherPct: String(existing.plancherPct),
 				ciblePct: String(existing.ciblePct),
 				plafondPct: String(existing.plafondPct),
@@ -78,6 +80,7 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 					where: { id, version: body.version },
 					data: {
 						maxClassSize: body.maxClassSize,
+						defaultAy2Intake: body.defaultAy2Intake ?? null,
 						plancherPct: new Decimal(body.plancherPct)
 							.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
 							.toFixed(4),
@@ -111,6 +114,7 @@ export async function gradeLevelRoutes(app: FastifyInstance) {
 						oldValues,
 						newValues: {
 							maxClassSize: body.maxClassSize,
+							defaultAy2Intake: body.defaultAy2Intake ?? null,
 							plancherPct: String(body.plancherPct),
 							ciblePct: String(body.ciblePct),
 							plafondPct: String(body.plafondPct),

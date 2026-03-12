@@ -12,6 +12,7 @@ import { EditableCell } from '../shared/editable-cell';
 import {
 	buildAy1HeadcountMap,
 	buildCohortProjectionRows,
+	DEFAULT_PLANNING_RULES,
 	getPsAy2Headcount,
 	BAND_LABELS,
 	type CohortProjectionRow,
@@ -92,14 +93,22 @@ export function CohortProgressionGrid({
 
 	const projectionRows = useMemo(() => {
 		const ay1HeadcountMap = buildAy1HeadcountMap(headcountEntries);
-		const psAy2Headcount = getPsAy2Headcount(headcountEntries, ay1HeadcountMap);
+		const psDefaultAy2Intake =
+			gradeLevels.find((gradeLevel) => gradeLevel.gradeCode === 'PS')?.defaultAy2Intake ?? null;
+		const psAy2Headcount = getPsAy2Headcount(
+			headcountEntries,
+			ay1HeadcountMap,
+			null,
+			psDefaultAy2Intake
+		);
 		return buildCohortProjectionRows({
 			gradeLevels,
 			ay1HeadcountMap,
 			cohortEntries,
 			psAy2Headcount,
+			planningRules: cohortData?.planningRules ?? DEFAULT_PLANNING_RULES,
 		});
-	}, [headcountEntries, gradeLevels, cohortEntries]);
+	}, [cohortData?.planningRules, headcountEntries, gradeLevels, cohortEntries]);
 
 	const nationalityByGrade = useMemo(() => {
 		const summary = new Map<string, { frPct: number; natPct: number; autPct: number }>();
@@ -173,21 +182,26 @@ export function CohortProgressionGrid({
 			const existing = cohortEntries.find((entry) => entry.gradeLevel === gradeLevel);
 			const baseEntry: CohortParameterEntry = {
 				gradeLevel,
-				retentionRate: existing?.retentionRate ?? 0.97,
+				retentionRate:
+					existing?.retentionRate ??
+					cohortData?.planningRules?.cappedRetention ??
+					DEFAULT_PLANNING_RULES.cappedRetention,
 				lateralEntryCount: existing?.lateralEntryCount ?? 0,
 				lateralWeightFr: existing?.lateralWeightFr ?? 0,
 				lateralWeightNat: existing?.lateralWeightNat ?? 0,
 				lateralWeightAut: existing?.lateralWeightAut ?? 0,
 			};
 
-			putCohortParams.mutate([
-				{
-					...baseEntry,
-					[field]: field === 'retentionRate' ? value : Math.max(0, Math.round(value)),
-				},
-			]);
+			putCohortParams.mutate({
+				entries: [
+					{
+						...baseEntry,
+						[field]: field === 'retentionRate' ? value : Math.max(0, Math.round(value)),
+					},
+				],
+			});
 		},
-		[isReadOnly, cohortEntries, putCohortParams]
+		[cohortData?.planningRules?.cappedRetention, isReadOnly, cohortEntries, putCohortParams]
 	);
 
 	const columns = useMemo(

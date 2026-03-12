@@ -8,6 +8,7 @@ import type {
 	AcademicPeriod,
 	CohortParameterEntry,
 	NationalityBreakdownEntry,
+	PlanningRules,
 } from '@budfin/types';
 
 // ── Response types ───────────────────────────────────────────────────────────
@@ -107,6 +108,7 @@ export interface CapacityResultsResponse {
 		totalStudentsAy2: number;
 		overCapacityGrades: string[];
 	};
+	lastCalculatedAt: string | null;
 	results: CapacityResult[];
 }
 
@@ -312,10 +314,12 @@ export function useApplyEnrollmentSetup(versionId: number | null) {
 			ay1Entries,
 			cohortEntries,
 			psAy2Headcount,
+			planningRules,
 		}: {
 			ay1Entries: Array<{ gradeLevel: string; headcount: number }>;
 			cohortEntries: CohortParameterEntry[];
 			psAy2Headcount?: number;
+			planningRules?: PlanningRules;
 		}) =>
 			apiClient<CalculateEnrollmentResponse>(`/versions/${versionId}/enrollment/setup/apply`, {
 				method: 'POST',
@@ -323,6 +327,7 @@ export function useApplyEnrollmentSetup(versionId: number | null) {
 					ay1Entries,
 					cohortEntries,
 					psAy2Headcount,
+					planningRules,
 				}),
 			}),
 		onSuccess: () => {

@@ -13,6 +13,10 @@ import {
 	normalizeCohortMutations,
 } from '../../services/enrollment-workspace.js';
 import { GRADE_PROGRESSION } from '../../services/cohort-engine.js';
+import {
+	buildEnrollmentPlanningRulesUpdateData,
+	resolveEnrollmentPlanningRules,
+} from '../../services/planning-rules.js';
 
 const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
@@ -35,10 +39,16 @@ const setupCohortEntrySchema = z.object({
 	lateralWeightAut: z.number().min(0).max(1),
 });
 
+const planningRulesSchema = z.object({
+	rolloverThreshold: z.number().min(0.5).max(2),
+	cappedRetention: z.number().min(0.5).max(1),
+});
+
 const setupApplyBodySchema = z.object({
 	ay1Entries: z.array(setupAy1EntrySchema).min(1),
 	cohortEntries: z.array(setupCohortEntrySchema).min(1),
 	psAy2Headcount: z.number().int().min(0).optional(),
+	planningRules: planningRulesSchema.optional(),
 });
 
 const gradeHeaderAliases = new Set(['grade', 'gradelevel', 'levelcode']);
@@ -263,12 +273,17 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 			const baselineField = file.fields['baseline'];
 			let baselineEntries: Array<{ gradeLevel: string; headcount: number }> = [];
 			if (baselineField && 'value' in baselineField && typeof baselineField.value === 'string') {
+				const baselineSchema = z.array(z.object({ gradeLevel: z.string(), headcount: z.number() }));
 				try {
-					const parsed = JSON.parse(baselineField.value) as Array<{
-						gradeLevel: string;
-						headcount: number;
-					}>;
-					baselineEntries = parsed;
+					const parsed: unknown = JSON.parse(baselineField.value);
+					const result = baselineSchema.safeParse(parsed);
+					if (!result.success) {
+						return reply.status(400).send({
+							code: 'INVALID_BASELINE',
+							message: 'baseline field must be a JSON array of {gradeLevel, headcount} entries',
+						});
+					}
+					baselineEntries = result.data;
 				} catch {
 					return reply.status(400).send({
 						code: 'INVALID_BASELINE',
@@ -335,9 +350,11 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 				const variancePct =
 					importedHeadcount === null || baselineHeadcount === 0
 						? null
-						: Number(
-								(((importedHeadcount - baselineHeadcount) / baselineHeadcount) * 100).toFixed(1)
-							);
+						: new Decimal(importedHeadcount - baselineHeadcount)
+								.div(baselineHeadcount)
+								.times(100)
+								.toDecimalPlaces(1, Decimal.ROUND_HALF_UP)
+								.toNumber();
 
 				return {
 					gradeLevel: gradeLevel.gradeCode,
@@ -383,6 +400,8 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 					status: true,
 					dataSource: true,
 					staleModules: true,
+					rolloverThreshold: true,
+					cappedRetention: true,
 				},
 			});
 
@@ -512,6 +531,13 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 					},
 				});
 
+				if (body.planningRules) {
+					await tx.budgetVersion.update({
+						where: { id: versionId },
+						data: buildEnrollmentPlanningRulesUpdateData(body.planningRules),
+					});
+				}
+
 				for (const entry of normalizedCohortEntries) {
 					await tx.cohortParameter.upsert({
 						where: {
@@ -564,6 +590,11 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 						id: version.id,
 						fiscalYear: version.fiscalYear,
 						staleModules,
+						...resolveEnrollmentPlanningRules(
+							body.planningRules
+								? buildEnrollmentPlanningRulesUpdateData(body.planningRules)
+								: version
+						),
 					},
 					actor: {
 						userId: request.user.id,
@@ -571,6 +602,11 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 						ipAddress: request.ip,
 					},
 				});
+			});
+
+			await prisma.budgetVersion.update({
+				where: { id: versionId },
+				data: { lastCalculatedAt: new Date() },
 			});
 
 			return reply.send(result);
