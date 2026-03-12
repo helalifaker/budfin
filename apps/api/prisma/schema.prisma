@@ -374,6 +374,7 @@ model BudgetVersion {
   calculationAuditLogs CalculationAuditLog[]
   cohortParameters       CohortParameter[]
   nationalityBreakdowns  NationalityBreakdown[]
+  capacityConfigs        VersionCapacityConfig[]
 
   // Revenue (Epic 2)
   feeGrids           FeeGrid[]
@@ -847,4 +848,21 @@ model CategoryMonthlyCost {
   @@unique([versionId, month, category], map: "uq_category_monthly_cost")
   @@index([versionId], map: "idx_category_monthly_costs_version")
   @@map("category_monthly_costs")
+}
+
+// ── Version Capacity Config (Enrollment — per-version class size overrides) ──
+
+model VersionCapacityConfig {
+  id           Int      @id @default(autoincrement())
+  versionId    Int      @map("version_id")
+  gradeLevel   String   @map("grade_level") @db.VarChar(10)
+  maxClassSize Int      @map("max_class_size")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, gradeLevel], map: "uq_version_capacity_config")
+  @@index([versionId], map: "idx_version_capacity_config_version")
+  @@map("version_capacity_config")
 }

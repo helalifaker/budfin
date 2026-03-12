@@ -932,6 +932,21 @@ export async function versionRoutes(app: FastifyInstance) {
 						});
 					}
 
+					// Copy capacity config overrides
+					const capacityConfigs = await (tx as typeof prisma).versionCapacityConfig.findMany({
+						where: { versionId: id },
+						select: { gradeLevel: true, maxClassSize: true },
+					});
+					if (capacityConfigs.length > 0) {
+						await (tx as typeof prisma).versionCapacityConfig.createMany({
+							data: capacityConfigs.map((cc) => ({
+								versionId: newVersion.id,
+								gradeLevel: cc.gradeLevel,
+								maxClassSize: cc.maxClassSize,
+							})),
+						});
+					}
+
 					// Copy nationality breakdown
 					const natBreakdown = await (tx as typeof prisma).nationalityBreakdown.findMany({
 						where: { versionId: id },
