@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Docs Governance'
+  short_description: 'Safe repo documentation maintenance.'
+  default_prompt: 'Audit BudFin documentation, classify files, surface duplicates, and apply only safe archival or reclassification changes with a concise summary.'
