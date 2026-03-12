@@ -97,6 +97,9 @@ export function PlanningGrid<T>({
 	const cols = table.getAllColumns().length;
 	const rows = table.getRowModel().rows;
 	const headerGroups = table.getHeaderGroups();
+	const isEditable = (editableColumns?.length ?? 0) > 0;
+	const tableRole = isEditable ? 'grid' : 'table';
+	const cellRole = isEditable ? 'gridcell' : 'cell';
 
 	// Build band groups when bandGrouping is provided
 	const bandedRows = useMemo(() => {
@@ -230,7 +233,7 @@ export function PlanningGrid<T>({
 					className
 				)}
 			>
-				<table role="grid" aria-label={ariaLabel} className="w-full text-left">
+				<table role={tableRole} aria-label={ariaLabel} className="w-full text-left">
 					<tbody>
 						<GridSkeleton rows={10} cols={cols} />
 					</tbody>
@@ -290,7 +293,7 @@ export function PlanningGrid<T>({
 		return (
 			<td
 				key={cell.id}
-				role="gridcell"
+				role={cellRole}
 				aria-selected={isActive}
 				onClick={() => handleCellClick(rowIndex, colIndex)}
 				style={{ width: cell.column.getSize() }}
@@ -437,7 +440,7 @@ export function PlanningGrid<T>({
 					return (
 						<td
 							key={`${key}-${header.id}`}
-							role="gridcell"
+							role={cellRole}
 							className={cn(
 								'px-(--grid-cell-px) py-(--grid-cell-py) align-middle',
 								'text-(--text-sm)',
@@ -523,7 +526,7 @@ export function PlanningGrid<T>({
 		>
 			<table
 				ref={tableRef}
-				role="grid"
+				role={tableRole}
 				aria-label={ariaLabel}
 				onKeyDown={handleKeyDown}
 				tabIndex={keyboardNavigation ? 0 : undefined}

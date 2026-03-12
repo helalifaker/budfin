@@ -211,6 +211,58 @@ describe('GET /setup-baseline', () => {
 });
 
 describe('POST /setup-import/validate', () => {
+	it('returns 400 INVALID_BASELINE when baseline JSON fails Zod validation', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({ id: 1 });
+		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(gradeLevels);
+
+		// baseline is valid JSON but the array items are missing the required `headcount` number field
+		const invalidBaseline = JSON.stringify([{ gradeLevel: 'PS' }]);
+		const { body, contentType } = buildMultipart('grade_level,student_count\nPS,95\n', {
+			baseline: invalidBaseline,
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/setup-import/validate`,
+			headers: {
+				...authHeader(token),
+				'content-type': contentType,
+			},
+			payload: body,
+		});
+
+		expect(res.statusCode).toBe(400);
+		expect(res.json().code).toBe('INVALID_BASELINE');
+		expect(mockPrisma.enrollmentHeadcount.upsert).not.toHaveBeenCalled();
+	});
+
+	it('returns 400 INVALID_BASELINE when baseline has headcount as string instead of number', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({ id: 1 });
+		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(gradeLevels);
+
+		// headcount must be a number; passing a string violates the Zod schema
+		const invalidBaseline = JSON.stringify([{ gradeLevel: 'PS', headcount: '90' }]);
+		const { body, contentType } = buildMultipart('grade_level,student_count\nPS,95\n', {
+			baseline: invalidBaseline,
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/setup-import/validate`,
+			headers: {
+				...authHeader(token),
+				'content-type': contentType,
+			},
+			payload: body,
+		});
+
+		expect(res.statusCode).toBe(400);
+		expect(res.json().code).toBe('INVALID_BASELINE');
+		expect(mockPrisma.enrollmentHeadcount.upsert).not.toHaveBeenCalled();
+	});
+
 	it('returns normalized preview rows and diffs without persisting', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({ id: 1 });
 		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(gradeLevels);

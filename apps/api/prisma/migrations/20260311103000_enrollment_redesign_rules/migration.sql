@@ -1,3 +1,9 @@
+-- DOWN: DROP COLUMN "default_ay2_intake" FROM "grade_levels";
+--       DROP COLUMN "rollover_threshold", "capped_retention", "last_calculated_at" FROM "budget_versions".
+-- NOTE: rollover_threshold and capped_retention hold per-version planning configuration;
+--       last_calculated_at is a derived timestamp. All three would be irrecoverably lost on rollback.
+--       Intentional: these are additive-only columns with safe defaults.
+
 ALTER TABLE "grade_levels"
 ADD COLUMN "default_ay2_intake" INTEGER;
 

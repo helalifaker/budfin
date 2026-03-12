@@ -273,12 +273,17 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 			const baselineField = file.fields['baseline'];
 			let baselineEntries: Array<{ gradeLevel: string; headcount: number }> = [];
 			if (baselineField && 'value' in baselineField && typeof baselineField.value === 'string') {
+				const baselineSchema = z.array(z.object({ gradeLevel: z.string(), headcount: z.number() }));
 				try {
-					const parsed = JSON.parse(baselineField.value) as Array<{
-						gradeLevel: string;
-						headcount: number;
-					}>;
-					baselineEntries = parsed;
+					const parsed: unknown = JSON.parse(baselineField.value);
+					const result = baselineSchema.safeParse(parsed);
+					if (!result.success) {
+						return reply.status(400).send({
+							code: 'INVALID_BASELINE',
+							message: 'baseline field must be a JSON array of {gradeLevel, headcount} entries',
+						});
+					}
+					baselineEntries = result.data;
 				} catch {
 					return reply.status(400).send({
 						code: 'INVALID_BASELINE',
@@ -345,9 +350,11 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 				const variancePct =
 					importedHeadcount === null || baselineHeadcount === 0
 						? null
-						: Number(
-								(((importedHeadcount - baselineHeadcount) / baselineHeadcount) * 100).toFixed(1)
-							);
+						: new Decimal(importedHeadcount - baselineHeadcount)
+								.div(baselineHeadcount)
+								.times(100)
+								.toDecimalPlaces(1, Decimal.ROUND_HALF_UP)
+								.toNumber();
 
 				return {
 					gradeLevel: gradeLevel.gradeCode,

@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import type {
 	CapacityAlert,
 	CohortParameterEntry,
@@ -180,7 +181,8 @@ export function getPsAy2Headcount(
 }
 
 function roundUpToFourDecimals(value: number) {
-	return Math.ceil(value * 10_000) / 10_000;
+	const SCALE = new Decimal(10_000);
+	return new Decimal(value).times(SCALE).ceil().div(SCALE).toNumber();
 }
 
 export function deriveRecommendationFromObservation({
@@ -487,10 +489,12 @@ export function buildCapacityPreviewRows({
 	gradeLevels,
 	ay1HeadcountMap,
 	projectionRows,
+	capacityOverrides,
 }: {
 	gradeLevels: GradeLevel[];
 	ay1HeadcountMap: Map<GradeCode, number>;
 	projectionRows: CohortProjectionRow[];
+	capacityOverrides?: Map<string, number> | undefined;
 }): CapacityPreviewRow[] {
 	const gradeMap = new Map(gradeLevels.map((gradeLevel) => [gradeLevel.gradeCode, gradeLevel]));
 	const rows: CapacityPreviewRow[] = [];
@@ -500,12 +504,13 @@ export function buildCapacityPreviewRows({
 		if (!metadata) {
 			continue;
 		}
+		const maxClassSize = capacityOverrides?.get(gradeLevel) ?? metadata.maxClassSize;
 		rows.push(
 			buildCapacityPreviewRow({
 				gradeLevel,
 				academicPeriod: 'AY1',
 				headcount: ay1Headcount,
-				maxClassSize: metadata.maxClassSize,
+				maxClassSize,
 				plafondPct: Number(metadata.plafondPct),
 			})
 		);
@@ -516,12 +521,13 @@ export function buildCapacityPreviewRows({
 		if (!metadata) {
 			continue;
 		}
+		const maxClassSize = capacityOverrides?.get(row.gradeLevel) ?? metadata.maxClassSize;
 		rows.push(
 			buildCapacityPreviewRow({
 				gradeLevel: row.gradeLevel,
 				academicPeriod: 'AY2',
 				headcount: row.ay2Headcount,
-				maxClassSize: metadata.maxClassSize,
+				maxClassSize,
 				plafondPct: Number(metadata.plafondPct),
 			})
 		);

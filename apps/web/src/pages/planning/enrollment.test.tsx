@@ -40,24 +40,53 @@ const filteredAy2HeadcountData = {
 	entries: fullHeadcountData.entries.filter((entry) => entry.academicPeriod === 'AY2'),
 };
 
+// Mutable state holders so individual tests can override values without
+// recreating the entire module mock (which would require vi.resetModules).
+let mockWorkspaceContext = {
+	versionId: 20,
+	fiscalYear: 2026,
+	academicPeriod: 'AY2' as const,
+	versionStatus: 'Draft',
+	versionName: 'v2',
+	versionDataSource: 'MANUAL',
+};
+
+let mockUserRole = 'Admin';
+
+let mockCohortParametersData = {
+	entries: [
+		{ gradeLevel: 'PS', isPersisted: true },
+		{ gradeLevel: 'MS', isPersisted: true },
+	] as Array<{ gradeLevel: string; isPersisted: boolean }>,
+	planningRules: {
+		rolloverThreshold: 1,
+		cappedRetention: 0.98,
+	},
+};
+
+let mockVersionsData = {
+	data: [
+		{
+			id: 20,
+			status: 'Draft',
+			dataSource: 'MANUAL',
+			staleModules: [] as string[],
+			name: 'v2',
+		},
+	],
+};
+
 vi.mock('react-router', () => ({
 	useNavigate: () => mockNavigate,
 }));
 
 vi.mock('../../hooks/use-workspace-context', () => ({
-	useWorkspaceContext: () => ({
-		versionId: 20,
-		fiscalYear: 2026,
-		academicPeriod: 'AY2',
-		versionStatus: 'Draft',
-		versionName: 'v2',
-		versionDataSource: 'MANUAL',
-	}),
+	useWorkspaceContext: () => mockWorkspaceContext,
 }));
 
 vi.mock('../../stores/auth-store', () => ({
 	useAuthStore: (selector: (state: { user: { role: string } }) => unknown) =>
-		selector({ user: { role: 'Admin' } }),
+		selector({ user: { role: mockUserRole } }),
 }));
 
 vi.mock('../../stores/right-panel-store', () => ({
@@ -99,19 +128,21 @@ vi.mock('../../hooks/use-enrollment', () => ({
 	}),
 }));
 
+vi.mock('../../hooks/use-capacity-config', () => ({
+	useCapacityConfig: () => ({
+		data: { configs: [] },
+	}),
+	usePutCapacityConfig: () => ({
+		mutate: vi.fn(),
+	}),
+	useResetCapacityConfig: () => ({
+		mutate: vi.fn(),
+	}),
+}));
+
 vi.mock('../../hooks/use-versions', () => ({
 	useVersions: () => ({
-		data: {
-			data: [
-				{
-					id: 20,
-					status: 'Draft',
-					dataSource: 'MANUAL',
-					staleModules: [],
-					name: 'v2',
-				},
-			],
-		},
+		data: mockVersionsData,
 	}),
 }));
 
@@ -144,16 +175,7 @@ vi.mock('../../hooks/use-grade-levels', () => ({
 
 vi.mock('../../hooks/use-cohort-parameters', () => ({
 	useCohortParameters: () => ({
-		data: {
-			entries: [
-				{ gradeLevel: 'PS', isPersisted: true },
-				{ gradeLevel: 'MS', isPersisted: true },
-			],
-			planningRules: {
-				rolloverThreshold: 1,
-				cappedRetention: 0.98,
-			},
-		},
+		data: mockCohortParametersData,
 	}),
 	usePutCohortParameters: () => ({
 		mutate: vi.fn(),
@@ -202,6 +224,37 @@ describe('EnrollmentPage', () => {
 		mockSetActivePage.mockClear();
 		mockClearSelection.mockClear();
 		mockNavigate.mockClear();
+		// Reset mutable mock state to defaults before each test
+		mockWorkspaceContext = {
+			versionId: 20,
+			fiscalYear: 2026,
+			academicPeriod: 'AY2',
+			versionStatus: 'Draft',
+			versionName: 'v2',
+			versionDataSource: 'MANUAL',
+		};
+		mockUserRole = 'Admin';
+		mockCohortParametersData = {
+			entries: [
+				{ gradeLevel: 'PS', isPersisted: true },
+				{ gradeLevel: 'MS', isPersisted: true },
+			],
+			planningRules: {
+				rolloverThreshold: 1,
+				cappedRetention: 0.98,
+			},
+		};
+		mockVersionsData = {
+			data: [
+				{
+					id: 20,
+					status: 'Draft',
+					dataSource: 'MANUAL',
+					staleModules: [],
+					name: 'v2',
+				},
+			],
+		};
 	});
 
 	afterEach(() => {
@@ -212,5 +265,46 @@ describe('EnrollmentPage', () => {
 		render(<EnrollmentPage />);
 
 		expect(screen.getByRole('button', { name: 'Reopen Setup Wizard' })).toBeTruthy();
+	});
+
+	it('renders version-lock banner when versionStatus is Locked', () => {
+		// A Locked status causes deriveEnrollmentEditability to return 'locked',
+		// which in turn renders the VersionLockBanner component.
+		mockWorkspaceContext = { ...mockWorkspaceContext, versionStatus: 'Locked' };
+		mockVersionsData = {
+			data: [{ id: 20, status: 'Locked', dataSource: 'MANUAL', staleModules: [], name: 'v2' }],
+		};
+
+		render(<EnrollmentPage />);
+
+		expect(screen.getByText('Version lock banner')).toBeTruthy();
+	});
+
+	it('renders viewer banner when user role is Viewer', () => {
+		// Viewer role causes deriveEnrollmentEditability to return 'viewer',
+		// which renders the viewer-mode info banner.
+		mockUserRole = 'Viewer';
+
+		render(<EnrollmentPage />);
+
+		expect(screen.getByText('Viewer access keeps this workspace in review mode.')).toBeTruthy();
+	});
+
+	it('shows wizard prompt when setup is incomplete', () => {
+		// Mark MS cohort entry as not persisted — setup is now incomplete because
+		// not every non-PS grade has a persisted cohort parameter.
+		mockCohortParametersData = {
+			...mockCohortParametersData,
+			entries: [
+				{ gradeLevel: 'PS', isPersisted: true },
+				{ gradeLevel: 'MS', isPersisted: false },
+			],
+		};
+
+		render(<EnrollmentPage />);
+
+		// When setup is incomplete, the wizard button reads "Resume Setup Wizard"
+		// rather than "Reopen Setup Wizard", confirming the component detects it.
+		expect(screen.getByRole('button', { name: 'Resume Setup Wizard' })).toBeTruthy();
 	});
 });
