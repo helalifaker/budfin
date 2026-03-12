@@ -8,6 +8,7 @@ import { useCohortParameters } from '../../hooks/use-cohort-parameters';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { usePlanningRules, usePutPlanningRules } from '../../hooks/use-planning-rules';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import {
 	buildAy1HeadcountMap,
 	buildCapacityPreviewRows,
@@ -248,7 +249,7 @@ export function InspectorDefaultView() {
 						<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 							Rollover threshold
 						</label>
-						<input
+						<Input
 							type="number"
 							min={0.5}
 							max={2}
@@ -271,7 +272,7 @@ export function InspectorDefaultView() {
 						<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 							Capped retention
 						</label>
-						<input
+						<Input
 							type="number"
 							min={0.5}
 							max={1}

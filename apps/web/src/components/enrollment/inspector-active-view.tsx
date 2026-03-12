@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { CohortParameterEntry, GradeCode } from '@budfin/types';
 import { cn } from '../../lib/cn';
+import { Input } from '../ui/input';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useEnrollmentSelectionStore } from '../../stores/enrollment-selection-store';
@@ -361,7 +362,7 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 									Petite Section bypasses retention and uses a direct AY2 entry.
 								</p>
 							</div>
-							<input
+							<Input
 								type="number"
 								min={0}
 								step={1}
