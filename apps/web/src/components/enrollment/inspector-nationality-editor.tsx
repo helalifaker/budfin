@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import type { NationalityType } from '@budfin/types';
 import { cn } from '../../lib/cn';
+import { Input } from '../ui/input';
 import {
 	useNationalityBreakdown,
 	usePutNationalityBreakdown,
@@ -140,7 +141,7 @@ export function InspectorNationalityEditor({
 					<div key={nationality.key} className="flex items-center justify-between">
 						<span className="text-(--text-sm) text-(--text-secondary)">{nationality.label}</span>
 						<div className="flex items-center gap-1">
-							<input
+							<Input
 								type="number"
 								min={0}
 								max={100}
