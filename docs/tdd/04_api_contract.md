@@ -958,6 +958,107 @@ Override nationality breakdown for one or more grades. Validates that nationalit
 
 ---
 
+#### GET /api/v1/versions/:versionId/enrollment/planning-rules
+
+Retrieve the version-scoped enrollment planning rules used by the cohort-progression engine (ADR-027, PR #184).
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "rolloverThreshold": 1.0,
+    "cappedRetention": 0.98
+}
+```
+
+**Error responses:**
+
+| Status | Code              | Condition              |
+| ------ | ----------------- | ---------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist |
+
+---
+
+#### PUT /api/v1/versions/:versionId/enrollment/planning-rules
+
+Update the rollover threshold and capped retention rate for a version. Marks the ENROLLMENT module stale so results must be recalculated before they can be trusted. Writes an audit entry on every successful update.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Request body:**
+
+```json
+{
+    "rolloverThreshold": 1.0,
+    "cappedRetention": 0.98
+}
+```
+
+Field constraints: `rolloverThreshold` ∈ [0.5, 2.0]; `cappedRetention` ∈ [0.5, 1.0].
+
+**Response 200:**
+
+```json
+{
+    "rolloverThreshold": 1.0,
+    "cappedRetention": 0.98,
+    "staleModules": ["ENROLLMENT"]
+}
+```
+
+**Error responses:**
+
+| Status | Code              | Condition                                         |
+| ------ | ----------------- | ------------------------------------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist                            |
+| 409    | VERSION_LOCKED    | Version is not in Draft status                    |
+| 409    | IMPORTED_VERSION  | Cannot modify planning rules on imported versions |
+
+---
+
+#### GET /api/v1/versions/:versionId/enrollment/capacity-results
+
+Retrieve the persisted capacity calculation results for a version, including per-grade section counts, utilization percentages, and traffic-light alerts. Returns the timestamp of the last successful enrollment calculation.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "summary": {
+        "totalStudentsAy1": 712,
+        "totalStudentsAy2": 698,
+        "overCapacityGrades": ["CE2"]
+    },
+    "lastCalculatedAt": "2026-03-12T09:14:00Z",
+    "results": [
+        {
+            "gradeLevel": "PS",
+            "academicPeriod": "AY1",
+            "headcount": 66,
+            "maxClassSize": 22,
+            "sectionsNeeded": 3,
+            "utilization": 1.0,
+            "alert": "OK",
+            "recruitmentSlots": 0
+        }
+    ]
+}
+```
+
+`lastCalculatedAt` is `null` when no calculation has run for the version. `alert` values: `OK`, `NEAR_CAP`, `OVER`, `UNDER`.
+
+**Error responses:**
+
+| Status | Code              | Condition              |
+| ------ | ----------------- | ---------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist |
+
+---
+
 ### 6.3.4 Fee Grid Endpoints
 
 #### GET /api/v1/versions/:versionId/fee-grid

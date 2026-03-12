@@ -1,11 +1,11 @@
 # BudFin Documentation Alignment Remediation Log
 
-| Field       | Value                                   |
-| ----------- | --------------------------------------- |
-| Date        | 2026-03-07                              |
-| Source      | `docs/BudFin_360_Alignment_Review.md`   |
-| Scope       | 13 documentation alignment issues       |
-| Code Impact | None — all fixes are documentation-only |
+| Field       | Value                                             |
+| ----------- | ------------------------------------------------- |
+| Date        | 2026-03-07                                        |
+| Source      | `docs/reviews/2026-03-07-360-alignment-review.md` |
+| Scope       | 13 documentation alignment issues                 |
+| Code Impact | None — all fixes are documentation-only           |
 
 ---
 
