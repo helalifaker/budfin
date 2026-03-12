@@ -9,6 +9,7 @@ export interface GradeLevel {
 	gradeName: string;
 	band: GradeBand;
 	maxClassSize: number;
+	defaultAy2Intake: number | null;
 	plancherPct: string;
 	ciblePct: string;
 	plafondPct: string;
@@ -36,7 +37,12 @@ export function useUpdateGradeLevel() {
 			Partial<
 				Pick<
 					GradeLevel,
-					'maxClassSize' | 'plancherPct' | 'ciblePct' | 'plafondPct' | 'displayOrder'
+					| 'maxClassSize'
+					| 'defaultAy2Intake'
+					| 'plancherPct'
+					| 'ciblePct'
+					| 'plafondPct'
+					| 'displayOrder'
 				>
 			>) =>
 			apiClient<GradeLevel>(`/master-data/grade-levels/${id}`, {

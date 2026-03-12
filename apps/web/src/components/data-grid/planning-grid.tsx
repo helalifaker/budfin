@@ -38,6 +38,7 @@ export interface PlanningGridProps<T> {
 	onActiveRowChange?: (rowIndex: number) => void;
 	onRowSelect?: (rowData: T) => void;
 	selectedRowPredicate?: (row: T) => boolean;
+	getRowClassName?: (row: T) => string | undefined;
 	className?: string;
 	ariaLabel?: string;
 }
@@ -85,6 +86,7 @@ export function PlanningGrid<T>({
 	onActiveRowChange,
 	onRowSelect,
 	selectedRowPredicate,
+	getRowClassName,
 	className,
 	ariaLabel,
 }: PlanningGridProps<T>) {
@@ -320,6 +322,7 @@ export function PlanningGrid<T>({
 		const isActiveRow = activeCell?.rowIndex === rowIndex;
 		const isSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
 		const headers = headerGroups[0]?.headers ?? [];
+		const customRowClass = getRowClassName?.(row.original);
 
 		return (
 			<tr
@@ -336,7 +339,8 @@ export function PlanningGrid<T>({
 					isSelected && 'border-l-[3px] border-l-(--accent-500) bg-(--grid-selected-row)',
 					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
 					rowAnimation && 'animate-row-enter',
-					onRowSelect && 'cursor-pointer'
+					onRowSelect && 'cursor-pointer',
+					customRowClass
 				)}
 				style={
 					rowAnimation ? { animationDelay: `${Math.min(animationIndex, 20) * 25}ms` } : undefined

@@ -1,11 +1,7 @@
 import { Decimal } from 'decimal.js';
 import { GRADE_PROGRESSION, type ProgressionGrade } from './cohort-engine.js';
+import { type EnrollmentPlanningRules, resolveEnrollmentPlanningRules } from './planning-rules.js';
 
-export const DEFAULT_COHORT_RETENTION_RATE = 0.97;
-export const HIGH_GROWTH_ROLLOVER_THRESHOLD = 1.05;
-
-const HIGH_GROWTH_ROLLOVER_THRESHOLD_DECIMAL = new Decimal(HIGH_GROWTH_ROLLOVER_THRESHOLD);
-const DEFAULT_COHORT_RETENTION_RATE_DECIMAL = new Decimal(DEFAULT_COHORT_RETENTION_RATE);
 const ONE_DECIMAL = new Decimal(1);
 const FOUR_DECIMAL_SCALE = new Decimal(10_000);
 
@@ -13,7 +9,7 @@ export type CohortRecommendationConfidence = 'high' | 'medium' | 'low';
 
 export type CohortRecommendationRule =
 	| 'direct-entry'
-	| 'fixed-97-growth'
+	| 'capped-retention-growth'
 	| 'historical-rollover'
 	| 'fallback-default';
 
@@ -36,6 +32,8 @@ export interface CohortRecommendation {
 	observationCount: number;
 	sourceFiscalYear: number | null;
 	rolloverRatio: number | null;
+	recommendationPriorAy1Headcount: number | null;
+	recommendationAy2Headcount: number | null;
 	rule: CohortRecommendationRule;
 }
 
@@ -129,10 +127,14 @@ export function pickCanonicalActualVersions(
 export function buildHistoricalCohortObservations({
 	headcounts,
 	versionFiscalYears,
+	planningRules,
 }: {
 	headcounts: HistoricalHeadcountRow[];
 	versionFiscalYears: Map<number, number>;
+	planningRules: EnrollmentPlanningRules;
 }): HistoricalCohortObservation[] {
+	const cappedRetentionDecimal = new Decimal(planningRules.cappedRetention);
+	const rolloverThresholdDecimal = new Decimal(planningRules.rolloverThreshold);
 	const rowsByVersion = new Map<number, Map<string, number>>();
 
 	for (const row of headcounts) {
@@ -174,9 +176,9 @@ export function buildHistoricalCohortObservations({
 
 			const rolloverRatio = new Decimal(ay2Headcount).div(priorAy1Headcount);
 
-			if (rolloverRatio.greaterThanOrEqualTo(HIGH_GROWTH_ROLLOVER_THRESHOLD_DECIMAL)) {
+			if (rolloverRatio.greaterThan(rolloverThresholdDecimal)) {
 				const retainedAtFixedRate = new Decimal(priorAy1Headcount)
-					.times(DEFAULT_COHORT_RETENTION_RATE_DECIMAL)
+					.times(cappedRetentionDecimal)
 					.floor()
 					.toNumber();
 
@@ -186,9 +188,9 @@ export function buildHistoricalCohortObservations({
 					priorAy1Headcount,
 					ay2Headcount,
 					rolloverRatio: Number(rolloverRatio.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toString()),
-					recommendedRetentionRate: DEFAULT_COHORT_RETENTION_RATE,
+					recommendedRetentionRate: planningRules.cappedRetention,
 					recommendedLateralEntryCount: Math.max(0, ay2Headcount - retainedAtFixedRate),
-					rule: 'fixed-97-growth',
+					rule: 'capped-retention-growth',
 				});
 				continue;
 			}
@@ -221,7 +223,8 @@ export function buildHistoricalCohortObservations({
 }
 
 export function buildCohortRecommendations(
-	observations: HistoricalCohortObservation[]
+	observations: HistoricalCohortObservation[],
+	planningRules: EnrollmentPlanningRules = resolveEnrollmentPlanningRules()
 ): CohortRecommendation[] {
 	const observationsByGrade = new Map<ProgressionGrade, HistoricalCohortObservation[]>();
 
@@ -241,6 +244,8 @@ export function buildCohortRecommendations(
 				observationCount: 0,
 				sourceFiscalYear: null,
 				rolloverRatio: null,
+				recommendationPriorAy1Headcount: null,
+				recommendationAy2Headcount: null,
 				rule: 'direct-entry' as const,
 			};
 		}
@@ -254,12 +259,14 @@ export function buildCohortRecommendations(
 		if (!latestObservation) {
 			return {
 				gradeLevel,
-				recommendedRetentionRate: DEFAULT_COHORT_RETENTION_RATE,
+				recommendedRetentionRate: planningRules.cappedRetention,
 				recommendedLateralEntryCount: 0,
 				confidence: 'low' as const,
 				observationCount,
 				sourceFiscalYear: null,
 				rolloverRatio: null,
+				recommendationPriorAy1Headcount: null,
+				recommendationAy2Headcount: null,
 				rule: 'fallback-default' as const,
 			};
 		}
@@ -275,6 +282,8 @@ export function buildCohortRecommendations(
 			observationCount,
 			sourceFiscalYear: latestObservation.fiscalYear,
 			rolloverRatio: latestObservation.rolloverRatio,
+			recommendationPriorAy1Headcount: latestObservation.priorAy1Headcount,
+			recommendationAy2Headcount: latestObservation.ay2Headcount,
 			rule: latestObservation.rule,
 		};
 	});
@@ -282,7 +291,8 @@ export function buildCohortRecommendations(
 
 export async function getHistoricalCohortRecommendations(
 	client: CohortRecommendationDbClient,
-	targetFiscalYear: number
+	targetFiscalYear: number,
+	planningRules: EnrollmentPlanningRules = resolveEnrollmentPlanningRules()
 ): Promise<CohortRecommendation[]> {
 	const versionCandidates = await client.budgetVersion.findMany({
 		where: {
@@ -300,7 +310,7 @@ export async function getHistoricalCohortRecommendations(
 
 	const actualVersions = pickCanonicalActualVersions(versionCandidates);
 	if (actualVersions.length === 0) {
-		return buildCohortRecommendations([]);
+		return buildCohortRecommendations([], planningRules);
 	}
 
 	const headcounts = await client.enrollmentHeadcount.findMany({
@@ -324,6 +334,8 @@ export async function getHistoricalCohortRecommendations(
 		buildHistoricalCohortObservations({
 			headcounts,
 			versionFiscalYears,
-		})
+			planningRules,
+		}),
+		planningRules
 	);
 }

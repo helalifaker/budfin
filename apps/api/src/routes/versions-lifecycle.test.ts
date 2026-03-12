@@ -79,6 +79,8 @@ function makeDraft(overrides: Record<string, unknown> = {}) {
 		sourceVersionId: null,
 		modificationCount: 0,
 		staleModules: [],
+		rolloverThreshold: '1.0000',
+		cappedRetention: '0.9800',
 		createdById: 1,
 		publishedAt: null,
 		lockedAt: null,

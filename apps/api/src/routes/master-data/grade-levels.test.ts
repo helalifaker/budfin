@@ -53,6 +53,7 @@ const mockGradeLevel = {
 	gradeName: 'Petite Section',
 	band: 'MATERNELLE',
 	maxClassSize: 25,
+	defaultAy2Intake: 66,
 	plancherPct: { toString: () => '0.7000' },
 	ciblePct: { toString: () => '0.8000' },
 	plafondPct: { toString: () => '0.9000' },
@@ -68,6 +69,7 @@ const mockGradeLevel2 = {
 	gradeName: 'Moyenne Section',
 	band: 'MATERNELLE',
 	maxClassSize: 28,
+	defaultAy2Intake: null,
 	plancherPct: { toString: () => '0.6500' },
 	ciblePct: { toString: () => '0.7500' },
 	plafondPct: { toString: () => '0.8500' },
@@ -113,6 +115,7 @@ describe('GET /api/v1/master-data/grade-levels', () => {
 		expect(body.gradeLevels[0].plancherPct).toBe('0.7000');
 		expect(body.gradeLevels[0].ciblePct).toBe('0.8000');
 		expect(body.gradeLevels[0].plafondPct).toBe('0.9000');
+		expect(body.gradeLevels[0].defaultAy2Intake).toBe(66);
 	});
 
 	it('returns 401 without auth', async () => {
@@ -127,6 +130,7 @@ describe('GET /api/v1/master-data/grade-levels', () => {
 describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 	const validPayload = {
 		maxClassSize: 30,
+		defaultAy2Intake: 72,
 		plancherPct: 0.75,
 		ciblePct: 0.85,
 		plafondPct: 0.95,
@@ -138,6 +142,7 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 		const updatedGrade = {
 			...mockGradeLevel,
 			maxClassSize: 30,
+			defaultAy2Intake: 72,
 			plancherPct: { toString: () => '0.7500' },
 			ciblePct: { toString: () => '0.8500' },
 			plafondPct: { toString: () => '0.9500' },
@@ -159,6 +164,7 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.plancherPct).toBe('0.7500');
+		expect(body.defaultAy2Intake).toBe(72);
 		expect(body.version).toBe(2);
 	});
 
@@ -189,6 +195,7 @@ describe('PUT /api/v1/master-data/grade-levels/:id', () => {
 		expect(call.data.operation).toBe('GRADE_LEVEL_UPDATED');
 		expect(call.data.oldValues).toMatchObject({
 			maxClassSize: 25,
+			defaultAy2Intake: 66,
 			plancherPct: '0.7000',
 		});
 	});

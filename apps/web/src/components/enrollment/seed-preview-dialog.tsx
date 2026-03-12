@@ -78,20 +78,23 @@ export function SeedPreviewDialog({ open, onClose }: SeedPreviewDialogProps) {
 				};
 			});
 
-		putCohortParams.mutate(entries, {
-			onSuccess: () => {
-				const highCount = seedResults.filter(
-					(r) => accepted.has(r.gradeLevel) && r.confidence === 'high'
-				).length;
-				const medCount = seedResults.filter(
-					(r) => accepted.has(r.gradeLevel) && r.confidence === 'medium'
-				).length;
-				toast.success(
-					`Seeded ${accepted.size} grades (${highCount} high confidence, ${medCount} medium)`
-				);
-				onClose();
-			},
-		});
+		putCohortParams.mutate(
+			{ entries },
+			{
+				onSuccess: () => {
+					const highCount = seedResults.filter(
+						(r) => accepted.has(r.gradeLevel) && r.confidence === 'high'
+					).length;
+					const medCount = seedResults.filter(
+						(r) => accepted.has(r.gradeLevel) && r.confidence === 'medium'
+					).length;
+					toast.success(
+						`Seeded ${accepted.size} grades (${highCount} high confidence, ${medCount} medium)`
+					);
+					onClose();
+				},
+			}
+		);
 	}, [versionId, cohortData, seedResults, accepted, putCohortParams, onClose]);
 
 	if (!open) return null;

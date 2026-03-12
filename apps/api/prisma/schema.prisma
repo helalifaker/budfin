@@ -253,6 +253,7 @@ model GradeLevel {
   gradeName    String    @map("grade_name") @db.VarChar(60)
   band         GradeBand
   maxClassSize Int       @map("max_class_size")
+  defaultAy2Intake Int?  @map("default_ay2_intake")
   plancherPct  Decimal   @map("plancher_pct") @db.Decimal(5, 4)
   ciblePct     Decimal   @map("cible_pct") @db.Decimal(5, 4)
   plafondPct   Decimal   @map("plafond_pct") @db.Decimal(5, 4)
@@ -346,11 +347,14 @@ model BudgetVersion {
   sourceVersionId   Int?     @map("source_version_id")
   modificationCount Int      @default(0) @map("modification_count")
   staleModules      String[] @default([]) @map("stale_modules")
+  rolloverThreshold Decimal  @default(1.0000) @map("rollover_threshold") @db.Decimal(5, 4)
+  cappedRetention   Decimal  @default(0.9800) @map("capped_retention") @db.Decimal(5, 4)
   createdById       Int      @map("created_by_id")
   publishedAt       DateTime? @map("published_at") @db.Timestamptz
   lockedAt          DateTime? @map("locked_at") @db.Timestamptz
   archivedAt        DateTime? @map("archived_at") @db.Timestamptz
   updatedById       Int?     @map("updated_by_id")
+  lastCalculatedAt  DateTime? @map("last_calculated_at")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 

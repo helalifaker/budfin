@@ -252,9 +252,12 @@ describe('POST /setup/apply', () => {
 	it('persists staged inputs and runs the enrollment calculation atomically', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
 			id: 1,
+			fiscalYear: 2026,
 			status: 'Draft',
 			dataSource: 'MANUAL',
 			staleModules: [],
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
 		});
 		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(
 			gradeLevels.map((gradeLevel) => ({ gradeCode: gradeLevel.gradeCode }))
@@ -279,6 +282,10 @@ describe('POST /setup/apply', () => {
 					lateralWeightAut: index % 3 > 0 ? 0.3333 : 0,
 				})),
 				psAy2Headcount: 92,
+				planningRules: {
+					rolloverThreshold: 1.03,
+					cappedRetention: 0.99,
+				},
 			},
 		});
 
@@ -298,6 +305,13 @@ describe('POST /setup/apply', () => {
 				}),
 			})
 		);
+		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
+			where: { id: 1 },
+			data: {
+				rolloverThreshold: '1.0300',
+				cappedRetention: '0.9900',
+			},
+		});
 		expect(mockPrisma.cohortParameter.upsert).toHaveBeenCalledTimes(15);
 		expect(mockMarkEnrollmentInputsStale).toHaveBeenCalled();
 		expect(mockCalculateAndPersistEnrollmentWorkspace).toHaveBeenCalled();
@@ -306,9 +320,12 @@ describe('POST /setup/apply', () => {
 	it('rejects setup apply when lateral weights do not sum to 1.0', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
 			id: 1,
+			fiscalYear: 2026,
 			status: 'Draft',
 			dataSource: 'MANUAL',
 			staleModules: [],
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
 		});
 		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(
 			gradeLevels.map((gradeLevel) => ({ gradeCode: gradeLevel.gradeCode }))

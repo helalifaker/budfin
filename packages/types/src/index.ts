@@ -27,6 +27,8 @@ export type {
 	NationalityBreakdownEntry,
 	CohortProgressionRow,
 	EnrollmentKpiData,
+	PlanningRules,
+	EnrollmentMasterGridRow,
 } from './cohort.js';
 
 export { DISTRIBUTION_METHODS, IFRS_CATEGORIES } from './revenue.js';

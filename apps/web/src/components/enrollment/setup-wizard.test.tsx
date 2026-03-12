@@ -63,6 +63,10 @@ function createHeadcountData() {
 
 function createCohortData() {
 	return {
+		planningRules: {
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
+		},
 		entries: [
 			{
 				gradeLevel: 'PS',
@@ -101,6 +105,7 @@ function createGradeLevelsData() {
 				band: 'MATERNELLE',
 				displayOrder: 1,
 				maxClassSize: 25,
+				defaultAy2Intake: 66,
 				plafondPct: '1',
 			},
 			{
@@ -109,6 +114,7 @@ function createGradeLevelsData() {
 				band: 'MATERNELLE',
 				displayOrder: 2,
 				maxClassSize: 25,
+				defaultAy2Intake: null,
 				plafondPct: '1',
 			},
 		],
@@ -251,10 +257,10 @@ describe('EnrollmentSetupWizard', () => {
 			/>
 		);
 
-		fireEvent.click(screen.getByRole('button', { name: /Import Compare/i }));
 		fireEvent.click(screen.getByRole('button', { name: /Use imported values/i }));
-		fireEvent.click(screen.getByRole('button', { name: /Preview & Validate/i }));
-		fireEvent.click(screen.getByRole('button', { name: /Validate and Apply/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /Confirm and Calculate/i }));
 
 		await waitFor(() => {
 			expect(mockHooks.applyMutateAsync).toHaveBeenCalledTimes(1);
@@ -263,13 +269,41 @@ describe('EnrollmentSetupWizard', () => {
 		const payload = mockHooks.applyMutateAsync.mock.calls[0]![0];
 		expect(payload.ay1Entries).toEqual(
 			expect.arrayContaining([
-				expect.objectContaining({ gradeLevel: 'PS', headcount: 91 }),
+				expect.objectContaining({ gradeLevel: 'PS', headcount: 90 }),
 				expect.objectContaining({ gradeLevel: 'MS', headcount: 120 }),
 			])
 		);
 	});
 
-	it('restores the seeded baseline dataset when Keep baseline is chosen after an import', async () => {
+	it('starts from the baseline dataset by default', async () => {
+		render(
+			<EnrollmentSetupWizard
+				open
+				versionId={20}
+				versionName="v2"
+				editability="editable"
+				onClose={vi.fn()}
+			/>
+		);
+
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /Confirm and Calculate/i }));
+
+		await waitFor(() => {
+			expect(mockHooks.applyMutateAsync).toHaveBeenCalledTimes(1);
+		});
+
+		const payload = mockHooks.applyMutateAsync.mock.calls[0]![0];
+		expect(payload.ay1Entries).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ gradeLevel: 'PS', headcount: 90 }),
+				expect.objectContaining({ gradeLevel: 'MS', headcount: 100 }),
+			])
+		);
+	});
+
+	it('restores the real baseline dataset when Use baseline is chosen after an import', async () => {
 		mockHooks.importData = {
 			totalRows: 1,
 			validRows: 1,
@@ -303,13 +337,11 @@ describe('EnrollmentSetupWizard', () => {
 			/>
 		);
 
-		fireEvent.click(screen.getByRole('button', { name: /Import Compare/i }));
 		fireEvent.click(screen.getByRole('button', { name: /Use imported values/i }));
-		fireEvent.click(screen.getByRole('button', { name: /Keep baseline/i }));
-		fireEvent.click(screen.getByRole('button', { name: /AY1 Review/i }));
-		fireEvent.click(screen.getByRole('button', { name: /Retention & Laterals/i }));
-		fireEvent.click(screen.getByRole('button', { name: /Preview & Validate/i }));
-		fireEvent.click(screen.getByRole('button', { name: /Validate and Apply/i }));
+		fireEvent.click(screen.getByRole('button', { name: /Use baseline/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /Confirm and Calculate/i }));
 
 		await waitFor(() => {
 			expect(mockHooks.applyMutateAsync).toHaveBeenCalledTimes(1);
@@ -317,7 +349,39 @@ describe('EnrollmentSetupWizard', () => {
 
 		const payload = mockHooks.applyMutateAsync.mock.calls[0]![0];
 		expect(payload.ay1Entries).toEqual(
-			expect.arrayContaining([expect.objectContaining({ gradeLevel: 'MS', headcount: 101 })])
+			expect.arrayContaining([
+				expect.objectContaining({ gradeLevel: 'PS', headcount: 90 }),
+				expect.objectContaining({ gradeLevel: 'MS', headcount: 100 }),
+			])
+		);
+	});
+
+	it('lets the user switch back to the saved AY1 run explicitly', async () => {
+		render(
+			<EnrollmentSetupWizard
+				open
+				versionId={20}
+				versionName="v2"
+				editability="editable"
+				onClose={vi.fn()}
+			/>
+		);
+
+		fireEvent.click(screen.getByRole('button', { name: /Use saved AY1/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /Confirm and Calculate/i }));
+
+		await waitFor(() => {
+			expect(mockHooks.applyMutateAsync).toHaveBeenCalledTimes(1);
+		});
+
+		const payload = mockHooks.applyMutateAsync.mock.calls[0]![0];
+		expect(payload.ay1Entries).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ gradeLevel: 'PS', headcount: 91 }),
+				expect.objectContaining({ gradeLevel: 'MS', headcount: 101 }),
+			])
 		);
 	});
 
@@ -340,7 +404,7 @@ describe('EnrollmentSetupWizard', () => {
 		const nextButton = screen.getByRole('button', { name: /Next/i }) as HTMLButtonElement;
 		expect(nextButton.disabled).toBe(true);
 		const previewStepButton = screen.getByRole('button', {
-			name: /Preview & Validate/i,
+			name: /Preview & Confirm/i,
 		}) as HTMLButtonElement;
 		expect(previewStepButton.disabled).toBe(true);
 	});
@@ -356,7 +420,6 @@ describe('EnrollmentSetupWizard', () => {
 			/>
 		);
 
-		fireEvent.click(screen.getByRole('button', { name: /AY1 Review/i }));
 		const reviewSection = screen
 			.getByRole('heading', { name: 'Finalize AY1 headcounts' })
 			.closest('section');
@@ -367,18 +430,18 @@ describe('EnrollmentSetupWizard', () => {
 		fireEvent.change(reviewInputs[0]!, { target: { value: '92.6' } });
 		fireEvent.change(reviewInputs[2]!, { target: { value: '101.6' } });
 
-		fireEvent.click(screen.getByRole('button', { name: /Retention & Laterals/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
 		const cohortSection = screen
-			.getByRole('heading', { name: 'Retention and lateral entries' })
+			.getByRole('heading', { name: 'Planning rules and cohort assumptions' })
 			.closest('section');
 		expect(cohortSection).not.toBeNull();
 		const cohortInputs = cohortSection!.querySelectorAll('input[type="number"]');
-		expect(cohortInputs.length).toBeGreaterThanOrEqual(2);
+		expect(cohortInputs.length).toBeGreaterThanOrEqual(4);
 
-		fireEvent.change(cohortInputs[1]!, { target: { value: '3.7' } });
+		fireEvent.change(cohortInputs[3]!, { target: { value: '3.7' } });
 
-		fireEvent.click(screen.getByRole('button', { name: /Preview & Validate/i }));
-		fireEvent.click(screen.getByRole('button', { name: /Validate and Apply/i }));
+		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
+		fireEvent.click(screen.getByRole('button', { name: /Confirm and Calculate/i }));
 
 		await waitFor(() => {
 			expect(mockHooks.applyMutateAsync).toHaveBeenCalledTimes(1);
@@ -404,9 +467,6 @@ describe('EnrollmentSetupWizard', () => {
 				onClose={vi.fn()}
 			/>
 		);
-
-		fireEvent.click(screen.getByRole('button', { name: /Preview & Validate/i }));
-		fireEvent.click(screen.getByRole('button', { name: /AY1 Review/i }));
 
 		const reviewSection = screen
 			.getByRole('heading', { name: 'Finalize AY1 headcounts' })
@@ -454,12 +514,11 @@ describe('EnrollmentSetupWizard', () => {
 			/>
 		);
 
-		fireEvent.click(screen.getByRole('button', { name: /AY1 Review/i }));
 		const updatedSection = screen
 			.getByRole('heading', { name: 'Finalize AY1 headcounts' })
 			.closest('section');
 		expect(updatedSection).not.toBeNull();
 		const updatedInputs = updatedSection!.querySelectorAll('input[type="number"]');
-		expect((updatedInputs[2] as HTMLInputElement).value).toBe('88');
+		expect((updatedInputs[2] as HTMLInputElement).value).toBe('100');
 	});
 });

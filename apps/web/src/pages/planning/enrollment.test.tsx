@@ -76,6 +76,9 @@ vi.mock('../../hooks/use-enrollment', () => ({
 	useHeadcount: (_versionId: number | null, academicPeriod?: 'AY1' | 'AY2' | 'SUMMER' | null) => ({
 		data: academicPeriod ? filteredAy2HeadcountData : fullHeadcountData,
 	}),
+	usePutHeadcount: () => ({
+		mutate: vi.fn(),
+	}),
 	useCalculateEnrollment: () => ({
 		mutate: vi.fn(),
 		isPending: false,
@@ -122,6 +125,7 @@ vi.mock('../../hooks/use-grade-levels', () => ({
 					band: 'MATERNELLE',
 					displayOrder: 1,
 					maxClassSize: 25,
+					defaultAy2Intake: 66,
 					plafondPct: '1',
 				},
 				{
@@ -130,6 +134,7 @@ vi.mock('../../hooks/use-grade-levels', () => ({
 					band: 'MATERNELLE',
 					displayOrder: 2,
 					maxClassSize: 25,
+					defaultAy2Intake: null,
 					plafondPct: '1',
 				},
 			],
@@ -144,7 +149,14 @@ vi.mock('../../hooks/use-cohort-parameters', () => ({
 				{ gradeLevel: 'PS', isPersisted: true },
 				{ gradeLevel: 'MS', isPersisted: true },
 			],
+			planningRules: {
+				rolloverThreshold: 1,
+				cappedRetention: 0.98,
+			},
 		},
+	}),
+	usePutCohortParameters: () => ({
+		mutate: vi.fn(),
 	}),
 }));
 
@@ -163,51 +175,8 @@ vi.mock('../../components/ui/toggle-group', () => ({
 	),
 }));
 
-vi.mock('../../components/shared/workspace-board', () => ({
-	WorkspaceBoard: ({
-		title,
-		actions,
-		children,
-	}: {
-		title: string;
-		actions: ReactNode;
-		children: ReactNode;
-	}) => (
-		<section>
-			<h1>{title}</h1>
-			<div>{actions}</div>
-			<div>{children}</div>
-		</section>
-	),
-}));
-
-vi.mock('../../components/shared/workspace-block', () => ({
-	WorkspaceBlock: ({ title, children }: { title: string; children: ReactNode }) => (
-		<section>
-			<h2>{title}</h2>
-			{children}
-		</section>
-	),
-}));
-
 vi.mock('../../components/enrollment/kpi-ribbon', () => ({
 	EnrollmentKpiRibbon: () => <div>KPI</div>,
-}));
-
-vi.mock('../../components/enrollment/cohort-progression-grid', () => ({
-	CohortProgressionGrid: () => <div>Cohort grid</div>,
-}));
-
-vi.mock('../../components/enrollment/nationality-distribution-grid', () => ({
-	NationalityDistributionGrid: () => <div>Nationality grid</div>,
-}));
-
-vi.mock('../../components/enrollment/capacity-grid', () => ({
-	CapacityGrid: () => <div>Capacity grid</div>,
-}));
-
-vi.mock('../../components/enrollment/historical-chart', () => ({
-	HistoricalChart: () => <div>History</div>,
 }));
 
 vi.mock('../../components/enrollment/calculate-button', () => ({

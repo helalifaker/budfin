@@ -13,6 +13,10 @@ import {
 	normalizeCohortMutations,
 } from '../../services/enrollment-workspace.js';
 import { GRADE_PROGRESSION } from '../../services/cohort-engine.js';
+import {
+	buildEnrollmentPlanningRulesUpdateData,
+	resolveEnrollmentPlanningRules,
+} from '../../services/planning-rules.js';
 
 const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
@@ -35,10 +39,16 @@ const setupCohortEntrySchema = z.object({
 	lateralWeightAut: z.number().min(0).max(1),
 });
 
+const planningRulesSchema = z.object({
+	rolloverThreshold: z.number().min(0.5).max(2),
+	cappedRetention: z.number().min(0.5).max(1),
+});
+
 const setupApplyBodySchema = z.object({
 	ay1Entries: z.array(setupAy1EntrySchema).min(1),
 	cohortEntries: z.array(setupCohortEntrySchema).min(1),
 	psAy2Headcount: z.number().int().min(0).optional(),
+	planningRules: planningRulesSchema.optional(),
 });
 
 const gradeHeaderAliases = new Set(['grade', 'gradelevel', 'levelcode']);
@@ -383,6 +393,8 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 					status: true,
 					dataSource: true,
 					staleModules: true,
+					rolloverThreshold: true,
+					cappedRetention: true,
 				},
 			});
 
@@ -512,6 +524,13 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 					},
 				});
 
+				if (body.planningRules) {
+					await tx.budgetVersion.update({
+						where: { id: versionId },
+						data: buildEnrollmentPlanningRulesUpdateData(body.planningRules),
+					});
+				}
+
 				for (const entry of normalizedCohortEntries) {
 					await tx.cohortParameter.upsert({
 						where: {
@@ -564,6 +583,11 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 						id: version.id,
 						fiscalYear: version.fiscalYear,
 						staleModules,
+						...resolveEnrollmentPlanningRules(
+							body.planningRules
+								? buildEnrollmentPlanningRulesUpdateData(body.planningRules)
+								: version
+						),
 					},
 					actor: {
 						userId: request.user.id,
@@ -571,6 +595,11 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 						ipAddress: request.ip,
 					},
 				});
+			});
+
+			await prisma.budgetVersion.update({
+				where: { id: versionId },
+				data: { lastCalculatedAt: new Date() },
 			});
 
 			return reply.send(result);

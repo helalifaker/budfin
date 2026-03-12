@@ -24,6 +24,8 @@ vi.mock('../../services/cohort-recommendations.js', () => ({
 			observationCount: 0,
 			sourceFiscalYear: null,
 			rolloverRatio: null,
+			recommendationPriorAy1Headcount: null,
+			recommendationAy2Headcount: null,
 			rule: 'direct-entry',
 		},
 		{
@@ -34,6 +36,8 @@ vi.mock('../../services/cohort-recommendations.js', () => ({
 			observationCount: 4,
 			sourceFiscalYear: 2025,
 			rolloverRatio: 1.0189,
+			recommendationPriorAy1Headcount: 106,
+			recommendationAy2Headcount: 108,
 			rule: 'historical-rollover',
 		},
 		{
@@ -44,6 +48,8 @@ vi.mock('../../services/cohort-recommendations.js', () => ({
 			observationCount: 4,
 			sourceFiscalYear: 2025,
 			rolloverRatio: 1.0309,
+			recommendationPriorAy1Headcount: 92,
+			recommendationAy2Headcount: 95,
 			rule: 'historical-rollover',
 		},
 	]),
@@ -109,6 +115,8 @@ const URL_PREFIX = '/api/v1/versions/1';
 const mockDraftVersion = {
 	id: 1,
 	fiscalYear: 2026,
+	rolloverThreshold: 1,
+	cappedRetention: 0.98,
 	name: 'Budget v1',
 	type: 'Budget',
 	status: 'Draft',
@@ -160,7 +168,12 @@ describe('GET /cohort-parameters', () => {
 	});
 
 	it('returns default parameters when no cohort params exist', async () => {
-		mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 1 });
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			id: 1,
+			fiscalYear: 2026,
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
+		});
 		mockPrisma.cohortParameter.findMany.mockResolvedValue([]);
 
 		const token = await makeToken();
@@ -175,6 +188,10 @@ describe('GET /cohort-parameters', () => {
 
 		// Should have 15 entries (one per grade in GRADE_PROGRESSION)
 		expect(body.entries).toHaveLength(15);
+		expect(body.planningRules).toEqual({
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
+		});
 
 		// PS defaults: retentionRate=0 (direct entry grade)
 		const ps = body.entries.find((e: Record<string, unknown>) => e.gradeLevel === 'PS');
@@ -193,10 +210,17 @@ describe('GET /cohort-parameters', () => {
 		expect(cp.lateralEntryCount).toBe(2);
 		expect(cp.isPersisted).toBe(false);
 		expect(cp.recommendationSourceFiscalYear).toBe(2025);
+		expect(cp.recommendationPriorAy1Headcount).toBe(106);
+		expect(cp.recommendationAy2Headcount).toBe(108);
 	});
 
 	it('returns existing parameters for a version', async () => {
-		mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 1 });
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			id: 1,
+			fiscalYear: 2026,
+			rolloverThreshold: 1.05,
+			cappedRetention: 0.97,
+		});
 		mockPrisma.cohortParameter.findMany.mockResolvedValue([
 			{
 				gradeLevel: 'CP',
@@ -242,6 +266,10 @@ describe('GET /cohort-parameters', () => {
 		expect(ms.lateralEntryCount).toBe(3);
 		expect(ms.isPersisted).toBe(false);
 		expect(ms.recommendationRule).toBe('historical-rollover');
+		expect(body.planningRules).toEqual({
+			rolloverThreshold: 1.05,
+			cappedRetention: 0.97,
+		});
 	});
 });
 

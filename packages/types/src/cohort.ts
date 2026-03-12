@@ -1,5 +1,10 @@
 import type { GradeCode, AcademicPeriod, NationalityType } from './enrollment.js';
 
+export interface PlanningRules {
+	rolloverThreshold: number;
+	cappedRetention: number;
+}
+
 export interface CohortParameterEntry {
 	gradeLevel: GradeCode;
 	retentionRate: number;
@@ -14,9 +19,11 @@ export interface CohortParameterEntry {
 	recommendationObservationCount?: number;
 	recommendationSourceFiscalYear?: number | null;
 	recommendationRolloverRatio?: number | null;
+	recommendationPriorAy1Headcount?: number | null;
+	recommendationAy2Headcount?: number | null;
 	recommendationRule?:
 		| 'direct-entry'
-		| 'fixed-97-growth'
+		| 'capped-retention-growth'
 		| 'historical-rollover'
 		| 'fallback-default';
 }
@@ -45,4 +52,24 @@ export interface EnrollmentKpiData {
 	utilizationPct: number;
 	alertCount: number;
 	isStale: boolean;
+}
+
+export interface EnrollmentMasterGridRow {
+	gradeLevel: GradeCode;
+	gradeName: string;
+	band: string;
+	displayOrder: number;
+	isPS: boolean;
+	ay1Headcount: number;
+	retentionRate: number;
+	lateralEntry: number;
+	ay2Headcount: number;
+	sectionsNeeded: number;
+	utilization: number;
+	alert: 'OVER' | 'NEAR_CAP' | 'OK' | 'UNDER' | null;
+	recruitmentSlots: number;
+	isPersistedResult: boolean;
+	hasManualOverride: boolean;
+	hasBlockingIssue: boolean;
+	issueTags: Array<'over-capacity' | 'near-cap' | 'missing-inputs' | 'manual-override'>;
 }

@@ -35,6 +35,8 @@ export interface EditableEnrollmentVersion {
 	id: number;
 	fiscalYear: number;
 	staleModules: string[];
+	rolloverThreshold: number;
+	cappedRetention: number;
 }
 
 export interface EnrollmentCalculationActor {
@@ -178,9 +180,12 @@ export async function calculateAndPersistEnrollmentWorkspace({
 		},
 	});
 	const recommendationMap = new Map(
-		(await getHistoricalCohortRecommendations(tx, version.fiscalYear)).map(
-			(recommendation) => [recommendation.gradeLevel, recommendation] as const
-		)
+		(
+			await getHistoricalCohortRecommendations(tx, version.fiscalYear, {
+				rolloverThreshold: version.rolloverThreshold,
+				cappedRetention: version.cappedRetention,
+			})
+		).map((recommendation) => [recommendation.gradeLevel, recommendation] as const)
 	);
 
 	const cohortParams = new Map<string, CohortParams>();
@@ -215,7 +220,8 @@ export async function calculateAndPersistEnrollmentWorkspace({
 		const recommendation = recommendationMap.get(gradeLevel);
 		cohortParams.set(gradeLevel, {
 			retentionRate: String(
-				recommendation?.recommendedRetentionRate ?? (gradeLevel === 'PS' ? 0 : 0.97)
+				recommendation?.recommendedRetentionRate ??
+					(gradeLevel === 'PS' ? 0 : version.cappedRetention)
 			),
 			lateralEntryCount: recommendation?.recommendedLateralEntryCount ?? 0,
 		});
@@ -243,7 +249,19 @@ export async function calculateAndPersistEnrollmentWorkspace({
 		}
 	}
 
-	const psAy2Headcount = existingAy2PsHeadcount ?? ay1Headcounts.get('PS') ?? 0;
+	const gradeLevels = await tx.gradeLevel.findMany({
+		select: {
+			gradeCode: true,
+			maxClassSize: true,
+			plafondPct: true,
+			defaultAy2Intake: true,
+		},
+	});
+	const psDefaultAy2Headcount =
+		gradeLevels.find((gradeLevel) => gradeLevel.gradeCode === 'PS')?.defaultAy2Intake ?? null;
+
+	const psAy2Headcount =
+		existingAy2PsHeadcount ?? psDefaultAy2Headcount ?? ay1Headcounts.get('PS') ?? 0;
 	const cohortResults = calculateCohortProgression({
 		ay1Headcounts,
 		cohortParams,
@@ -325,17 +343,13 @@ export async function calculateAndPersistEnrollmentWorkspace({
 				weight: String(entry.weight),
 				headcount: entry.headcount,
 			})),
-			retentionRate: cohortParam?.retentionRate ?? '0.97',
+			retentionRate: cohortParam?.retentionRate ?? String(version.cappedRetention),
 			lateralCount: cohortParam?.lateralEntryCount ?? 0,
 			lateralWeights: buildLateralWeightMap(cohortWeights, cohortParam?.lateralEntryCount ?? 0),
 		});
 	}
 
 	const nationalityResults = calculateNationalityDistribution(nationalityInputs);
-
-	const gradeLevels = await tx.gradeLevel.findMany({
-		select: { gradeCode: true, maxClassSize: true, plafondPct: true },
-	});
 
 	const gradeConfigs = new Map<string, GradeConfig>();
 	for (const gradeLevel of gradeLevels) {

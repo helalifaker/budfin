@@ -16,6 +16,9 @@ vi.mock('../../lib/prisma.js', () => {
 		dhgRequirement: {
 			findMany: vi.fn(),
 		},
+		calculationAuditLog: {
+			findFirst: vi.fn(),
+		},
 	};
 	return { prisma: mockPrisma };
 });
@@ -26,6 +29,9 @@ const mockPrisma = prisma as unknown as {
 	};
 	dhgRequirement: {
 		findMany: ReturnType<typeof vi.fn>;
+	};
+	calculationAuditLog: {
+		findFirst: ReturnType<typeof vi.fn>;
 	};
 };
 
@@ -102,6 +108,9 @@ describe('GET /capacity-results', () => {
 				recruitmentSlots: 5,
 			},
 		]);
+		mockPrisma.calculationAuditLog.findFirst.mockResolvedValueOnce({
+			completedAt: new Date('2026-03-10T09:30:00Z'),
+		});
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -116,6 +125,7 @@ describe('GET /capacity-results', () => {
 			totalStudentsAy2: 95,
 			overCapacityGrades: ['PS'],
 		});
+		expect(res.json().lastCalculatedAt).toBe('2026-03-10T09:30:00.000Z');
 		expect(res.json().results).toHaveLength(2);
 	});
 });

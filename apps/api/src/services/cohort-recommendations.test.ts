@@ -34,6 +34,10 @@ describe('buildHistoricalCohortObservations', () => {
 				{ versionId: 1, academicPeriod: 'AY2', gradeLevel: 'CP', headcount: 111 },
 			],
 			versionFiscalYears: new Map([[1, 2024]]),
+			planningRules: {
+				rolloverThreshold: 1.05,
+				cappedRetention: 0.97,
+			},
 		});
 
 		expect(observations).toEqual([
@@ -43,7 +47,7 @@ describe('buildHistoricalCohortObservations', () => {
 				rolloverRatio: 1.1809,
 				recommendedRetentionRate: 0.97,
 				recommendedLateralEntryCount: 20,
-				rule: 'fixed-97-growth',
+				rule: 'capped-retention-growth',
 			}),
 		]);
 	});
@@ -55,6 +59,10 @@ describe('buildHistoricalCohortObservations', () => {
 				{ versionId: 1, academicPeriod: 'AY2', gradeLevel: '2NDE', headcount: 122 },
 			],
 			versionFiscalYears: new Map([[1, 2025]]),
+			planningRules: {
+				rolloverThreshold: 1.05,
+				cappedRetention: 0.97,
+			},
 		});
 
 		expect(observations).toEqual([
@@ -76,6 +84,10 @@ describe('buildHistoricalCohortObservations', () => {
 				{ versionId: 1, academicPeriod: 'AY2', gradeLevel: '6EME', headcount: 128 },
 			],
 			versionFiscalYears: new Map([[1, 2025]]),
+			planningRules: {
+				rolloverThreshold: 1.05,
+				cappedRetention: 0.97,
+			},
 		});
 
 		expect(observations).toEqual([
@@ -112,7 +124,7 @@ describe('buildCohortRecommendations', () => {
 				rolloverRatio: 1.1531,
 				recommendedRetentionRate: 0.97,
 				recommendedLateralEntryCount: 18,
-				rule: 'fixed-97-growth',
+				rule: 'capped-retention-growth',
 			},
 			{
 				gradeLevel: 'CE1',
@@ -122,7 +134,7 @@ describe('buildCohortRecommendations', () => {
 				rolloverRatio: 1.0753,
 				recommendedRetentionRate: 0.97,
 				recommendedLateralEntryCount: 10,
-				rule: 'fixed-97-growth',
+				rule: 'capped-retention-growth',
 			},
 		]);
 
@@ -136,6 +148,8 @@ describe('buildCohortRecommendations', () => {
 				confidence: 'high',
 				observationCount: 3,
 				sourceFiscalYear: 2025,
+				recommendationPriorAy1Headcount: 111,
+				recommendationAy2Headcount: 110,
 				rule: 'historical-rollover',
 			})
 		);

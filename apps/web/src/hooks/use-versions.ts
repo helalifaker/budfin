@@ -18,6 +18,7 @@ export interface BudgetVersion {
 	publishedAt: string | null;
 	lockedAt: string | null;
 	archivedAt: string | null;
+	lastCalculatedAt: string | null;
 	createdAt: string;
 	updatedAt: string;
 }

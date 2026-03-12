@@ -706,3 +706,78 @@ body {
 	background-color: var(--workspace-border-strong);
 	border-radius: 3px;
 }
+
+/* ── Wizard Step Animations ── */
+@keyframes wizard-step-enter-right {
+	from {
+		transform: translateX(40px);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes wizard-step-enter-left {
+	from {
+		transform: translateX(-40px);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes wizard-success-pulse {
+	0% {
+		transform: scale(1);
+		box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4);
+	}
+	50% {
+		transform: scale(1.02);
+		box-shadow: 0 0 20px 4px rgba(20, 184, 166, 0.2);
+	}
+	100% {
+		transform: scale(1);
+		box-shadow: 0 0 0 0 rgba(20, 184, 166, 0);
+	}
+}
+
+@keyframes wizard-checkmark-draw {
+	from {
+		stroke-dashoffset: 48;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+.animate-wizard-step-right {
+	animation: wizard-step-enter-right 350ms var(--ease-out-expo) both;
+}
+
+.animate-wizard-step-left {
+	animation: wizard-step-enter-left 350ms var(--ease-out-expo) both;
+}
+
+.animate-wizard-success {
+	animation: wizard-success-pulse 1.5s var(--ease-in-out) both;
+}
+
+.animate-wizard-checkmark {
+	stroke-dasharray: 48;
+	stroke-dashoffset: 48;
+	animation: wizard-checkmark-draw 600ms var(--ease-out-expo) 200ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-wizard-step-right,
+	.animate-wizard-step-left,
+	.animate-wizard-success,
+	.animate-wizard-checkmark {
+		animation: none !important;
+		transition: none !important;
+	}
+}

@@ -17,7 +17,7 @@ export async function enrollmentCapacityResultsRoutes(app: FastifyInstance) {
 
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
-				select: { id: true },
+				select: { id: true, lastCalculatedAt: true },
 			});
 
 			if (!version) {
@@ -40,6 +40,17 @@ export async function enrollmentCapacityResultsRoutes(app: FastifyInstance) {
 					recruitmentSlots: true,
 				},
 				orderBy: [{ academicPeriod: 'asc' }, { gradeLevel: 'asc' }],
+			});
+			const lastCalculation = await prisma.calculationAuditLog.findFirst({
+				where: {
+					versionId,
+					module: 'ENROLLMENT',
+					status: 'SUCCESS',
+				},
+				select: {
+					completedAt: true,
+				},
+				orderBy: [{ completedAt: 'desc' }, { startedAt: 'desc' }],
 			});
 
 			const normalizedResults = results.map((result) => ({
@@ -69,6 +80,7 @@ export async function enrollmentCapacityResultsRoutes(app: FastifyInstance) {
 						),
 					],
 				},
+				lastCalculatedAt: version.lastCalculatedAt ?? lastCalculation?.completedAt ?? null,
 				results: normalizedResults,
 			};
 		},
