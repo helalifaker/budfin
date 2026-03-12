@@ -109,19 +109,20 @@ Flat config only (`eslint.config.ts`). No `.eslintrc` files. All plugins must su
 
 All development follows the 7-phase BudFin workflow defined in `.claude/workflow/WORKFLOW.md`. Current phase is tracked in `.claude/workflow/STATUS.md`.
 
-See `.claude/COMMANDS.md` for the full command reference. 9 user-facing commands:
+See `.claude/COMMANDS.md` for the full command reference. 10 user-facing commands:
 
 | #   | Command                         | Purpose                                                                                                        |
 | --- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | 1   | `/workflow:run [epic-#]`        | Full Epic lifecycle: health check -> spec -> stories -> implement -> review -> visual audit -> merge -> rollup |
 | 2   | `/workflow:status`              | Phase, checklist, `>>> NEXT:` recommendation                                                                   |
-| 3   | `/fix:all [symptom?]`           | Fix everything (or debug a specific symptom with root cause analysis)                                          |
-| 4   | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously                                                                                 |
-| 5   | `/workflow:advance`             | Manual phase gate check                                                                                        |
-| 6   | `/plan:adr "[title]"`           | Record architectural decision                                                                                  |
-| 7   | `/plan:spec [epic-#]`           | Write feature spec interactively                                                                               |
-| 8   | `/impl:story [story-#]`         | Implement a single story                                                                                       |
-| 9   | `/audit:360 [--epic N / --all]` | 360-degree implementation audit (read-only, 8 layers)                                                          |
+| 3   | `/docs:sync [--audit] [path]`   | Inventory, classify, deduplicate, and archive docs safely                                                      |
+| 4   | `/fix:all [symptom?]`           | Fix everything (or debug a specific symptom with root cause analysis)                                          |
+| 5   | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously                                                                                 |
+| 6   | `/workflow:advance`             | Manual phase gate check                                                                                        |
+| 7   | `/plan:adr "[title]"`           | Record architectural decision                                                                                  |
+| 8   | `/plan:spec [epic-#]`           | Write feature spec interactively                                                                               |
+| 9   | `/impl:story [story-#]`         | Implement a single story                                                                                       |
+| 10  | `/audit:360 [--epic N / --all]` | 360-degree implementation audit (read-only, 8 layers)                                                          |
 
 ## File Output Rules
 
