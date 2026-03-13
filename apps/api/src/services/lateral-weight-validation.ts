@@ -24,9 +24,17 @@ export function findInvalidLateralWeightEntry(
 			continue;
 		}
 
-		const weightSum = new Decimal(entry.lateralWeightFr ?? 0)
-			.plus(entry.lateralWeightNat ?? 0)
-			.plus(entry.lateralWeightAut ?? 0);
+		const fr = entry.lateralWeightFr ?? 0;
+		const nat = entry.lateralWeightNat ?? 0;
+		const aut = entry.lateralWeightAut ?? 0;
+
+		// Skip when all weights are zero — this is a pure manual adjustment,
+		// not lateral entries requiring nationality distribution
+		if (fr === 0 && nat === 0 && aut === 0) {
+			continue;
+		}
+
+		const weightSum = new Decimal(fr).plus(nat).plus(aut);
 
 		if (
 			weightSum.minus(EXPECTED_LATERAL_WEIGHT_SUM).abs().greaterThan(LATERAL_WEIGHT_SUM_TOLERANCE)
