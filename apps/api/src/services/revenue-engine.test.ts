@@ -135,7 +135,7 @@ describe('Revenue Engine', () => {
 				makeInput({
 					enrollmentDetails: [makeEnrollment({ tariff: 'RP' })],
 					feeGrid: [makeFee({ tariff: 'RP' })],
-					discountPolicies: [{ tariff: 'RP', nationality: 'Francais', discountRate: '0.250000' }],
+					discountPolicies: [{ tariff: 'RP', discountRate: '0.250000' }],
 				})
 			);
 
@@ -146,16 +146,14 @@ describe('Revenue Engine', () => {
 			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
 		});
 
-		it('should apply highest discount when multiple policies match (SA-006)', () => {
+		it('should apply the highest discount when duplicate tariff policies exist', () => {
 			const result = calculateRevenue(
 				makeInput({
 					enrollmentDetails: [makeEnrollment({ tariff: 'RP' })],
 					feeGrid: [makeFee({ tariff: 'RP' })],
 					discountPolicies: [
-						// Exact match: RP + Francais = 20%
-						{ tariff: 'RP', nationality: 'Francais', discountRate: '0.200000' },
-						// Wildcard match: RP + null = 30% — should win
-						{ tariff: 'RP', nationality: null, discountRate: '0.300000' },
+						{ tariff: 'RP', discountRate: '0.200000' },
+						{ tariff: 'RP', discountRate: '0.300000' },
 					],
 				})
 			);
@@ -170,7 +168,7 @@ describe('Revenue Engine', () => {
 		it('should apply no discount for Plein tariff', () => {
 			const result = calculateRevenue(
 				makeInput({
-					discountPolicies: [{ tariff: 'RP', nationality: null, discountRate: '0.300000' }],
+					discountPolicies: [{ tariff: 'RP', discountRate: '0.300000' }],
 				})
 			);
 

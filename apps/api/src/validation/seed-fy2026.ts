@@ -36,7 +36,6 @@ interface FeeGridFixture {
 
 interface DiscountFixture {
 	tariff: string;
-	nationality: string | null;
 	discountRate: string;
 }
 
@@ -187,9 +186,9 @@ async function main() {
 				gradeLevel: f.gradeLevel,
 				nationality: f.nationality,
 				tariff: f.tariff,
-				tuitionTtc: parseFloat(f.tuitionTtc),
-				tuitionHt: parseFloat(f.tuitionHt),
-				dai: parseFloat(f.dai),
+				tuitionTtc: f.tuitionTtc,
+				tuitionHt: f.tuitionHt,
+				dai: f.dai,
 				createdBy: admin.id,
 			},
 		});
@@ -204,8 +203,7 @@ async function main() {
 			data: {
 				versionId: version.id,
 				tariff: d.tariff,
-				nationality: d.nationality,
-				discountRate: parseFloat(d.discountRate),
+				discountRate: d.discountRate,
 				createdBy: admin.id,
 			},
 		});
@@ -219,7 +217,7 @@ async function main() {
 			data: {
 				versionId: version.id,
 				lineItemName: o.lineItemName,
-				annualAmount: parseFloat(o.annualAmount),
+				annualAmount: o.annualAmount,
 				distributionMethod: o.distributionMethod,
 				weightArray: o.weightArray ? JSON.parse(JSON.stringify(o.weightArray)) : undefined,
 				specificMonths: o.specificMonths ?? [],
@@ -259,7 +257,6 @@ async function main() {
 		discountPolicies: discounts.map(
 			(d): DiscountPolicyInput => ({
 				tariff: d.tariff,
-				nationality: d.nationality,
 				discountRate: d.discountRate,
 			})
 		),

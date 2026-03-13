@@ -1,10 +1,10 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Documentation Alignment & Epic 16 Preparation
-**Current Story**: Epic 12 complete; enrollment workspace redesign merged (PRs #184, #185); docs reorganized; now preparing Epic 16 — Revenue Workspace Redesign
+**Phase**: 6 — IMPLEMENT
+**Current Epic**: Epic 16 — Revenue Workspace Redesign (#186)
+**Current Story**: Story 194 — Revenue Page Assembly (#194)
 **Last updated**: 2026-03-14
-**Note**: All core feature epics (1–4, 7, 10–13, 15) are complete. Epic 12 (Data Migration) finished 2026-03-09. Enrollment workspace redesign delivered 2026-03-12. Currently in REVIEW phase for documentation alignment before starting Epic 16 (Revenue Workspace Redesign). Epics 5, 6, 8, 9 remain in backlog.
+**Note**: Epic 16 implementation completed locally with green targeted tests, lint, and typecheck. PR/review drive is next. Epics 5, 6, 8, 9 remain in backlog.
 
 ## Phase History
 
@@ -54,7 +54,10 @@
 | 7 — REVIEW (Epic 12) | ✅ Complete | 2026-03-09 |
 | 7 — REVIEW (Epic 1 — Enrollment Redesign) | ✅ Complete | 2026-03-12 |
 | 7 — REVIEW (Docs Reorganization) | ✅ Complete | 2026-03-13 |
-| 7 — REVIEW (Documentation Alignment) | In Progress | 2026-03-14 |
+| 7 — REVIEW (Documentation Alignment) | ✅ Complete | 2026-03-14 |
+| 4 — SPECIFY (Epic 16) | ✅ Complete | 2026-03-14 |
+| 5 — TDD RED (Epic 16) | ✅ Complete | 2026-03-14 |
+| 6 — IMPLEMENT (Epic 16) | In Progress | 2026-03-14 |
 
 ## Feature Progress
 
@@ -74,7 +77,7 @@
 | 12 | Data Migration | DONE | All 11 stories complete (11/11), PR #183 — 2026-03-09 |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 | 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
-| 16 | Revenue Workspace Redesign | 4 | Epic Created (#186), spec complete — 2026-03-14. Next priority. |
+| 16 | Revenue Workspace Redesign | 6 | Epic #186 local implementation complete, review + PR drive next — 2026-03-14 |
 
 ## Update Instructions
 

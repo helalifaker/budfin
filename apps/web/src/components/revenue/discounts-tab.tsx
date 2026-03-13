@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import Decimal from 'decimal.js';
 import type { DiscountEntry } from '@budfin/types';
 import { useDiscounts, usePutDiscounts } from '../../hooks/use-revenue';
 import { EditableCell } from '../data-grid/editable-cell';
@@ -28,7 +29,9 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 	const handleValueChange = (rowIndex: number, value: string) => {
 		setDraftEntries((current) =>
 			current.map((entry, index) =>
-				index === rowIndex ? { ...entry, discountRate: String(Number(value) || 0) } : entry
+				index === rowIndex
+					? { ...entry, discountRate: new Decimal(value || '0').toFixed(6) }
+					: entry
 			)
 		);
 	};
@@ -38,10 +41,6 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 			columnHelper.accessor('tariff', {
 				header: 'Tariff',
 				cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-			}),
-			columnHelper.accessor('nationality', {
-				header: 'Nationality',
-				cell: (info) => info.getValue() ?? <span className="italic text-(--text-muted)">All</span>,
 			}),
 			columnHelper.accessor('discountRate', {
 				header: 'Rate',
@@ -55,7 +54,7 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 							className="max-w-[88px]"
 						/>
 						<span className="text-xs text-(--text-muted)">
-							({(Number(info.getValue()) * 100).toFixed(2)}%)
+							({new Decimal(info.getValue()).mul(100).toFixed(2)}%)
 						</span>
 					</div>
 				),
@@ -64,8 +63,8 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 				id: 'effect',
 				header: 'Workbook Effect',
 				cell: (info) => {
-					const rate = Number(info.row.original.discountRate);
-					const kept = ((1 - rate) * 100).toFixed(2);
+					const rate = new Decimal(info.row.original.discountRate);
+					const kept = new Decimal(1).minus(rate).mul(100).toFixed(2);
 					return (
 						<span className="text-xs text-(--text-secondary)">
 							Students are billed at {kept}% of Plein tuition.
@@ -89,8 +88,7 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 				<div>
 					<div className="font-medium text-(--text-primary)">Discount Matrix</div>
 					<div className="text-(--text-muted)">
-						The revenue engine converts these rates into effective tariff tuition, exactly like the
-						workbook.
+						The revenue engine applies one rate per reduced tariff, exactly like the workbook.
 					</div>
 				</div>
 				{!isReadOnly && (

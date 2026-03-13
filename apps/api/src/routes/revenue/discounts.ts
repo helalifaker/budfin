@@ -10,13 +10,14 @@ const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
 });
 
-const discountEntrySchema = z.object({
-	tariff: z.enum(['RP', 'R3+']),
-	nationality: z.enum(['Francais', 'Nationaux', 'Autres']).nullable(),
-	discountRate: z
-		.string()
-		.regex(/^\d+(\.\d{1,6})?$/, 'Must be a decimal string with up to 6 decimal places'),
-});
+const discountEntrySchema = z
+	.object({
+		tariff: z.enum(['RP', 'R3+']),
+		discountRate: z
+			.string()
+			.regex(/^\d+(\.\d{1,6})?$/, 'Must be a decimal string with up to 6 decimal places'),
+	})
+	.strip();
 
 const putBodySchema = z.object({
 	entries: z.array(discountEntrySchema).min(1),
@@ -47,12 +48,11 @@ export async function discountRoutes(app: FastifyInstance) {
 
 			const policies = await prisma.discountPolicy.findMany({
 				where: { versionId },
-				orderBy: [{ tariff: 'asc' }, { nationality: 'asc' }],
+				orderBy: [{ tariff: 'asc' }],
 			});
 
 			const entries = policies.map((p) => ({
 				tariff: p.tariff,
-				nationality: p.nationality,
 				discountRate: new Decimal(p.discountRate.toString()).toFixed(6),
 			}));
 
@@ -119,16 +119,14 @@ export async function discountRoutes(app: FastifyInstance) {
 				for (const entry of entries) {
 					await txPrisma.discountPolicy.upsert({
 						where: {
-							versionId_tariff_nationality: {
+							versionId_tariff: {
 								versionId,
 								tariff: entry.tariff,
-								nationality: entry.nationality ?? '',
 							},
 						},
 						create: {
 							versionId,
 							tariff: entry.tariff,
-							nationality: entry.nationality,
 							discountRate: entry.discountRate,
 							createdBy: request.user.id,
 						},

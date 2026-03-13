@@ -6,6 +6,7 @@ import ExcelJS from 'exceljs';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Decimal } from 'decimal.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,7 +30,6 @@ interface FeeGridEntry {
 
 interface DiscountEntry {
 	tariff: string;
-	nationality: string | null;
 	discountRate: string;
 }
 
@@ -96,7 +96,7 @@ function cellNum(cell: ExcelJS.Cell): number {
 }
 
 function dec(n: number, places: number = 4): string {
-	return n.toFixed(places);
+	return new Decimal(n).toDecimalPlaces(places, Decimal.ROUND_HALF_UP).toFixed(places);
 }
 
 function writeFixture(name: string, data: unknown): void {
@@ -336,27 +336,24 @@ function parseDiscounts(workbook: ExcelJS.Workbook): DiscountEntry[] {
 	// Convert to discount rates (1 - payment rate = discount rate)
 	// RP pays 75% → gets 25% discount
 	if (rpRate > 0) {
-		const discountRate = 1 - rpRate;
+		const discountRate = new Decimal(1).minus(new Decimal(rpRate));
 		results.push({
 			tariff: 'Reduit Personnel',
-			nationality: null,
-			discountRate: dec(discountRate, 6),
+			discountRate: discountRate.toDecimalPlaces(6, Decimal.ROUND_HALF_UP).toFixed(6),
 		});
 	}
 
 	if (r3Rate > 0) {
-		const discountRate = 1 - r3Rate;
+		const discountRate = new Decimal(1).minus(new Decimal(r3Rate));
 		results.push({
 			tariff: 'Reduit 3+',
-			nationality: null,
-			discountRate: dec(discountRate, 6),
+			discountRate: discountRate.toDecimalPlaces(6, Decimal.ROUND_HALF_UP).toFixed(6),
 		});
 	}
 
 	// Plein tariff has 0% discount
 	results.push({
 		tariff: 'Plein',
-		nationality: null,
 		discountRate: '0.000000',
 	});
 

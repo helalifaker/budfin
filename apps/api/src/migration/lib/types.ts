@@ -40,7 +40,6 @@ export interface FeeGridFixture {
 
 export interface DiscountFixture {
 	tariff: string;
-	nationality: string | null;
 	discountRate: string;
 }
 

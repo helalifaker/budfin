@@ -25,7 +25,6 @@ export interface FeeGridInput {
 
 export interface DiscountPolicyInput {
 	tariff: string;
-	nationality: string | null;
 	discountRate: string; // decimal string 0–1
 }
 
@@ -162,18 +161,11 @@ function distributeAcademicYearAcrossFiscalMonths(
 
 // ── Helper: Resolve discount rate ─────────────────────────────────────────────
 
-function resolveDiscountRate(
-	tariff: string,
-	nationality: string,
-	policies: DiscountPolicyInput[]
-): Decimal {
+function resolveDiscountRate(tariff: string, policies: DiscountPolicyInput[]): Decimal {
 	let maxRate = ZERO;
 
 	for (const policy of policies) {
-		const tariffMatch = policy.tariff === tariff;
-		const nationalityMatch = policy.nationality === null || policy.nationality === nationality;
-
-		if (tariffMatch && nationalityMatch) {
+		if (policy.tariff === tariff) {
 			const rate = new Decimal(policy.discountRate);
 			if (rate.gt(maxRate)) {
 				maxRate = rate;
@@ -227,11 +219,7 @@ function resolveEffectiveTuitionAmounts(
 
 	const pleinTuitionHt = new Decimal(referencePleinFee.tuitionHt);
 	const selectedTuitionHt = new Decimal(fee.tuitionHt);
-	const discountRate = resolveDiscountRate(
-		enrollment.tariff,
-		enrollment.nationality,
-		discountPolicies
-	);
+	const discountRate = resolveDiscountRate(enrollment.tariff, discountPolicies);
 
 	let tuitionFeesPerStudentHt = selectedTuitionHt;
 
