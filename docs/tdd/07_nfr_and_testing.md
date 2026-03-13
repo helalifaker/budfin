@@ -128,6 +128,8 @@ that achieves it.
 | API routes         | >= 60%        | N/A             |
 | Overall codebase   | >= 60%        | N/A             |
 
+> **Note:** The Vitest configuration enforces 80% thresholds uniformly across lines, functions, branches, and statements for all packages. The module-specific thresholds above (60% for API routes, 90% branch coverage for calculation engines) represent target guidelines but are not enforced separately in the current CI pipeline.
+
 ### API Documentation
 
 - Zod schemas defined for all request/response types
@@ -152,7 +154,9 @@ that achieves it.
 
 ## Section 10: Testing Strategy
 
-## 10.1 Unit Tests (Vitest)
+## 10.1 Unit Tests (Vitest) — IMPLEMENTED
+
+> 283+ test files across all workspaces.
 
 Framework: Vitest with TypeScript. Co-located with source files as `*.test.ts`.
 
@@ -211,7 +215,9 @@ Edge cases: day 31 normalization; February end-of-month; same year/month.
 - Expired JWT -> all protected routes: 401
 - Tampered JWT signature -> all protected routes: 401
 
-## 10.2 Integration Tests (Vitest + Real PostgreSQL)
+## 10.2 Integration Tests (Vitest + Real PostgreSQL) — IMPLEMENTED
+
+> Tests use database fixtures with a dedicated test PostgreSQL instance.
 
 Uses a dedicated test PostgreSQL database (separate from dev). Schema applied via
 `prisma migrate deploy` in CI.
@@ -250,7 +256,9 @@ new/existing), 1 fee grid (simplified), 1 academic year of enrollment.
 - Load employee, note updated_at
 - Concurrent PUT with stale updated_at -> 409 OPTIMISTIC_LOCK_CONFLICT
 
-## 10.3 Excel Regression Suite (Phase 2+)
+## 10.3 Excel Regression Suite (Phase 2+) — NOT YET IMPLEMENTED
+
+> Planned for Phase 5+.
 
 Python scripts in `/tests/regression/` that call the BudFin API and compare results
 against frozen Excel workbook values.
@@ -280,7 +288,9 @@ Scope:
 - All 168 employees x 12 months of monthly_staff_costs (GOSI, Ajeer, EoS per employee)
 - All 12 months of monthly_budget_summary (revenue, costs, P&L subtotals)
 
-## 10.4 End-to-End Tests (Playwright)
+## 10.4 End-to-End Tests (Playwright) — NOT YET IMPLEMENTED
+
+> Planned for Phase 6.
 
 Browser: Chromium (default Playwright browser). Runs against staging environment.
 
@@ -291,7 +301,9 @@ Key scenarios:
 3. **Context bar persistence**: Navigate from Enrollment -> Revenue -> Staff Costs -> P&L -> verify fiscalYear and versionId remain unchanged in context bar throughout
 4. **Calculate button stale indicator**: Modify enrollment headcount -> verify revenue module shows stale indicator -> click Calculate Revenue -> verify stale indicator clears
 
-## 10.5 Performance Tests (k6)
+## 10.5 Performance Tests (k6) — NOT YET IMPLEMENTED
+
+> Planned for Phase 6.
 
 Test scenarios in `/tests/performance/`:
 

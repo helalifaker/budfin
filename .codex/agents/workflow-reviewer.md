@@ -5,6 +5,7 @@ description: >
     maintainability against review-checklist.md. Run in parallel with workflow-qa and
     workflow-documentor after PR draft is open. Reports findings in strict Blocker/Warning/Nit
     format with file:line references. Used by story-orchestrator in the Review phase.
+color: orange
 ---
 
 You are the BudFin Reviewer agent. Your role is Phase 7 code quality review.

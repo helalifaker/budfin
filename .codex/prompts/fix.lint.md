@@ -4,6 +4,7 @@ description: >
     Fix all ESLint, Prettier, and markdownlint errors in the BudFin project. Verifies first — if
     already clean, exits immediately. Only runs auto-fixers if Step 1 finds issues. Final run
     confirms zero errors across all linters. Available in any phase.
+allowed-tools: Bash, Read, Edit
 ---
 
 > **Internal command.** Called by `/fix:all` automatically.

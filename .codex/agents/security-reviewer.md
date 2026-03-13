@@ -5,6 +5,7 @@ description: >
     encryption code. Validates implementation against docs/tdd/05_security.md.
     Invoke after implementing any authentication, authorization, session,
     or encryption feature.
+color: red
 ---
 
 You are a security reviewer for the BudFin school budgeting system.

@@ -7,6 +7,8 @@
 | Date             | March 3, 2026                                                                                                            |
 | Related Sections | 01_overview.md (TC-001 through TC-005), 02_component_design.md (engine interfaces), 05_security.md (RBAC and encryption) |
 
+> **Post-TDD updates (2026-03-13):** Three new tables (`cohort_parameters`, `nationality_breakdown`, `version_capacity_config`) were added as part of the enrollment planning refactor (ADR-025, ADR-027). See Tables 13b, 13c, 13d in Section 5.1 and the Schema Evolution Notes in Section 5.5 for full details on divergences from the original spec.
+
 ---
 
 ## 5.1 Database Schema
@@ -1047,6 +1049,164 @@ CREATE INDEX dhg_requirements_calculated_by_idx ON dhg_requirements (calculated_
 -- Trigger: auto-update updated_at
 CREATE TRIGGER dhg_requirements_updated_at_trigger
   BEFORE UPDATE ON dhg_requirements
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+### Table 13b: cohort_parameters
+
+Per-version, per-grade enrollment cohort configuration. Stores the retention rate and lateral entry assumptions used by the cohort promotion algorithm to project AY2 headcounts from AY1 actuals. Added post-TDD as part of the enrollment planning refactor (ADR-025).
+
+```sql
+CREATE TABLE cohort_parameters (
+  id                  BIGSERIAL       PRIMARY KEY,
+  version_id          BIGINT          NOT NULL,
+  grade_level         VARCHAR(10)     NOT NULL,
+  retention_rate      DECIMAL(5,4)    NOT NULL DEFAULT 0.9700,
+  lateral_entry_count INTEGER         NOT NULL DEFAULT 0,
+  lateral_weight_fr   DECIMAL(5,4)    NOT NULL DEFAULT 0.0000,
+  lateral_weight_nat  DECIMAL(5,4)    NOT NULL DEFAULT 0.0000,
+  lateral_weight_aut  DECIMAL(5,4)    NOT NULL DEFAULT 0.0000,
+  created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT cohort_parameters_version_fk
+    FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
+  CONSTRAINT cohort_parameters_composite_unique
+    UNIQUE (version_id, grade_level)
+);
+
+COMMENT ON TABLE cohort_parameters IS
+  'Per-version cohort promotion parameters. The cohort algorithm uses retention_rate to attrit
+   the current grade headcount into the next grade for AY2, then adds lateral_entry_count new
+   students distributed across nationality buckets using the lateral_weight_* columns.
+   Added as part of ADR-025 enrollment planning refactor.';
+COMMENT ON COLUMN cohort_parameters.id IS 'Auto-incrementing primary key.';
+COMMENT ON COLUMN cohort_parameters.version_id IS 'FK to budget_versions. CASCADE delete.';
+COMMENT ON COLUMN cohort_parameters.grade_level IS 'Grade identifier (e.g., PS, CP, 6eme). One row per grade per version.';
+COMMENT ON COLUMN cohort_parameters.retention_rate IS 'Fraction of students retained from one academic period to the next. DECIMAL(5,4). Default 0.97 (97%).';
+COMMENT ON COLUMN cohort_parameters.lateral_entry_count IS 'Number of new lateral (mid-year) entrants for this grade. Integer >= 0.';
+COMMENT ON COLUMN cohort_parameters.lateral_weight_fr IS 'Proportion of lateral entrants assigned to the Francais nationality bucket. DECIMAL(5,4).';
+COMMENT ON COLUMN cohort_parameters.lateral_weight_nat IS 'Proportion of lateral entrants assigned to the Nationaux nationality bucket. DECIMAL(5,4).';
+COMMENT ON COLUMN cohort_parameters.lateral_weight_aut IS 'Proportion of lateral entrants assigned to the Autres nationality bucket. DECIMAL(5,4).';
+COMMENT ON COLUMN cohort_parameters.created_at IS 'Row creation timestamp.';
+COMMENT ON COLUMN cohort_parameters.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
+
+-- Index: lookup cohort parameters for a version (enrollment calculation)
+CREATE INDEX idx_cohort_parameters_version ON cohort_parameters (version_id);
+
+-- Trigger: auto-update updated_at
+CREATE TRIGGER cohort_parameters_updated_at_trigger
+  BEFORE UPDATE ON cohort_parameters
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+### Table 13c: nationality_breakdown
+
+Per-version nationality distribution weights for each grade and academic period. Drives the allocation of total headcount into nationality buckets (Francais, Nationaux, Autres) for revenue calculation. Weights can be auto-calculated from historical data or manually overridden. Added post-TDD as part of the enrollment planning refactor (ADR-025).
+
+```sql
+CREATE TABLE nationality_breakdown (
+  id              BIGSERIAL       PRIMARY KEY,
+  version_id      BIGINT          NOT NULL,
+  academic_period VARCHAR(3)      NOT NULL,
+  grade_level     VARCHAR(10)     NOT NULL,
+  nationality     VARCHAR(10)     NOT NULL,
+  weight          DECIMAL(5,4)    NOT NULL DEFAULT 0.0000,
+  headcount       INTEGER         NOT NULL DEFAULT 0,
+  is_overridden   BOOLEAN         NOT NULL DEFAULT FALSE,
+  created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT nationality_breakdown_version_fk
+    FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
+  CONSTRAINT nationality_breakdown_composite_unique
+    UNIQUE (version_id, academic_period, grade_level, nationality)
+);
+
+COMMENT ON TABLE nationality_breakdown IS
+  'Nationality distribution weights per version/grade/period. Used to split total headcount
+   into nationality buckets for fee grid lookups and revenue calculation. Weights are
+   auto-calculated from historical enrollment data unless is_overridden = TRUE.
+   Added as part of ADR-025 enrollment planning refactor.';
+COMMENT ON COLUMN nationality_breakdown.id IS 'Auto-incrementing primary key.';
+COMMENT ON COLUMN nationality_breakdown.version_id IS 'FK to budget_versions. CASCADE delete.';
+COMMENT ON COLUMN nationality_breakdown.academic_period IS 'AY1 or AY2.';
+COMMENT ON COLUMN nationality_breakdown.grade_level IS 'Grade identifier (e.g., PS, CP, 6eme).';
+COMMENT ON COLUMN nationality_breakdown.nationality IS 'Nationality code (e.g., FR, NAT, AUT). FK-like reference to nationalities.code.';
+COMMENT ON COLUMN nationality_breakdown.weight IS 'Proportion of total headcount for this nationality. DECIMAL(5,4). Weights for a given (version, period, grade) should sum to 1.0000.';
+COMMENT ON COLUMN nationality_breakdown.headcount IS 'Computed headcount = ROUND(total_headcount * weight). Integer.';
+COMMENT ON COLUMN nationality_breakdown.is_overridden IS 'TRUE if the weight was manually set by the user (overriding the auto-calculated value from historical data). FALSE if auto-calculated.';
+COMMENT ON COLUMN nationality_breakdown.created_at IS 'Row creation timestamp.';
+COMMENT ON COLUMN nationality_breakdown.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
+
+-- Index: lookup breakdowns for a version and period (enrollment calculation)
+CREATE INDEX idx_nationality_breakdown_version_period ON nationality_breakdown (version_id, academic_period);
+
+-- Trigger: auto-update updated_at
+CREATE TRIGGER nationality_breakdown_updated_at_trigger
+  BEFORE UPDATE ON nationality_breakdown
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+### Table 13d: version_capacity_config
+
+Per-version capacity configuration overrides for grade-level class sizes and thresholds. The base capacity parameters live in `grade_levels` (formerly `class_capacity_config`), but each budget version can override them to model different capacity scenarios. Added for enrollment planning flexibility (ADR-027).
+
+```sql
+CREATE TABLE version_capacity_config (
+  id              BIGSERIAL       PRIMARY KEY,
+  version_id      BIGINT          NOT NULL,
+  grade_level     VARCHAR(10)     NOT NULL,
+  max_class_size  INTEGER         NOT NULL,
+  plancher_pct    DECIMAL(5,4)    NOT NULL,
+  cible_pct       DECIMAL(5,4)    NOT NULL,
+  plafond_pct     DECIMAL(5,4)    NOT NULL,
+  created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT version_capacity_config_version_fk
+    FOREIGN KEY (version_id) REFERENCES budget_versions(id) ON DELETE CASCADE,
+  CONSTRAINT version_capacity_config_composite_unique
+    UNIQUE (version_id, grade_level),
+  CONSTRAINT version_capacity_size_check
+    CHECK (max_class_size > 0),
+  CONSTRAINT version_capacity_plancher_check
+    CHECK (plancher_pct >= 0 AND plancher_pct <= 1.0000),
+  CONSTRAINT version_capacity_cible_check
+    CHECK (cible_pct >= 0 AND cible_pct <= 1.0000),
+  CONSTRAINT version_capacity_plafond_check
+    CHECK (plafond_pct >= 0 AND plafond_pct <= 1.0000),
+  CONSTRAINT version_capacity_pct_ordering_check
+    CHECK (plancher_pct < cible_pct AND cible_pct <= plafond_pct)
+);
+
+COMMENT ON TABLE version_capacity_config IS
+  'Per-version grade capacity overrides. Allows each budget version to model different class
+   size and threshold scenarios without modifying the base grade_levels table. If a row exists
+   for a (version_id, grade_level), it takes precedence over grade_levels defaults.
+   Added for enrollment planning flexibility (ADR-027).';
+COMMENT ON COLUMN version_capacity_config.id IS 'Auto-incrementing primary key.';
+COMMENT ON COLUMN version_capacity_config.version_id IS 'FK to budget_versions. CASCADE delete.';
+COMMENT ON COLUMN version_capacity_config.grade_level IS 'Grade identifier (e.g., PS, CP, 6eme). One override row per grade per version.';
+COMMENT ON COLUMN version_capacity_config.max_class_size IS 'Maximum students per section for this version. Must be > 0.';
+COMMENT ON COLUMN version_capacity_config.plancher_pct IS 'Floor threshold override. DECIMAL(5,4).';
+COMMENT ON COLUMN version_capacity_config.cible_pct IS 'Target threshold override. DECIMAL(5,4).';
+COMMENT ON COLUMN version_capacity_config.plafond_pct IS 'Ceiling threshold override. DECIMAL(5,4).';
+COMMENT ON COLUMN version_capacity_config.created_at IS 'Row creation timestamp.';
+COMMENT ON COLUMN version_capacity_config.updated_at IS 'Last modification timestamp. Auto-updated by trigger.';
+
+-- Index: lookup capacity overrides for a version (enrollment/DHG calculation)
+CREATE INDEX idx_version_capacity_config_version ON version_capacity_config (version_id);
+
+-- Trigger: auto-update updated_at
+CREATE TRIGGER version_capacity_config_updated_at_trigger
+  BEFORE UPDATE ON version_capacity_config
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
@@ -2148,3 +2308,79 @@ Automated as a CI pipeline step in Phase 6. All validations must pass before mig
 - **Idempotency:** All scripts use `INSERT ... ON CONFLICT DO UPDATE`. Safe to re-run without creating duplicates.
 - **Encryption:** `migrate_staff_costs.py` encrypts salary fields using `pgp_sym_encrypt()` via a raw SQL `INSERT` statement with the encryption key read from the file path specified in the `SALARY_ENCRYPTION_KEY` environment variable.
 - **Logging:** Each migration script writes a structured JSON log with row counts, checksums, duration, and any warnings or skipped rows.
+
+---
+
+## 5.5 Schema Evolution Notes
+
+> **Last updated:** 2026-03-13
+
+This section documents known divergences between the original TDD schema (Section 5.1) and the current Prisma schema at `apps/api/prisma/schema.prisma`. The TDD was written as a design specification; the Prisma schema is the source of truth for the production database.
+
+### Post-TDD Tables Added
+
+Three tables were added after the original TDD was written, as part of the enrollment planning refactor:
+
+| Table                     | Added In | TDD Section | Purpose                                                               |
+| ------------------------- | -------- | ----------- | --------------------------------------------------------------------- |
+| `cohort_parameters`       | ADR-025  | Table 13b   | Per-version cohort promotion config (retention rate, lateral entries) |
+| `nationality_breakdown`   | ADR-025  | Table 13c   | Nationality distribution weights per version/grade/period             |
+| `version_capacity_config` | ADR-027  | Table 13d   | Per-version capacity threshold overrides                              |
+
+These tables are documented inline in Section 5.1 (Tables 13b, 13c, 13d).
+
+### Field-Level Divergences in Existing Tables
+
+The following tables have known differences between the TDD DDL and the current Prisma schema. The Prisma schema is authoritative.
+
+**Employee (`employees`):**
+
+- `augmentation` is now an encrypted field (Prisma `Bytes` type, stored via `pgp_sym_encrypt`) -- the original TDD did not include this field.
+- `augmentationEffectiveDate` (`augmentation_effective_date DATE`) added -- not in the original TDD.
+- `is_teaching` and `notes` fields described in some early TDD drafts were ultimately implemented (`is_teaching` exists in Prisma; `notes` was not implemented).
+
+**EosProvision (`eos_provisions`):**
+
+- Simplified from the TDD design. Uses `eosAnnual` (`eos_annual`) and `eosMonthlyAccrual` (`eos_monthly_accrual`) instead of the TDD's `opening_provision`, `annual_fy_charge`, and `provision_amount` columns.
+- Added `eosBase` (`eos_base`) and `asOfDate` (`as_of_date`) not in the original TDD.
+
+**ActualsImportLog (`actuals_import_log`):**
+
+- Simplified from the TDD design. The TDD columns `academic_year_label`, `target_fiscal_year`, `target_period`, and `validation_notes` were not implemented.
+- Uses `module` and `sourceFile` (`source_file`) instead.
+
+**DhgGrilleConfig (`dhg_grille_config`):**
+
+- `band` field from the TDD was not implemented; grade-to-band mapping is handled via `grade_levels.band`.
+- `created_by` / `updated_by` audit columns from the TDD were not implemented.
+
+**GradeLevel (`grade_levels`):**
+
+- Added `defaultAy2Intake` (`default_ay2_intake`) -- not in the original TDD. Used by the cohort algorithm for PS intake projections.
+- Added `displayOrder` (`display_order`) -- not in the original TDD. Controls UI sort order.
+- Added `version` -- optimistic concurrency field not in the original TDD.
+- Note: The TDD documented this as `class_capacity_config` (Table 8). In the Prisma schema, capacity fields are on `grade_levels` with per-version overrides in `version_capacity_config`.
+
+**BudgetVersion (`budget_versions`):**
+
+- Added `staleModules` (`stale_modules`), `rolloverThreshold` (`rollover_threshold`), `cappedRetention` (`capped_retention`), `retentionRecentWeight` (`retention_recent_weight`), `historicalTargetRecentWeight` (`historical_target_recent_weight`) -- these fields exist in the Prisma schema but were not in the original TDD. They support the cohort promotion algorithm (ADR-025).
+- Added `lastCalculatedAt` (`last_calculated_at`) -- not in the original TDD.
+
+**AuditEntry (`audit_entries`):**
+
+- `operation` uses `VARCHAR(50)` (Prisma `String`) instead of the TDD's PostgreSQL `ENUM audit_operation`. Enum was avoided for flexibility with new operation types.
+- `occurred_at` from the TDD was renamed to `createdAt` (`created_at`) in the Prisma schema.
+- `ip_address` uses `VARCHAR(45)` (Prisma `String`) instead of the TDD's PostgreSQL `INET` type. VARCHAR was chosen for Prisma compatibility.
+- Added `userEmail` (`user_email`), `sessionId` (`session_id`), and `auditNote` (`audit_note`) -- not in the original TDD.
+
+**DhgRequirement (`dhg_requirements`):**
+
+- Added `headcount`, `maxClassSize` (`max_class_size`), `utilization`, `alert`, `recruitmentSlots` (`recruitment_slots`) -- not in the original TDD. These denormalized fields support the enrollment planning grid UI.
+- Renamed `total_dhg_hours_per_week` to `totalWeeklyHours` (`total_weekly_hours`) and added `totalAnnualHours` (`total_annual_hours`).
+- Renamed `fte_required` to `fte` and removed `ors_hours`, `calculated_by`, `updated_by`.
+
+**CalculationAuditLog (`calculation_audit_log`):**
+
+- Renamed `input_snapshot` to `inputSummary` (`input_summary`) and `error_details` was removed.
+- Added `triggeredBy` (`triggered_by`) replacing `user_id`.
+- Added `startedAt` (`started_at`), `completedAt` (`completed_at`), `durationMs` (`duration_ms`) replacing single `created_at` timestamp.

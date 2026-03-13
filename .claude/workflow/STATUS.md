@@ -1,10 +1,10 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 12 — Data Migration (#10)
-**Current Story**: All 11 stories implemented — PR review phase
-**Last updated**: 2026-03-09
-**Note**: Epic 12 moved ahead of Epics 5, 6, 8, 9 to allow real-data testing of completed features (Enrollment, Revenue, Staffing, Staff Costs). P&L migration data deferred until Epic 5 is done.
+**Phase**: 6 — IMPLEMENT
+**Current Epic**: Epic 16 — Revenue Workspace Redesign (#186)
+**Current Story**: Story 194 — Revenue Page Assembly (#194)
+**Last updated**: 2026-03-14
+**Note**: Epic 16 implementation completed locally with green targeted tests, lint, and typecheck. PR/review drive is next. Epics 5, 6, 8, 9 remain in backlog.
 
 ## Phase History
 
@@ -52,13 +52,18 @@
 | 5 — TDD RED (Epic 12) | ✅ Complete | 2026-03-09 |
 | 6 — IMPLEMENT (Epic 12) | ✅ Complete | 2026-03-09 |
 | 7 — REVIEW (Epic 12) | ✅ Complete | 2026-03-09 |
-| 7 — REVIEW (Epic 1) | In Progress | 2026-03-12 |
+| 7 — REVIEW (Epic 1 — Enrollment Redesign) | ✅ Complete | 2026-03-12 |
+| 7 — REVIEW (Docs Reorganization) | ✅ Complete | 2026-03-13 |
+| 7 — REVIEW (Documentation Alignment) | ✅ Complete | 2026-03-14 |
+| 4 — SPECIFY (Epic 16) | ✅ Complete | 2026-03-14 |
+| 5 — TDD RED (Epic 16) | ✅ Complete | 2026-03-14 |
+| 6 — IMPLEMENT (Epic 16) | In Progress | 2026-03-14 |
 
 ## Feature Progress
 
 | Epic # | Feature | Phase | Status |
 | -------- | --------- | ------- | -------- |
-| 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07; enrollment planning workspace redesign PR #184 in review — 2026-03-12 |
+| 1 | Enrollment & Capacity | DONE | All 13 stories complete (13/13), merged PR #93 + remediation PRs #94, #96 — 2026-03-07; enrollment planning workspace redesign merged PRs #184, #185 — 2026-03-12 |
 | 2 | Revenue | DONE | All 12 stories complete (12/12), merged PR #113 — 2026-03-07 |
 | 3 | Staffing (DHG) | DONE | All 18 stories complete (18/18), merged PR #156 — 2026-03-09 |
 | 4 | Staff Costs | DONE | All 13 stories complete (13/13) — 2026-03-09 |
@@ -72,6 +77,7 @@
 | 12 | Data Migration | DONE | All 11 stories complete (11/11), PR #183 — 2026-03-09 |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 | 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
+| 16 | Revenue Workspace Redesign | 6 | Epic #186 local implementation complete, review + PR drive next — 2026-03-14 |
 
 ## Update Instructions
 

@@ -370,6 +370,31 @@ describe('PUT /cohort-parameters', () => {
 		expect(res.json().code).toBe('LATERAL_WEIGHT_SUM_INVALID');
 	});
 
+	it('allows positive lateralEntryCount when all lateral weights are zero (pure manual adjustment)', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/cohort-parameters`,
+			headers: authHeader(token),
+			payload: {
+				entries: [
+					{
+						gradeLevel: 'GS',
+						retentionRate: 0.97,
+						lateralEntryCount: 7,
+						lateralWeightFr: 0,
+						lateralWeightNat: 0,
+						lateralWeightAut: 0,
+					},
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(200);
+	});
+
 	it('successfully upserts parameters and adds stale modules', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
 

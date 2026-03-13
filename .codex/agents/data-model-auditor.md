@@ -4,6 +4,7 @@ description: >
     BudFin 360 Audit Layer 3: Data Model Alignment. Compares the TDD data architecture spec and
     per-epic spec data models against the actual Prisma schema. Checks table/model coverage, column
     types, indexes, relations, enums, and cascades. Reports mismatches with file:line references.
+color: green
 ---
 
 You are the BudFin Data Model Auditor. Your role is Layer 3 of the `/audit:360` command.

@@ -6,6 +6,7 @@ description: >
     Self-healing with auto-fix, stuck detection, and PR conversation resolution.
     Usage - /workflow:run [epic-issue-number]
 argument-hint: '[epic-issue-number]'
+allowed-tools: Bash, Read, Edit, Agent, TeamCreate, TaskCreate, TaskUpdate, TaskList, SendMessage, Skill
 ---
 
 Parse the argument:
@@ -114,11 +115,11 @@ gh pr checks $PR_NUMBER --watch
 
 ### Step 7b: REVIEW AGENTS (if CI green)
 
-Spawn 3 agents in parallel, loading each repo-local brief first:
+Spawn 3 agents in parallel:
 
-1. **workflow-reviewer** -- `.codex/agents/workflow-reviewer.md` -- code quality, security, financial precision
-2. **workflow-qa** -- `.codex/agents/workflow-qa.md` -- AC coverage, edge cases, coverage >= 80%
-3. **workflow-documentor** -- `.codex/agents/workflow-documentor.md` -- CHANGELOG, docs, traceability
+1. **workflow-reviewer** -- code quality, security, financial precision
+2. **workflow-qa** -- AC coverage, edge cases, coverage >= 80%
+3. **workflow-documentor** -- CHANGELOG, docs, traceability
 
 Provide each agent with PR diff, story number, Epic number, changed files.
 
@@ -147,10 +148,10 @@ gh pr diff $PR_NUMBER --name-only | grep '\.tsx$'
 If frontend changes found:
 
 1. Start dev server: `pnpm dev` (wait for localhost:3000)
-2. Navigate to affected routes via Chrome automation (`Playwright browser navigation`)
-3. Take screenshots of key components (`Playwright screenshots and interaction`)
-4. Read accessibility tree (`Playwright accessibility snapshot`)
-5. Test keyboard navigation (Tab, Enter, Escape via `Playwright screenshots and interaction`)
+2. Navigate to affected routes via Chrome automation (`mcp__claude-in-chrome__navigate`)
+3. Take screenshots of key components (`mcp__claude-in-chrome__computer`)
+4. Read accessibility tree (`mcp__claude-in-chrome__read_page`)
+5. Test keyboard navigation (Tab, Enter, Escape via `mcp__claude-in-chrome__computer`)
 6. Compare against UI/UX spec (`docs/ui-ux-spec/NN-module.md`):
     - Correct shell (PlanningShell vs ManagementShell)
     - CSS tokens used (not hardcoded colors)

@@ -45,6 +45,7 @@ export function usePutNationalityBreakdown(versionId: number | null) {
 			queryClient.invalidateQueries({
 				queryKey: ['enrollment', 'nationality-breakdown', versionId],
 			});
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
 		onError: (err) =>
@@ -66,6 +67,7 @@ export function useResetNationalityBreakdown(versionId: number | null) {
 			queryClient.invalidateQueries({
 				queryKey: ['enrollment', 'nationality-breakdown', versionId],
 			});
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
 		onError: (err) =>

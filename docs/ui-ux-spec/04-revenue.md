@@ -2,11 +2,16 @@
 
 > **Document Version:** 1.0
 > **Date:** March 4, 2026
-> **Status:** Draft
+> **Status:** Superseded
 > **Module Route:** `/planning/revenue`
 > **Sidebar Location:** Planning > Revenue
 > **Personas:** Budget Analyst (edit), Budget Owner (view + lifecycle), Viewer (read-only)
 > **PRD Coverage:** FR-REV-001 through FR-REV-021
+> **Superseded by:** Epic 16 — Revenue Workspace Redesign
+> (`docs/specs/epic-16/revenue-workspace-redesign.md`). The tab-based layout (Fees/Discounts/
+> Forecast tabs) described in this document is replaced by a single-viewport forecast grid
+> workspace with a fullscreen settings dialog, right panel inspector, and non-linear setup
+> checklist.
 
 ---
 

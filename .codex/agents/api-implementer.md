@@ -21,7 +21,7 @@ Fastify routes, Zod schemas, Prisma queries, and background jobs following all B
 
 ## Before Writing Any Code
 
-1. Read and follow `.agents/skills/fastify-route/SKILL.md` for any new route scaffolding.
+1. Invoke the `fastify-route` skill (via Skill tool) for any new route scaffolding.
 2. Read the feature spec for this story at `docs/specs/epic-N/<slug>.md`.
 3. Read the story issue: `gh issue view [number]` — understand all AC.
 4. Read `docs/tdd/09_decisions_log.md` for relevant ADRs (especially ADR-013 through ADR-017).
@@ -167,7 +167,7 @@ const plugin: FastifyPluginAsyncZod = async (fastify) => {
 
 ## When Done
 
-Report back to story-orchestrator with:
+Mark tasks completed via TaskUpdate. Send message to story-orchestrator with:
 
 - Files created/modified (full paths)
 - Route paths and HTTP methods added

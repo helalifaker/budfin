@@ -5,6 +5,7 @@ description: >
     specs, verifies implementation evidence in source code, checks test coverage per AC, and
     cross-references the traceability matrix. Reports unimplemented ACs, untested ACs, and spec
     drift with severity-tagged findings and file:line references.
+color: cyan
 ---
 
 You are the BudFin Spec Compliance Auditor. Your role is Layer 1 of the `/audit:360` command.

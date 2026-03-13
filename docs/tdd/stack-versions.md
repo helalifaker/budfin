@@ -1,7 +1,7 @@
 # BudFin — Pinned Stack Version Manifest
 
-**Document Version:** 1.2
-**Date:** March 4, 2026
+**Document Version:** 1.3
+**Date:** March 13, 2026
 **Status:** Adopted — supersedes TDD v1.0 version table
 
 This file is the canonical source of truth for all package versions used in BudFin. All `package.json` files, Docker images, and CI configuration must align with the versions listed here.
@@ -26,7 +26,9 @@ This file is the canonical source of truth for all package versions used in BudF
 | @fastify/jwt              | ^9.0.0  | JWT plugin for Fastify 5                                                                                  |
 | @fastify/cookie           | ^11.0.0 | Cookie plugin for Fastify 5                                                                               |
 | @fastify/cors             | ^10.0.0 | CORS plugin for Fastify 5                                                                                 |
+| @fastify/multipart        | ^9.4.0  | Multipart form data handling for file uploads                                                             |
 | @fastify/rate-limit       | ^10.0.0 | Rate limiting for Fastify 5                                                                               |
+| fastify-plugin            | ^5.0.0  | Fastify plugin utility for encapsulation control                                                          |
 | fastify-type-provider-zod | ^6.0.0  | Zod integration for Fastify schema validation                                                             |
 | prisma                    | ^6.0.0  | **Breaking from v5:** `Buffer` → `Uint8Array`; `NotFoundError` removed; implicit m-n `_id` fields renamed |
 | @prisma/client            | ^6.0.0  | Generated Prisma client                                                                                   |
@@ -39,6 +41,7 @@ This file is the canonical source of truth for all package versions used in BudF
 | exceljs                   | ^4.4.0  | Server-side xlsx; aging (2yr no update) but stable; monitor for security                                  |
 | @react-pdf/renderer       | ^4.3.0  | Server-side PDF generation; replaces Puppeteer (see ADR-014); no Chrome dependency, < 50 MB RAM per job   |
 | fast-csv                  | ^5.0.0  | CSV import/export                                                                                         |
+| papaparse                 | ^5.5.3  | CSV parsing for enrollment/staff data import                                                              |
 | pg-boss                   | ^10.0.0 | PostgreSQL-backed job queue (no Redis dependency)                                                         |
 | date-fns                  | ^4.0.0  | Timezone support via `@date-fns/tz`; critical for AST (UTC+3) handling                                    |
 | @date-fns/tz              | ^1.0.0  | Arabia Standard Time (UTC+3) support                                                                      |
@@ -57,26 +60,30 @@ This file is the canonical source of truth for all package versions used in BudF
 
 ## Frontend (`apps/web`)
 
-| Package                  | Version  | Notes                                                                           |
-| ------------------------ | -------- | ------------------------------------------------------------------------------- |
-| react                    | ^19.0.0  | Stable since Dec 2024; new hooks API, Actions, Server Components support        |
-| react-dom                | ^19.0.0  | React DOM renderer                                                              |
-| react-hook-form          | ^7.0.0   | Performant form state; pairs with Zod                                           |
-| @hookform/resolvers      | ^5.0.0   | Zod resolver for React Hook Form; **v5 required for Zod 4** (v3 is Zod 3 only)  |
-| zod                      | ^4.0.0   | Shared with backend; form + API validation                                      |
-| @tanstack/react-table    | ^8.0.0   | **Replaces AG Grid Community**; headless table logic                            |
-| @tanstack/react-query    | ^5.0.0   | Server-state management; caching, background sync, pagination                   |
-| recharts                 | ^3.0.0   | Charts; React 19 compatible                                                     |
-| zustand                  | ^5.0.0   | Client-side UI state; minimal API; React 19 compatible                          |
-| decimal.js               | ^10.6.0  | Presentation-layer rounding only (TC-004); no calculations                      |
-| date-fns                 | ^4.0.0   | Date formatting and parsing                                                     |
-| @date-fns/tz             | ^1.0.0   | AST (UTC+3) display formatting                                                  |
-| radix-ui                 | ^1.4.0   | Unified `radix-ui` package (Feb 2026); headless accessible primitives (WCAG AA) |
-| class-variance-authority | ^0.7.0   | Variant-based class generation for shadcn/ui components                         |
-| clsx                     | ^2.1.0   | Conditional className utility                                                   |
-| tailwind-merge           | ^3.5.0   | Merge Tailwind classes without conflicts                                        |
-| lucide-react             | ^0.576.0 | Icon library used by shadcn/ui                                                  |
-| react-router             | ^7.13.0  | Client-side routing for SPA                                                     |
+| Package                                | Version  | Notes                                                                           |
+| -------------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| react                                  | ^19.0.0  | Stable since Dec 2024; new hooks API, Actions, Server Components support        |
+| react-dom                              | ^19.0.0  | React DOM renderer                                                              |
+| react-hook-form                        | ^7.0.0   | Performant form state; pairs with Zod                                           |
+| @hookform/resolvers                    | ^5.0.0   | Zod resolver for React Hook Form; **v5 required for Zod 4** (v3 is Zod 3 only)  |
+| zod                                    | ^4.0.0   | Shared with backend; form + API validation                                      |
+| @tanstack/react-table                  | ^8.0.0   | **Replaces AG Grid Community**; headless table logic                            |
+| @tanstack/react-query                  | ^5.0.0   | Server-state management; caching, background sync, pagination                   |
+| recharts                               | ^3.0.0   | Charts; React 19 compatible                                                     |
+| zustand                                | ^5.0.0   | Client-side UI state; minimal API; React 19 compatible                          |
+| decimal.js                             | ^10.6.0  | Presentation-layer rounding only (TC-004); no calculations                      |
+| date-fns                               | ^4.0.0   | Date formatting and parsing                                                     |
+| @date-fns/tz                           | ^1.0.0   | AST (UTC+3) display formatting                                                  |
+| @fontsource-variable/dm-sans           | ^5.2.8   | DM Sans variable font                                                           |
+| @fontsource-variable/plus-jakarta-sans | ^5.2.8   | Plus Jakarta Sans variable font                                                 |
+| @fontsource/geist-mono                 | ^5.2.7   | Geist Mono font for code/monospace                                              |
+| radix-ui                               | ^1.4.0   | Unified `radix-ui` package (Feb 2026); headless accessible primitives (WCAG AA) |
+| @radix-ui/react-tabs                   | ^1.1.13  | Radix UI tabs primitive (explicit version alongside unified radix-ui package)   |
+| class-variance-authority               | ^0.7.0   | Variant-based class generation for shadcn/ui components                         |
+| clsx                                   | ^2.1.0   | Conditional className utility                                                   |
+| tailwind-merge                         | ^3.5.0   | Merge Tailwind classes without conflicts                                        |
+| lucide-react                           | ^0.576.0 | Icon library used by shadcn/ui                                                  |
+| react-router                           | ^7.13.0  | Client-side routing for SPA                                                     |
 
 ### Frontend DevDependencies
 

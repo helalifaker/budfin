@@ -5,6 +5,7 @@ description: >
     the parent Epic. Derives dependency-ordered story breakdown via workflow-orchestrator agent.
     Usage - /plan:stories [epic-issue-number] [--single]
 argument-hint: '[epic-issue-number] [--single]'
+allowed-tools: Bash, Read, Agent
 ---
 
 > **Internal command.** Called by `/workflow:run` automatically.
@@ -57,8 +58,7 @@ Store these values for use in Step 4.
 
 ## Step 3: Derive Story Breakdown (if not --single)
 
-Load `.codex/agents/workflow-orchestrator.md` as the planning brief, then spawn a Codex
-sub-agent with the spec file and this instruction:
+Use the Agent tool to launch `workflow-orchestrator` with the spec file and this instruction:
 
 ```
 Analyze the feature spec at [spec-path]. Return:

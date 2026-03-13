@@ -5,6 +5,7 @@ description: >
     optional symptom for root cause analysis first. Supports escape-hatch flags for individual fixers.
     Final verification confirms pnpm test && pnpm typecheck both pass. Available in any phase.
 argument-hint: '["symptom"] [--lint|--types|--tests|--security|--precision]'
+allowed-tools: Bash, Read, Edit, Agent, Skill
 ---
 
 Parse the argument:
@@ -80,8 +81,7 @@ Must complete with all tests passing before proceeding.
 
 Run the `fix:security` workflow:
 
-1. Spawn a Codex sub-agent on changed files
-    - Load `.codex/agents/security-reviewer.md` as the review brief
+1. Use Agent to launch `security-reviewer` on changed files
 2. Fix all BLOCKING findings (JWT, RBAC, SQL injection, audit log)
 3. Fix all WARNING findings
 4. Re-run until `VERDICT: PASS`
@@ -92,8 +92,7 @@ Record results: `Security: N blockers fixed, N warnings fixed`
 
 Run the `fix:precision` workflow:
 
-1. Spawn a Codex sub-agent on changed files
-    - Load `.codex/agents/financial-precision-reviewer.md` as the review brief
+1. Use Agent to launch `financial-precision-reviewer` on changed files
 2. Fix all BLOCKING violations (TC-001 native arithmetic, JSON serialization, Uint8Array)
 3. Fix all WARNING violations (rounding consistency)
 4. Re-run until `VERDICT: PASS`

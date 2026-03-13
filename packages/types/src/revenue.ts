@@ -19,6 +19,10 @@ export type RevenueExecutiveCategory =
 	| 'ACTIVITIES_SERVICES'
 	| 'EXAMINATION_FEES';
 
+export type RevenueViewMode = 'category' | 'grade' | 'nationality' | 'tariff';
+
+export type RevenueSettingsTab = 'feeGrid' | 'tariffAssignment' | 'discounts' | 'otherRevenue';
+
 export interface FeeGridEntry {
 	academicPeriod: 'AY1' | 'AY2';
 	gradeLevel: string;
@@ -34,7 +38,6 @@ export interface FeeGridEntry {
 
 export interface DiscountEntry {
 	tariff: 'RP' | 'R3+';
-	nationality: 'Francais' | 'Nationaux' | 'Autres' | null;
 	discountRate: string;
 }
 
@@ -94,6 +97,29 @@ export interface RevenueCompositionItem {
 	percentageOfRevenue: string;
 }
 
+export interface RevenueReadinessAreaStatus {
+	ready: boolean;
+}
+
+export interface FeeGridReadiness extends RevenueReadinessAreaStatus {
+	total: number;
+	complete: number;
+}
+
+export interface TariffAssignmentReadiness extends RevenueReadinessAreaStatus {
+	reconciled: boolean;
+}
+
+export interface DiscountReadiness extends RevenueReadinessAreaStatus {
+	rpRate: string | null;
+	r3Rate: string | null;
+}
+
+export interface OtherRevenueReadiness extends RevenueReadinessAreaStatus {
+	total: number;
+	configured: number;
+}
+
 export interface RevenueExecutiveSummary {
 	rows: RevenueMatrixRow[];
 	composition: RevenueCompositionItem[];
@@ -101,6 +127,16 @@ export interface RevenueExecutiveSummary {
 		month: number;
 		amount: string;
 	}>;
+}
+
+export interface RevenueReadinessResponse {
+	feeGrid: FeeGridReadiness;
+	tariffAssignment: TariffAssignmentReadiness;
+	discounts: DiscountReadiness;
+	otherRevenue: OtherRevenueReadiness;
+	overallReady: boolean;
+	readyCount: number;
+	totalCount: 4;
 }
 
 export interface RevenueResultsResponse {

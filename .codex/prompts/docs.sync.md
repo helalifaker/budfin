@@ -7,9 +7,10 @@ description: >-
     needed. Use `--audit` for a read-only pass or omit it to apply only safe
     cleanup changes. Usage - /docs:sync [--audit] [--deep] [path]
 argument-hint: '[--audit] [--deep] [path]'
+allowed-tools: Read, Edit, Bash, Grep, Glob
 ---
 
-Load `.agents/skills/docs-governance/SKILL.md` and follow it.
+Load `.claude/skills/docs-governance/SKILL.md` and follow it.
 
 Parse the arguments:
 
@@ -24,7 +25,7 @@ If no path is provided, use `docs`.
 Run:
 
 ```bash
-python3 .agents/skills/docs-governance/scripts/inventory_docs.py --root . --scope [path]
+python3 .claude/skills/docs-governance/scripts/inventory_docs.py --root . --scope [path]
 ```
 
 If `--audit` is present, stop after reporting findings and recommendations.
@@ -35,7 +36,7 @@ Read:
 
 1. `docs/README.md`
 2. `docs/tdd/00_document_governance.md`
-3. `.agents/skills/docs-governance/references/doc-taxonomy.md`
+3. `.claude/skills/docs-governance/references/doc-taxonomy.md`
 
 Then read only the candidate files needed to confirm:
 

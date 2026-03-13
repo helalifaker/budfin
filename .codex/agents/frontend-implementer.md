@@ -256,7 +256,7 @@ Before marking implementation complete, perform visual verification:
 
 ## When Done
 
-Report back to story-orchestrator with:
+Mark tasks completed via TaskUpdate. Send message to story-orchestrator with:
 
 - Files created/modified (full paths)
 - Components and hooks created

@@ -88,7 +88,6 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				discountPolicies: discountPolicies.map(
 					(p): DiscountPolicyInput => ({
 						tariff: p.tariff,
-						nationality: p.nationality,
 						discountRate: new Decimal(p.discountRate.toString()).toFixed(6),
 					})
 				),
@@ -176,6 +175,8 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				// Remove REVENUE from staleModules
 				const currentStale = new Set(version.staleModules);
 				currentStale.delete('REVENUE');
+				currentStale.add('STAFFING');
+				currentStale.add('PNL');
 				await txPrisma.budgetVersion.update({
 					where: { id: versionId },
 					data: { staleModules: [...currentStale] },

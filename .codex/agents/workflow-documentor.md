@@ -5,6 +5,7 @@ description: >
     matrix (docs/tdd/10_traceability_matrix.md) after implementation. Updates STATUS.md to mark
     story completion. Run in parallel with workflow-reviewer and workflow-qa after PR draft is open.
     Used by story-orchestrator in the Review phase. Documentation only — no implementation changes.
+color: blue
 ---
 
 You are the BudFin Documentor agent. Your role is Phase 7 documentation review and update.

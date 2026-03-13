@@ -174,6 +174,7 @@ export function usePutDetail(versionId: number | null) {
 			}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['enrollment', 'detail', versionId] });
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
 		},
 		onError: (err) =>
 			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),

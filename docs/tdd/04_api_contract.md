@@ -1,7 +1,7 @@
 # Section 6: API & Integration Design
 
 > BudFin Technical Design Document -- Section 6 of 12
-> Last updated: 2026-03-03
+> Last updated: 2026-03-13
 
 | Field  | Value    |
 | ------ | -------- |
@@ -958,6 +958,33 @@ Override nationality breakdown for one or more grades. Validates that nationalit
 
 ---
 
+#### DELETE /api/v1/versions/:versionId/enrollment/nationality-breakdown/:gradeLevel
+
+Reset overridden nationality breakdown rows for a specific grade level. Deletes all rows with `isOverridden: true` for the AY2 period of the specified grade, then marks dependent modules (ENROLLMENT, REVENUE, DHG, STAFFING, PNL) as stale.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Path params:** `versionId` (integer, required), `gradeLevel` (string, grade code).
+
+**Response 200:**
+
+```json
+{
+    "deleted": "integer (number of rows removed)",
+    "staleModules": ["ENROLLMENT", "REVENUE", "DHG", "STAFFING", "PNL"]
+}
+```
+
+**Error responses:**
+
+| Status | Code              | Condition                                                |
+| ------ | ----------------- | -------------------------------------------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist                                   |
+| 409    | VERSION_LOCKED    | Version is not in Draft status                           |
+| 409    | IMPORTED_VERSION  | Cannot modify nationality breakdown on imported versions |
+
+---
+
 #### GET /api/v1/versions/:versionId/enrollment/planning-rules
 
 Retrieve the version-scoped enrollment planning rules used by the cohort-progression engine (ADR-027, PR #184).
@@ -1110,7 +1137,6 @@ Field constraints: `plancherPct` <= `ciblePct` <= `plafondPct`; `maxClassSize` â
 
 ---
 
-
 #### GET /api/v1/versions/:versionId/enrollment/capacity-results
 
 Retrieve the persisted capacity calculation results for a version, including per-grade section counts, utilization percentages, and traffic-light alerts. Returns the timestamp of the last successful enrollment calculation.
@@ -1149,6 +1175,168 @@ Retrieve the persisted capacity calculation results for a version, including per
 | Status | Code              | Condition              |
 | ------ | ----------------- | ---------------------- |
 | 404    | VERSION_NOT_FOUND | Version does not exist |
+
+---
+
+#### GET /api/v1/versions/:versionId/enrollment/setup-baseline
+
+Retrieve the baseline snapshot for the enrollment setup wizard. Returns grade-level entries with baseline headcounts from the previous fiscal year's best available Actual version (preferring Locked status, then most recently updated). Includes band-level totals.
+
+**RBAC:** All authenticated.
+
+**Path params:** `versionId` (integer, required).
+
+**Response 200:**
+
+```json
+{
+    "available": "boolean (true if a source version was found)",
+    "sourceVersion": {
+        "id": "integer",
+        "name": "string",
+        "fiscalYear": "integer",
+        "status": "string",
+        "updatedAt": "string (ISO 8601)"
+    },
+    "entries": [
+        {
+            "gradeLevel": "string (grade code)",
+            "gradeName": "string",
+            "band": "string",
+            "displayOrder": "integer",
+            "baselineHeadcount": "integer"
+        }
+    ],
+    "totals": {
+        "grandTotal": "integer",
+        "bands": [{ "band": "string", "total": "integer" }]
+    }
+}
+```
+
+`sourceVersion` is `null` when no prior Actual version exists for the previous fiscal year.
+
+**Error responses:**
+
+| Status | Code              | Condition              |
+| ------ | ----------------- | ---------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist |
+
+---
+
+#### POST /api/v1/versions/:versionId/enrollment/setup-import/validate
+
+Validate an uploaded enrollment import file (xlsx or csv) without writing any data. Returns a row-by-row preview with variance analysis against an optional baseline.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Path params:** `versionId` (integer, required).
+
+**Request:** `multipart/form-data` with:
+
+- `file` (required): xlsx or csv file (max 5 MB). Must contain a grade column and a headcount column using supported header aliases (`grade`/`gradeLevel`/`levelCode` and `headcount`/`studentCount`/`ay1Headcount`).
+- `baseline` (optional): JSON string array of `{gradeLevel, headcount}` entries for variance calculation.
+
+**Response 200:**
+
+```json
+{
+    "totalRows": "integer",
+    "validRows": "integer",
+    "errors": [
+        {
+            "row": "integer (1-based row number in file)",
+            "field": "string (column name)",
+            "message": "string"
+        }
+    ],
+    "preview": [
+        {
+            "gradeLevel": "string",
+            "gradeName": "string",
+            "band": "string",
+            "displayOrder": "integer",
+            "baselineHeadcount": "integer",
+            "importedHeadcount": "integer|null",
+            "delta": "integer|null",
+            "variancePct": "number|null",
+            "hasLargeVariance": "boolean"
+        }
+    ],
+    "summary": {
+        "baselineTotal": "integer",
+        "importTotal": "integer"
+    }
+}
+```
+
+`hasLargeVariance` is `true` when `|variancePct| >= 10`.
+
+**Error responses:**
+
+| Status | Code                   | Condition                                        |
+| ------ | ---------------------- | ------------------------------------------------ |
+| 400    | FILE_REQUIRED          | No file was attached                             |
+| 400    | INVALID_IMPORT_HEADERS | Missing grade or headcount column                |
+| 400    | INVALID_BASELINE       | baseline field is not valid JSON or wrong schema |
+| 404    | VERSION_NOT_FOUND      | Version does not exist                           |
+
+---
+
+#### POST /api/v1/versions/:versionId/enrollment/setup/apply
+
+Apply enrollment setup data: AY1 headcounts, PS AY2 headcount, cohort parameters, and optional planning rules. Upserts all entries, marks dependent modules stale, and triggers the enrollment calculation engine within a single transaction.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Path params:** `versionId` (integer, required).
+
+**Request body:**
+
+```json
+{
+    "ay1Entries": [
+        {
+            "gradeLevel": "string (valid grade code)",
+            "headcount": "integer (>= 0)"
+        }
+    ],
+    "cohortEntries": [
+        {
+            "gradeLevel": "string (cohort progression grade)",
+            "retentionRate": "number (0-1)",
+            "manualAdjustment": "integer (optional)",
+            "lateralEntryCount": "integer (optional)",
+            "lateralWeightFr": "number (0-1)",
+            "lateralWeightNat": "number (0-1)",
+            "lateralWeightAut": "number (0-1)"
+        }
+    ],
+    "psAy2Headcount": "integer (optional, defaults to PS AY1 headcount)",
+    "planningRules": {
+        "rolloverThreshold": "number (0.5-2)",
+        "cappedRetention": "number (0.5-1, optional)",
+        "retentionRecentWeight": "number (0-1)",
+        "historicalTargetRecentWeight": "number (0-1)"
+    }
+}
+```
+
+- `ay1Entries` must include all grade levels.
+- `cohortEntries` must include all grades in the cohort progression sequence (MS through Tle).
+- Lateral weights for each cohort grade must sum to 1.0.
+
+**Response 200:** Enrollment calculation result (workspace data with per-grade results).
+
+**Error responses:**
+
+| Status | Code                       | Condition                                     |
+| ------ | -------------------------- | --------------------------------------------- |
+| 404    | VERSION_NOT_FOUND          | Version does not exist                        |
+| 409    | VERSION_LOCKED             | Version is not in Draft status                |
+| 409    | IMPORTED_VERSION           | Cannot run setup on imported versions         |
+| 422    | SETUP_DATA_INCOMPLETE      | Missing grade entries for AY1 or cohort       |
+| 422    | LATERAL_WEIGHT_SUM_INVALID | Lateral weights do not sum to 1.0 for a grade |
 
 ---
 
@@ -1435,6 +1623,8 @@ Run the DHG (Dotation Horaire Globale) calculation and Staff Cost Engine. Comput
 
 #### POST /api/v1/versions/:versionId/calculate/pnl
 
+> **Status: Not yet implemented.** This endpoint is planned for a future epic.
+
 Run P&L consolidation. Aggregates revenue and staff cost results into IFRS-aligned monthly P&L statements.
 
 **Prerequisites:** REVENUE and STAFFING modules must not be stale.
@@ -1484,6 +1674,8 @@ Check which modules have stale calculated data for a version.
 
 #### POST /api/v1/versions/:id/calculations/run
 
+> **Status: Not yet implemented.** This endpoint is planned for a future epic.
+
 Triggers an async full-version salary and budget recalculation job. The job is queued via pg-boss and runs in-process. Returns immediately with a job reference; use `GET /api/v1/versions/:versionId/calculate/status` to poll progress.
 
 **RBAC:** Admin, BudgetOwner, Editor.
@@ -1520,6 +1712,8 @@ If `scope` is omitted the server defaults to `"full"`.
 ---
 
 #### GET /api/v1/versions/:versionId/calculate/status
+
+> **Status: Not yet implemented.** This endpoint is planned for a future epic.
 
 Polls the status of an async calculation job for a version. If `jobId` is omitted, returns the status of the most recently queued job for this version.
 
@@ -1793,12 +1987,12 @@ Retrieve calculated staff cost results.
 
 **Query parameters:**
 
-| Param               | Type    | Required | Default | Description                                 |
-| ------------------- | ------- | -------- | ------- | ------------------------------------------- |
-| `group_by`          | string  | No       | `month` | Grouping: `employee`, `department`, `month` |
-| `include_breakdown` | boolean | No       | false   | Include employee-level detail in response   |
+| Param               | Type    | Required | Default | Description                                                   |
+| ------------------- | ------- | -------- | ------- | ------------------------------------------------------------- |
+| `group_by`          | string  | No       | `month` | Grouping: `employee`, `department`, `month`, `category_month` |
+| `include_breakdown` | boolean | No       | false   | Include employee-level detail in response                     |
 
-**Response 200:**
+**Response 200 (group_by = `employee` | `department` | `month`):**
 
 ```json
 {
@@ -1818,6 +2012,55 @@ Retrieve calculated staff cost results.
         "total_staff_cost": "string (decimal)"
     },
     "breakdown": "array|null (employee-level detail when include_breakdown=true)"
+}
+```
+
+**Response 200 (group_by = `category_month`):**
+
+Returns a pivoted view for the Monthly Cost Budget tab, with salary categories broken down by month.
+
+```json
+{
+    "months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "categories": [
+        {
+            "category": "gross_salaries_existing",
+            "label": "Existing Staff",
+            "parent": "local_staff_salaries",
+            "values": ["string (decimal)|null (per month, null if redacted)"]
+        },
+        {
+            "category": "gross_salaries_new",
+            "label": "New Staff",
+            "parent": "local_staff_salaries",
+            "values": ["..."]
+        },
+        {
+            "category": "gosi",
+            "label": "GOSI",
+            "parent": null,
+            "values": ["..."]
+        },
+        {
+            "category": "ajeer",
+            "label": "Ajeer",
+            "parent": null,
+            "values": ["..."]
+        },
+        {
+            "category": "eos_accrual",
+            "label": "EoS Accrual",
+            "parent": null,
+            "values": ["..."]
+        }
+    ],
+    "annual_totals": {
+        "gross_salaries_existing": "string (decimal)|null",
+        "gross_salaries_new": "string (decimal)|null",
+        "gosi": "string (decimal)",
+        "ajeer": "string (decimal)",
+        "eos_accrual": "string (decimal)"
+    }
 }
 ```
 
@@ -1889,7 +2132,43 @@ Returns a high-level staffing cost summary for a version, aggregated by departme
 
 ---
 
+#### GET /api/v1/versions/:versionId/category-costs
+
+Retrieve the Contrats Locaux & Residents monthly cost breakdown. Returns category-level monthly costs from the `category_monthly_costs` table, grouped by month. Categories include remplacements, formation, resident salary, and resident logement.
+
+**RBAC:** All authenticated.
+
+**Path params:** `versionId` (integer, required).
+
+**Response 200:**
+
+```json
+{
+    "data": [
+        {
+            "month": 1,
+            "remplacements": "string (decimal)",
+            "formation": "string (decimal)",
+            "resident_salary": "string (decimal)",
+            "resident_logement": "string (decimal)"
+        }
+    ],
+    "grand_total": "string (decimal)"
+}
+```
+
+**Error responses:**
+
+| Status | Code              | Condition                                                    |
+| ------ | ----------------- | ------------------------------------------------------------ |
+| 404    | VERSION_NOT_FOUND | No version with this ID                                      |
+| 409    | STALE_DATA        | Staffing has not been (re)calculated since last input change |
+
+---
+
 #### GET /api/v1/versions/:versionId/pnl
+
+> **Status: Not yet implemented.** This endpoint is planned for a future epic.
 
 Retrieve the IFRS monthly P&L statement (FR-PNL-001 through FR-PNL-018).
 
@@ -1949,6 +2228,8 @@ Retrieve the IFRS monthly P&L statement (FR-PNL-001 through FR-PNL-018).
 
 #### GET /api/v1/versions/:versionId/scenarios
 
+> **Status: Not yet implemented.** This endpoint is planned for a future epic.
+
 Scenario comparison view (FR-SCN-004, FR-SCN-006). Returns Base, Optimistic, and Pessimistic scenarios side-by-side.
 
 **RBAC:** All authenticated.
@@ -1991,6 +2272,8 @@ Scenario comparison view (FR-SCN-004, FR-SCN-006). Returns Base, Optimistic, and
 ---
 
 #### GET /api/v1/versions/:versionId/dashboard
+
+> **Status: Not yet implemented.** This endpoint is planned for a future epic.
 
 Returns aggregated dashboard data for all 4 KPI cards, chart data, alerts, and a stale flag in a single response (FR-DSH-001 through FR-DSH-005). Designed to avoid N+1 requests from the dashboard UI.
 
@@ -2054,6 +2337,8 @@ Returns aggregated dashboard data for all 4 KPI cards, chart data, alerts, and a
 ---
 
 ### 6.3.8 Export Endpoints (Async)
+
+> **Status: Not yet implemented.** These endpoints are planned for a future epic.
 
 Export operations use an async job pattern backed by the `export_jobs` PostgreSQL table and a worker process.
 
@@ -2611,6 +2896,669 @@ Phase 2 of the two-phase import workflow. Commits previously validated import da
 
 ---
 
+### 6.3.14 Master Data Endpoints
+
+Master data endpoints manage the reference tables that underpin all budget calculations. These are global resources (not version-scoped) and follow common patterns:
+
+- **Optimistic locking:** Update operations require a `version` field (integer). The server increments the version on each successful update. If the submitted version does not match the current database version, the request fails with `409 OPTIMISTIC_LOCK`.
+- **Unique constraint violations:** Creating or updating a record with a duplicate code returns `409 DUPLICATE_CODE`.
+- **Foreign key violations on delete:** Attempting to delete a record referenced by other data returns `409 REFERENCED_RECORD`.
+- **Audit trail:** All CUD operations write an audit entry within the same transaction.
+
+---
+
+#### 6.3.14.1 Academic Years
+
+##### GET /api/v1/master-data/academic-years
+
+List all academic years, ordered by fiscal year descending.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "academicYears": [
+        {
+            "id": "integer",
+            "fiscalYear": "string (e.g. \"2025-26\")",
+            "ay1Start": "string (ISO 8601)",
+            "ay1End": "string (ISO 8601)",
+            "ay2Start": "string (ISO 8601)",
+            "ay2End": "string (ISO 8601)",
+            "summerStart": "string (ISO 8601)",
+            "summerEnd": "string (ISO 8601)",
+            "academicWeeks": "integer",
+            "version": "integer",
+            "createdAt": "string (ISO 8601)",
+            "updatedAt": "string (ISO 8601)",
+            "createdBy": "integer",
+            "updatedBy": "integer"
+        }
+    ]
+}
+```
+
+---
+
+##### GET /api/v1/master-data/academic-years/:id
+
+Retrieve a single academic year by ID.
+
+**RBAC:** All authenticated.
+
+**Path params:** `id` (integer, required).
+
+**Response 200:** Single academic year object (same shape as list item).
+
+**Errors:** 404 NOT_FOUND.
+
+---
+
+##### POST /api/v1/master-data/academic-years
+
+Create a new academic year.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Request body:**
+
+```json
+{
+    "fiscalYear": "string (min 4, max 6 chars)",
+    "ay1Start": "string (ISO date)",
+    "ay1End": "string (ISO date)",
+    "ay2Start": "string (ISO date)",
+    "ay2End": "string (ISO date)",
+    "summerStart": "string (ISO date)",
+    "summerEnd": "string (ISO date)",
+    "academicWeeks": "integer (1-52)"
+}
+```
+
+Server validates date ordering: `ay1Start < ay1End <= summerStart < summerEnd <= ay2Start < ay2End`.
+
+**Response 201:** Created academic year object.
+
+**Error responses:**
+
+| Status | Code               | Condition                                               |
+| ------ | ------------------ | ------------------------------------------------------- |
+| 409    | DUPLICATE_CODE     | Fiscal year already exists                              |
+| 422    | INVALID_DATE_ORDER | Dates do not follow the required chronological ordering |
+
+---
+
+##### PUT /api/v1/master-data/academic-years/:id
+
+Update an academic year with optimistic locking.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Request body:** Same as POST, plus `version` (integer, required for optimistic lock).
+
+**Response 200:** Updated academic year object.
+
+**Error responses:**
+
+| Status | Code               | Condition                                 |
+| ------ | ------------------ | ----------------------------------------- |
+| 404    | NOT_FOUND          | Academic year not found                   |
+| 409    | OPTIMISTIC_LOCK    | Record modified by another user           |
+| 422    | INVALID_DATE_ORDER | Dates do not follow the required ordering |
+
+---
+
+##### DELETE /api/v1/master-data/academic-years/:id
+
+Delete an academic year.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Response 204:** No content.
+
+**Error responses:**
+
+| Status | Code              | Condition                                   |
+| ------ | ----------------- | ------------------------------------------- |
+| 404    | NOT_FOUND         | Academic year not found                     |
+| 409    | REFERENCED_RECORD | Cannot delete: record is referenced by data |
+
+---
+
+#### 6.3.14.2 Grade Levels
+
+Grade levels are seeded and cannot be created or deleted via the API. Only mutable configuration fields can be updated.
+
+##### GET /api/v1/master-data/grade-levels
+
+List all grade levels, ordered by display order ascending.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "gradeLevels": [
+        {
+            "id": "integer",
+            "gradeCode": "string",
+            "gradeName": "string",
+            "band": "string",
+            "maxClassSize": "integer",
+            "defaultAy2Intake": "integer|null",
+            "plancherPct": "string (decimal, 4dp)",
+            "ciblePct": "string (decimal, 4dp)",
+            "plafondPct": "string (decimal, 4dp)",
+            "displayOrder": "integer",
+            "version": "integer"
+        }
+    ]
+}
+```
+
+Percentage fields (`plancherPct`, `ciblePct`, `plafondPct`) are returned as decimal strings with 4 decimal places (e.g. `"0.7500"`).
+
+---
+
+##### PUT /api/v1/master-data/grade-levels/:id
+
+Update a grade level's mutable fields with optimistic locking.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Request body:**
+
+```json
+{
+    "maxClassSize": "integer (1-50)",
+    "defaultAy2Intake": "integer (0-200)|null",
+    "plancherPct": "number (0-1)",
+    "ciblePct": "number (0-1)",
+    "plafondPct": "number (0-1)",
+    "displayOrder": "integer (min 1)",
+    "version": "integer"
+}
+```
+
+Server validates: `plancherPct <= ciblePct <= plafondPct`.
+
+**Response 200:** Updated grade level object.
+
+**Error responses:**
+
+| Status | Code            | Condition                                        |
+| ------ | --------------- | ------------------------------------------------ |
+| 400    | INVALID_ID      | Grade level ID is not a number                   |
+| 404    | NOT_FOUND       | Grade level not found                            |
+| 409    | OPTIMISTIC_LOCK | Record modified by another user                  |
+| 422    | (Zod error)     | plancher <= cible <= plafond constraint violated |
+
+---
+
+##### POST /api/v1/master-data/grade-levels
+
+Returns `405 METHOD_NOT_ALLOWED`. Grade levels are seeded and cannot be created via API.
+
+##### DELETE /api/v1/master-data/grade-levels/:id
+
+Returns `405 METHOD_NOT_ALLOWED`. Grade levels cannot be deleted.
+
+---
+
+#### 6.3.14.3 Nationalities
+
+##### GET /api/v1/master-data/nationalities
+
+List all nationalities, ordered by code ascending.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "nationalities": [
+        {
+            "id": "integer",
+            "code": "string (2-5 uppercase letters)",
+            "label": "string",
+            "vatExempt": "boolean",
+            "version": "integer",
+            "createdAt": "string (ISO 8601)",
+            "updatedAt": "string (ISO 8601)"
+        }
+    ]
+}
+```
+
+---
+
+##### POST /api/v1/master-data/nationalities
+
+Create a new nationality.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Request body:**
+
+```json
+{
+    "code": "string (2-5 uppercase letters, regex: ^[A-Z]{2,5}$)",
+    "label": "string (1-100 chars)",
+    "vatExempt": "boolean (optional)"
+}
+```
+
+**Response 201:** Created nationality object.
+
+**Errors:** 409 DUPLICATE_CODE.
+
+---
+
+##### PUT /api/v1/master-data/nationalities/:id
+
+Update a nationality with optimistic locking.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Request body:** Same as POST, plus `version` (integer, required).
+
+**Response 200:** Updated nationality object.
+
+**Errors:** 404 NOT_FOUND, 409 OPTIMISTIC_LOCK, 409 DUPLICATE_CODE.
+
+---
+
+##### DELETE /api/v1/master-data/nationalities/:id
+
+Delete a nationality.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Response 204:** No content.
+
+**Errors:** 404 NOT_FOUND, 409 REFERENCED_RECORD.
+
+---
+
+#### 6.3.14.4 Tariffs
+
+##### GET /api/v1/master-data/tariffs
+
+List all tariffs, ordered by code ascending.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "tariffs": [
+        {
+            "id": "integer",
+            "code": "string (2-10 uppercase alphanumeric + '+')",
+            "label": "string",
+            "description": "string|null",
+            "version": "integer",
+            "createdAt": "string (ISO 8601)",
+            "updatedAt": "string (ISO 8601)"
+        }
+    ]
+}
+```
+
+---
+
+##### POST /api/v1/master-data/tariffs
+
+Create a new tariff.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Request body:**
+
+```json
+{
+    "code": "string (2-10 chars, regex: ^[A-Z0-9+]{2,10}$)",
+    "label": "string (1-100 chars)",
+    "description": "string (max 500 chars, optional)"
+}
+```
+
+**Response 201:** Created tariff object.
+
+**Errors:** 409 DUPLICATE_CODE.
+
+---
+
+##### PUT /api/v1/master-data/tariffs/:id
+
+Update a tariff with optimistic locking.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Request body:** Same as POST, plus `version` (integer, required).
+
+**Response 200:** Updated tariff object.
+
+**Errors:** 404 NOT_FOUND, 409 OPTIMISTIC_LOCK, 409 DUPLICATE_CODE.
+
+---
+
+##### DELETE /api/v1/master-data/tariffs/:id
+
+Delete a tariff.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Response 204:** No content.
+
+**Errors:** 404 NOT_FOUND, 409 REFERENCED_RECORD.
+
+---
+
+#### 6.3.14.5 Accounts (Chart of Accounts)
+
+##### GET /api/v1/master-data/accounts
+
+List accounts with optional filters.
+
+**RBAC:** All authenticated.
+
+**Query parameters:**
+
+| Param        | Type   | Required | Description                                               |
+| ------------ | ------ | -------- | --------------------------------------------------------- |
+| `type`       | string | No       | Filter: `REVENUE`, `EXPENSE`, `ASSET`, `LIABILITY`        |
+| `centerType` | string | No       | Filter: `PROFIT_CENTER`, `COST_CENTER`                    |
+| `status`     | string | No       | Filter: `ACTIVE`, `INACTIVE`                              |
+| `search`     | string | No       | Case-insensitive search on `accountCode` or `accountName` |
+
+**Response 200:**
+
+```json
+{
+    "accounts": [
+        {
+            "id": "integer",
+            "accountCode": "string (3-10 uppercase alphanumeric)",
+            "accountName": "string",
+            "type": "REVENUE|EXPENSE|ASSET|LIABILITY",
+            "ifrsCategory": "string",
+            "centerType": "PROFIT_CENTER|COST_CENTER",
+            "description": "string|null",
+            "status": "ACTIVE|INACTIVE",
+            "version": "integer",
+            "createdAt": "string (ISO 8601)",
+            "updatedAt": "string (ISO 8601)"
+        }
+    ]
+}
+```
+
+---
+
+##### GET /api/v1/master-data/accounts/:id
+
+Retrieve a single account by ID.
+
+**RBAC:** All authenticated.
+
+**Path params:** `id` (integer, required).
+
+**Response 200:** Single account object.
+
+**Errors:** 404 NOT_FOUND.
+
+---
+
+##### POST /api/v1/master-data/accounts
+
+Create a new account.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Request body:**
+
+```json
+{
+    "accountCode": "string (3-10 chars, regex: ^[A-Z0-9]{3,10}$)",
+    "accountName": "string (1-100 chars)",
+    "type": "REVENUE|EXPENSE|ASSET|LIABILITY",
+    "ifrsCategory": "string (1-100 chars)",
+    "centerType": "PROFIT_CENTER|COST_CENTER",
+    "description": "string (max 500 chars, optional)",
+    "status": "ACTIVE|INACTIVE (optional, defaults to ACTIVE)"
+}
+```
+
+**Response 201:** Created account object.
+
+**Errors:** 409 DUPLICATE_CODE.
+
+---
+
+##### PUT /api/v1/master-data/accounts/:id
+
+Update an account with optimistic locking.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Request body:** Same as POST, plus `version` (integer, required).
+
+**Response 200:** Updated account object.
+
+**Errors:** 404 NOT_FOUND, 409 OPTIMISTIC_LOCK, 409 DUPLICATE_CODE.
+
+---
+
+##### DELETE /api/v1/master-data/accounts/:id
+
+Delete an account.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Response 204:** No content.
+
+**Errors:** 404 NOT_FOUND, 409 REFERENCED_RECORD.
+
+---
+
+#### 6.3.14.6 Departments
+
+##### GET /api/v1/master-data/departments
+
+List all departments, ordered by code ascending.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "departments": [
+        {
+            "id": "integer",
+            "code": "string (2-20 uppercase with underscores)",
+            "label": "string",
+            "bandMapping": "MATERNELLE|ELEMENTAIRE|COLLEGE|LYCEE|NON_ACADEMIC",
+            "version": "integer",
+            "createdAt": "string (ISO 8601)",
+            "updatedAt": "string (ISO 8601)"
+        }
+    ]
+}
+```
+
+---
+
+##### POST /api/v1/master-data/departments
+
+Create a new department.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Request body:**
+
+```json
+{
+    "code": "string (2-20 chars, regex: ^[A-Z_]{2,20}$)",
+    "label": "string (1-100 chars)",
+    "bandMapping": "MATERNELLE|ELEMENTAIRE|COLLEGE|LYCEE|NON_ACADEMIC"
+}
+```
+
+**Response 201:** Created department object.
+
+**Errors:** 409 DUPLICATE_CODE.
+
+---
+
+##### PUT /api/v1/master-data/departments/:id
+
+Update a department with optimistic locking.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Request body:** Same as POST, plus `version` (integer, required).
+
+**Response 200:** Updated department object.
+
+**Errors:** 404 NOT_FOUND, 409 OPTIMISTIC_LOCK, 409 DUPLICATE_CODE.
+
+---
+
+##### DELETE /api/v1/master-data/departments/:id
+
+Delete a department.
+
+**RBAC:** Admin only (`admin:config` permission).
+
+**Path params:** `id` (integer, required).
+
+**Response 204:** No content.
+
+**Errors:** 404 NOT_FOUND, 409 REFERENCED_RECORD.
+
+---
+
+#### 6.3.14.7 Assumptions
+
+##### GET /api/v1/master-data/assumptions
+
+List all assumptions with a computed GOSI total.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "assumptions": [
+        {
+            "id": "integer",
+            "key": "string",
+            "label": "string",
+            "section": "string",
+            "value": "string",
+            "valueType": "PERCENTAGE|CURRENCY|INTEGER|DECIMAL",
+            "version": "integer",
+            "createdAt": "string (ISO 8601)",
+            "updatedAt": "string (ISO 8601)"
+        }
+    ],
+    "computed": {
+        "gosiRateTotal": "string (decimal, 4dp, sum of gosiPension + gosiSaned + gosiOhi)"
+    }
+}
+```
+
+---
+
+##### PATCH /api/v1/master-data/assumptions
+
+Bulk update assumptions by key. Each update includes the assumption key, new value, and version for optimistic locking. All updates are applied within a single transaction.
+
+**RBAC:** Admin, BudgetOwner, Editor (`data:edit` permission).
+
+**Request body:**
+
+```json
+{
+    "updates": [
+        {
+            "key": "string (assumption key)",
+            "value": "string (new value)",
+            "version": "integer (optimistic lock)"
+        }
+    ]
+}
+```
+
+Server validates each value against its `valueType`:
+
+- `PERCENTAGE`: number 0-100
+- `CURRENCY`: non-negative number
+- `INTEGER`: whole number
+- `DECIMAL`: valid number
+
+Values of type `CURRENCY` and `PERCENTAGE` are canonicalized to 4 decimal places with ROUND_HALF_UP.
+
+**Response 200:** Same shape as GET (full list with computed GOSI total).
+
+**Error responses:**
+
+| Status | Code             | Condition                                           |
+| ------ | ---------------- | --------------------------------------------------- |
+| 409    | OPTIMISTIC_LOCK  | An assumption has been modified by another user     |
+| 422    | VALIDATION_ERROR | One or more values failed validation (field_errors) |
+
+---
+
+### 6.3.15 Metrics Endpoint
+
+#### GET /metrics
+
+Prometheus-compatible scrape endpoint. Returns all registered `prom-client` metrics in Prometheus text exposition format.
+
+**Note:** This endpoint is registered at the root path (`/metrics`), **not** under the `/api/v1/` prefix.
+
+**Auth:** None (public). Access should be restricted to internal networks via nginx configuration.
+
+**Response 200:** `Content-Type: text/plain; version=0.0.4; charset=utf-8`
+
+```text
+# HELP process_cpu_user_seconds_total Total user CPU time spent in seconds.
+# TYPE process_cpu_user_seconds_total counter
+process_cpu_user_seconds_total 0.123
+...
+```
+
+---
+
 ## 6.4 Integration Notes
 
 BudFin v1 is a fully standalone application with no external system integrations:
@@ -2730,4 +3678,12 @@ The OpenAPI spec is generated at build time and served at:
 | Calculation audit              | Yes    | Yes         | No     | No                  |
 | Users (manage)                 | Yes    | No          | No     | No                  |
 | System config                  | Yes    | No          | No     | No                  |
+| Master data (read)             | Yes    | Yes         | Yes    | Yes                 |
+| Master data (CUD)              | Yes    | No          | No     | No                  |
+| Assumptions (read)             | Yes    | Yes         | Yes    | Yes                 |
+| Assumptions (update)           | Yes    | Yes         | Yes    | No                  |
+| Enrollment setup (read)        | Yes    | Yes         | Yes    | Yes                 |
+| Enrollment setup (write)       | Yes    | Yes         | Yes    | No                  |
+| Category costs (read)          | Yes    | Yes         | Yes    | Yes                 |
+| Metrics                        | Public | Public      | Public | Public              |
 | Health check                   | Public | Public      | Public | Public              |

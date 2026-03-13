@@ -1,10 +1,11 @@
 ---
 name: fix:debug
 description: >
-    Root cause analysis for BudFin errors. Uses a strict reproduce → isolate → hypothesize →
-    confirm → fix → verify → regression-check loop, with auto-detection for common BudFin failure
-    patterns (TC-001, P2025, JWT, ESM/CJS). Usage - /fix:debug "[symptom]"
+    Root cause analysis for BudFin errors. Invokes the systematic-debugging skill: reproduce →
+    isolate → hypothesize → confirm → fix → verify → regression check. Auto-detects common BudFin
+    failure patterns (TC-001, P2025, JWT, ESM/CJS). Usage - /fix:debug "[symptom]"
 argument-hint: '"[symptom description]"'
+allowed-tools: Bash, Read, Edit, Skill
 ---
 
 > **Internal command.** Called by `/fix:all` automatically.
@@ -20,9 +21,10 @@ If missing, ask the user: "Describe the symptom you're debugging (error message,
 
 ## Step 1 — Invoke Systematic Debugging Skill
 
-Follow a strict reproduce -> isolate -> hypothesize -> confirm -> fix -> verify -> regression-check debugging loop.
+Use the Skill tool to invoke: `superpowers:systematic-debugging`
 
-Do not skip to a fix before the root cause is confirmed.
+This skill enforces a rigorous RCA process. Follow it exactly — do not skip to a fix
+before the root cause is confirmed.
 
 ## Step 2 — BudFin-Specific Pattern Detection
 
@@ -79,7 +81,7 @@ While following the debugging skill, auto-check for these common BudFin failure 
 
 ## Step 3 — Systematic Debugging Protocol
 
-Following the systematic debugging loop above:
+Following the `systematic-debugging` skill:
 
 **a. Reproduce** — Run the exact command or test that fails. Document the full error output.
 

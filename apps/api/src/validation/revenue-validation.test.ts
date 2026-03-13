@@ -52,7 +52,6 @@ interface FeeGridFixture {
 
 interface DiscountFixture {
 	tariff: string;
-	nationality: string | null;
 	discountRate: string;
 }
 
@@ -104,7 +103,6 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 
 		const engineDiscounts: DiscountPolicyInput[] = discounts.map((d) => ({
 			tariff: d.tariff,
-			nationality: d.nationality,
 			discountRate: d.discountRate,
 		}));
 

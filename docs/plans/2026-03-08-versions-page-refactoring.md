@@ -10,7 +10,7 @@ The current "Versions" management functionality in BudFin suffers from a fragmen
 
 ### 2.1 FR Referenced in PRD
 
-Based on `docs/prd/BudFin_PRD_v2.0.md` Section 7:
+Based on `docs/prd/BudFin_PRD_v2.1.md` Section 7:
 
 - **FR-VER-001 [MUST]:** Create new version (name, type, optional base copy). Starts in Draft.
 - **FR-VER-002 [MUST]:** Delete draft versions (Published/Locked/Archived immutable).

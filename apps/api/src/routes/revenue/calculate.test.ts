@@ -194,7 +194,7 @@ describe('POST /calculate/revenue', () => {
 		expect(mockPrisma.calculationAuditLog.updateMany).toHaveBeenCalledOnce();
 	});
 
-	it('removes REVENUE from staleModules after calculation', async () => {
+	it('removes REVENUE and marks downstream modules stale after calculation', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			...mockVersion,
 			staleModules: ['REVENUE', 'PNL'],
@@ -210,7 +210,47 @@ describe('POST /calculate/revenue', () => {
 
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['PNL'] },
+			data: { staleModules: ['PNL', 'STAFFING'] },
+		});
+	});
+
+	it('adds STAFFING and PNL when staleModules starts empty', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			...mockVersion,
+			staleModules: [],
+		});
+		mockCalculateRevenue.mockReturnValue(mockEngineResult);
+
+		const token = await makeToken();
+		await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/revenue`,
+			headers: authHeader(token),
+		});
+
+		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
+			where: { id: 1 },
+			data: { staleModules: ['STAFFING', 'PNL'] },
+		});
+	});
+
+	it('preserves existing STAFFING while adding PNL', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
+			...mockVersion,
+			staleModules: ['REVENUE', 'STAFFING'],
+		});
+		mockCalculateRevenue.mockReturnValue(mockEngineResult);
+
+		const token = await makeToken();
+		await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/revenue`,
+			headers: authHeader(token),
+		});
+
+		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
+			where: { id: 1 },
+			data: { staleModules: ['STAFFING', 'PNL'] },
 		});
 	});
 

@@ -2,6 +2,7 @@
 name: plan:spec
 description: Phase 4 - Write a feature spec for a BudFin Epic. Usage - /plan:spec [epic-number] "[feature name]"
 argument-hint: '[epic-number] "[feature name]"'
+allowed-tools: Read, Edit, Write, Bash, Agent
 ---
 
 Parse the arguments:
@@ -13,7 +14,7 @@ If any argument is missing, ask the user for it before continuing.
 
 ## Step 1: Invoke Skill
 
-Read and follow `.agents/skills/budfin-workflow/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `budfin-workflow`
 
 This confirms phase compliance and loads all technical constraints before proceeding.
 
@@ -167,8 +168,8 @@ After all sections complete and gate passes, say:
 Spec draft complete. Launching workflow-orchestrator agent to review for gate readiness.
 ```
 
-Load `.codex/agents/workflow-orchestrator.md` as the review brief, then spawn a Codex
-sub-agent against the spec file at `docs/specs/epic-$EPIC_NUMBER/$FEATURE_SLUG.md`.
+Use the Agent tool to launch `workflow-orchestrator` against the spec file at
+`docs/specs/epic-$EPIC_NUMBER/$FEATURE_SLUG.md`.
 
 ## Step 9: Handle Review Result
 

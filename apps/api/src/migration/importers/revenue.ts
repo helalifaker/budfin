@@ -145,7 +145,7 @@ export async function importRevenue(
 					},
 				},
 				update: {
-					weight: weight.toNumber(),
+					weight: weight.toFixed(4),
 					headcount: entry.headcount,
 				},
 				create: {
@@ -153,7 +153,7 @@ export async function importRevenue(
 					academicPeriod: entry.period,
 					gradeLevel: entry.grade,
 					nationality: entry.nationality,
-					weight: weight.toNumber(),
+					weight: weight.toFixed(4),
 					headcount: entry.headcount,
 					isOverridden: false,
 				},
@@ -183,12 +183,12 @@ export async function importRevenue(
 					},
 				},
 				update: {
-					tuitionTtc: tuitionTtc.toNumber(),
-					tuitionHt: tuitionHt.toNumber(),
-					dai: dai.toNumber(),
-					term1Amount: term1Amount.toNumber(),
-					term2Amount: term2Amount.toNumber(),
-					term3Amount: term3Amount.toNumber(),
+					tuitionTtc: tuitionTtc.toFixed(4),
+					tuitionHt: tuitionHt.toFixed(4),
+					dai: dai.toFixed(4),
+					term1Amount: term1Amount.toFixed(4),
+					term2Amount: term2Amount.toFixed(4),
+					term3Amount: term3Amount.toFixed(4),
 					updatedBy: userId,
 				},
 				create: {
@@ -197,12 +197,12 @@ export async function importRevenue(
 					gradeLevel: f.gradeLevel,
 					nationality: f.nationality,
 					tariff: f.tariff,
-					tuitionTtc: tuitionTtc.toNumber(),
-					tuitionHt: tuitionHt.toNumber(),
-					dai: dai.toNumber(),
-					term1Amount: term1Amount.toNumber(),
-					term2Amount: term2Amount.toNumber(),
-					term3Amount: term3Amount.toNumber(),
+					tuitionTtc: tuitionTtc.toFixed(4),
+					tuitionHt: tuitionHt.toFixed(4),
+					dai: dai.toFixed(4),
+					term1Amount: term1Amount.toFixed(4),
+					term2Amount: term2Amount.toFixed(4),
+					term3Amount: term3Amount.toFixed(4),
 					createdBy: userId,
 				},
 			});
@@ -217,21 +217,19 @@ export async function importRevenue(
 
 			await prisma.discountPolicy.upsert({
 				where: {
-					versionId_tariff_nationality: {
+					versionId_tariff: {
 						versionId,
 						tariff: d.tariff,
-						nationality: d.nationality ?? '',
 					},
 				},
 				update: {
-					discountRate: discountRate.toNumber(),
+					discountRate: discountRate.toFixed(6),
 					updatedBy: userId,
 				},
 				create: {
 					versionId,
 					tariff: d.tariff,
-					nationality: d.nationality,
-					discountRate: discountRate.toNumber(),
+					discountRate: discountRate.toFixed(6),
 					createdBy: userId,
 				},
 			});

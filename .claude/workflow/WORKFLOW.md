@@ -15,19 +15,20 @@ Never skip a phase. Never skip a checklist item.
 
 ## Command Reference
 
-9 user-facing commands. See `.claude/COMMANDS.md` for the full decision tree.
+10 user-facing commands. See `.claude/COMMANDS.md` for the full decision tree.
 
 | # | Command | Phase | Purpose |
 |---|---------|-------|---------|
 | 1 | `/workflow:run [epic-#]` | 4-7 | Full Epic lifecycle: health check -> spec -> stories -> implement -> review -> visual audit -> merge -> rollup |
 | 2 | `/workflow:status` | Any | Phase, checklist, `>>> NEXT:` recommendation |
-| 3 | `/fix:all [symptom?]` | Any | Fix everything (or debug a specific symptom) |
-| 4 | `/pr:drive [--pr N / --epic #]` | 5-7 | Push PRs to merge autonomously |
-| 5 | `/workflow:advance` | Any | Manual phase gate check |
-| 6 | `/plan:adr "[title]"` | Any | Record architectural decision |
-| 7 | `/plan:spec [epic-#]` | 4 | Write feature spec interactively |
-| 8 | `/impl:story [story-#]` | 5-6 | Implement a single story (5-agent TDD swarm) |
-| 9 | `/audit:360 [--epic N... / --all]` | Any | 360-degree implementation audit (read-only, 8 layers) |
+| 3 | `/docs:sync [--audit] [path]` | Any | Inventory, classify, deduplicate, and archive docs safely |
+| 4 | `/fix:all [symptom?]` | Any | Fix everything (or debug a specific symptom) |
+| 5 | `/pr:drive [--pr N / --epic #]` | 5-7 | Push PRs to merge autonomously |
+| 6 | `/workflow:advance` | Any | Manual phase gate check |
+| 7 | `/plan:adr "[title]"` | Any | Record architectural decision |
+| 8 | `/plan:spec [epic-#]` | 4 | Write feature spec interactively |
+| 9 | `/impl:story [story-#]` | 5-6 | Implement a single story (5-agent TDD swarm) |
+| 10 | `/audit:360 [--epic N... / --all]` | Any | 360-degree implementation audit (read-only, 8 layers) |
 
 ### Error Type -> Fix Command
 
@@ -53,7 +54,7 @@ These three phases run once at project start.
 
 > Freeze all requirements before writing a single line of code.
 
-- [x] PRD v2.0 reviewed and frozen (`docs/prd/BudFin_PRD_v2.0.md`)
+- [x] PRD v2.0 reviewed and frozen (`docs/prd/BudFin_PRD_v2.1.md`)
 - [x] PRD v2.0 reviewed and frozen (serves as project constitution)
 - [x] Technology constraints documented (TC-001 → TC-005)
 - [x] Edge cases analyzed — 35 cases, severity rated (`docs/edge-cases/`)
@@ -275,13 +276,14 @@ See `.claude/COMMANDS.md` for the full decision-tree user guide.
 |---|---------|---------|
 | 1 | `/workflow:run [epic-#]` | Full Epic lifecycle (one command to rule them all) |
 | 2 | `/workflow:status` | Phase, checklist, `>>> NEXT:` recommendation |
-| 3 | `/fix:all [symptom?]` | Fix everything (or debug a specific symptom) |
-| 4 | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously |
-| 5 | `/workflow:advance` | Manual phase gate check |
-| 6 | `/plan:adr "[title]"` | Record architectural decision |
-| 7 | `/plan:spec [epic-#]` | Write feature spec interactively |
-| 8 | `/impl:story [story-#]` | Implement a single story (5-agent TDD swarm) |
-| 9 | `/audit:360 [--epic N... / --all]` | 360-degree implementation audit (read-only, 8 layers) |
+| 3 | `/docs:sync [--audit] [path]` | Inventory, classify, deduplicate, and archive docs safely |
+| 4 | `/fix:all [symptom?]` | Fix everything (or debug a specific symptom) |
+| 5 | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously |
+| 6 | `/workflow:advance` | Manual phase gate check |
+| 7 | `/plan:adr "[title]"` | Record architectural decision |
+| 8 | `/plan:spec [epic-#]` | Write feature spec interactively |
+| 9 | `/impl:story [story-#]` | Implement a single story (5-agent TDD swarm) |
+| 10 | `/audit:360 [--epic N... / --all]` | 360-degree implementation audit (read-only, 8 layers) |
 
 ---
 

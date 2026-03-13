@@ -111,12 +111,10 @@ describe('GET /discounts', () => {
 		mockPrisma.discountPolicy.findMany.mockResolvedValue([
 			{
 				tariff: 'RP',
-				nationality: 'Francais',
 				discountRate: '0.250000',
 			},
 			{
 				tariff: 'R3+',
-				nationality: null,
 				discountRate: '0.100000',
 			},
 		]);
@@ -131,6 +129,7 @@ describe('GET /discounts', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.entries).toHaveLength(2);
+		expect(body.entries[0]).not.toHaveProperty('nationality');
 		expect(body.entries[0].discountRate).toBe('0.250000');
 		expect(body.entries[1].discountRate).toBe('0.100000');
 	});
@@ -163,7 +162,7 @@ describe('GET /discounts', () => {
 
 describe('PUT /discounts', () => {
 	const validPayload = {
-		entries: [{ tariff: 'RP', nationality: 'Francais', discountRate: '0.250000' }],
+		entries: [{ tariff: 'RP', discountRate: '0.250000' }],
 	};
 
 	it('upserts discount policies and marks modules stale', async () => {
@@ -179,7 +178,24 @@ describe('PUT /discounts', () => {
 
 		expect(res.statusCode).toBe(200);
 		expect(res.json().updated).toBe(1);
-		expect(mockPrisma.discountPolicy.upsert).toHaveBeenCalledOnce();
+		expect(mockPrisma.discountPolicy.upsert).toHaveBeenCalledWith({
+			where: {
+				versionId_tariff: {
+					versionId: 1,
+					tariff: 'RP',
+				},
+			},
+			create: {
+				versionId: 1,
+				tariff: 'RP',
+				discountRate: '0.250000',
+				createdBy: 1,
+			},
+			update: {
+				discountRate: '0.250000',
+				updatedBy: 1,
+			},
+		});
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: { id: 1 },
@@ -191,6 +207,28 @@ describe('PUT /discounts', () => {
 				data: expect.objectContaining({
 					operation: 'DISCOUNT_POLICY_UPDATED',
 				}),
+			})
+		);
+	});
+
+	it('silently strips nationality fields from older clients', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/discounts`,
+			headers: authHeader(token),
+			payload: {
+				entries: [{ tariff: 'RP', nationality: 'Francais', discountRate: '0.250000' }],
+			},
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(mockPrisma.discountPolicy.upsert).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: { versionId_tariff: { versionId: 1, tariff: 'RP' } },
+				create: expect.not.objectContaining({ nationality: expect.anything() }),
 			})
 		);
 	});
@@ -237,7 +275,7 @@ describe('PUT /discounts', () => {
 			url: `${URL_PREFIX}/discounts`,
 			headers: authHeader(token),
 			payload: {
-				entries: [{ tariff: 'RP', nationality: 'Francais', discountRate: '1.500000' }],
+				entries: [{ tariff: 'RP', discountRate: '1.500000' }],
 			},
 		});
 
@@ -255,7 +293,6 @@ describe('PUT /discounts', () => {
 				entries: [
 					{
 						tariff: 'RP',
-						nationality: 'Francais',
 						discountRate: '-0.100000',
 					},
 				],
@@ -284,7 +321,7 @@ describe('PUT /discounts', () => {
 			url: `${URL_PREFIX}/discounts`,
 			headers: authHeader(token),
 			payload: {
-				entries: [{ tariff: 'RP', nationality: 'Francais', discountRate: 'abc' }],
+				entries: [{ tariff: 'RP', discountRate: 'abc' }],
 			},
 		});
 

@@ -4,6 +4,7 @@ description: >
     Fix all failing Vitest tests in the BudFin monorepo. Diagnoses each failure, fixes
     implementation (never weakens tests), and confirms ≥80% coverage maintained. Repeats until
     all tests pass. Available in any phase.
+allowed-tools: Bash, Read, Edit
 ---
 
 > **Internal command.** Called by `/fix:all` automatically.

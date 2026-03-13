@@ -8,7 +8,7 @@
 | Status            | Approved                                                 |
 | Author            | Development Team                                         |
 | Date              | March 3, 2026                                            |
-| Related Documents | PRD v2.0 (`BudFin_PRD_v2.0.md`), Edge Case Analysis v1.0 |
+| Related Documents | PRD v2.1 (`BudFin_PRD_v2.1.md`), Edge Case Analysis v1.0 |
 
 ### Revision History
 
@@ -46,7 +46,7 @@ BudFin adopts a **monolithic SPA + REST API** architecture. The system is not de
 | Backend runtime      | Node.js 22 LTS + TypeScript 5.9.3 (pinned — ADR-013) | Python/FastAPI, Java/Spring Boot | Decimal.js ecosystem for TC-001; Prisma ORM native Decimal type; full-stack TypeScript consistency; Node 20 EOL April 2026                       |
 | Database             | PostgreSQL 16                                        | MySQL 8, SQLite                  | pgcrypto for PDPL field encryption; native DECIMAL(15,4) per TC-003; JSONB audit log; row-level security primitives; superior Prisma integration |
 | Decimal library      | Decimal.js 10.6.x                                    | big.js, native Number            | TC-001 compliance; arbitrary precision; actively maintained; works in Node.js; Prisma Decimal compatibility                                      |
-| ORM                  | Prisma 6                                             | TypeORM, Drizzle, raw SQL        | Native Decimal type; type-safe migrations; typed client generation; audit middleware via $extends                                                |
+| ORM                  | Prisma 6                                             | TypeORM, Drizzle, raw SQL        | Native Decimal type; type-safe migrations; typed client generation; transactional audit logging                                                  |
 | Frontend             | React 19 + Vite 7 + TypeScript                       | Next.js, Vue.js                  | Modern SSR not needed (internal tool, no SEO); Vite fast dev cycle; TypeScript safety on financial data                                          |
 | UI component library | shadcn/ui + Tailwind CSS 4                           | MUI, Chakra UI                   | WCAG AA compliant; copy-paste components on Radix UI; CSS-first Tailwind v4 with Oxide engine                                                    |
 | Data grid            | TanStack Table v8 (no virtual scrolling — ADR-016)   | AG Grid Community                | Headless table logic paired with shadcn/ui Table components; server-side pagination for audit log; integrates with Tailwind v4                   |
@@ -205,7 +205,7 @@ The system defines four trust levels in descending order of privilege. The full 
 │  Calculation Engine (pure TypeScript + Decimal.js)                  │
 │  ├── Revenue Engine      ├── DHG Engine                             │
 │  ├── Staff Cost Engine   └── P&L Engine                             │
-│  Version Manager | Audit Logger ($extends middleware)               │
+│  Version Manager | Audit Logger (explicit per-handler)              │
 │  Export Service (ExcelJS / @react-pdf/renderer / fast-csv)          │
 │  Data Import Service (two-phase validation + commit)                │
 └──────────────────────────┬──────────────────────────────────────────┘
@@ -220,7 +220,7 @@ The system defines four trust levels in descending order of privilege. The full 
                            │
 ┌──────────────────────────▼──────────────────────────────────────────┐
 │  INFRASTRUCTURE                                                     │
-│  Docker Compose: nginx | api | db                (ADR-015 — worker in-process) │
+│  Docker Compose: nginx | api | db          (ADR-015 — pg-boss planned, not yet active) │
 │  GitHub Actions CI/CD | pg_dump backups | UptimeRobot monitoring    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -229,23 +229,23 @@ The system defines four trust levels in descending order of privilege. The full 
 
 **Application Layer.** Fastify 5 handles HTTP routing, request parsing, and response serialization. Every request passes through authentication middleware (JWT verification), RBAC guards (role and permission checks), and Zod schema validation before reaching a route handler. Winston provides structured JSON logging with a correlation `requestId` propagated through all log entries for a given request. The `prom-client` library exposes Prometheus-compatible metrics for latency percentiles and error rates.
 
-**Domain / Service Layer.** This is the core of the system. The calculation engine is implemented as pure TypeScript functions operating on Decimal.js values. Each engine (Revenue, DHG, Staff Cost, P&L) is a self-contained module with explicit inputs and outputs. Calculations are always explicitly invoked (never triggered by implicit events — this is architectural decision D-004) via command objects: `CalculateRevenueCommand`, `CalculateDHGCommand`, `CalculateStaffCostsCommand`, `CalculateConsolidatedPLCommand`. The Version Manager handles version creation, cloning (snapshot copy), status transitions, and locking. The Audit Logger, implemented as Prisma `$extends` middleware, intercepts every write operation and appends an entry to the audit trail automatically. The Export Service generates Excel (ExcelJS), PDF (@react-pdf/renderer — ADR-014), and CSV (fast-csv) outputs. The Data Import Service validates uploaded CSV/xlsx files in two phases (structural validation, then business rule validation) before committing data.
+**Domain / Service Layer.** This is the core of the system. The calculation engine is implemented as pure TypeScript functions operating on Decimal.js values. Each engine (Revenue, DHG, Staff Cost, P&L) is a self-contained module with explicit inputs and outputs. Calculations are always explicitly invoked (never triggered by implicit events — this is architectural decision D-004) as pure functions called directly from route handlers (e.g., `calculateRevenue()`, `calculateDHG()`). The Version Manager handles version creation, cloning (snapshot copy), status transitions, and locking. Audit entries are created explicitly in route handlers within the same Prisma transaction as the data modification. The Export Service generates Excel (ExcelJS), PDF (@react-pdf/renderer — ADR-014), and CSV (fast-csv) outputs. The Data Import Service validates uploaded CSV/xlsx files in two phases (structural validation, then business rule validation) before committing data.
 
 **Data Layer.** PostgreSQL 16 stores all persistent state. The schema enforces decimal precision at the column level per TC-003. PII fields in the `employees` table are encrypted at rest using pgcrypto (AES-256) per PDPL requirements. The `audit_entries` table is append-only — no UPDATE or DELETE operations are permitted, enforced by a database trigger. The `calculation_audit_log` captures the inputs, outputs, and intermediate values of every calculation run for reproducibility and debugging.
 
-**Infrastructure Layer.** Docker Compose orchestrates three containers: `nginx` (reverse proxy, TLS termination, static asset serving), `api` (Node.js application + in-process pg-boss background workers per ADR-015), and `db` (PostgreSQL 16). GitHub Actions runs CI/CD: lint, type-check, unit tests, integration tests, and Docker image builds. PostgreSQL backups run on a cron schedule via `pg_dump`. UptimeRobot or equivalent monitors the `/api/v1/health` endpoint.
+**Infrastructure Layer.** Docker Compose orchestrates three containers: `nginx` (reverse proxy, TLS termination, static asset serving), `api` (Node.js application; pg-boss is declared as a dependency per ADR-015 but async job processing is not yet implemented — export operations are planned for a future epic), and `db` (PostgreSQL 16). GitHub Actions runs CI/CD: lint, type-check, unit tests, integration tests, and Docker image builds. PostgreSQL backups run on a cron schedule via `pg_dump`. UptimeRobot or equivalent monitors the `/api/v1/health` endpoint.
 
 ### 3.2 Architecture Patterns
 
-**1. Repository Pattern.** Prisma repositories abstract all database queries behind a clean interface. Domain services (e.g., the Revenue Engine) call repository methods like `feeGridRepository.findByVersionAndAcademicYear(versionId, year)` rather than invoking Prisma client queries directly. This separation enables unit testing of domain logic with mocked repositories and prevents Prisma query syntax from leaking into business logic.
+**1. Direct Prisma Queries.** Database queries use Prisma Client directly within route handlers and service functions. The Repository Pattern was considered but deferred in favor of simpler direct queries, which are sufficient at the current scale.
 
-**2. Command/Service Pattern.** Each major operation is represented as an explicit command object. `CalculateRevenueCommand` takes a version ID and academic year as inputs and produces monthly revenue rows as output. `CalculateStaffCostsCommand` takes a version ID and produces monthly staff cost breakdowns. These commands are explicitly invoked by route handlers — there are no implicit event-driven triggers (architectural decision D-004). This makes the execution flow predictable, debuggable, and auditable. Every command execution is logged with its inputs and outputs.
+**2. Pure Function Calculation Engines.** Each calculation engine is implemented as a pure TypeScript function with explicit typed inputs and outputs (e.g., `calculateRevenue(input: RevenueEngineInput): RevenueEngineResult`). Functions are called directly from route handlers. There are no implicit event-driven triggers (architectural decision D-004). This makes the execution flow predictable, debuggable, and auditable.
 
 **3. Snapshot Copy (Version Isolation).** When a user clones a budget version, the system creates a deep copy of all version-scoped data: employees, fee grids, enrollment detail, discount policies, and all calculated outputs. The cloned version shares no mutable state with the source version. Changes to the clone do not affect the original, and vice versa. This isolation is critical for the budget workflow where analysts explore "what-if" scenarios by cloning a base version and modifying assumptions. Version isolation is implemented as a single PostgreSQL transaction that copies all related rows with a new `version_id` foreign key.
 
-**4. Optimistic Locking.** Every mutable entity includes an `updated_at` timestamp. On every write operation, the application checks that the `updated_at` value in the request matches the current value in the database. If another user has modified the record since it was loaded, the write is rejected with a `409 Conflict` response. The client then reloads the current state before retrying. This mechanism is sufficient for the expected concurrency level of fewer than 20 simultaneous users and avoids the complexity and performance cost of pessimistic locking.
+**4. Optimistic Locking.** Mutable entities include `updated_at` timestamps. The Employee update endpoint uses `If-Match` header-based optimistic locking. Other endpoints do not yet enforce optimistic locking checks. This will be extended as concurrency requirements grow.
 
-**5. Decorator/Middleware Pattern (Audit Logging).** Prisma's `$extends` API is used to attach middleware that intercepts all `create`, `update`, and `delete` operations across every model. The middleware automatically captures the operation type, table name, record ID, old values (for updates and deletes), new values (for creates and updates), the authenticated user ID, and a timestamp. These entries are written to the `audit_entries` table in the same transaction as the data modification, ensuring that no write can occur without a corresponding audit record. This pattern eliminates the risk of developers forgetting to add audit logging to new endpoints.
+**5. Explicit Audit Logging.** Audit entries are created explicitly in route handlers within the same Prisma transaction as the data modification. Each write operation manually constructs an `auditEntry.create()` call with the relevant operation type, old/new values, and user context. This approach ensures audit records are always written atomically with the data change.
 
 ### 3.3 Cross-Cutting Concerns
 
@@ -253,7 +253,7 @@ The system defines four trust levels in descending order of privilege. The full 
 
 **Observability.** The application exposes a `GET /api/v1/health` endpoint that returns the application status, database connectivity, and uptime. The `prom-client` library collects HTTP request duration histograms (p50, p95, p99) per endpoint, active connection count, and calculation engine execution times. These metrics are scraped by Prometheus. Note: Grafana dashboard integration is deferred to v2 per ADR-017. Alerts are configured for: p95 latency exceeding 2 seconds, error rate exceeding 5% over a 5-minute window, and health check failures.
 
-**Error Handling.** The calculation engine follows a fail-fast strategy. If any step in the calculation chain encounters an error (missing data, constraint violation, unexpected state), the entire calculation transaction is rolled back. Partial calculation results are never persisted. The API returns a structured error response with a correlation `requestId` for debugging. Export operations (Excel, PDF, CSV) follow a different strategy: export jobs are queued and processed asynchronously, with automatic retry (up to 3 attempts with exponential backoff). Failed exports are flagged in the UI with the error details.
+**Error Handling.** The calculation engine follows a fail-fast strategy. If any step in the calculation chain encounters an error (missing data, constraint violation, unexpected state), the entire calculation transaction is rolled back. Partial calculation results are never persisted. The API returns a structured error response with a correlation `requestId` for debugging. Export operations (Excel, PDF, CSV) currently run synchronously within the request. Async job processing via pg-boss (with automatic retry and exponential backoff) is planned for a future epic.
 
 **Caching.** There is no application-level cache for financial data. This is a deliberate decision driven by correctness requirements. Financial calculations must always reflect the current state of the underlying data. Stale cache entries could produce incorrect reports — an unacceptable outcome for budget planning. The only caching in the system is at the Nginx layer for static assets (the React SPA bundle, images, fonts) with appropriate `Cache-Control` headers.
 

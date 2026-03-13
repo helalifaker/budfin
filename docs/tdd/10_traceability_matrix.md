@@ -10,6 +10,8 @@
 | ------------------------------- | --------------------------------------------------- |
 | Epic 1 — Enrollment & Capacity  | `docs/specs/epic-1/enrollment-capacity.md`          |
 | Epic 2 — Revenue                | `docs/specs/epic-2/revenue.md`                      |
+| Epic 3 — DHG Staffing           | `docs/specs/epic-3/staffing-dhg.md`                 |
+| Epic 4 — Staff Costs            | `docs/specs/epic-4/staff-costs.md`                  |
 | Epic 7 — Master Data Management | `docs/specs/epic-7/master-data-management.md`       |
 | Epic 10 — Version Management    | `docs/specs/epic-10/version-management.md`          |
 | Epic 11 — Authentication & RBAC | `docs/specs/epic-11/authentication-rbac.md`         |
@@ -207,6 +209,8 @@ This appendix maps every functional requirement from PRD v2.0 to the TDD design 
 
 ## Scenario Modeling
 
+> **Status: Planned — Not Yet Implemented.** Epic 5 (Scenario Modeling) is scheduled for a future phase.
+
 | FR ID      | MoSCoW | Description                                  | TDD File | Component          | API Endpoints                                | DB Tables                                   | Tests |
 | ---------- | ------ | -------------------------------------------- | -------- | ------------------ | -------------------------------------------- | ------------------------------------------- | ----- |
 | FR-SCN-001 | SHOULD | Three pre-defined scenarios                  | 03, 04   | Calculation Engine | GET/PUT /scenarios                           | scenario_parameters                         | U, I  |
@@ -245,6 +249,8 @@ This appendix maps every functional requirement from PRD v2.0 to the TDD design 
 ---
 
 ## Dashboard
+
+> **Status: Planned — Not Yet Implemented.** Epic 6 (Dashboard & Export) is scheduled for a future phase.
 
 | FR ID      | MoSCoW | Description                                | TDD File | Component                | API Endpoints  | DB Tables                                    | Tests  |
 | ---------- | ------ | ------------------------------------------ | -------- | ------------------------ | -------------- | -------------------------------------------- | ------ |

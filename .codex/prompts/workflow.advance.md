@@ -1,6 +1,7 @@
 ---
 name: workflow:advance
 description: Gate-check the current phase and advance STATUS.md to the next phase if all criteria are met.
+allowed-tools: Read, Edit, Bash, Agent, Skill
 ---
 
 Read `.claude/workflow/STATUS.md` to determine the current phase number and name.
@@ -81,7 +82,7 @@ STATUS.md updated. Now in Phase [N] — [NAME].
 
 Entry command for Phase [N]:
   [command to run immediately — e.g., /plan:spec for Phase 4,
-   /impl:story [#] for Phase 5, /pr:drive --epic [epic-#] for Phase 7]
+   /impl:story [#] for Phase 5, /review:run --all for Phase 7]
 ```
 
 ## Auto-Chain to Next Phase
@@ -91,7 +92,7 @@ After advancing, determine and execute the entry action automatically:
 | New Phase                   | Auto-Chain Behavior                                                                                                                                                                                                                                                                    |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Phase 4 (SPECIFY)           | Auto-select next Epic by priority: read plan-decompose catalog, filter out DONE epics, respect dependency order + MoSCoW priority. Set Current Epic in STATUS.md. Print: `/plan:spec [epic-N] "[feature]"` (spec writing stays interactive -- user provides content for each section). |
-| Phase 5 (TDD RED)           | Read Current Epic, list matching story issues for that epic, then print `/impl:story [first-story-#]` or `/workflow:run [epic-#]`                                                                                                                                                      |
+| Phase 5 (TDD RED)           | Read Current Epic, list stories via `gh issue list --label story --search "Parent Epic: #N" --state open`, print: `/impl:story [first-story-#]` or `/workflow:run [epic-#]`                                                                                                            |
 | Phase 6 (IMPLEMENT)         | Skip -- impl:story handles 5->6 internally                                                                                                                                                                                                                                             |
-| Phase 7 (REVIEW)            | Print: `/pr:drive --epic [epic-#]` to review and merge all PRs for current epic                                                                                                                                                                                                        |
+| Phase 7 (REVIEW)            | Print: `/review:run --all` to review and merge all PRs for current epic                                                                                                                                                                                                                |
 | Phase 4 (from 7, next Epic) | Auto-select next Epic by dependency order + MoSCoW priority (no prompt). Set Current Epic in STATUS.md. Print: `/workflow:run [next-epic-#]`                                                                                                                                           |

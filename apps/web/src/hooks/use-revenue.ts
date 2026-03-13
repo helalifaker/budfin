@@ -5,7 +5,9 @@ import type {
 	FeeGridEntry,
 	DiscountEntry,
 	OtherRevenueItem,
+	RevenueReadinessResponse,
 	RevenueResultsResponse,
+	RevenueViewMode,
 } from '@budfin/types';
 
 // ── Fee Grid ─────────────────────────────────────────────────────────────────
@@ -39,6 +41,7 @@ export function usePutFeeGrid(versionId: number | null) {
 			}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'fee-grid', versionId] });
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
 		onError: (err) =>
@@ -70,6 +73,7 @@ export function usePutDiscounts(versionId: number | null) {
 			}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'discounts', versionId] });
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
 		onError: (err) =>
@@ -101,6 +105,7 @@ export function usePutOtherRevenue(versionId: number | null) {
 			}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'other-revenue', versionId] });
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
 		onError: (err) =>
@@ -139,14 +144,24 @@ export function useCalculateRevenue(versionId: number | null) {
 	});
 }
 
+// ── Revenue readiness ─────────────────────────────────────────────────────────
+
+export function useRevenueReadiness(versionId: number | null) {
+	return useQuery({
+		queryKey: ['revenue', 'readiness', versionId],
+		queryFn: () => apiClient<RevenueReadinessResponse>(`/versions/${versionId}/revenue/readiness`),
+		enabled: versionId !== null,
+	});
+}
+
 // ── Revenue Results ──────────────────────────────────────────────────────────
 
 export function useRevenueResults(
 	versionId: number | null,
-	groupBy: 'month' | 'grade' | 'nationality' | 'tariff' = 'month'
+	groupBy: RevenueViewMode | 'month' = 'month'
 ) {
 	const params = new URLSearchParams();
-	params.set('group_by', groupBy);
+	params.set('group_by', groupBy === 'category' ? 'month' : groupBy);
 	const query = params.toString();
 
 	return useQuery({

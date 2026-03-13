@@ -627,7 +627,6 @@ model DiscountPolicy {
   id           Int      @id @default(autoincrement())
   versionId    Int      @map("version_id")
   tariff       String   @db.VarChar(10)
-  nationality  String?  @db.VarChar(10)
   discountRate Decimal  @map("discount_rate") @db.Decimal(7, 6)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -638,8 +637,8 @@ model DiscountPolicy {
   creator User          @relation("DiscountCreator", fields: [createdBy], references: [id], onDelete: Restrict)
   updater User?         @relation("DiscountUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
 
-  @@unique([versionId, tariff, nationality], map: "uq_discount_policy")
-  @@index([versionId, tariff, nationality], map: "idx_discount_policies_calc")
+  @@unique([versionId, tariff], map: "uq_discount_policy")
+  @@index([versionId, tariff], map: "idx_discount_policies_calc")
   @@index([createdBy], map: "idx_discount_policies_created_by")
   @@map("discount_policies")
 }

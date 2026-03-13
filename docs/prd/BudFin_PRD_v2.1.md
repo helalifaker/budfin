@@ -1964,9 +1964,9 @@ Prob 1
 | ID | Issue | Status | Owner | Date Raised | Resolution Target | Impact |
 | --- | --- | --- | --- | --- | --- | --- |
 | I-001 | Excel Executive Summary sheet contains #REF! error | Open | Tech Lead | March 3, 2026 | Phase 1 Week 2 (pre-migration audit) | Blocks baseline validation for consolidated P&L |
-| I-002 | Technology stack not yet selected | Open | Tech Lead | March 3, 2026 | Phase 1 Week 1 | Blocks all development work |
-| I-003 | YEARFRAC day-count convention not specified in PRD | Open | Tech Lead | March 3, 2026 | Phase 1 Week 4 (Calendar Rules Spec) | Blocks EoS calculation implementation in Phase 3 |
-| I-004 | Rounding rules (per-month vs. annual total) not defined | Open | Tech Lead | March 3, 2026 | Phase 1 Week 4 (Calculation Spec) | Blocks revenue distribution implementation in Phase 2 |
+| I-002 | Technology stack not yet selected | Resolved | Tech Lead | March 3, 2026 | Phase 1 Week 1 | Resolved: Fastify 5, React 19, Prisma 6, PostgreSQL 16. See TDD `stack-versions.md` v1.3. |
+| I-003 | YEARFRAC day-count convention not specified in PRD | Resolved | Tech Lead | March 3, 2026 | Phase 1 Week 4 (Calendar Rules Spec) | Resolved: US 30/360 convention (basis = 0) specified in TC-002 and implemented in calculation engine. |
+| I-004 | Rounding rules (per-month vs. annual total) not defined | Resolved | Tech Lead | March 3, 2026 | Phase 1 Week 4 (Calculation Spec) | Resolved: TC-004 defines round-half-up at presentation layer only; full precision in storage and intermediate calculations. |
 | I-005 | PDPL compliance assessment not conducted | Open | CAO | March 3, 2026 | Phase 1 Week 3 | Blocks personal data storage design |
 | I-006 | MVP/Target/Stretch tier sign-off pending | Open | CAO | March 3, 2026 | Phase 1 Week 1 (project kickoff) | Blocks scope trade-off decisions if delays occur |
 
@@ -1974,16 +1974,16 @@ Prob 1
 
 | ID | Dependency | Type | Source | Target | Status | Impact if Broken |
 | --- | --- | --- | --- | --- | --- | --- |
-| D-001 | Phase 2 depends on Phase 1 database schema and authentication | Technical | Phase 1 | Phase 2 | Pending | Phase 2 start delayed; all downstream phases shift |
-| D-002 | Phase 3 depends on Phase 2 enrollment data and fee grid | Technical | Phase 2 | Phase 3 | Pending | Staff cost calculations cannot reference enrollment-driven revenue |
-| D-003 | Phase 4 depends on Phase 2 revenue engine and Phase 3 staff cost engine | Technical | Phases 2, 3 | Phase 4 | Pending | Version comparison and P&L consolidation cannot be built |
+| D-001 | Phase 2 depends on Phase 1 database schema and authentication | Technical | Phase 1 | Phase 2 | Resolved | Phase 1 complete: schema, auth, RBAC, master data all operational. |
+| D-002 | Phase 3 depends on Phase 2 enrollment data and fee grid | Technical | Phase 2 | Phase 3 | Resolved | Phase 2 complete: enrollment pipeline and revenue engine operational. |
+| D-003 | Phase 4 depends on Phase 2 revenue engine and Phase 3 staff cost engine | Technical | Phases 2, 3 | Phase 4 | Resolved | Phases 2 and 3 complete: revenue and staff cost engines operational. Version management implemented. P&L consolidation pending. |
 | D-004 | Phase 5 depends on Phase 4 reporting engine and version management | Technical | Phase 4 | Phase 5 | Pending | Dashboard has no data source for KPIs and analytics |
 | D-005 | Phase 6 depends on all prior phases completing within buffer | Schedule | Phases 1-5 | Phase 6 | Pending | UAT cannot validate incomplete features |
 | D-006 | CAO availability for validation sessions (0.5 day/week Phases 1-5, 2 days/week Phase 6) | Resource | CAO | All phases | Confirmed | Validation bottleneck; phase gates cannot be passed |
 | D-007 | Pre-migration Excel audit must complete before Phase 2 regression test baseline is set | Process | Phase 1 audit | Phase 2 testing | Pending | Regression tests compare against potentially incorrect baselines |
-| D-008 | Technology stack decision must precede all implementation | Technical | Phase 1 Week 1 | All development | Pending | No code can be written until stack is selected |
-| D-009 | Regulatory Configuration table must be designed before statutory cost implementation | Technical | Phase 1 schema | Phase 3 statutory costs | Pending | Hardcoded rates create R-005 exposure |
-| D-010 | Decimal arithmetic library must be validated before financial calculations begin | Technical | Phase 1 PoC | Phases 2, 3 | Pending | R-004 (precision) cannot be mitigated without this |
+| D-008 | Technology stack decision must precede all implementation | Technical | Phase 1 Week 1 | All development | Resolved | Stack selected and operational. See TDD `stack-versions.md` v1.3. |
+| D-009 | Regulatory Configuration table must be designed before statutory cost implementation | Technical | Phase 1 schema | Phase 3 statutory costs | Resolved | Assumptions table stores configurable statutory rates (GOSI, Ajeer, EoS). Phase 3 implemented. |
+| D-010 | Decimal arithmetic library must be validated before financial calculations begin | Technical | Phase 1 PoC | Phases 2, 3 | Resolved | decimal.js 10.6.0 validated and used in all calculation engines (TC-001 compliant). |
 
 ---
 
@@ -2454,7 +2454,7 @@ The following sign-off is required before the PRD is considered an approved base
 ### 19.3 Communication Plan
 
 **1. Version Control**
-The PRD is maintained under Git version control in the project repository at `docs/prd/BudFin_PRD_v2.0.md`. All changes are tracked through Git commits, providing a complete history of who changed what, when, and why.
+The PRD is maintained under Git version control in the project repository at `docs/prd/BudFin_PRD_v2.1.md`. All changes are tracked through Git commits, providing a complete history of who changed what, when, and why.
 
 **2. Change Notifications**
 - Every PRD modification is accompanied by a descriptive Git commit message.

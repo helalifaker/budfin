@@ -4,6 +4,7 @@ description: >
     Fix all TypeScript type errors in the BudFin monorepo. Groups errors by category, applies
     targeted fixes, and repeats until pnpm typecheck reports zero errors. Handles Prisma 6
     breaking changes (Buffer→Uint8Array) as a special category. Available in any phase.
+allowed-tools: Bash, Read, Edit
 ---
 
 > **Internal command.** Called by `/fix:all` automatically.

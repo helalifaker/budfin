@@ -13,7 +13,7 @@ records.
 
 1. `docs/README.md`
 2. `docs/tdd/00_document_governance.md`
-3. `.agents/skills/docs-governance/references/doc-taxonomy.md`
+3. `.claude/skills/docs-governance/references/doc-taxonomy.md`
 
 Then load only the files needed for the current cleanup scope.
 
@@ -22,13 +22,13 @@ Then load only the files needed for the current cleanup scope.
 1. Build an inventory first:
 
     ```bash
-    python3 .agents/skills/docs-governance/scripts/inventory_docs.py --root .
+    python3 .claude/skills/docs-governance/scripts/inventory_docs.py --root .
     ```
 
 2. If the request is scoped, limit the scan:
 
     ```bash
-    python3 .agents/skills/docs-governance/scripts/inventory_docs.py --root . --scope docs/plans
+    python3 .claude/skills/docs-governance/scripts/inventory_docs.py --root . --scope docs/plans
     ```
 
 3. Use the inventory plus the taxonomy reference to decide:
@@ -78,7 +78,7 @@ Then load only the files needed for the current cleanup scope.
 
 ## Verification
 
-- `python3 .agents/skills/docs-governance/scripts/inventory_docs.py --root . [--scope ...]`
+- `python3 .claude/skills/docs-governance/scripts/inventory_docs.py --root . [--scope ...]`
 - `pnpm lint:md` if the cleanup touched multiple Markdown files or changed links broadly
 
 ## Deliverable

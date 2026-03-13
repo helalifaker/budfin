@@ -5,6 +5,7 @@ description: >
     each story, pausing on blockers. Creates an Epic-level summary after all stories complete.
     Usage - /impl:epic [epic-issue-number]
 argument-hint: '[epic-issue-number]'
+allowed-tools: Bash, Read, Agent, TeamCreate, TaskCreate, TaskUpdate, TaskList, SendMessage
 ---
 
 > **Internal command.** Called by `/workflow:run` automatically.
@@ -67,8 +68,8 @@ For each story in the sorted order:
 
 2. Execute the full `impl:story` workflow inline (not as a slash command call):
     - Context gathering (issue + epic + spec)
-    - Read `.agents/skills/budfin-workflow/SKILL.md`
-    - Spawn story-orchestrator swarm using `.codex/agents/story-orchestrator.md`
+    - Skill invocation (`budfin-workflow`)
+    - Spawn story-orchestrator swarm
     - TDD RED phase
     - TDD GREEN phase
     - Parallel review phase

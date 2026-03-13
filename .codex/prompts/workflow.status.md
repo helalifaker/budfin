@@ -1,6 +1,7 @@
 ---
 name: workflow:status
 description: Show the current BudFin workflow phase, checklist progress, and next gate requirement.
+allowed-tools: Read, Bash
 ---
 
 Read `.claude/workflow/STATUS.md` and `.claude/workflow/WORKFLOW.md`.

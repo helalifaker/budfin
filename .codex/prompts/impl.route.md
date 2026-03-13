@@ -5,6 +5,7 @@ description: >
     Zod schema, fastify-type-provider-zod integration, RBAC preHandler, and paired Vitest test file.
     Usage - /impl:route "[resource]" "[method]"
 argument-hint: '"[resource]" "[method]"'
+allowed-tools: Bash, Read, Write, Edit, Skill
 ---
 
 > **Internal command.** Called by `/impl:story` automatically.
@@ -21,7 +22,7 @@ If either argument is missing, ask the user for it before proceeding.
 
 ## Step 1 — Invoke Skill
 
-Read and follow `.agents/skills/fastify-route/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `fastify-route`
 
 This skill handles all route scaffolding with correct BudFin patterns. Follow the skill exactly.
 
