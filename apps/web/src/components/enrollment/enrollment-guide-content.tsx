@@ -1,31 +1,43 @@
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import {
+	AlertTriangle,
+	Calculator,
+	ChevronDown,
+	Globe,
+	GraduationCap,
+	ListChecks,
+	Settings2,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '../../lib/cn';
 
 function GuideSection({
 	title,
+	icon: Icon,
 	children,
 	defaultOpen = false,
 }: {
 	title: string;
+	icon: LucideIcon;
 	children: React.ReactNode;
 	defaultOpen?: boolean;
 }) {
 	const [open, setOpen] = useState(defaultOpen);
 
 	return (
-		<div className="border-b border-(--workspace-border) last:border-b-0">
+		<div className="rounded-lg border border-(--inspector-section-border) bg-(--workspace-bg-card) px-3 py-1">
 			<button
 				type="button"
 				onClick={() => setOpen((prev) => !prev)}
 				className={cn(
-					'flex w-full items-center justify-between px-1 py-2.5',
+					'flex w-full items-center gap-2 py-2.5',
 					'text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)',
 					'hover:text-(--text-primary) transition-colors duration-(--duration-fast)'
 				)}
 				aria-expanded={open}
 			>
-				{title}
+				<Icon className="h-5 w-5 text-(--accent-500)" aria-hidden="true" />
+				<span className="flex-1 text-left">{title}</span>
 				<ChevronDown
 					className={cn(
 						'h-3.5 w-3.5 transition-transform duration-(--duration-fast)',
@@ -41,8 +53,12 @@ function GuideSection({
 
 export function EnrollmentGuideContent() {
 	return (
-		<div className="space-y-0">
-			<GuideSection title="Workflow Overview" defaultOpen>
+		<div className="space-y-2">
+			<p className="text-(--text-xs) text-(--text-muted) mb-3">
+				Reference guide for enrollment planning concepts and formulas.
+			</p>
+
+			<GuideSection title="Workflow Overview" icon={ListChecks} defaultOpen>
 				<div className="space-y-2">
 					<p>The enrollment planning workflow follows four stages:</p>
 					<ol className="list-decimal space-y-1 pl-5 text-(--text-xs)">
@@ -66,7 +82,7 @@ export function EnrollmentGuideContent() {
 				</div>
 			</GuideSection>
 
-			<GuideSection title="Cohort Progression Formula">
+			<GuideSection title="Cohort Progression Formula" icon={Calculator}>
 				<div className="space-y-2">
 					<p>For each grade (except Petite Section):</p>
 					<div className="rounded-md bg-(--workspace-bg-muted) px-3 py-2 font-[family-name:var(--font-mono)] text-(--text-xs)">
@@ -79,7 +95,7 @@ export function EnrollmentGuideContent() {
 				</div>
 			</GuideSection>
 
-			<GuideSection title="Petite Section (PS) Handling">
+			<GuideSection title="Petite Section (PS) Handling" icon={GraduationCap}>
 				<div className="space-y-2">
 					<p>
 						PS is the entry grade and does not have a prior grade for progression. Instead, AY2
@@ -99,7 +115,7 @@ export function EnrollmentGuideContent() {
 				</div>
 			</GuideSection>
 
-			<GuideSection title="Planning Rules">
+			<GuideSection title="Planning Rules" icon={Settings2}>
 				<div className="space-y-2">
 					<p>
 						Two version-scoped rules control how recommendations are generated from historical data:
@@ -125,7 +141,7 @@ export function EnrollmentGuideContent() {
 				</div>
 			</GuideSection>
 
-			<GuideSection title="Nationality Overrides">
+			<GuideSection title="Nationality Overrides" icon={Globe}>
 				<div className="space-y-2">
 					<p>
 						Each grade&apos;s AY2 headcount is distributed across three nationality groups:
@@ -142,7 +158,7 @@ export function EnrollmentGuideContent() {
 				</div>
 			</GuideSection>
 
-			<GuideSection title="Capacity Alerts">
+			<GuideSection title="Capacity Alerts" icon={AlertTriangle}>
 				<div className="space-y-2">
 					<p>
 						The master grid flags capacity pressure using four alert levels based on utilization

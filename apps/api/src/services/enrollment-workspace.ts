@@ -1,25 +1,22 @@
 import { randomUUID } from 'node:crypto';
+import type { GradeCode, CohortCalculationRules } from '@budfin/types';
+import { calculateCohortGradeResult, calculateHistoricalTrendRetention } from '@budfin/types';
 import type { Prisma } from '@prisma/client';
 import { calculateCapacity, type GradeConfig } from './capacity-engine.js';
-import {
-	calculateCohortProgression,
-	GRADE_PROGRESSION,
-	type CohortParams,
-} from './cohort-engine.js';
-import { getHistoricalCohortRecommendations } from './cohort-recommendations.js';
+import { loadHistoricalAy1Headcounts } from './cohort-history.js';
+import { GRADE_PROGRESSION } from './cohort-engine.js';
 import {
 	calculateNationalityDistribution,
 	computeWeightsFromHeadcounts,
 	type NationalityInput,
 } from './nationality-engine.js';
 
-const DEFAULT_LATERAL_WEIGHTS = {
-	Francais: '0.3333',
-	Nationaux: '0.3334',
-	Autres: '0.3333',
+// Real EFIR distribution: ~34% Francais, ~2% Nationaux, ~64% Autres
+const DEFAULT_NATIONALITY_WEIGHTS = {
+	Francais: '0.3366',
+	Nationaux: '0.0234',
+	Autres: '0.6400',
 } as const;
-
-const COHORT_WEIGHT_SUM_TOLERANCE = 0.0001;
 
 export const ENROLLMENT_STALE_MODULES = [
 	'ENROLLMENT',
@@ -31,12 +28,11 @@ export const ENROLLMENT_STALE_MODULES = [
 
 export type EnrollmentTransaction = Prisma.TransactionClient;
 
-export interface EditableEnrollmentVersion {
+export interface EditableEnrollmentVersion extends CohortCalculationRules {
 	id: number;
 	fiscalYear: number;
 	staleModules: string[];
-	rolloverThreshold: number;
-	cappedRetention: number;
+	cappedRetention?: number | undefined;
 }
 
 export interface EnrollmentCalculationActor {
@@ -65,76 +61,50 @@ export interface EnrollmentCalculationResponse {
 	}>;
 }
 
-interface CohortParameterWeights {
-	lateralWeightFr: number;
-	lateralWeightNat: number;
-	lateralWeightAut: number;
-}
-
-interface CohortParameterMutation extends CohortParameterWeights {
+interface CohortParameterMutation {
 	gradeLevel: string;
 	retentionRate: number;
-	lateralEntryCount: number;
+	manualAdjustment?: number | undefined;
+	lateralEntryCount?: number | undefined;
+	lateralWeightFr?: number | undefined;
+	lateralWeightNat?: number | undefined;
+	lateralWeightAut?: number | undefined;
 }
 
-function normalizeCohortWeights(entry: CohortParameterMutation): CohortParameterMutation {
-	if (entry.lateralEntryCount <= 0) {
-		return entry;
+function normalizeWholeNumber(value: number | undefined) {
+	if (value === undefined) {
+		return 0;
 	}
 
-	const weightSum = entry.lateralWeightFr + entry.lateralWeightNat + entry.lateralWeightAut;
+	if (!Number.isFinite(value)) {
+		throw new TypeError(`Expected a finite whole number, received ${String(value)}`);
+	}
 
-	if (Math.abs(weightSum) <= COHORT_WEIGHT_SUM_TOLERANCE) {
+	return Math.round(value);
+}
+
+function resolveManualAdjustment(entry: CohortParameterMutation) {
+	if (entry.manualAdjustment !== undefined) {
+		return normalizeWholeNumber(entry.manualAdjustment);
+	}
+
+	return normalizeWholeNumber(entry.lateralEntryCount);
+}
+
+export function normalizeCohortMutations(entries: CohortParameterMutation[]) {
+	return entries.map((entry) => {
+		const manualAdjustment = resolveManualAdjustment(entry);
+
 		return {
-			...entry,
-			lateralWeightFr: Number(DEFAULT_LATERAL_WEIGHTS.Francais),
-			lateralWeightNat: Number(DEFAULT_LATERAL_WEIGHTS.Nationaux),
-			lateralWeightAut: Number(DEFAULT_LATERAL_WEIGHTS.Autres),
+			gradeLevel: entry.gradeLevel,
+			retentionRate: entry.retentionRate,
+			manualAdjustment,
+			lateralEntryCount: manualAdjustment,
+			lateralWeightFr: entry.lateralWeightFr ?? 0,
+			lateralWeightNat: entry.lateralWeightNat ?? 0,
+			lateralWeightAut: entry.lateralWeightAut ?? 0,
 		};
-	}
-
-	return entry;
-}
-
-export function normalizeCohortMutations<T extends CohortParameterMutation>(entries: T[]): T[] {
-	return entries.map((entry) => normalizeCohortWeights(entry) as T);
-}
-
-function buildLateralWeightMap(
-	entry: CohortParameterWeights | null | undefined,
-	lateralEntryCount: number
-): Map<string, string> {
-	if (lateralEntryCount <= 0) {
-		return new Map([
-			['Francais', '0.0000'],
-			['Nationaux', '0.0000'],
-			['Autres', '0.0000'],
-		]);
-	}
-
-	const normalized = entry
-		? normalizeCohortWeights({
-				gradeLevel: 'TMP',
-				retentionRate: 0,
-				lateralEntryCount,
-				lateralWeightFr: entry.lateralWeightFr,
-				lateralWeightNat: entry.lateralWeightNat,
-				lateralWeightAut: entry.lateralWeightAut,
-			})
-		: {
-				gradeLevel: 'TMP',
-				retentionRate: 0,
-				lateralEntryCount,
-				lateralWeightFr: Number(DEFAULT_LATERAL_WEIGHTS.Francais),
-				lateralWeightNat: Number(DEFAULT_LATERAL_WEIGHTS.Nationaux),
-				lateralWeightAut: Number(DEFAULT_LATERAL_WEIGHTS.Autres),
-			};
-
-	return new Map([
-		['Francais', String(normalized.lateralWeightFr)],
-		['Nationaux', String(normalized.lateralWeightNat)],
-		['Autres', String(normalized.lateralWeightAut)],
-	]);
+	});
 }
 
 function buildVersionStaleModules(staleModules: string[]) {
@@ -154,6 +124,36 @@ export async function markEnrollmentInputsStale(
 	return nextModules;
 }
 
+function buildFallbackPsWeights() {
+	return new Map([
+		['Francais', DEFAULT_NATIONALITY_WEIGHTS.Francais],
+		['Nationaux', DEFAULT_NATIONALITY_WEIGHTS.Nationaux],
+		['Autres', DEFAULT_NATIONALITY_WEIGHTS.Autres],
+	]);
+}
+
+function buildDefaultRetentionRate({
+	gradeLevel,
+	historicalTrendRatio,
+	historicalTrendRetention,
+	rolloverThreshold,
+}: {
+	gradeLevel: GradeCode;
+	historicalTrendRatio: number | null;
+	historicalTrendRetention: number | null;
+	rolloverThreshold: number;
+}) {
+	if (gradeLevel === 'PS') {
+		return 0;
+	}
+
+	if (historicalTrendRatio !== null && historicalTrendRatio > rolloverThreshold) {
+		return 1;
+	}
+
+	return historicalTrendRetention ?? 1;
+}
+
 export async function calculateAndPersistEnrollmentWorkspace({
 	tx,
 	versionId,
@@ -168,74 +168,46 @@ export async function calculateAndPersistEnrollmentWorkspace({
 	const startTime = performance.now();
 	const runId = randomUUID();
 
-	const cohortParamRows = await tx.cohortParameter.findMany({
-		where: { versionId },
-		select: {
-			gradeLevel: true,
-			retentionRate: true,
-			lateralEntryCount: true,
-			lateralWeightFr: true,
-			lateralWeightNat: true,
-			lateralWeightAut: true,
-		},
-	});
-	const recommendationMap = new Map(
-		(
-			await getHistoricalCohortRecommendations(tx, version.fiscalYear, {
-				rolloverThreshold: version.rolloverThreshold,
-				cappedRetention: version.cappedRetention,
-			})
-		).map((recommendation) => [recommendation.gradeLevel, recommendation] as const)
-	);
-
-	const cohortParams = new Map<string, CohortParams>();
-	const cohortWeightMap = new Map<
-		string,
-		{
-			lateralWeightFr: number;
-			lateralWeightNat: number;
-			lateralWeightAut: number;
-			lateralEntryCount: number;
-		}
-	>();
-
-	for (const row of cohortParamRows) {
-		cohortParams.set(row.gradeLevel, {
-			retentionRate: String(row.retentionRate),
-			lateralEntryCount: row.lateralEntryCount,
-		});
-		cohortWeightMap.set(row.gradeLevel, {
-			lateralWeightFr: Number(row.lateralWeightFr),
-			lateralWeightNat: Number(row.lateralWeightNat),
-			lateralWeightAut: Number(row.lateralWeightAut),
-			lateralEntryCount: row.lateralEntryCount,
-		});
-	}
-
-	for (const gradeLevel of GRADE_PROGRESSION) {
-		if (cohortParams.has(gradeLevel)) {
-			continue;
-		}
-
-		const recommendation = recommendationMap.get(gradeLevel);
-		cohortParams.set(gradeLevel, {
-			retentionRate: String(
-				recommendation?.recommendedRetentionRate ??
-					(gradeLevel === 'PS' ? 0 : version.cappedRetention)
-			),
-			lateralEntryCount: recommendation?.recommendedLateralEntryCount ?? 0,
-		});
-		cohortWeightMap.set(gradeLevel, {
-			lateralWeightFr: 0,
-			lateralWeightNat: 0,
-			lateralWeightAut: 0,
-			lateralEntryCount: recommendation?.recommendedLateralEntryCount ?? 0,
-		});
-	}
-
-	const allHeadcounts = await tx.enrollmentHeadcount.findMany({
-		where: { versionId },
-	});
+	const [
+		cohortParamRows,
+		allHeadcounts,
+		gradeLevels,
+		versionCapacityConfigs,
+		historicalHeadcounts,
+	] = await Promise.all([
+		tx.cohortParameter.findMany({
+			where: { versionId },
+			select: {
+				gradeLevel: true,
+				retentionRate: true,
+				lateralEntryCount: true,
+			},
+		}),
+		tx.enrollmentHeadcount.findMany({
+			where: { versionId },
+		}),
+		tx.gradeLevel.findMany({
+			select: {
+				gradeCode: true,
+				maxClassSize: true,
+				plancherPct: true,
+				ciblePct: true,
+				plafondPct: true,
+				defaultAy2Intake: true,
+			},
+		}),
+		tx.versionCapacityConfig.findMany({
+			where: { versionId },
+			select: {
+				gradeLevel: true,
+				maxClassSize: true,
+				plancherPct: true,
+				ciblePct: true,
+				plafondPct: true,
+			},
+		}),
+		loadHistoricalAy1Headcounts(tx, version.fiscalYear),
+	]);
 
 	const ay1Headcounts = new Map<string, number>();
 	let existingAy2PsHeadcount: number | null = null;
@@ -244,28 +216,74 @@ export async function calculateAndPersistEnrollmentWorkspace({
 		if (row.academicPeriod === 'AY1') {
 			ay1Headcounts.set(row.gradeLevel, row.headcount);
 		}
+
 		if (row.academicPeriod === 'AY2' && row.gradeLevel === 'PS') {
 			existingAy2PsHeadcount = row.headcount;
 		}
 	}
 
-	const gradeLevels = await tx.gradeLevel.findMany({
-		select: {
-			gradeCode: true,
-			maxClassSize: true,
-			plafondPct: true,
-			defaultAy2Intake: true,
-		},
-	});
 	const psDefaultAy2Headcount =
 		gradeLevels.find((gradeLevel) => gradeLevel.gradeCode === 'PS')?.defaultAy2Intake ?? null;
-
 	const psAy2Headcount =
 		existingAy2PsHeadcount ?? psDefaultAy2Headcount ?? ay1Headcounts.get('PS') ?? 0;
-	const cohortResults = calculateCohortProgression({
-		ay1Headcounts,
-		cohortParams,
-		psAy2Headcount,
+
+	const planningRules: CohortCalculationRules = {
+		rolloverThreshold: version.rolloverThreshold,
+		retentionRecentWeight: version.retentionRecentWeight,
+		historicalTargetRecentWeight: version.historicalTargetRecentWeight,
+	};
+
+	const persistedEntries = new Map(
+		cohortParamRows.map((row) => [
+			row.gradeLevel,
+			{
+				gradeLevel: row.gradeLevel as GradeCode,
+				retentionRate: Number(row.retentionRate),
+				manualAdjustment: row.lateralEntryCount,
+			},
+		])
+	);
+
+	const cohortResults = GRADE_PROGRESSION.map((gradeLevel, index) => {
+		const gradeCode = gradeLevel as GradeCode;
+		const persistedEntry = persistedEntries.get(gradeLevel);
+		const priorGrade = index === 0 ? null : (GRADE_PROGRESSION[index - 1] as GradeCode);
+		const feederAy1Headcount = priorGrade ? (ay1Headcounts.get(priorGrade) ?? 0) : 0;
+		const defaultTrendResult =
+			persistedEntry?.retentionRate === undefined && gradeLevel !== 'PS'
+				? calculateHistoricalTrendRetention({
+						gradeLevel: gradeCode,
+						historicalHeadcounts,
+						targetFiscalYear: version.fiscalYear,
+						recentWeight: planningRules.retentionRecentWeight,
+					})
+				: null;
+
+		const resolvedRetentionRate =
+			persistedEntry?.retentionRate ??
+			buildDefaultRetentionRate({
+				gradeLevel: gradeCode,
+				historicalTrendRatio: defaultTrendResult?.historicalTrendRatio ?? null,
+				historicalTrendRetention: defaultTrendResult?.historicalTrendRetention ?? null,
+				rolloverThreshold: planningRules.rolloverThreshold,
+			});
+
+		const finalResult = calculateCohortGradeResult({
+			gradeLevel: gradeCode,
+			feederAy1Headcount,
+			configuredRetentionRate: resolvedRetentionRate,
+			manualAdjustment: persistedEntry?.manualAdjustment ?? 0,
+			historicalHeadcounts,
+			targetFiscalYear: version.fiscalYear,
+			planningRules,
+			psAy2Headcount,
+		});
+
+		return {
+			...finalResult,
+			ay1Headcount: ay1Headcounts.get(gradeLevel) ?? 0,
+			retentionRate: resolvedRetentionRate,
+		};
 	});
 
 	const ay2HeadcountMap = new Map<string, number>();
@@ -314,11 +332,7 @@ export async function calculateAndPersistEnrollmentWorkspace({
 								headcount: entry.headcount,
 							}))
 						)
-					: new Map([
-							['Francais', DEFAULT_LATERAL_WEIGHTS.Francais],
-							['Nationaux', DEFAULT_LATERAL_WEIGHTS.Nationaux],
-							['Autres', DEFAULT_LATERAL_WEIGHTS.Autres],
-						]);
+					: buildFallbackPsWeights();
 
 			nationalityInputs.push({
 				gradeLevel: grade,
@@ -331,8 +345,6 @@ export async function calculateAndPersistEnrollmentWorkspace({
 
 		const priorGrade = GRADE_PROGRESSION[index - 1]!;
 		const priorNationality = ay1NationalityByGrade.get(priorGrade) ?? [];
-		const cohortParam = cohortParams.get(grade);
-		const cohortWeights = cohortWeightMap.get(grade);
 
 		nationalityInputs.push({
 			gradeLevel: grade,
@@ -343,20 +355,22 @@ export async function calculateAndPersistEnrollmentWorkspace({
 				weight: String(entry.weight),
 				headcount: entry.headcount,
 			})),
-			retentionRate: cohortParam?.retentionRate ?? String(version.cappedRetention),
-			lateralCount: cohortParam?.lateralEntryCount ?? 0,
-			lateralWeights: buildLateralWeightMap(cohortWeights, cohortParam?.lateralEntryCount ?? 0),
 		});
 	}
 
 	const nationalityResults = calculateNationalityDistribution(nationalityInputs);
 
+	const versionCapacityByGrade = new Map(
+		versionCapacityConfigs.map((config) => [config.gradeLevel, config] as const)
+	);
+
 	const gradeConfigs = new Map<string, GradeConfig>();
 	for (const gradeLevel of gradeLevels) {
+		const capacityConfig = versionCapacityByGrade.get(gradeLevel.gradeCode);
 		gradeConfigs.set(gradeLevel.gradeCode, {
 			gradeCode: gradeLevel.gradeCode,
-			maxClassSize: gradeLevel.maxClassSize,
-			plafondPct: Number(gradeLevel.plafondPct),
+			maxClassSize: capacityConfig?.maxClassSize ?? gradeLevel.maxClassSize,
+			plafondPct: Number(capacityConfig?.plafondPct ?? gradeLevel.plafondPct),
 		});
 	}
 
@@ -388,10 +402,17 @@ export async function calculateAndPersistEnrollmentWorkspace({
 	let totalStudentsAy2 = 0;
 	const overCapacityGradeSet = new Set<string>();
 	for (const result of capacityResults) {
-		if (result.academicPeriod === 'AY1') totalStudentsAy1 += result.headcount;
-		else totalStudentsAy2 += result.headcount;
-		if (result.alert === 'OVER') overCapacityGradeSet.add(result.gradeLevel);
+		if (result.academicPeriod === 'AY1') {
+			totalStudentsAy1 += result.headcount;
+		} else {
+			totalStudentsAy2 += result.headcount;
+		}
+
+		if (result.alert === 'OVER') {
+			overCapacityGradeSet.add(result.gradeLevel);
+		}
 	}
+
 	const overCapacityGrades = [...overCapacityGradeSet];
 	const durationMs = Math.round(performance.now() - startTime);
 
@@ -408,6 +429,7 @@ export async function calculateAndPersistEnrollmentWorkspace({
 				totalStudentsAy2,
 				cohortParamCount: cohortParamRows.length,
 				psAy2Headcount,
+				historicalObservationCount: historicalHeadcounts.length,
 			},
 		},
 	});

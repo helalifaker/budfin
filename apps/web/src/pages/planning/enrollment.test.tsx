@@ -76,6 +76,47 @@ let mockVersionsData = {
 	],
 };
 
+const mockEnrollmentSettingsData = {
+	rules: {
+		rolloverThreshold: 1,
+		cappedRetention: 0.98,
+		retentionRecentWeight: 0.6,
+		historicalTargetRecentWeight: 0.8,
+	},
+	capacityByGrade: [
+		{
+			gradeLevel: 'PS',
+			gradeName: 'Petite Section',
+			band: 'MATERNELLE',
+			displayOrder: 1,
+			defaultAy2Intake: 66,
+			maxClassSize: 25,
+			plancherPct: 0.7,
+			ciblePct: 0.8,
+			plafondPct: 1,
+			templateMaxClassSize: 25,
+			templatePlancherPct: 0.7,
+			templateCiblePct: 0.8,
+			templatePlafondPct: 1,
+		},
+		{
+			gradeLevel: 'MS',
+			gradeName: 'Moyenne Section',
+			band: 'MATERNELLE',
+			displayOrder: 2,
+			defaultAy2Intake: null,
+			maxClassSize: 25,
+			plancherPct: 0.7,
+			ciblePct: 0.8,
+			plafondPct: 1,
+			templateMaxClassSize: 25,
+			templatePlancherPct: 0.7,
+			templateCiblePct: 0.8,
+			templatePlafondPct: 1,
+		},
+	],
+};
+
 vi.mock('react-router', () => ({
 	useNavigate: () => mockNavigate,
 }));
@@ -125,6 +166,9 @@ vi.mock('../../hooks/use-enrollment', () => ({
 			cagrByBand: {},
 			movingAvgByBand: {},
 		},
+	}),
+	useEnrollmentSettings: () => ({
+		data: mockEnrollmentSettingsData,
 	}),
 }));
 
@@ -217,6 +261,25 @@ vi.mock('../../components/enrollment/setup-wizard', () => ({
 	EnrollmentSetupWizard: () => <div>Wizard</div>,
 }));
 
+vi.mock('../../components/enrollment/enrollment-settings-sheet', () => ({
+	EnrollmentSettingsSheet: () => <div>Settings Sheet</div>,
+}));
+
+vi.mock('../../stores/enrollment-settings-store', () => ({
+	useEnrollmentSettingsSheetStore: (
+		selector: (state: {
+			open: () => void;
+			isOpen: boolean;
+			setOpen: (open: boolean) => void;
+		}) => unknown
+	) =>
+		selector({
+			open: vi.fn(),
+			isOpen: false,
+			setOpen: vi.fn(),
+		}),
+}));
+
 vi.mock('../../components/enrollment/enrollment-inspector', () => ({}));
 
 describe('EnrollmentPage', () => {
@@ -265,6 +328,7 @@ describe('EnrollmentPage', () => {
 		render(<EnrollmentPage />);
 
 		expect(screen.getByRole('button', { name: 'Reopen Setup Wizard' })).toBeTruthy();
+		expect(screen.getByRole('button', { name: 'Enrollment Settings' })).toBeTruthy();
 	});
 
 	it('renders version-lock banner when versionStatus is Locked', () => {

@@ -35,7 +35,7 @@ export function SeedPreviewDialog({ open, onClose }: SeedPreviewDialogProps) {
 		return (cohortData?.entries ?? []).map((entry) => ({
 			gradeLevel: entry.gradeLevel,
 			suggestedRetention: entry.recommendedRetentionRate ?? entry.retentionRate,
-			suggestedLaterals: entry.recommendedLateralEntryCount ?? entry.lateralEntryCount,
+			suggestedLaterals: entry.derivedLaterals ?? entry.recommendedLateralEntryCount ?? 0,
 			confidence: entry.recommendationConfidence ?? 'low',
 		}));
 	}, [cohortData?.entries]);
@@ -71,6 +71,7 @@ export function SeedPreviewDialog({ open, onClose }: SeedPreviewDialogProps) {
 				return {
 					gradeLevel: r.gradeLevel as CohortParameterEntry['gradeLevel'],
 					retentionRate: r.suggestedRetention,
+					manualAdjustment: 0,
 					lateralEntryCount: r.suggestedLaterals,
 					lateralWeightFr: existing?.lateralWeightFr ?? 0,
 					lateralWeightNat: existing?.lateralWeightNat ?? 0,

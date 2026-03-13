@@ -1,6 +1,6 @@
 # BudFin Command Reference
 
-9 user-facing commands. Everything else is internal and called automatically.
+10 user-facing commands. Everything else is internal and called automatically.
 
 ---
 
@@ -14,6 +14,11 @@ What do I want to do?
   |
   +-- Check where I am
   |     /workflow:status
+  |
+  +-- Tidy and sync documentation
+  |     /docs:sync --audit         (read-only doc health check)
+  |     /docs:sync docs/plans      (scoped cleanup for active plans)
+  |     /docs:sync --deep docs     (full duplicate review before changes)
   |
   +-- Something is broken
   |     /fix:all                    (run all fixers)
@@ -48,7 +53,7 @@ What do I want to do?
 
 ---
 
-## The 9 Commands
+## The 10 Commands
 
 ### 1. `/workflow:run [epic-#]`
 
@@ -77,7 +82,22 @@ Phase: 4 -- SPECIFY | Epics: 5/13 done
 Current Epic: Epic 2 -- Revenue (#6)
 ```
 
-### 3. `/fix:all [symptom?] [--flag?]`
+### 3. `/docs:sync [--audit] [--deep] [path]`
+
+Documentation governance and cleanup. Uses the repo-local `docs-governance` skill to inventory
+docs, classify misplaced files, flag duplicates, and archive clearly superseded working docs.
+
+**Modes**:
+- `/docs:sync --audit` -- read-only inventory and recommendations
+- `/docs:sync docs/plans` -- scoped cleanup of one documentation area
+- `/docs:sync --deep docs` -- inspect duplicate groups more thoroughly before any move
+
+**Safety**: never deletes docs, never archives authoritative sets by default, and stops when
+authority or classification is ambiguous.
+
+**Phase gate**: any phase.
+
+### 4. `/fix:all [symptom?] [--flag?]`
 
 Unified fixer. Runs all fixers or a specific one.
 
@@ -93,7 +113,7 @@ Unified fixer. Runs all fixers or a specific one.
 
 **Phase gate**: any phase.
 
-### 4. `/pr:drive [story-# | --pr N... | --epic #]`
+### 5. `/pr:drive [story-# | --pr N... | --epic #]`
 
 Autonomous PR driver. Loops until merged or stuck.
 
@@ -106,29 +126,29 @@ Autonomous PR driver. Loops until merged or stuck.
 
 **Safety**: stuck detection (2 identical failure fingerprints), new commits only, never `--no-verify`.
 
-### 5. `/workflow:advance`
+### 6. `/workflow:advance`
 
 Manual phase gate check. Lists unmet criteria if FAIL. Advances STATUS.md if PASS.
 
-### 6. `/plan:adr "[title]"`
+### 7. `/plan:adr "[title]"`
 
 Record an architectural decision. Saves to `docs/adr/ADR-NNN-<slug>.md`.
 
 **Phase gate**: any phase.
 
-### 7. `/plan:spec [epic-#]`
+### 8. `/plan:spec [epic-#]`
 
 Write a feature spec interactively. Runs orchestrator review. Output: `docs/specs/epic-N/<slug>.md`.
 
 **Phase gate**: Phase 4.
 
-### 8. `/impl:story [story-#]`
+### 9. `/impl:story [story-#]`
 
 Implement a single story end-to-end. Spawns 5-agent TDD swarm (orchestrator + implementer + reviewer + QA + documentor). Drives TDD RED -> GREEN -> parallel Review. Creates draft PR.
 
 **Phase gate**: Phase 5-6.
 
-### 9. `/audit:360 [--epic N... | --all] [--layer L...] [--quick]`
+### 10. `/audit:360 [--epic N... | --all] [--layer L...] [--quick]`
 
 360-degree implementation audit. Read-only diagnostic across 8 layers.
 
@@ -148,7 +168,7 @@ Implement a single story end-to-end. Spawns 5-agent TDD swarm (orchestrator + im
 
 ## Internal Commands (called automatically)
 
-These commands are invoked by the 9 user-facing commands above. You should not need to run them directly.
+These commands are invoked by the 10 user-facing commands above. You should not need to run them directly.
 
 ### Called by `/workflow:run`
 
@@ -186,6 +206,7 @@ These commands are invoked by the 9 user-facing commands above. You should not n
 |---------|:---------:|:-------:|:---------:|:-------:|
 | `/workflow:run` | -- | Y | Y | Y |
 | `/workflow:status` | Y | Y | Y | Y |
+| `/docs:sync` | Y | Y | Y | Y |
 | `/fix:all` | Y | Y | Y | Y |
 | `/pr:drive` | -- | -- | Y | Y |
 | `/workflow:advance` | Y | Y | Y | Y |

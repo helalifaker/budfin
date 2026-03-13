@@ -24,6 +24,9 @@ export function usePutPlanningRules(versionId: number | null) {
 			),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
+				queryKey: ['enrollment', 'settings', versionId],
+			});
+			queryClient.invalidateQueries({
 				queryKey: ['enrollment', 'planning-rules', versionId],
 			});
 			queryClient.invalidateQueries({

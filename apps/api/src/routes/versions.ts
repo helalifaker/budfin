@@ -116,6 +116,8 @@ function formatVersion(v: {
 	staleModules: string[];
 	rolloverThreshold: Decimal.Value;
 	cappedRetention: Decimal.Value;
+	retentionRecentWeight?: Decimal.Value | null;
+	historicalTargetRecentWeight?: Decimal.Value | null;
 	createdById: number;
 	lastCalculatedAt: Date | null;
 	publishedAt: Date | null;
@@ -138,6 +140,10 @@ function formatVersion(v: {
 		staleModules: v.staleModules,
 		rolloverThreshold: new Decimal(String(v.rolloverThreshold)).toNumber(),
 		cappedRetention: new Decimal(String(v.cappedRetention)).toNumber(),
+		retentionRecentWeight: new Decimal(String(v.retentionRecentWeight ?? 0.6)).toNumber(),
+		historicalTargetRecentWeight: new Decimal(
+			String(v.historicalTargetRecentWeight ?? 0.8)
+		).toNumber(),
 		createdById: v.createdById,
 		createdByEmail: v.createdBy?.email ?? null,
 		lastCalculatedAt: v.lastCalculatedAt,
@@ -147,6 +153,62 @@ function formatVersion(v: {
 		createdAt: v.createdAt,
 		updatedAt: v.updatedAt,
 	};
+}
+
+async function seedVersionCapacityConfig(
+	tx: Pick<Prisma.TransactionClient, 'gradeLevel' | 'versionCapacityConfig'>,
+	{
+		targetVersionId,
+		sourceVersionId,
+	}: {
+		targetVersionId: number;
+		sourceVersionId?: number | null;
+	}
+) {
+	const [templateRows, sourceConfigs] = await Promise.all([
+		tx.gradeLevel.findMany({
+			orderBy: { displayOrder: 'asc' },
+			select: {
+				gradeCode: true,
+				maxClassSize: true,
+				plancherPct: true,
+				ciblePct: true,
+				plafondPct: true,
+			},
+		}),
+		sourceVersionId
+			? tx.versionCapacityConfig.findMany({
+					where: { versionId: sourceVersionId },
+					select: {
+						gradeLevel: true,
+						maxClassSize: true,
+						plancherPct: true,
+						ciblePct: true,
+						plafondPct: true,
+					},
+				})
+			: Promise.resolve([]),
+	]);
+
+	const sourceByGrade = new Map(sourceConfigs.map((config) => [config.gradeLevel, config]));
+	const rows = templateRows.map((template) => {
+		const source = sourceByGrade.get(template.gradeCode);
+
+		return {
+			versionId: targetVersionId,
+			gradeLevel: template.gradeCode,
+			maxClassSize: source?.maxClassSize ?? template.maxClassSize,
+			plancherPct: source?.plancherPct ?? template.plancherPct,
+			ciblePct: source?.ciblePct ?? template.ciblePct,
+			plafondPct: source?.plafondPct ?? template.plafondPct,
+		};
+	});
+
+	if (rows.length > 0) {
+		await tx.versionCapacityConfig.createMany({
+			data: rows,
+		});
+	}
 }
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -698,10 +760,17 @@ export async function versionRoutes(app: FastifyInstance) {
 								? {
 										rolloverThreshold: sourceVersion.rolloverThreshold,
 										cappedRetention: sourceVersion.cappedRetention,
+										retentionRecentWeight: sourceVersion.retentionRecentWeight,
+										historicalTargetRecentWeight: sourceVersion.historicalTargetRecentWeight,
 									}
 								: {}),
 						},
 						include: { createdBy: { select: { email: true } } },
+					});
+
+					await seedVersionCapacityConfig(tx as Prisma.TransactionClient, {
+						targetVersionId: created.id,
+						sourceVersionId: sourceVersion?.id ?? null,
 					});
 
 					// Clone data from source version if specified
@@ -847,8 +916,15 @@ export async function versionRoutes(app: FastifyInstance) {
 							dataSource: source.dataSource,
 							rolloverThreshold: source.rolloverThreshold,
 							cappedRetention: source.cappedRetention,
+							retentionRecentWeight: source.retentionRecentWeight,
+							historicalTargetRecentWeight: source.historicalTargetRecentWeight,
 						},
 						include: { createdBy: { select: { email: true } } },
+					});
+
+					await seedVersionCapacityConfig(tx as Prisma.TransactionClient, {
+						targetVersionId: newVersion.id,
+						sourceVersionId: id,
 					});
 
 					// Copy enrollment headcount rows
@@ -928,21 +1004,6 @@ export async function versionRoutes(app: FastifyInstance) {
 								lateralWeightFr: cp.lateralWeightFr,
 								lateralWeightNat: cp.lateralWeightNat,
 								lateralWeightAut: cp.lateralWeightAut,
-							})),
-						});
-					}
-
-					// Copy capacity config overrides
-					const capacityConfigs = await (tx as typeof prisma).versionCapacityConfig.findMany({
-						where: { versionId: id },
-						select: { gradeLevel: true, maxClassSize: true },
-					});
-					if (capacityConfigs.length > 0) {
-						await (tx as typeof prisma).versionCapacityConfig.createMany({
-							data: capacityConfigs.map((cc) => ({
-								versionId: newVersion.id,
-								gradeLevel: cc.gradeLevel,
-								maxClassSize: cc.maxClassSize,
 							})),
 						});
 					}

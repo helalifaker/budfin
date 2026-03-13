@@ -406,6 +406,7 @@ See `.claude/COMMANDS.md` for full command reference:
 - `/workflow:status` — show current phase and checklist
 - `/workflow:advance` — gate-check and move to next phase
 - `/workflow:run [epic-N]` — drive full Epic lifecycle
+- `/docs:sync [--audit] [--deep] [path]` — inventory, classify, deduplicate, and archive docs safely
 - `/plan:spec [epic-N]` — write a feature spec
 - `/plan:stories [epic-N]` — create story issues from spec
 - `/impl:story [#]` — implement a single story

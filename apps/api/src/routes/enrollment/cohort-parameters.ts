@@ -1,18 +1,18 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { Decimal } from 'decimal.js';
 import { Prisma } from '@prisma/client';
+import type { GradeCode } from '@budfin/types';
+import { calculateCohortGradeResult } from '@budfin/types';
 import { prisma } from '../../lib/prisma.js';
+import { loadHistoricalAy1Headcounts } from '../../services/cohort-history.js';
 import { GRADE_PROGRESSION } from '../../services/cohort-engine.js';
-import { getHistoricalCohortRecommendations } from '../../services/cohort-recommendations.js';
 import { normalizeCohortMutations } from '../../services/enrollment-workspace.js';
 import {
 	buildEnrollmentPlanningRulesUpdateData,
 	ENROLLMENT_RULES_STALE_MODULES,
 	resolveEnrollmentPlanningRules,
 } from '../../services/planning-rules.js';
-
-// ── Schemas ───────────────────────────────────────────────────────────────────
+import { findInvalidLateralWeightEntry } from '../../services/lateral-weight-validation.js';
 
 const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
@@ -23,15 +23,18 @@ const gradeLevelEnum = z.enum(GRADE_PROGRESSION as unknown as [string, ...string
 const cohortParameterEntrySchema = z.object({
 	gradeLevel: gradeLevelEnum,
 	retentionRate: z.number().min(0).max(1),
-	lateralEntryCount: z.number().int().min(0),
-	lateralWeightFr: z.number().min(0).max(1),
-	lateralWeightNat: z.number().min(0).max(1),
-	lateralWeightAut: z.number().min(0).max(1),
+	manualAdjustment: z.number().int().optional(),
+	lateralEntryCount: z.number().int().optional(),
+	lateralWeightFr: z.number().min(0).max(1).optional(),
+	lateralWeightNat: z.number().min(0).max(1).optional(),
+	lateralWeightAut: z.number().min(0).max(1).optional(),
 });
 
 const planningRulesSchema = z.object({
 	rolloverThreshold: z.number().min(0.5).max(2),
-	cappedRetention: z.number().min(0.5).max(1),
+	retentionRecentWeight: z.number().min(0).max(1),
+	historicalTargetRecentWeight: z.number().min(0).max(1),
+	cappedRetention: z.number().min(0.5).max(1).optional(),
 });
 
 const putBodySchema = z.object({
@@ -39,12 +42,39 @@ const putBodySchema = z.object({
 	planningRules: planningRulesSchema.optional(),
 });
 
-const WEIGHT_SUM_TOLERANCE = 0.0001;
+function getConfidence(observationCount: number) {
+	if (observationCount >= 3) {
+		return 'high' as const;
+	}
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+	if (observationCount === 2) {
+		return 'medium' as const;
+	}
+
+	return 'low' as const;
+}
+
+function getDefaultConfiguredRetentionRate({
+	gradeLevel,
+	historicalTrendRetention,
+	usesConfiguredRetention,
+}: {
+	gradeLevel: string;
+	historicalTrendRetention: number | null;
+	usesConfiguredRetention: boolean;
+}) {
+	if (gradeLevel === 'PS') {
+		return 0;
+	}
+
+	if (usesConfiguredRetention) {
+		return 1;
+	}
+
+	return historicalTrendRetention ?? 1;
+}
 
 export async function cohortParameterRoutes(app: FastifyInstance) {
-	// GET /cohort-parameters — list cohort parameters for a version
 	app.get('/cohort-parameters', {
 		schema: {
 			params: versionIdParamsSchema,
@@ -60,6 +90,8 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 					fiscalYear: true,
 					rolloverThreshold: true,
 					cappedRetention: true,
+					retentionRecentWeight: true,
+					historicalTargetRecentWeight: true,
 				},
 			});
 
@@ -71,80 +103,112 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 			}
 
 			const planningRules = resolveEnrollmentPlanningRules(version);
+			const [params, headcounts, historicalHeadcounts] = await Promise.all([
+				prisma.cohortParameter.findMany({
+					where: { versionId },
+					select: {
+						gradeLevel: true,
+						retentionRate: true,
+						lateralEntryCount: true,
+						lateralWeightFr: true,
+						lateralWeightNat: true,
+						lateralWeightAut: true,
+					},
+				}),
+				prisma.enrollmentHeadcount.findMany({
+					where: {
+						versionId,
+						OR: [{ academicPeriod: 'AY1' }, { academicPeriod: 'AY2', gradeLevel: 'PS' }],
+					},
+					select: {
+						gradeLevel: true,
+						academicPeriod: true,
+						headcount: true,
+					},
+				}),
+				loadHistoricalAy1Headcounts(prisma, version.fiscalYear),
+			]);
 
-			// Fetch existing parameters
-			const params = await prisma.cohortParameter.findMany({
-				where: { versionId },
-				select: {
-					gradeLevel: true,
-					retentionRate: true,
-					lateralEntryCount: true,
-					lateralWeightFr: true,
-					lateralWeightNat: true,
-					lateralWeightAut: true,
-				},
-			});
-
-			const paramsMap = new Map(params.map((p) => [p.gradeLevel, p]));
-			const recommendationMap = new Map(
-				(await getHistoricalCohortRecommendations(prisma, version.fiscalYear, planningRules)).map(
-					(recommendation) => [recommendation.gradeLevel, recommendation] as const
-				)
+			const paramsMap = new Map(params.map((entry) => [entry.gradeLevel, entry]));
+			const ay1Headcounts = new Map(
+				headcounts
+					.filter((entry) => entry.academicPeriod === 'AY1')
+					.map((entry) => [entry.gradeLevel, entry.headcount] as const)
 			);
+			const psAy2Headcount =
+				headcounts.find((entry) => entry.academicPeriod === 'AY2' && entry.gradeLevel === 'PS')
+					?.headcount ??
+				ay1Headcounts.get('PS') ??
+				0;
 
-			// Build response: one row per grade, with defaults for missing grades
-			const entries = GRADE_PROGRESSION.map((grade) => {
-				const existing = paramsMap.get(grade);
-				const isPs = grade === 'PS';
-				const recommendation = recommendationMap.get(grade);
+			const entries = GRADE_PROGRESSION.map((gradeLevel, index) => {
+				const persisted = paramsMap.get(gradeLevel);
+				const priorGrade = index === 0 ? null : (GRADE_PROGRESSION[index - 1] as GradeCode);
+				const feederAy1Headcount = priorGrade ? (ay1Headcounts.get(priorGrade) ?? 0) : 0;
+				const configuredRetentionRate = persisted
+					? Number(persisted.retentionRate)
+					: gradeLevel === 'PS'
+						? 0
+						: 1;
+				const manualAdjustment = persisted?.lateralEntryCount ?? 0;
 
-				if (existing) {
-					return {
-						gradeLevel: existing.gradeLevel,
-						retentionRate: Number(existing.retentionRate),
-						lateralEntryCount: existing.lateralEntryCount,
-						lateralWeightFr: Number(existing.lateralWeightFr),
-						lateralWeightNat: Number(existing.lateralWeightNat),
-						lateralWeightAut: Number(existing.lateralWeightAut),
-						isPersisted: true,
-						recommendedRetentionRate:
-							recommendation?.recommendedRetentionRate ??
-							(isPs ? 0 : planningRules.cappedRetention),
-						recommendedLateralEntryCount: recommendation?.recommendedLateralEntryCount ?? 0,
-						recommendationConfidence: recommendation?.confidence ?? 'low',
-						recommendationObservationCount: recommendation?.observationCount ?? 0,
-						recommendationSourceFiscalYear: recommendation?.sourceFiscalYear ?? null,
-						recommendationRolloverRatio: recommendation?.rolloverRatio ?? null,
-						recommendationPriorAy1Headcount:
-							recommendation?.recommendationPriorAy1Headcount ?? null,
-						recommendationAy2Headcount: recommendation?.recommendationAy2Headcount ?? null,
-						recommendationRule:
-							recommendation?.rule ?? (isPs ? 'direct-entry' : 'fallback-default'),
-					};
-				}
+				const calculation = calculateCohortGradeResult({
+					gradeLevel: gradeLevel as GradeCode,
+					feederAy1Headcount,
+					configuredRetentionRate,
+					manualAdjustment,
+					historicalHeadcounts,
+					targetFiscalYear: version.fiscalYear,
+					planningRules,
+					psAy2Headcount,
+				});
 
-				const defaultRetentionRate =
-					recommendation?.recommendedRetentionRate ?? (isPs ? 0 : planningRules.cappedRetention);
-				const defaultLateralEntryCount = recommendation?.recommendedLateralEntryCount ?? 0;
+				const retentionRate = persisted
+					? Number(persisted.retentionRate)
+					: getDefaultConfiguredRetentionRate({
+							gradeLevel,
+							historicalTrendRetention: calculation.historicalTrendRetention,
+							usesConfiguredRetention: calculation.usesConfiguredRetention,
+						});
 
-				// Defaults: PS has retentionRate=0 (direct entry), others use the latest historical recommendation.
+				const recommendationRule =
+					gradeLevel === 'PS'
+						? 'direct-entry'
+						: calculation.ratioObservationCount === 0
+							? 'fallback-default'
+							: calculation.usesConfiguredRetention
+								? 'capped-retention-growth'
+								: 'historical-rollover';
+
 				return {
-					gradeLevel: grade,
-					retentionRate: defaultRetentionRate,
-					lateralEntryCount: defaultLateralEntryCount,
-					lateralWeightFr: 0,
-					lateralWeightNat: 0,
-					lateralWeightAut: 0,
-					isPersisted: false,
-					recommendedRetentionRate: defaultRetentionRate,
-					recommendedLateralEntryCount: defaultLateralEntryCount,
-					recommendationConfidence: recommendation?.confidence ?? 'low',
-					recommendationObservationCount: recommendation?.observationCount ?? 0,
-					recommendationSourceFiscalYear: recommendation?.sourceFiscalYear ?? null,
-					recommendationRolloverRatio: recommendation?.rolloverRatio ?? null,
-					recommendationPriorAy1Headcount: recommendation?.recommendationPriorAy1Headcount ?? null,
-					recommendationAy2Headcount: recommendation?.recommendationAy2Headcount ?? null,
-					recommendationRule: recommendation?.rule ?? (isPs ? 'direct-entry' : 'fallback-default'),
+					gradeLevel,
+					retentionRate,
+					manualAdjustment,
+					lateralEntryCount: manualAdjustment,
+					lateralWeightFr: Number(persisted?.lateralWeightFr ?? 0),
+					lateralWeightNat: Number(persisted?.lateralWeightNat ?? 0),
+					lateralWeightAut: Number(persisted?.lateralWeightAut ?? 0),
+					isPersisted: Boolean(persisted),
+					historicalTrendRatio: calculation.historicalTrendRatio,
+					historicalTrendRetention: calculation.historicalTrendRetention,
+					appliedRetentionRate: calculation.appliedRetentionRate,
+					retainedFromPrior: calculation.retainedFromPrior,
+					historicalTargetHeadcount: calculation.historicalTargetHeadcount,
+					derivedLaterals: calculation.derivedLaterals,
+					ay2Headcount: calculation.ay2Headcount,
+					usesConfiguredRetention: calculation.usesConfiguredRetention,
+					ratioObservationCount: calculation.ratioObservationCount,
+					recommendedRetentionRate: retentionRate,
+					recommendedLateralEntryCount: calculation.derivedLaterals,
+					recommendationConfidence: getConfidence(calculation.ratioObservationCount),
+					recommendationObservationCount: calculation.ratioObservationCount,
+					recommendationSourceFiscalYear:
+						historicalHeadcounts.reduce((maxYear, row) => Math.max(maxYear, row.academicYear), 0) ||
+						null,
+					recommendationRolloverRatio: calculation.historicalTrendRatio,
+					recommendationPriorAy1Headcount: feederAy1Headcount,
+					recommendationAy2Headcount: calculation.ay2Headcount,
+					recommendationRule,
 				};
 			});
 
@@ -152,7 +216,6 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 		},
 	});
 
-	// PUT /cohort-parameters — bulk upsert cohort parameters
 	app.put('/cohort-parameters', {
 		schema: {
 			params: versionIdParamsSchema,
@@ -164,7 +227,6 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 			const { entries, planningRules } = request.body as z.infer<typeof putBodySchema>;
 			const normalizedEntries = normalizeCohortMutations(entries);
 
-			// Version lock guard
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
 				select: { id: true, status: true, dataSource: true, staleModules: true },
@@ -191,38 +253,14 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 				});
 			}
 
-			// Validate: lateral weights must sum to 1.0 when lateralEntryCount > 0
-			const weightErrors: Array<{
-				gradeLevel: string;
-				weightSum: number;
-			}> = [];
-
-			for (const entry of normalizedEntries) {
-				if (entry.lateralEntryCount > 0) {
-					const weightSum = new Decimal(entry.lateralWeightFr)
-						.plus(entry.lateralWeightNat)
-						.plus(entry.lateralWeightAut)
-						.toNumber();
-
-					if (Math.abs(weightSum - 1.0) > WEIGHT_SUM_TOLERANCE) {
-						weightErrors.push({
-							gradeLevel: entry.gradeLevel,
-							weightSum,
-						});
-					}
-				}
-			}
-
-			if (weightErrors.length > 0) {
+			const invalidLateralWeightEntry = findInvalidLateralWeightEntry(normalizedEntries);
+			if (invalidLateralWeightEntry) {
 				return reply.status(422).send({
 					code: 'LATERAL_WEIGHT_SUM_INVALID',
-					message:
-						'Lateral weights (Fr + Nat + Aut) must sum to 1.0 for grades with lateral entries',
-					errors: weightErrors,
+					message: `Lateral weights for ${invalidLateralWeightEntry.gradeLevel} sum to ${invalidLateralWeightEntry.weightSum}, expected 1.0`,
 				});
 			}
 
-			// Upsert in a transaction
 			const result = await prisma.$transaction(async (tx) => {
 				const txPrisma = tx as typeof prisma;
 
@@ -238,14 +276,14 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 							versionId,
 							gradeLevel: entry.gradeLevel,
 							retentionRate: entry.retentionRate,
-							lateralEntryCount: entry.lateralEntryCount,
+							lateralEntryCount: entry.manualAdjustment,
 							lateralWeightFr: entry.lateralWeightFr,
 							lateralWeightNat: entry.lateralWeightNat,
 							lateralWeightAut: entry.lateralWeightAut,
 						},
 						update: {
 							retentionRate: entry.retentionRate,
-							lateralEntryCount: entry.lateralEntryCount,
+							lateralEntryCount: entry.manualAdjustment,
 							lateralWeightFr: entry.lateralWeightFr,
 							lateralWeightNat: entry.lateralWeightNat,
 							lateralWeightAut: entry.lateralWeightAut,
@@ -253,10 +291,9 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 					});
 				}
 
-				// Update stale modules
 				const currentStale = new Set(version.staleModules);
-				for (const m of ENROLLMENT_RULES_STALE_MODULES) {
-					currentStale.add(m);
+				for (const moduleName of ENROLLMENT_RULES_STALE_MODULES) {
+					currentStale.add(moduleName);
 				}
 				const staleModules = [...currentStale];
 
@@ -268,7 +305,6 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 					},
 				});
 
-				// Audit log
 				await txPrisma.auditEntry.create({
 					data: {
 						userId: request.user.id,
@@ -278,13 +314,13 @@ export async function cohortParameterRoutes(app: FastifyInstance) {
 						recordId: versionId,
 						ipAddress: request.ip,
 						newValues: {
-							entries: normalizedEntries.map((e) => ({
-								gradeLevel: e.gradeLevel,
-								retentionRate: e.retentionRate,
-								lateralEntryCount: e.lateralEntryCount,
-								lateralWeightFr: e.lateralWeightFr,
-								lateralWeightNat: e.lateralWeightNat,
-								lateralWeightAut: e.lateralWeightAut,
+							entries: normalizedEntries.map((entry) => ({
+								gradeLevel: entry.gradeLevel,
+								retentionRate: entry.retentionRate,
+								manualAdjustment: entry.manualAdjustment,
+								lateralWeightFr: entry.lateralWeightFr,
+								lateralWeightNat: entry.lateralWeightNat,
+								lateralWeightAut: entry.lateralWeightAut,
 							})),
 							planningRules,
 						} as unknown as Prisma.InputJsonValue,

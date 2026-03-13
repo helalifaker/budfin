@@ -54,6 +54,7 @@ pnpm lint:md      # Lint Markdown documentation
 
 | Document                      | Location                       |
 | ----------------------------- | ------------------------------ |
+| Documentation map             | `docs/README.md`               |
 | Technical Design Document     | `docs/tdd/`                    |
 | Product Requirements          | `docs/prd/`                    |
 | Edge Case Analysis            | `docs/edge-cases/`             |

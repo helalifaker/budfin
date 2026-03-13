@@ -48,6 +48,9 @@ vi.mock('../../lib/prisma.js', () => {
 		gradeLevel: {
 			findMany: vi.fn(),
 		},
+		versionCapacityConfig: {
+			findMany: vi.fn().mockResolvedValue([]),
+		},
 		dhgGrilleConfig: {
 			findMany: vi.fn(),
 		},
@@ -91,6 +94,7 @@ const mockPrisma = prisma as unknown as {
 	};
 	employee: { count: ReturnType<typeof vi.fn> };
 	gradeLevel: { findMany: ReturnType<typeof vi.fn> };
+	versionCapacityConfig: { findMany: ReturnType<typeof vi.fn> };
 	dhgGrilleConfig: { findMany: ReturnType<typeof vi.fn> };
 	dhgRequirement: { upsert: ReturnType<typeof vi.fn> };
 	monthlyStaffCost: {

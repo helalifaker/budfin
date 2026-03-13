@@ -174,23 +174,23 @@ describe('Enrollment & Capacity Validation — FY2026', () => {
 		});
 
 		it('should match per-grade AY1 headcounts from Excel', () => {
-			// Expected per-grade totals from ENROLLMENT_DETAIL (Grand Total column)
+			// Expected per-grade totals from real EFIR historical data
 			const expected: Record<string, number> = {
-				PS: 100,
-				MS: 103,
-				GS: 106,
-				CP: 110,
-				CE1: 113,
-				CE2: 116,
-				CM1: 119,
-				CM2: 122,
-				'6EME': 131,
-				'5EME': 134,
-				'4EME': 137,
-				'3EME': 139,
+				PS: 65,
+				MS: 77,
+				GS: 124,
+				CP: 126,
+				CE1: 118,
+				CE2: 132,
+				CM1: 121,
+				CM2: 121,
+				'6EME': 151,
+				'5EME': 139,
+				'4EME': 120,
+				'3EME': 103,
 				'2NDE': 125,
 				'1ERE': 120,
-				TERM: 78,
+				TERM: 111,
 			};
 
 			const ay1ByGrade: Record<string, number> = {};
@@ -212,7 +212,7 @@ describe('Enrollment & Capacity Validation — FY2026', () => {
 			}
 
 			expect(ay1ByGrade['1ERE']).toBe(120);
-			expect(ay1ByGrade['TERM']).toBe(78);
+			expect(ay1ByGrade['TERM']).toBe(111);
 			// Verify S1T does not exist
 			expect(ay1ByGrade['S1T']).toBeUndefined();
 		});
@@ -300,12 +300,12 @@ describe('Enrollment & Capacity Validation — FY2026', () => {
 			const results = calculateCapacity(inputs, configMap);
 			const totalSections = results.reduce((sum, r) => sum + r.sectionsNeeded, 0);
 
-			// Engine computes MINIMUM sections: ceil(headcount/maxClassSize) = 64
+			// Engine computes MINIMUM sections: ceil(headcount/maxClassSize) = 66
 			// Excel EXECUTIVE_SUMMARY shows PLANNED sections: 74
-			// Difference of 10: schools open more sections than minimum for operational
+			// Difference of 8: schools open more sections than minimum for operational
 			// reasons (mid-year intake buffer, pedagogical grouping, option splits).
 			// This is an expected discrepancy — not a bug.
-			expect(totalSections).toBe(64);
+			expect(totalSections).toBe(66);
 			expect(totalSections).toBeLessThan(74); // always fewer than planned
 		});
 	});
@@ -340,12 +340,12 @@ describe('Enrollment & Capacity Validation — FY2026', () => {
 		it('should preserve total student count after mapping', () => {
 			if (!enrollmentHeadcount) return;
 
-			// 2025-26 CSV total: PS(65)+MS(71)+GS(124)+CP(126)+CE1(118)+CE2(132)
+			// 2025-26 CSV total: PS(65)+MS(77)+GS(124)+CP(126)+CE1(118)+CE2(132)
 			// +CM1(121)+CM2(121)+6EME(151)+5EME(139)+4EME(120)+3EME(103)
-			// +2NDE(125)+1ERE(120)+TERM(111) = 1747
+			// +2NDE(125)+1ERE(120)+TERM(111) = 1753
 			const fy2026 = enrollmentHeadcount.filter((e) => e.academicYear === '2025-26');
 			const total = fy2026.reduce((sum, e) => sum + e.headcount, 0);
-			expect(total).toBe(1747);
+			expect(total).toBe(1753);
 		});
 	});
 });

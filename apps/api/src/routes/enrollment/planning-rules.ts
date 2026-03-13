@@ -14,7 +14,9 @@ const versionIdParamsSchema = z.object({
 
 const planningRulesSchema = z.object({
 	rolloverThreshold: z.number().min(0.5).max(2),
-	cappedRetention: z.number().min(0.5).max(1),
+	retentionRecentWeight: z.number().min(0).max(1),
+	historicalTargetRecentWeight: z.number().min(0).max(1),
+	cappedRetention: z.number().min(0.5).max(1).optional(),
 });
 
 export async function planningRulesRoutes(app: FastifyInstance) {
@@ -32,6 +34,8 @@ export async function planningRulesRoutes(app: FastifyInstance) {
 					id: true,
 					rolloverThreshold: true,
 					cappedRetention: true,
+					retentionRecentWeight: true,
+					historicalTargetRecentWeight: true,
 				},
 			});
 
@@ -100,6 +104,8 @@ export async function planningRulesRoutes(app: FastifyInstance) {
 					select: {
 						rolloverThreshold: true,
 						cappedRetention: true,
+						retentionRecentWeight: true,
+						historicalTargetRecentWeight: true,
 					},
 				});
 

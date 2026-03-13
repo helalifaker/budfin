@@ -189,7 +189,7 @@ NEW  apps/api/src/validation/parse-consolidated-excel.ts
 NEW  apps/api/src/validation/revenue-validation.test.ts
 NEW  apps/api/src/validation/enrollment-validation.test.ts
 NEW  apps/api/src/validation/seed-fy2026.ts
-NEW  docs/validation-sprint-report.md
+NEW  docs/reviews/2026-03-08-validation-sprint-report.md
 ```
 
 ## Files Modified

@@ -78,6 +78,8 @@ describe('GET /planning-rules', () => {
 			id: 1,
 			rolloverThreshold: 1.03,
 			cappedRetention: 0.99,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 
 		const token = await makeToken();
@@ -91,6 +93,8 @@ describe('GET /planning-rules', () => {
 		expect(res.json()).toEqual({
 			rolloverThreshold: 1.03,
 			cappedRetention: 0.99,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 	});
 
@@ -120,6 +124,8 @@ describe('PUT /planning-rules', () => {
 		mockPrisma.budgetVersion.update.mockResolvedValueOnce({
 			rolloverThreshold: '1.0200',
 			cappedRetention: '0.9900',
+			retentionRecentWeight: '0.6500',
+			historicalTargetRecentWeight: '0.8500',
 		});
 
 		const token = await makeToken();
@@ -130,6 +136,8 @@ describe('PUT /planning-rules', () => {
 			payload: {
 				rolloverThreshold: 1.02,
 				cappedRetention: 0.99,
+				retentionRecentWeight: 0.65,
+				historicalTargetRecentWeight: 0.85,
 			},
 		});
 
@@ -139,16 +147,22 @@ describe('PUT /planning-rules', () => {
 			data: {
 				rolloverThreshold: '1.0200',
 				cappedRetention: '0.9900',
+				retentionRecentWeight: '0.6500',
+				historicalTargetRecentWeight: '0.8500',
 				staleModules: ['REVENUE', 'ENROLLMENT', 'DHG', 'STAFFING', 'PNL'],
 			},
 			select: {
 				rolloverThreshold: true,
 				cappedRetention: true,
+				retentionRecentWeight: true,
+				historicalTargetRecentWeight: true,
 			},
 		});
 		expect(res.json()).toEqual({
 			rolloverThreshold: 1.02,
 			cappedRetention: 0.99,
+			retentionRecentWeight: 0.65,
+			historicalTargetRecentWeight: 0.85,
 			staleModules: ['REVENUE', 'ENROLLMENT', 'DHG', 'STAFFING', 'PNL'],
 		});
 	});
@@ -161,7 +175,12 @@ describe('PUT /planning-rules', () => {
 			method: 'PUT',
 			url: '/api/v1/versions/999/enrollment/planning-rules',
 			headers: authHeader(token),
-			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+			payload: {
+				rolloverThreshold: 1.02,
+				cappedRetention: 0.99,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
+			},
 		});
 
 		expect(res.statusCode).toBe(404);
@@ -181,7 +200,12 @@ describe('PUT /planning-rules', () => {
 			method: 'PUT',
 			url: `${URL_PREFIX}/planning-rules`,
 			headers: authHeader(token),
-			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+			payload: {
+				rolloverThreshold: 1.02,
+				cappedRetention: 0.99,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
+			},
 		});
 
 		expect(res.statusCode).toBe(409);
@@ -201,7 +225,12 @@ describe('PUT /planning-rules', () => {
 			method: 'PUT',
 			url: `${URL_PREFIX}/planning-rules`,
 			headers: authHeader(token),
-			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+			payload: {
+				rolloverThreshold: 1.02,
+				cappedRetention: 0.99,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
+			},
 		});
 
 		expect(res.statusCode).toBe(409);
@@ -214,7 +243,12 @@ describe('PUT /planning-rules', () => {
 			method: 'PUT',
 			url: `${URL_PREFIX}/planning-rules`,
 			headers: authHeader(token),
-			payload: { rolloverThreshold: 1.02, cappedRetention: 0.99 },
+			payload: {
+				rolloverThreshold: 1.02,
+				cappedRetention: 0.99,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
+			},
 		});
 
 		expect(res.statusCode).toBe(403);

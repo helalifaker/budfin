@@ -2,17 +2,60 @@ import type { GradeCode, AcademicPeriod, NationalityType } from './enrollment.js
 
 export interface PlanningRules {
 	rolloverThreshold: number;
-	cappedRetention: number;
+	retentionRecentWeight: number;
+	historicalTargetRecentWeight: number;
+	cappedRetention?: number | undefined;
+}
+
+export interface EnrollmentCapacityByGradeSetting {
+	gradeLevel: GradeCode;
+	gradeName: string;
+	band: string;
+	displayOrder: number;
+	defaultAy2Intake: number | null;
+	maxClassSize: number;
+	plancherPct: number;
+	ciblePct: number;
+	plafondPct: number;
+	templateMaxClassSize: number;
+	templatePlancherPct: number;
+	templateCiblePct: number;
+	templatePlafondPct: number;
+}
+
+export interface EnrollmentSettings {
+	rules: PlanningRules;
+	capacityByGrade: EnrollmentCapacityByGradeSetting[];
+}
+
+export interface EnrollmentSettingsUpdatePayload {
+	rules: PlanningRules;
+	capacityByGrade: Array<
+		Pick<
+			EnrollmentCapacityByGradeSetting,
+			'gradeLevel' | 'maxClassSize' | 'plancherPct' | 'ciblePct' | 'plafondPct'
+		>
+	>;
 }
 
 export interface CohortParameterEntry {
 	gradeLevel: GradeCode;
 	retentionRate: number;
-	lateralEntryCount: number;
+	manualAdjustment?: number;
+	lateralEntryCount?: number;
 	lateralWeightFr: number;
 	lateralWeightNat: number;
 	lateralWeightAut: number;
 	isPersisted?: boolean;
+	historicalTrendRatio?: number | null;
+	historicalTrendRetention?: number | null;
+	appliedRetentionRate?: number | null;
+	retainedFromPrior?: number | null;
+	historicalTargetHeadcount?: number | null;
+	derivedLaterals?: number | null;
+	ay2Headcount?: number | null;
+	usesConfiguredRetention?: boolean;
+	ratioObservationCount?: number;
 	recommendedRetentionRate?: number;
 	recommendedLateralEntryCount?: number;
 	recommendationConfidence?: 'high' | 'medium' | 'low';
@@ -49,6 +92,7 @@ export interface CohortProgressionRow {
 export interface EnrollmentKpiData {
 	totalAy1: number;
 	totalAy2: number;
+	totalDelta?: number;
 	utilizationPct: number;
 	alertCount: number;
 	isStale: boolean;
@@ -62,10 +106,20 @@ export interface EnrollmentMasterGridRow {
 	isPS: boolean;
 	ay1Headcount: number;
 	retentionRate: number;
+	trendRetentionRate?: number | null;
+	retainedFromPrior?: number;
+	historicalTargetHeadcount?: number | null;
+	manualAdjustment?: number;
+	usesConfiguredRetention?: boolean;
 	lateralEntry: number;
 	ay2Headcount: number;
+	delta: number;
+	maxClassSize: number;
 	sectionsNeeded: number;
 	utilization: number;
+	plancher: number;
+	cible: number;
+	plafond: number;
 	alert: 'OVER' | 'NEAR_CAP' | 'OK' | 'UNDER' | null;
 	recruitmentSlots: number;
 	isPersistedResult: boolean;

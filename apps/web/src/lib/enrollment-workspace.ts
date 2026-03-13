@@ -1,14 +1,16 @@
-import Decimal from 'decimal.js';
 import type {
 	CapacityAlert,
 	CohortParameterEntry,
+	EnrollmentCapacityByGradeSetting,
 	EnrollmentMasterGridRow,
 	GradeCode,
+	HistoricalHeadcountPoint,
 	NationalityBreakdownEntry,
 	NationalityType,
 	PlanningRules,
 } from '@budfin/types';
-import type { GradeLevel } from '../hooks/use-grade-levels';
+import { calculateCohortGradeResult } from '@budfin/types';
+import Decimal from 'decimal.js';
 import type { HeadcountRow } from '../hooks/use-enrollment';
 
 export const ENROLLMENT_GRADE_PROGRESSION: GradeCode[] = [
@@ -41,14 +43,19 @@ export const BAND_LABELS: Record<string, string> = {
 export interface CohortProjectionRow {
 	gradeLevel: GradeCode;
 	gradeName: string;
-	band: GradeLevel['band'];
+	band: EnrollmentGradeLevel['band'];
 	displayOrder: number;
 	isPS: boolean;
 	ay1Headcount: number;
-	retainedFromPrior: number;
 	retentionRate: number;
+	trendRetentionRate: number | null;
+	appliedRetentionRate: number;
+	retainedFromPrior: number;
+	historicalTargetHeadcount: number | null;
+	manualAdjustment: number;
 	lateralEntry: number;
 	ay2Headcount: number;
+	usesConfiguredRetention: boolean;
 }
 
 export interface CapacityPreviewRow {
@@ -62,40 +69,76 @@ export interface CapacityPreviewRow {
 	recruitmentSlots: number;
 }
 
-const DEFAULT_LATERAL_WEIGHTS: Record<NationalityType, number> = {
-	Francais: 0.3333,
-	Nationaux: 0.3334,
-	Autres: 0.3333,
+export interface EnrollmentGradeLevel {
+	gradeCode: string;
+	gradeName: string;
+	band: string;
+	displayOrder: number;
+	maxClassSize: number;
+	defaultAy2Intake: number | null;
+	plancherPct: number | string;
+	ciblePct: number | string;
+	plafondPct: number | string;
+}
+
+// Real EFIR distribution: ~34% Francais, ~2% Nationaux, ~64% Autres
+const DEFAULT_NATIONALITY_WEIGHTS: Record<NationalityType, number> = {
+	Francais: 0.3366,
+	Nationaux: 0.0234,
+	Autres: 0.64,
 };
+
+const CAPACITY_OK_UTILIZATION_THRESHOLD = 70;
+const CAPACITY_NEAR_UTILIZATION_THRESHOLD = 95;
 
 export const DEFAULT_PLANNING_RULES: PlanningRules = {
 	rolloverThreshold: 1,
+	retentionRecentWeight: 0.6,
+	historicalTargetRecentWeight: 0.8,
 	cappedRetention: 0.98,
 };
+
+export function resolveEnrollmentGradeLevels({
+	gradeLevels,
+	capacityByGrade,
+}: {
+	gradeLevels: EnrollmentGradeLevel[];
+	capacityByGrade?: EnrollmentCapacityByGradeSetting[] | undefined;
+}): EnrollmentGradeLevel[] {
+	if (!capacityByGrade || capacityByGrade.length === 0) {
+		return gradeLevels;
+	}
+
+	return [...capacityByGrade]
+		.sort((left, right) => left.displayOrder - right.displayOrder)
+		.map((row) => ({
+			gradeCode: row.gradeLevel,
+			gradeName: row.gradeName,
+			band: row.band,
+			displayOrder: row.displayOrder,
+			maxClassSize: row.maxClassSize,
+			defaultAy2Intake: row.defaultAy2Intake,
+			plancherPct: row.plancherPct,
+			ciblePct: row.ciblePct,
+			plafondPct: row.plafondPct,
+		}));
+}
 
 function getPriorGrade(gradeLevel: GradeCode): GradeCode | null {
 	const index = ENROLLMENT_GRADE_PROGRESSION.indexOf(gradeLevel);
 	if (index <= 0) {
 		return null;
 	}
+
 	return ENROLLMENT_GRADE_PROGRESSION[index - 1] ?? null;
 }
 
-function normalizeLateralWeights(entry: CohortParameterEntry | undefined) {
-	if (!entry || entry.lateralEntryCount <= 0) {
-		return DEFAULT_LATERAL_WEIGHTS;
+function normalizeWholeNumber(value: number | undefined | null) {
+	if (!Number.isFinite(value)) {
+		return 0;
 	}
 
-	const weightSum = entry.lateralWeightFr + entry.lateralWeightNat + entry.lateralWeightAut;
-	if (Math.abs(weightSum) < 0.0001) {
-		return DEFAULT_LATERAL_WEIGHTS;
-	}
-
-	return {
-		Francais: entry.lateralWeightFr,
-		Nationaux: entry.lateralWeightNat,
-		Autres: entry.lateralWeightAut,
-	};
+	return Math.round(value ?? 0);
 }
 
 function reconcileCountsToTarget(
@@ -125,6 +168,139 @@ function reconcileCountsToTarget(
 		headcount: counts[largestIndex]!.headcount + diff,
 	};
 	return counts;
+}
+
+function toHistoricalHeadcountPoints(historicalEntries: HistoricalHeadcountPoint[] | undefined) {
+	return (historicalEntries ?? []).map((entry) => ({
+		academicYear: entry.academicYear,
+		gradeLevel: entry.gradeLevel,
+		headcount: entry.headcount,
+	}));
+}
+
+export function getCapacityAlertForUtilization(utilization: number): CapacityAlert | null {
+	if (utilization <= 0) {
+		return null;
+	}
+
+	if (utilization > 100) {
+		return 'OVER';
+	}
+
+	if (utilization > CAPACITY_NEAR_UTILIZATION_THRESHOLD) {
+		return 'NEAR_CAP';
+	}
+
+	if (utilization >= CAPACITY_OK_UTILIZATION_THRESHOLD) {
+		return 'OK';
+	}
+
+	return 'UNDER';
+}
+
+function getCapacityAlert({
+	headcount,
+	utilization,
+	plafond,
+}: {
+	headcount: number;
+	utilization: number;
+	plafond: number;
+}): CapacityAlert | null {
+	if (headcount <= 0) {
+		return null;
+	}
+
+	if (headcount > plafond) {
+		return 'OVER';
+	}
+
+	return getCapacityAlertForUtilization(utilization);
+}
+
+function getDefaultConfiguredRetentionRate(entry: CohortParameterEntry | undefined) {
+	if (!entry) {
+		return 1;
+	}
+
+	if (entry.gradeLevel === 'PS') {
+		return 0;
+	}
+
+	if (entry.usesConfiguredRetention) {
+		return entry.retentionRate;
+	}
+
+	return entry.historicalTrendRetention ?? entry.retentionRate;
+}
+
+function getDerivedCalculation({
+	gradeLevel,
+	cohortEntry,
+	ay1HeadcountMap,
+	psAy2Headcount,
+	planningRules,
+	historicalEntries,
+	targetFiscalYear,
+}: {
+	gradeLevel: GradeCode;
+	cohortEntry: CohortParameterEntry | undefined;
+	ay1HeadcountMap: Map<GradeCode, number>;
+	psAy2Headcount: number;
+	planningRules: PlanningRules;
+	historicalEntries?: HistoricalHeadcountPoint[] | undefined;
+	targetFiscalYear?: number | undefined;
+}) {
+	const priorGrade = getPriorGrade(gradeLevel);
+	const feederAy1Headcount = priorGrade ? (ay1HeadcountMap.get(priorGrade) ?? 0) : 0;
+	const manualAdjustment = normalizeWholeNumber(
+		cohortEntry?.manualAdjustment ?? cohortEntry?.lateralEntryCount ?? 0
+	);
+
+	if (historicalEntries && historicalEntries.length > 0) {
+		const resolvedTargetFiscalYear =
+			targetFiscalYear ?? Math.max(...historicalEntries.map((entry) => entry.academicYear)) + 1;
+
+		return calculateCohortGradeResult({
+			gradeLevel,
+			feederAy1Headcount,
+			configuredRetentionRate: getDefaultConfiguredRetentionRate(cohortEntry),
+			manualAdjustment,
+			historicalHeadcounts: toHistoricalHeadcountPoints(historicalEntries),
+			targetFiscalYear: resolvedTargetFiscalYear,
+			planningRules,
+			psAy2Headcount,
+		});
+	}
+
+	return {
+		gradeLevel,
+		historicalTrendRatio: cohortEntry?.historicalTrendRatio ?? null,
+		historicalTrendRetention: cohortEntry?.historicalTrendRetention ?? null,
+		appliedRetentionRate: cohortEntry?.appliedRetentionRate ?? cohortEntry?.retentionRate ?? 0,
+		retainedFromPrior:
+			cohortEntry?.retainedFromPrior ??
+			Math.round(
+				feederAy1Headcount * (cohortEntry?.appliedRetentionRate ?? cohortEntry?.retentionRate ?? 0)
+			),
+		historicalTargetHeadcount: cohortEntry?.historicalTargetHeadcount ?? null,
+		derivedLaterals: cohortEntry?.derivedLaterals ?? 0,
+		manualAdjustment,
+		ay2Headcount:
+			cohortEntry?.ay2Headcount ??
+			Math.max(
+				0,
+				(cohortEntry?.retainedFromPrior ??
+					Math.round(
+						feederAy1Headcount *
+							(cohortEntry?.appliedRetentionRate ?? cohortEntry?.retentionRate ?? 0)
+					)) +
+					(cohortEntry?.derivedLaterals ?? 0) +
+					manualAdjustment
+			),
+		usesConfiguredRetention: cohortEntry?.usesConfiguredRetention ?? false,
+		ratioObservationCount: cohortEntry?.ratioObservationCount ?? 0,
+	};
 }
 
 export function deriveEnrollmentEditability({
@@ -180,106 +356,91 @@ export function getPsAy2Headcount(
 	return persistedPsAy2?.headcount ?? defaultAy2Intake ?? ay1HeadcountMap.get('PS') ?? 0;
 }
 
-function roundUpToFourDecimals(value: number) {
-	const SCALE = new Decimal(10_000);
-	return new Decimal(value).times(SCALE).ceil().div(SCALE).toNumber();
-}
-
-export function deriveRecommendationFromObservation({
-	gradeLevel,
-	priorAy1Headcount,
-	ay2Headcount,
-	planningRules = DEFAULT_PLANNING_RULES,
+export function applyPlanningRulesToCohortEntries({
+	entries,
+	planningRules,
+	ay1HeadcountMap,
+	historicalEntries,
+	psAy2Headcount,
+	targetFiscalYear,
 }: {
-	gradeLevel: GradeCode;
-	priorAy1Headcount: number | null | undefined;
-	ay2Headcount: number | null | undefined;
-	planningRules?: PlanningRules;
+	entries: CohortParameterEntry[];
+	planningRules: PlanningRules;
+	ay1HeadcountMap: Map<GradeCode, number>;
+	historicalEntries: HistoricalHeadcountPoint[];
+	psAy2Headcount: number;
+	targetFiscalYear?: number | undefined;
 }) {
-	if (gradeLevel === 'PS') {
-		return {
-			recommendedRetentionRate: 0,
-			recommendedLateralEntryCount: 0,
-			rolloverRatio: null,
-			rule: 'direct-entry' as const,
-		};
-	}
-
-	if (
-		priorAy1Headcount === null ||
-		priorAy1Headcount === undefined ||
-		priorAy1Headcount <= 0 ||
-		ay2Headcount === null ||
-		ay2Headcount === undefined ||
-		ay2Headcount < 0
-	) {
-		return {
-			recommendedRetentionRate: planningRules.cappedRetention,
-			recommendedLateralEntryCount: 0,
-			rolloverRatio: null,
-			rule: 'fallback-default' as const,
-		};
-	}
-
-	const rolloverRatioD = new Decimal(ay2Headcount).div(priorAy1Headcount);
-	const roundedRolloverRatio = rolloverRatioD.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toNumber();
-
-	if (rolloverRatioD.toNumber() > planningRules.rolloverThreshold) {
-		const retainedAtCappedRate = new Decimal(priorAy1Headcount)
-			.times(planningRules.cappedRetention)
-			.floor()
-			.toNumber();
-		return {
-			recommendedRetentionRate: planningRules.cappedRetention,
-			recommendedLateralEntryCount: Math.max(0, ay2Headcount - retainedAtCappedRate),
-			rolloverRatio: roundedRolloverRatio,
-			rule: 'capped-retention-growth' as const,
-		};
-	}
-
-	const roundedHistoricalRetention = Math.min(roundUpToFourDecimals(rolloverRatioD.toNumber()), 1);
-	const retainedFromHistoricalRate = new Decimal(priorAy1Headcount)
-		.times(roundedHistoricalRetention)
-		.floor()
-		.toNumber();
-
-	return {
-		recommendedRetentionRate: roundedHistoricalRetention,
-		recommendedLateralEntryCount: Math.max(0, ay2Headcount - retainedFromHistoricalRate),
-		rolloverRatio: roundedRolloverRatio,
-		rule: 'historical-rollover' as const,
-	};
-}
-
-export function applyPlanningRulesToCohortEntries(
-	entries: CohortParameterEntry[],
-	planningRules: PlanningRules
-) {
 	return entries.map((entry) => {
-		const recommendation = deriveRecommendationFromObservation({
+		const calculation = getDerivedCalculation({
 			gradeLevel: entry.gradeLevel,
-			priorAy1Headcount: entry.recommendationPriorAy1Headcount,
-			ay2Headcount: entry.recommendationAy2Headcount,
+			cohortEntry: entry,
+			ay1HeadcountMap,
+			psAy2Headcount,
 			planningRules,
+			historicalEntries,
+			targetFiscalYear,
 		});
 
 		return {
 			...entry,
-			recommendedRetentionRate: recommendation.recommendedRetentionRate,
-			recommendedLateralEntryCount: recommendation.recommendedLateralEntryCount,
-			recommendationRolloverRatio: recommendation.rolloverRatio,
-			recommendationRule: recommendation.rule,
-		};
+			historicalTrendRatio: calculation.historicalTrendRatio,
+			historicalTrendRetention: calculation.historicalTrendRetention,
+			appliedRetentionRate: calculation.appliedRetentionRate,
+			retainedFromPrior: calculation.retainedFromPrior,
+			historicalTargetHeadcount: calculation.historicalTargetHeadcount,
+			derivedLaterals: calculation.derivedLaterals,
+			manualAdjustment: calculation.manualAdjustment,
+			lateralEntryCount: calculation.manualAdjustment,
+			ay2Headcount: calculation.ay2Headcount,
+			usesConfiguredRetention: calculation.usesConfiguredRetention,
+			ratioObservationCount: calculation.ratioObservationCount,
+			recommendedRetentionRate:
+				entry.gradeLevel === 'PS'
+					? 0
+					: calculation.usesConfiguredRetention
+						? entry.retentionRate
+						: (calculation.historicalTrendRetention ?? entry.retentionRate),
+			recommendedLateralEntryCount: calculation.derivedLaterals,
+			recommendationConfidence:
+				calculation.ratioObservationCount >= 3
+					? 'high'
+					: calculation.ratioObservationCount === 2
+						? 'medium'
+						: 'low',
+			recommendationObservationCount: calculation.ratioObservationCount,
+			recommendationSourceFiscalYear:
+				historicalEntries.length > 0
+					? Math.max(...historicalEntries.map((historicalEntry) => historicalEntry.academicYear))
+					: null,
+			recommendationRolloverRatio: calculation.historicalTrendRatio,
+			recommendationPriorAy1Headcount:
+				entry.gradeLevel === 'PS'
+					? null
+					: (ay1HeadcountMap.get(getPriorGrade(entry.gradeLevel) ?? entry.gradeLevel) ?? 0),
+			recommendationAy2Headcount: calculation.ay2Headcount,
+			recommendationRule:
+				entry.gradeLevel === 'PS'
+					? 'direct-entry'
+					: calculation.ratioObservationCount === 0
+						? 'fallback-default'
+						: calculation.usesConfiguredRetention
+							? 'capped-retention-growth'
+							: 'historical-rollover',
+		} satisfies CohortParameterEntry;
 	});
 }
 
 export function isCohortEntryOverridden(entry: CohortParameterEntry) {
-	const recommendedRetention = entry.recommendedRetentionRate ?? entry.retentionRate;
-	const recommendedLaterals = entry.recommendedLateralEntryCount ?? entry.lateralEntryCount;
-	return (
-		Math.abs(entry.retentionRate - recommendedRetention) > 0.0001 ||
-		entry.lateralEntryCount !== recommendedLaterals
-	);
+	const recommendedRetention =
+		entry.gradeLevel === 'PS'
+			? 0
+			: entry.usesConfiguredRetention
+				? (entry.recommendedRetentionRate ?? entry.retentionRate)
+				: (entry.historicalTrendRetention ?? entry.recommendedRetentionRate ?? entry.retentionRate);
+	const manualAdjustment = normalizeWholeNumber(entry.manualAdjustment ?? entry.lateralEntryCount);
+
+	return Math.abs(entry.retentionRate - recommendedRetention) > 0.0001 || manualAdjustment !== 0;
 }
 
 export function buildCohortProjectionRows({
@@ -288,12 +449,16 @@ export function buildCohortProjectionRows({
 	cohortEntries,
 	psAy2Headcount,
 	planningRules = DEFAULT_PLANNING_RULES,
+	historicalEntries,
+	targetFiscalYear,
 }: {
-	gradeLevels: GradeLevel[];
+	gradeLevels: EnrollmentGradeLevel[];
 	ay1HeadcountMap: Map<GradeCode, number>;
 	cohortEntries: CohortParameterEntry[];
 	psAy2Headcount: number;
 	planningRules?: PlanningRules;
+	historicalEntries?: HistoricalHeadcountPoint[] | undefined;
+	targetFiscalYear?: number | undefined;
 }): CohortProjectionRow[] {
 	const cohortMap = new Map(cohortEntries.map((entry) => [entry.gradeLevel, entry]));
 
@@ -302,14 +467,16 @@ export function buildCohortProjectionRows({
 		.map((gradeLevel) => {
 			const gradeCode = gradeLevel.gradeCode as GradeCode;
 			const isPS = gradeCode === 'PS';
-			const currentAy1 = ay1HeadcountMap.get(gradeCode) ?? 0;
 			const cohortEntry = cohortMap.get(gradeCode);
-			const retentionRate =
-				cohortEntry?.retentionRate ?? (isPS ? 0 : planningRules.cappedRetention);
-			const lateralEntry = cohortEntry?.lateralEntryCount ?? 0;
-			const priorGrade = getPriorGrade(gradeCode);
-			const priorAy1 = priorGrade ? (ay1HeadcountMap.get(priorGrade) ?? 0) : 0;
-			const retainedFromPrior = isPS ? 0 : Math.floor(priorAy1 * retentionRate);
+			const calculation = getDerivedCalculation({
+				gradeLevel: gradeCode,
+				cohortEntry,
+				ay1HeadcountMap,
+				psAy2Headcount,
+				planningRules,
+				historicalEntries,
+				targetFiscalYear,
+			});
 
 			return {
 				gradeLevel: gradeCode,
@@ -317,11 +484,16 @@ export function buildCohortProjectionRows({
 				band: gradeLevel.band,
 				displayOrder: gradeLevel.displayOrder,
 				isPS,
-				ay1Headcount: currentAy1,
-				retainedFromPrior,
-				retentionRate,
-				lateralEntry: isPS ? 0 : lateralEntry,
-				ay2Headcount: isPS ? psAy2Headcount : retainedFromPrior + lateralEntry,
+				ay1Headcount: ay1HeadcountMap.get(gradeCode) ?? 0,
+				retentionRate: cohortEntry?.retentionRate ?? getDefaultConfiguredRetentionRate(cohortEntry),
+				trendRetentionRate: calculation.historicalTrendRetention,
+				appliedRetentionRate: calculation.appliedRetentionRate,
+				retainedFromPrior: calculation.retainedFromPrior,
+				historicalTargetHeadcount: calculation.historicalTargetHeadcount,
+				manualAdjustment: calculation.manualAdjustment,
+				lateralEntry: calculation.derivedLaterals,
+				ay2Headcount: isPS ? psAy2Headcount : calculation.ay2Headcount,
+				usesConfiguredRetention: calculation.usesConfiguredRetention,
 			};
 		});
 }
@@ -333,13 +505,17 @@ export function buildMasterGridRows({
 	psAy2Headcount,
 	capacityResults,
 	planningRules = DEFAULT_PLANNING_RULES,
+	historicalEntries,
+	targetFiscalYear,
 }: {
-	gradeLevels: GradeLevel[];
+	gradeLevels: EnrollmentGradeLevel[];
 	ay1HeadcountMap: Map<GradeCode, number>;
 	cohortEntries: CohortParameterEntry[];
 	psAy2Headcount: number;
 	capacityResults: CapacityPreviewRow[];
 	planningRules?: PlanningRules;
+	historicalEntries?: HistoricalHeadcountPoint[] | undefined;
+	targetFiscalYear?: number | undefined;
 }): EnrollmentMasterGridRow[] {
 	const projectionRows = buildCohortProjectionRows({
 		gradeLevels,
@@ -347,12 +523,15 @@ export function buildMasterGridRows({
 		cohortEntries,
 		psAy2Headcount,
 		planningRules,
+		historicalEntries,
+		targetFiscalYear,
 	});
 	const ay2CapacityMap = new Map(
 		capacityResults
 			.filter((result) => result.academicPeriod === 'AY2')
 			.map((result) => [result.gradeLevel, result] as const)
 	);
+	const gradeMap = new Map(gradeLevels.map((gradeLevel) => [gradeLevel.gradeCode, gradeLevel]));
 
 	const cohortMap = new Map(cohortEntries.map((entry) => [entry.gradeLevel, entry]));
 
@@ -361,7 +540,9 @@ export function buildMasterGridRows({
 		const cohortEntry = cohortMap.get(row.gradeLevel);
 		const alert = capacityRow?.alert ?? null;
 		const isPersistedResult = cohortEntry?.isPersisted === true;
-		const hasManualOverride = cohortEntry ? isCohortEntryOverridden(cohortEntry) : false;
+		const hasManualOverride = cohortEntry
+			? isCohortEntryOverridden(cohortEntry)
+			: row.manualAdjustment !== 0;
 		const hasBlockingIssue = alert === 'OVER' || (row.ay1Headcount === 0 && !row.isPS);
 
 		const issueTags: EnrollmentMasterGridRow['issueTags'] = [];
@@ -369,6 +550,13 @@ export function buildMasterGridRows({
 		if (alert === 'NEAR_CAP') issueTags.push('near-cap');
 		if (hasManualOverride) issueTags.push('manual-override');
 		if (row.ay1Headcount === 0 && !row.isPS) issueTags.push('missing-inputs');
+
+		const maxClassSize = capacityRow?.maxClassSize ?? 0;
+		const sectionsNeeded = capacityRow?.sectionsNeeded ?? 0;
+		const gradeConfig = gradeMap.get(row.gradeLevel);
+		const plancherPct = Number(gradeConfig?.plancherPct ?? 0);
+		const ciblePct = Number(gradeConfig?.ciblePct ?? 0);
+		const plafondPct = Number(gradeConfig?.plafondPct ?? 0);
 
 		return {
 			gradeLevel: row.gradeLevel,
@@ -378,10 +566,19 @@ export function buildMasterGridRows({
 			isPS: row.isPS,
 			ay1Headcount: row.ay1Headcount,
 			retentionRate: row.retentionRate,
+			trendRetentionRate: row.trendRetentionRate,
+			retainedFromPrior: row.retainedFromPrior,
+			historicalTargetHeadcount: row.historicalTargetHeadcount,
+			manualAdjustment: row.manualAdjustment,
 			lateralEntry: row.lateralEntry,
 			ay2Headcount: row.ay2Headcount,
-			sectionsNeeded: capacityRow?.sectionsNeeded ?? 0,
+			delta: row.ay2Headcount - row.ay1Headcount,
+			maxClassSize,
+			sectionsNeeded,
 			utilization: capacityRow?.utilization ?? 0,
+			plancher: Math.floor(sectionsNeeded * maxClassSize * plancherPct),
+			cible: Math.floor(sectionsNeeded * maxClassSize * ciblePct),
+			plafond: Math.floor(sectionsNeeded * maxClassSize * plafondPct),
 			alert,
 			recruitmentSlots: capacityRow?.recruitmentSlots ?? 0,
 			isPersistedResult,
@@ -395,11 +592,10 @@ export function buildMasterGridRows({
 export function buildNationalityPreviewRows({
 	projectionRows,
 	ay1NationalityEntries,
-	cohortEntries,
 }: {
 	projectionRows: CohortProjectionRow[];
 	ay1NationalityEntries: NationalityBreakdownEntry[];
-	cohortEntries: CohortParameterEntry[];
+	cohortEntries?: CohortParameterEntry[];
 }) {
 	const ay1ByGrade = new Map<GradeCode, NationalityBreakdownEntry[]>();
 	for (const entry of ay1NationalityEntries) {
@@ -412,7 +608,6 @@ export function buildNationalityPreviewRows({
 		ay1ByGrade.set(entry.gradeLevel, entries);
 	}
 
-	const cohortMap = new Map(cohortEntries.map((entry) => [entry.gradeLevel, entry]));
 	const results: NationalityBreakdownEntry[] = [];
 
 	for (const row of projectionRows) {
@@ -425,7 +620,7 @@ export function buildNationalityPreviewRows({
 							Nationaux: psEntries.find((entry) => entry.nationality === 'Nationaux')?.weight ?? 0,
 							Autres: psEntries.find((entry) => entry.nationality === 'Autres')?.weight ?? 0,
 						}
-					: DEFAULT_LATERAL_WEIGHTS;
+					: DEFAULT_NATIONALITY_WEIGHTS;
 
 			const counts = reconcileCountsToTarget(
 				(Object.keys(psWeights) as NationalityType[]).map((nationality) => ({
@@ -451,28 +646,29 @@ export function buildNationalityPreviewRows({
 
 		const priorGrade = getPriorGrade(row.gradeLevel);
 		const priorEntries = priorGrade ? (ay1ByGrade.get(priorGrade) ?? []) : [];
-		const cohortEntry = cohortMap.get(row.gradeLevel);
-		const lateralWeights = normalizeLateralWeights(cohortEntry);
-
 		const baselineEntries =
 			priorEntries.length > 0
 				? priorEntries
-				: (Object.keys(DEFAULT_LATERAL_WEIGHTS) as NationalityType[]).map((nationality) => ({
+				: (Object.keys(DEFAULT_NATIONALITY_WEIGHTS) as NationalityType[]).map((nationality) => ({
 						gradeLevel: row.gradeLevel,
 						academicPeriod: 'AY1',
 						nationality,
-						weight: DEFAULT_LATERAL_WEIGHTS[nationality],
+						weight: DEFAULT_NATIONALITY_WEIGHTS[nationality],
 						headcount: 0,
 						isOverridden: false,
 					}));
 
+		const totalPriorHeadcount = baselineEntries.reduce((sum, entry) => sum + entry.headcount, 0);
 		const counts = reconcileCountsToTarget(
-			baselineEntries.map((entry) => ({
-				nationality: entry.nationality,
-				headcount:
-					Math.floor(entry.headcount * row.retentionRate) +
-					Math.round(row.lateralEntry * lateralWeights[entry.nationality]),
-			})),
+			baselineEntries.map((entry) => {
+				const sourceWeight =
+					totalPriorHeadcount > 0 ? entry.headcount / totalPriorHeadcount : entry.weight;
+
+				return {
+					nationality: entry.nationality,
+					headcount: Math.round(row.ay2Headcount * sourceWeight),
+				};
+			}),
 			row.ay2Headcount
 		);
 
@@ -497,7 +693,7 @@ export function buildCapacityPreviewRows({
 	projectionRows,
 	capacityOverrides,
 }: {
-	gradeLevels: GradeLevel[];
+	gradeLevels: EnrollmentGradeLevel[];
 	ay1HeadcountMap: Map<GradeCode, number>;
 	projectionRows: CohortProjectionRow[];
 	capacityOverrides?: Map<string, number> | undefined;
@@ -510,16 +706,24 @@ export function buildCapacityPreviewRows({
 		if (!metadata) {
 			continue;
 		}
+
 		const maxClassSize = capacityOverrides?.get(gradeLevel) ?? metadata.maxClassSize;
-		rows.push(
-			buildCapacityPreviewRow({
-				gradeLevel,
-				academicPeriod: 'AY1',
-				headcount: ay1Headcount,
-				maxClassSize,
-				plafondPct: Number(metadata.plafondPct),
-			})
-		);
+		const sectionsNeeded = maxClassSize > 0 ? Math.ceil(ay1Headcount / maxClassSize) : 0;
+		const totalCapacity = sectionsNeeded * maxClassSize;
+		const utilization =
+			totalCapacity > 0 ? new Decimal(ay1Headcount).div(totalCapacity).times(100).toNumber() : 0;
+		const plafond = sectionsNeeded * maxClassSize * Number(metadata.plafondPct);
+
+		rows.push({
+			gradeLevel,
+			academicPeriod: 'AY1',
+			headcount: ay1Headcount,
+			maxClassSize,
+			sectionsNeeded,
+			utilization: new Decimal(utilization).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber(),
+			alert: getCapacityAlert({ headcount: ay1Headcount, utilization, plafond }),
+			recruitmentSlots: Math.max(0, sectionsNeeded * maxClassSize - ay1Headcount),
+		});
 	}
 
 	for (const row of projectionRows) {
@@ -527,16 +731,26 @@ export function buildCapacityPreviewRows({
 		if (!metadata) {
 			continue;
 		}
+
 		const maxClassSize = capacityOverrides?.get(row.gradeLevel) ?? metadata.maxClassSize;
-		rows.push(
-			buildCapacityPreviewRow({
-				gradeLevel: row.gradeLevel,
-				academicPeriod: 'AY2',
-				headcount: row.ay2Headcount,
-				maxClassSize,
-				plafondPct: Number(metadata.plafondPct),
-			})
-		);
+		const sectionsNeeded = maxClassSize > 0 ? Math.ceil(row.ay2Headcount / maxClassSize) : 0;
+		const totalCapacity = sectionsNeeded * maxClassSize;
+		const utilization =
+			totalCapacity > 0
+				? new Decimal(row.ay2Headcount).div(totalCapacity).times(100).toNumber()
+				: 0;
+		const plafond = sectionsNeeded * maxClassSize * Number(metadata.plafondPct);
+
+		rows.push({
+			gradeLevel: row.gradeLevel,
+			academicPeriod: 'AY2',
+			headcount: row.ay2Headcount,
+			maxClassSize,
+			sectionsNeeded,
+			utilization: new Decimal(utilization).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber(),
+			alert: getCapacityAlert({ headcount: row.ay2Headcount, utilization, plafond }),
+			recruitmentSlots: Math.max(0, sectionsNeeded * maxClassSize - row.ay2Headcount),
+		});
 	}
 
 	return rows;
@@ -555,36 +769,11 @@ export function buildCapacityPreviewRow({
 	maxClassSize: number;
 	plafondPct: number;
 }): CapacityPreviewRow {
-	if (headcount === 0 || maxClassSize === 0) {
-		return {
-			gradeLevel,
-			academicPeriod,
-			headcount,
-			maxClassSize,
-			sectionsNeeded: 0,
-			utilization: 0,
-			alert: null,
-			recruitmentSlots: 0,
-		};
-	}
-
-	const sectionsNeeded = Math.ceil(headcount / maxClassSize);
+	const sectionsNeeded = maxClassSize > 0 ? Math.ceil(headcount / maxClassSize) : 0;
 	const totalCapacity = sectionsNeeded * maxClassSize;
-	const utilization = new Decimal(headcount)
-		.div(totalCapacity)
-		.times(100)
-		.toDecimalPlaces(1, Decimal.ROUND_HALF_UP)
-		.toNumber();
-	let alert: CapacityAlert | null = null;
-	if (utilization > 100) {
-		alert = 'OVER';
-	} else if (utilization > 95) {
-		alert = 'NEAR_CAP';
-	} else if (utilization >= 70) {
-		alert = 'OK';
-	} else {
-		alert = 'UNDER';
-	}
+	const utilization =
+		totalCapacity > 0 ? new Decimal(headcount).div(totalCapacity).times(100).toNumber() : 0;
+	const plafond = sectionsNeeded * maxClassSize * plafondPct;
 
 	return {
 		gradeLevel,
@@ -592,10 +781,57 @@ export function buildCapacityPreviewRow({
 		headcount,
 		maxClassSize,
 		sectionsNeeded,
-		utilization,
-		alert,
-		recruitmentSlots: Math.floor(totalCapacity * plafondPct) - headcount,
+		utilization: new Decimal(utilization).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber(),
+		alert: getCapacityAlert({ headcount, utilization, plafond }),
+		recruitmentSlots: Math.max(0, sectionsNeeded * maxClassSize - headcount),
 	};
+}
+
+export interface BandNationalitySummary {
+	band: string;
+	label: string;
+	francaisPct: number;
+	nationauxPct: number;
+	autresPct: number;
+	total: number;
+}
+
+const BAND_ORDER = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'];
+
+export function buildBandNationalitySummary(
+	nationalityEntries: NationalityBreakdownEntry[],
+	gradeLevels: EnrollmentGradeLevel[]
+): BandNationalitySummary[] {
+	const gradeToBand = new Map(gradeLevels.map((gl) => [gl.gradeCode, gl.band]));
+	const bandTotals = new Map<string, { francais: number; nationaux: number; autres: number }>();
+
+	for (const entry of nationalityEntries) {
+		const band = gradeToBand.get(entry.gradeLevel);
+		if (!band) continue;
+
+		let totals = bandTotals.get(band);
+		if (!totals) {
+			totals = { francais: 0, nationaux: 0, autres: 0 };
+			bandTotals.set(band, totals);
+		}
+
+		if (entry.nationality === 'Francais') totals.francais += entry.headcount;
+		else if (entry.nationality === 'Nationaux') totals.nationaux += entry.headcount;
+		else if (entry.nationality === 'Autres') totals.autres += entry.headcount;
+	}
+
+	return BAND_ORDER.map((band) => {
+		const totals = bandTotals.get(band) ?? { francais: 0, nationaux: 0, autres: 0 };
+		const total = totals.francais + totals.nationaux + totals.autres;
+		return {
+			band,
+			label: BAND_LABELS[band] ?? band,
+			francaisPct: total > 0 ? (totals.francais / total) * 100 : 0,
+			nationauxPct: total > 0 ? (totals.nationaux / total) * 100 : 0,
+			autresPct: total > 0 ? (totals.autres / total) * 100 : 0,
+			total,
+		};
+	});
 }
 
 export function buildNationalityOverrideRows({
@@ -606,19 +842,21 @@ export function buildNationalityOverrideRows({
 	gradeLevel: string;
 	weights: Record<NationalityType, number>;
 	ay2Headcount: number;
-}) {
+}): NationalityBreakdownEntry[] {
 	const counts = reconcileCountsToTarget(
 		(Object.keys(weights) as NationalityType[]).map((nationality) => ({
 			nationality,
-			headcount: Math.round(ay2Headcount * weights[nationality]),
+			headcount: Math.round(ay2Headcount * (weights[nationality] ?? 0)),
 		})),
 		ay2Headcount
 	);
 
 	return counts.map((count) => ({
-		gradeLevel,
+		gradeLevel: gradeLevel as GradeCode,
+		academicPeriod: 'AY2',
 		nationality: count.nationality,
-		weight: weights[count.nationality],
 		headcount: count.headcount,
+		weight: ay2Headcount > 0 ? Number((count.headcount / ay2Headcount).toFixed(4)) : 0,
+		isOverridden: true,
 	}));
 }

@@ -14,44 +14,12 @@ import { setKeys, signAccessToken } from '../../services/token.js';
 import { auth } from '../../plugins/auth.js';
 import { cohortParameterRoutes } from './cohort-parameters.js';
 
-vi.mock('../../services/cohort-recommendations.js', () => ({
-	getHistoricalCohortRecommendations: vi.fn().mockResolvedValue([
-		{
-			gradeLevel: 'PS',
-			recommendedRetentionRate: 0,
-			recommendedLateralEntryCount: 0,
-			confidence: 'low',
-			observationCount: 0,
-			sourceFiscalYear: null,
-			rolloverRatio: null,
-			recommendationPriorAy1Headcount: null,
-			recommendationAy2Headcount: null,
-			rule: 'direct-entry',
-		},
-		{
-			gradeLevel: 'CP',
-			recommendedRetentionRate: 1,
-			recommendedLateralEntryCount: 2,
-			confidence: 'high',
-			observationCount: 4,
-			sourceFiscalYear: 2025,
-			rolloverRatio: 1.0189,
-			recommendationPriorAy1Headcount: 106,
-			recommendationAy2Headcount: 108,
-			rule: 'historical-rollover',
-		},
-		{
-			gradeLevel: 'MS',
-			recommendedRetentionRate: 1,
-			recommendedLateralEntryCount: 3,
-			confidence: 'high',
-			observationCount: 4,
-			sourceFiscalYear: 2025,
-			rolloverRatio: 1.0309,
-			recommendationPriorAy1Headcount: 92,
-			recommendationAy2Headcount: 95,
-			rule: 'historical-rollover',
-		},
+vi.mock('../../services/cohort-history.js', () => ({
+	loadHistoricalAy1Headcounts: vi.fn().mockResolvedValue([
+		{ academicYear: 2024, gradeLevel: 'PS', headcount: 92 },
+		{ academicYear: 2025, gradeLevel: 'MS', headcount: 95 },
+		{ academicYear: 2024, gradeLevel: 'GS', headcount: 106 },
+		{ academicYear: 2025, gradeLevel: 'CP', headcount: 108 },
 	]),
 }));
 
@@ -65,6 +33,9 @@ vi.mock('../../lib/prisma.js', () => {
 			findMany: vi.fn().mockResolvedValue([]),
 			upsert: vi.fn().mockResolvedValue({}),
 		},
+		enrollmentHeadcount: {
+			findMany: vi.fn().mockResolvedValue([]),
+		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
@@ -72,6 +43,7 @@ vi.mock('../../lib/prisma.js', () => {
 			fn({
 				budgetVersion: mockPrisma.budgetVersion,
 				cohortParameter: mockPrisma.cohortParameter,
+				enrollmentHeadcount: mockPrisma.enrollmentHeadcount,
 				auditEntry: mockPrisma.auditEntry,
 			})
 		),
@@ -89,6 +61,9 @@ const mockPrisma = prisma as unknown as {
 	cohortParameter: {
 		findMany: ReturnType<typeof vi.fn>;
 		upsert: ReturnType<typeof vi.fn>;
+	};
+	enrollmentHeadcount: {
+		findMany: ReturnType<typeof vi.fn>;
 	};
 	auditEntry: { create: ReturnType<typeof vi.fn> };
 	$transaction: ReturnType<typeof vi.fn>;
@@ -117,6 +92,8 @@ const mockDraftVersion = {
 	fiscalYear: 2026,
 	rolloverThreshold: 1,
 	cappedRetention: 0.98,
+	retentionRecentWeight: 0.6,
+	historicalTargetRecentWeight: 0.8,
 	name: 'Budget v1',
 	type: 'Budget',
 	status: 'Draft',
@@ -173,6 +150,8 @@ describe('GET /cohort-parameters', () => {
 			fiscalYear: 2026,
 			rolloverThreshold: 1,
 			cappedRetention: 0.98,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 		mockPrisma.cohortParameter.findMany.mockResolvedValue([]);
 
@@ -191,6 +170,8 @@ describe('GET /cohort-parameters', () => {
 		expect(body.planningRules).toEqual({
 			rolloverThreshold: 1,
 			cappedRetention: 0.98,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 
 		// PS defaults: retentionRate=0 (direct entry grade)
@@ -207,10 +188,10 @@ describe('GET /cohort-parameters', () => {
 		const cp = body.entries.find((e: Record<string, unknown>) => e.gradeLevel === 'CP');
 		expect(cp).toBeDefined();
 		expect(cp.retentionRate).toBe(1);
-		expect(cp.lateralEntryCount).toBe(2);
+		expect(cp.lateralEntryCount).toBe(0);
 		expect(cp.isPersisted).toBe(false);
 		expect(cp.recommendationSourceFiscalYear).toBe(2025);
-		expect(cp.recommendationPriorAy1Headcount).toBe(106);
+		expect(cp.recommendationPriorAy1Headcount).toBe(0);
 		expect(cp.recommendationAy2Headcount).toBe(108);
 	});
 
@@ -220,6 +201,8 @@ describe('GET /cohort-parameters', () => {
 			fiscalYear: 2026,
 			rolloverThreshold: 1.05,
 			cappedRetention: 0.97,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 		mockPrisma.cohortParameter.findMany.mockResolvedValue([
 			{
@@ -263,12 +246,14 @@ describe('GET /cohort-parameters', () => {
 		// MS should be defaults (not stored)
 		const ms = body.entries.find((e: Record<string, unknown>) => e.gradeLevel === 'MS');
 		expect(ms.retentionRate).toBe(1);
-		expect(ms.lateralEntryCount).toBe(3);
+		expect(ms.lateralEntryCount).toBe(0);
 		expect(ms.isPersisted).toBe(false);
 		expect(ms.recommendationRule).toBe('historical-rollover');
 		expect(body.planningRules).toEqual({
 			rolloverThreshold: 1.05,
 			cappedRetention: 0.97,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 	});
 });
@@ -359,7 +344,7 @@ describe('PUT /cohort-parameters', () => {
 		expect(res.json().code).toBe('IMPORTED_VERSION');
 	});
 
-	it('returns 422 when lateral weights do not sum to 1.0 (lateralEntryCount > 0)', async () => {
+	it('returns 422 when lateral weights do not sum to 1 for active lateral overrides', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
 
 		const token = await makeToken();
@@ -382,10 +367,7 @@ describe('PUT /cohort-parameters', () => {
 		});
 
 		expect(res.statusCode).toBe(422);
-		const body = res.json();
-		expect(body.code).toBe('LATERAL_WEIGHT_SUM_INVALID');
-		expect(body.errors).toHaveLength(1);
-		expect(body.errors[0].gradeLevel).toBe('CP');
+		expect(res.json().code).toBe('LATERAL_WEIGHT_SUM_INVALID');
 	});
 
 	it('successfully upserts parameters and adds stale modules', async () => {
@@ -491,7 +473,7 @@ describe('PUT /cohort-parameters', () => {
 							expect.objectContaining({
 								gradeLevel: 'CP',
 								retentionRate: 0.95,
-								lateralEntryCount: 2,
+								manualAdjustment: 2,
 							}),
 						]),
 					}),

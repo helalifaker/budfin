@@ -174,18 +174,60 @@
 	--grid-cell-py: 10px;
 	--grid-resize-handle: var(--accent-300);
 	--grid-active-row: color-mix(in srgb, var(--accent-100) 40%, white);
-	--grid-footer-bg: #f7f9fc;
+	--grid-footer-bg: #1e293b;
 	--grid-pinned-shadow: 8px 0 16px -12px rgba(15, 23, 42, 0.22);
+
+	/* ── Compact Grid Variant ── */
+	--grid-compact-cell-px: 8px;
+	--grid-compact-cell-py: 8px;
+	--grid-compact-border: #e2e8f0;
+	--grid-compact-group-bg: #334155;
+	--grid-compact-group-border: #475569;
+
+	/* ── Two-tone Header ── */
+	--grid-group-header-text: #ffffff;
+	--grid-subheader-bg: #f1f5f9;
+	--grid-subheader-text: #475569;
+
+	/* ── Grand Total Footer ── */
+	--grid-grandtotal-bg: #1e293b;
+	--grid-grandtotal-text: #ffffff;
+	--grid-grandtotal-border-top: var(--accent-500);
+
+	/* ── Subtotal Row ── */
+	--grid-subtotal-bg: #475569;
+	--grid-subtotal-text: #ffffff;
+
+	/* ── Grid Frame ── */
+	--grid-frame-border: #334155;
+
+	/* ── Elevated KPI Shadow ── */
+	--shadow-card-elevated:
+		0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04),
+		0 0 0 1px rgba(0, 0, 0, 0.04);
+
+	/* ── KPI Accent ── */
+	--kpi-accent-default: var(--accent-500);
+
+	/* ── Utilization Gauge ── */
+	--gauge-track-bg: #e2e8f0;
+	--gauge-height: 12px;
+	--gauge-width: 80px;
+
+	/* ── Delta Colors ── */
+	--delta-positive: var(--color-success);
+	--delta-negative: var(--color-error);
+	--delta-zero: var(--text-muted);
 
 	/* ── Band/Department Badge Colors ── */
 	--badge-maternelle: #be185d;
-	--badge-maternelle-bg: #fdf2f8;
+	--badge-maternelle-bg: #fce7f3;
 	--badge-elementaire: #2563eb;
-	--badge-elementaire-bg: var(--accent-50);
+	--badge-elementaire-bg: #dbeafe;
 	--badge-college: #15803d;
-	--badge-college-bg: #ecfdf5;
+	--badge-college-bg: #d1fae5;
 	--badge-lycee: #7e22ce;
-	--badge-lycee-bg: #faf5ff;
+	--badge-lycee-bg: #ede9fe;
 	--badge-non-academic: var(--text-secondary);
 	--badge-non-academic-bg: var(--workspace-bg-muted);
 

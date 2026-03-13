@@ -109,22 +109,19 @@ describe('Nationality Distribution Engine', () => {
 	});
 
 	describe('Non-PS grade with prior data', () => {
-		it('calculates retained + lateral for each nationality', () => {
+		it('scales the prior-grade nationality mix to the final AY2 total', () => {
 			const results = calculateNationalityDistribution([makeNonPsInput()]);
 
 			expect(results).toHaveLength(3);
 
-			// Raw calculation:
-			// Francais: floor(15 * 0.95)=14, lateral=round(2*0.5)=1 -> 15
-			// Nationaux: floor(9 * 0.95)=8, lateral=round(2*0.3)=1 -> 9
-			// Autres: floor(6 * 0.95)=5, lateral=round(2*0.2)=0 -> 5
-			// Raw sum = 29, target = 25, diff = -4
-			// Reconciliation: largest bucket (Francais at 15) adjusted by -4 = 11
+			// Prior-grade weights are 50% / 30% / 20%.
+			// Applying those weights to an AY2 target of 25 yields 13 / 8 / 5.
+			// Reconciliation adjusts the largest bucket by -1 to keep the total at 25.
 			const francais = results.find((r) => r.nationality === 'Francais')!;
-			expect(francais.headcount).toBe(11);
+			expect(francais.headcount).toBe(12);
 
 			const nationaux = results.find((r) => r.nationality === 'Nationaux')!;
-			expect(nationaux.headcount).toBe(9);
+			expect(nationaux.headcount).toBe(8);
 
 			const autres = results.find((r) => r.nationality === 'Autres')!;
 			expect(autres.headcount).toBe(5);

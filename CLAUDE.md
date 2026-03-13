@@ -78,6 +78,10 @@ packages/types/    Shared TypeScript types (@budfin/types)
 - **Tables**: TanStack Table v8 (headless) + shadcn/ui `<Table>` components. No virtual scrolling (< 300 rows in v1 per ADR-016).
 - **Forms**: React Hook Form + `@hookform/resolvers` v5 (v5 required for Zod 4 compatibility — v3 does not work).
 - **Styling**: Tailwind CSS v4 (CSS-first config, no `tailwind.config.js`). UI primitives from `radix-ui` (unified Feb 2026 package).
+- **Layout shells** (ADR-023): Two dedicated shells share the same `RootLayout` and `Sidebar`:
+    - `PlanningShell` — budget planning routes (`/enrollment`, `/staff`, `/budget`, `/reports`). Includes `ContextBar` (fiscal year/version/period selectors) and a resizable docked `RightPanel`.
+    - `ManagementShell` — master data, admin, and version management routes. Includes `ModuleToolbar`. Panels are overlays (side panels, dialogs) within individual pages.
+    - New routes must be nested under the correct shell in the router.
 
 ### TypeScript config split
 
@@ -109,19 +113,20 @@ Flat config only (`eslint.config.ts`). No `.eslintrc` files. All plugins must su
 
 All development follows the 7-phase BudFin workflow defined in `.claude/workflow/WORKFLOW.md`. Current phase is tracked in `.claude/workflow/STATUS.md`.
 
-See `.claude/COMMANDS.md` for the full command reference. 9 user-facing commands:
+See `.claude/COMMANDS.md` for the full command reference. 10 user-facing commands:
 
 | #   | Command                         | Purpose                                                                                                        |
 | --- | ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | 1   | `/workflow:run [epic-#]`        | Full Epic lifecycle: health check -> spec -> stories -> implement -> review -> visual audit -> merge -> rollup |
 | 2   | `/workflow:status`              | Phase, checklist, `>>> NEXT:` recommendation                                                                   |
-| 3   | `/fix:all [symptom?]`           | Fix everything (or debug a specific symptom with root cause analysis)                                          |
-| 4   | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously                                                                                 |
-| 5   | `/workflow:advance`             | Manual phase gate check                                                                                        |
-| 6   | `/plan:adr "[title]"`           | Record architectural decision                                                                                  |
-| 7   | `/plan:spec [epic-#]`           | Write feature spec interactively                                                                               |
-| 8   | `/impl:story [story-#]`         | Implement a single story                                                                                       |
-| 9   | `/audit:360 [--epic N / --all]` | 360-degree implementation audit (read-only, 8 layers)                                                          |
+| 3   | `/docs:sync [--audit] [path]`   | Inventory, classify, deduplicate, and archive docs safely                                                      |
+| 4   | `/fix:all [symptom?]`           | Fix everything (or debug a specific symptom with root cause analysis)                                          |
+| 5   | `/pr:drive [--pr N / --epic #]` | Push PRs to merge autonomously                                                                                 |
+| 6   | `/workflow:advance`             | Manual phase gate check                                                                                        |
+| 7   | `/plan:adr "[title]"`           | Record architectural decision                                                                                  |
+| 8   | `/plan:spec [epic-#]`           | Write feature spec interactively                                                                               |
+| 9   | `/impl:story [story-#]`         | Implement a single story                                                                                       |
+| 10  | `/audit:360 [--epic N / --all]` | 360-degree implementation audit (read-only, 8 layers)                                                          |
 
 ## File Output Rules
 
@@ -138,7 +143,7 @@ See `.claude/COMMANDS.md` for the full command reference. 9 user-facing commands
 | Canonical pinned versions                       | `docs/tdd/stack-versions.md`      |
 | Architecture overview                           | `docs/tdd/01_overview.md`         |
 | ADRs (ADR-001 to ADR-017)                       | `docs/tdd/09_decisions_log.md`    |
-| ADRs (ADR-018+)                                 | `docs/adr/`                       |
+| ADRs (ADR-018 to ADR-027+)                      | `docs/adr/`                       |
 | Security architecture                           | `docs/tdd/05_security.md`         |
 | Data model                                      | `docs/tdd/02_component_design.md` |
 | API contracts                                   | `docs/tdd/04_api_contract.md`     |

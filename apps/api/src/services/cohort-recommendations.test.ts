@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildCohortRecommendations,
 	buildHistoricalCohortObservations,
-	pickCanonicalActualVersions,
 } from './cohort-recommendations.js';
+import { pickCanonicalActualVersions } from './cohort-history.js';
 
 describe('pickCanonicalActualVersions', () => {
 	it('prefers locked Actual versions within the same fiscal year', () => {
@@ -37,6 +37,8 @@ describe('buildHistoricalCohortObservations', () => {
 			planningRules: {
 				rolloverThreshold: 1.05,
 				cappedRetention: 0.97,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
 			},
 		});
 
@@ -62,6 +64,8 @@ describe('buildHistoricalCohortObservations', () => {
 			planningRules: {
 				rolloverThreshold: 1.05,
 				cappedRetention: 0.97,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
 			},
 		});
 
@@ -87,6 +91,8 @@ describe('buildHistoricalCohortObservations', () => {
 			planningRules: {
 				rolloverThreshold: 1.05,
 				cappedRetention: 0.97,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
 			},
 		});
 

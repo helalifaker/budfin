@@ -1,7 +1,7 @@
 // Generate all migration fixture files with internally consistent data
 // Run: npx tsx scripts/generate-fixtures.ts
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,8 +29,8 @@ const GRADES = [
 	{ code: 'TERM', name: 'TERM', band: 'LYCEE', feeBand: 'LYCEE' },
 ] as const;
 
-const NATIONALITIES = ['FR', 'NAT', 'AUT'] as const;
-const TARIFFS = ['PLEIN', 'RP', 'R3P'] as const;
+const NATIONALITIES = ['Francais', 'Nationaux', 'Autres'] as const;
+const TARIFFS = ['Plein', 'RP', 'R3+'] as const;
 
 // ── 1. Grade code mapping ────────────────────────────────────────────────────
 
@@ -111,66 +111,51 @@ function generateFeeGrid() {
 
 function generateDiscounts() {
 	return [
-		{ tariff: 'PLEIN', nationality: null, discountRate: '0.0000' },
+		{ tariff: 'Plein', nationality: null, discountRate: '0.0000' },
 		{ tariff: 'RP', nationality: null, discountRate: '0.2500' },
-		{ tariff: 'R3P', nationality: null, discountRate: '0.1000' },
+		{ tariff: 'R3+', nationality: null, discountRate: '0.1000' },
 	];
 }
 
-// ── 4. Enrollment detail (214 entries, AY1 total = 1753) ─────────────────────
+// ── 4. Enrollment detail — real AY1 data from EFIR historical records ────────
+
+// Real 2025-26 nationality × tariff distribution per grade (AY1)
+// Format: [Fr-RP, Fr-R3+, Fr-Plein, Nat-RP, Nat-R3+, Nat-Plein, Aut-RP, Aut-R3+, Aut-Plein]
+const REAL_AY1_DATA: Record<
+	string,
+	[number, number, number, number, number, number, number, number, number]
+> = {
+	PS: [1, 6, 17, 0, 1, 1, 0, 5, 34],
+	MS: [1, 8, 18, 0, 1, 1, 1, 10, 37],
+	GS: [2, 12, 29, 0, 2, 2, 2, 15, 60],
+	CP: [2, 10, 32, 0, 1, 2, 2, 11, 66],
+	CE1: [2, 9, 30, 0, 1, 2, 2, 10, 62],
+	CE2: [2, 10, 34, 0, 1, 2, 2, 11, 70],
+	CM1: [2, 9, 31, 0, 1, 2, 2, 10, 64],
+	CM2: [2, 9, 31, 0, 1, 2, 2, 10, 64],
+	'6EME': [2, 5, 43, 0, 0, 3, 4, 5, 89],
+	'5EME': [1, 5, 40, 0, 0, 3, 4, 4, 82],
+	'4EME': [1, 4, 34, 0, 0, 2, 4, 4, 71],
+	'3EME': [1, 4, 29, 0, 0, 2, 3, 3, 61],
+	'2NDE': [2, 0, 37, 0, 0, 3, 6, 0, 77],
+	'1ERE': [2, 0, 36, 0, 0, 3, 5, 0, 74],
+	TERM: [2, 0, 33, 0, 0, 2, 5, 0, 69],
+};
+
+// Column order maps to: [nat, tariff] combos
+const COMBO_MAP: Array<{ nat: string; tariff: string }> = [
+	{ nat: 'Francais', tariff: 'RP' },
+	{ nat: 'Francais', tariff: 'R3+' },
+	{ nat: 'Francais', tariff: 'Plein' },
+	{ nat: 'Nationaux', tariff: 'RP' },
+	{ nat: 'Nationaux', tariff: 'R3+' },
+	{ nat: 'Nationaux', tariff: 'Plein' },
+	{ nat: 'Autres', tariff: 'RP' },
+	{ nat: 'Autres', tariff: 'R3+' },
+	{ nat: 'Autres', tariff: 'Plein' },
+];
 
 function generateEnrollmentDetail() {
-	// Excluded combos (56 total → 270 - 56 = 214 entries):
-	// - AUT/R3P everywhere (30): too few 3+ sibling families among "Autres"
-	// - NAT/R3P for maternelle both periods (6): rare in early years
-	// - AUT/RP in AY2 all grades (15): staff "Autres" children attrit by AY2
-	// - NAT/RP for maternelle in AY2 (3): attrition
-	// - FR/R3P for GS and TERM in AY2 (2): attrition in edge grades
-	const EXCLUDED = new Set<string>();
-	for (const period of ['AY1', 'AY2']) {
-		for (const g of GRADES) {
-			EXCLUDED.add(`${period}|${g.code}|AUT|R3P`);
-		}
-		for (const code of ['PS', 'MS', 'GS']) {
-			EXCLUDED.add(`${period}|${code}|NAT|R3P`);
-		}
-	}
-	for (const g of GRADES) EXCLUDED.add(`AY2|${g.code}|AUT|RP`);
-	for (const code of ['PS', 'MS', 'GS']) EXCLUDED.add(`AY2|${code}|NAT|RP`);
-	EXCLUDED.add('AY2|GS|FR|R3P');
-	EXCLUDED.add('AY2|TERM|FR|R3P');
-
-	// Distribution weights (used only for included combos, then normalized)
-	const natWeights: Record<string, number> = { FR: 0.48, NAT: 0.3, AUT: 0.22 };
-	const tariffWeights: Record<string, number> = { PLEIN: 0.78, RP: 0.12, R3P: 0.1 };
-
-	// Target grade headcounts for AY1 (must sum to 1753)
-	const gradeTargetsAY1: Record<string, number> = {
-		PS: 100,
-		MS: 103,
-		GS: 106,
-		CP: 110,
-		CE1: 113,
-		CE2: 116,
-		CM1: 119,
-		CM2: 122,
-		'6EME': 131,
-		'5EME': 134,
-		'4EME': 137,
-		'3EME': 139,
-		'2NDE': 125,
-		'1ERE': 120,
-		TERM: 78,
-	};
-	const ay1Sum = Object.values(gradeTargetsAY1).reduce((a, b) => a + b, 0);
-	if (ay1Sum !== 1753) throw new Error(`AY1 sum is ${ay1Sum}, expected 1753`);
-
-	// AY2 is ~95% of AY1
-	const gradeTargetsAY2: Record<string, number> = {};
-	for (const [code, count] of Object.entries(gradeTargetsAY1)) {
-		gradeTargetsAY2[code] = Math.round(count * 0.95);
-	}
-
 	const rows: Array<{
 		academicPeriod: string;
 		gradeLevel: string;
@@ -179,53 +164,58 @@ function generateEnrollmentDetail() {
 		headcount: number;
 	}> = [];
 
-	for (const period of ['AY1', 'AY2'] as const) {
-		const targets = period === 'AY1' ? gradeTargetsAY1 : gradeTargetsAY2;
-
-		for (const grade of GRADES) {
-			const gradeTotal = targets[grade.code]!;
-
-			// Collect active combos and their raw weights
-			const active: Array<{ nat: string; tariff: string; weight: number }> = [];
-			for (const nat of NATIONALITIES) {
-				for (const tariff of TARIFFS) {
-					const key = `${period}|${grade.code}|${nat}|${tariff}`;
-					if (!EXCLUDED.has(key)) {
-						active.push({ nat, tariff, weight: natWeights[nat]! * tariffWeights[tariff]! });
-					}
-				}
+	// AY1: emit real data directly
+	for (const grade of GRADES) {
+		const data = REAL_AY1_DATA[grade.code]!;
+		for (let i = 0; i < COMBO_MAP.length; i++) {
+			const count = data[i]!;
+			if (count > 0) {
+				rows.push({
+					academicPeriod: 'AY1',
+					gradeLevel: grade.code,
+					nationality: COMBO_MAP[i]!.nat,
+					tariff: COMBO_MAP[i]!.tariff,
+					headcount: count,
+				});
 			}
+		}
+	}
 
-			// Normalize weights and distribute headcount
-			const totalWeight = active.reduce((s, a) => s + a.weight, 0);
-			let remaining = gradeTotal;
-			const combos: Array<{ nat: string; tariff: string; count: number }> = [];
+	// Validate AY1 total
+	const ay1Sum = rows.reduce((s, r) => s + r.headcount, 0);
+	if (ay1Sum !== 1753) throw new Error(`AY1 sum is ${ay1Sum}, expected 1753`);
 
-			for (let i = 0; i < active.length; i++) {
-				const a = active[i]!;
-				const isLast = i === active.length - 1;
-				const count = isLast ? remaining : Math.round(gradeTotal * (a.weight / totalWeight));
-				if (count > 0) {
-					combos.push({ nat: a.nat, tariff: a.tariff, count });
-					remaining -= count;
-				}
-			}
+	// AY2: derive proportionally from AY1 at ~95% retention per grade
+	for (const grade of GRADES) {
+		const data = REAL_AY1_DATA[grade.code]!;
+		const ay1Total = data.reduce((s, v) => s + v, 0);
+		const ay2Target = Math.round(ay1Total * 0.95);
 
-			// Fix rounding remainder
-			if (remaining !== 0 && combos.length > 0) {
-				combos[combos.length - 1]!.count += remaining;
-			}
+		// Distribute proportionally with largest-remainder rounding
+		const weights = data.map((v) => v / ay1Total);
+		const rawCounts = weights.map((w) => w * ay2Target);
+		const floors = rawCounts.map((c) => Math.floor(c));
+		let remainder = ay2Target - floors.reduce((s, v) => s + v, 0);
 
-			for (const combo of combos) {
-				if (combo.count > 0) {
-					rows.push({
-						academicPeriod: period,
-						gradeLevel: grade.code,
-						nationality: combo.nat,
-						tariff: combo.tariff,
-						headcount: combo.count,
-					});
-				}
+		// Sort by fractional part descending, give +1 to top remainders
+		const fractionals = rawCounts.map((c, i) => ({ i, frac: c - Math.floor(c) }));
+		fractionals.sort((a, b) => b.frac - a.frac);
+		for (const f of fractionals) {
+			if (remainder <= 0) break;
+			floors[f.i]!++;
+			remainder--;
+		}
+
+		for (let i = 0; i < COMBO_MAP.length; i++) {
+			const count = floors[i]!;
+			if (count > 0) {
+				rows.push({
+					academicPeriod: 'AY2',
+					gradeLevel: grade.code,
+					nationality: COMBO_MAP[i]!.nat,
+					tariff: COMBO_MAP[i]!.tariff,
+					headcount: count,
+				});
 			}
 		}
 	}
@@ -240,7 +230,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'DAI — Maternelle',
 			annualAmount: '600000.0000',
-			distributionMethod: 'ACADEMIC',
+			distributionMethod: 'ACADEMIC_10',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Registration Fees',
@@ -248,7 +238,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'DAI — Elementaire',
 			annualAmount: '1100000.0000',
-			distributionMethod: 'ACADEMIC',
+			distributionMethod: 'ACADEMIC_10',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Registration Fees',
@@ -256,7 +246,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'DAI — College',
 			annualAmount: '1350000.0000',
-			distributionMethod: 'ACADEMIC',
+			distributionMethod: 'ACADEMIC_10',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Registration Fees',
@@ -264,7 +254,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'DAI — Lycee',
 			annualAmount: '905000.0000',
-			distributionMethod: 'ACADEMIC',
+			distributionMethod: 'ACADEMIC_10',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Registration Fees',
@@ -272,7 +262,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'DPI Revenue',
 			annualAmount: '450000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [1, 9],
 			ifrsCategory: 'Registration Fees',
@@ -280,7 +270,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Frais de Dossier',
 			annualAmount: '350000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [3, 4, 5],
 			ifrsCategory: 'Registration Fees',
@@ -288,7 +278,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Examination Fees — BAC',
 			annualAmount: '78000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [3],
 			ifrsCategory: 'Examination Fees',
@@ -296,7 +286,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Examination Fees — DNB',
 			annualAmount: '69500.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [3],
 			ifrsCategory: 'Examination Fees',
@@ -304,7 +294,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Examination Fees — EAF',
 			annualAmount: '60000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [4],
 			ifrsCategory: 'Examination Fees',
@@ -312,7 +302,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Examination Fees — SIELE',
 			annualAmount: '42000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [5],
 			ifrsCategory: 'Examination Fees',
@@ -320,7 +310,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'After-School Activities',
 			annualAmount: '280000.0000',
-			distributionMethod: 'ACADEMIC',
+			distributionMethod: 'ACADEMIC_10',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Activities & Services',
@@ -328,7 +318,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Daycare Revenue',
 			annualAmount: '195000.0000',
-			distributionMethod: 'ACADEMIC',
+			distributionMethod: 'ACADEMIC_10',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Activities & Services',
@@ -336,7 +326,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Class Photos Revenue',
 			annualAmount: '35000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [10, 11],
 			ifrsCategory: 'Activities & Services',
@@ -344,7 +334,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'PSG Academy Rental',
 			annualAmount: '120000.0000',
-			distributionMethod: 'EVEN',
+			distributionMethod: 'YEAR_ROUND_12',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Activities & Services',
@@ -352,7 +342,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Evaluation Fees',
 			annualAmount: '87500.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [1, 2, 3],
 			ifrsCategory: 'Registration Fees',
@@ -360,7 +350,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Bourses AEFE',
 			annualAmount: '-450000.0000',
-			distributionMethod: 'EVEN',
+			distributionMethod: 'YEAR_ROUND_12',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Other Revenue',
@@ -368,7 +358,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Bourses AESH',
 			annualAmount: '-120000.0000',
-			distributionMethod: 'EVEN',
+			distributionMethod: 'YEAR_ROUND_12',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Other Revenue',
@@ -376,7 +366,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Transport Service — Buses',
 			annualAmount: '680000.0000',
-			distributionMethod: 'ACADEMIC',
+			distributionMethod: 'ACADEMIC_10',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Activities & Services',
@@ -384,7 +374,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Cafeteria Concession',
 			annualAmount: '95000.0000',
-			distributionMethod: 'EVEN',
+			distributionMethod: 'YEAR_ROUND_12',
 			weightArray: null,
 			specificMonths: null,
 			ifrsCategory: 'Other Revenue',
@@ -392,7 +382,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Uniform Sales Commission',
 			annualAmount: '45000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [8, 9],
 			ifrsCategory: 'Other Revenue',
@@ -400,7 +390,7 @@ function generateOtherRevenue() {
 		{
 			lineItemName: 'Summer Camp Revenue',
 			annualAmount: '150000.0000',
-			distributionMethod: 'SPECIFIC_MONTHS',
+			distributionMethod: 'SPECIFIC_PERIOD',
 			weightArray: null,
 			specificMonths: [7, 8],
 			ifrsCategory: 'Activities & Services',
@@ -1323,63 +1313,28 @@ function generateStaffCosts() {
 	return employees;
 }
 
-// ── 8. Historical enrollment CSVs ────────────────────────────────────────────
+// ── 8. Historical enrollment CSVs (derived from headcount fixture) ───────────
 
 function generateEnrollmentCsvs() {
-	const yearTotals: Record<string, number> = {
-		'2021-22': 1434,
-		'2022-23': 1499,
-		'2023-24': 1587,
-		'2024-25': 1794,
-		'2025-26': 1747,
-	};
+	// Read the headcount fixture as the single source of truth
+	const headcountPath = resolve(FIXTURES, 'fy2026-enrollment-headcount.json');
+	const headcountData: Array<{ academicYear: string; gradeLevel: string; headcount: number }> =
+		JSON.parse(readFileSync(headcountPath, 'utf-8'));
 
-	// Base distribution weights per grade (will be scaled to hit totals)
-	const gradeWeights: Record<string, number> = {
-		PS: 0.054,
-		MS: 0.057,
-		GS: 0.059,
-		CP: 0.062,
-		CE1: 0.063,
-		CE2: 0.064,
-		CM1: 0.066,
-		CM2: 0.068,
-		'6EME': 0.073,
-		'5EME': 0.075,
-		'4EME': 0.077,
-		'3EME': 0.078,
-		'2NDE': 0.07,
-		'1ERE': 0.068,
-		TERM: 0.066,
-	};
+	// Group by academic year
+	const byYear: Record<string, Record<string, number>> = {};
+	for (const row of headcountData) {
+		if (!byYear[row.academicYear]) byYear[row.academicYear] = {};
+		byYear[row.academicYear]![row.gradeLevel] = row.headcount;
+	}
 
 	const csvs: Record<string, string> = {};
+	const gradeOrder = GRADES.map((g) => g.code);
 
-	for (const [yearKey, total] of Object.entries(yearTotals)) {
-		const gradeOrder = GRADES.map((g) => g.code);
-		const rawCounts: Record<string, number> = {};
-		let rawSum = 0;
-
-		// Calculate raw counts
-		for (const code of gradeOrder) {
-			const count = Math.round(total * gradeWeights[code]!);
-			rawCounts[code] = count;
-			rawSum += count;
-		}
-
-		// Adjust last grade to hit exact total
-		const diff = total - rawSum;
-		rawCounts['TERM'] = rawCounts['TERM']! + diff;
-
-		// Verify
-		const actualSum = Object.values(rawCounts).reduce((a, b) => a + b, 0);
-		if (actualSum !== total) {
-			throw new Error(`CSV sum mismatch for ${yearKey}: ${actualSum} != ${total}`);
-		}
-
+	for (const [yearKey, grades] of Object.entries(byYear)) {
 		const lines = ['level_code,student_count'];
 		for (const code of gradeOrder) {
-			lines.push(`${code},${rawCounts[code]}`);
+			lines.push(`${code},${grades[code] ?? 0}`);
 		}
 		csvs[yearKey] = lines.join('\n') + '\n';
 	}
@@ -1427,7 +1382,7 @@ const ay1Total = enrollmentDetail
 	.reduce((sum, e) => sum + e.headcount, 0);
 // eslint-disable-next-line no-console
 console.log(
-	`  enrollment_detail: ${enrollmentDetail.length} rows, AY1 total: ${ay1Total} (expected 214 / 1753)`
+	`  enrollment_detail: ${enrollmentDetail.length} rows, AY1 total: ${ay1Total} (expected 1753)`
 );
 writeJson('fy2026-enrollment-detail.json', enrollmentDetail);
 

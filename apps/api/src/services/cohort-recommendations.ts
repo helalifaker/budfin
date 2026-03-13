@@ -1,6 +1,11 @@
 import { Decimal } from 'decimal.js';
 import { GRADE_PROGRESSION, type ProgressionGrade } from './cohort-engine.js';
-import { type EnrollmentPlanningRules, resolveEnrollmentPlanningRules } from './planning-rules.js';
+import {
+	DEFAULT_CAPPED_RETENTION,
+	type EnrollmentPlanningRules,
+	resolveEnrollmentPlanningRules,
+} from './planning-rules.js';
+import { pickCanonicalActualVersions, type ActualVersionCandidate } from './cohort-history.js';
 
 const ONE_DECIMAL = new Decimal(1);
 const FOUR_DECIMAL_SCALE = new Decimal(10_000);
@@ -35,13 +40,6 @@ export interface CohortRecommendation {
 	recommendationPriorAy1Headcount: number | null;
 	recommendationAy2Headcount: number | null;
 	rule: CohortRecommendationRule;
-}
-
-export interface ActualVersionCandidate {
-	id: number;
-	fiscalYear: number;
-	status: string;
-	updatedAt: Date;
 }
 
 export interface HistoricalHeadcountRow {
@@ -96,34 +94,6 @@ function getPriorGrade(gradeLevel: ProgressionGrade): ProgressionGrade | null {
 	return GRADE_PROGRESSION[index - 1] ?? null;
 }
 
-export function pickCanonicalActualVersions(
-	versions: ActualVersionCandidate[]
-): ActualVersionCandidate[] {
-	const byFiscalYear = new Map<number, ActualVersionCandidate[]>();
-
-	for (const version of versions) {
-		const entries = byFiscalYear.get(version.fiscalYear) ?? [];
-		entries.push(version);
-		byFiscalYear.set(version.fiscalYear, entries);
-	}
-
-	return [...byFiscalYear.entries()]
-		.sort(([leftYear], [rightYear]) => rightYear - leftYear)
-		.map(
-			([, candidates]) =>
-				[...candidates].sort((left, right) => {
-					const leftRank = left.status === 'Locked' ? 0 : 1;
-					const rightRank = right.status === 'Locked' ? 0 : 1;
-
-					if (leftRank !== rightRank) {
-						return leftRank - rightRank;
-					}
-
-					return right.updatedAt.getTime() - left.updatedAt.getTime();
-				})[0]!
-		);
-}
-
 export function buildHistoricalCohortObservations({
 	headcounts,
 	versionFiscalYears,
@@ -133,7 +103,9 @@ export function buildHistoricalCohortObservations({
 	versionFiscalYears: Map<number, number>;
 	planningRules: EnrollmentPlanningRules;
 }): HistoricalCohortObservation[] {
-	const cappedRetentionDecimal = new Decimal(planningRules.cappedRetention);
+	const cappedRetentionDecimal = new Decimal(
+		planningRules.cappedRetention ?? DEFAULT_CAPPED_RETENTION
+	);
 	const rolloverThresholdDecimal = new Decimal(planningRules.rolloverThreshold);
 	const rowsByVersion = new Map<number, Map<string, number>>();
 
@@ -188,7 +160,7 @@ export function buildHistoricalCohortObservations({
 					priorAy1Headcount,
 					ay2Headcount,
 					rolloverRatio: Number(rolloverRatio.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toString()),
-					recommendedRetentionRate: planningRules.cappedRetention,
+					recommendedRetentionRate: planningRules.cappedRetention ?? DEFAULT_CAPPED_RETENTION,
 					recommendedLateralEntryCount: Math.max(0, ay2Headcount - retainedAtFixedRate),
 					rule: 'capped-retention-growth',
 				});
@@ -259,7 +231,7 @@ export function buildCohortRecommendations(
 		if (!latestObservation) {
 			return {
 				gradeLevel,
-				recommendedRetentionRate: planningRules.cappedRetention,
+				recommendedRetentionRate: planningRules.cappedRetention ?? DEFAULT_CAPPED_RETENTION,
 				recommendedLateralEntryCount: 0,
 				confidence: 'low' as const,
 				observationCount,

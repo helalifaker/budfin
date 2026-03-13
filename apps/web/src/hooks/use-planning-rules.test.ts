@@ -41,7 +41,12 @@ afterEach(() => {
 
 describe('usePlanningRules', () => {
 	it('calls the correct URL for the given versionId', async () => {
-		const planningRules: PlanningRules = { rolloverThreshold: 1.03, cappedRetention: 0.99 };
+		const planningRules: PlanningRules = {
+			rolloverThreshold: 1.03,
+			cappedRetention: 0.99,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
+		};
 		mockApiClient.mockResolvedValue(planningRules);
 
 		const { wrapper } = makeWrapper();
@@ -65,6 +70,8 @@ describe('usePutPlanningRules', () => {
 		mockApiClient.mockResolvedValue({
 			rolloverThreshold: 1.03,
 			cappedRetention: 0.99,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 			staleModules: [],
 		});
 	});
@@ -75,7 +82,12 @@ describe('usePutPlanningRules', () => {
 
 		const { result } = renderHook(() => usePutPlanningRules(42), { wrapper });
 
-		result.current.mutate({ rolloverThreshold: 1.03, cappedRetention: 0.99 });
+		result.current.mutate({
+			rolloverThreshold: 1.03,
+			cappedRetention: 0.99,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
+		});
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 

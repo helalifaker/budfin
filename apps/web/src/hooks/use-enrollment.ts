@@ -7,8 +7,11 @@ import type {
 	CapacityResult,
 	AcademicPeriod,
 	CohortParameterEntry,
+	HistoricalHeadcountPoint,
 	NationalityBreakdownEntry,
 	PlanningRules,
+	EnrollmentSettings,
+	EnrollmentSettingsUpdatePayload,
 } from '@budfin/types';
 
 // ── Response types ───────────────────────────────────────────────────────────
@@ -32,14 +35,8 @@ export interface HeadcountPutResponse {
 	staleModules: string[];
 }
 
-export interface HistoricalDataPoint {
-	academicYear: number;
-	gradeLevel: string;
-	headcount: number;
-}
-
 export interface HistoricalResponse {
-	data: HistoricalDataPoint[];
+	data: HistoricalHeadcountPoint[];
 	cagrByBand: Record<string, string>;
 	movingAvgByBand: Record<string, number>;
 }
@@ -110,6 +107,10 @@ export interface CapacityResultsResponse {
 	};
 	lastCalculatedAt: string | null;
 	results: CapacityResult[];
+}
+
+export interface EnrollmentSettingsResponse extends EnrollmentSettings {
+	staleModules?: string[];
 }
 
 // ── Headcount hooks (Stage 1) ────────────────────────────────────────────────
@@ -206,6 +207,41 @@ export function useCalculateEnrollment(versionId: number | null) {
 			});
 			queryClient.invalidateQueries({
 				queryKey: ['enrollment', 'nationality-breakdown', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
+	});
+}
+
+export function useEnrollmentSettings(versionId: number | null) {
+	return useQuery({
+		queryKey: ['enrollment', 'settings', versionId],
+		queryFn: () =>
+			apiClient<EnrollmentSettingsResponse>(`/versions/${versionId}/enrollment/settings`),
+		enabled: versionId !== null,
+	});
+}
+
+export function usePutEnrollmentSettings(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (settings: EnrollmentSettingsUpdatePayload) =>
+			apiClient<EnrollmentSettingsResponse>(`/versions/${versionId}/enrollment/settings`, {
+				method: 'PUT',
+				body: JSON.stringify(settings),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['enrollment', 'settings', versionId] });
+			queryClient.invalidateQueries({
+				queryKey: ['enrollment', 'cohort-parameters', versionId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['enrollment', 'planning-rules', versionId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['enrollment', 'capacity-results', versionId],
 			});
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},
