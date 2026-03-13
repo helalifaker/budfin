@@ -566,7 +566,7 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 					},
 				});
 
-				return calculateAndPersistEnrollmentWorkspace({
+				const calcResult = await calculateAndPersistEnrollmentWorkspace({
 					tx,
 					versionId,
 					version: {
@@ -585,11 +585,13 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 						ipAddress: request.ip,
 					},
 				});
-			});
 
-			await prisma.budgetVersion.update({
-				where: { id: versionId },
-				data: { lastCalculatedAt: new Date() },
+				await tx.budgetVersion.update({
+					where: { id: versionId },
+					data: { lastCalculatedAt: new Date() },
+				});
+
+				return calcResult;
 			});
 
 			return reply.send(result);

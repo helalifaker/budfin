@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildCohortRecommendations,
 	buildHistoricalCohortObservations,
-	pickCanonicalActualVersions,
 } from './cohort-recommendations.js';
+import { pickCanonicalActualVersions } from './cohort-history.js';
 
 describe('pickCanonicalActualVersions', () => {
 	it('prefers locked Actual versions within the same fiscal year', () => {

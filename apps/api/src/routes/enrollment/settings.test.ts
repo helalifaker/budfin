@@ -196,6 +196,9 @@ describe('PUT /settings', () => {
 				plafondPct: '0.9600',
 			},
 		]);
+		mockPrisma.budgetVersion.update.mockResolvedValueOnce({
+			staleModules: ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'],
+		});
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -229,8 +232,9 @@ describe('PUT /settings', () => {
 				cappedRetention: '0.9900',
 				retentionRecentWeight: '0.6000',
 				historicalTargetRecentWeight: '0.8000',
-				staleModules: ['ENROLLMENT', 'DHG', 'STAFFING', 'PNL'],
+				staleModules: ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'],
 			},
+			select: { staleModules: true },
 		});
 		expect(mockPrisma.versionCapacityConfig.upsert).toHaveBeenCalledWith({
 			where: {
@@ -278,7 +282,7 @@ describe('PUT /settings', () => {
 					templatePlafondPct: 1,
 				},
 			],
-			staleModules: ['ENROLLMENT', 'DHG', 'STAFFING', 'PNL'],
+			staleModules: ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'],
 		});
 	});
 

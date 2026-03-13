@@ -114,12 +114,10 @@ function buildUpdatePayload({
 	};
 }
 
-function fieldInputClass() {
-	return cn(
-		'w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-2 text-right',
-		'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)'
-	);
-}
+const fieldInputClass = cn(
+	'w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-2 text-right',
+	'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)'
+);
 
 function rowDiffersFromTemplate(row: EnrollmentCapacityByGradeSetting) {
 	return (
@@ -370,10 +368,14 @@ export function EnrollmentSettingsSheet({
 									) : (
 										<div className="mt-4 grid gap-3 md:grid-cols-2">
 											<div>
-												<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<label
+													htmlFor="rollover-threshold"
+													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+												>
 													Rollover threshold (%)
 												</label>
 												<Input
+													id="rollover-threshold"
 													type="number"
 													min={50}
 													max={200}
@@ -386,14 +388,18 @@ export function EnrollmentSettingsSheet({
 														}))
 													}
 													disabled={!isEditable}
-													className={cn(fieldInputClass(), 'mt-2')}
+													className={cn(fieldInputClass, 'mt-2')}
 												/>
 											</div>
 											<div>
-												<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<label
+													htmlFor="capped-retention"
+													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+												>
 													Capped retention (%)
 												</label>
 												<Input
+													id="capped-retention"
 													type="number"
 													min={50}
 													max={100}
@@ -406,14 +412,18 @@ export function EnrollmentSettingsSheet({
 														}))
 													}
 													disabled={!isEditable}
-													className={cn(fieldInputClass(), 'mt-2')}
+													className={cn(fieldInputClass, 'mt-2')}
 												/>
 											</div>
 											<div>
-												<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<label
+													htmlFor="retention-trend-weight"
+													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+												>
 													Retention trend weight (%)
 												</label>
 												<Input
+													id="retention-trend-weight"
 													type="number"
 													min={0}
 													max={100}
@@ -426,14 +436,18 @@ export function EnrollmentSettingsSheet({
 														}))
 													}
 													disabled={!isEditable}
-													className={cn(fieldInputClass(), 'mt-2')}
+													className={cn(fieldInputClass, 'mt-2')}
 												/>
 											</div>
 											<div>
-												<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<label
+													htmlFor="historical-target-weight"
+													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+												>
 													Historical target weight (%)
 												</label>
 												<Input
+													id="historical-target-weight"
 													type="number"
 													min={0}
 													max={100}
@@ -446,7 +460,7 @@ export function EnrollmentSettingsSheet({
 														}))
 													}
 													disabled={!isEditable}
-													className={cn(fieldInputClass(), 'mt-2')}
+													className={cn(fieldInputClass, 'mt-2')}
 												/>
 											</div>
 										</div>
@@ -506,7 +520,7 @@ export function EnrollmentSettingsSheet({
 														}))
 													}
 													disabled={!isEditable}
-													className={cn(fieldInputClass(), 'mt-1 h-9 px-2')}
+													className={cn(fieldInputClass, 'mt-1 h-9 px-2')}
 												/>
 											</div>
 										))}
@@ -678,6 +692,8 @@ function BandGroup({
 							</td>
 							<td className="px-3 py-2">
 								<Input
+									id={`${row.gradeLevel}-maxClassSize`}
+									aria-label={`${row.gradeName} max class size`}
 									type="number"
 									min={1}
 									max={50}
@@ -687,11 +703,13 @@ function BandGroup({
 										updateCapacityRow(row.gradeLevel, 'maxClassSize', Number(event.target.value))
 									}
 									disabled={!isEditable}
-									className={fieldInputClass()}
+									className={fieldInputClass}
 								/>
 							</td>
 							<td className="px-3 py-2">
 								<Input
+									id={`${row.gradeLevel}-plancherPct`}
+									aria-label={`${row.gradeName} floor percentage`}
 									type="number"
 									min={0}
 									max={1}
@@ -701,11 +719,13 @@ function BandGroup({
 										updateCapacityRow(row.gradeLevel, 'plancherPct', Number(event.target.value))
 									}
 									disabled={!isEditable}
-									className={fieldInputClass()}
+									className={fieldInputClass}
 								/>
 							</td>
 							<td className="px-3 py-2">
 								<Input
+									id={`${row.gradeLevel}-ciblePct`}
+									aria-label={`${row.gradeName} target percentage`}
 									type="number"
 									min={0}
 									max={1}
@@ -715,11 +735,13 @@ function BandGroup({
 										updateCapacityRow(row.gradeLevel, 'ciblePct', Number(event.target.value))
 									}
 									disabled={!isEditable}
-									className={fieldInputClass()}
+									className={fieldInputClass}
 								/>
 							</td>
 							<td className="px-3 py-2">
 								<Input
+									id={`${row.gradeLevel}-plafondPct`}
+									aria-label={`${row.gradeName} ceiling percentage`}
 									type="number"
 									min={0}
 									max={1.5}
@@ -729,7 +751,7 @@ function BandGroup({
 										updateCapacityRow(row.gradeLevel, 'plafondPct', Number(event.target.value))
 									}
 									disabled={!isEditable}
-									className={fieldInputClass()}
+									className={fieldInputClass}
 								/>
 							</td>
 							<td className="px-2 py-2 text-center">

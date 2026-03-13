@@ -118,12 +118,13 @@ export async function enrollmentSettingsRoutes(app: FastifyInstance) {
 			const staleModules = buildEnrollmentSettingsStaleModules(version.staleModules);
 
 			const updated = await prisma.$transaction(async (tx) => {
-				await tx.budgetVersion.update({
+				const updatedVersion = await tx.budgetVersion.update({
 					where: { id: versionId },
 					data: {
 						...buildEnrollmentPlanningRulesUpdateData(body.rules),
 						staleModules,
 					},
+					select: { staleModules: true },
 				});
 
 				for (const setting of body.capacityByGrade) {
@@ -160,13 +161,10 @@ export async function enrollmentSettingsRoutes(app: FastifyInstance) {
 					throw new Error(`Version ${versionId} disappeared during enrollment settings update`);
 				}
 
-				return settings;
+				return { ...settings, staleModules: updatedVersion.staleModules };
 			});
 
-			return {
-				...updated,
-				staleModules,
-			};
+			return updated;
 		},
 	});
 }

@@ -105,7 +105,6 @@ export function InspectorInput({
 		<input
 			ref={inputRef}
 			type="number"
-			inputMode="numeric"
 			min={min}
 			max={max}
 			step={1}

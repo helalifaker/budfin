@@ -48,7 +48,6 @@ export function AlertBadge({ alert }: AlertBadgeProps) {
 				'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
 				config.className
 			)}
-			role="status"
 			aria-label={config.label}
 		>
 			<Icon className="h-3 w-3" aria-hidden="true" />

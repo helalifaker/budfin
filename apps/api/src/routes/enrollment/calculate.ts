@@ -51,8 +51,8 @@ export async function calculateRoutes(app: FastifyInstance) {
 				});
 			}
 
-			const result = await prisma.$transaction((tx) =>
-				calculateAndPersistEnrollmentWorkspace({
+			const result = await prisma.$transaction(async (tx) => {
+				const calcResult = await calculateAndPersistEnrollmentWorkspace({
 					tx,
 					versionId,
 					version: {
@@ -66,12 +66,14 @@ export async function calculateRoutes(app: FastifyInstance) {
 						userEmail: request.user.email,
 						ipAddress: request.ip,
 					},
-				})
-			);
+				});
 
-			await prisma.budgetVersion.update({
-				where: { id: versionId },
-				data: { lastCalculatedAt: new Date() },
+				await tx.budgetVersion.update({
+					where: { id: versionId },
+					data: { lastCalculatedAt: new Date() },
+				});
+
+				return calcResult;
 			});
 
 			return result;

@@ -251,7 +251,7 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 				gradeLevel: gradeLevel as CohortParameterEntry['gradeLevel'],
 				retentionRate: cohortEntry?.retentionRate ?? retentionRate,
 				manualAdjustment,
-				lateralEntryCount: manualAdjustment,
+				lateralEntryCount: cohortEntry?.lateralEntryCount ?? 0,
 				lateralWeightFr: cohortEntry?.lateralWeightFr ?? 0,
 				lateralWeightNat: cohortEntry?.lateralWeightNat ?? 0,
 				lateralWeightAut: cohortEntry?.lateralWeightAut ?? 0,

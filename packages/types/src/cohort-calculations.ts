@@ -7,6 +7,13 @@ export interface HistoricalHeadcountPoint {
 	headcount: number;
 }
 
+/**
+ * Rules that govern cohort-based enrollment calculations.
+ *
+ * Note: `cappedRetention` is intentionally absent here. It is applied at the
+ * recommendation layer (`cohort-recommendations.ts`), which writes the capped
+ * rate into `retentionRate` on the cohort parameter before the calculator runs.
+ */
 export interface CohortCalculationRules {
 	rolloverThreshold: number;
 	retentionRecentWeight: number;
@@ -27,6 +34,7 @@ export interface CohortGradeCalculationInput {
 export interface CohortGradeCalculationResult {
 	gradeLevel: GradeCode;
 	historicalTrendRatio: number | null;
+	/** Clamped to [0, 1]. For the raw ratio (which can exceed 1 in growth cohorts), use historicalTrendRatio. */
 	historicalTrendRetention: number | null;
 	appliedRetentionRate: number;
 	retainedFromPrior: number;

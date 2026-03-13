@@ -271,7 +271,12 @@ export function EnrollmentMasterGrid({
 						id: 'ay2Headcount',
 						header: 'AY2',
 						cell: ({ row, getValue }) => {
-							const isDirty = dirtyRows.has(row.original.gradeLevel);
+							const gradeFields = dirtyRows.get(row.original.gradeLevel);
+							const isDirty = gradeFields
+								? gradeFields.has('ay1') ||
+									gradeFields.has('retention') ||
+									gradeFields.has('override')
+								: false;
 							const value = getValue();
 
 							if (row.original.isPS && canEdit && onEditPsAy2) {

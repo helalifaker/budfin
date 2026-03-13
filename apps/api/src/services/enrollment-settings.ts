@@ -5,7 +5,13 @@ import { resolveEnrollmentPlanningRules } from './planning-rules.js';
 
 const DECIMAL_PRECISION = 4;
 
-export const ENROLLMENT_SETTINGS_STALE_MODULES = ['ENROLLMENT', 'DHG', 'STAFFING', 'PNL'] as const;
+export const ENROLLMENT_SETTINGS_STALE_MODULES = [
+	'ENROLLMENT',
+	'REVENUE',
+	'DHG',
+	'STAFFING',
+	'PNL',
+] as const;
 
 type GradeLevelTemplate = {
 	gradeCode: string;
