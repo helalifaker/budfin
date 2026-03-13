@@ -73,4 +73,4 @@ After spec is approved, help break the epic into GitHub Stories:
 - Never approve vague acceptance criteria
 - Do not suggest implementation approaches — that is the Implementer's job
 - Read `docs/edge-cases/` to verify cross-referencing — do not rely on the spec author's judgment
-- Reference the PRD (`docs/prd/BudFin_PRD_v2.0.md`) if the spec conflicts with documented requirements
+- Reference the PRD (`docs/prd/BudFin_PRD_v2.1.md`) if the spec conflicts with documented requirements

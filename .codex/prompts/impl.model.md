@@ -6,6 +6,7 @@ description: >
     Runs prisma generate and prisma migrate dev after scaffolding.
     Usage - /impl:model "[ModelName]"
 argument-hint: '"[ModelName]"'
+allowed-tools: Bash, Read, Write, Edit, Skill
 ---
 
 > **Internal command.** Called by `/impl:story` automatically.
@@ -21,7 +22,7 @@ If missing, ask the user: "What is the name of the Prisma model you want to scaf
 
 ## Step 1 — Invoke Skill
 
-Read and follow `.agents/skills/prisma-model/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `prisma-model`
 
 This skill handles all model scaffolding with correct BudFin patterns (Uint8Array for binary
 fields, DECIMAL(15,4) for monetary fields, P2025 error handling). Follow the skill exactly.

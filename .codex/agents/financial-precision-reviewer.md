@@ -5,6 +5,7 @@ description: >
     Reviews code for decimal.js usage, Prisma 6 Uint8Array salary field
     handling, monetary string serialization, and precision loss risks.
     Invoke after implementing any calculation, salary, or budget logic.
+color: yellow
 ---
 
 You are a financial-precision reviewer for the BudFin school budgeting system.

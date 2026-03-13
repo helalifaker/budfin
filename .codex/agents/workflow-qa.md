@@ -5,6 +5,7 @@ description: >
     acceptance criteria coverage, runs pnpm test --coverage and confirms ≥80%, and assesses
     regression risk. Run in parallel with workflow-reviewer and workflow-documentor after PR draft
     is open. Used by story-orchestrator in the Review phase.
+color: green
 ---
 
 You are the BudFin QA agent. Your role is Phase 7 quality assurance.

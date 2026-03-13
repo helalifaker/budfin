@@ -4,6 +4,7 @@ description: >
     Fix security vulnerabilities in BudFin. Launches security-reviewer agent on changed files,
     fixes all Blockers (JWT, RBAC, SQL injection, rate limit, audit log), then re-runs to confirm
     clean. Commits with fix(security) message. Available in any phase.
+allowed-tools: Bash, Read, Edit, Agent, Skill
 ---
 
 > **Internal command.** Called by `/fix:all` automatically.
@@ -13,7 +14,7 @@ fix every Blocker, and confirm clean before committing.
 
 ## Step 1 — Invoke Skill
 
-Read and follow `.agents/skills/budfin-workflow/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `budfin-workflow`
 
 This confirms phase and loads security constraints from `docs/tdd/05_security.md`.
 
@@ -29,7 +30,7 @@ If a specific path was provided as an argument, use that instead.
 
 ## Step 3 — Launch Security Reviewer Agent
 
-Load `.codex/agents/security-reviewer.md` as the review brief, then spawn a Codex sub-agent with:
+Use the Agent tool to launch `security-reviewer` with:
 
 - The list of changed files to review
 - Instruction to read `docs/tdd/05_security.md` as the authoritative security spec
@@ -93,7 +94,7 @@ All warnings should be resolved unless there is a documented reason not to.
 
 ## Step 6 — Re-Run Security Review
 
-Re-run the security reviewer using `.codex/agents/security-reviewer.md` on the same files.
+Use the Agent tool to re-launch `security-reviewer` on the same files.
 
 If any BLOCKING findings remain, go back to Step 4.
 If only INFO findings remain, proceed to Step 7.

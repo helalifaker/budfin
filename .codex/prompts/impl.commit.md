@@ -4,6 +4,7 @@ description: >
     Commit story changes, push branch, and open draft PR linked to story/epic.
     Usage - /impl:commit [story-issue-number]
 argument-hint: '[story-issue-number]'
+allowed-tools: Bash, Read, Glob, Grep, Skill
 ---
 
 > **Internal command.** Called by `/impl:story` automatically.
@@ -16,7 +17,7 @@ If the argument is missing, ask the user for the story issue number before proce
 
 ## Step 1 — Invoke Skill (COMMIT mode)
 
-Read and follow `.agents/skills/impl-commit/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `impl-commit`
 
 Run in **COMMIT mode** for story `[argument]`.
 

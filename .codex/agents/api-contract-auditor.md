@@ -5,6 +5,7 @@ description: >
     every endpoint definition (method, path, request/response schema, status codes, RBAC, error
     codes) against the actual Fastify route implementations. Reports missing endpoints, schema
     mismatches, wrong status codes, and missing RBAC with file:line references.
+color: blue
 ---
 
 You are the BudFin API Contract Auditor. Your role is Layer 2 of the `/audit:360` command.

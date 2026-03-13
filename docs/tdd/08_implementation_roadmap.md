@@ -1,7 +1,7 @@
 # Section 11: Implementation Roadmap
 
 > **Status:** Approved (with delivery status annotations)
-> **Last updated:** 2026-03-07
+> **Last updated:** 2026-03-13
 
 Follows PRD Section 14 exactly. 30 working weeks + 5-week buffer total = 35 weeks.
 6 phases.
@@ -25,11 +25,11 @@ Follows PRD Section 14 exactly. 30 working weeks + 5-week buffer total = 35 week
 | Epic 1  | Enrollment & Capacity     | **Implemented** |
 | Epic 2  | Revenue                   | **Implemented** |
 | Epic 15 | UI/UX Clean-Slate Rewrite | **In Progress** |
-| Epic 3  | Staffing & Staff Costs    | **Planned**     |
-| Epic 4  | P&L Consolidation         | **Planned**     |
+| Epic 3  | Staffing & Staff Costs    | **Implemented** |
+| Epic 4  | P&L Consolidation         | **Implemented** |
 | Epic 5  | Scenario Modeling         | **Planned**     |
 | Epic 6  | Dashboard & Export        | **Planned**     |
-| Epic 8  | Data Migration            | **Planned**     |
+| Epic 8  | Data Migration            | **In Progress** |
 
 ## 11.1 Team Structure
 
@@ -166,7 +166,7 @@ Owner: Dev 1 (backend) + Dev 2 (frontend)
 - QA: functional testing of enrollment and revenue modules
 - M2 Gate criteria: POST /calculate/revenue produces revenue within +/- 1 SAR of Excel baseline for all 12 months; all FR-ENR-001 through FR-REV-021 unit and integration tests passing; Excel regression suite passing
 
-## 11.4 Phase 3: Staffing and Staff Costs (Weeks 12-18) — **Planned**
+## 11.4 Phase 3: Staffing and Staff Costs (Weeks 12-18) — **Implemented**
 
 **Objective:** Implement DHG staffing model and complete staff cost engine including
 GOSI/Ajeer/EoS.
@@ -219,7 +219,7 @@ GOSI/Ajeer/EoS.
 - QA functional testing of staffing module
 - M3 Gate criteria: POST /calculate/staffing produces staff costs within +/- 1 SAR of Excel baseline for all 168 employees x 12 months; YEARFRAC matches Excel for all 168 joining dates; all FR-DHG and FR-STC tests passing
 
-## 11.5 Phase 4: Versions and P&L (Weeks 19-25) — **Planned**
+## 11.5 Phase 4: Versions and P&L (Weeks 19-25) — **In Progress**
 
 **Objective:** Version lifecycle management, P&L consolidation, IFRS mapping,
 scenario modeling.

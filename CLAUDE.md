@@ -80,7 +80,7 @@ packages/types/    Shared TypeScript types (@budfin/types)
 - **Styling**: Tailwind CSS v4 (CSS-first config, no `tailwind.config.js`). UI primitives from `radix-ui` (unified Feb 2026 package).
 - **Layout shells** (ADR-023): Two dedicated shells share the same `RootLayout` and `Sidebar`:
     - `PlanningShell` — budget planning routes (`/enrollment`, `/staff`, `/budget`, `/reports`). Includes `ContextBar` (fiscal year/version/period selectors) and a resizable docked `RightPanel`.
-    - `ManagementShell` — master data, admin, and version management routes. Includes `ModuleToolbar`. Panels are overlays (side panels, dialogs) within individual pages.
+    - `ManagementShell` — master data, admin, and version management routes. Currently minimal (renders `<Outlet />` only; `ModuleToolbar` is planned but not yet implemented). Panels are overlays (side panels, dialogs) within individual pages.
     - New routes must be nested under the correct shell in the router.
 
 ### TypeScript config split
@@ -108,6 +108,30 @@ All dates must handle Arabia Standard Time (UTC+3) via `@date-fns/tz`. Use `date
 
 Flat config only (`eslint.config.ts`). No `.eslintrc` files. All plugins must support ESLint 9 flat config.
 `no-console` is set to `error` globally — use a logger or prefix with `_`. Exception: `prisma/seed.ts` files.
+
+### RBAC permissions
+
+Roles and their permissions (`apps/api/src/lib/rbac.ts`):
+
+| Permission     | Admin | BudgetOwner | Editor | Viewer |
+| -------------- | ----- | ----------- | ------ | ------ |
+| `data:view`    | ✓     | ✓           | ✓      | ✓      |
+| `data:edit`    | ✓     | ✓           | ✓      |        |
+| `salary:view`  | ✓     | ✓           | ✓      |        |
+| `salary:edit`  | ✓     | ✓           |        |        |
+| `admin:users`  | ✓     |             |        |        |
+| `admin:audit`  | ✓     |             |        |        |
+| `admin:config` | ✓     |             |        |        |
+
+New routes that expose salary data must check `salary:view`. Routes that mutate data need `data:edit` at minimum.
+
+### Version-scoped API routes
+
+All budget-calculation routes are scoped under a version: `/api/v1/versions/:versionId/`. The three route groups registered at this prefix are `enrollmentRoutes`, `revenueRoutes`, and `staffingRoutes`. Their calculate triggers live under `/api/v1/versions/:versionId/calculate`.
+
+### Frontend workspace context
+
+`workspace-context-store.ts` (Zustand) is the single source of truth for the active fiscal year, versionId, comparison version, and academic period. The `PlanningShell` reads from this store via `useWorkspaceContextStore`. The `GET /api/v1/context` endpoint provides the authenticated user's role and permission list to the frontend on login.
 
 ## Workflow
 

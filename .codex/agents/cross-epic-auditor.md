@@ -5,6 +5,7 @@ description: >
     (Enrollment -> Capacity -> Revenue -> Staffing -> P&L), verifies versionId scoping on all
     version-scoped queries, checks stale flag propagation, audits shared types in packages/types,
     and detects cross-epic RBAC inconsistencies. Reports violations with file:line references.
+color: yellow
 ---
 
 You are the BudFin Cross-Epic Auditor. Your role is Layer 6 of the `/audit:360` command.

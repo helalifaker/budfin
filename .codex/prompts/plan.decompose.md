@@ -1,11 +1,12 @@
 ---
 name: plan:decompose
 description: Phase 2 - Bulk-create all 13 BudFin GitHub Epics, required labels, and the GitHub Projects board with Backlog/In Progress/In Review/Done columns.
+allowed-tools: Bash, Read, Edit
 ---
 
 > **Internal command.** Called by `/workflow:run` automatically.
 
-Read and follow `.agents/skills/plan-decompose/SKILL.md` before any steps.
+Invoke the plan-decompose skill before any steps.
 
 This command executes Phase 2 (DECOMPOSE) of the BudFin workflow in full.
 
@@ -13,7 +14,7 @@ Read `.claude/workflow/STATUS.md` first to confirm we are in Phase 2. If not, wa
 
 ## Swarm Agent Requirement
 
-Use Codex sub-agents to spin up a swarm before executing. Minimum 5 agents:
+Use `TeamCreate` to spin up a swarm before executing. Minimum 5 agents:
 
 | Agent         | Role                                                                                                                                      |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +64,7 @@ Note: GitHub Projects v2 creates a default Status field automatically with Backl
 
 ## Step 3: Create All 13 Epics
 
-Use the epic catalog from `.agents/skills/plan-decompose/SKILL.md`. Create epics in dependency-respecting order:
+Use the epic catalog from the plan-decompose skill. Create epics in dependency-respecting order:
 
 **Order**: 13 → 11 → 7 → 1 → 2 → 3 → 4 → 8 → 12 → 5 → 6 → 9 → 10
 

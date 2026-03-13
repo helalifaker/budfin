@@ -8,6 +8,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Weighted cohort retention algorithm for enrollment planning: configurable recent-year and historical-year weights determine AY2 headcounts from multi-year retention trends; lateral weight validation service prevents sum-to-1.0 errors for pure headcount adjustments (#185)
+- Enrollment settings API (GET/PUT) with version-scoped configuration for planning parameters including retention weights and rollover thresholds (#185)
+- Cohort history service aggregating multi-year enrollment actuals to compute per-grade retention trend baselines (#185)
+
+- Monthly Cost Budget grid (Tab C) for the Staff Costs module: 12-month columns with hierarchical category rows (Local Staff Salaries, GOSI, Ajeer, EoS Accrual, Contrats Locaux, Residents, Grand Total); WCAG AA accessible with keyboard-navigable expand/collapse (#161)
+- September step-change indicator on the Monthly Cost Budget grid: amber triangle and tooltip mark the September column where salary augmentation applies (#162)
+- Academic period filter (Full Year / AY1 / AY2 / Summer) on the Monthly Cost Budget grid with dynamic column visibility and annual total recalculation for visible months only (#162)
+- Encrypted salary field masking: Viewer-role users see "--" with `aria-label="Salary data restricted"` on null salary cells instead of hidden or blank values (#169)
+- ARIA attribute enhancements across all staffing grids: `aria-label`, `aria-rowcount`, `aria-colcount`, `aria-colindex`, and `aria-readonly` on EmployeeGrid, MonthlyCostGrid, and MonthlyCostBudgetGrid (#169, #170, #171)
+- Department group grid for the Staff Costs module with expandable department rows, pinned first column, grand total footer, and department share percentage column (#163, #164)
+- Gross salary tooltip in the Employee grid showing base salary, allowances, and hourly percentage breakdown on hover (#165)
+- Employee grid department grouping with expand/collapse rows and Ctrl+Shift+N keyboard shortcut (#168)
+- CategoryMonthlyCost Prisma model and category-cost-engine computing 4 cost categories (Local Staff, Contrats Locaux, Residents, social charges) across 12 months; POST /calculate/staffing now persists category costs (#160)
+- GET /category-costs endpoint with stale enforcement returning monthly and annual totals per cost category (#160)
+- Contrats Locaux and Residents seed configuration (4 system_config keys) providing calculation parameters for contract staff cost categories (#159)
+- Stale data enforcement on GET /staff-costs and GET /staffing-summary: both return 409 STALE_DATA when the staffing calculation is outdated (#157)
+- Enhanced staffing KPI ribbon with 6 metrics: total headcount, annual cost, average monthly cost, GOSI, Ajeer, and EoS accrual (#166)
+- YEARFRAC US 30/360 regression test suite with 25 tests verified against Excel YEARFRAC(start, end, 0) baselines (#167)
+
+- Staffing (DHG) module: Employee CRUD with pgcrypto salary encryption, salary redaction for non-`salary:view` roles, and optimistic locking via If-Match header (#140)
+- Employee xlsx bulk import with two-phase validate/commit workflow and duplicate detection (#142)
+- DHG calculation engine computing sections needed, FTE, and DHG requirements per grade level from enrollment headcounts and grille configuration (#143)
+- Staff Cost calculation engine: monthly gross salary with September step-change augmentation, GOSI (11.75% Saudi), Ajeer fee (prorated for new staff), and End-of-Service provision (#144, #145, #146)
+- YEARFRAC US 30/360 engine matching Excel behavior exactly with 24 regression tests (#139)
+- 4 new Prisma models: Employee, DhgGrilleConfig, MonthlyStaffCost, EosProvision (#138)
+- POST /calculate/staffing orchestration endpoint running the full DHG + Staff Cost pipeline with enrollment prerequisite checks (#147)
+- GET /staff-costs (group_by employee|department|month), GET /dhg-grilles, GET /staffing-summary result endpoints (#148)
+- Stale flag integration: STAFFING module marked stale on any employee mutation, cleared after successful calculation (#149)
+- Frontend Employee List page with PlanningGrid, department/status filters, and salary redaction for Viewer role (#150)
+- Frontend Employee Form in right panel supporting create and edit with 18+ fields (#151)
+- Frontend Employee Import dialog with two-phase xlsx upload, validation preview, and commit workflow (#152)
+- Frontend DHG Grille View and DHG Requirements View tabs (#153)
+- Frontend Monthly Cost tab: 12-month read-only grid with hierarchical category rows and September indicator (#154)
+- Frontend Staffing module toolbar with Calculate button, stale banner, and staffing summary KPI ribbon (#155)
+
 - Data migration pipeline for importing FY2026 budget data from Excel workbooks and historical enrollment CSVs into BudFin, enabling staff to verify and work with real financial data immediately after go-live (#10)
 - Staff Costs Excel parser that reads the EFIR Staff Costs workbook and produces a validated JSON fixture, handling formula errors and dirty data with structured warnings (#10)
 - Master data seeding for nationalities, tariffs, departments, academic years, and chart of accounts as part of the migration pipeline (#10)
@@ -143,6 +178,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Version cloning accepts optional description override (#14)
 
 ### Fixed
+
+- Positive manual adjustments (via `manualAdjustment`) no longer raise 422 `LATERAL_WEIGHT_SUM_INVALID` when all three nationality weights are zero; the lateral weight sum-to-1.0 check is skipped for zero-weight configurations that represent pure headcount adjustments with no lateral entry distribution (#185)
+- SQL injection vulnerability in employees.ts resolved: all `$queryRawUnsafe` calls replaced with `Prisma.sql` tagged templates with parameterized filter, encryption key, and body field values (#185)
+- `/revenue-results` route renamed to `/revenue` across API routes, frontend hooks, and tests to match the API contract (#185)
+- User creation error code changed from `CONFLICT` to `EMAIL_EXISTS` to match the documented API contract (#185)
+- Staffing summary response fields renamed to match the API contract: `totalFTE` → `fte`, `totalSalaryCost` → `cost` (#185)
+- `@unique` constraint added to `RefreshToken.tokenHash`; `CalculationAuditLog` onDelete cascade changed to `SetNull`; 14 indexes added across 6 models (BudgetVersion, FiscalPeriod, AuditEntry, MonthlyStaffCost, CalculationAuditLog, RefreshToken) to enforce data integrity and improve query performance (#185)
+- Budget version `dataSource` now uses the per-definition value (MANUAL for budget versions, IMPORTED for actuals) instead of a hardcoded IMPORTED value, unblocking revenue calculation on manually created versions
+- Fee grid fixtures now include term1/term2/term3 splits; nationality codes normalized (FR→Francais, NAT→Nationaux, AUT→Autres) and tariff codes normalized (PLEIN→Plein, R3P→R3+) across all fixture files
+- `GRADE_CODES` and `GRADE_PROGRESSION` constants aligned with the database seed data (6EME/5EME/4EME/3EME/2NDE/1ERE/TERM), fixing AY2 cohort lookups that previously failed to find matching grade records
+- `nationality_breakdown` table is now seeded from enrollment detail records during migration with computed nationality weights, preventing empty nationality distribution on first calculation
+- URL-to-store sync now re-reads query parameters on every `location.search` change instead of once on mount, preventing stale version/period context after navigation
+- Discount importer nationality handling made consistent with the Prisma compound unique constraint, preventing duplicate key violations on re-import
+- Revenue parser now preserves all 12 months and no longer drops month 7 (January), ensuring full-year revenue totals are correct
 
 - System Settings page now displays all configured values correctly; three fields (session timeout, fiscal year start, autosave interval) previously appeared empty due to mismatched setting key names (#5)
 - Audit trail tamper protection now correctly applied; database migration targets the actual runtime role (`app_user`) instead of a non-existent role, restoring append-only enforcement on the audit log (#98)

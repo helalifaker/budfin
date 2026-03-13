@@ -2,8 +2,13 @@
 
 > **Epic:** #6 — Revenue
 > **PRD Coverage:** FR-REV-001 through FR-REV-021
-> **Status:** Approved
+> **Status:** Approved (DONE)
 > **Date:** 2026-03-07
+> **Superseded by:** Epic 16 — Revenue Workspace Redesign
+> (`docs/specs/epic-16/revenue-workspace-redesign.md`) for UI architecture. The data model,
+> calculation engine, and CRUD endpoints defined in this spec remain the foundation. Epic 16
+> adds: forecast grid workspace, settings dialog, inspector, readiness endpoint, and
+> DiscountPolicy nationality removal.
 
 ---
 

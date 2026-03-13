@@ -389,7 +389,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 | Purpose                       | Location                        |
 | ----------------------------- | ------------------------------- |
 | Full Technical Design         | `docs/tdd/` (12 files)          |
-| Product Requirements          | `docs/prd/BudFin_PRD_v2.0.md`   |
+| Product Requirements          | `docs/prd/BudFin_PRD_v2.1.md`   |
 | Architecture Decisions (ADRs) | `docs/tdd/09_decisions_log.md`  |
 | Pinned Stack Versions         | `docs/tdd/stack-versions.md`    |
 | API Contracts                 | `docs/tdd/04_api_contract.md`   |

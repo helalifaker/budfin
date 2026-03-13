@@ -7,6 +7,7 @@ description: >
     findings and file:line references.
     Usage - /audit:360 [--epic N [N...] | --all] [--layer L [L...]] [--quick]
 argument-hint: '[--epic N... | --all] [--layer L...] [--quick]'
+allowed-tools: Bash, Read, Glob, Grep, Agent, TeamCreate, TaskCreate, TaskUpdate, TaskList, SendMessage
 ---
 
 Parse arguments:
@@ -95,14 +96,13 @@ Proceeding to static analysis...
 Determine which layers to run based on `--layer` flag and `--quick` flag.
 Default layers for Phase B: 1, 2, 3, 4, 6.
 
-Spawn up to 5 agents **in parallel** via `Codex sub-agent coordination` (team name: `audit-360-static`).
-Load the matching repo-local brief from `.codex/agents/` for each one:
+Spawn up to 5 agents **in parallel** via `TeamCreate` (team name: `audit-360-static`):
 
-1. **spec-compliance-auditor** -- `.codex/agents/spec-compliance-auditor.md` -- Layer 1
-2. **api-contract-auditor** -- `.codex/agents/api-contract-auditor.md` -- Layer 2
-3. **data-model-auditor** -- `.codex/agents/data-model-auditor.md` -- Layer 3
-4. **frontend-conformance-auditor** -- `.codex/agents/frontend-conformance-auditor.md` -- Layer 4
-5. **cross-epic-auditor** -- `.codex/agents/cross-epic-auditor.md` -- Layer 6
+1. **spec-compliance-auditor** -- Layer 1
+2. **api-contract-auditor** -- Layer 2
+3. **data-model-auditor** -- Layer 3
+4. **frontend-conformance-auditor** -- Layer 4
+5. **cross-epic-auditor** -- Layer 6
 
 Context packet for all agents:
 
@@ -137,7 +137,7 @@ If Layer 5 is requested:
     grep -rl "Decimal\|toFixed\|parseFloat\|Math\.round" apps/api/src/ --include="*.ts"
     grep -rl "Decimal\|toFixed" apps/web/src/ --include="*.ts" --include="*.tsx"
     ```
-2. Spawn the reviewer using `.codex/agents/financial-precision-reviewer.md` with the file list
+2. Spawn `financial-precision-reviewer` agent with the file list
 3. Additional audit-specific checks the agent must perform:
     - Flag native arithmetic (`+`, `-`, `*`, `/`) on variables named salary/amount/cost/revenue/fee/discount/total
     - Flag `Number()` or `parseFloat()` on API response monetary values
@@ -149,7 +149,7 @@ If Layer 7 is requested:
 1. Run `pnpm test --coverage 2>&1` -- capture full output
 2. Parse per-file coverage percentages from output
 3. Build AC-to-test mapping for each audited epic
-4. Spawn the reviewer using `.codex/agents/workflow-qa.md` with:
+4. Spawn `workflow-qa` agent with:
     - Coverage output
     - AC list per epic (from Layer 1 results if available)
     - Edge cases from `docs/edge-cases/budfin_edge_case_analysis.md`

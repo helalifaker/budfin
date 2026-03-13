@@ -5,6 +5,7 @@ description: >
     implementer + workflow-reviewer + workflow-qa + workflow-documentor). Drives TDD RED → GREEN
     → parallel Review. Creates draft PR on GREEN. Usage - /impl:story [story-issue-number]
 argument-hint: '[story-issue-number]'
+allowed-tools: Bash, Read, Agent, TeamCreate, TaskCreate, TaskUpdate, TaskList, SendMessage
 ---
 
 Parse the argument:
@@ -64,17 +65,16 @@ Display determined story type before proceeding.
 
 ## Step 3 — Invoke Skill
 
-Read and follow `.agents/skills/budfin-workflow/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `budfin-workflow`
 
 This confirms phase compliance and loads all technical constraints (TC-001, TC-002, Prisma 6
 patterns, Zod 4 validation, Tailwind v4 CSS-first, etc.).
 
 ## Step 4 — Spawn the Swarm
 
-Organize the work under the label `story-$STORY_NUMBER` and use Codex sub-agents as needed.
+Use TeamCreate to create a team named `story-$STORY_NUMBER`.
 
-Load `.codex/agents/story-orchestrator.md` as the team-lead brief, then spawn the
-story-orchestrator sub-agent with these instructions:
+Spawn the `story-orchestrator` agent as team lead with these instructions:
 
 ```
 Story issue number: $STORY_NUMBER
@@ -97,15 +97,6 @@ Your task:
 7. Launch workflow-reviewer + workflow-qa + workflow-documentor in parallel
 8. Collect results and report PASS or FAIL with blocker list
 ```
-
-When the orchestrator fans work out, it should load these repo-local agent briefs as needed:
-
-- `.codex/agents/api-implementer.md`
-- `.codex/agents/frontend-implementer.md`
-- `.codex/agents/calculation-implementer.md`
-- `.codex/agents/workflow-reviewer.md`
-- `.codex/agents/workflow-qa.md`
-- `.codex/agents/workflow-documentor.md`
 
 ## Step 5 — TDD RED Phase Detail
 
@@ -130,8 +121,8 @@ Phase 5 gate (enforced by orchestrator):
 The story-orchestrator will direct the implementer to:
 
 - Write minimum code to make all failing tests pass
-- Read and follow `.agents/skills/fastify-route/SKILL.md` for API route scaffolding when needed
-- Read and follow `.agents/skills/prisma-model/SKILL.md` for new Prisma model scaffolding when needed
+- Use `fastify-route` skill for API routes (Skill tool invocation)
+- Use `prisma-model` skill for new DB models (Skill tool invocation)
 - Apply TC-001: ALL monetary arithmetic via `Decimal.js` — zero exceptions
 - Apply TC-002: YEARFRAC algorithm for all date proration
 - Apply Prisma 6 patterns: `Uint8Array` for binary, `P2025` for not-found

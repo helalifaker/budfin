@@ -20,7 +20,7 @@ ADR-021 merged PlanningShell and ManagementShell into a single unified shell. Wh
 Restore two dedicated shell layouts:
 
 - **PlanningShell** — Used by budget planning routes (`/enrollment`, `/staff`, `/budget`, `/reports`). Includes the ContextBar (fiscal year, version, period selectors) and a resizable docked RightPanel.
-- **ManagementShell** — Used by master data, admin, and version management routes. Includes a ModuleToolbar for page-level actions. Panels are rendered as overlays (side panels, dialogs) within individual pages.
+- **ManagementShell** — Used by master data, admin, and version management routes. Currently minimal — renders `<Outlet />` only. A ModuleToolbar for page-level actions is planned but not yet implemented. Panels are rendered as overlays (side panels, dialogs) within individual pages.
 
 Both shells share the same Sidebar and RootLayout. The router nests planning routes under a `<PlanningShell />` layout element and management routes under a `<ManagementShell />` layout element.
 

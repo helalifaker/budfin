@@ -4,6 +4,7 @@ description: >
     Fix financial precision violations in BudFin. Launches financial-precision-reviewer agent on
     changed files, fixes all BLOCKING violations (TC-001 Decimal.js, monetary string serialization,
     Uint8Array salary fields), then re-runs to confirm PASS. Available in any phase.
+allowed-tools: Bash, Read, Edit, Agent, Skill
 ---
 
 > **Internal command.** Called by `/fix:all` automatically.
@@ -13,7 +14,7 @@ financial-precision-reviewer agent, fix every BLOCKING violation, and confirm PA
 
 ## Step 1 — Invoke Skill
 
-Read and follow `.agents/skills/budfin-workflow/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `budfin-workflow`
 
 This confirms phase and loads TC-001 through TC-005 constraints.
 
@@ -29,7 +30,7 @@ If a specific path was provided as an argument, use that instead.
 
 ## Step 3 — Launch Financial Precision Reviewer Agent
 
-Load `.codex/agents/financial-precision-reviewer.md` as the review brief, then spawn a Codex sub-agent with:
+Use the Agent tool to launch `financial-precision-reviewer` with:
 
 - The list of changed files (prioritize `apps/api/src/engines/`, `apps/api/src/routes/`,
   `apps/api/src/services/`)
@@ -101,7 +102,7 @@ For each WARNING (rounding mode consistency, mixed rounding strategies):
 
 ## Step 6 — Re-Run Precision Review
 
-Re-run the precision reviewer using `.codex/agents/financial-precision-reviewer.md` on the same files.
+Use the Agent tool to re-launch `financial-precision-reviewer` on the same files.
 
 If any BLOCKING findings remain, go back to Step 4.
 Continue until the agent reports `VERDICT: PASS`.

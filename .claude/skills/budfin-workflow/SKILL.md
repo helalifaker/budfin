@@ -41,13 +41,13 @@ Then load only the additional files needed for the current command:
 ## Core rules
 
 1. Treat `.claude/workflow/STATUS.md` as the live source of truth for the active phase, epic, and story.
-2. Keep the workflow project-local. Prefer `.codex/prompts/` for Codex commands and `.agents/skills/` for repo skills.
+2. Keep the workflow project-local. Prefer `.codex/prompts/` for Codex commands and `.claude/skills/` for repo skills.
 3. Respect phase gates. If the requested command is out of phase, report that clearly and stop instead of pushing ahead.
 4. Reuse the existing project skills when a command needs them:
-   - `.agents/skills/fastify-route/SKILL.md`
-   - `.agents/skills/prisma-model/SKILL.md`
-   - `.agents/skills/impl-commit/SKILL.md`
-   - `.agents/skills/plan-decompose/SKILL.md`
+   - `.claude/skills/fastify-route/SKILL.md`
+   - `.claude/skills/prisma-model/SKILL.md`
+   - `.claude/skills/impl-commit/SKILL.md`
+   - `.claude/skills/plan-decompose/SKILL.md`
 5. For multi-agent steps, use Codex sub-agents with narrow scopes instead of inventing new coordination workflows.
 
 ## Technical constraints to enforce
@@ -73,4 +73,4 @@ Then load only the additional files needed for the current command:
 - The command outcome matches the current phase rules in `.claude/workflow/WORKFLOW.md`
 - Any files updated in `.claude/workflow/STATUS.md` remain internally consistent
 - Any referenced follow-up command actually exists in `.codex/prompts/`
-- Any handoff to another project skill points at a real file in `.agents/skills/`
+- Any handoff to another project skill points at a real file in `.claude/skills/`

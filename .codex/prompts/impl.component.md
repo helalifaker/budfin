@@ -6,6 +6,7 @@ description: >
     @hookform/resolvers v5 (if form), Decimal.js for monetary display, and WCAG AA accessibility.
     Usage - /impl:component "[ComponentName]"
 argument-hint: '"[ComponentName]"'
+allowed-tools: Bash, Read, Write, Edit, Skill
 ---
 
 > **Internal command.** Called by `/impl:story` automatically.
@@ -21,7 +22,7 @@ If missing, ask the user: "What is the name of the React component you want to s
 
 ## Step 1 — Invoke Skill
 
-Read and follow `.agents/skills/budfin-workflow/SKILL.md` before proceeding.
+Use the Skill tool to invoke: `budfin-workflow`
 
 This confirms phase compliance and loads frontend technical constraints (Tailwind v4, shadcn/ui,
 WCAG AA, TanStack Table v8, React Hook Form v7, @hookform/resolvers v5, ADR-002, ADR-004).

@@ -6,6 +6,7 @@ description: >
     docs/tdd/09_decisions_log.md. Commits the ADR. Available in any phase.
     Usage - /plan:adr "[decision title]"
 argument-hint: '"[decision title]"'
+allowed-tools: Read, Write, Edit, Bash
 ---
 
 Parse the argument:

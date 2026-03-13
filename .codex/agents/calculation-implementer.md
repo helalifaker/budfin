@@ -207,7 +207,7 @@ apps/api/src/engines/
 
 ## When Done
 
-Report back to story-orchestrator with:
+Mark tasks completed via TaskUpdate. Send message to story-orchestrator with:
 
 - Engine files created (full paths)
 - Which TC requirements addressed and how

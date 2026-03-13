@@ -553,4 +553,8 @@ ADRs created during epic implementation are stored in `docs/adr/`. These extend 
 - **ADR-020** — Allow Logout Without Valid Access Token (`docs/adr/ADR-020-unauthenticated-logout.md`): Created during Epic 15 (UI/UX Rewrite) implementation.
 - **ADR-021** — Single-Shell Layout (`docs/adr/ADR-021-single-shell-layout.md`): Superseded by ADR-023.
 - **ADR-022** — Calculation Persistence and Audit Logging (`docs/adr/ADR-022-calculation-persistence-and-audit.md`): Created during Epic 1 (Enrollment) remediation.
-- **ADR-023** — Restore Two-Shell Layout Architecture (`docs/adr/ADR-023-two-shell-layout.md`): Created during Epic 15 (UI/UX Rewrite) implementation.
+- **ADR-023** — Restore Two-Shell Layout Architecture (`docs/adr/ADR-023-two-shell-layout.md`): Created during Epic 15 (UI/UX Rewrite) implementation. Supersedes ADR-021.
+- **ADR-024** — Continuous Planning Board Layout Pattern (`docs/adr/ADR-024-continuous-planning-board.md`): Adopted 2026-03-08. Replaces tabbed layout with vertically stacked WorkspaceBoard/WorkspaceBlock pattern for all planning pages; moves tariff assignment from Enrollment to Revenue domain.
+- **ADR-025** — Cohort Progression and Nationality Distribution Engines (`docs/adr/ADR-025-cohort-nationality-engines.md`): Accepted 2026-03-08. Introduces two pure-function calculation engines and two database tables for formula-driven AY2 headcount and nationality distribution.
+- **ADR-026** — CLI-Only Data Migration Pipeline (`docs/adr/ADR-026-cli-only-data-migration.md`): Accepted 2026-03-09. Uses TypeScript CLI scripts within the monorepo for one-time go-live data import across 10 phases with idempotent upserts and zero-tolerance validation.
+- **ADR-027** — Version-Scoped Enrollment Planning Rules on BudgetVersion (`docs/adr/ADR-027-version-scoped-enrollment-planning-rules.md`): Accepted 2026-03-12. Stores rollover threshold and capped retention rate as columns on budget_versions for per-version scenario testing.

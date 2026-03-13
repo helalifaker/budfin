@@ -7,6 +7,7 @@ description: >
     Supports --epic flag to drive all PRs for an Epic in dependency order.
     Usage - /pr:drive [story-#] or /pr:drive --pr N [N...] or /pr:drive --epic [epic-#]
 argument-hint: '[story-# or --pr N [N...] or --epic [epic-#]]'
+allowed-tools: Bash, Read, Edit, Agent, TeamCreate, Skill
 ---
 
 Parse the argument:
@@ -206,11 +207,11 @@ gh pr diff $PR_NUMBER
 
 ### 3c. Spawn 3 review agents in parallel
 
-Spawn three Codex sub-agents simultaneously, loading each repo-local brief first:
+Use Agent tool to spawn three agents simultaneously:
 
-1. **workflow-reviewer** -- `.codex/agents/workflow-reviewer.md` -- code quality, security, financial precision, OWASP top 10
-2. **workflow-qa** -- `.codex/agents/workflow-qa.md` -- acceptance criteria coverage, edge cases, regression risk, coverage >= 80%
-3. **workflow-documentor** -- `.codex/agents/workflow-documentor.md` -- CHANGELOG, ADR if applicable, STATUS.md consistency
+1. **workflow-reviewer** -- code quality, security, financial precision, OWASP top 10
+2. **workflow-qa** -- acceptance criteria coverage, edge cases, regression risk, coverage >= 80%
+3. **workflow-documentor** -- CHANGELOG, ADR if applicable, STATUS.md consistency
 
 Provide each agent with:
 
