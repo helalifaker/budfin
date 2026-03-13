@@ -349,6 +349,8 @@ model BudgetVersion {
   staleModules      String[] @default([]) @map("stale_modules")
   rolloverThreshold Decimal  @default(1.0000) @map("rollover_threshold") @db.Decimal(5, 4)
   cappedRetention   Decimal  @default(0.9800) @map("capped_retention") @db.Decimal(5, 4)
+  retentionRecentWeight Decimal @default(0.6000) @map("retention_recent_weight") @db.Decimal(5, 4)
+  historicalTargetRecentWeight Decimal @default(0.8000) @map("historical_target_recent_weight") @db.Decimal(5, 4)
   createdById       Int      @map("created_by_id")
   publishedAt       DateTime? @map("published_at") @db.Timestamptz
   lockedAt          DateTime? @map("locked_at") @db.Timestamptz
@@ -850,13 +852,16 @@ model CategoryMonthlyCost {
   @@map("category_monthly_costs")
 }
 
-// ── Version Capacity Config (Enrollment — per-version class size overrides) ──
+// ── Version Capacity Config (Enrollment — per-version grade planning config) ──
 
 model VersionCapacityConfig {
   id           Int      @id @default(autoincrement())
   versionId    Int      @map("version_id")
   gradeLevel   String   @map("grade_level") @db.VarChar(10)
   maxClassSize Int      @map("max_class_size")
+  plancherPct  Decimal  @map("plancher_pct") @db.Decimal(5, 4)
+  ciblePct     Decimal  @map("cible_pct") @db.Decimal(5, 4)
+  plafondPct   Decimal  @map("plafond_pct") @db.Decimal(5, 4)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 

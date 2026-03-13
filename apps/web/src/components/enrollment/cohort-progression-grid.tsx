@@ -3,11 +3,12 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import type { CohortParameterEntry, GradeCode } from '@budfin/types';
 import { cn } from '../../lib/cn';
 import { PlanningGrid } from '../data-grid/planning-grid';
-import { useHeadcount, usePutHeadcount } from '../../hooks/use-enrollment';
+import { useHeadcount, useHistorical, usePutHeadcount } from '../../hooks/use-enrollment';
 import { useCohortParameters, usePutCohortParameters } from '../../hooks/use-cohort-parameters';
 import { useNationalityBreakdown } from '../../hooks/use-nationality-breakdown';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useEnrollmentSelectionStore } from '../../stores/enrollment-selection-store';
+import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { EditableCell } from '../shared/editable-cell';
 import {
 	buildAy1HeadcountMap,
@@ -71,7 +72,9 @@ export function CohortProgressionGrid({
 	bandFilter,
 	isReadOnly,
 }: CohortProgressionGridProps) {
+	const { fiscalYear } = useWorkspaceContext();
 	const { data: headcountData, isLoading: headcountLoading } = useHeadcount(versionId);
+	const { data: historicalData } = useHistorical(5);
 	const { data: cohortData, isLoading: cohortLoading } = useCohortParameters(versionId);
 	const { data: natData } = useNationalityBreakdown(versionId, 'AY2');
 	const { data: gradeLevelData } = useGradeLevels();
@@ -85,6 +88,7 @@ export function CohortProgressionGrid({
 	const isLoading = headcountLoading || cohortLoading;
 	const headcountEntries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
 	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
+	const historicalEntries = useMemo(() => historicalData?.data ?? [], [historicalData?.data]);
 	const natEntries = useMemo(() => natData?.entries ?? [], [natData?.entries]);
 	const gradeLevels = useMemo(
 		() => gradeLevelData?.gradeLevels ?? [],
@@ -107,8 +111,17 @@ export function CohortProgressionGrid({
 			cohortEntries,
 			psAy2Headcount,
 			planningRules: cohortData?.planningRules ?? DEFAULT_PLANNING_RULES,
+			historicalEntries,
+			targetFiscalYear: fiscalYear,
 		});
-	}, [cohortData?.planningRules, headcountEntries, gradeLevels, cohortEntries]);
+	}, [
+		cohortData?.planningRules,
+		fiscalYear,
+		headcountEntries,
+		historicalEntries,
+		gradeLevels,
+		cohortEntries,
+	]);
 
 	const nationalityByGrade = useMemo(() => {
 		const summary = new Map<string, { frPct: number; natPct: number; autPct: number }>();
@@ -172,7 +185,7 @@ export function CohortProgressionGrid({
 	const handleCohortChange = useCallback(
 		(
 			gradeLevel: GradeCode,
-			field: keyof Pick<CohortParameterEntry, 'retentionRate' | 'lateralEntryCount'>,
+			field: keyof Pick<CohortParameterEntry, 'retentionRate' | 'manualAdjustment'>,
 			value: number
 		) => {
 			if (isReadOnly) {
@@ -185,7 +198,9 @@ export function CohortProgressionGrid({
 				retentionRate:
 					existing?.retentionRate ??
 					cohortData?.planningRules?.cappedRetention ??
-					DEFAULT_PLANNING_RULES.cappedRetention,
+					DEFAULT_PLANNING_RULES.cappedRetention ??
+					0.98,
+				manualAdjustment: existing?.manualAdjustment ?? existing?.lateralEntryCount ?? 0,
 				lateralEntryCount: existing?.lateralEntryCount ?? 0,
 				lateralWeightFr: existing?.lateralWeightFr ?? 0,
 				lateralWeightNat: existing?.lateralWeightNat ?? 0,
@@ -196,7 +211,7 @@ export function CohortProgressionGrid({
 				entries: [
 					{
 						...baseEntry,
-						[field]: field === 'retentionRate' ? value : Math.max(0, Math.round(value)),
+						[field]: field === 'retentionRate' ? value : Math.round(value),
 					},
 				],
 			});
@@ -243,7 +258,7 @@ export function CohortProgressionGrid({
 								handleCohortChange(info.row.original.gradeLevel, 'retentionRate', value)
 							}
 							type="percentage"
-							isReadOnly={isReadOnly}
+							isReadOnly={isReadOnly || info.row.original.usesConfiguredRetention !== true}
 							className="px-3 py-1.5"
 						/>
 					),
@@ -256,10 +271,29 @@ export function CohortProgressionGrid({
 							—
 						</span>
 					) : (
+						<span
+							className={cn(
+								'inline-block w-full rounded-md border border-transparent px-3 py-1.5 text-right',
+								'bg-(--cell-readonly-bg) font-medium text-(--text-secondary) tabular-nums'
+							)}
+						>
+							{info.getValue()}
+						</span>
+					),
+			}),
+			columnHelper.accessor((row) => row.manualAdjustment ?? 0, {
+				id: 'manualAdjustment',
+				header: 'Override',
+				cell: (info) =>
+					info.row.original.isPS ? (
+						<span className="inline-block w-full px-2 py-1 text-right text-(--text-sm) text-(--text-muted)">
+							—
+						</span>
+					) : (
 						<EditableCell
 							value={info.getValue()}
 							onChange={(value) =>
-								handleCohortChange(info.row.original.gradeLevel, 'lateralEntryCount', value)
+								handleCohortChange(info.row.original.gradeLevel, 'manualAdjustment', value)
 							}
 							type="number"
 							isReadOnly={isReadOnly}

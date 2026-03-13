@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { GradeCode } from '@budfin/types';
 
-type DirtyField = 'ay1' | 'retention' | 'laterals';
+type DirtyField = 'ay1' | 'retention' | 'laterals' | 'override';
 
 interface DirtyRowsState {
 	dirtyRows: Map<GradeCode, Set<DirtyField>>;

@@ -146,6 +146,10 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 					<h2 className="text-(--text-lg) font-semibold">
 						Edit Grade Level — {gradeLevel.gradeName}
 					</h2>
+					<p className="mt-1 text-(--text-sm) text-(--text-muted)">
+						These values seed new enrollment versions. Live planning settings are now managed from
+						Enrollment.
+					</p>
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-6 py-4">
@@ -191,7 +195,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 
 						<div>
 							<label htmlFor="maxClassSize" className="block text-(--text-sm) font-medium">
-								Max Class Size
+								Template Max Class Size
 							</label>
 							<Input
 								id="maxClassSize"
@@ -210,7 +214,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 
 						<div>
 							<label htmlFor="defaultAy2Intake" className="block text-(--text-sm) font-medium">
-								Default AY2 Intake
+								Default AY2 Intake Template
 							</label>
 							<Input
 								id="defaultAy2Intake"
@@ -234,7 +238,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 						<div className="grid grid-cols-3 gap-3">
 							<div>
 								<label htmlFor="plancherPct" className="block text-(--text-sm) font-medium">
-									Plancher %
+									Template Plancher %
 								</label>
 								<Input
 									id="plancherPct"
@@ -253,7 +257,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							</div>
 							<div>
 								<label htmlFor="ciblePct" className="block text-(--text-sm) font-medium">
-									Cible %
+									Template Cible %
 								</label>
 								<Input
 									id="ciblePct"
@@ -272,7 +276,7 @@ export function GradeLevelSidePanel({ open, onClose, gradeLevel }: GradeLevelSid
 							</div>
 							<div>
 								<label htmlFor="plafondPct" className="block text-(--text-sm) font-medium">
-									Plafond %
+									Template Plafond %
 								</label>
 								<Input
 									id="plafondPct"

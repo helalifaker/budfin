@@ -37,6 +37,8 @@ describe('buildHistoricalCohortObservations', () => {
 			planningRules: {
 				rolloverThreshold: 1.05,
 				cappedRetention: 0.97,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
 			},
 		});
 
@@ -62,6 +64,8 @@ describe('buildHistoricalCohortObservations', () => {
 			planningRules: {
 				rolloverThreshold: 1.05,
 				cappedRetention: 0.97,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
 			},
 		});
 
@@ -87,6 +91,8 @@ describe('buildHistoricalCohortObservations', () => {
 			planningRules: {
 				rolloverThreshold: 1.05,
 				cappedRetention: 0.97,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
 			},
 		});
 

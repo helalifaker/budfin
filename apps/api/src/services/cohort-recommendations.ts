@@ -1,6 +1,10 @@
 import { Decimal } from 'decimal.js';
 import { GRADE_PROGRESSION, type ProgressionGrade } from './cohort-engine.js';
-import { type EnrollmentPlanningRules, resolveEnrollmentPlanningRules } from './planning-rules.js';
+import {
+	DEFAULT_CAPPED_RETENTION,
+	type EnrollmentPlanningRules,
+	resolveEnrollmentPlanningRules,
+} from './planning-rules.js';
 
 const ONE_DECIMAL = new Decimal(1);
 const FOUR_DECIMAL_SCALE = new Decimal(10_000);
@@ -133,7 +137,9 @@ export function buildHistoricalCohortObservations({
 	versionFiscalYears: Map<number, number>;
 	planningRules: EnrollmentPlanningRules;
 }): HistoricalCohortObservation[] {
-	const cappedRetentionDecimal = new Decimal(planningRules.cappedRetention);
+	const cappedRetentionDecimal = new Decimal(
+		planningRules.cappedRetention ?? DEFAULT_CAPPED_RETENTION
+	);
 	const rolloverThresholdDecimal = new Decimal(planningRules.rolloverThreshold);
 	const rowsByVersion = new Map<number, Map<string, number>>();
 
@@ -188,7 +194,7 @@ export function buildHistoricalCohortObservations({
 					priorAy1Headcount,
 					ay2Headcount,
 					rolloverRatio: Number(rolloverRatio.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toString()),
-					recommendedRetentionRate: planningRules.cappedRetention,
+					recommendedRetentionRate: planningRules.cappedRetention ?? DEFAULT_CAPPED_RETENTION,
 					recommendedLateralEntryCount: Math.max(0, ay2Headcount - retainedAtFixedRate),
 					rule: 'capped-retention-growth',
 				});
@@ -259,7 +265,7 @@ export function buildCohortRecommendations(
 		if (!latestObservation) {
 			return {
 				gradeLevel,
-				recommendedRetentionRate: planningRules.cappedRetention,
+				recommendedRetentionRate: planningRules.cappedRetention ?? DEFAULT_CAPPED_RETENTION,
 				recommendedLateralEntryCount: 0,
 				confidence: 'low' as const,
 				observationCount,

@@ -43,6 +43,9 @@ export function usePutCohortParameters(versionId: number | null) {
 				queryKey: ['enrollment', 'cohort-parameters', versionId],
 			});
 			queryClient.invalidateQueries({
+				queryKey: ['enrollment', 'settings', versionId],
+			});
+			queryClient.invalidateQueries({
 				queryKey: ['enrollment', 'planning-rules', versionId],
 			});
 			queryClient.invalidateQueries({ queryKey: ['versions'] });

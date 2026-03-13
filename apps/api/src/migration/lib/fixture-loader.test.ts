@@ -35,7 +35,7 @@ describe('loadEnrollmentCsv', () => {
 			'enrollment_2022-23.csv': 1499,
 			'enrollment_2023-24.csv': 1587,
 			'enrollment_2024-25.csv': 1794,
-			'enrollment_2025-26.csv': 1747,
+			'enrollment_2025-26.csv': 1753,
 		};
 
 		for (const [file, expected] of Object.entries(expectedTotals)) {

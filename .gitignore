@@ -58,3 +58,6 @@ nginx/ssl/
 
 # Claude worktrees (transient working directories)
 .claude/worktrees/
+
+# Excel lock files
+~$*.xlsx

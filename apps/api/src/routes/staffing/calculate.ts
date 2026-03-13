@@ -94,13 +94,31 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 				where: { versionId },
 			});
 
-			const gradeLevels = await prisma.gradeLevel.findMany();
+			const [gradeLevels, versionCapacityConfigs] = await Promise.all([
+				prisma.gradeLevel.findMany({
+					select: {
+						gradeCode: true,
+						maxClassSize: true,
+					},
+				}),
+				prisma.versionCapacityConfig.findMany({
+					where: { versionId },
+					select: {
+						gradeLevel: true,
+						maxClassSize: true,
+					},
+				}),
+			]);
 			const gradeMap = new Map(gradeLevels.map((g) => [g.gradeCode, g]));
+			const versionCapacityMap = new Map(
+				versionCapacityConfigs.map((config) => [config.gradeLevel, config.maxClassSize] as const)
+			);
 
 			const enrollmentInputs: EnrollmentInput[] = enrollments.map((e) => ({
 				gradeLevel: e.gradeLevel,
 				headcount: e.headcount,
-				maxClassSize: gradeMap.get(e.gradeLevel)?.maxClassSize ?? 28,
+				maxClassSize:
+					versionCapacityMap.get(e.gradeLevel) ?? gradeMap.get(e.gradeLevel)?.maxClassSize ?? 28,
 			}));
 
 			const grilleConfigs = await prisma.dhgGrilleConfig.findMany({
@@ -140,7 +158,10 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 						academicPeriod: enrollment.academicPeriod,
 						gradeLevel: result.gradeLevel,
 						headcount: enrollment.headcount,
-						maxClassSize: gradeMap.get(result.gradeLevel)?.maxClassSize ?? 28,
+						maxClassSize:
+							versionCapacityMap.get(result.gradeLevel) ??
+							gradeMap.get(result.gradeLevel)?.maxClassSize ??
+							28,
 						sectionsNeeded: result.sectionsNeeded,
 						totalWeeklyHours: result.totalWeeklyHours.toFixed(4),
 						totalAnnualHours: result.totalAnnualHours.toFixed(4),

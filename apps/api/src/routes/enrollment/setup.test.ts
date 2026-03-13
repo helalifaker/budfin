@@ -310,6 +310,8 @@ describe('POST /setup/apply', () => {
 			staleModules: [],
 			rolloverThreshold: 1,
 			cappedRetention: 0.98,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(
 			gradeLevels.map((gradeLevel) => ({ gradeCode: gradeLevel.gradeCode }))
@@ -337,6 +339,8 @@ describe('POST /setup/apply', () => {
 				planningRules: {
 					rolloverThreshold: 1.03,
 					cappedRetention: 0.99,
+					retentionRecentWeight: 0.65,
+					historicalTargetRecentWeight: 0.85,
 				},
 			},
 		});
@@ -361,6 +365,8 @@ describe('POST /setup/apply', () => {
 			where: { id: 1 },
 			data: {
 				rolloverThreshold: '1.0300',
+				retentionRecentWeight: '0.6500',
+				historicalTargetRecentWeight: '0.8500',
 				cappedRetention: '0.9900',
 			},
 		});
@@ -378,6 +384,8 @@ describe('POST /setup/apply', () => {
 			staleModules: [],
 			rolloverThreshold: 1,
 			cappedRetention: 0.98,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
 		});
 		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(
 			gradeLevels.map((gradeLevel) => ({ gradeCode: gradeLevel.gradeCode }))

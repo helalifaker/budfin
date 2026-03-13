@@ -1,16 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ClipboardCheck, Rows3, ShieldCheck, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
-import { useHeadcount } from '../../hooks/use-enrollment';
+import { useEnrollmentSettings, useHeadcount, useHistorical } from '../../hooks/use-enrollment';
 import { useCohortParameters } from '../../hooks/use-cohort-parameters';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
-import { usePlanningRules, usePutPlanningRules } from '../../hooks/use-planning-rules';
+import { useEnrollmentSettingsSheetStore } from '../../stores/enrollment-settings-store';
+import { useNationalityBreakdown } from '../../hooks/use-nationality-breakdown';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import {
 	buildAy1HeadcountMap,
+	buildBandNationalitySummary,
 	buildCapacityPreviewRows,
 	buildCohortProjectionRows,
 	buildMasterGridRows,
@@ -19,6 +20,7 @@ import {
 	getPsAy2Headcount,
 	isCohortEntryOverridden,
 	BAND_LABELS,
+	resolveEnrollmentGradeLevels,
 } from '../../lib/enrollment-workspace';
 
 const WORKFLOW_STEPS = [
@@ -29,8 +31,9 @@ const WORKFLOW_STEPS = [
 	},
 	{
 		icon: Rows3,
-		title: 'Tune rules',
-		description: 'Adjust rollover threshold and capped retention before accepting suggestions.',
+		title: 'Open settings',
+		description:
+			'Manage rollover rules and version-level capacity policy from Enrollment Settings.',
 	},
 	{
 		icon: Sparkles,
@@ -42,18 +45,42 @@ const WORKFLOW_STEPS = [
 
 const BANDS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
 
+const BAND_DOT_COLORS: Record<string, string> = {
+	MATERNELLE: 'bg-(--badge-maternelle)',
+	ELEMENTAIRE: 'bg-(--badge-elementaire)',
+	COLLEGE: 'bg-(--badge-college)',
+	LYCEE: 'bg-(--badge-lycee)',
+};
+
+const ALERT_DOT_COLORS: Record<string, string> = {
+	OVER: 'bg-(--color-error)',
+	NEAR_CAP: 'bg-(--color-warning)',
+	Override: 'bg-(--accent-500)',
+};
+
+function getWorkflowAccent(label: string): { border: string; iconBg: string } {
+	switch (label) {
+		case 'Setup complete':
+			return { border: 'border-l-(--color-success)', iconBg: 'bg-(--color-success)/15' };
+		case 'Setup pending':
+			return { border: 'border-l-(--color-warning)', iconBg: 'bg-(--color-warning)/15' };
+		case 'Review mode':
+			return { border: 'border-l-(--color-info)', iconBg: 'bg-(--color-info)/15' };
+		default:
+			return { border: 'border-l-(--accent-500)', iconBg: 'bg-(--accent-50)' };
+	}
+}
+
 export function InspectorDefaultView() {
-	const { versionId, versionStatus, versionDataSource } = useWorkspaceContext();
+	const { versionId, fiscalYear, versionStatus, versionDataSource } = useWorkspaceContext();
 	const user = useAuthStore((state) => state.user);
 	const { data: headcountData } = useHeadcount(versionId);
+	const { data: historicalData } = useHistorical(5);
 	const { data: cohortData } = useCohortParameters(versionId);
 	const { data: gradeLevelData } = useGradeLevels();
-	const { data: planningRulesData } = usePlanningRules(versionId);
-	const putPlanningRules = usePutPlanningRules(versionId);
-	const [draftRulesOverride, setDraftRulesOverride] = useState<
-		null | typeof DEFAULT_PLANNING_RULES
-	>(null);
-	const draftRules = draftRulesOverride ?? planningRulesData ?? DEFAULT_PLANNING_RULES;
+	const { data: enrollmentSettingsData } = useEnrollmentSettings(versionId);
+	const { data: natData } = useNationalityBreakdown(versionId, 'AY2');
+	const openEnrollmentSettings = useEnrollmentSettingsSheetStore((state) => state.open);
 
 	const editability = deriveEnrollmentEditability({
 		role: user?.role ?? null,
@@ -62,10 +89,15 @@ export function InspectorDefaultView() {
 	});
 
 	const gradeLevels = useMemo(
-		() => gradeLevelData?.gradeLevels ?? [],
-		[gradeLevelData?.gradeLevels]
+		() =>
+			resolveEnrollmentGradeLevels({
+				gradeLevels: gradeLevelData?.gradeLevels ?? [],
+				capacityByGrade: enrollmentSettingsData?.capacityByGrade,
+			}),
+		[enrollmentSettingsData?.capacityByGrade, gradeLevelData?.gradeLevels]
 	);
 	const headcountEntries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
+	const historicalEntries = useMemo(() => historicalData?.data ?? [], [historicalData?.data]);
 	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
 	const ay1HeadcountMap = useMemo(() => buildAy1HeadcountMap(headcountEntries), [headcountEntries]);
 	const psDefaultAy2Intake =
@@ -83,9 +115,21 @@ export function InspectorDefaultView() {
 				ay1HeadcountMap,
 				cohortEntries,
 				psAy2Headcount,
-				planningRules: cohortData?.planningRules ?? DEFAULT_PLANNING_RULES,
+				planningRules:
+					enrollmentSettingsData?.rules ?? cohortData?.planningRules ?? DEFAULT_PLANNING_RULES,
+				historicalEntries,
+				targetFiscalYear: fiscalYear,
 			}),
-		[ay1HeadcountMap, cohortData?.planningRules, cohortEntries, gradeLevels, psAy2Headcount]
+		[
+			ay1HeadcountMap,
+			cohortEntries,
+			cohortData?.planningRules,
+			enrollmentSettingsData?.rules,
+			fiscalYear,
+			gradeLevels,
+			historicalEntries,
+			psAy2Headcount,
+		]
 	);
 	const capacityRows = useMemo(
 		() =>
@@ -104,14 +148,20 @@ export function InspectorDefaultView() {
 				cohortEntries,
 				psAy2Headcount,
 				capacityResults: capacityRows,
-				planningRules: cohortData?.planningRules ?? DEFAULT_PLANNING_RULES,
+				planningRules:
+					enrollmentSettingsData?.rules ?? cohortData?.planningRules ?? DEFAULT_PLANNING_RULES,
+				historicalEntries,
+				targetFiscalYear: fiscalYear,
 			}),
 		[
 			ay1HeadcountMap,
 			capacityRows,
-			cohortData?.planningRules,
 			cohortEntries,
+			cohortData?.planningRules,
+			enrollmentSettingsData?.rules,
+			fiscalYear,
 			gradeLevels,
+			historicalEntries,
 			psAy2Headcount,
 		]
 	);
@@ -157,6 +207,11 @@ export function InspectorDefaultView() {
 		});
 	}, [masterRows]);
 
+	const bandNationality = useMemo(
+		() => buildBandNationalitySummary(natData?.entries ?? [], gradeLevels),
+		[natData?.entries, gradeLevels]
+	);
+
 	const ay1ConfiguredCount = new Set(
 		headcountEntries
 			.filter((entry) => entry.academicPeriod === 'AY1')
@@ -176,11 +231,27 @@ export function InspectorDefaultView() {
 				: 'Setup pending'
 			: 'Review mode';
 
+	const workflowAccent = getWorkflowAccent(readinessLabel);
+	const planningRules =
+		enrollmentSettingsData?.rules ?? cohortData?.planningRules ?? DEFAULT_PLANNING_RULES;
+
 	return (
 		<div className="space-y-5">
-			<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-4">
+			{/* 4a: Workflow status card with semantic left accent */}
+			<div
+				className={cn(
+					'rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-4',
+					'border-l-[3px]',
+					workflowAccent.border
+				)}
+			>
 				<div className="flex items-start gap-3">
-					<span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-(--accent-50)">
+					<span
+						className={cn(
+							'mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl',
+							workflowAccent.iconBg
+						)}
+					>
 						<ShieldCheck className="h-4 w-4 text-(--accent-700)" aria-hidden="true" />
 					</span>
 					<div className="space-y-1">
@@ -191,8 +262,8 @@ export function InspectorDefaultView() {
 							{readinessLabel}
 						</h3>
 						<p className="text-(--text-sm) text-(--text-secondary)">
-							Use the grid for operations, the wizard for intake resets, and this panel for rules
-							and exception triage.
+							Use the grid for operations, the wizard for intake resets, and Enrollment Settings for
+							version-wide assumptions.
 						</p>
 					</div>
 				</div>
@@ -217,96 +288,67 @@ export function InspectorDefaultView() {
 				</div>
 			</div>
 
-			<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-4">
-				<div className="flex items-center justify-between gap-3">
-					<div>
-						<h4 className="text-(--text-sm) font-semibold text-(--text-primary)">Planning rules</h4>
-						<p className="text-(--text-xs) text-(--text-muted)">
-							These govern the suggested cohort defaults across the version.
-						</p>
+			{/* 4b: Settings card — compact key-value table with action row */}
+			<div>
+				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+					Planning rules
+				</h4>
+				<div className="overflow-hidden rounded-lg border border-(--workspace-border)">
+					<div className="divide-y divide-(--workspace-border)">
+						{[
+							{
+								label: 'Rollover threshold',
+								value: `${Math.round(planningRules.rolloverThreshold * 100)}%`,
+							},
+							{
+								label: 'Retention cap',
+								value: `${Math.round((planningRules.cappedRetention ?? 0.98) * 100)}%`,
+							},
+							{
+								label: 'Recent-year weight',
+								value: `${Math.round(planningRules.retentionRecentWeight * 100)}%`,
+							},
+							{
+								label: 'Target trend weight',
+								value: `${Math.round(planningRules.historicalTargetRecentWeight * 100)}%`,
+							},
+						].map((item) => (
+							<div key={item.label} className="flex items-center justify-between px-3 py-2">
+								<span className="text-(--text-sm) text-(--text-secondary)">{item.label}</span>
+								<span className="font-[family-name:var(--font-mono)] text-(--text-sm) tabular-nums text-(--text-primary)">
+									{item.value}
+								</span>
+							</div>
+						))}
 					</div>
-					<div className="flex items-center gap-2">
+					<div className="border-t border-(--workspace-border) bg-(--workspace-bg-muted) px-3 py-2">
 						<Button
 							type="button"
-							variant="ghost"
+							variant="outline"
 							size="sm"
-							onClick={() => setDraftRulesOverride(null)}
+							className="w-full"
+							onClick={openEnrollmentSettings}
 						>
-							Reset
+							Open Enrollment Settings
 						</Button>
-						<Button
-							type="button"
-							size="sm"
-							onClick={() => putPlanningRules.mutate(draftRules)}
-							disabled={editability !== 'editable'}
-						>
-							Save rules
-						</Button>
-					</div>
-				</div>
-				<div className="mt-4 grid gap-3 md:grid-cols-2">
-					<div>
-						<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
-							Rollover threshold
-						</label>
-						<Input
-							type="number"
-							min={0.5}
-							max={2}
-							step={0.01}
-							value={draftRules.rolloverThreshold}
-							onChange={(event) =>
-								setDraftRulesOverride((current) => ({
-									...(current ?? draftRules),
-									rolloverThreshold: Number(event.target.value),
-								}))
-							}
-							disabled={editability !== 'editable'}
-							className={cn(
-								'mt-2 w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-2',
-								'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)'
-							)}
-						/>
-					</div>
-					<div>
-						<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
-							Capped retention
-						</label>
-						<Input
-							type="number"
-							min={0.5}
-							max={1}
-							step={0.01}
-							value={draftRules.cappedRetention}
-							onChange={(event) =>
-								setDraftRulesOverride((current) => ({
-									...(current ?? draftRules),
-									cappedRetention: Number(event.target.value),
-								}))
-							}
-							disabled={editability !== 'editable'}
-							className={cn(
-								'mt-2 w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-2',
-								'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)'
-							)}
-						/>
 					</div>
 				</div>
 			</div>
 
+			{/* 4c: Recommended workflow -- divider-separated list in one card */}
 			<div>
 				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
 					Recommended workflow
 				</h4>
-				<div className="space-y-2">
+				<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card)">
 					{WORKFLOW_STEPS.map((step, index) => {
 						const Icon = step.icon;
 						return (
 							<div
 								key={step.title}
 								className={cn(
-									'animate-stagger-reveal rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-2.5',
-									'flex items-start gap-3'
+									'animate-stagger-reveal flex items-start gap-3 p-2.5',
+									'border-b border-(--workspace-border) last:border-b-0'
 								)}
 								style={{ animationDelay: `${index * 50}ms` }}
 							>
@@ -323,6 +365,7 @@ export function InspectorDefaultView() {
 				</div>
 			</div>
 
+			{/* 4d: Exception queue with alert color indicators */}
 			<div>
 				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
 					Exception queue
@@ -353,23 +396,34 @@ export function InspectorDefaultView() {
 									</td>
 								</tr>
 							) : (
-								exceptionRows.map((row) => (
-									<tr key={row.gradeLevel} className="border-t border-(--workspace-border)">
-										<td className="px-3 py-1.5 font-medium">{row.gradeName}</td>
-										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-											{row.ay2Headcount}
-										</td>
-										<td className="px-3 py-1.5 text-right text-(--text-muted)">
-											{row.alert ?? 'Override'}
-										</td>
-									</tr>
-								))
+								exceptionRows.map((row) => {
+									const alertLabel = row.alert ?? 'Override';
+									const dotColor = ALERT_DOT_COLORS[alertLabel] ?? '';
+									return (
+										<tr key={row.gradeLevel} className="border-t border-(--workspace-border)">
+											<td className="px-3 py-1.5 font-medium">{row.gradeName}</td>
+											<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+												{row.ay2Headcount}
+											</td>
+											<td className="px-3 py-1.5 text-right text-(--text-muted)">
+												<span className="inline-flex items-center gap-1.5">
+													<span
+														className={cn('inline-block h-2 w-2 rounded-full', dotColor)}
+														aria-hidden="true"
+													/>
+													{alertLabel}
+												</span>
+											</td>
+										</tr>
+									);
+								})
 							)}
 						</tbody>
 					</table>
 				</div>
 			</div>
 
+			{/* 4e: Band summary with color dots */}
 			<div>
 				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
 					Summary by Band
@@ -393,28 +447,92 @@ export function InspectorDefaultView() {
 							</tr>
 						</thead>
 						<tbody>
-							{bandSummary.map((row) => (
-								<tr key={row.band} className="border-t border-(--workspace-border)">
-									<td className="px-3 py-1.5 font-medium">{row.label}</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-										{row.ay1}
-									</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-										{row.ay2}
-									</td>
-									<td
-										className={cn(
-											'px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums',
-											row.change > 0 && 'text-(--color-success)',
-											row.change < 0 && 'text-(--color-error)',
-											row.change === 0 && 'text-(--text-muted)'
-										)}
-									>
-										{row.change > 0 ? '+' : ''}
-										{row.change.toFixed(1)}%
-									</td>
-								</tr>
-							))}
+							{bandSummary.map((row) => {
+								const dotColor = BAND_DOT_COLORS[row.band] ?? '';
+								return (
+									<tr key={row.band} className="border-t border-(--workspace-border)">
+										<td className="px-3 py-1.5 font-medium">
+											<span className="inline-flex items-center gap-1.5">
+												<span
+													className={cn('inline-block h-2 w-2 rounded-full', dotColor)}
+													aria-hidden="true"
+												/>
+												{row.label}
+											</span>
+										</td>
+										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+											{row.ay1}
+										</td>
+										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+											{row.ay2}
+										</td>
+										<td
+											className={cn(
+												'px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums',
+												row.change > 0 && 'text-(--color-success)',
+												row.change < 0 && 'text-(--color-error)',
+												row.change === 0 && 'text-(--text-muted)'
+											)}
+										>
+											{row.change > 0 ? '+' : ''}
+											{row.change.toFixed(1)}%
+										</td>
+									</tr>
+								);
+							})}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			{/* 4f: Nationality by Band */}
+			<div>
+				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+					Nationality by Band
+				</h4>
+				<div className="overflow-hidden rounded-lg border border-(--workspace-border)">
+					<table className="w-full text-(--text-sm)">
+						<thead>
+							<tr className="bg-(--workspace-bg-muted)">
+								<th className="px-3 py-1.5 text-left text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									Band
+								</th>
+								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									Fr%
+								</th>
+								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									Nat%
+								</th>
+								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									Aut%
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{bandNationality.map((row) => {
+								const dotColor = BAND_DOT_COLORS[row.band] ?? '';
+								return (
+									<tr key={row.band} className="border-t border-(--workspace-border)">
+										<td className="px-3 py-1.5 font-medium">
+											<span className="inline-flex items-center gap-1.5">
+												<span
+													className={cn('inline-block h-2 w-2 rounded-full', dotColor)}
+													aria-hidden="true"
+												/>
+												{row.label}
+											</span>
+										</td>
+										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+											{row.total === 0 ? '--' : `${row.francaisPct.toFixed(1)}%`}
+										</td>
+										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+											{row.total === 0 ? '--' : `${row.nationauxPct.toFixed(1)}%`}
+										</td>
+										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+											{row.total === 0 ? '--' : `${row.autresPct.toFixed(1)}%`}
+										</td>
+									</tr>
+								);
+							})}
 						</tbody>
 					</table>
 				</div>

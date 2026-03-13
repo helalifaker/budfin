@@ -3,818 +3,748 @@
 		"academicPeriod": "AY1",
 		"gradeLevel": "PS",
 		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 39
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "PS",
-		"nationality": "Francais",
 		"tariff": "RP",
-		"headcount": 6
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "PS",
 		"nationality": "Francais",
 		"tariff": "R3+",
-		"headcount": 5
+		"headcount": 6
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 17
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "PS",
 		"nationality": "Nationaux",
 		"tariff": "Plein",
-		"headcount": 25
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "PS",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "PS",
 		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "PS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 34
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 8
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
 		"tariff": "Plein",
 		"headcount": 18
 	},
 	{
 		"academicPeriod": "AY1",
-		"gradeLevel": "PS",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
 		"gradeLevel": "MS",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 41
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "MS",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "MS",
-		"nationality": "Francais",
+		"nationality": "Nationaux",
 		"tariff": "R3+",
-		"headcount": 5
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "MS",
 		"nationality": "Nationaux",
 		"tariff": "Plein",
-		"headcount": 25
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "MS",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "MS",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 19
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "MS",
 		"nationality": "Autres",
 		"tariff": "RP",
-		"headcount": 3
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 37
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "GS",
 		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 42
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "GS",
-		"nationality": "Francais",
 		"tariff": "RP",
-		"headcount": 6
+		"headcount": 2
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "GS",
 		"nationality": "Francais",
 		"tariff": "R3+",
-		"headcount": 5
+		"headcount": 12
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "GS",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 26
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "GS",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "GS",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 19
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "GS",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
 		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 42
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 26
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 19
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CP",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 43
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 27
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE1",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 44
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 28
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CE2",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 46
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 28
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 21
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM1",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 47
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Nationaux",
 		"tariff": "Plein",
 		"headcount": 29
 	},
 	{
 		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 21
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "CM2",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 50
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 8
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 31
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 23
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "6EME",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 51
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 8
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 32
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 24
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "5EME",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 52
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 8
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 33
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 24
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "4EME",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 53
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 8
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 33
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 24
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "3EME",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 48
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 30
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 22
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "2NDE",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 46
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 29
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 21
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "1ERE",
-		"nationality": "Autres",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "TERM",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 30
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "TERM",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "TERM",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "TERM",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 19
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "TERM",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY1",
-		"gradeLevel": "TERM",
+		"gradeLevel": "GS",
 		"nationality": "Nationaux",
 		"tariff": "R3+",
 		"headcount": 2
 	},
 	{
 		"academicPeriod": "AY1",
-		"gradeLevel": "TERM",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 15
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "GS",
 		"nationality": "Autres",
 		"tariff": "Plein",
-		"headcount": 14
+		"headcount": 60
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 32
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 11
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 66
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 30
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 62
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 34
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 11
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 70
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 31
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 64
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 31
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 64
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 43
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 89
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 40
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 82
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 34
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 71
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 29
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 61
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 37
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 6
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 77
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 36
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 74
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 33
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
 	},
 	{
 		"academicPeriod": "AY1",
 		"gradeLevel": "TERM",
 		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY1",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 69
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Francais",
 		"tariff": "RP",
 		"headcount": 1
 	},
@@ -822,679 +752,735 @@
 		"academicPeriod": "AY2",
 		"gradeLevel": "PS",
 		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 40
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "PS",
-		"nationality": "Francais",
-		"tariff": "RP",
+		"tariff": "R3+",
 		"headcount": 6
 	},
 	{
 		"academicPeriod": "AY2",
 		"gradeLevel": "PS",
 		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 16
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "PS",
+		"nationality": "Nationaux",
 		"tariff": "R3+",
-		"headcount": 5
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY2",
 		"gradeLevel": "PS",
 		"nationality": "Nationaux",
 		"tariff": "Plein",
-		"headcount": 25
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY2",
 		"gradeLevel": "PS",
 		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 19
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "MS",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 41
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "MS",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "MS",
-		"nationality": "Francais",
 		"tariff": "R3+",
 		"headcount": 5
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "MS",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 26
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "MS",
+		"gradeLevel": "PS",
 		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "GS",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 45
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "GS",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "GS",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 28
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "GS",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 21
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CP",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 41
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CP",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CP",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CP",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 26
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CP",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CP",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CP",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE1",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 42
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE1",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE1",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE1",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 26
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE1",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE1",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE1",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 21
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE2",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 43
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE2",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE2",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE2",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 27
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE2",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE2",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CE2",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM1",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 44
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM1",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM1",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM1",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 28
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM1",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM1",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM1",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM2",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 46
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM2",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM2",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM2",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 29
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM2",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM2",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "CM2",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "6EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 49
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "6EME",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 8
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "6EME",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "6EME",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 30
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "6EME",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "6EME",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "6EME",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 22
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "5EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 50
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "5EME",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 8
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "5EME",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "5EME",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 31
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "5EME",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "5EME",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "5EME",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 23
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "4EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 51
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "4EME",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 8
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "4EME",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "4EME",
-		"nationality": "Nationaux",
 		"tariff": "Plein",
 		"headcount": 32
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "4EME",
-		"nationality": "Nationaux",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
 		"tariff": "RP",
-		"headcount": 5
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "4EME",
-		"nationality": "Nationaux",
+		"gradeLevel": "MS",
+		"nationality": "Francais",
 		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "4EME",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 23
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "3EME",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 52
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "3EME",
-		"nationality": "Francais",
-		"tariff": "RP",
 		"headcount": 8
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "3EME",
+		"gradeLevel": "MS",
 		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 7
+		"tariff": "Plein",
+		"headcount": 17
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "3EME",
+		"gradeLevel": "MS",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "MS",
 		"nationality": "Nationaux",
 		"tariff": "Plein",
-		"headcount": 32
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "3EME",
-		"nationality": "Nationaux",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
 		"tariff": "RP",
-		"headcount": 5
+		"headcount": 1
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "3EME",
-		"nationality": "Nationaux",
+		"gradeLevel": "MS",
+		"nationality": "Autres",
 		"tariff": "R3+",
-		"headcount": 4
+		"headcount": 9
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "3EME",
+		"gradeLevel": "MS",
 		"nationality": "Autres",
 		"tariff": "Plein",
-		"headcount": 24
+		"headcount": 35
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "2NDE",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 47
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "2NDE",
+		"gradeLevel": "GS",
 		"nationality": "Francais",
 		"tariff": "RP",
-		"headcount": 7
+		"headcount": 2
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "2NDE",
+		"gradeLevel": "GS",
 		"nationality": "Francais",
 		"tariff": "R3+",
-		"headcount": 6
+		"headcount": 11
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "2NDE",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 29
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "2NDE",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "2NDE",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "2NDE",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 21
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "1ERE",
+		"gradeLevel": "GS",
 		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 45
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "1ERE",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 7
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "1ERE",
-		"nationality": "Francais",
-		"tariff": "R3+",
-		"headcount": 6
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "1ERE",
-		"nationality": "Nationaux",
 		"tariff": "Plein",
 		"headcount": 28
 	},
 	{
 		"academicPeriod": "AY2",
-		"gradeLevel": "1ERE",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "1ERE",
-		"nationality": "Nationaux",
-		"tariff": "R3+",
-		"headcount": 4
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "1ERE",
-		"nationality": "Autres",
-		"tariff": "Plein",
-		"headcount": 20
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "TERM",
-		"nationality": "Francais",
-		"tariff": "Plein",
-		"headcount": 31
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "TERM",
-		"nationality": "Francais",
-		"tariff": "RP",
-		"headcount": 5
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "TERM",
-		"nationality": "Nationaux",
-		"tariff": "Plein",
-		"headcount": 19
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "TERM",
-		"nationality": "Nationaux",
-		"tariff": "RP",
-		"headcount": 3
-	},
-	{
-		"academicPeriod": "AY2",
-		"gradeLevel": "TERM",
+		"gradeLevel": "GS",
 		"nationality": "Nationaux",
 		"tariff": "R3+",
 		"headcount": 2
 	},
 	{
 		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 14
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "GS",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 57
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 30
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CP",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 63
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 28
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 59
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 32
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 10
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CE2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 66
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 29
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM1",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 61
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 29
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "R3+",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 9
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "CM2",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 61
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 40
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "6EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 84
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 38
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "5EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 78
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 32
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "4EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 67
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 1
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "R3+",
+		"headcount": 4
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 27
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "R3+",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "3EME",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 58
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 35
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 6
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "2NDE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 73
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 34
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 3
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "1ERE",
+		"nationality": "Autres",
+		"tariff": "Plein",
+		"headcount": 70
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "RP",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Francais",
+		"tariff": "Plein",
+		"headcount": 31
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Nationaux",
+		"tariff": "Plein",
+		"headcount": 2
+	},
+	{
+		"academicPeriod": "AY2",
+		"gradeLevel": "TERM",
+		"nationality": "Autres",
+		"tariff": "RP",
+		"headcount": 5
+	},
+	{
+		"academicPeriod": "AY2",
 		"gradeLevel": "TERM",
 		"nationality": "Autres",
 		"tariff": "Plein",
-		"headcount": 14
+		"headcount": 65
 	}
 ]

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import type { NationalityType } from '@budfin/types';
 import { cn } from '../../lib/cn';
-import { Input } from '../ui/input';
+import { InspectorInput } from '../shared/inspector-input';
 import {
 	useNationalityBreakdown,
 	usePutNationalityBreakdown,
@@ -73,7 +73,8 @@ export function InspectorNationalityEditor({
 				return;
 			}
 
-			const normalizedValue = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+			const pctValue = Math.round(value * 100);
+			const normalizedValue = Number.isFinite(pctValue) ? Math.max(0, Math.min(100, pctValue)) : 0;
 			setLocalWeights((current) => ({
 				...current,
 				[nationality]: normalizedValue,
@@ -140,24 +141,15 @@ export function InspectorNationalityEditor({
 				{NATIONALITIES.map((nationality) => (
 					<div key={nationality.key} className="flex items-center justify-between">
 						<span className="text-(--text-sm) text-(--text-secondary)">{nationality.label}</span>
-						<div className="flex items-center gap-1">
-							<Input
-								type="number"
-								min={0}
-								max={100}
-								value={localWeights[nationality.key] ?? 0}
-								onChange={(event) => handleChange(nationality.key, Number(event.target.value))}
-								disabled={isReadOnly || isBusy}
-								className={cn(
-									'w-16 rounded-sm border border-(--workspace-border) px-2 py-1',
-									'bg-(--cell-editable-bg) text-right text-(length:--text-sm) tabular-nums',
-									'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
-									(isReadOnly || isBusy) && 'cursor-not-allowed bg-(--cell-readonly-bg)'
-								)}
-								aria-label={`${nationality.label} weight percentage`}
-							/>
-							<span className="text-(--text-xs) text-(--text-muted)">%</span>
-						</div>
+						<InspectorInput
+							value={localWeights[nationality.key] ?? 0}
+							onChange={(value) => handleChange(nationality.key, value)}
+							type="percentage"
+							min={0}
+							max={100}
+							isReadOnly={isReadOnly || isBusy}
+							aria-label={`${nationality.label} weight percentage`}
+						/>
 					</div>
 				))}
 

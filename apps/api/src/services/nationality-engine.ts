@@ -17,9 +17,9 @@ export interface NationalityInput {
 	psWeights?: Map<string, string>; // nationality -> weight decimal string
 	// For non-PS: prior grade data
 	priorGradeNationality?: NationalityWeight[];
-	retentionRate?: string; // decimal string
-	lateralCount?: number;
-	lateralWeights?: Map<string, string>; // nationality -> weight decimal string
+	retentionRate?: string | undefined;
+	lateralCount?: number | undefined;
+	lateralWeights?: Map<string, string> | undefined;
 }
 
 export interface NationalityOutputRow {
@@ -62,9 +62,8 @@ function reconcileToTarget(counts: { nationality: string; count: number }[], tar
  *   Apply last-bucket reconciliation: adjust largest nationality so sum == ay2Headcount
  *
  * For non-PS grades:
- *   retainedN = floor(priorCount[N] * retentionRate)
- *   lateralN = round(lateralCount * lateralWeight[N])
- *   totalN = retainedN + lateralN
+ *   priorWeight[N] = priorCount[N] / priorTotal
+ *   totalN = round(ay2Headcount * priorWeight[N])
  *   Reconcile: adjust largest bucket so sum == ay2Headcount
  *   weight = totalN / ay2Total
  */
@@ -152,38 +151,30 @@ function distributePs(
 }
 
 function distributeNonPs(input: NationalityInput): { nationality: string; count: number }[] {
-	const {
-		priorGradeNationality = [],
-		retentionRate = '0.97',
-		lateralCount = 0,
-		lateralWeights = new Map<string, string>(),
-	} = input;
+	const { priorGradeNationality = [], ay2Headcount } = input;
 
-	// When no prior nationality data exists, fall back to equal split
 	const effectivePrior: NationalityWeight[] =
 		priorGradeNationality.length > 0
 			? priorGradeNationality
 			: [
-					{ nationality: 'Francais', weight: '0.3333', headcount: 0 },
-					{ nationality: 'Nationaux', weight: '0.3334', headcount: 0 },
-					{ nationality: 'Autres', weight: '0.3333', headcount: 0 },
+					// Real EFIR distribution: ~34% Francais, ~2% Nationaux, ~64% Autres
+					{ nationality: 'Francais', weight: '0.3366', headcount: 0 },
+					{ nationality: 'Nationaux', weight: '0.0234', headcount: 0 },
+					{ nationality: 'Autres', weight: '0.6400', headcount: 0 },
 				];
 
-	const retention = new Decimal(retentionRate);
-	const lateralTotal = new Decimal(lateralCount);
+	const totalPrior = effectivePrior.reduce((sum, prior) => sum + prior.headcount, 0);
 	const counts: { nationality: string; count: number }[] = [];
 
 	for (const prior of effectivePrior) {
-		// Retained from prior grade: floor (conservative)
-		const retained = new Decimal(prior.headcount).times(retention).floor().toNumber();
-
-		// Lateral entries distributed by weight
-		const lateralWeightStr = lateralWeights.get(prior.nationality) ?? '0';
-		const lateralForNat = lateralTotal.times(new Decimal(lateralWeightStr)).round().toNumber();
+		const sourceWeight =
+			totalPrior > 0
+				? new Decimal(prior.headcount).dividedBy(totalPrior)
+				: new Decimal(prior.weight);
 
 		counts.push({
 			nationality: prior.nationality,
-			count: retained + lateralForNat,
+			count: new Decimal(ay2Headcount).times(sourceWeight).round().toNumber(),
 		});
 	}
 

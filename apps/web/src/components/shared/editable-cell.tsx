@@ -6,6 +6,7 @@ export type EditableCellProps = {
 	onChange: (value: number) => void;
 	onNavigate?: (direction: 'up' | 'down' | 'left' | 'right') => void;
 	type?: 'number' | 'percentage';
+	variant?: 'subtle' | 'highlighted';
 	isReadOnly?: boolean;
 	isError?: boolean;
 	errorMessage?: string;
@@ -32,12 +33,14 @@ export function EditableCell({
 	onChange,
 	onNavigate,
 	type = 'number',
+	variant = 'highlighted',
 	isReadOnly = false,
 	isError = false,
 	errorMessage,
 	min,
 	className,
 }: EditableCellProps) {
+	const isSubtle = variant === 'subtle';
 	const [editing, setEditing] = useState(false);
 	const [draft, setDraft] = useState('');
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -118,10 +121,12 @@ export function EditableCell({
 				min={min}
 				className={cn(
 					'w-full rounded-md border border-[color-mix(in_srgb,var(--workspace-border),white_35%)]',
-					'bg-(--cell-editable-bg) px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',
-					'text-right text-(length:--text-sm) font-medium tabular-nums',
+					'px-2.5 py-1.5 text-right text-(length:--text-sm) font-medium tabular-nums',
 					'ring-2 ring-(--cell-editable-focus)',
 					'focus:outline-none',
+					isSubtle
+						? 'bg-white'
+						: 'bg-(--cell-editable-bg) shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',
 					className
 				)}
 				value={draft}
@@ -140,7 +145,9 @@ export function EditableCell({
 					'inline-block w-full rounded-md border border-transparent px-2.5 py-1.5',
 					'text-right text-(length:--text-sm) font-medium tabular-nums',
 					'transition-[background-color,border-color] duration-(--duration-fast)',
-					'bg-(--cell-readonly-bg) text-(--text-secondary)',
+					isSubtle
+						? 'bg-transparent text-(--text-secondary)'
+						: 'bg-(--cell-readonly-bg) text-(--text-secondary)',
 					isError && 'border border-(--cell-error-border)',
 					className
 				)}
@@ -158,8 +165,10 @@ export function EditableCell({
 				'inline-block w-full rounded-md border border-transparent px-2.5 py-1.5',
 				'text-right text-(length:--text-sm) font-medium tabular-nums',
 				'transition-[background-color,border-color,box-shadow] duration-(--duration-fast)',
-				'cursor-pointer bg-(--cell-editable-bg) shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]',
-				'hover:border-(--accent-200) hover:bg-[color-mix(in_srgb,var(--cell-editable-bg),white_20%)]',
+				'cursor-pointer',
+				isSubtle
+					? 'bg-transparent hover:bg-(--accent-50)/40'
+					: 'bg-(--cell-editable-bg) shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] hover:border-(--accent-200) hover:bg-[color-mix(in_srgb,var(--cell-editable-bg),white_20%)]',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-400)',
 				isError && 'border border-(--cell-error-border)',
 				className

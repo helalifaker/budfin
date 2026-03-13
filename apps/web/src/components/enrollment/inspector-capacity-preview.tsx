@@ -1,4 +1,5 @@
 import { cn } from '../../lib/cn';
+import { getCapacityAlertForUtilization } from '../../lib/enrollment-workspace';
 import { AlertBadge } from './capacity-columns';
 import type { CapacityAlert } from '@budfin/types';
 
@@ -10,11 +11,7 @@ export type InspectorCapacityPreviewProps = {
 };
 
 function getAlert(utilization: number): CapacityAlert | null {
-	if (utilization === 0) return null;
-	if (utilization > 100) return 'OVER';
-	if (utilization > 95) return 'NEAR_CAP';
-	if (utilization >= 70) return 'OK';
-	return 'UNDER';
+	return getCapacityAlertForUtilization(utilization);
 }
 
 export function InspectorCapacityPreview({

@@ -22,6 +22,7 @@ vi.mock('../../lib/prisma.js', () => {
 	const mockPrisma = {
 		budgetVersion: {
 			findUnique: vi.fn(),
+			findMany: vi.fn().mockResolvedValue([]),
 			update: vi.fn().mockResolvedValue({}),
 		},
 		enrollmentHeadcount: {
@@ -30,6 +31,9 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		gradeLevel: {
 			findMany: vi.fn(),
+		},
+		versionCapacityConfig: {
+			findMany: vi.fn().mockResolvedValue([]),
 		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
@@ -53,6 +57,7 @@ vi.mock('../../lib/prisma.js', () => {
 				budgetVersion: mockPrisma.budgetVersion,
 				enrollmentHeadcount: mockPrisma.enrollmentHeadcount,
 				gradeLevel: mockPrisma.gradeLevel,
+				versionCapacityConfig: mockPrisma.versionCapacityConfig,
 				auditEntry: mockPrisma.auditEntry,
 				calculationAuditLog: mockPrisma.calculationAuditLog,
 				dhgRequirement: mockPrisma.dhgRequirement,
@@ -69,6 +74,7 @@ import { prisma } from '../../lib/prisma.js';
 const mockPrisma = prisma as unknown as {
 	budgetVersion: {
 		findUnique: ReturnType<typeof vi.fn>;
+		findMany: ReturnType<typeof vi.fn>;
 		update: ReturnType<typeof vi.fn>;
 	};
 	enrollmentHeadcount: {
@@ -76,6 +82,9 @@ const mockPrisma = prisma as unknown as {
 		upsert: ReturnType<typeof vi.fn>;
 	};
 	gradeLevel: {
+		findMany: ReturnType<typeof vi.fn>;
+	};
+	versionCapacityConfig: {
 		findMany: ReturnType<typeof vi.fn>;
 	};
 	auditEntry: { create: ReturnType<typeof vi.fn> };
@@ -123,6 +132,10 @@ const mockDraftVersion = {
 	dataSource: 'MANUAL',
 	staleModules: ['ENROLLMENT', 'REVENUE'],
 	modificationCount: 0,
+	rolloverThreshold: 1,
+	cappedRetention: 0.98,
+	retentionRecentWeight: 0.6,
+	historicalTargetRecentWeight: 0.8,
 };
 
 const mockGradeLevels = [

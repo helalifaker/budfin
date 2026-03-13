@@ -9,7 +9,9 @@ import { useDirtyRowsStore } from '../../stores/dirty-rows-store';
 import {
 	useCalculateEnrollment,
 	useEnrollmentCapacityResults,
+	useEnrollmentSettings,
 	useHeadcount,
+	useHistorical,
 	usePutHeadcount,
 } from '../../hooks/use-enrollment';
 import { useVersions } from '../../hooks/use-versions';
@@ -29,6 +31,7 @@ import { CalculateButton } from '../../components/enrollment/calculate-button';
 import { PageTransition } from '../../components/shared/page-transition';
 import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
 import { EnrollmentSetupWizard } from '../../components/enrollment/setup-wizard';
+import { EnrollmentSettingsSheet } from '../../components/enrollment/enrollment-settings-sheet';
 import {
 	buildAy1HeadcountMap,
 	buildCapacityPreviewRows,
@@ -37,8 +40,10 @@ import {
 	DEFAULT_PLANNING_RULES,
 	deriveEnrollmentEditability,
 	getPsAy2Headcount,
+	resolveEnrollmentGradeLevels,
 } from '../../lib/enrollment-workspace';
 import '../../components/enrollment/enrollment-inspector';
+import { useEnrollmentSettingsSheetStore } from '../../stores/enrollment-settings-store';
 
 const BAND_FILTERS: Array<{ value: string; label: string }> = [
 	{ value: 'ALL', label: 'All' },
@@ -62,6 +67,7 @@ export function EnrollmentPage() {
 		) ?? null;
 	const navigate = useNavigate();
 	const dirtyCount = useDirtyRowsStore((state) => state.dirtyCount);
+	const openEnrollmentSettings = useEnrollmentSettingsSheetStore((state) => state.open);
 
 	const [bandFilter, setBandFilter] = useState('ALL');
 	const [exceptionFilter, setExceptionFilter] = useState<ExceptionFilterValue>('all');
@@ -70,9 +76,11 @@ export function EnrollmentPage() {
 	const autoPromptedVersionRef = useRef<number | null>(null);
 
 	const { data: headcountData } = useHeadcount(versionId);
+	const { data: historicalData } = useHistorical(5);
 	const { data: gradeLevelsData } = useGradeLevels();
 	const { data: cohortData } = useCohortParameters(versionId);
 	const { data: capacityResultsData } = useEnrollmentCapacityResults(versionId);
+	const { data: enrollmentSettingsData } = useEnrollmentSettings(versionId);
 	const calculateMutation = useCalculateEnrollment(versionId);
 	const putHeadcount = usePutHeadcount(versionId);
 	const putCohortParameters = usePutCohortParameters(versionId);
@@ -112,12 +120,18 @@ export function EnrollmentPage() {
 	const isStale = currentVersion?.staleModules?.includes('ENROLLMENT') ?? false;
 
 	const gradeLevels = useMemo(
-		() => gradeLevelsData?.gradeLevels ?? [],
-		[gradeLevelsData?.gradeLevels]
+		() =>
+			resolveEnrollmentGradeLevels({
+				gradeLevels: gradeLevelsData?.gradeLevels ?? [],
+				capacityByGrade: enrollmentSettingsData?.capacityByGrade,
+			}),
+		[enrollmentSettingsData?.capacityByGrade, gradeLevelsData?.gradeLevels]
 	);
 	const headcountEntries = useMemo(() => headcountData?.entries ?? [], [headcountData?.entries]);
+	const historicalEntries = useMemo(() => historicalData?.data ?? [], [historicalData?.data]);
 	const cohortEntries = useMemo(() => cohortData?.entries ?? [], [cohortData?.entries]);
-	const planningRules = cohortData?.planningRules ?? DEFAULT_PLANNING_RULES;
+	const planningRules =
+		enrollmentSettingsData?.rules ?? cohortData?.planningRules ?? DEFAULT_PLANNING_RULES;
 
 	const expectedGradeCount = gradeLevels.length;
 	const ay1HeadcountMap = useMemo(() => buildAy1HeadcountMap(headcountEntries), [headcountEntries]);
@@ -138,8 +152,18 @@ export function EnrollmentPage() {
 				cohortEntries,
 				psAy2Headcount,
 				planningRules,
+				historicalEntries,
+				targetFiscalYear: fiscalYear,
 			}),
-		[ay1HeadcountMap, cohortEntries, gradeLevels, planningRules, psAy2Headcount]
+		[
+			ay1HeadcountMap,
+			cohortEntries,
+			fiscalYear,
+			gradeLevels,
+			historicalEntries,
+			planningRules,
+			psAy2Headcount,
+		]
 	);
 	const capacityPreviewRows = useMemo(
 		() =>
@@ -159,12 +183,16 @@ export function EnrollmentPage() {
 				psAy2Headcount,
 				capacityResults: capacityPreviewRows,
 				planningRules,
+				historicalEntries,
+				targetFiscalYear: fiscalYear,
 			}),
 		[
 			ay1HeadcountMap,
 			capacityPreviewRows,
 			cohortEntries,
+			fiscalYear,
 			gradeLevels,
+			historicalEntries,
 			planningRules,
 			psAy2Headcount,
 		]
@@ -194,6 +222,7 @@ export function EnrollmentPage() {
 	const kpiData = useMemo(() => {
 		const totalAy1 = masterGridRows.reduce((sum, row) => sum + row.ay1Headcount, 0);
 		const totalAy2 = masterGridRows.reduce((sum, row) => sum + row.ay2Headcount, 0);
+		const totalDelta = masterGridRows.reduce((sum, row) => sum + row.delta, 0);
 		const utilizationPct =
 			masterGridRows.length > 0
 				? masterGridRows.reduce((sum, row) => sum + row.utilization, 0) / masterGridRows.length
@@ -202,6 +231,7 @@ export function EnrollmentPage() {
 		return {
 			totalAy1,
 			totalAy2,
+			totalDelta,
 			utilizationPct,
 			alertCount: masterGridRows.filter((row) => row.alert === 'OVER' || row.alert === 'NEAR_CAP')
 				.length,
@@ -259,7 +289,8 @@ export function EnrollmentPage() {
 
 		return {
 			gradeLevel,
-			retentionRate: gradeLevel === 'PS' ? 0 : planningRules.cappedRetention,
+			retentionRate: gradeLevel === 'PS' ? 0 : 1,
+			manualAdjustment: 0,
 			lateralEntryCount: 0,
 			lateralWeightFr: 0,
 			lateralWeightNat: 0,
@@ -330,62 +361,61 @@ export function EnrollmentPage() {
 					</div>
 				)}
 
-				{/* Header zone */}
-				<header className="shrink-0 border-b border-(--workspace-border) px-6 py-3">
-					<div className="flex items-center justify-between">
-						<div>
-							<h1 className="text-lg font-semibold">Enrollment Planning</h1>
-							<p className="text-xs text-(--text-muted)">{versionName}</p>
-						</div>
-						<div className="flex items-center gap-2">
-							<ToggleGroup
-								type="single"
-								value={bandFilter}
-								onValueChange={(value) => {
-									if (value) {
-										setBandFilter(value);
-									}
-								}}
-								aria-label="Grade band filter"
-							>
-								{BAND_FILTERS.map((filter) => (
-									<ToggleGroupItem key={filter.value} value={filter.value}>
-										{filter.label}
-									</ToggleGroupItem>
-								))}
-							</ToggleGroup>
-							<ExceptionFilterMenu value={exceptionFilter} onChange={setExceptionFilter} />
-							<Button
-								type="button"
-								variant={quickEdit ? 'default' : 'outline'}
-								size="sm"
-								onClick={() => setQuickEdit((current) => !current)}
-								aria-pressed={quickEdit}
-							>
-								{quickEdit ? 'Quick Edit On' : 'Quick Edit'}
-							</Button>
-							<ExportButton
-								rows={filteredRows}
-								versionName={versionName ?? 'enrollment'}
-								activeFilters={activeFilters}
-								isFiltered={isFiltered}
-								dirtyCount={dirtyCount}
-							/>
-							<Button type="button" variant="outline" size="sm" onClick={() => setWizardOpen(true)}>
-								{isSetupComplete ? 'Reopen Setup Wizard' : 'Resume Setup Wizard'}
-							</Button>
-							{editability === 'editable' && (
-								<CalculateButton
-									versionId={versionId}
-									onCalculate={() => calculateMutation.mutate()}
-									isPending={calculateMutation.isPending}
-									isSuccess={calculateMutation.isSuccess}
-									isError={calculateMutation.isError}
-								/>
-							)}
-						</div>
+				{/* Toolbar */}
+				<div className="flex shrink-0 items-center justify-between border-b border-(--workspace-border) px-6 py-2">
+					<div className="flex items-center gap-2">
+						<ToggleGroup
+							type="single"
+							value={bandFilter}
+							onValueChange={(value) => {
+								if (value) {
+									setBandFilter(value);
+								}
+							}}
+							aria-label="Grade band filter"
+						>
+							{BAND_FILTERS.map((filter) => (
+								<ToggleGroupItem key={filter.value} value={filter.value}>
+									{filter.label}
+								</ToggleGroupItem>
+							))}
+						</ToggleGroup>
+						<ExceptionFilterMenu value={exceptionFilter} onChange={setExceptionFilter} />
 					</div>
-				</header>
+					<div className="flex items-center gap-2">
+						<Button
+							type="button"
+							variant={quickEdit ? 'default' : 'outline'}
+							size="sm"
+							onClick={() => setQuickEdit((current) => !current)}
+							aria-pressed={quickEdit}
+						>
+							{quickEdit ? 'Quick Edit On' : 'Quick Edit'}
+						</Button>
+						<ExportButton
+							rows={filteredRows}
+							versionName={versionName ?? 'enrollment'}
+							activeFilters={activeFilters}
+							isFiltered={isFiltered}
+							dirtyCount={dirtyCount}
+						/>
+						<Button type="button" variant="outline" size="sm" onClick={openEnrollmentSettings}>
+							Enrollment Settings
+						</Button>
+						<Button type="button" variant="outline" size="sm" onClick={() => setWizardOpen(true)}>
+							{isSetupComplete ? 'Reopen Setup Wizard' : 'Resume Setup Wizard'}
+						</Button>
+						{editability === 'editable' && (
+							<CalculateButton
+								versionId={versionId}
+								onCalculate={() => calculateMutation.mutate()}
+								isPending={calculateMutation.isPending}
+								isSuccess={calculateMutation.isSuccess}
+								isError={calculateMutation.isError}
+							/>
+						)}
+					</div>
+				</div>
 
 				{/* KPI ribbon */}
 				<EnrollmentKpiRibbon {...kpiData} />
@@ -401,8 +431,8 @@ export function EnrollmentPage() {
 				/>
 
 				{/* Grid zone — flex-1, owns its own scroll */}
-				<div className="flex-1 min-h-0 overflow-hidden px-6 py-3">
-					<div className="h-full overflow-y-auto rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card)">
+				<div className="flex-1 min-h-0 overflow-hidden px-6 py-2">
+					<div className="h-full overflow-y-auto scrollbar-thin">
 						<EnrollmentMasterGrid
 							rows={filteredRows}
 							selectedGradeLevel={selectedGrade}
@@ -429,12 +459,12 @@ export function EnrollmentPage() {
 									],
 								})
 							}
-							onEditLateralEntry={(gradeLevel, value) =>
+							onEditManualAdjustment={(gradeLevel, value) =>
 								putCohortParameters.mutate({
 									entries: [
 										{
 											...buildEditableCohortEntry(gradeLevel),
-											lateralEntryCount: Math.max(0, Math.round(value)),
+											manualAdjustment: Math.round(value),
 										},
 									],
 								})
@@ -451,6 +481,7 @@ export function EnrollmentPage() {
 				editability={editability}
 				onClose={() => setWizardOpen(false)}
 			/>
+			<EnrollmentSettingsSheet versionId={versionId} editability={editability} />
 		</PageTransition>
 	);
 }

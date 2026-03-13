@@ -6,6 +6,7 @@ import { Sparkline } from '../shared/sparkline';
 export type EnrollmentKpiRibbonProps = {
 	totalAy1: number;
 	totalAy2: number;
+	totalDelta?: number;
 	utilizationPct: number;
 	alertCount: number;
 	isStale: boolean;
@@ -43,6 +44,7 @@ const kpiDefs = [
 export function EnrollmentKpiRibbon({
 	totalAy1,
 	totalAy2,
+	totalDelta,
 	utilizationPct,
 	alertCount,
 	isStale,
@@ -74,27 +76,22 @@ export function EnrollmentKpiRibbon({
 								'animate-kpi-enter relative overflow-hidden',
 								'rounded-xl',
 								'border border-(--workspace-border)',
-								'shadow-(--shadow-card)',
-								'bg-(--workspace-bg-card) p-3',
-								isUtilization && utilizationPct > 100 && 'border-l-[3px] border-l-(--color-error)',
+								'shadow-(--shadow-card-elevated)',
+								'hover:shadow-(--shadow-card-hover) transition-shadow duration-(--duration-fast)',
+								'bg-(--workspace-bg-card) p-4',
+								'border-l-[3px]',
+								isUtilization && utilizationPct > 100 && 'border-l-(--color-error)',
 								isUtilization &&
 									utilizationPct > 95 &&
 									utilizationPct <= 100 &&
-									'border-l-[3px] border-l-(--color-warning)',
-								isUtilization &&
-									utilizationPct > 0 &&
-									utilizationPct <= 95 &&
-									'border-l-[3px] border-l-(--color-success)'
+									'border-l-(--color-warning)',
+								isUtilization && utilizationPct <= 95 && 'border-l-(--kpi-accent-default)',
+								hasAlerts && 'border-l-(--color-warning)',
+								noAlerts && 'border-l-(--color-success)',
+								!isUtilization && !isAlert && 'border-l-(--kpi-accent-default)'
 							)}
 							style={{ animationDelay: `${i * 60}ms` }}
 						>
-							{!isUtilization && (
-								<span
-									className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-(--accent-500)"
-									aria-hidden="true"
-								/>
-							)}
-
 							{showSparkline && (
 								<Sparkline
 									data={historicalTotals}
@@ -133,8 +130,19 @@ export function EnrollmentKpiRibbon({
 									<Counter
 										value={value}
 										formatter={kpi.formatter}
-										className="text-(--text-2xl) font-bold text-(--text-primary) font-[family-name:var(--font-display)]"
+										className="text-3xl font-bold text-(--text-primary) font-[family-name:var(--font-display)]"
 									/>
+									{kpi.key === 'totalAy2' && totalDelta !== undefined && totalDelta !== 0 && (
+										<span
+											className={cn(
+												'text-(--text-xs) font-medium tabular-nums',
+												totalDelta >= 0 ? 'text-(--color-success)' : 'text-(--color-error)'
+											)}
+										>
+											{totalDelta >= 0 ? '+' : ''}
+											{totalDelta} vs AY1
+										</span>
+									)}
 									{kpi.key === 'totalAy2' &&
 										previousYearTotal !== undefined &&
 										previousYearTotal > 0 && (

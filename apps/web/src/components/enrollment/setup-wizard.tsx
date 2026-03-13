@@ -19,12 +19,7 @@ import {
 	Upload,
 	X,
 } from 'lucide-react';
-import type {
-	CohortParameterEntry,
-	GradeCode,
-	NationalityType,
-	PlanningRules,
-} from '@budfin/types';
+import type { CohortParameterEntry, GradeCode, NationalityType } from '@budfin/types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import {
@@ -40,13 +35,17 @@ import {
 import { cn } from '../../lib/cn';
 import {
 	useApplyEnrollmentSetup,
+	useEnrollmentSettings,
 	useEnrollmentSetupBaseline,
 	useHeadcount,
+	useHistorical,
 	useValidateEnrollmentSetupImport,
 } from '../../hooks/use-enrollment';
 import { useCohortParameters } from '../../hooks/use-cohort-parameters';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useNationalityBreakdown } from '../../hooks/use-nationality-breakdown';
+import { useEnrollmentSettingsSheetStore } from '../../stores/enrollment-settings-store';
+import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import {
 	applyPlanningRulesToCohortEntries,
 	buildAy1HeadcountMap,
@@ -55,6 +54,7 @@ import {
 	buildNationalityPreviewRows,
 	DEFAULT_PLANNING_RULES,
 	getPsAy2Headcount,
+	resolveEnrollmentGradeLevels,
 	type EnrollmentEditability,
 } from '../../lib/enrollment-workspace';
 
@@ -133,7 +133,7 @@ const WIZARD_STEPS: Array<{ id: WizardStepId; title: string; description: string
 	{
 		id: 'rules',
 		title: 'Rules & Assumptions',
-		description: 'Tune planning rules and confirm retention and lateral assumptions.',
+		description: 'Review enrollment settings, then confirm retention and lateral assumptions.',
 	},
 	{
 		id: 'preview',
@@ -441,13 +441,17 @@ export function EnrollmentSetupWizard({
 	editability,
 	onClose,
 }: EnrollmentSetupWizardProps) {
+	const { fiscalYear } = useWorkspaceContext();
 	const { data: baselineData } = useEnrollmentSetupBaseline(versionId);
 	const { data: headcountData } = useHeadcount(versionId);
 	const { data: cohortData } = useCohortParameters(versionId);
 	const { data: gradeLevelData } = useGradeLevels();
+	const { data: enrollmentSettingsData } = useEnrollmentSettings(versionId);
 	const { data: ay1NationalityData } = useNationalityBreakdown(versionId, 'AY1');
+	const { data: historicalData } = useHistorical(5);
 	const validateImport = useValidateEnrollmentSetupImport(versionId);
 	const applySetup = useApplyEnrollmentSetup(versionId);
+	const openEnrollmentSettings = useEnrollmentSettingsSheetStore((state) => state.open);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const initializedVersionRef = useRef<number | null>(null);
 
@@ -462,7 +466,6 @@ export function EnrollmentSetupWizard({
 	const [workingRows, setWorkingRows] = useState<WizardRow[]>([]);
 	const [cohortRows, setCohortRows] = useState<CohortParameterEntry[]>([]);
 	const [psAy2Headcount, setPsAy2Headcount] = useState(0);
-	const [planningRules, setPlanningRules] = useState<PlanningRules>(DEFAULT_PLANNING_RULES);
 	const [sourceMode, setSourceMode] = useState<'baseline' | 'saved' | 'imported'>('baseline');
 	const [preAcceptCohortRows, setPreAcceptCohortRows] = useState<CohortParameterEntry[] | null>(
 		null
@@ -505,7 +508,6 @@ export function EnrollmentSetupWizard({
 				);
 			setCohortRows(sortedCohortEntries);
 			setInitialCohortRows(sortedCohortEntries.map((entry) => ({ ...entry })));
-			setPlanningRules(cohortData.planningRules ?? DEFAULT_PLANNING_RULES);
 
 			const ay1Map = buildAy1HeadcountMap(headcountData.entries);
 			const psDefaultAy2Intake =
@@ -542,14 +544,36 @@ export function EnrollmentSetupWizard({
 		};
 	}, [open, onClose]);
 
+	const ay1Map = useMemo(
+		() => new Map(workingRows.map((row) => [row.gradeLevel as GradeCode, row.headcount] as const)),
+		[workingRows]
+	);
+	const historicalEntries = useMemo(() => historicalData?.data ?? [], [historicalData?.data]);
+	const planningRules =
+		enrollmentSettingsData?.rules ?? cohortData?.planningRules ?? DEFAULT_PLANNING_RULES;
+	const gradeLevels = useMemo(
+		() =>
+			resolveEnrollmentGradeLevels({
+				gradeLevels: gradeLevelData?.gradeLevels ?? [],
+				capacityByGrade: enrollmentSettingsData?.capacityByGrade,
+			}),
+		[enrollmentSettingsData?.capacityByGrade, gradeLevelData?.gradeLevels]
+	);
 	const recommendedMap = useMemo(
 		() =>
 			new Map(
-				applyPlanningRulesToCohortEntries(cohortData?.entries ?? [], planningRules).map((entry) => [
+				applyPlanningRulesToCohortEntries({
+					entries: cohortData?.entries ?? [],
+					planningRules,
+					ay1HeadcountMap: ay1Map,
+					historicalEntries,
+					psAy2Headcount,
+					targetFiscalYear: fiscalYear,
+				}).map((entry) => [
 					entry.gradeLevel,
 					{
 						suggestedRetention: entry.recommendedRetentionRate ?? entry.retentionRate,
-						suggestedLaterals: entry.recommendedLateralEntryCount ?? entry.lateralEntryCount,
+						suggestedLaterals: entry.derivedLaterals ?? entry.recommendedLateralEntryCount ?? 0,
 						confidence: entry.recommendationConfidence ?? 'low',
 						observationCount: entry.recommendationObservationCount ?? 0,
 						sourceFiscalYear: entry.recommendationSourceFiscalYear ?? null,
@@ -558,37 +582,42 @@ export function EnrollmentSetupWizard({
 					} satisfies RecommendedCohortDefault,
 				])
 			),
-		[cohortData?.entries, planningRules]
-	);
-
-	const ay1Map = useMemo(
-		() => new Map(workingRows.map((row) => [row.gradeLevel as GradeCode, row.headcount] as const)),
-		[workingRows]
+		[ay1Map, cohortData?.entries, historicalEntries, planningRules, psAy2Headcount, fiscalYear]
 	);
 
 	const projectionRows = useMemo(() => {
-		if (!gradeLevelData?.gradeLevels.length) {
+		if (gradeLevels.length === 0) {
 			return [];
 		}
 		return buildCohortProjectionRows({
-			gradeLevels: gradeLevelData.gradeLevels,
+			gradeLevels,
 			ay1HeadcountMap: ay1Map,
 			cohortEntries: cohortRows,
 			psAy2Headcount,
 			planningRules,
+			historicalEntries,
+			targetFiscalYear: fiscalYear,
 		});
-	}, [gradeLevelData, ay1Map, cohortRows, planningRules, psAy2Headcount]);
+	}, [
+		fiscalYear,
+		gradeLevels,
+		ay1Map,
+		cohortRows,
+		historicalEntries,
+		planningRules,
+		psAy2Headcount,
+	]);
 
 	const capacityRows = useMemo(() => {
-		if (!gradeLevelData?.gradeLevels.length) {
+		if (gradeLevels.length === 0) {
 			return [];
 		}
 		return buildCapacityPreviewRows({
-			gradeLevels: gradeLevelData.gradeLevels,
+			gradeLevels,
 			ay1HeadcountMap: ay1Map,
 			projectionRows,
 		});
-	}, [gradeLevelData, ay1Map, projectionRows]);
+	}, [gradeLevels, ay1Map, projectionRows]);
 
 	const nationalityPreviewRows = useMemo(
 		() =>
@@ -640,9 +669,8 @@ export function EnrollmentSetupWizard({
 				Number.isFinite(row.retentionRate) &&
 				row.retentionRate >= 0 &&
 				row.retentionRate <= 1 &&
-				Number.isFinite(row.lateralEntryCount) &&
-				Number.isInteger(row.lateralEntryCount) &&
-				row.lateralEntryCount >= 0
+				Number.isFinite(row.manualAdjustment ?? 0) &&
+				Number.isInteger(row.manualAdjustment ?? 0)
 			);
 		});
 	const canAccessStep = useCallback(
@@ -708,7 +736,7 @@ export function EnrollmentSetupWizard({
 			});
 		}
 
-		const psGrade = gradeLevelData?.gradeLevels.find((gl) => gl.gradeCode === 'PS');
+		const psGrade = gradeLevels.find((gl) => gl.gradeCode === 'PS');
 		if (psAy2Headcount === 0 && !psGrade?.defaultAy2Intake) {
 			issues.push({
 				message: 'Missing PS intake: PS AY2 headcount is 0 with no default intake configured',
@@ -716,7 +744,7 @@ export function EnrollmentSetupWizard({
 			});
 		}
 
-		const missingCapacityGrades = (gradeLevelData?.gradeLevels ?? [])
+		const missingCapacityGrades = gradeLevels
 			.filter((gl) => !gl.maxClassSize || gl.maxClassSize === 0)
 			.map((gl) => gl.gradeName);
 		if (missingCapacityGrades.length > 0) {
@@ -728,16 +756,16 @@ export function EnrollmentSetupWizard({
 
 		const invalidCohortGrades = cohortRows
 			.filter((row) => row.gradeLevel !== 'PS')
-			.filter((row) => row.retentionRate === 0 || row.lateralEntryCount < 0);
+			.filter((row) => row.retentionRate === 0);
 		if (invalidCohortGrades.length > 0) {
 			issues.push({
-				message: `Invalid cohort entries: ${invalidCohortGrades.map((r) => r.gradeLevel).join(', ')} (zero retention or negative laterals)`,
+				message: `Invalid cohort entries: ${invalidCohortGrades.map((r) => r.gradeLevel).join(', ')} (zero retention)`,
 				blocking: false,
 			});
 		}
 
 		return issues;
-	}, [workingRows, psAy2Headcount, gradeLevelData, cohortRows]);
+	}, [workingRows, psAy2Headcount, gradeLevels, cohortRows]);
 
 	const hasBlockingValidationIssues = validationIssues.some((issue) => issue.blocking);
 
@@ -748,7 +776,7 @@ export function EnrollmentSetupWizard({
 			if (!initial) return false;
 			return (
 				row.retentionRate !== initial.retentionRate ||
-				row.lateralEntryCount !== initial.lateralEntryCount
+				(row.manualAdjustment ?? 0) !== (initial.manualAdjustment ?? initial.lateralEntryCount ?? 0)
 			);
 		});
 	}, [cohortRows, initialCohortRows]);
@@ -788,7 +816,7 @@ export function EnrollmentSetupWizard({
 
 	const handleCohortChange = (
 		gradeLevel: string,
-		field: keyof Pick<CohortParameterEntry, 'retentionRate' | 'lateralEntryCount'>,
+		field: keyof Pick<CohortParameterEntry, 'retentionRate' | 'manualAdjustment'>,
 		value: number
 	) => {
 		setPreAcceptCohortRows(null);
@@ -797,7 +825,8 @@ export function EnrollmentSetupWizard({
 				row.gradeLevel === gradeLevel
 					? {
 							...row,
-							[field]: field === 'retentionRate' ? value : normalizeWholeNumber(value),
+							[field]:
+								field === 'retentionRate' ? value : Math.round(Number.isFinite(value) ? value : 0),
 						}
 					: row
 			)
@@ -810,10 +839,7 @@ export function EnrollmentSetupWizard({
 			if (row.gradeLevel === 'PS') continue;
 			const suggested = recommendedMap.get(row.gradeLevel);
 			if (!suggested) continue;
-			if (
-				row.retentionRate !== suggested.suggestedRetention ||
-				row.lateralEntryCount !== suggested.suggestedLaterals
-			) {
+			if (row.retentionRate !== suggested.suggestedRetention || (row.manualAdjustment ?? 0) !== 0) {
 				count++;
 			}
 		}
@@ -832,7 +858,7 @@ export function EnrollmentSetupWizard({
 				return {
 					...row,
 					retentionRate: suggested.suggestedRetention,
-					lateralEntryCount: suggested.suggestedLaterals,
+					manualAdjustment: 0,
 				};
 			})
 		);
@@ -893,7 +919,8 @@ export function EnrollmentSetupWizard({
 				})),
 				cohortEntries: cohortRows.map((row) => ({
 					...row,
-					lateralEntryCount: normalizeWholeNumber(row.lateralEntryCount),
+					manualAdjustment: Math.round(row.manualAdjustment ?? 0),
+					lateralEntryCount: Math.round(row.manualAdjustment ?? 0),
 				})),
 				psAy2Headcount: normalizeWholeNumber(psAy2Headcount),
 				planningRules,
@@ -1253,65 +1280,55 @@ export function EnrollmentSetupWizard({
 							{isWizardInitialized && activeStep === 1 && (
 								<SectionCard
 									title="Planning rules and cohort assumptions"
-									description="Tune the version-wide recommendation rules, then confirm retention and laterals using locally refreshed suggestions from the latest completed Actual cohort observation."
+									description="Open Enrollment Settings for version-wide rules and capacity policy, then confirm retention and laterals using locally refreshed suggestions from the latest completed Actual cohort observation."
 								>
-									<div className="mb-4 grid gap-4 md:grid-cols-2">
-										<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3">
-											<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
-												Rollover threshold
-											</p>
-											<p className="mt-1 text-(--text-xs) text-(--text-muted)">
-												When actual rollover exceeds this ratio, retention is capped and excess
-												students become laterals.
-											</p>
-											<Input
-												type="number"
-												min={0.5}
-												max={2}
-												step={0.01}
-												value={planningRules.rolloverThreshold}
-												onChange={(event) =>
-													setPlanningRules((current) => ({
-														...current,
-														rolloverThreshold: Number(event.target.value),
-													}))
-												}
-												disabled={!isEditable}
-												className={cn(
-													'mt-3 w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5',
-													'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
-													'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
-													!isEditable && 'bg-(--cell-readonly-bg)'
-												)}
-											/>
+									<div className="mb-4 rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-4">
+										<div className="flex flex-wrap items-start justify-between gap-3">
+											<div>
+												<p className="text-(--text-sm) font-semibold text-(--text-primary)">
+													Version-wide settings
+												</p>
+												<p className="mt-1 text-(--text-xs) text-(--text-muted)">
+													Edit planning rules and capacity policy in one shared place.
+												</p>
+											</div>
+											<Button type="button" variant="outline" onClick={openEnrollmentSettings}>
+												Open Enrollment Settings
+											</Button>
 										</div>
-										<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3">
-											<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
-												Capped retention
-											</p>
-											<p className="mt-1 text-(--text-xs) text-(--text-muted)">
-												Default retention applied to growth scenarios above the threshold.
-											</p>
-											<Input
-												type="number"
-												min={0.5}
-												max={1}
-												step={0.01}
-												value={planningRules.cappedRetention}
-												onChange={(event) =>
-													setPlanningRules((current) => ({
-														...current,
-														cappedRetention: Number(event.target.value),
-													}))
-												}
-												disabled={!isEditable}
-												className={cn(
-													'mt-3 w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5',
-													'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
-													'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
-													!isEditable && 'bg-(--cell-readonly-bg)'
-												)}
-											/>
+										<div className="mt-4 grid gap-4 md:grid-cols-4">
+											<div>
+												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													Rollover threshold
+												</p>
+												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+													{planningRules.rolloverThreshold.toFixed(2)}
+												</p>
+											</div>
+											<div>
+												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													Capped retention
+												</p>
+												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+													{(planningRules.cappedRetention ?? 0.98).toFixed(2)}
+												</p>
+											</div>
+											<div>
+												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													Retention trend weight
+												</p>
+												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+													{planningRules.retentionRecentWeight.toFixed(2)}
+												</p>
+											</div>
+											<div>
+												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													Historical target weight
+												</p>
+												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+													{planningRules.historicalTargetRecentWeight.toFixed(2)}
+												</p>
+											</div>
 										</div>
 									</div>
 									<div className="mb-4 flex flex-wrap items-center gap-3">
@@ -1348,7 +1365,19 @@ export function EnrollmentSetupWizard({
 														Retention %
 													</th>
 													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														Trend Ret %
+													</th>
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														Retained
+													</th>
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														Hist Target
+													</th>
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 														Laterals
+													</th>
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														Override
 													</th>
 													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 														Suggested
@@ -1391,8 +1420,10 @@ export function EnrollmentSetupWizard({
 																			'w-24 rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5 text-right',
 																			'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
 																			'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
-																			!isEditable && 'bg-(--cell-readonly-bg)'
+																			(!isEditable || row.usesConfiguredRetention !== true) &&
+																				'bg-(--cell-readonly-bg)'
 																		)}
+																		readOnly={row.usesConfiguredRetention !== true}
 																	/>
 																)}
 															</td>
@@ -1400,16 +1431,33 @@ export function EnrollmentSetupWizard({
 																{isPS ? (
 																	<span className="text-(--text-muted)">--</span>
 																) : (
+																	<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																		{Math.round((row.historicalTrendRetention ?? 0) * 100)}%
+																	</span>
+																)}
+															</td>
+															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																{isPS ? '--' : (row.retainedFromPrior ?? '--')}
+															</td>
+															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																{isPS ? '--' : (row.historicalTargetHeadcount ?? '--')}
+															</td>
+															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																{isPS ? '--' : (row.derivedLaterals ?? '--')}
+															</td>
+															<td className="px-4 py-2 text-right">
+																{isPS ? (
+																	<span className="text-(--text-muted)">--</span>
+																) : (
 																	<Input
 																		type="number"
-																		min={0}
 																		step={1}
 																		inputMode="numeric"
-																		value={row.lateralEntryCount}
+																		value={row.manualAdjustment ?? 0}
 																		onChange={(event) =>
 																			handleCohortChange(
 																				row.gradeLevel,
-																				'lateralEntryCount',
+																				'manualAdjustment',
 																				Number(event.target.value)
 																			)
 																		}
@@ -1425,7 +1473,7 @@ export function EnrollmentSetupWizard({
 															</td>
 															<td className="px-4 py-3 text-right text-(--text-secondary)">
 																{suggested && !isPS
-																	? `${Math.round(suggested.suggestedRetention * 100)}% · ${suggested.suggestedLaterals}`
+																	? `${Math.round(suggested.suggestedRetention * 100)}% · ${suggested.suggestedLaterals} lat`
 																	: '--'}
 															</td>
 															<td className="px-4 py-3 text-right">
@@ -1493,7 +1541,7 @@ export function EnrollmentSetupWizard({
 									</div>
 									<SectionCard
 										title="AY2 cohort preview"
-										description="This preview uses prior-grade AY1, floor retention, and direct PS AY2 entry."
+										description="This preview uses trend retention, weighted historical targets, derived laterals, signed overrides, and direct PS AY2 entry."
 									>
 										<div className="overflow-hidden rounded-xl border border-(--workspace-border)">
 											<table className="w-full text-left text-(--text-sm)">
@@ -1509,7 +1557,13 @@ export function EnrollmentSetupWizard({
 															Retained
 														</th>
 														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															Hist Target
+														</th>
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 															Laterals
+														</th>
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															Override
 														</th>
 														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 															AY2
@@ -1532,7 +1586,13 @@ export function EnrollmentSetupWizard({
 																{row.retainedFromPrior}
 															</td>
 															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+																{row.isPS ? '--' : (row.historicalTargetHeadcount ?? '--')}
+															</td>
+															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
 																{row.isPS ? '--' : row.lateralEntry}
+															</td>
+															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+																{row.isPS ? '--' : row.manualAdjustment}
 															</td>
 															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
 																{row.ay2Headcount}

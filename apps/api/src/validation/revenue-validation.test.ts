@@ -20,22 +20,22 @@ const __dirname = dirname(__filename);
 const FIXTURES = resolve(__dirname, '..', '..', '..', '..', 'data', 'fixtures');
 const PARITY_TOLERANCE = new Decimal('0.05');
 const WORKBOOK_TOTALS = {
-	tuitionFees: new Decimal('32743360.0000'),
-	discountImpact: new Decimal('1231800.0000'),
-	netTuition: new Decimal('31511560.0000'),
-	totalOperatingRevenue: new Decimal('38031060.0000'),
+	tuitionFees: new Decimal('33430796.0000'),
+	discountImpact: new Decimal('707684.0000'),
+	netTuition: new Decimal('32723112.0000'),
+	totalOperatingRevenue: new Decimal('39242612.0000'),
 };
 const WORKBOOK_MONTHLY_NET_TUITION: Record<number, Decimal> = {
-	1: new Decimal('3674700.0000'),
-	2: new Decimal('3674700.0000'),
-	3: new Decimal('3674700.0000'),
-	4: new Decimal('3674700.0000'),
-	5: new Decimal('3674700.0000'),
-	6: new Decimal('3674700.0000'),
-	9: new Decimal('2365840.0000'),
-	10: new Decimal('2365840.0000'),
-	11: new Decimal('2365840.0000'),
-	12: new Decimal('2365840.0000'),
+	1: new Decimal('3836460.0000'),
+	2: new Decimal('3836460.0000'),
+	3: new Decimal('3836460.0000'),
+	4: new Decimal('3836460.0000'),
+	5: new Decimal('3836460.0000'),
+	6: new Decimal('3836460.0000'),
+	9: new Decimal('2426088.0000'),
+	10: new Decimal('2426088.0000'),
+	11: new Decimal('2426088.0000'),
+	12: new Decimal('2426088.0000'),
 };
 
 // ── Fixture types ────────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ describe('Revenue Validation — FY2026 Excel Data', () => {
 				(sum, row) => sum.plus(new Decimal(row.grossRevenueHt)),
 				new Decimal(0)
 			);
-			const expectedTotal = new Decimal('22969440.0000');
+			const expectedTotal = new Decimal('23512140.0000');
 			expect(monthlyAY1.minus(expectedTotal).abs().lte(PARITY_TOLERANCE)).toBe(true);
 		});
 	});

@@ -25,6 +25,8 @@ export async function calculateRoutes(app: FastifyInstance) {
 					staleModules: true,
 					rolloverThreshold: true,
 					cappedRetention: true,
+					retentionRecentWeight: true,
+					historicalTargetRecentWeight: true,
 				},
 			});
 

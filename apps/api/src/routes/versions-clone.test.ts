@@ -37,6 +37,24 @@ vi.mock('../lib/prisma.js', () => {
 			findMany: vi.fn().mockResolvedValue([]),
 			createMany: vi.fn().mockResolvedValue({ count: 0 }),
 		},
+		gradeLevel: {
+			findMany: vi.fn().mockResolvedValue([
+				{
+					gradeCode: 'PS',
+					maxClassSize: 25,
+					plancherPct: '0.7000',
+					ciblePct: '0.8000',
+					plafondPct: '1.0000',
+				},
+				{
+					gradeCode: 'CP',
+					maxClassSize: 28,
+					plancherPct: '0.7500',
+					ciblePct: '0.8500',
+					plafondPct: '1.0000',
+				},
+			]),
+		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
@@ -58,6 +76,7 @@ vi.mock('../lib/prisma.js', () => {
 				enrollmentHeadcount: mockPrisma.enrollmentHeadcount,
 				enrollmentDetail: mockPrisma.enrollmentDetail,
 				monthlyBudgetSummary: mockPrisma.monthlyBudgetSummary,
+				gradeLevel: mockPrisma.gradeLevel,
 				auditEntry: mockPrisma.auditEntry,
 				cohortParameter: mockPrisma.cohortParameter,
 				nationalityBreakdown: mockPrisma.nationalityBreakdown,
@@ -86,6 +105,9 @@ const mockPrisma = prisma as unknown as {
 	monthlyBudgetSummary: {
 		findMany: ReturnType<typeof vi.fn>;
 		createMany: ReturnType<typeof vi.fn>;
+	};
+	gradeLevel: {
+		findMany: ReturnType<typeof vi.fn>;
 	};
 	auditEntry: { create: ReturnType<typeof vi.fn> };
 	cohortParameter: {

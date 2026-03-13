@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Header, Table } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
@@ -16,7 +17,7 @@ interface BandGrouping<T> {
 interface FooterRow {
 	label: string;
 	type: 'subtotal' | 'grandtotal';
-	values: Record<string, number | string>;
+	values: Record<string, ReactNode>;
 }
 
 interface ActiveCell {
@@ -26,6 +27,7 @@ interface ActiveCell {
 
 export interface PlanningGridProps<T> {
 	table: Table<T>;
+	variant?: 'default' | 'compact';
 	isLoading?: boolean;
 	bandGrouping?: BandGrouping<T>;
 	pinnedColumns?: string[];
@@ -74,6 +76,7 @@ function ResizeHandle<T>({ header }: { header: Header<T, unknown> }) {
 
 export function PlanningGrid<T>({
 	table,
+	variant = 'default',
 	isLoading = false,
 	bandGrouping,
 	pinnedColumns,
@@ -90,6 +93,7 @@ export function PlanningGrid<T>({
 	className,
 	ariaLabel,
 }: PlanningGridProps<T>) {
+	const isCompact = variant === 'compact';
 	const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
 	const [collapsedBands, setCollapsedBands] = useState<Set<string>>(new Set());
 	const tableRef = useRef<HTMLTableElement>(null);
@@ -97,6 +101,10 @@ export function PlanningGrid<T>({
 	const cols = table.getAllColumns().length;
 	const rows = table.getRowModel().rows;
 	const headerGroups = table.getHeaderGroups();
+	const leafHeaders = useMemo(
+		() => headerGroups[headerGroups.length - 1]?.headers ?? [],
+		[headerGroups]
+	);
 	const isEditable = (editableColumns?.length ?? 0) > 0;
 	const tableRole = isEditable ? 'grid' : 'table';
 	const cellRole = isEditable ? 'gridcell' : 'cell';
@@ -174,7 +182,7 @@ export function PlanningGrid<T>({
 					if (!editableColumns?.length) break;
 					e.preventDefault();
 					const dir = e.shiftKey ? -1 : 1;
-					const allHeaders = headerGroups[0]?.headers ?? [];
+					const allHeaders = leafHeaders;
 					let { colIndex, rowIndex } = activeCell;
 					// Find next editable cell
 					let steps = 0;
@@ -207,7 +215,7 @@ export function PlanningGrid<T>({
 					break;
 			}
 		},
-		[keyboardNavigation, activeCell, rows, cols, editableColumns, headerGroups, onRowSelect]
+		[keyboardNavigation, activeCell, rows, cols, editableColumns, leafHeaders, onRowSelect]
 	);
 
 	const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
@@ -246,24 +254,56 @@ export function PlanningGrid<T>({
 		headerGroups.map((hg) => (
 			<tr key={hg.id} role="row">
 				{hg.headers.map((header) => {
+					const isGroupHeader = header.colSpan > 1;
 					const pinned = isPinned(header.id, pinnedColumns);
 					const lastPin = isLastPinned(header.id, pinnedColumns);
 					const numeric = isNumeric(header.id, numericColumns);
+
+					if (header.isPlaceholder) {
+						const hasGroupSiblings = hg.headers.some((h) => h.colSpan > 1);
+						return (
+							<th
+								key={header.id}
+								colSpan={header.colSpan}
+								className={cn(
+									isCompact && 'border border-(--grid-compact-border)',
+									isCompact && hasGroupSiblings && 'bg-(--grid-compact-group-bg)',
+									isCompact && !hasGroupSiblings && 'bg-(--grid-subheader-bg)',
+									pinned && 'sticky left-0 z-[1]'
+								)}
+							/>
+						);
+					}
+
 					return (
 						<th
 							key={header.id}
 							role="columnheader"
-							style={{ width: header.getSize() }}
+							colSpan={header.colSpan}
+							style={{ width: isGroupHeader ? undefined : header.getSize() }}
 							className={cn(
-								'relative px-(--grid-cell-px) py-4 align-middle',
-								'text-[11px] font-semibold uppercase tracking-[0.12em] text-(--text-muted)',
-								numeric && 'text-right',
-								pinned && 'sticky left-0 z-[1] bg-(--grid-header-bg)',
+								'relative align-middle',
+								'text-[11px] font-semibold uppercase tracking-[0.12em]',
+								isCompact
+									? 'px-(--grid-compact-cell-px) py-2 border border-(--grid-compact-border)'
+									: 'px-(--grid-cell-px) py-4',
+								isGroupHeader &&
+									isCompact &&
+									'bg-(--grid-compact-group-bg) text-(--grid-group-header-text) text-center border-b-2 border-b-(--grid-compact-group-border)',
+								!isGroupHeader &&
+									isCompact &&
+									'bg-(--grid-subheader-bg) text-(--grid-subheader-text)',
+								!isGroupHeader && !isCompact && 'text-(--text-muted)',
+								!isGroupHeader && numeric && 'text-right',
+								pinned && 'sticky left-0 z-[1]',
+								pinned && isGroupHeader && isCompact && 'bg-(--grid-compact-group-bg)',
+								pinned && !isGroupHeader && isCompact && 'bg-(--grid-subheader-bg)',
+								pinned && !isCompact && 'bg-(--grid-header-bg)',
 								lastPin && 'shadow-(--grid-pinned-shadow)'
 							)}
 						>
 							{flexRender(header.column.columnDef.header, header.getContext())}
-							{header.column.getCanResize() && <ResizeHandle header={header} />}
+							{!isGroupHeader && header.column.getCanResize() && <ResizeHandle header={header} />}
 						</th>
 					);
 				})}
@@ -286,7 +326,7 @@ export function PlanningGrid<T>({
 		const isRowSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
 		const pinnedBackgroundClass = isRowSelected
 			? 'bg-(--grid-selected-row)'
-			: rowIndex % 2 === 1
+			: !isCompact && rowIndex % 2 === 1
 				? 'bg-(--grid-row-stripe)'
 				: 'bg-(--workspace-bg-card)';
 
@@ -298,17 +338,22 @@ export function PlanningGrid<T>({
 				onClick={() => handleCellClick(rowIndex, colIndex)}
 				style={{ width: cell.column.getSize() }}
 				className={cn(
-					'px-(--grid-cell-px) py-(--grid-cell-py) align-middle',
-					'text-(--text-sm)',
+					isCompact
+						? 'px-(--grid-compact-cell-px) py-(--grid-compact-cell-py) border-b border-b-(--grid-compact-border)'
+						: 'px-(--grid-cell-px) py-(--grid-cell-py)',
+					'align-middle text-(--text-sm)',
 					'transition-[background-color,box-shadow,transform] duration-(--duration-fast)',
 					numeric &&
 						'text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
 					pinned && 'sticky left-0 z-[1]',
 					pinned && pinnedBackgroundClass,
-					pinned && 'group-hover:bg-(--grid-row-hover)',
+					pinned && (isCompact ? 'group-hover:bg-gray-50/60' : 'group-hover:bg-(--grid-row-hover)'),
 					pinned && isRowSelected && 'group-hover:bg-(--grid-selected-row)',
 					lastPin && 'shadow-(--grid-pinned-shadow)',
-					isActive && 'ring-2 ring-(--accent-400) ring-inset shadow-(--shadow-glow-accent)'
+					isActive &&
+						(isCompact
+							? 'ring-1 ring-(--accent-300) ring-inset'
+							: 'ring-2 ring-(--accent-400) ring-inset shadow-(--shadow-glow-accent)')
 				)}
 			>
 				{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -324,7 +369,7 @@ export function PlanningGrid<T>({
 	) => {
 		const isActiveRow = activeCell?.rowIndex === rowIndex;
 		const isSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
-		const headers = headerGroups[0]?.headers ?? [];
+		const headers = leafHeaders;
 		const customRowClass = getRowClassName?.(row.original);
 
 		return (
@@ -336,8 +381,8 @@ export function PlanningGrid<T>({
 				className={cn(
 					'group border-b border-(--workspace-border) last:border-0',
 					'transition-colors duration-(--duration-fast)',
-					rowIndex % 2 === 1 && 'bg-(--grid-row-stripe)',
-					'hover:bg-(--grid-row-hover)',
+					!isCompact && rowIndex % 2 === 1 && 'bg-(--grid-row-stripe)',
+					isCompact ? 'hover:bg-gray-50/60' : 'hover:bg-(--grid-row-hover)',
 					isActiveRow && 'bg-(--grid-active-row)',
 					isSelected && 'border-l-[3px] border-l-(--accent-500) bg-(--grid-selected-row)',
 					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
@@ -366,8 +411,13 @@ export function PlanningGrid<T>({
 					colSpan={cols}
 					className={cn('px-(--grid-cell-px) py-3', 'text-(--text-xs) font-semibold')}
 					style={{
-						borderLeft: style ? `var(--grid-band-accent-width) solid ${style.color}` : undefined,
-						background: style ? `color-mix(in srgb, ${style.bg} 30%, white)` : undefined,
+						borderLeft:
+							style && !isCompact
+								? `var(--grid-band-accent-width) solid ${style.color}`
+								: undefined,
+						background: style
+							? `color-mix(in srgb, ${style.bg} ${isCompact ? '50%' : '60%'}, white)`
+							: undefined,
 					}}
 				>
 					<span className="inline-flex items-center gap-2">
@@ -419,7 +469,7 @@ export function PlanningGrid<T>({
 	};
 
 	const renderSummaryRow = (summaryRow: FooterRow, key: string) => {
-		const headers = headerGroups[0]?.headers ?? [];
+		const headers = leafHeaders;
 
 		return (
 			<tr
@@ -427,8 +477,10 @@ export function PlanningGrid<T>({
 				role="row"
 				className={cn(
 					'border-t border-(--workspace-border)',
-					summaryRow.type === 'grandtotal' && 'font-semibold bg-(--grid-footer-bg)',
-					summaryRow.type === 'subtotal' && 'bg-(--workspace-bg-subtle)'
+					summaryRow.type === 'grandtotal' &&
+						'font-semibold bg-(--grid-grandtotal-bg) text-(--grid-grandtotal-text) border-t-2 border-t-(--grid-grandtotal-border-top) sticky bottom-0 z-[2]',
+					summaryRow.type === 'subtotal' &&
+						'bg-(--grid-subtotal-bg) text-(--grid-subtotal-text) font-semibold'
 				)}
 			>
 				{headers.map((header, colIdx) => {
@@ -442,23 +494,24 @@ export function PlanningGrid<T>({
 							key={`${key}-${header.id}`}
 							role={cellRole}
 							className={cn(
-								'px-(--grid-cell-px) py-(--grid-cell-py) align-middle',
-								'text-(--text-sm)',
+								isCompact
+									? 'px-(--grid-compact-cell-px) py-(--grid-compact-cell-py) border-b border-b-(--grid-compact-border)'
+									: 'px-(--grid-cell-px) py-(--grid-cell-py)',
+								'align-middle text-(--text-sm)',
 								numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
 								pinned && 'sticky left-0 z-[1]',
 								lastPin && 'shadow-(--grid-pinned-shadow)',
-								summaryRow.type === 'grandtotal' && 'bg-(--grid-footer-bg)',
-								summaryRow.type === 'subtotal' && pinned && 'bg-(--workspace-bg-subtle)',
-								summaryRow.type === 'grandtotal' && pinned && 'bg-(--grid-footer-bg)',
-								summaryRow.type === 'subtotal' && colIdx === 0 && 'pl-8',
-								summaryRow.type === 'grandtotal' && 'font-semibold text-(--text-primary)',
-								summaryRow.type === 'subtotal' && 'text-(--text-secondary)'
+								summaryRow.type === 'grandtotal' &&
+									'bg-(--grid-grandtotal-bg) text-(--grid-grandtotal-text) py-3 font-bold',
+								summaryRow.type === 'subtotal' &&
+									'bg-(--grid-subtotal-bg) text-(--grid-subtotal-text) font-semibold',
+								summaryRow.type === 'subtotal' && colIdx === 0 && 'pl-8'
 							)}
 						>
 							{colIdx === 0 && cellValue === undefined
 								? summaryRow.label
 								: cellValue !== undefined
-									? String(cellValue)
+									? cellValue
 									: ''}
 						</td>
 					);
@@ -519,8 +572,9 @@ export function PlanningGrid<T>({
 		<div
 			className={cn(
 				'overflow-x-auto',
-				'rounded-[18px] border border-(--workspace-border) bg-(--workspace-bg-card)',
-				'shadow-(--shadow-card)',
+				isCompact
+					? 'rounded-lg border border-(--grid-frame-border) bg-(--workspace-bg-card)'
+					: 'rounded-[18px] border border-(--workspace-border) bg-(--workspace-bg-card) shadow-(--shadow-card)',
 				className
 			)}
 		>
@@ -530,13 +584,19 @@ export function PlanningGrid<T>({
 				aria-label={ariaLabel}
 				onKeyDown={handleKeyDown}
 				tabIndex={keyboardNavigation ? 0 : undefined}
-				className="w-full min-w-[980px] text-left text-(--text-sm)"
+				className={cn(
+					'w-full text-left text-(--text-sm)',
+					!isCompact && 'min-w-[980px]',
+					isCompact && 'border-collapse'
+				)}
 			>
 				<thead
 					className={cn(
 						'sticky top-0 z-[2]',
-						'bg-(--grid-header-bg)',
-						'border-b-2 border-b-(--grid-header-border)',
+						isCompact ? 'bg-(--grid-subheader-bg)' : 'bg-(--grid-header-bg)',
+						isCompact
+							? 'border-b-2 border-b-(--grid-frame-border)'
+							: 'border-b-2 border-b-(--grid-header-border)',
 						'backdrop-blur-sm'
 					)}
 				>

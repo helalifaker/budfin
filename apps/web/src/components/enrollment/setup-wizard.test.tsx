@@ -149,6 +149,46 @@ const mockHooks = vi.hoisted(() => ({
 	headcountData: createHeadcountData(),
 	cohortData: createCohortData(),
 	gradeLevelsData: createGradeLevelsData(),
+	enrollmentSettingsData: {
+		rules: {
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
+		},
+		capacityByGrade: [
+			{
+				gradeLevel: 'PS',
+				gradeName: 'Petite Section',
+				band: 'MATERNELLE',
+				displayOrder: 1,
+				defaultAy2Intake: 66,
+				maxClassSize: 25,
+				plancherPct: 0.7,
+				ciblePct: 0.8,
+				plafondPct: 1,
+				templateMaxClassSize: 25,
+				templatePlancherPct: 0.7,
+				templateCiblePct: 0.8,
+				templatePlafondPct: 1,
+			},
+			{
+				gradeLevel: 'MS',
+				gradeName: 'Moyenne Section',
+				band: 'MATERNELLE',
+				displayOrder: 2,
+				defaultAy2Intake: null,
+				maxClassSize: 25,
+				plancherPct: 0.7,
+				ciblePct: 0.8,
+				plafondPct: 1,
+				templateMaxClassSize: 25,
+				templatePlancherPct: 0.7,
+				templateCiblePct: 0.8,
+				templatePlafondPct: 1,
+			},
+		],
+	},
 	nationalityData: {
 		entries: [],
 	},
@@ -164,6 +204,16 @@ vi.mock('../../hooks/use-enrollment', () => ({
 	}),
 	useHeadcount: () => ({
 		data: mockHooks.headcountData,
+	}),
+	useEnrollmentSettings: () => ({
+		data: mockHooks.enrollmentSettingsData,
+	}),
+	useHistorical: () => ({
+		data: {
+			data: [],
+			cagrByBand: {},
+			movingAvgByBand: {},
+		},
 	}),
 	useValidateEnrollmentSetupImport: () => ({
 		mutateAsync: mockHooks.importMutateAsync,
@@ -191,6 +241,17 @@ vi.mock('../../hooks/use-nationality-breakdown', () => ({
 	}),
 }));
 
+vi.mock('../../hooks/use-workspace-context', () => ({
+	useWorkspaceContext: () => ({
+		versionId: 20,
+		fiscalYear: 2026,
+		academicPeriod: 'AY2',
+		versionStatus: 'Draft',
+		versionName: 'v2',
+		versionDataSource: 'MANUAL',
+	}),
+}));
+
 class MockResizeObserver {
 	observe() {}
 	unobserve() {}
@@ -214,6 +275,46 @@ describe('EnrollmentSetupWizard', () => {
 		mockHooks.headcountData = createHeadcountData();
 		mockHooks.cohortData = createCohortData();
 		mockHooks.gradeLevelsData = createGradeLevelsData();
+		mockHooks.enrollmentSettingsData = {
+			rules: {
+				rolloverThreshold: 1,
+				cappedRetention: 0.98,
+				retentionRecentWeight: 0.6,
+				historicalTargetRecentWeight: 0.8,
+			},
+			capacityByGrade: [
+				{
+					gradeLevel: 'PS',
+					gradeName: 'Petite Section',
+					band: 'MATERNELLE',
+					displayOrder: 1,
+					defaultAy2Intake: 66,
+					maxClassSize: 25,
+					plancherPct: 0.7,
+					ciblePct: 0.8,
+					plafondPct: 1,
+					templateMaxClassSize: 25,
+					templatePlancherPct: 0.7,
+					templateCiblePct: 0.8,
+					templatePlafondPct: 1,
+				},
+				{
+					gradeLevel: 'MS',
+					gradeName: 'Moyenne Section',
+					band: 'MATERNELLE',
+					displayOrder: 2,
+					defaultAy2Intake: null,
+					maxClassSize: 25,
+					plancherPct: 0.7,
+					ciblePct: 0.8,
+					plafondPct: 1,
+					templateMaxClassSize: 25,
+					templatePlancherPct: 0.7,
+					templateCiblePct: 0.8,
+					templatePlafondPct: 1,
+				},
+			],
+		};
 		mockHooks.nationalityData = { entries: [] };
 		mockHooks.importData = null;
 	});
@@ -273,6 +374,7 @@ describe('EnrollmentSetupWizard', () => {
 				expect.objectContaining({ gradeLevel: 'MS', headcount: 120 }),
 			])
 		);
+		expect(payload.planningRules).toEqual(mockHooks.enrollmentSettingsData.rules);
 	});
 
 	it('starts from the baseline dataset by default', async () => {
@@ -301,6 +403,7 @@ describe('EnrollmentSetupWizard', () => {
 				expect.objectContaining({ gradeLevel: 'MS', headcount: 100 }),
 			])
 		);
+		expect(payload.planningRules).toEqual(mockHooks.enrollmentSettingsData.rules);
 	});
 
 	it('restores the real baseline dataset when Use baseline is chosen after an import', async () => {
@@ -354,6 +457,7 @@ describe('EnrollmentSetupWizard', () => {
 				expect.objectContaining({ gradeLevel: 'MS', headcount: 100 }),
 			])
 		);
+		expect(payload.planningRules).toEqual(mockHooks.enrollmentSettingsData.rules);
 	});
 
 	it('lets the user switch back to the saved AY1 run explicitly', async () => {
@@ -383,6 +487,7 @@ describe('EnrollmentSetupWizard', () => {
 				expect.objectContaining({ gradeLevel: 'MS', headcount: 101 }),
 			])
 		);
+		expect(payload.planningRules).toEqual(mockHooks.enrollmentSettingsData.rules);
 	});
 
 	it('keeps navigation disabled until the wizard data is initialized', () => {
@@ -436,9 +541,9 @@ describe('EnrollmentSetupWizard', () => {
 			.closest('section');
 		expect(cohortSection).not.toBeNull();
 		const cohortInputs = cohortSection!.querySelectorAll('input[type="number"]');
-		expect(cohortInputs.length).toBeGreaterThanOrEqual(4);
+		expect(cohortInputs.length).toBeGreaterThanOrEqual(2);
 
-		fireEvent.change(cohortInputs[3]!, { target: { value: '3.7' } });
+		fireEvent.change(cohortInputs[cohortInputs.length - 1]!, { target: { value: '3.7' } });
 
 		fireEvent.click(screen.getByRole('button', { name: /^Next$/i }));
 		fireEvent.click(screen.getByRole('button', { name: /Confirm and Calculate/i }));

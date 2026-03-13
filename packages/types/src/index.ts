@@ -28,8 +28,26 @@ export type {
 	CohortProgressionRow,
 	EnrollmentKpiData,
 	PlanningRules,
+	EnrollmentCapacityByGradeSetting,
+	EnrollmentSettings,
+	EnrollmentSettingsUpdatePayload,
 	EnrollmentMasterGridRow,
 } from './cohort.js';
+
+export {
+	COHORT_GRADE_PROGRESSION,
+	calculateCohortGradeResult,
+	calculateHistoricalTargetHeadcount,
+	calculateHistoricalTrendRetention,
+	getPriorGradeLevel,
+} from './cohort-calculations.js';
+
+export type {
+	CohortCalculationRules,
+	CohortGradeCalculationInput,
+	CohortGradeCalculationResult,
+	HistoricalHeadcountPoint,
+} from './cohort-calculations.js';
 
 export { DISTRIBUTION_METHODS, IFRS_CATEGORIES } from './revenue.js';
 

@@ -17,6 +17,7 @@ import {
 	buildEnrollmentPlanningRulesUpdateData,
 	resolveEnrollmentPlanningRules,
 } from '../../services/planning-rules.js';
+import { findInvalidLateralWeightEntry } from '../../services/lateral-weight-validation.js';
 
 const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
@@ -33,7 +34,8 @@ const setupAy1EntrySchema = z.object({
 const setupCohortEntrySchema = z.object({
 	gradeLevel: cohortGradeEnum,
 	retentionRate: z.number().min(0).max(1),
-	lateralEntryCount: z.number().int().min(0),
+	manualAdjustment: z.number().int().optional(),
+	lateralEntryCount: z.number().int().optional(),
 	lateralWeightFr: z.number().min(0).max(1),
 	lateralWeightNat: z.number().min(0).max(1),
 	lateralWeightAut: z.number().min(0).max(1),
@@ -41,7 +43,9 @@ const setupCohortEntrySchema = z.object({
 
 const planningRulesSchema = z.object({
 	rolloverThreshold: z.number().min(0.5).max(2),
-	cappedRetention: z.number().min(0.5).max(1),
+	cappedRetention: z.number().min(0.5).max(1).optional(),
+	retentionRecentWeight: z.number().min(0).max(1),
+	historicalTargetRecentWeight: z.number().min(0).max(1),
 });
 
 const setupApplyBodySchema = z.object({
@@ -53,8 +57,6 @@ const setupApplyBodySchema = z.object({
 
 const gradeHeaderAliases = new Set(['grade', 'gradelevel', 'levelcode']);
 const headcountHeaderAliases = new Set(['headcount', 'studentcount', 'ay1headcount']);
-const WEIGHT_SUM_TOLERANCE = 0.0001;
-
 function normalizeHeaderName(header: string) {
 	return header
 		.trim()
@@ -402,6 +404,8 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 					staleModules: true,
 					rolloverThreshold: true,
 					cappedRetention: true,
+					retentionRecentWeight: true,
+					historicalTargetRecentWeight: true,
 				},
 			});
 
@@ -451,33 +455,12 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 			}
 
 			const normalizedCohortEntries = normalizeCohortMutations(body.cohortEntries);
-			const weightErrors: Array<{
-				gradeLevel: string;
-				weightSum: number;
-			}> = [];
 
-			for (const entry of normalizedCohortEntries) {
-				if (entry.lateralEntryCount > 0) {
-					const weightSum = new Decimal(entry.lateralWeightFr)
-						.plus(entry.lateralWeightNat)
-						.plus(entry.lateralWeightAut)
-						.toNumber();
-
-					if (Math.abs(weightSum - 1.0) > WEIGHT_SUM_TOLERANCE) {
-						weightErrors.push({
-							gradeLevel: entry.gradeLevel,
-							weightSum,
-						});
-					}
-				}
-			}
-
-			if (weightErrors.length > 0) {
+			const invalidLateralWeightEntry = findInvalidLateralWeightEntry(normalizedCohortEntries);
+			if (invalidLateralWeightEntry) {
 				return reply.status(422).send({
 					code: 'LATERAL_WEIGHT_SUM_INVALID',
-					message:
-						'Lateral weights (Fr + Nat + Aut) must sum to 1.0 for grades with lateral entries',
-					errors: weightErrors,
+					message: `Lateral weights for ${invalidLateralWeightEntry.gradeLevel} sum to ${invalidLateralWeightEntry.weightSum}, expected 1.0`,
 				});
 			}
 
@@ -550,14 +533,14 @@ export async function enrollmentSetupRoutes(app: FastifyInstance) {
 							versionId,
 							gradeLevel: entry.gradeLevel,
 							retentionRate: entry.retentionRate,
-							lateralEntryCount: entry.lateralEntryCount,
+							lateralEntryCount: entry.manualAdjustment,
 							lateralWeightFr: entry.lateralWeightFr,
 							lateralWeightNat: entry.lateralWeightNat,
 							lateralWeightAut: entry.lateralWeightAut,
 						},
 						update: {
 							retentionRate: entry.retentionRate,
-							lateralEntryCount: entry.lateralEntryCount,
+							lateralEntryCount: entry.manualAdjustment,
 							lateralWeightFr: entry.lateralWeightFr,
 							lateralWeightNat: entry.lateralWeightNat,
 							lateralWeightAut: entry.lateralWeightAut,

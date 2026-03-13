@@ -150,19 +150,19 @@ export function AcademicPage() {
 				},
 			}),
 			glColumnHelper.accessor('maxClassSize', {
-				header: 'Max Class Size',
+				header: 'Template Max Class Size',
 				cell: (info) => info.getValue(),
 			}),
 			glColumnHelper.accessor('plancherPct', {
-				header: 'Plancher %',
+				header: 'Template Plancher %',
 				cell: (info) => info.getValue(),
 			}),
 			glColumnHelper.accessor('ciblePct', {
-				header: 'Cible %',
+				header: 'Template Cible %',
 				cell: (info) => info.getValue(),
 			}),
 			glColumnHelper.accessor('plafondPct', {
-				header: 'Plafond %',
+				header: 'Template Plafond %',
 				cell: (info) => info.getValue(),
 			}),
 			glColumnHelper.accessor('displayOrder', {
