@@ -301,6 +301,140 @@ describe('POST /setup-import/validate', () => {
 });
 
 describe('POST /setup/apply', () => {
+	it('returns 404 when version does not exist', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/setup/apply`,
+			headers: authHeader(token),
+			payload: {
+				ay1Entries: [{ gradeLevel: 'PS', headcount: 80 }],
+				cohortEntries: [
+					{
+						gradeLevel: 'PS',
+						retentionRate: 0,
+						lateralEntryCount: 0,
+						lateralWeightFr: 0,
+						lateralWeightNat: 0,
+						lateralWeightAut: 0,
+					},
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
+	});
+
+	it('returns 409 when version is locked', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
+			id: 1,
+			fiscalYear: 2026,
+			status: 'Locked',
+			dataSource: 'MANUAL',
+			staleModules: [],
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/setup/apply`,
+			headers: authHeader(token),
+			payload: {
+				ay1Entries: [{ gradeLevel: 'PS', headcount: 80 }],
+				cohortEntries: [
+					{
+						gradeLevel: 'PS',
+						retentionRate: 0,
+						lateralEntryCount: 0,
+						lateralWeightFr: 0,
+						lateralWeightNat: 0,
+						lateralWeightAut: 0,
+					},
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('VERSION_LOCKED');
+	});
+
+	it('returns 409 when version is imported', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
+			id: 1,
+			fiscalYear: 2026,
+			status: 'Draft',
+			dataSource: 'IMPORTED',
+			staleModules: [],
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/setup/apply`,
+			headers: authHeader(token),
+			payload: {
+				ay1Entries: [{ gradeLevel: 'PS', headcount: 80 }],
+				cohortEntries: [
+					{
+						gradeLevel: 'PS',
+						retentionRate: 0,
+						lateralEntryCount: 0,
+						lateralWeightFr: 0,
+						lateralWeightNat: 0,
+						lateralWeightAut: 0,
+					},
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('IMPORTED_VERSION');
+	});
+
+	it('returns 422 when grades are incomplete', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
+			id: 1,
+			fiscalYear: 2026,
+			status: 'Draft',
+			dataSource: 'MANUAL',
+			staleModules: [],
+			rolloverThreshold: 1,
+			cappedRetention: 0.98,
+			retentionRecentWeight: 0.6,
+			historicalTargetRecentWeight: 0.8,
+		});
+		mockPrisma.gradeLevel.findMany.mockResolvedValueOnce(
+			gradeLevels.map((gradeLevel) => ({ gradeCode: gradeLevel.gradeCode }))
+		);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/setup/apply`,
+			headers: authHeader(token),
+			payload: {
+				ay1Entries: [{ gradeLevel: 'PS', headcount: 80 }],
+				cohortEntries: [
+					{
+						gradeLevel: 'PS',
+						retentionRate: 0,
+						lateralEntryCount: 0,
+						lateralWeightFr: 0,
+						lateralWeightNat: 0,
+						lateralWeightAut: 0,
+					},
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(422);
+		expect(res.json().code).toBe('SETUP_DATA_INCOMPLETE');
+		expect(mockCalculateAndPersistEnrollmentWorkspace).not.toHaveBeenCalled();
+	});
+
 	it('persists staged inputs and runs the enrollment calculation atomically', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValueOnce({
 			id: 1,

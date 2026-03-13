@@ -10,6 +10,7 @@ import type {
 	PlanningRules,
 } from '@budfin/types';
 import { calculateCohortGradeResult } from '@budfin/types';
+import Decimal from 'decimal.js';
 import type { HeadcountRow } from '../hooks/use-enrollment';
 
 export const ENROLLMENT_GRADE_PROGRESSION: GradeCode[] = [
@@ -708,8 +709,9 @@ export function buildCapacityPreviewRows({
 
 		const maxClassSize = capacityOverrides?.get(gradeLevel) ?? metadata.maxClassSize;
 		const sectionsNeeded = maxClassSize > 0 ? Math.ceil(ay1Headcount / maxClassSize) : 0;
+		const totalCapacity = sectionsNeeded * maxClassSize;
 		const utilization =
-			sectionsNeeded > 0 ? (ay1Headcount / (sectionsNeeded * maxClassSize)) * 100 : 0;
+			totalCapacity > 0 ? new Decimal(ay1Headcount).div(totalCapacity).times(100).toNumber() : 0;
 		const plafond = sectionsNeeded * maxClassSize * Number(metadata.plafondPct);
 
 		rows.push({
@@ -718,7 +720,7 @@ export function buildCapacityPreviewRows({
 			headcount: ay1Headcount,
 			maxClassSize,
 			sectionsNeeded,
-			utilization: Number(utilization.toFixed(1)),
+			utilization: new Decimal(utilization).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber(),
 			alert: getCapacityAlert({ headcount: ay1Headcount, utilization, plafond }),
 			recruitmentSlots: Math.max(0, sectionsNeeded * maxClassSize - ay1Headcount),
 		});
@@ -732,8 +734,11 @@ export function buildCapacityPreviewRows({
 
 		const maxClassSize = capacityOverrides?.get(row.gradeLevel) ?? metadata.maxClassSize;
 		const sectionsNeeded = maxClassSize > 0 ? Math.ceil(row.ay2Headcount / maxClassSize) : 0;
+		const totalCapacity = sectionsNeeded * maxClassSize;
 		const utilization =
-			sectionsNeeded > 0 ? (row.ay2Headcount / (sectionsNeeded * maxClassSize)) * 100 : 0;
+			totalCapacity > 0
+				? new Decimal(row.ay2Headcount).div(totalCapacity).times(100).toNumber()
+				: 0;
 		const plafond = sectionsNeeded * maxClassSize * Number(metadata.plafondPct);
 
 		rows.push({
@@ -742,7 +747,7 @@ export function buildCapacityPreviewRows({
 			headcount: row.ay2Headcount,
 			maxClassSize,
 			sectionsNeeded,
-			utilization: Number(utilization.toFixed(1)),
+			utilization: new Decimal(utilization).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber(),
 			alert: getCapacityAlert({ headcount: row.ay2Headcount, utilization, plafond }),
 			recruitmentSlots: Math.max(0, sectionsNeeded * maxClassSize - row.ay2Headcount),
 		});
@@ -765,7 +770,9 @@ export function buildCapacityPreviewRow({
 	plafondPct: number;
 }): CapacityPreviewRow {
 	const sectionsNeeded = maxClassSize > 0 ? Math.ceil(headcount / maxClassSize) : 0;
-	const utilization = sectionsNeeded > 0 ? (headcount / (sectionsNeeded * maxClassSize)) * 100 : 0;
+	const totalCapacity = sectionsNeeded * maxClassSize;
+	const utilization =
+		totalCapacity > 0 ? new Decimal(headcount).div(totalCapacity).times(100).toNumber() : 0;
 	const plafond = sectionsNeeded * maxClassSize * plafondPct;
 
 	return {
@@ -774,7 +781,7 @@ export function buildCapacityPreviewRow({
 		headcount,
 		maxClassSize,
 		sectionsNeeded,
-		utilization: Number(utilization.toFixed(1)),
+		utilization: new Decimal(utilization).toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toNumber(),
 		alert: getCapacityAlert({ headcount, utilization, plafond }),
 		recruitmentSlots: Math.max(0, sectionsNeeded * maxClassSize - headcount),
 	};

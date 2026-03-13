@@ -969,7 +969,9 @@ Retrieve the version-scoped enrollment planning rules used by the cohort-progres
 ```json
 {
     "rolloverThreshold": 1.0,
-    "cappedRetention": 0.98
+    "cappedRetention": 0.98,
+    "retentionRecentWeight": 0.6,
+    "historicalTargetRecentWeight": 0.8
 }
 ```
 
@@ -983,7 +985,7 @@ Retrieve the version-scoped enrollment planning rules used by the cohort-progres
 
 #### PUT /api/v1/versions/:versionId/enrollment/planning-rules
 
-Update the rollover threshold and capped retention rate for a version. Marks the ENROLLMENT module stale so results must be recalculated before they can be trusted. Writes an audit entry on every successful update.
+Update the enrollment planning rules for a version. Marks the ENROLLMENT module stale so results must be recalculated before they can be trusted. Writes an audit entry on every successful update.
 
 **RBAC:** Admin, BudgetOwner, Editor.
 
@@ -992,11 +994,13 @@ Update the rollover threshold and capped retention rate for a version. Marks the
 ```json
 {
     "rolloverThreshold": 1.0,
-    "cappedRetention": 0.98
+    "cappedRetention": 0.98,
+    "retentionRecentWeight": 0.6,
+    "historicalTargetRecentWeight": 0.8
 }
 ```
 
-Field constraints: `rolloverThreshold` ∈ [0.5, 2.0]; `cappedRetention` ∈ [0.5, 1.0].
+Field constraints: `rolloverThreshold` ∈ [0.5, 2.0]; `cappedRetention` ∈ [0.5, 1.0] (optional); `retentionRecentWeight` ∈ [0, 1]; `historicalTargetRecentWeight` ∈ [0, 1].
 
 **Response 200:**
 
@@ -1004,6 +1008,8 @@ Field constraints: `rolloverThreshold` ∈ [0.5, 2.0]; `cappedRetention` ∈ [0.
 {
     "rolloverThreshold": 1.0,
     "cappedRetention": 0.98,
+    "retentionRecentWeight": 0.6,
+    "historicalTargetRecentWeight": 0.8,
     "staleModules": ["ENROLLMENT"]
 }
 ```
@@ -1015,6 +1021,92 @@ Field constraints: `rolloverThreshold` ∈ [0.5, 2.0]; `cappedRetention` ∈ [0.
 | 404    | VERSION_NOT_FOUND | Version does not exist                            |
 | 409    | VERSION_LOCKED    | Version is not in Draft status                    |
 | 409    | IMPORTED_VERSION  | Cannot modify planning rules on imported versions |
+
+---
+
+#### GET /api/v1/versions/:versionId/enrollment/settings
+
+Retrieve the combined enrollment settings for a version: planning rules and per-grade capacity configuration (max class size, plancher/cible/plafond percentages). Aggregates data from `budgetVersions` and `versionCapacityConfig`.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "rules": {
+        "rolloverThreshold": 1.0,
+        "cappedRetention": 0.98,
+        "retentionRecentWeight": 0.6,
+        "historicalTargetRecentWeight": 0.8
+    },
+    "capacityByGrade": [
+        {
+            "gradeLevel": "PS",
+            "gradeName": "Petite Section",
+            "band": "MATERNELLE",
+            "maxClassSize": 22,
+            "plancherPct": 0.75,
+            "ciblePct": 0.85,
+            "plafondPct": 1.0,
+            "templateMaxClassSize": 22,
+            "templatePlancherPct": 0.75,
+            "templateCiblePct": 0.85,
+            "templatePlafondPct": 1.0
+        }
+    ],
+    "staleModules": ["ENROLLMENT"]
+}
+```
+
+**Error responses:**
+
+| Status | Code              | Condition              |
+| ------ | ----------------- | ---------------------- |
+| 404    | VERSION_NOT_FOUND | Version does not exist |
+
+---
+
+#### PUT /api/v1/versions/:versionId/enrollment/settings
+
+Update enrollment planning rules and per-grade capacity configuration in a single transaction. Marks ENROLLMENT, REVENUE, DHG, STAFFING, and PNL modules stale. Writes an audit entry.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Request body:**
+
+```json
+{
+    "rules": {
+        "rolloverThreshold": 1.0,
+        "cappedRetention": 0.98,
+        "retentionRecentWeight": 0.6,
+        "historicalTargetRecentWeight": 0.8
+    },
+    "capacityByGrade": [
+        {
+            "gradeLevel": "PS",
+            "maxClassSize": 22,
+            "plancherPct": 0.75,
+            "ciblePct": 0.85,
+            "plafondPct": 1.0
+        }
+    ]
+}
+```
+
+Field constraints: `plancherPct` <= `ciblePct` <= `plafondPct`; `maxClassSize` ∈ [1, 50]; `plafondPct` ∈ [0, 1.5]. Must include one row per grade level.
+
+**Response 200:** Same shape as GET `/enrollment/settings`.
+
+**Error responses:**
+
+| Status | Code                     | Condition                                              |
+| ------ | ------------------------ | ------------------------------------------------------ |
+| 404    | VERSION_NOT_FOUND        | Version does not exist                                 |
+| 409    | VERSION_LOCKED           | Version is not in Draft status                         |
+| 409    | IMPORTED_VERSION         | Cannot modify enrollment settings on imported versions |
+| 422    | SETTINGS_DATA_INCOMPLETE | Missing rows for some grade levels                     |
 
 ---
 
