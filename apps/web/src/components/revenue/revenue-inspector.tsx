@@ -1,5 +1,15 @@
 import { useMemo } from 'react';
-import { Bar, BarChart, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+	Bar,
+	BarChart,
+	Cell,
+	Pie,
+	PieChart,
+	ResponsiveContainer,
+	Tooltip,
+	XAxis,
+	YAxis,
+} from 'recharts';
 import Decimal from 'decimal.js';
 import type { RevenueResultsResponse } from '@budfin/types';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
@@ -11,13 +21,20 @@ import {
 	formatRevenueGridAmount,
 	formatRevenueGridPercent,
 } from '../../lib/revenue-workspace';
+import { CHART_TOOLTIP_STYLE, useChartSeriesColors } from '../../lib/chart-utils';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 import { Button } from '../ui/button';
 
 type BreakdownDimension = 'band' | 'nationality' | 'tariff' | 'category';
 
-const CHART_COLORS = ['#2463EB', '#16A34A', '#D97706', '#DC2626', '#7C3AED'];
+const CHART_SERIES_TOKENS = [
+	'--chart-series-1',
+	'--chart-series-2',
+	'--chart-series-3',
+	'--chart-series-4',
+	'--chart-series-5',
+];
 
 function toNumber(value: string) {
 	return new Decimal(value).toNumber();
@@ -164,6 +181,7 @@ function RevenueInspectorDefaultView() {
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
 	const { data } = useRevenueResults(versionId, 'category');
 	const { data: readiness } = useRevenueReadiness(versionId);
+	const chartColors = useChartSeriesColors(CHART_SERIES_TOKENS);
 
 	if (!versionId) {
 		return (
@@ -181,42 +199,58 @@ function RevenueInspectorDefaultView() {
 					Revenue composition
 				</h3>
 				<div className="mt-3 flex justify-center">
-					<PieChart width={260} height={180}>
-						<Pie
-							data={composition.map((item) => ({ name: item.label, value: toNumber(item.amount) }))}
-							dataKey="value"
-							nameKey="name"
-							innerRadius={42}
-							outerRadius={72}
-						>
-							{composition.map((item, index) => (
-								<Cell
-									key={item.label}
-									fill={CHART_COLORS[index % CHART_COLORS.length] ?? CHART_COLORS[0]!}
-								/>
-							))}
-						</Pie>
-						<Tooltip formatter={(value) => formatChartTooltipValue(value)} />
-					</PieChart>
+					<ResponsiveContainer width="100%" height={180}>
+						<PieChart>
+							<Pie
+								data={composition.map((item) => ({
+									name: item.label,
+									value: toNumber(item.amount),
+								}))}
+								dataKey="value"
+								nameKey="name"
+								innerRadius={42}
+								outerRadius={72}
+							>
+								{composition.map((item, index) => (
+									<Cell
+										key={item.label}
+										fill={chartColors[index % chartColors.length] ?? chartColors[0]!}
+									/>
+								))}
+							</Pie>
+							<Tooltip
+								formatter={(value) => formatChartTooltipValue(value)}
+								contentStyle={CHART_TOOLTIP_STYLE}
+							/>
+						</PieChart>
+					</ResponsiveContainer>
 				</div>
 			</section>
 
 			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 				<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">Monthly trend</h3>
 				<div className="mt-3 flex justify-center">
-					<BarChart
-						width={300}
-						height={180}
-						data={monthlyTrend.map((item) => ({
-							month: item.month,
-							amount: toNumber(item.amount),
-						}))}
-					>
-						<XAxis dataKey="month" tickLine={false} axisLine={false} />
-						<YAxis hide />
-						<Tooltip formatter={(value) => formatChartTooltipValue(value)} />
-						<Bar dataKey="amount" fill="#2463EB" radius={[6, 6, 0, 0]} />
-					</BarChart>
+					<ResponsiveContainer width="100%" height={180}>
+						<BarChart
+							data={monthlyTrend.map((item) => ({
+								month: item.month,
+								amount: toNumber(item.amount),
+							}))}
+						>
+							<XAxis
+								dataKey="month"
+								tickLine={false}
+								axisLine={false}
+								tick={{ fontSize: 'var(--chart-tick-size)' }}
+							/>
+							<YAxis hide />
+							<Tooltip
+								formatter={(value) => formatChartTooltipValue(value)}
+								contentStyle={CHART_TOOLTIP_STYLE}
+							/>
+							<Bar dataKey="amount" fill={chartColors[0]} radius={[6, 6, 0, 0]} />
+						</BarChart>
+					</ResponsiveContainer>
 				</div>
 			</section>
 
@@ -274,6 +308,7 @@ function RevenueInspectorActiveView({
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
 	const { data } = useRevenueResults(versionId, viewMode);
 	const { data: gradeLevelsData } = useGradeLevels();
+	const chartColors = useChartSeriesColors(CHART_SERIES_TOKENS);
 	const gradeBandMap = useMemo(
 		() =>
 			new Map(
@@ -341,12 +376,22 @@ function RevenueInspectorActiveView({
 			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 				<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">Monthly trend</h3>
 				<div className="mt-3 flex justify-center">
-					<BarChart width={300} height={160} data={monthlyTrend ?? []}>
-						<XAxis dataKey="month" tickLine={false} axisLine={false} />
-						<YAxis hide />
-						<Tooltip formatter={(value) => formatChartTooltipValue(value)} />
-						<Bar dataKey="amount" fill="#16A34A" radius={[6, 6, 0, 0]} />
-					</BarChart>
+					<ResponsiveContainer width="100%" height={160}>
+						<BarChart data={monthlyTrend ?? []}>
+							<XAxis
+								dataKey="month"
+								tickLine={false}
+								axisLine={false}
+								tick={{ fontSize: 'var(--chart-tick-size)' }}
+							/>
+							<YAxis hide />
+							<Tooltip
+								formatter={(value) => formatChartTooltipValue(value)}
+								contentStyle={CHART_TOOLTIP_STYLE}
+							/>
+							<Bar dataKey="amount" fill={chartColors[1]} radius={[6, 6, 0, 0]} />
+						</BarChart>
+					</ResponsiveContainer>
 				</div>
 			</section>
 

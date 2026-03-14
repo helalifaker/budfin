@@ -253,6 +253,37 @@
 	--badge-editor: #15803d;
 	--badge-editor-bg: #ecfdf5;
 
+	/* ── Chart Series Tokens ── */
+	--chart-series-1: var(--color-info);
+	--chart-series-2: var(--color-success);
+	--chart-series-3: var(--color-warning);
+	--chart-series-4: var(--color-error);
+	--chart-series-5: #7c3aed;
+
+	/* ── Chart Typography Tokens ── */
+	--chart-tick-size: 11px;
+	--chart-tooltip-size: 12px;
+
+	/* ── Nationality Badge Tokens ── */
+	--badge-francais: var(--color-info);
+	--badge-francais-bg: var(--color-info-bg);
+	--badge-nationaux: var(--color-success);
+	--badge-nationaux-bg: var(--color-success-bg);
+	--badge-autres: var(--color-warning);
+	--badge-autres-bg: var(--color-warning-bg);
+
+	/* ── Tariff Group Tokens ── */
+	--tariff-plein: var(--color-info);
+	--tariff-plein-bg: var(--color-info-bg);
+	--tariff-rp: var(--color-success);
+	--tariff-rp-bg: var(--color-success-bg);
+	--tariff-r3plus: var(--color-warning);
+	--tariff-r3plus-bg: var(--color-warning-bg);
+
+	/* ── KPI Stagger Token ── */
+	--kpi-stagger-delay: 60ms;
+	--selected-row-accent: var(--accent-50);
+
 	/* ── Animation Tokens ── */
 	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 	--ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -818,7 +849,10 @@ body {
 	.animate-wizard-step-right,
 	.animate-wizard-step-left,
 	.animate-wizard-success,
-	.animate-wizard-checkmark {
+	.animate-wizard-checkmark,
+	.animate-kpi-enter,
+	.animate-inspector-crossfade,
+	.animate-stagger-reveal {
 		animation: none !important;
 		transition: none !important;
 	}

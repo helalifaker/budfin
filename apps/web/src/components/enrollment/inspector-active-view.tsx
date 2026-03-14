@@ -369,12 +369,20 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 						<ResponsiveContainer width="100%" height={148}>
 							<LineChart data={chartData}>
 								<CartesianGrid stroke={chartColors.grid} strokeDasharray="4 4" />
-								<XAxis dataKey="year" tick={{ fontSize: 10 }} stroke={chartColors.axis} />
-								<YAxis tick={{ fontSize: 10 }} stroke={chartColors.axis} width={36} />
+								<XAxis
+									dataKey="year"
+									tick={{ fontSize: 'var(--chart-tick-size)' }}
+									stroke={chartColors.axis}
+								/>
+								<YAxis
+									tick={{ fontSize: 'var(--chart-tick-size)' }}
+									stroke={chartColors.axis}
+									width={36}
+								/>
 								<Tooltip
 									contentStyle={{
-										fontSize: 11,
-										borderRadius: 8,
+										fontSize: 'var(--chart-tooltip-size)',
+										borderRadius: 'var(--radius-md)',
 										border: `1px solid ${chartColors.tooltipBorder}`,
 										backgroundColor: 'var(--workspace-bg-card)',
 									}}

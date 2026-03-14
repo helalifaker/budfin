@@ -97,16 +97,17 @@ export function RevenueKpiRibbon({
 
 	return (
 		<div
-			className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5"
+			className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
 			role="list"
 			aria-label="Revenue key performance indicators"
 		>
-			{cards.map((card) => (
+			{cards.map((card, index) => (
 				<div
 					key={card.label}
 					role="listitem"
+					style={{ animationDelay: `${index * 60}ms` }}
 					className={cn(
-						'relative rounded-2xl border border-(--workspace-border) border-l-4 bg-(--workspace-bg-card) p-4 shadow-(--shadow-xs)',
+						'animate-kpi-enter relative rounded-xl border border-(--workspace-border) border-l-[3px] bg-(--workspace-bg-card) p-4 shadow-(--shadow-card-elevated) transition-shadow duration-(--duration-fast) hover:shadow-(--shadow-card-hover)',
 						ACCENT_CLASSES[card.accent],
 						isStale && 'opacity-60'
 					)}
