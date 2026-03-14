@@ -18,6 +18,7 @@ import {
 	formatRevenueGridPercent,
 	getVisibleRevenueMonths,
 	REVENUE_MONTH_LABELS,
+	type RevenueGridRowIdentity,
 	type RevenueForecastGridRow,
 	type RevenueForecastPeriod,
 } from '../../lib/revenue-workspace';
@@ -189,7 +190,7 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 		);
 
 		return {
-			getBand: (row: RevenueForecastGridRow) => row.band,
+			getBand: (row: RevenueForecastGridRow) => row.band ?? '',
 			bandLabels: BAND_LABELS,
 			bandStyles: BAND_STYLES,
 			collapsible: false,
@@ -210,7 +211,7 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 		if (viewMode !== 'nationality') return undefined;
 
 		return {
-			getBand: (row: RevenueForecastGridRow) => row.band,
+			getBand: (row: RevenueForecastGridRow) => row.band ?? '',
 			bandLabels: NATIONALITY_LABELS,
 			bandStyles: NATIONALITY_STYLES,
 			collapsible: false,
@@ -222,7 +223,7 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 		if (viewMode !== 'tariff') return undefined;
 
 		return {
-			getBand: (row: RevenueForecastGridRow) => row.band,
+			getBand: (row: RevenueForecastGridRow) => row.band ?? '',
 			bandLabels: TARIFF_LABELS,
 			bandStyles: TARIFF_STYLES,
 			collapsible: false,
@@ -248,9 +249,19 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 
 	const handleRowSelect = useCallback(
 		(row: RevenueForecastGridRow) => {
-			selectRow({ label: row.label, viewMode });
+			const identity: RevenueGridRowIdentity = {
+				id: row.id,
+				code: row.code,
+				label: row.label,
+				viewMode: row.viewMode,
+				rowType: row.rowType,
+				...(row.band !== undefined && { band: row.band }),
+				...(row.groupKey !== undefined && { groupKey: row.groupKey }),
+				...(row.settingsTarget !== undefined && { settingsTarget: row.settingsTarget }),
+			};
+			selectRow(identity);
 		},
-		[selectRow, viewMode]
+		[selectRow]
 	);
 
 	const selectedRowPredicate = useCallback(
@@ -282,17 +293,20 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 		);
 	}
 
-	const gridProps = {
+	const sharedProps = {
 		table,
-		ariaLabel: 'Revenue forecast grid',
-		forceGridRole: true,
+		ariaLabel: 'Revenue forecast grid' as const,
+		forceGridRole: true as const,
 		pinnedColumns: ['label'],
 		numericColumns: numericColumnIds,
 		footerRows,
 		onRowSelect: handleRowSelect,
 		selectedRowPredicate,
-		...(activeGrouping ? { bandGrouping: activeGrouping } : {}),
 	};
 
-	return <PlanningGrid {...gridProps} />;
+	if (activeGrouping) {
+		return <PlanningGrid {...sharedProps} bandGrouping={activeGrouping} />;
+	}
+
+	return <PlanningGrid {...sharedProps} />;
 }
