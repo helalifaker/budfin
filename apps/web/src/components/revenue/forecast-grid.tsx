@@ -82,9 +82,8 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 				</thead>
 				<tbody>
 					{rows.map((row) => {
-						const isSelectable = !row.isTotal && !row.isSubtotal;
-						const isSelected =
-							isSelectable && selection?.label === row.label && selection.viewMode === viewMode;
+						const isSelectable = row.rowType === 'data';
+						const isSelected = isSelectable && selection?.id === row.id;
 
 						return (
 							<tr
@@ -103,7 +102,7 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 										return;
 									}
 
-									selectRow({ label: row.label, viewMode });
+									selectRow(row);
 								}}
 								onKeyDown={(event) => {
 									if (!isSelectable) {
@@ -112,7 +111,7 @@ export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps)
 
 									if (event.key === 'Enter' || event.key === ' ') {
 										event.preventDefault();
-										selectRow({ label: row.label, viewMode });
+										selectRow(row);
 									}
 								}}
 								tabIndex={isSelectable ? 0 : undefined}

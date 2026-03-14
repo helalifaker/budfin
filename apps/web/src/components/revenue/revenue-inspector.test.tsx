@@ -192,8 +192,12 @@ describe('RevenueInspectorContent', () => {
 
 	it('renders the active inspector view and opens the mapped settings tab', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'category-tuition-fees',
+			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
+			rowType: 'data',
+			settingsTarget: 'feeGrid',
 		});
 
 		render(<RevenueInspectorContent />);

@@ -256,9 +256,12 @@ describe('ForecastGrid', () => {
 
 		fireEvent.click(screen.getByText('RP'));
 
-		expect(useRevenueSelectionStore.getState().selection).toEqual({
-			label: 'RP',
-			viewMode: 'tariff',
-		});
+		const selection = useRevenueSelectionStore.getState().selection;
+		expect(selection).not.toBeNull();
+		expect(selection?.id).toBe('tariff-RP');
+		expect(selection?.code).toBe('RP');
+		expect(selection?.label).toBe('RP');
+		expect(selection?.viewMode).toBe('tariff');
+		expect(selection?.rowType).toBe('data');
 	});
 });

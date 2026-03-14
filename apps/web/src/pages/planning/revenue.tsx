@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 import { Button } from '../../components/ui/button';
@@ -55,6 +55,7 @@ export function RevenuePage() {
 	);
 	const [setupOpen, setSetupOpen] = useState(false);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
 	const clearSelection = useRevenueSelectionStore((state) => state.clearSelection);
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
 	const { data: versionsData } = useVersions(fiscalYear);
@@ -72,9 +73,36 @@ export function RevenuePage() {
 		};
 	}, [clearSelection, setActivePage]);
 
+	// GP-03: When the right panel closes, clear selection
+	useEffect(() => {
+		if (!isPanelOpen) {
+			clearSelection();
+		}
+	}, [isPanelOpen, clearSelection]);
+
+	// ID-04: When viewMode changes, clear selection and close panel
+	const prevViewMode = useRef(viewMode);
+	useEffect(() => {
+		if (prevViewMode.current !== viewMode) {
+			clearSelection();
+			useRightPanelStore.getState().close();
+			prevViewMode.current = viewMode;
+		}
+	}, [viewMode, clearSelection]);
+
 	const period = useMemo<RevenueForecastPeriod>(() => {
 		return academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
 	}, [academicPeriod]);
+
+	// GP-08: When period changes, clear selection and close panel
+	const prevPeriod = useRef(period);
+	useEffect(() => {
+		if (prevPeriod.current !== period) {
+			clearSelection();
+			useRightPanelStore.getState().close();
+			prevPeriod.current = period;
+		}
+	}, [period, clearSelection]);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId) {
@@ -138,6 +166,7 @@ export function RevenuePage() {
 								if (value) {
 									setViewMode(value as 'category' | 'grade' | 'nationality' | 'tariff');
 									clearSelection();
+									useRightPanelStore.getState().close();
 								}
 							}}
 							aria-label="Revenue view mode"

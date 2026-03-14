@@ -1,13 +1,31 @@
 import Decimal from 'decimal.js';
-import type { RevenueResultsResponse, RevenueViewMode } from '@budfin/types';
+import type { RevenueResultsResponse, RevenueSettingsTab, RevenueViewMode } from '@budfin/types';
 import type { GradeLevel } from '../hooks/use-grade-levels';
 import { BAND_LABELS } from './enrollment-workspace';
 
 export type RevenueForecastPeriod = 'AY1' | 'AY2' | 'both';
+export type RevenueRowType = 'data' | 'subtotal' | 'total' | 'group-header';
+
+export interface RevenueGridRowIdentity {
+	id: string;
+	code: string;
+	label: string;
+	viewMode: RevenueViewMode;
+	rowType: RevenueRowType;
+	band?: string;
+	groupKey?: string;
+	settingsTarget?: RevenueSettingsTab;
+}
 
 export interface RevenueForecastGridRow {
 	id: string;
+	code: string;
 	label: string;
+	viewMode: RevenueViewMode;
+	rowType: RevenueRowType;
+	band?: string;
+	groupKey?: string;
+	settingsTarget?: RevenueSettingsTab;
 	monthlyAmounts: string[];
 	annualTotal: string;
 	percentageOfRevenue: string;
@@ -50,29 +68,48 @@ function toMonthlyStrings(bucket: Decimal[]) {
 
 function toGridRow({
 	id,
+	code,
 	label,
+	viewMode,
+	rowType,
 	bucket,
 	totalBase,
 	isTotal = false,
 	isSubtotal = false,
+	band,
+	groupKey,
+	settingsTarget,
 }: {
 	id: string;
+	code: string;
 	label: string;
+	viewMode: RevenueViewMode;
+	rowType: RevenueRowType;
 	bucket: Decimal[];
 	totalBase: Decimal;
 	isTotal?: boolean;
 	isSubtotal?: boolean;
+	band?: string;
+	groupKey?: string;
+	settingsTarget?: RevenueSettingsTab;
 }): RevenueForecastGridRow {
 	const annual = sumBucket(bucket);
-	return {
+	const row: RevenueForecastGridRow = {
 		id,
+		code,
 		label,
+		viewMode,
+		rowType,
 		monthlyAmounts: toMonthlyStrings(bucket),
 		annualTotal: annual.toFixed(4),
 		percentageOfRevenue: totalBase.eq(0) ? '0.000000' : annual.div(totalBase).toFixed(6),
-		isTotal,
-		isSubtotal,
+		isTotal: isTotal ?? false,
+		isSubtotal: isSubtotal ?? false,
 	};
+	if (band !== undefined) row.band = band;
+	if (groupKey !== undefined) row.groupKey = groupKey;
+	if (settingsTarget !== undefined) row.settingsTarget = settingsTarget;
+	return row;
 }
 
 function aggregateEntriesByKey(
@@ -156,6 +193,21 @@ export function formatRevenueGridPercent(value: string) {
 	return decimalValue.lt(0) ? `-${formatted}%` : `${formatted}%`;
 }
 
+function resolveCategorySettingsTarget(label: string): RevenueSettingsTab {
+	switch (label) {
+		case 'Tuition Fees':
+			return 'feeGrid';
+		case 'Discount Impact':
+			return 'discounts';
+		case 'Registration Fees':
+		case 'Activities & Services':
+		case 'Examination Fees':
+			return 'otherRevenue';
+		default:
+			return 'tariffAssignment';
+	}
+}
+
 export function buildRevenueForecastGridRows({
 	data,
 	viewMode,
@@ -170,15 +222,26 @@ export function buildRevenueForecastGridRows({
 	}
 
 	if (viewMode === 'category') {
-		return data.executiveSummary.rows.map((row, index) => ({
-			id: `category-${index}-${row.label}`,
-			label: row.label,
-			monthlyAmounts: row.monthlyAmounts,
-			annualTotal: row.annualTotal,
-			percentageOfRevenue: row.percentageOfRevenue,
-			isTotal: row.isTotal,
-			isSubtotal: false,
-		}));
+		return data.executiveSummary.rows.map((row): RevenueForecastGridRow => {
+			const rowType: RevenueRowType = row.isTotal ? 'total' : 'data';
+			const code = row.label.replace(/\s+/g, '-').toLowerCase();
+			const gridRow: RevenueForecastGridRow = {
+				id: `category-${code}`,
+				code,
+				label: row.label,
+				viewMode: 'category',
+				rowType,
+				monthlyAmounts: row.monthlyAmounts,
+				annualTotal: row.annualTotal,
+				percentageOfRevenue: row.percentageOfRevenue,
+				isTotal: row.isTotal,
+				isSubtotal: false,
+			};
+			if (rowType === 'data') {
+				gridRow.settingsTarget = resolveCategorySettingsTarget(row.label);
+			}
+			return gridRow;
+		});
 	}
 
 	const byKey =
@@ -209,7 +272,13 @@ export function buildRevenueForecastGridRows({
 				rows.push(
 					toGridRow({
 						id: `grade-${gradeCode}`,
+						code: gradeCode,
 						label: gradeCode,
+						viewMode: 'grade',
+						rowType: 'data',
+						band,
+						groupKey: band,
+						settingsTarget: 'feeGrid',
 						bucket,
 						totalBase,
 					})
@@ -222,8 +291,13 @@ export function buildRevenueForecastGridRows({
 
 			rows.push(
 				toGridRow({
-					id: `band-${band}`,
+					id: `grade-band-${band}`,
+					code: `band-${band}`,
 					label: BAND_LABELS[band] ?? band,
+					viewMode: 'grade',
+					rowType: 'subtotal',
+					band,
+					groupKey: band,
 					bucket: bandBucket,
 					totalBase,
 					isSubtotal: true,
@@ -234,7 +308,10 @@ export function buildRevenueForecastGridRows({
 		rows.push(
 			toGridRow({
 				id: 'grade-grand-total',
+				code: 'grand-total',
 				label: 'Grand Total',
+				viewMode: 'grade',
+				rowType: 'total',
 				bucket: totalBucket,
 				totalBase,
 				isTotal: true,
@@ -245,12 +322,18 @@ export function buildRevenueForecastGridRows({
 	}
 
 	const order = viewMode === 'nationality' ? NATIONALITY_ORDER : TARIFF_ORDER;
+	const settingsTarget: RevenueSettingsTab =
+		viewMode === 'nationality' ? 'tariffAssignment' : 'tariffAssignment';
 	const rows = order
 		.filter((label) => byKey.has(label))
 		.map((label) =>
 			toGridRow({
 				id: `${viewMode}-${label}`,
+				code: label,
 				label,
+				viewMode,
+				rowType: 'data',
+				settingsTarget,
 				bucket: byKey.get(label) ?? createMonthBucket(),
 				totalBase,
 			})
@@ -259,7 +342,10 @@ export function buildRevenueForecastGridRows({
 	rows.push(
 		toGridRow({
 			id: `${viewMode}-grand-total`,
+			code: 'grand-total',
 			label: 'Grand Total',
+			viewMode,
+			rowType: 'total',
 			bucket: totalBucket,
 			totalBase,
 			isTotal: true,

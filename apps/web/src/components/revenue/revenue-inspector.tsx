@@ -390,7 +390,12 @@ function RevenueInspectorContent() {
 		return <RevenueInspectorDefaultView />;
 	}
 
-	return <RevenueInspectorActiveView label={selection.label} viewMode={selection.viewMode} />;
+	return (
+		<RevenueInspectorActiveView
+			label={selection.label}
+			viewMode={selection.viewMode as 'category' | 'grade' | 'nationality' | 'tariff'}
+		/>
+	);
 }
 
 registerPanelContent('revenue', RevenueInspectorContent);
