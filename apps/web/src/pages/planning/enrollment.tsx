@@ -43,6 +43,7 @@ import {
 	resolveEnrollmentGradeLevels,
 } from '../../lib/enrollment-workspace';
 import '../../components/enrollment/enrollment-inspector';
+import '../../components/enrollment/enrollment-guide-content';
 import { useEnrollmentSettingsSheetStore } from '../../stores/enrollment-settings-store';
 
 const BAND_FILTERS: Array<{ value: string; label: string }> = [

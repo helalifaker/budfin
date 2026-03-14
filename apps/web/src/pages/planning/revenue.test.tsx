@@ -167,6 +167,7 @@ vi.mock('../../components/revenue/revenue-settings-dialog', () => ({
 }));
 
 vi.mock('../../components/revenue/revenue-inspector', () => ({}));
+vi.mock('../../components/revenue/revenue-guide-content', () => ({}));
 
 describe('RevenuePage', () => {
 	beforeEach(() => {

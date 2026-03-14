@@ -1,11 +1,10 @@
 import { useCallback, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/cn';
-import { getPanelContent } from '../../lib/right-panel-registry';
+import { getGuideContent, getPanelContent } from '../../lib/right-panel-registry';
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import type { RightPanelTab } from '../../stores/right-panel-store';
-import { EnrollmentGuideContent } from '../enrollment/enrollment-guide-content';
 
 const TABS: Array<{ id: RightPanelTab; label: string }> = [
 	{ id: 'details', label: 'Details' },
@@ -44,9 +43,17 @@ function DelegatedDetailsContent() {
 	return <DefaultDetailsContent />;
 }
 
+function DelegatedGuideContent() {
+	const activePage = useRightPanelStore((s) => s.activePage);
+	const renderer = activePage ? getGuideContent(activePage) : undefined;
+	if (renderer) return <>{renderer()}</>;
+	return (
+		<p className="text-(--text-sm) text-(--text-muted)">Contextual help for the current module.</p>
+	);
+}
+
 export function RightPanel() {
 	const { isOpen, activeTab, width, close, setTab, setWidth } = useRightPanelStore();
-	const activePage = useRightPanelStore((s) => s.activePage);
 	const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
 	const handleResizeStart = useCallback(
@@ -153,14 +160,7 @@ export function RightPanel() {
 							Audit log entries for the selected item.
 						</p>
 					)}
-					{activeTab === 'help' &&
-						(activePage === 'enrollment' ? (
-							<EnrollmentGuideContent />
-						) : (
-							<p className="text-(--text-sm) text-(--text-muted)">
-								Contextual help for the current module.
-							</p>
-						))}
+					{activeTab === 'help' && <DelegatedGuideContent />}
 				</div>
 			</div>
 		</div>
