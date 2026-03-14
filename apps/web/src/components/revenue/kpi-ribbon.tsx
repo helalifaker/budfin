@@ -1,8 +1,6 @@
 import Decimal from 'decimal.js';
-import { BarChart3, DollarSign, TrendingUp, Users } from 'lucide-react';
-import { formatRevenueGridAmount } from '../../lib/revenue-workspace';
-import { Counter } from '../shared/counter';
-import { KpiCard } from '../shared/kpi-card';
+import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 
 export type RevenueKpiRibbonProps = {
 	grossHt: string;
@@ -14,13 +12,64 @@ export type RevenueKpiRibbonProps = {
 	isStale: boolean;
 };
 
-function sarAmount(value: string): number {
-	return new Decimal(value).abs().toDecimalPlaces(0).toNumber();
-}
+type KpiCardDefinition = {
+	label: string;
+	value: string;
+	subtitle: string;
+	accent: 'blue' | 'red' | 'green' | 'default';
+};
 
-function formatSarLabel(value: string): string {
-	const amount = formatRevenueGridAmount(value);
-	return `SAR ${amount.text}`;
+const ACCENT_CLASSES: Record<KpiCardDefinition['accent'], string> = {
+	blue: 'border-l-(--color-info)',
+	red: 'border-l-(--color-error)',
+	green: 'border-l-(--color-success)',
+	default: 'border-l-(--workspace-border)',
+};
+
+function buildKpiCards({
+	grossHt,
+	totalDiscounts,
+	netRevenue,
+	otherRevenue,
+	totalOperatingRevenue,
+	avgPerStudent,
+}: Omit<RevenueKpiRibbonProps, 'isStale'>): KpiCardDefinition[] {
+	const gross = new Decimal(grossHt);
+	const discounts = new Decimal(totalDiscounts);
+	const discountRatio = gross.eq(0) ? '0.0' : discounts.div(gross).mul(100).toFixed(1);
+
+	return [
+		{
+			label: 'Gross Tuition HT',
+			value: formatMoney(grossHt, { showCurrency: true }),
+			subtitle: 'Primary tuition forecast',
+			accent: 'blue',
+		},
+		{
+			label: 'Total Discounts',
+			value: formatMoney(totalDiscounts, { showCurrency: true }),
+			subtitle: `${discountRatio}% of gross tuition`,
+			accent: 'red',
+		},
+		{
+			label: 'Net Revenue HT',
+			value: formatMoney(netRevenue, { showCurrency: true }),
+			subtitle: 'Headline tuition revenue',
+			accent: 'green',
+		},
+		{
+			label: 'Other Revenue',
+			value: formatMoney(otherRevenue, { showCurrency: true }),
+			subtitle: 'Registration, activities, exams',
+			accent: 'default',
+		},
+		{
+			label: 'Total Operating Revenue',
+			value: formatMoney(totalOperatingRevenue, { showCurrency: true }),
+			subtitle: `${formatMoney(avgPerStudent, { showCurrency: true })} avg/student`,
+			accent: 'green',
+		},
+	];
 }
 
 export function RevenueKpiRibbon({
@@ -32,73 +81,45 @@ export function RevenueKpiRibbon({
 	avgPerStudent,
 	isStale,
 }: RevenueKpiRibbonProps) {
-	const gross = new Decimal(grossHt);
-	const discounts = new Decimal(totalDiscounts);
-	const discountPct = gross.eq(0) ? '0.0' : discounts.div(gross).mul(100).toFixed(1);
-
-	const cards = [
-		{
-			key: 'net-tuition',
-			label: 'Net Tuition HT',
-			icon: DollarSign,
-			value: sarAmount(netRevenue),
-			subtitle: `${discountPct}% discount applied`,
-			accentColor: 'var(--color-success)',
-		},
-		{
-			key: 'other-revenue',
-			label: 'Other Revenue',
-			icon: TrendingUp,
-			value: sarAmount(otherRevenue),
-			subtitle: 'Registration, activities, exams',
-			accentColor: 'var(--accent-500)',
-		},
-		{
-			key: 'total-operating',
-			label: 'Total Operating Revenue',
-			icon: BarChart3,
-			value: sarAmount(totalOperatingRevenue),
-			subtitle: `${formatSarLabel(avgPerStudent)} avg/student`,
-			accentColor: 'var(--color-success)',
-		},
-		{
-			key: 'sar-per-student',
-			label: 'SAR per Student',
-			icon: Users,
-			value: sarAmount(avgPerStudent),
-			subtitle: 'Revenue intensity',
-			accentColor: 'var(--accent-500)',
-		},
-	] as const;
-
-	const sarFormatter = new Intl.NumberFormat('en-SA', {
-		style: 'decimal',
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 0,
+	const cards = buildKpiCards({
+		grossHt,
+		totalDiscounts,
+		netRevenue,
+		otherRevenue,
+		totalOperatingRevenue,
+		avgPerStudent,
 	});
 
 	return (
 		<div
-			className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+			className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5"
 			role="list"
 			aria-label="Revenue key performance indicators"
 		>
-			{cards.map((card, i) => (
-				<KpiCard
-					key={card.key}
-					label={card.label}
-					icon={card.icon}
-					index={i}
-					isStale={isStale}
-					accentColor={card.accentColor}
-					subtitle={card.subtitle}
+			{cards.map((card) => (
+				<div
+					key={card.label}
+					role="listitem"
+					className={cn(
+						'relative rounded-2xl border border-(--workspace-border) border-l-4 bg-(--workspace-bg-card) p-4 shadow-(--shadow-xs)',
+						ACCENT_CLASSES[card.accent],
+						isStale && 'opacity-60'
+					)}
 				>
-					<Counter
-						value={card.value}
-						formatter={(v) => `SAR ${sarFormatter.format(v)}`}
-						className="truncate font-[family-name:var(--font-mono)]"
-					/>
-				</KpiCard>
+					{isStale && (
+						<span
+							className="absolute right-4 top-4 size-2.5 animate-pulse rounded-full bg-(--color-stale)"
+							aria-hidden="true"
+						/>
+					)}
+					<div className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+						{card.label}
+					</div>
+					<div className="mt-2 font-[family-name:var(--font-mono)] text-(--text-xl) font-bold text-(--text-primary)">
+						{card.value}
+					</div>
+					<div className="mt-1 text-(--text-xs) text-(--text-secondary)">{card.subtitle}</div>
+				</div>
 			))}
 		</div>
 	);

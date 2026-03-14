@@ -217,40 +217,30 @@ describe('ForecastGrid', () => {
 		cleanup();
 	});
 
-	it('renders category rows via PlanningGrid with negative and summer formatting', () => {
+	it('renders the six category rows with negative and summer formatting', () => {
 		render(<ForecastGrid versionId={1} viewMode="category" period="both" />);
 
 		expect(screen.getByRole('grid', { name: 'Revenue forecast grid' })).toBeDefined();
 		expect(screen.getByText('Tuition Fees')).toBeDefined();
 		expect(screen.getByText('Discount Impact')).toBeDefined();
-		// Grand total appears in the footer rendered by PlanningGrid
-		expect(screen.getByText('TOTAL OPERATING REV')).toBeDefined();
+		expect(screen.getByText('Grand Total')).toBeDefined();
 		expect(screen.getByText('(175)')).toBeDefined();
 		expect(screen.getAllByText('-').length).toBeGreaterThan(0);
 	});
 
-	it('renders grade view with band group headers, subtotals, and grand total', () => {
+	it('renders 20 grade rows including band subtotals and grand total', () => {
 		render(<ForecastGrid versionId={1} viewMode="grade" period="both" />);
 		const grid = screen.getByRole('grid', { name: 'Revenue forecast grid' });
 
-		// Data rows: grade codes present in test entries
 		expect(screen.getByText('PS')).toBeDefined();
 		expect(screen.getByText('MS')).toBeDefined();
 		expect(screen.getByText('GS')).toBeDefined();
-
-		// Band group headers + subtotal labels (PlanningGrid renders both)
-		expect(screen.getAllByText('Maternelle').length).toBeGreaterThanOrEqual(1);
-		expect(screen.getAllByText('Elementaire').length).toBeGreaterThanOrEqual(1);
-		expect(screen.getAllByText('College').length).toBeGreaterThanOrEqual(1);
-		expect(screen.getAllByText('Lycee').length).toBeGreaterThanOrEqual(1);
-
-		// Grand total footer
+		expect(screen.getByText('Maternelle')).toBeDefined();
+		expect(screen.getByText('Elementaire')).toBeDefined();
+		expect(screen.getByText('College')).toBeDefined();
+		expect(screen.getByText('Lycee')).toBeDefined();
 		expect(screen.getByText('Grand Total')).toBeDefined();
-
-		// PlanningGrid renders: 1 header row + 4 band headers + 4 data rows + 4 subtotals + 1 grand total = ~14 rows
-		// (Only grades with entries appear as data rows: PS, MS, GS, CP)
-		const rows = within(grid).getAllByRole('row');
-		expect(rows.length).toBeGreaterThanOrEqual(10);
+		expect(within(grid).getAllByRole('row')).toHaveLength(21);
 	});
 
 	it('filters visible columns by period', () => {
@@ -266,12 +256,9 @@ describe('ForecastGrid', () => {
 
 		fireEvent.click(screen.getByText('RP'));
 
-		const selection = useRevenueSelectionStore.getState().selection;
-		expect(selection).not.toBeNull();
-		expect(selection?.id).toBe('tariff-RP');
-		expect(selection?.code).toBe('RP');
-		expect(selection?.label).toBe('RP');
-		expect(selection?.viewMode).toBe('tariff');
-		expect(selection?.rowType).toBe('data');
+		expect(useRevenueSelectionStore.getState().selection).toEqual({
+			label: 'RP',
+			viewMode: 'tariff',
+		});
 	});
 });

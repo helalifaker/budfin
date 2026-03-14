@@ -1,20 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 import { Button } from '../../components/ui/button';
 import { PageTransition } from '../../components/shared/page-transition';
-import { CalculateButton } from '../../components/shared/calculate-button';
 import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
 import { ForecastGrid } from '../../components/revenue/forecast-grid';
 import { RevenueExportButton } from '../../components/revenue/revenue-export-button';
-import {
-	RevenueExceptionFilter,
-	type RevenueExceptionFilterValue,
-} from '../../components/revenue/revenue-exception-filter';
 import { RevenueKpiRibbon } from '../../components/revenue/kpi-ribbon';
 import { RevenueSettingsDialog } from '../../components/revenue/revenue-settings-dialog';
+import { RevenueSetupChecklist } from '../../components/revenue/setup-checklist';
 import { RevenueStatusStrip } from '../../components/revenue/revenue-status-strip';
-import { useGradeLevels } from '../../hooks/use-grade-levels';
+import { useGradeLevels, type GradeBand } from '../../hooks/use-grade-levels';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useHeadcount } from '../../hooks/use-enrollment';
 import {
@@ -32,12 +28,8 @@ import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 import { useAuthStore } from '../../stores/auth-store';
 import '../../components/revenue/revenue-inspector';
-import '../../components/revenue/revenue-guide-content';
 
-type ViewMode = 'category' | 'grade' | 'nationality' | 'tariff';
-type BandFilter = 'ALL' | 'MATERNELLE' | 'ELEMENTAIRE' | 'COLLEGE' | 'LYCEE';
-
-const BAND_FILTERS: Array<{ value: BandFilter; label: string }> = [
+const BAND_FILTERS: Array<{ value: string; label: string }> = [
 	{ value: 'ALL', label: 'All' },
 	{ value: 'MATERNELLE', label: 'Mat' },
 	{ value: 'ELEMENTAIRE', label: 'Elem' },
@@ -47,7 +39,7 @@ const BAND_FILTERS: Array<{ value: BandFilter; label: string }> = [
 
 function ImportedBanner() {
 	return (
-		<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-4 py-3 text-(--text-sm) text-(--color-info)">
+		<div className="rounded-lg border border-(--color-info) bg-(--color-info-bg) px-3 py-2 text-(--text-sm) text-(--color-info)">
 			This version was imported. Review the loaded assumptions before recalculating revenue.
 		</div>
 	);
@@ -55,7 +47,7 @@ function ImportedBanner() {
 
 function ViewerBanner() {
 	return (
-		<div className="shrink-0 border-b border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-(--text-sm) text-(--text-secondary)">
+		<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-2 text-(--text-sm) text-(--text-secondary)">
 			Viewer access keeps this workspace in review mode.
 		</div>
 	);
@@ -66,11 +58,15 @@ export function RevenuePage() {
 		useWorkspaceContext();
 	const user = useAuthStore((state) => state.user);
 	const isViewer = user?.role === 'Viewer';
-	const [viewMode, setViewMode] = useState<ViewMode>('category');
-	const [bandFilter, setBandFilter] = useState<BandFilter>('ALL');
-	const [exceptionFilter, setExceptionFilter] = useState<RevenueExceptionFilterValue>('all');
+	const [viewMode, setViewMode] = useState<'category' | 'grade' | 'nationality' | 'tariff'>(
+		'category'
+	);
+	const [bandFilter, setBandFilter] = useState<GradeBand | 'ALL'>('ALL');
+	const [setupOpen, setSetupOpen] = useState(false);
+	const settingsButtonRef = useRef<HTMLButtonElement>(null);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
-	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
+	const closePanel = useRightPanelStore((state) => state.close);
+	const selection = useRevenueSelectionStore((state) => state.selection);
 	const clearSelection = useRevenueSelectionStore((state) => state.clearSelection);
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
 	const { data: versionsData } = useVersions(fiscalYear);
@@ -80,6 +76,8 @@ export function RevenuePage() {
 	const { data: gradeLevelsData } = useGradeLevels();
 	const calculateMutation = useCalculateRevenue(versionId);
 
+	const isFiltered = bandFilter !== 'ALL';
+
 	useEffect(() => {
 		setActivePage('revenue');
 		return () => {
@@ -88,40 +86,33 @@ export function RevenuePage() {
 		};
 	}, [clearSelection, setActivePage]);
 
-	// GP-03: When the right panel closes, clear selection
+	// GP-09: Clear selection when filter hides the selected row
 	useEffect(() => {
-		if (!isPanelOpen) {
-			clearSelection();
-		}
-	}, [isPanelOpen, clearSelection]);
-
-	function handleViewModeChange(value: string) {
-		if (!value) {
+		if (!isFiltered || !selection) {
 			return;
 		}
 
-		const nextMode = value as ViewMode;
-		setViewMode(nextMode);
-		clearSelection();
-		useRightPanelStore.getState().close();
-		if (nextMode !== 'grade') {
-			setBandFilter('ALL');
+		// In grade view, check if the selected row's grade belongs to the active band
+		if (viewMode === 'grade' && gradeLevelsData?.gradeLevels) {
+			const gradeLevel = gradeLevelsData.gradeLevels.find((gl) => gl.gradeCode === selection.label);
+			if (gradeLevel && gradeLevel.band !== bandFilter) {
+				clearSelection();
+				closePanel();
+			}
 		}
-	}
+	}, [
+		bandFilter,
+		clearSelection,
+		closePanel,
+		gradeLevelsData?.gradeLevels,
+		isFiltered,
+		selection,
+		viewMode,
+	]);
 
 	const period = useMemo<RevenueForecastPeriod>(() => {
 		return academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
 	}, [academicPeriod]);
-
-	// GP-08: When period changes, clear selection and close panel
-	const prevPeriod = useRef(period);
-	useEffect(() => {
-		if (prevPeriod.current !== period) {
-			clearSelection();
-			useRightPanelStore.getState().close();
-			prevPeriod.current = period;
-		}
-	}, [period, clearSelection]);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId) {
@@ -131,9 +122,12 @@ export function RevenuePage() {
 		return versionsData?.data.find((version) => version.id === versionId) ?? null;
 	}, [versionId, versionsData?.data]);
 
+	const handleSettingsClose = useCallback(() => {
+		settingsButtonRef.current?.focus();
+	}, []);
+
 	const isStale = currentVersion?.staleModules?.includes('REVENUE') ?? false;
 	const enrollmentStale = currentVersion?.staleModules?.includes('ENROLLMENT') ?? false;
-	const isImported = currentVersion?.dataSource === 'IMPORTED';
 	const downstreamStale = (currentVersion?.staleModules ?? []).filter(
 		(moduleName) => moduleName === 'STAFFING' || moduleName === 'PNL'
 	);
@@ -167,24 +161,27 @@ export function RevenuePage() {
 
 	return (
 		<PageTransition>
-			<div className="flex h-full min-h-0 flex-col overflow-hidden">
-				{/* Conditional banners */}
+			<div className="space-y-4 pb-6">
 				{(currentVersion?.status ?? versionStatus) !== 'Draft' && (
 					<VersionLockBanner
 						status={currentVersion?.status ?? versionStatus ?? 'Draft'}
 						versionName={currentVersion?.name ?? versionName ?? undefined}
 					/>
 				)}
-				{isImported && <ImportedBanner />}
+				{currentVersion?.dataSource === 'IMPORTED' && <ImportedBanner />}
 				{isViewer && <ViewerBanner />}
 
-				{/* Toolbar */}
-				<div className="flex shrink-0 items-center justify-between border-b border-(--workspace-border) px-6 py-2">
-					<div className="flex items-center gap-3">
+				<div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3 shadow-(--shadow-xs)">
+					<div className="flex flex-wrap items-center gap-3">
 						<ToggleGroup
 							type="single"
 							value={viewMode}
-							onValueChange={handleViewModeChange}
+							onValueChange={(value) => {
+								if (value) {
+									setViewMode(value as 'category' | 'grade' | 'nationality' | 'tariff');
+									clearSelection();
+								}
+							}}
 							aria-label="Revenue view mode"
 						>
 							<ToggleGroupItem value="category">Category</ToggleGroupItem>
@@ -210,7 +207,7 @@ export function RevenuePage() {
 								value={bandFilter}
 								onValueChange={(value) => {
 									if (value) {
-										setBandFilter(value as BandFilter);
+										setBandFilter(value as GradeBand | 'ALL');
 									}
 								}}
 								aria-label="Grade band filter"
@@ -222,18 +219,18 @@ export function RevenuePage() {
 								))}
 							</ToggleGroup>
 						)}
-
-						<RevenueExceptionFilter value={exceptionFilter} onChange={setExceptionFilter} />
 					</div>
 
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2">
 						<RevenueExportButton
 							rows={exportRows}
 							viewMode={viewMode}
 							period={period}
 							versionName={currentVersion?.name ?? 'revenue'}
+							bandFilter={bandFilter}
 						/>
 						<Button
+							ref={settingsButtonRef}
 							type="button"
 							variant="outline"
 							size="sm"
@@ -241,18 +238,22 @@ export function RevenuePage() {
 						>
 							{isViewer ? 'View Settings' : 'Revenue Settings'}
 						</Button>
+						<Button type="button" variant="outline" size="sm" onClick={() => setSetupOpen(true)}>
+							Setup
+						</Button>
 						{!isViewer && (
-							<CalculateButton
-								onCalculate={() => calculateMutation.mutate()}
-								isPending={calculateMutation.isPending}
-								isSuccess={calculateMutation.isSuccess}
-								isError={calculateMutation.isError}
-							/>
+							<Button
+								type="button"
+								size="sm"
+								disabled={calculateMutation.isPending}
+								onClick={() => calculateMutation.mutate()}
+							>
+								{calculateMutation.isPending ? 'Calculating...' : 'Calculate Revenue'}
+							</Button>
 						)}
 					</div>
 				</div>
 
-				{/* KPI ribbon */}
 				<RevenueKpiRibbon
 					grossHt={revenueResults?.totals.grossRevenueHt ?? '0.0000'}
 					totalDiscounts={revenueResults?.totals.discountAmount ?? '0.0000'}
@@ -263,7 +264,6 @@ export function RevenuePage() {
 					isStale={isStale}
 				/>
 
-				{/* Status strip */}
 				<RevenueStatusStrip
 					lastCalculated={currentVersion?.lastCalculatedAt ?? null}
 					enrollmentStale={enrollmentStale}
@@ -271,20 +271,29 @@ export function RevenuePage() {
 					readiness={readiness}
 				/>
 
-				{/* Grid zone */}
-				<div className="flex-1 min-h-0 overflow-hidden px-6 py-2">
-					<div className="h-full overflow-y-auto scrollbar-thin">
-						<ForecastGrid versionId={versionId} viewMode={viewMode} period={period} />
-					</div>
-				</div>
-			</div>
+				<ForecastGrid
+					versionId={versionId}
+					viewMode={viewMode}
+					period={period}
+					bandFilter={bandFilter}
+				/>
 
-			<RevenueSettingsDialog
-				versionId={versionId}
-				isViewer={isViewer}
-				readiness={readiness}
-				isImported={isImported}
-			/>
+				{readiness && (
+					<RevenueSetupChecklist
+						versionId={versionId}
+						lastCalculatedAt={currentVersion?.lastCalculatedAt}
+						readiness={readiness}
+						forceOpen={setupOpen}
+						onClose={() => setSetupOpen(false)}
+					/>
+				)}
+
+				<RevenueSettingsDialog
+					versionId={versionId}
+					isViewer={isViewer}
+					onClose={handleSettingsClose}
+				/>
+			</div>
 		</PageTransition>
 	);
 }

@@ -1,23 +1,26 @@
 import type { RevenueReadinessResponse } from '@budfin/types';
-import { StalePill } from '../shared/stale-pill';
-import { WorkspaceStatusStrip } from '../shared/workspace-status-strip';
-import type { StatusSection } from '../shared/workspace-status-strip';
+import { formatDateTime } from '../../lib/format-date';
+import { useRevenueSettingsDirtyStore } from '../../stores/revenue-settings-dirty-store';
 
 const STALE_LABELS: Record<string, string> = {
 	STAFFING: 'Staffing',
 	PNL: 'P&L',
 };
 
-function formatTimestamp(value: string | null): string {
-	if (!value) {
-		return 'Not yet calculated';
+function formatDownstreamModules(modules: string[]) {
+	if (modules.length === 0) {
+		return 'None';
 	}
 
-	return new Intl.DateTimeFormat('en-GB', {
-		timeZone: 'Asia/Riyadh',
-		dateStyle: 'medium',
-		timeStyle: 'short',
-	}).format(new Date(value));
+	return modules.map((module) => STALE_LABELS[module] ?? module).join(', ');
+}
+
+function formatReadiness(readiness: RevenueReadinessResponse | undefined) {
+	if (!readiness) {
+		return 'Loading readiness...';
+	}
+
+	return `${readiness.readyCount} of ${readiness.totalCount} complete`;
 }
 
 export function RevenueStatusStrip({
@@ -31,48 +34,41 @@ export function RevenueStatusStrip({
 	downstreamStale: string[];
 	readiness: RevenueReadinessResponse | undefined;
 }) {
-	const sections: StatusSection[] = [];
+	const dirtyFields = useRevenueSettingsDirtyStore((state) => state.dirtyFields);
+	const dirtyCount = [...dirtyFields.values()].reduce((sum, fields) => sum + fields.size, 0);
 
-	sections.push({
-		key: 'lastCalculated',
-		label: 'Last calculated',
-		value: formatTimestamp(lastCalculated),
-		severity: lastCalculated ? 'default' : 'warning',
-		priority: 0,
-	});
-
-	sections.push({
-		key: 'enrollment',
-		label: 'Enrollment',
-		value: enrollmentStale ? 'Stale' : 'Fresh',
-		severity: enrollmentStale ? 'warning' : 'success',
-		priority: 1,
-	});
-
-	if (downstreamStale.length > 0) {
-		sections.push({
-			key: 'downstream',
-			label: 'Downstream stale',
-			value: (
-				<span className="flex items-center gap-1.5">
-					{downstreamStale.map((mod) => (
-						<StalePill key={mod} label={STALE_LABELS[mod] ?? mod} />
-					))}
-				</span>
-			),
-			priority: 2,
-		});
-	}
-
-	if (readiness) {
-		sections.push({
-			key: 'config',
-			label: 'Config',
-			value: `${readiness.readyCount} of ${readiness.totalCount} complete`,
-			severity: readiness.overallReady ? 'success' : 'warning',
-			priority: 3,
-		});
-	}
-
-	return <WorkspaceStatusStrip sections={sections} />;
+	return (
+		<div
+			role="status"
+			aria-live="polite"
+			className="flex flex-wrap items-center gap-3 rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-(--text-sm) text-(--text-secondary)"
+		>
+			<span>
+				<span className="font-semibold">Last calculated:</span>{' '}
+				{lastCalculated ? formatDateTime(lastCalculated) : 'Not yet calculated'}
+			</span>
+			<span aria-hidden="true">|</span>
+			<span>
+				<span className="font-semibold">Enrollment:</span> {enrollmentStale ? 'Stale' : 'Fresh'}
+			</span>
+			<span aria-hidden="true">|</span>
+			<span>
+				<span className="font-semibold">Downstream:</span>{' '}
+				{formatDownstreamModules(downstreamStale)}
+			</span>
+			<span aria-hidden="true">|</span>
+			<span>
+				<span className="font-semibold">Config:</span> {formatReadiness(readiness)}
+			</span>
+			{dirtyCount > 0 && (
+				<>
+					<span aria-hidden="true">|</span>
+					<span className="text-(--color-warning)">
+						<span className="font-semibold">Unsaved:</span> {dirtyCount}{' '}
+						{dirtyCount === 1 ? 'setting' : 'settings'} changed since last calculation
+					</span>
+				</>
+			)}
+		</div>
+	);
 }

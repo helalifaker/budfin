@@ -1,4 +1,6 @@
 import { Download } from 'lucide-react';
+import { format } from 'date-fns';
+import { TZDate } from '@date-fns/tz';
 import type { RevenueViewMode } from '@budfin/types';
 import { Button } from '../ui/button';
 import {
@@ -16,6 +18,33 @@ import {
 
 function sanitizeFilename(value: string) {
 	return value.replace(/\s+/g, '-').toLowerCase();
+}
+
+function buildFilenameBase({
+	versionName,
+	viewMode,
+	period,
+	bandFilter,
+}: {
+	versionName: string;
+	viewMode: RevenueViewMode;
+	period: RevenueForecastPeriod;
+	bandFilter: string;
+}) {
+	const parts = ['revenue', sanitizeFilename(versionName), viewMode];
+
+	if (period !== 'both') {
+		parts.push(period);
+	}
+
+	if (bandFilter !== 'ALL') {
+		parts.push(sanitizeFilename(bandFilter));
+	}
+
+	const dateStamp = format(new TZDate(Date.now(), 'Asia/Riyadh'), 'yyyy-MM-dd');
+	parts.push(dateStamp);
+
+	return parts.join('-');
 }
 
 function buildExportRows({
@@ -48,11 +77,13 @@ export function RevenueExportButton({
 	viewMode,
 	period,
 	versionName,
+	bandFilter = 'ALL',
 }: {
 	rows: RevenueForecastGridRow[];
 	viewMode: RevenueViewMode;
 	period: RevenueForecastPeriod;
 	versionName: string;
+	bandFilter?: string;
 }) {
 	const visibleMonths = getVisibleRevenueMonths(period);
 	const headers = [
@@ -69,10 +100,8 @@ export function RevenueExportButton({
 
 		const dataRows = buildExportRows({ rows, period });
 		const csv = [headers.join(','), ...dataRows.map((row) => row.join(','))].join('\n');
-		triggerDownload(
-			`revenue-${sanitizeFilename(versionName)}-${viewMode}.csv`,
-			new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-		);
+		const basename = buildFilenameBase({ versionName, viewMode, period, bandFilter });
+		triggerDownload(`${basename}.csv`, new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
 	}
 
 	async function handleExportXlsx() {
@@ -92,8 +121,9 @@ export function RevenueExportButton({
 			buffer instanceof ArrayBuffer
 				? new Uint8Array(buffer)
 				: Uint8Array.from(new Uint8Array(buffer as ArrayBufferLike));
+		const basename = buildFilenameBase({ versionName, viewMode, period, bandFilter });
 		triggerDownload(
-			`revenue-${sanitizeFilename(versionName)}-${viewMode}.xlsx`,
+			`${basename}.xlsx`,
 			new Blob([bytes], {
 				type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 			})
