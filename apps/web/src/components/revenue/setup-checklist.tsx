@@ -15,7 +15,7 @@ type RevenueSetupChecklistProps = {
 const AREA_CONFIG: Array<{
 	key: keyof Pick<
 		RevenueReadinessResponse,
-		'feeGrid' | 'tariffAssignment' | 'discounts' | 'otherRevenue'
+		'feeGrid' | 'tariffAssignment' | 'discounts' | 'derivedRevenueSettings' | 'otherRevenue'
 	>;
 	label: string;
 	tab: RevenueSettingsTab;
@@ -23,6 +23,7 @@ const AREA_CONFIG: Array<{
 	{ key: 'feeGrid', label: 'Fee Grid', tab: 'feeGrid' },
 	{ key: 'tariffAssignment', label: 'Tariff Assignment', tab: 'tariffAssignment' },
 	{ key: 'discounts', label: 'Discounts', tab: 'discounts' },
+	{ key: 'derivedRevenueSettings', label: 'Derived Revenue Rates', tab: 'otherRevenue' },
 	{ key: 'otherRevenue', label: 'Other Revenue', tab: 'otherRevenue' },
 ];
 
@@ -154,7 +155,7 @@ export function RevenueSetupChecklist({
 
 				<div className="mt-5 flex items-center justify-between gap-3 border-t border-(--workspace-border) pt-4">
 					<div className="text-(--text-sm) text-(--text-secondary)">
-						{readiness.readyCount} of 4 complete
+						{readiness.readyCount} of {readiness.totalCount} complete
 					</div>
 					<div className="flex items-center gap-2">
 						<Button type="button" variant="outline" size="sm" onClick={handleSkip}>

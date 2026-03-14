@@ -1,123 +1,174 @@
 [
 	{
-		"lineItemName": "DAI — Maternelle",
-		"annualAmount": "600000.0000",
-		"distributionMethod": "ACADEMIC_10",
-		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Registration Fees"
-	},
-	{
-		"lineItemName": "DAI — Elementaire",
-		"annualAmount": "1100000.0000",
-		"distributionMethod": "ACADEMIC_10",
-		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Registration Fees"
-	},
-	{
-		"lineItemName": "DAI — College",
-		"annualAmount": "1350000.0000",
-		"distributionMethod": "ACADEMIC_10",
-		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Registration Fees"
-	},
-	{
-		"lineItemName": "DAI — Lycee",
-		"annualAmount": "905000.0000",
-		"distributionMethod": "ACADEMIC_10",
-		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Registration Fees"
-	},
-	{
-		"lineItemName": "DPI Revenue",
-		"annualAmount": "450000.0000",
+		"lineItemName": "DAI - Francais",
+		"annualAmount": "0.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": [1, 9],
-		"ifrsCategory": "Registration Fees"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "DAI"
 	},
 	{
-		"lineItemName": "Frais de Dossier",
-		"annualAmount": "350000.0000",
+		"lineItemName": "DAI - Nationaux",
+		"annualAmount": "0.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": [3, 4, 5],
-		"ifrsCategory": "Registration Fees"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "DAI"
 	},
 	{
-		"lineItemName": "Examination Fees — BAC",
-		"annualAmount": "78000.0000",
+		"lineItemName": "DAI - Autres",
+		"annualAmount": "0.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": [3],
-		"ifrsCategory": "Examination Fees"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "DAI"
 	},
 	{
-		"lineItemName": "Examination Fees — DNB",
-		"annualAmount": "69500.0000",
+		"lineItemName": "DPI - Francais",
+		"annualAmount": "0.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": [3],
-		"ifrsCategory": "Examination Fees"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "DPI"
 	},
 	{
-		"lineItemName": "Examination Fees — EAF",
-		"annualAmount": "60000.0000",
+		"lineItemName": "DPI - Nationaux",
+		"annualAmount": "0.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": [4],
-		"ifrsCategory": "Examination Fees"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "DPI"
 	},
 	{
-		"lineItemName": "Examination Fees — SIELE",
-		"annualAmount": "42000.0000",
+		"lineItemName": "DPI - Autres",
+		"annualAmount": "0.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": [5],
-		"ifrsCategory": "Examination Fees"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "DPI"
 	},
 	{
-		"lineItemName": "After-School Activities",
-		"annualAmount": "280000.0000",
-		"distributionMethod": "ACADEMIC_10",
+		"lineItemName": "Frais de Dossier - Francais",
+		"annualAmount": "0.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Activities & Services"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "FRAIS_DOSSIER"
 	},
 	{
-		"lineItemName": "Daycare Revenue",
-		"annualAmount": "195000.0000",
-		"distributionMethod": "ACADEMIC_10",
+		"lineItemName": "Frais de Dossier - Nationaux",
+		"annualAmount": "0.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Activities & Services"
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "FRAIS_DOSSIER"
 	},
 	{
-		"lineItemName": "Class Photos Revenue",
-		"annualAmount": "35000.0000",
+		"lineItemName": "Frais de Dossier - Autres",
+		"annualAmount": "0.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
+		"weightArray": null,
+		"specificMonths": [5, 6],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "FRAIS_DOSSIER"
+	},
+	{
+		"lineItemName": "BAC",
+		"annualAmount": "0.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
+		"weightArray": null,
+		"specificMonths": [4, 5],
+		"ifrsCategory": "Examination Fees",
+		"computeMethod": "EXAM_BAC"
+	},
+	{
+		"lineItemName": "DNB",
+		"annualAmount": "0.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
+		"weightArray": null,
+		"specificMonths": [4, 5],
+		"ifrsCategory": "Examination Fees",
+		"computeMethod": "EXAM_DNB"
+	},
+	{
+		"lineItemName": "EAF",
+		"annualAmount": "0.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
+		"weightArray": null,
+		"specificMonths": [4, 5],
+		"ifrsCategory": "Examination Fees",
+		"computeMethod": "EXAM_EAF"
+	},
+	{
+		"lineItemName": "Evaluation - Primaire",
+		"annualAmount": "0.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
 		"specificMonths": [10, 11],
-		"ifrsCategory": "Activities & Services"
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "EVAL_PRIMAIRE"
 	},
 	{
-		"lineItemName": "PSG Academy Rental",
-		"annualAmount": "120000.0000",
+		"lineItemName": "Evaluation - College+Lycee",
+		"annualAmount": "0.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
+		"weightArray": null,
+		"specificMonths": [10, 11],
+		"ifrsCategory": "Registration Fees",
+		"computeMethod": "EVAL_SECONDAIRE"
+	},
+	{
+		"lineItemName": "APS",
+		"annualAmount": "1230000.0000",
+		"distributionMethod": "ACADEMIC_10",
+		"weightArray": null,
+		"specificMonths": null,
+		"ifrsCategory": "Activities & Services",
+		"computeMethod": null
+	},
+	{
+		"lineItemName": "Garderie",
+		"annualAmount": "30000.0000",
 		"distributionMethod": "YEAR_ROUND_12",
 		"weightArray": null,
 		"specificMonths": null,
-		"ifrsCategory": "Activities & Services"
+		"ifrsCategory": "Activities & Services",
+		"computeMethod": null
 	},
 	{
-		"lineItemName": "Evaluation Fees",
-		"annualAmount": "87500.0000",
+		"lineItemName": "Class Photos",
+		"annualAmount": "52800.0000",
 		"distributionMethod": "SPECIFIC_PERIOD",
 		"weightArray": null,
-		"specificMonths": [1, 2, 3],
-		"ifrsCategory": "Registration Fees"
+		"specificMonths": [10, 11],
+		"ifrsCategory": "Activities & Services",
+		"computeMethod": null
+	},
+	{
+		"lineItemName": "PSG Academy Rental",
+		"annualAmount": "51230.0000",
+		"distributionMethod": "YEAR_ROUND_12",
+		"weightArray": null,
+		"specificMonths": null,
+		"ifrsCategory": "Activities & Services",
+		"computeMethod": null
+	},
+	{
+		"lineItemName": "SIELE",
+		"annualAmount": "15000.0000",
+		"distributionMethod": "SPECIFIC_PERIOD",
+		"weightArray": null,
+		"specificMonths": [5],
+		"ifrsCategory": "Examination Fees",
+		"computeMethod": null
 	},
 	{
 		"lineItemName": "Bourses AEFE",
@@ -125,7 +176,8 @@
 		"distributionMethod": "YEAR_ROUND_12",
 		"weightArray": null,
 		"specificMonths": null,
-		"ifrsCategory": "Other Revenue"
+		"ifrsCategory": "Other Revenue",
+		"computeMethod": null
 	},
 	{
 		"lineItemName": "Bourses AESH",
@@ -133,38 +185,7 @@
 		"distributionMethod": "YEAR_ROUND_12",
 		"weightArray": null,
 		"specificMonths": null,
-		"ifrsCategory": "Other Revenue"
-	},
-	{
-		"lineItemName": "Transport Service — Buses",
-		"annualAmount": "680000.0000",
-		"distributionMethod": "ACADEMIC_10",
-		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Activities & Services"
-	},
-	{
-		"lineItemName": "Cafeteria Concession",
-		"annualAmount": "95000.0000",
-		"distributionMethod": "YEAR_ROUND_12",
-		"weightArray": null,
-		"specificMonths": null,
-		"ifrsCategory": "Other Revenue"
-	},
-	{
-		"lineItemName": "Uniform Sales Commission",
-		"annualAmount": "45000.0000",
-		"distributionMethod": "SPECIFIC_PERIOD",
-		"weightArray": null,
-		"specificMonths": [8, 9],
-		"ifrsCategory": "Other Revenue"
-	},
-	{
-		"lineItemName": "Summer Camp Revenue",
-		"annualAmount": "150000.0000",
-		"distributionMethod": "SPECIFIC_PERIOD",
-		"weightArray": null,
-		"specificMonths": [7, 8],
-		"ifrsCategory": "Activities & Services"
+		"ifrsCategory": "Other Revenue",
+		"computeMethod": null
 	}
 ]

@@ -16,7 +16,7 @@ vi.mock('../../lib/prisma.js', () => {
 			count: vi.fn(),
 		},
 		otherRevenueItem: {
-			count: vi.fn(),
+			findMany: vi.fn(),
 		},
 		discountPolicy: {
 			findMany: vi.fn(),
@@ -27,6 +27,9 @@ vi.mock('../../lib/prisma.js', () => {
 		nationalityBreakdown: {
 			findMany: vi.fn(),
 		},
+		versionRevenueSettings: {
+			findUnique: vi.fn(),
+		},
 	};
 	return { prisma: mockPrisma };
 });
@@ -36,10 +39,11 @@ import { prisma } from '../../lib/prisma.js';
 const mockPrisma = prisma as unknown as {
 	budgetVersion: { findUnique: ReturnType<typeof vi.fn> };
 	feeGrid: { count: ReturnType<typeof vi.fn> };
-	otherRevenueItem: { count: ReturnType<typeof vi.fn> };
+	otherRevenueItem: { findMany: ReturnType<typeof vi.fn> };
 	discountPolicy: { findMany: ReturnType<typeof vi.fn> };
 	enrollmentDetail: { findMany: ReturnType<typeof vi.fn> };
 	nationalityBreakdown: { findMany: ReturnType<typeof vi.fn> };
+	versionRevenueSettings: { findUnique: ReturnType<typeof vi.fn> };
 };
 
 let app: FastifyInstance;
@@ -77,16 +81,153 @@ beforeEach(async () => {
 
 	mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 1 });
 	mockPrisma.feeGrid.count.mockResolvedValue(0);
-	mockPrisma.otherRevenueItem.count.mockResolvedValue(0);
+	mockPrisma.otherRevenueItem.findMany.mockResolvedValue([]);
 	mockPrisma.discountPolicy.findMany.mockResolvedValue([]);
 	mockPrisma.enrollmentDetail.findMany.mockResolvedValue([]);
 	mockPrisma.nationalityBreakdown.findMany.mockResolvedValue([]);
+	mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue({ id: 1 });
 });
 
 describe('GET /revenue/readiness', () => {
-	it('returns overallReady true when all four areas are configured', async () => {
+	it('returns overallReady true when all five areas are configured', async () => {
 		mockPrisma.feeGrid.count.mockResolvedValue(90);
-		mockPrisma.otherRevenueItem.count.mockResolvedValueOnce(20).mockResolvedValueOnce(20);
+		mockPrisma.otherRevenueItem.findMany.mockResolvedValue([
+			{
+				lineItemName: 'APS',
+				annualAmount: '1230000.0000',
+				distributionMethod: 'ACADEMIC_10',
+				weightArray: null,
+				specificMonths: [],
+				ifrsCategory: 'Activities & Services',
+				computeMethod: null,
+			},
+			{
+				lineItemName: 'DAI - Francais',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'DAI',
+			},
+			{
+				lineItemName: 'DAI - Nationaux',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'DAI',
+			},
+			{
+				lineItemName: 'DAI - Autres',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'DAI',
+			},
+			{
+				lineItemName: 'DPI - Francais',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'DPI',
+			},
+			{
+				lineItemName: 'DPI - Nationaux',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'DPI',
+			},
+			{
+				lineItemName: 'DPI - Autres',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'DPI',
+			},
+			{
+				lineItemName: 'Frais de Dossier - Francais',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'FRAIS_DOSSIER',
+			},
+			{
+				lineItemName: 'Frais de Dossier - Nationaux',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'FRAIS_DOSSIER',
+			},
+			{
+				lineItemName: 'Frais de Dossier - Autres',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'FRAIS_DOSSIER',
+			},
+			{
+				lineItemName: 'BAC',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [4, 5],
+				ifrsCategory: 'Examination Fees',
+				computeMethod: 'EXAM_BAC',
+			},
+			{
+				lineItemName: 'DNB',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [4, 5],
+				ifrsCategory: 'Examination Fees',
+				computeMethod: 'EXAM_DNB',
+			},
+			{
+				lineItemName: 'EAF',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [4, 5],
+				ifrsCategory: 'Examination Fees',
+				computeMethod: 'EXAM_EAF',
+			},
+			{
+				lineItemName: 'Evaluation - Primaire',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [10, 11],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'EVAL_PRIMAIRE',
+			},
+			{
+				lineItemName: 'Evaluation - College+Lycee',
+				annualAmount: '0.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [10, 11],
+				ifrsCategory: 'Registration Fees',
+				computeMethod: 'EVAL_SECONDAIRE',
+			},
+		]);
 		mockPrisma.discountPolicy.findMany.mockResolvedValue([
 			{ tariff: 'RP', discountRate: '0.250000' },
 			{ tariff: 'R3+', discountRate: '0.100000' },
@@ -111,10 +252,11 @@ describe('GET /revenue/readiness', () => {
 			feeGrid: { total: 90, complete: 90, ready: true },
 			tariffAssignment: { reconciled: true, ready: true },
 			discounts: { rpRate: '0.250000', r3Rate: '0.100000', ready: true },
-			otherRevenue: { total: 20, configured: 20, ready: true },
+			derivedRevenueSettings: { exists: true, ready: true },
+			otherRevenue: { total: 15, configured: 15, ready: true },
 			overallReady: true,
-			readyCount: 4,
-			totalCount: 4,
+			readyCount: 5,
+			totalCount: 5,
 		});
 	});
 
@@ -131,15 +273,36 @@ describe('GET /revenue/readiness', () => {
 			feeGrid: { total: 0, complete: 0, ready: false },
 			tariffAssignment: { reconciled: false, ready: false },
 			discounts: { rpRate: null, r3Rate: null, ready: false },
+			derivedRevenueSettings: { exists: true, ready: true },
 			otherRevenue: { total: 0, configured: 0, ready: false },
 			overallReady: false,
-			readyCount: 0,
-			totalCount: 4,
+			readyCount: 1,
+			totalCount: 5,
 		});
 	});
 
 	it('returns partial readiness when only discounts and other revenue are configured', async () => {
-		mockPrisma.otherRevenueItem.count.mockResolvedValueOnce(2).mockResolvedValueOnce(2);
+		mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue(null);
+		mockPrisma.otherRevenueItem.findMany.mockResolvedValue([
+			{
+				lineItemName: 'APS',
+				annualAmount: '5000.0000',
+				distributionMethod: 'ACADEMIC_10',
+				weightArray: null,
+				specificMonths: [],
+				ifrsCategory: 'Activities & Services',
+				computeMethod: null,
+			},
+			{
+				lineItemName: 'Garderie',
+				annualAmount: '5000.0000',
+				distributionMethod: 'YEAR_ROUND_12',
+				weightArray: null,
+				specificMonths: [],
+				ifrsCategory: 'Activities & Services',
+				computeMethod: null,
+			},
+		]);
 		mockPrisma.discountPolicy.findMany.mockResolvedValue([
 			{ tariff: 'RP', discountRate: '0.250000' },
 			{ tariff: 'R3+', discountRate: '0.100000' },
@@ -155,11 +318,12 @@ describe('GET /revenue/readiness', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.overallReady).toBe(false);
-		expect(body.readyCount).toBe(2);
+		expect(body.readyCount).toBe(1);
 		expect(body.feeGrid.ready).toBe(false);
 		expect(body.tariffAssignment.ready).toBe(false);
 		expect(body.discounts.ready).toBe(true);
-		expect(body.otherRevenue.ready).toBe(true);
+		expect(body.derivedRevenueSettings.ready).toBe(false);
+		expect(body.otherRevenue.ready).toBe(false);
 	});
 
 	it('returns 404 for a missing version', async () => {

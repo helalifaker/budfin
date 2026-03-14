@@ -229,6 +229,10 @@ function RevenueInspectorDefaultView() {
 						{ label: 'Fee Grid', ready: readiness?.feeGrid.ready ?? false },
 						{ label: 'Tariff Assignment', ready: readiness?.tariffAssignment.ready ?? false },
 						{ label: 'Discounts', ready: readiness?.discounts.ready ?? false },
+						{
+							label: 'Derived Revenue Rates',
+							ready: readiness?.derivedRevenueSettings.ready ?? false,
+						},
 						{ label: 'Other Revenue', ready: readiness?.otherRevenue.ready ?? false },
 					].map((item) => (
 						<div key={item.label} className="flex items-center justify-between">

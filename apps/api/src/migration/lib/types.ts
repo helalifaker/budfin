@@ -58,6 +58,7 @@ export interface OtherRevenueFixture {
 	weightArray: number[] | null;
 	specificMonths: number[] | null;
 	ifrsCategory: string;
+	computeMethod: string | null;
 }
 
 export interface StaffCostsFixture {

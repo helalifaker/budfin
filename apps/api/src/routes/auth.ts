@@ -16,7 +16,33 @@ const loginBodySchema = z.object({
 	password: z.string(),
 });
 
+const REFRESH_COOKIE_PATH = '/api/v1/auth';
+const REFRESH_COOKIE_MAX_AGE_SECONDS = 8 * 60 * 60;
+
 type ConfigClient = Pick<typeof prisma, 'systemConfig'>;
+
+function shouldUseSecureRefreshCookie() {
+	return process.env.NODE_ENV === 'production';
+}
+
+function buildRefreshCookieOptions() {
+	return {
+		httpOnly: true,
+		secure: shouldUseSecureRefreshCookie(),
+		sameSite: 'strict' as const,
+		path: REFRESH_COOKIE_PATH,
+		maxAge: REFRESH_COOKIE_MAX_AGE_SECONDS,
+	};
+}
+
+function buildRefreshCookieClearOptions() {
+	return {
+		httpOnly: true,
+		secure: shouldUseSecureRefreshCookie(),
+		sameSite: 'strict' as const,
+		path: REFRESH_COOKIE_PATH,
+	};
+}
 
 async function getConfigValue(
 	key: string,
@@ -228,13 +254,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			});
 
 			// 7. Set refresh token cookie
-			reply.setCookie('refresh_token', family.token, {
-				httpOnly: true,
-				secure: true,
-				sameSite: 'strict',
-				path: '/api/v1/auth',
-				maxAge: 8 * 60 * 60,
-			});
+			reply.setCookie('refresh_token', family.token, buildRefreshCookieOptions());
 
 			return {
 				access_token: accessToken,
@@ -256,10 +276,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			const ip = request.ip;
 
 			if (!rawToken) {
-				return reply.status(401).send({
-					code: 'MISSING_TOKEN',
-					message: 'No refresh token provided',
-				});
+				return reply.status(204).send();
 			}
 
 			const tokenHash = hashRefreshToken(rawToken);
@@ -280,9 +297,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			// Check for replay (revoked token reuse)
 			if (existing.isRevoked) {
 				await detectReplay(tokenHash, existing.userId, ip);
-				reply.clearCookie('refresh_token', {
-					path: '/api/v1/auth',
-				});
+				reply.clearCookie('refresh_token', buildRefreshCookieClearOptions());
 				return reply.status(401).send({
 					code: 'REFRESH_TOKEN_REUSE',
 					message: 'Token reuse detected',
@@ -303,9 +318,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 						ipAddress: ip,
 					},
 				});
-				reply.clearCookie('refresh_token', {
-					path: '/api/v1/auth',
-				});
+				reply.clearCookie('refresh_token', buildRefreshCookieClearOptions());
 				return reply.status(401).send({
 					code: 'ACCOUNT_DISABLED',
 					message: 'Account is disabled',
@@ -324,7 +337,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			const rotated = await rotateToken(tokenHash, existing.familyId, ip);
 
 			if (!rotated) {
-				reply.clearCookie('refresh_token', { path: '/api/v1/auth' });
+				reply.clearCookie('refresh_token', buildRefreshCookieClearOptions());
 				return reply.status(401).send({
 					code: 'REFRESH_TOKEN_REUSE',
 					message: 'Token reuse detected',
@@ -340,13 +353,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 			});
 
 			// Set new refresh cookie
-			reply.setCookie('refresh_token', rotated.token, {
-				httpOnly: true,
-				secure: true,
-				sameSite: 'strict',
-				path: '/api/v1/auth',
-				maxAge: 8 * 60 * 60,
-			});
+			reply.setCookie('refresh_token', rotated.token, buildRefreshCookieOptions());
 
 			return {
 				access_token: accessToken,
@@ -403,9 +410,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 				},
 			});
 
-			reply.clearCookie('refresh_token', {
-				path: '/api/v1/auth',
-			});
+			reply.clearCookie('refresh_token', buildRefreshCookieClearOptions());
 
 			return reply.status(204).send();
 		},

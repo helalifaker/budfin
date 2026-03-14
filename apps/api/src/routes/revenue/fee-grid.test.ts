@@ -279,6 +279,36 @@ describe('PUT /fee-grid', () => {
 		expect(res.json().errors).toHaveLength(1);
 	});
 
+	it('returns 422 when AY2 DAI differs across tariffs for the same grade and nationality', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/fee-grid`,
+			headers: authHeader(token),
+			payload: {
+				entries: [
+					{
+						...validEntry,
+						academicPeriod: 'AY2',
+						tariff: 'Plein',
+						dai: '500.0000',
+					},
+					{
+						...validEntry,
+						academicPeriod: 'AY2',
+						tariff: 'RP',
+						dai: '550.0000',
+					},
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(422);
+		expect(res.json().code).toBe('DAI_MISMATCH');
+	});
+
 	it('accepts Nationaux with 0% VAT (tuitionHt = tuitionTtc)', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
 

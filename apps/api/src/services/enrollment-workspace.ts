@@ -181,6 +181,9 @@ export async function calculateAndPersistEnrollmentWorkspace({
 				gradeLevel: true,
 				retentionRate: true,
 				lateralEntryCount: true,
+				lateralWeightFr: true,
+				lateralWeightNat: true,
+				lateralWeightAut: true,
 			},
 		}),
 		tx.enrollmentHeadcount.findMany({
@@ -240,6 +243,9 @@ export async function calculateAndPersistEnrollmentWorkspace({
 				gradeLevel: row.gradeLevel as GradeCode,
 				retentionRate: Number(row.retentionRate),
 				manualAdjustment: row.lateralEntryCount,
+				lateralWeightFr: row.lateralWeightFr,
+				lateralWeightNat: row.lateralWeightNat,
+				lateralWeightAut: row.lateralWeightAut,
 			},
 		])
 	);
@@ -435,6 +441,37 @@ export async function calculateAndPersistEnrollmentWorkspace({
 	});
 
 	await Promise.all([
+		...cohortResults.map((row) =>
+			tx.cohortParameter.upsert({
+				where: {
+					versionId_gradeLevel: {
+						versionId,
+						gradeLevel: row.gradeLevel,
+					},
+				},
+				create: {
+					versionId,
+					gradeLevel: row.gradeLevel,
+					retentionRate: row.retentionRate,
+					lateralEntryCount: persistedEntries.get(row.gradeLevel)?.manualAdjustment ?? 0,
+					lateralWeightFr: persistedEntries.get(row.gradeLevel)?.lateralWeightFr ?? 0,
+					lateralWeightNat: persistedEntries.get(row.gradeLevel)?.lateralWeightNat ?? 0,
+					lateralWeightAut: persistedEntries.get(row.gradeLevel)?.lateralWeightAut ?? 0,
+					appliedRetentionRate: row.appliedRetentionRate,
+					retainedFromPrior: row.retainedFromPrior,
+					historicalTargetHeadcount: row.historicalTargetHeadcount,
+					derivedLaterals: row.derivedLaterals,
+					usesConfiguredRetention: row.usesConfiguredRetention,
+				},
+				update: {
+					appliedRetentionRate: row.appliedRetentionRate,
+					retainedFromPrior: row.retainedFromPrior,
+					historicalTargetHeadcount: row.historicalTargetHeadcount,
+					derivedLaterals: row.derivedLaterals,
+					usesConfiguredRetention: row.usesConfiguredRetention,
+				},
+			})
+		),
 		...cohortResults.map((row) =>
 			tx.enrollmentHeadcount.upsert({
 				where: {

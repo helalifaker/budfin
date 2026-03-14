@@ -49,16 +49,18 @@ export type {
 	HistoricalHeadcountPoint,
 } from './cohort-calculations.js';
 
-export { DISTRIBUTION_METHODS, IFRS_CATEGORIES } from './revenue.js';
+export { DISTRIBUTION_METHODS, IFRS_CATEGORIES, OTHER_REVENUE_COMPUTE_METHODS } from './revenue.js';
 
 export type {
 	DistributionMethod,
 	IfrsCategory,
+	OtherRevenueComputeMethod,
 	FeeGridEntry,
 	DiscountEntry,
 	RevenueViewMode,
 	RevenueSettingsTab,
 	OtherRevenueItem,
+	RevenueSettings,
 	MonthlyRevenueEntry,
 	MonthlyOtherRevenueEntry,
 	RevenueTotals,
@@ -69,6 +71,7 @@ export type {
 	FeeGridReadiness,
 	TariffAssignmentReadiness,
 	DiscountReadiness,
+	DerivedRevenueSettingsReadiness,
 	OtherRevenueReadiness,
 	RevenueExecutiveSummary,
 	RevenueReadinessResponse,

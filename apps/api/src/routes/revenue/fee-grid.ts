@@ -45,6 +45,28 @@ const VAT_RATE = new Decimal('0.15');
 const VAT_TOLERANCE = new Decimal('0.01');
 const FEE_GRID_STALE_MODULES = ['REVENUE', 'PNL'] as const;
 
+function validateAy2DaiConsistency(entries: Array<z.infer<typeof feeGridEntrySchema>>) {
+	const grouped = new Map<string, Set<string>>();
+
+	for (const entry of entries) {
+		if (entry.academicPeriod !== 'AY2') {
+			continue;
+		}
+
+		const key = `${entry.gradeLevel}|${entry.nationality}`;
+		const values = grouped.get(key) ?? new Set<string>();
+		values.add(new Decimal(entry.dai).toFixed(4));
+		grouped.set(key, values);
+	}
+
+	return [...grouped.entries()]
+		.filter(([, values]) => values.size > 1)
+		.map(([key, values]) => ({
+			key,
+			values: [...values],
+		}));
+}
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 
 export async function feeGridRoutes(app: FastifyInstance) {
@@ -162,6 +184,15 @@ export async function feeGridRoutes(app: FastifyInstance) {
 					code: 'VAT_MISMATCH',
 					message: 'tuition_ht does not match tuition_ttc / (1 + VAT_rate)',
 					errors: vatErrors,
+				});
+			}
+
+			const daiErrors = validateAy2DaiConsistency(entries);
+			if (daiErrors.length > 0) {
+				return reply.status(422).send({
+					code: 'DAI_MISMATCH',
+					message: 'AY2 DAI must be identical across tariffs for the same grade and nationality.',
+					errors: daiErrors,
 				});
 			}
 

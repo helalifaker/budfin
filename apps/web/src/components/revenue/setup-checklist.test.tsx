@@ -11,10 +11,11 @@ function makeReadiness(
 		feeGrid: { total: 0, complete: 0, ready: false },
 		tariffAssignment: { reconciled: false, ready: false },
 		discounts: { rpRate: null, r3Rate: null, ready: false },
+		derivedRevenueSettings: { exists: false, ready: false },
 		otherRevenue: { total: 0, configured: 0, ready: false },
 		overallReady: false,
 		readyCount: 0,
-		totalCount: 4,
+		totalCount: 5,
 		...overrides,
 	};
 }

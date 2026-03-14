@@ -43,6 +43,7 @@ export async function importOtherRevenue(
 					weightArray: item.weightArray ? JSON.parse(JSON.stringify(item.weightArray)) : undefined,
 					specificMonths: item.specificMonths ?? [],
 					ifrsCategory: item.ifrsCategory,
+					computeMethod: item.computeMethod ?? null,
 					updatedBy: userId,
 				},
 				create: {
@@ -53,6 +54,7 @@ export async function importOtherRevenue(
 					weightArray: item.weightArray ? JSON.parse(JSON.stringify(item.weightArray)) : undefined,
 					specificMonths: item.specificMonths ?? [],
 					ifrsCategory: item.ifrsCategory,
+					computeMethod: item.computeMethod ?? null,
 					createdBy: userId,
 				},
 			});

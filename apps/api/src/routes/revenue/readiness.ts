@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
-import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { Decimal } from 'decimal.js';
 import { prisma } from '../../lib/prisma.js';
+import { validateCanonicalDynamicOtherRevenueItems } from '../../services/revenue-config.js';
 
 const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
@@ -73,18 +73,23 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 
 			const [
 				feeGridTotal,
-				otherRevenueTotal,
-				otherRevenueConfigured,
+				otherRevenueItems,
 				discountPolicies,
 				enrollmentDetails,
 				nationalityBreakdown,
+				revenueSettings,
 			] = await Promise.all([
 				prisma.feeGrid.count({ where: { versionId } }),
-				prisma.otherRevenueItem.count({ where: { versionId } }),
-				prisma.otherRevenueItem.count({
-					where: {
-						versionId,
-						annualAmount: { gt: new Prisma.Decimal(0) },
+				prisma.otherRevenueItem.findMany({
+					where: { versionId },
+					select: {
+						lineItemName: true,
+						annualAmount: true,
+						distributionMethod: true,
+						weightArray: true,
+						specificMonths: true,
+						ifrsCategory: true,
+						computeMethod: true,
 					},
 				}),
 				prisma.discountPolicy.findMany({
@@ -116,6 +121,10 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 						headcount: true,
 					},
 				}),
+				prisma.versionRevenueSettings.findUnique({
+					where: { versionId },
+					select: { id: true },
+				}),
 			]);
 
 			const feeGrid = {
@@ -143,16 +152,53 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 					new Decimal(r3Rate).gt(0),
 			};
 
+			const staticOtherRevenueItems = otherRevenueItems.filter(
+				(item) => item.computeMethod === null
+			);
+			const dynamicOtherRevenueItems = otherRevenueItems.filter(
+				(item) => item.computeMethod !== null
+			);
+			const dynamicValidation = validateCanonicalDynamicOtherRevenueItems(
+				dynamicOtherRevenueItems.map((item) => ({
+					lineItemName: item.lineItemName,
+					computeMethod: item.computeMethod,
+					distributionMethod: item.distributionMethod,
+					weightArray: item.weightArray,
+					specificMonths: item.specificMonths,
+					ifrsCategory: item.ifrsCategory,
+				}))
+			);
+			const invalidDynamicRows = new Set(dynamicValidation.invalid.map((row) => row.lineItemName));
+			const staticConfigured = staticOtherRevenueItems.filter(
+				(item) => !new Decimal(item.annualAmount.toString()).isZero()
+			).length;
+			const dynamicConfigured = dynamicOtherRevenueItems.filter(
+				(item) =>
+					!dynamicValidation.unexpected.includes(item.lineItemName) &&
+					!invalidDynamicRows.has(item.lineItemName)
+			).length;
+			const otherRevenueConfigured = staticConfigured + dynamicConfigured;
 			const otherRevenue = {
-				total: otherRevenueTotal,
+				total: otherRevenueItems.length,
 				configured: otherRevenueConfigured,
-				ready: otherRevenueTotal > 0 && otherRevenueConfigured === otherRevenueTotal,
+				ready:
+					otherRevenueItems.length > 0 &&
+					otherRevenueConfigured === otherRevenueItems.length &&
+					dynamicValidation.missing.length === 0 &&
+					dynamicValidation.unexpected.length === 0 &&
+					dynamicValidation.invalid.length === 0,
+			};
+
+			const derivedRevenueSettings = {
+				exists: revenueSettings !== null,
+				ready: revenueSettings !== null,
 			};
 
 			const readyCount = [
 				feeGrid.ready,
 				tariffAssignment.ready,
 				discounts.ready,
+				derivedRevenueSettings.ready,
 				otherRevenue.ready,
 			].filter(Boolean).length;
 
@@ -160,10 +206,11 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 				feeGrid,
 				tariffAssignment,
 				discounts,
+				derivedRevenueSettings,
 				otherRevenue,
-				overallReady: readyCount === 4,
+				overallReady: readyCount === 5,
 				readyCount,
-				totalCount: 4 as const,
+				totalCount: 5 as const,
 			};
 		},
 	});

@@ -2,7 +2,10 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { Decimal } from 'decimal.js';
 import { prisma } from '../../lib/prisma.js';
-import { buildRevenueReportingView } from '../../services/revenue-reporting.js';
+import {
+	buildRevenueReportingTotals,
+	buildRevenueReportingView,
+} from '../../services/revenue-reporting.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -105,7 +108,18 @@ export async function revenueResultsRoutes(app: FastifyInstance) {
 				})),
 				otherRevenueEntries
 			);
-			const totals = buildTotals(entries, reporting);
+			const totals = buildRevenueReportingTotals(
+				entries.map((entry) => ({
+					academicPeriod: entry.academicPeriod as 'AY1' | 'AY2',
+					gradeLevel: entry.gradeLevel,
+					month: entry.month,
+					grossRevenueHt: entry.grossRevenueHt,
+					discountAmount: entry.discountAmount,
+					netRevenueHt: entry.netRevenueHt,
+					vatAmount: entry.vatAmount,
+				})),
+				reporting
+			);
 
 			return {
 				entries,
@@ -186,54 +200,4 @@ function buildGroupedSummary(
 		netRevenueHt: group.netRevenueHt.toFixed(4),
 		vatAmount: group.vatAmount.toFixed(4),
 	}));
-}
-
-function buildTotals(
-	entries: Array<{
-		grossRevenueHt: string;
-		discountAmount: string;
-		netRevenueHt: string;
-		vatAmount: string;
-	}>,
-	reporting: ReturnType<typeof buildRevenueReportingView>
-) {
-	let totalGross = new Decimal(0);
-	let totalDiscount = new Decimal(0);
-	let totalNet = new Decimal(0);
-	let totalVat = new Decimal(0);
-
-	for (const row of entries) {
-		totalGross = totalGross.plus(new Decimal(row.grossRevenueHt));
-		totalDiscount = totalDiscount.plus(new Decimal(row.discountAmount));
-		totalNet = totalNet.plus(new Decimal(row.netRevenueHt));
-		totalVat = totalVat.plus(new Decimal(row.vatAmount));
-	}
-
-	const compositionByLabel = new Map(
-		reporting.executiveSummary.composition.map((item) => [item.label, item.amount] as const)
-	);
-	const totalOperatingRevenue =
-		reporting.executiveSummary.rows[reporting.executiveSummary.rows.length - 1]?.annualTotal ??
-		'0.0000';
-	const registrationRevenue =
-		reporting.executiveSummary.rows.find((row) => row.label === 'Registration Fees')?.annualTotal ??
-		'0.0000';
-	const activitiesRevenue =
-		reporting.executiveSummary.rows.find((row) => row.label === 'Activities & Services')
-			?.annualTotal ?? '0.0000';
-	const examinationRevenue =
-		reporting.executiveSummary.rows.find((row) => row.label === 'Examination Fees')?.annualTotal ??
-		'0.0000';
-
-	return {
-		grossRevenueHt: totalGross.toFixed(4),
-		discountAmount: totalDiscount.toFixed(4),
-		netRevenueHt: compositionByLabel.get('Net Tuition') ?? totalNet.toFixed(4),
-		vatAmount: totalVat.toFixed(4),
-		otherRevenueAmount: new Decimal(registrationRevenue)
-			.plus(new Decimal(activitiesRevenue))
-			.plus(new Decimal(examinationRevenue))
-			.toFixed(4),
-		totalOperatingRevenue,
-	};
 }

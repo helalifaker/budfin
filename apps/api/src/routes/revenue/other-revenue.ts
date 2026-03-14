@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { Decimal } from 'decimal.js';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
+import {
+	getCanonicalDynamicOtherRevenueItem,
+	validateCanonicalDynamicOtherRevenueItems,
+} from '../../services/revenue-config.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -28,6 +32,20 @@ const decimalString = z
 	.string()
 	.regex(/^-?\d+(\.\d{1,4})?$/, 'Must be a decimal string with up to 4 decimal places');
 
+const computeMethodEnum = z
+	.enum([
+		'DAI',
+		'DPI',
+		'FRAIS_DOSSIER',
+		'EXAM_BAC',
+		'EXAM_DNB',
+		'EXAM_EAF',
+		'EVAL_PRIMAIRE',
+		'EVAL_SECONDAIRE',
+	])
+	.nullable()
+	.default(null);
+
 const otherRevenueItemSchema = z
 	.object({
 		lineItemName: z.string().min(1).max(200),
@@ -36,6 +54,7 @@ const otherRevenueItemSchema = z
 		weightArray: z.array(z.number()).length(12).nullable().optional(),
 		specificMonths: z.array(z.number().int().min(1).max(12)).min(1).nullable().optional(),
 		ifrsCategory: ifrsCategoryEnum,
+		computeMethod: computeMethodEnum,
 	})
 	.refine(
 		(data) => {
@@ -96,6 +115,7 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 				weightArray: item.weightArray,
 				specificMonths: item.specificMonths,
 				ifrsCategory: item.ifrsCategory,
+				computeMethod: item.computeMethod,
 			}));
 
 			return { items: result };
@@ -162,11 +182,77 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 				});
 			}
 
+			const duplicateLineItems = new Set<string>();
+			const seenLineItems = new Set<string>();
+			for (const item of items) {
+				if (seenLineItems.has(item.lineItemName)) {
+					duplicateLineItems.add(item.lineItemName);
+				}
+				seenLineItems.add(item.lineItemName);
+			}
+
+			if (duplicateLineItems.size > 0) {
+				return reply.status(422).send({
+					code: 'DUPLICATE_LINE_ITEM',
+					message: 'Other revenue line items must be unique within a version.',
+					errors: [...duplicateLineItems],
+				});
+			}
+
+			const dynamicItems = items.filter((item) => item.computeMethod != null);
+			const dynamicValidation = validateCanonicalDynamicOtherRevenueItems(
+				dynamicItems.map((item) => ({
+					lineItemName: item.lineItemName,
+					computeMethod: item.computeMethod ?? null,
+					distributionMethod: item.distributionMethod,
+					weightArray: item.weightArray ?? null,
+					specificMonths: item.specificMonths ?? [],
+					ifrsCategory: item.ifrsCategory,
+				}))
+			);
+			if (
+				dynamicValidation.missing.length > 0 ||
+				dynamicValidation.unexpected.length > 0 ||
+				dynamicValidation.invalid.length > 0
+			) {
+				return reply.status(422).send({
+					code: 'DYNAMIC_OTHER_REVENUE_INVALID',
+					message:
+						'Dynamic other-revenue rows are server-controlled and must match the canonical configuration.',
+					details: dynamicValidation,
+				});
+			}
+
+			const existingDynamicItems = await prisma.otherRevenueItem.findMany({
+				where: {
+					versionId,
+					computeMethod: { not: null },
+				},
+				select: {
+					lineItemName: true,
+					annualAmount: true,
+				},
+			});
+			const existingDynamicAmounts = new Map(
+				existingDynamicItems.map((item) => [item.lineItemName, item.annualAmount] as const)
+			);
+
 			// Upsert in transaction
 			const result = await prisma.$transaction(async (tx) => {
 				const txPrisma = tx as typeof prisma;
 
 				for (const item of items) {
+					const canonicalDynamic =
+						item.computeMethod == null
+							? undefined
+							: getCanonicalDynamicOtherRevenueItem(item.lineItemName);
+					const annualAmount =
+						canonicalDynamic === undefined
+							? item.annualAmount
+							: new Decimal(
+									String(existingDynamicAmounts.get(item.lineItemName) ?? item.annualAmount)
+								).toFixed(4);
+
 					await txPrisma.otherRevenueItem.upsert({
 						where: {
 							versionId_lineItemName: {
@@ -176,20 +262,28 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 						},
 						create: {
 							versionId,
-							lineItemName: item.lineItemName,
-							annualAmount: item.annualAmount,
-							distributionMethod: item.distributionMethod,
-							weightArray: (item.weightArray as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-							specificMonths: item.specificMonths ?? [],
-							ifrsCategory: item.ifrsCategory,
+							lineItemName: canonicalDynamic?.lineItemName ?? item.lineItemName,
+							annualAmount,
+							distributionMethod: canonicalDynamic?.distributionMethod ?? item.distributionMethod,
+							weightArray:
+								canonicalDynamic === undefined
+									? ((item.weightArray as Prisma.InputJsonValue) ?? Prisma.JsonNull)
+									: Prisma.JsonNull,
+							specificMonths: canonicalDynamic?.specificMonths ?? item.specificMonths ?? [],
+							ifrsCategory: canonicalDynamic?.ifrsCategory ?? item.ifrsCategory,
+							computeMethod: canonicalDynamic?.computeMethod ?? item.computeMethod ?? null,
 							createdBy: request.user.id,
 						},
 						update: {
-							annualAmount: item.annualAmount,
-							distributionMethod: item.distributionMethod,
-							weightArray: (item.weightArray as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-							specificMonths: item.specificMonths ?? [],
-							ifrsCategory: item.ifrsCategory,
+							annualAmount,
+							distributionMethod: canonicalDynamic?.distributionMethod ?? item.distributionMethod,
+							weightArray:
+								canonicalDynamic === undefined
+									? ((item.weightArray as Prisma.InputJsonValue) ?? Prisma.JsonNull)
+									: Prisma.JsonNull,
+							specificMonths: canonicalDynamic?.specificMonths ?? item.specificMonths ?? [],
+							ifrsCategory: canonicalDynamic?.ifrsCategory ?? item.ifrsCategory,
+							computeMethod: canonicalDynamic?.computeMethod ?? item.computeMethod ?? null,
 							updatedBy: request.user.id,
 						},
 					});

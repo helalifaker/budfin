@@ -47,6 +47,7 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		cohortParameter: {
 			findMany: vi.fn().mockResolvedValue([]),
+			upsert: vi.fn().mockResolvedValue({}),
 		},
 		nationalityBreakdown: {
 			findMany: vi.fn().mockResolvedValue([]),
@@ -97,6 +98,7 @@ const mockPrisma = prisma as unknown as {
 	};
 	cohortParameter: {
 		findMany: ReturnType<typeof vi.fn>;
+		upsert: ReturnType<typeof vi.fn>;
 	};
 	nationalityBreakdown: {
 		findMany: ReturnType<typeof vi.fn>;
