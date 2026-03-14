@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 import { Button } from '../../components/ui/button';
@@ -70,6 +70,7 @@ export function RevenuePage() {
 	const [bandFilter, setBandFilter] = useState<BandFilter>('ALL');
 	const [exceptionFilter, setExceptionFilter] = useState<RevenueExceptionFilterValue>('all');
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
 	const clearSelection = useRevenueSelectionStore((state) => state.clearSelection);
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
 	const { data: versionsData } = useVersions(fiscalYear);
@@ -87,6 +88,13 @@ export function RevenuePage() {
 		};
 	}, [clearSelection, setActivePage]);
 
+	// GP-03: When the right panel closes, clear selection
+	useEffect(() => {
+		if (!isPanelOpen) {
+			clearSelection();
+		}
+	}, [isPanelOpen, clearSelection]);
+
 	function handleViewModeChange(value: string) {
 		if (!value) {
 			return;
@@ -95,6 +103,7 @@ export function RevenuePage() {
 		const nextMode = value as ViewMode;
 		setViewMode(nextMode);
 		clearSelection();
+		useRightPanelStore.getState().close();
 		if (nextMode !== 'grade') {
 			setBandFilter('ALL');
 		}
@@ -103,6 +112,16 @@ export function RevenuePage() {
 	const period = useMemo<RevenueForecastPeriod>(() => {
 		return academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
 	}, [academicPeriod]);
+
+	// GP-08: When period changes, clear selection and close panel
+	const prevPeriod = useRef(period);
+	useEffect(() => {
+		if (prevPeriod.current !== period) {
+			clearSelection();
+			useRightPanelStore.getState().close();
+			prevPeriod.current = period;
+		}
+	}, [period, clearSelection]);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId) {

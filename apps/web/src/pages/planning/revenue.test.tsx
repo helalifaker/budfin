@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { RevenuePage } from './revenue';
 
-const mockSetActivePage = vi.fn();
-const mockClearSelection = vi.fn();
+const { mockSetActivePage, mockClearSelection, mockPanelClose } = vi.hoisted(() => ({
+	mockSetActivePage: vi.fn(),
+	mockClearSelection: vi.fn(),
+	mockPanelClose: vi.fn(),
+}));
 
 type MockWorkspaceContext = {
 	versionId: number | null;
@@ -54,10 +57,16 @@ vi.mock('../../stores/auth-store', () => ({
 		selector({ user: { role: mockUserRole } }),
 }));
 
-vi.mock('../../stores/right-panel-store', () => ({
-	useRightPanelStore: (selector: (state: { setActivePage: typeof mockSetActivePage }) => unknown) =>
-		selector({ setActivePage: mockSetActivePage }),
-}));
+vi.mock('../../stores/right-panel-store', () => {
+	const storeState = {
+		setActivePage: mockSetActivePage,
+		isOpen: false,
+		close: mockPanelClose,
+	};
+	const hook = (selector: (state: typeof storeState) => unknown) => selector(storeState);
+	hook.getState = () => storeState;
+	return { useRightPanelStore: hook };
+});
 
 vi.mock('../../stores/revenue-selection-store', () => ({
 	useRevenueSelectionStore: (
@@ -178,6 +187,7 @@ describe('RevenuePage', () => {
 	beforeEach(() => {
 		mockSetActivePage.mockClear();
 		mockClearSelection.mockClear();
+		mockPanelClose.mockClear();
 		mockWorkspaceContext = {
 			versionId: 16,
 			fiscalYear: 2026,

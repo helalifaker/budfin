@@ -1,10 +1,10 @@
 # BudFin — Current Status
 
 **Phase**: 6 — IMPLEMENT
-**Current Epic**: Epic 16 — Revenue Workspace Redesign (#186)
-**Current Story**: Story 194 — Revenue Page Assembly (#194)
+**Current Epic**: Epic 17 — Revenue Page — Enrollment Parity & Fee Grid Redesign (#197)
+**Current Story**: S1 — CSS Foundation & Design Token Alignment (#198)
 **Last updated**: 2026-03-14
-**Note**: Epic 16 implementation completed locally with green targeted tests, lint, and typecheck. PR/review drive is next. Epics 5, 6, 8, 9 remain in backlog.
+**Note**: Epic 17 spec reviewed, 11 stories created (#198–#208). Implementation starting with Wave 1: S1 (#198) + S2 (#199) in parallel.
 
 ## Phase History
 
@@ -57,7 +57,11 @@
 | 7 — REVIEW (Documentation Alignment) | ✅ Complete | 2026-03-14 |
 | 4 — SPECIFY (Epic 16) | ✅ Complete | 2026-03-14 |
 | 5 — TDD RED (Epic 16) | ✅ Complete | 2026-03-14 |
-| 6 — IMPLEMENT (Epic 16) | In Progress | 2026-03-14 |
+| 6 — IMPLEMENT (Epic 16) | ✅ Complete | 2026-03-14 |
+| 7 — REVIEW (Epic 16) | ✅ Complete | 2026-03-14 |
+| 4 — SPECIFY (Epic 17) | ✅ Complete | 2026-03-14 |
+| 5 — TDD RED (Epic 17) | ✅ Complete | 2026-03-14 |
+| 6 — IMPLEMENT (Epic 17) | 🔄 In Progress | 2026-03-14 |
 
 ## Feature Progress
 
@@ -77,7 +81,8 @@
 | 12 | Data Migration | DONE | All 11 stories complete (11/11), PR #183 — 2026-03-09 |
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 | 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
-| 16 | Revenue Workspace Redesign | 6 | Epic #186 local implementation complete, review + PR drive next — 2026-03-14 |
+| 16 | Revenue Workspace Redesign | DONE | All 8 stories complete (8/8), merged PR #195 — 2026-03-14 |
+| 17 | Revenue Page — Enrollment Parity & Fee Grid Redesign | 4 | Epic Created (#197), spec reviewed by 2 architecture reviewers — 2026-03-14 |
 
 ## Update Instructions
 
