@@ -135,6 +135,20 @@ describe('GET /revenue/settings', () => {
 		expect(res.statusCode).toBe(404);
 		expect(res.json().code).toBe('VERSION_NOT_FOUND');
 	});
+
+	it('returns 404 when revenue settings row does not exist', async () => {
+		mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: `${URL_PREFIX}/revenue/settings`,
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('REVENUE_SETTINGS_NOT_FOUND');
+	});
 });
 
 describe('PUT /revenue/settings', () => {
@@ -188,5 +202,43 @@ describe('PUT /revenue/settings', () => {
 
 		expect(res.statusCode).toBe(409);
 		expect(res.json().code).toBe('VERSION_LOCKED');
+	});
+
+	it('returns 404 when version does not exist on PUT', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/revenue/settings`,
+			headers: authHeader(token),
+			payload: mockSettings,
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
+	});
+
+	it('returns 403 for Viewer role', async () => {
+		const token = await makeToken('Viewer');
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/revenue/settings`,
+			headers: authHeader(token),
+			payload: mockSettings,
+		});
+
+		expect(res.statusCode).toBe(403);
+		expect(res.json().code).toBe('FORBIDDEN');
+	});
+
+	it('returns 401 without authentication', async () => {
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/revenue/settings`,
+			payload: mockSettings,
+		});
+
+		expect(res.statusCode).toBe(401);
 	});
 });

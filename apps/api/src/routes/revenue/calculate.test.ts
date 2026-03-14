@@ -482,12 +482,13 @@ describe('POST /calculate/revenue', () => {
 		expect(res.json().code).toBe('DYNAMIC_OTHER_REVENUE_INVALID');
 	});
 
-	it('returns 422 when derived revenue validation fails', async () => {
+	it('returns 422 when derived revenue validation fails with DAI_MISMATCH', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
 		mockComputeAllDerivedRevenue.mockImplementationOnce(() => {
 			throw new DerivedRevenueConfigurationError(
 				'DAI_MISMATCH',
-				'DAI values must match across AY2 tariffs for CP|Francais.'
+				'DAI values must match across AY2 tariffs for CP|Francais.',
+				{ gradeLevel: 'CP', nationality: 'Francais' }
 			);
 		});
 
@@ -500,6 +501,29 @@ describe('POST /calculate/revenue', () => {
 
 		expect(res.statusCode).toBe(422);
 		expect(res.json().code).toBe('DAI_MISMATCH');
+		expect(res.json().details).toBeDefined();
+	});
+
+	it('returns 422 when derived revenue validation fails with DAI_RATE_MISSING', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+		mockComputeAllDerivedRevenue.mockImplementationOnce(() => {
+			throw new DerivedRevenueConfigurationError(
+				'DAI_RATE_MISSING',
+				'No Plein tariff DAI rate found for CP|Francais.',
+				{ gradeLevel: 'CP', nationality: 'Francais' }
+			);
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/revenue`,
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(422);
+		expect(res.json().code).toBe('DAI_RATE_MISSING');
+		expect(res.json().details).toBeDefined();
 	});
 
 	it('updates dynamic OtherRevenueItem annualAmount with computed derived value', async () => {

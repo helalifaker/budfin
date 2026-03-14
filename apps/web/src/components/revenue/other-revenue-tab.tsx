@@ -1,3 +1,4 @@
+import { Decimal } from 'decimal.js';
 import { useEffect, useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type {
@@ -191,7 +192,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 							onChange={(value) =>
 								updateRow(info.row.index, (row) => ({
 									...row,
-									annualAmount: String(Number(value) || 0),
+									annualAmount: new Decimal(value || '0').toFixed(4),
 								}))
 							}
 							isReadOnly={isReadOnly || dynamicRow}

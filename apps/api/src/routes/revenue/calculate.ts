@@ -122,7 +122,6 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				return reply.status(422).send({
 					code: 'DYNAMIC_OTHER_REVENUE_INVALID',
 					message: 'Dynamic other-revenue rows must match the canonical configuration.',
-					details: dynamicValidation,
 				});
 			}
 

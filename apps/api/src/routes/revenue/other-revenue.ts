@@ -219,7 +219,6 @@ export async function otherRevenueRoutes(app: FastifyInstance) {
 					code: 'DYNAMIC_OTHER_REVENUE_INVALID',
 					message:
 						'Dynamic other-revenue rows are server-controlled and must match the canonical configuration.',
-					details: dynamicValidation,
 				});
 			}
 
