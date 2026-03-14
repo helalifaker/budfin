@@ -76,4 +76,8 @@ export type {
 	RevenueExecutiveSummary,
 	RevenueReadinessResponse,
 	RevenueResultsResponse,
+	FeeEditability,
+	FeeScheduleRow,
+	FeeScheduleGroup,
+	FeeScheduleSection,
 } from './revenue.js';

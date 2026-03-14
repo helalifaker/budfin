@@ -178,3 +178,36 @@ export interface RevenueResultsResponse {
 	};
 	executiveSummary: RevenueExecutiveSummary;
 }
+
+// ── Fee Schedule (EFIR 3-section layout) ────────────────────────────────────
+
+export type FeeEditability = 'editable-source' | 'editable-fanout' | 'summary-only';
+
+export interface FeeScheduleRow {
+	id: string;
+	label: string;
+	editability: FeeEditability;
+	dai?: string;
+	tuitionHt?: string;
+	term1?: string;
+	term2?: string;
+	term3?: string;
+	totalTtc?: string;
+	underlyingGradeCount?: number;
+	hasHeterogeneousValues?: boolean;
+	/** Dynamic per-nationality fields (e.g. dai_Francais, dai_Nationaux, dai_Autres) */
+	[key: string]: string | number | boolean | undefined;
+}
+
+export interface FeeScheduleGroup {
+	nationality: string;
+	nationalityLabel: string;
+	rows: FeeScheduleRow[];
+}
+
+export interface FeeScheduleSection {
+	id: string;
+	title: string;
+	groups?: FeeScheduleGroup[];
+	rows?: FeeScheduleRow[];
+}
