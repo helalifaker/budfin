@@ -20,6 +20,16 @@ vi.mock('../../hooks/use-grade-levels', () => ({
 	useGradeLevels: vi.fn(),
 }));
 
+vi.mock('recharts', async () => {
+	const actual = await vi.importActual<typeof import('recharts')>('recharts');
+	return {
+		...actual,
+		ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+			<div data-testid="responsive-container">{children}</div>
+		),
+	};
+});
+
 const mockUseRevenueResults = vi.mocked(useRevenueResults);
 const mockUseRevenueReadiness = vi.mocked(useRevenueReadiness);
 const mockUseWorkspaceContext = vi.mocked(useWorkspaceContext);
@@ -181,13 +191,78 @@ describe('RevenueInspectorContent', () => {
 		cleanup();
 	});
 
-	it('renders the default analytics view when no row is selected', () => {
+	it('renders the 9-section default view when no row is selected', () => {
 		render(<RevenueInspectorContent />);
 
+		// Section 1: Workflow status
+		expect(screen.getByText('Revenue Workflow')).toBeDefined();
+		expect(screen.getByText('Setup complete')).toBeDefined();
+
+		// Section 2: Readiness counters
+		expect(screen.getByText('Config coverage')).toBeDefined();
+		expect(screen.getByText('5/5 ready')).toBeDefined();
+		expect(screen.getByText('Validation issues')).toBeDefined();
+
+		// Section 3: Revenue assumptions
+		expect(screen.getByText('Revenue assumptions')).toBeDefined();
+		expect(screen.getByText('RP discount rate')).toBeDefined();
+
+		// Section 4: Recommended workflow
+		expect(screen.getByText('Recommended workflow')).toBeDefined();
+		expect(screen.getByText('Configure fee grid')).toBeDefined();
+		expect(screen.getByText('Assign tariffs')).toBeDefined();
+		expect(screen.getByText('Set discounts')).toBeDefined();
+		expect(screen.getByText('Calculate revenue')).toBeDefined();
+
+		// Section 5: Validation queue
+		expect(screen.getByText('Validation queue')).toBeDefined();
+		expect(screen.getByText('All areas configured.')).toBeDefined();
+
+		// Section 6: Revenue by Band
+		expect(screen.getByText('Revenue by Band')).toBeDefined();
+
+		// Section 7: Revenue by Nationality
+		expect(screen.getByText('Revenue by Nationality')).toBeDefined();
+
+		// Section 8: Revenue composition
 		expect(screen.getByText('Revenue composition')).toBeDefined();
+
+		// Section 9: Monthly trend
 		expect(screen.getByText('Monthly trend')).toBeDefined();
-		expect(screen.getByText('Readiness checklist')).toBeDefined();
-		expect(screen.getByRole('button', { name: 'Open Settings' })).toBeDefined();
+	});
+
+	it('shows validation queue items when readiness areas are not ready', () => {
+		mockUseRevenueReadiness.mockReturnValue({
+			data: {
+				feeGrid: { total: 90, complete: 45, ready: false },
+				tariffAssignment: { reconciled: false, ready: false },
+				discounts: { rpRate: null, r3Rate: null, ready: true },
+				derivedRevenueSettings: { exists: true, ready: true },
+				otherRevenue: { total: 20, configured: 20, ready: true },
+				overallReady: false,
+				readyCount: 3,
+				totalCount: 5,
+			},
+			isLoading: false,
+		} as unknown as ReturnType<typeof useRevenueReadiness>);
+
+		render(<RevenueInspectorContent />);
+
+		expect(screen.getByText('Setup pending')).toBeDefined();
+		expect(screen.getByText('3/5 ready')).toBeDefined();
+
+		// Validation queue shows non-ready areas
+		expect(screen.getByText('Fee Grid')).toBeDefined();
+		expect(screen.getByText('Tariff Assignment')).toBeDefined();
+	});
+
+	it('opens revenue settings when clicking the action button in assumptions', () => {
+		render(<RevenueInspectorContent />);
+
+		fireEvent.click(screen.getByRole('button', { name: 'Open Revenue Settings' }));
+
+		expect(useRevenueSettingsDialogStore.getState().isOpen).toBe(true);
+		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('feeGrid');
 	});
 
 	it('renders the active inspector view and opens the mapped settings tab', () => {
@@ -212,5 +287,13 @@ describe('RevenueInspectorContent', () => {
 
 		expect(useRevenueSettingsDialogStore.getState().isOpen).toBe(true);
 		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('feeGrid');
+	});
+
+	it('shows aria-live region on the container', () => {
+		render(<RevenueInspectorContent />);
+
+		const container = screen.getByText('Revenue Workflow').closest('[aria-live]');
+		expect(container).toBeDefined();
+		expect(container?.getAttribute('aria-live')).toBe('polite');
 	});
 });
