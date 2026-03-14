@@ -33,12 +33,8 @@ export const ENROLLMENT_GRADE_PROGRESSION: GradeCode[] = [
 
 export type EnrollmentEditability = 'editable' | 'locked' | 'viewer' | 'imported';
 
-export const BAND_LABELS: Record<string, string> = {
-	MATERNELLE: 'Maternelle',
-	ELEMENTAIRE: 'Elementaire',
-	COLLEGE: 'College',
-	LYCEE: 'Lycee',
-};
+import { BAND_LABELS } from './band-styles';
+export { BAND_LABELS };
 
 export interface CohortProjectionRow {
 	gradeLevel: GradeCode;

@@ -19,9 +19,9 @@ import {
 	deriveEnrollmentEditability,
 	getPsAy2Headcount,
 	isCohortEntryOverridden,
-	BAND_LABELS,
 	resolveEnrollmentGradeLevels,
 } from '../../lib/enrollment-workspace';
+import { BAND_DOT_COLORS, BAND_LABELS } from '../../lib/band-styles';
 
 const WORKFLOW_STEPS = [
 	{
@@ -44,13 +44,6 @@ const WORKFLOW_STEPS = [
 ] as const;
 
 const BANDS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
-
-const BAND_DOT_COLORS: Record<string, string> = {
-	MATERNELLE: 'bg-(--badge-maternelle)',
-	ELEMENTAIRE: 'bg-(--badge-elementaire)',
-	COLLEGE: 'bg-(--badge-college)',
-	LYCEE: 'bg-(--badge-lycee)',
-};
 
 const ALERT_DOT_COLORS: Record<string, string> = {
 	OVER: 'bg-(--color-error)',

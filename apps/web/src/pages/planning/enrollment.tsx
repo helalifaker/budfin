@@ -407,7 +407,6 @@ export function EnrollmentPage() {
 						</Button>
 						{editability === 'editable' && (
 							<CalculateButton
-								versionId={versionId}
 								onCalculate={() => calculateMutation.mutate()}
 								isPending={calculateMutation.isPending}
 								isSuccess={calculateMutation.isSuccess}

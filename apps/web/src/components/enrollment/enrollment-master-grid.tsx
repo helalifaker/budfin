@@ -4,18 +4,11 @@ import type { EnrollmentMasterGridRow, GradeCode } from '@budfin/types';
 import { PlanningGrid } from '../data-grid/planning-grid';
 import { EditableCell } from '../shared/editable-cell';
 import { AlertBadge, DeltaCell, UtilizationGauge } from './capacity-columns';
-import { BAND_LABELS } from '../../lib/enrollment-workspace';
+import { BAND_LABELS, BAND_STYLES } from '../../lib/band-styles';
 import { useDirtyRowsStore } from '../../stores/dirty-rows-store';
 
 const columnHelper = createColumnHelper<EnrollmentMasterGridRow>();
 const INTEGER_FORMATTER = new Intl.NumberFormat('en-US');
-
-const BAND_STYLES = {
-	MATERNELLE: { color: 'var(--badge-maternelle)', bg: 'var(--badge-maternelle-bg)' },
-	ELEMENTAIRE: { color: 'var(--badge-elementaire)', bg: 'var(--badge-elementaire-bg)' },
-	COLLEGE: { color: 'var(--badge-college)', bg: 'var(--badge-college-bg)' },
-	LYCEE: { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
-} as const;
 
 function formatInt(value: number) {
 	return INTEGER_FORMATTER.format(value);

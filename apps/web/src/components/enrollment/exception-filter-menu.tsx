@@ -1,4 +1,5 @@
-import { cn } from '../../lib/cn';
+import { FilterPillMenu } from '../shared/filter-pill-menu';
+import type { FilterConfig } from '../shared/filter-pill-menu';
 
 export type ExceptionFilterValue =
 	| 'all'
@@ -7,7 +8,7 @@ export type ExceptionFilterValue =
 	| 'missing-inputs'
 	| 'manual-override';
 
-const FILTERS: Array<{ value: ExceptionFilterValue; label: string }> = [
+const FILTERS: FilterConfig[] = [
 	{ value: 'all', label: 'All' },
 	{ value: 'over-capacity', label: 'Over Capacity' },
 	{ value: 'near-cap', label: 'Near Capacity' },
@@ -23,23 +24,11 @@ export function ExceptionFilterMenu({
 	onChange: (value: ExceptionFilterValue) => void;
 }) {
 	return (
-		<div className="flex items-center gap-1" role="group" aria-label="Exception filter">
-			{FILTERS.map((filter) => (
-				<button
-					key={filter.value}
-					type="button"
-					onClick={() => onChange(filter.value)}
-					className={cn(
-						'rounded-full px-2.5 py-1 text-(--text-xs) font-medium transition-colors duration-(--duration-fast)',
-						value === filter.value
-							? 'bg-(--accent-100) text-(--accent-700)'
-							: 'bg-(--workspace-bg-muted) text-(--text-muted) hover:bg-(--workspace-bg-subtle) hover:text-(--text-secondary)'
-					)}
-					aria-pressed={value === filter.value}
-				>
-					{filter.label}
-				</button>
-			))}
-		</div>
+		<FilterPillMenu
+			filters={FILTERS}
+			value={value}
+			onChange={(v) => onChange(v as ExceptionFilterValue)}
+			label="Exception filter"
+		/>
 	);
 }

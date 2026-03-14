@@ -1,4 +1,6 @@
-import { cn } from '../../lib/cn';
+import { StalePill } from '../shared/stale-pill';
+import { WorkspaceStatusStrip } from '../shared/workspace-status-strip';
+import type { StatusSection } from '../shared/workspace-status-strip';
 
 const STALE_MODULE_LABELS: Record<string, string> = {
 	ENROLLMENT: 'Enrollment',
@@ -33,46 +35,50 @@ export function EnrollmentStatusStrip({
 }) {
 	const downstreamStale = staleModules.filter((m) => m !== 'ENROLLMENT');
 
-	return (
-		<div className="flex shrink-0 items-center gap-4 border-b border-(--workspace-border) bg-(--workspace-bg-subtle) px-6 py-2.5 text-(--text-sm) text-(--text-muted)">
-			{baselineSource && (
-				<span>
-					<span className="font-semibold text-(--text-secondary)">Baseline:</span>{' '}
-					<span className="font-medium text-(--text-secondary)">{baselineSource}</span>
-				</span>
-			)}
+	const sections: StatusSection[] = [];
 
-			<span>
-				<span className="font-semibold text-(--text-secondary)">Last calculated:</span>{' '}
-				<span
-					className={cn(
-						'font-medium',
-						lastCalculatedAt ? 'text-(--text-secondary)' : 'text-(--color-warning)'
-					)}
-				>
-					{formatTimestamp(lastCalculatedAt)}
-				</span>
-			</span>
+	if (baselineSource) {
+		sections.push({
+			key: 'baseline',
+			label: 'Baseline',
+			value: baselineSource,
+			priority: 0,
+		});
+	}
 
-			{dirtyCount > 0 && (
-				<span className="font-medium text-(--color-warning)">
-					{dirtyCount} {dirtyCount === 1 ? 'row needs' : 'rows need'} recalculation
-				</span>
-			)}
+	sections.push({
+		key: 'lastCalculated',
+		label: 'Last calculated',
+		value: formatTimestamp(lastCalculatedAt),
+		severity: lastCalculatedAt ? 'default' : 'warning',
+		priority: 1,
+	});
 
-			{downstreamStale.length > 0 && (
+	if (dirtyCount > 0) {
+		sections.push({
+			key: 'dirty',
+			label: 'Recalculation',
+			value: `${dirtyCount} ${dirtyCount === 1 ? 'row needs' : 'rows need'} recalculation`,
+			severity: 'warning',
+			badge: true,
+			priority: 2,
+		});
+	}
+
+	if (downstreamStale.length > 0) {
+		sections.push({
+			key: 'downstream',
+			label: 'Downstream stale',
+			value: (
 				<span className="flex items-center gap-1.5">
-					<span className="font-semibold text-(--text-secondary)">Downstream stale:</span>
 					{downstreamStale.map((mod) => (
-						<span
-							key={mod}
-							className="rounded-full bg-(--color-warning-bg) px-2 py-0.5 text-(--text-xs) font-medium text-(--color-warning)"
-						>
-							{STALE_MODULE_LABELS[mod] ?? mod}
-						</span>
+						<StalePill key={mod} label={STALE_MODULE_LABELS[mod] ?? mod} />
 					))}
 				</span>
-			)}
-		</div>
-	);
+			),
+			priority: 3,
+		});
+	}
+
+	return <WorkspaceStatusStrip sections={sections} />;
 }
