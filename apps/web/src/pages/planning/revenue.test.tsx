@@ -101,6 +101,8 @@ vi.mock('../../hooks/use-revenue', () => ({
 	useCalculateRevenue: () => ({
 		mutate: vi.fn(),
 		isPending: false,
+		isSuccess: false,
+		isError: false,
 	}),
 }));
 
@@ -137,6 +139,10 @@ vi.mock('../../components/shared/page-transition', () => ({
 	PageTransition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('../../components/shared/calculate-button', () => ({
+	CalculateButton: () => <button type="button">Calculate</button>,
+}));
+
 vi.mock('../../components/enrollment/version-lock-banner', () => ({
 	VersionLockBanner: () => <div>Version lock banner</div>,
 }));
@@ -149,17 +155,16 @@ vi.mock('../../components/revenue/revenue-export-button', () => ({
 	RevenueExportButton: () => <button type="button">Export</button>,
 }));
 
+vi.mock('../../components/revenue/revenue-exception-filter', () => ({
+	RevenueExceptionFilter: () => <div>Exception Filter</div>,
+}));
+
 vi.mock('../../components/revenue/kpi-ribbon', () => ({
 	RevenueKpiRibbon: () => <div>KPI Ribbon</div>,
 }));
 
 vi.mock('../../components/revenue/revenue-status-strip', () => ({
 	RevenueStatusStrip: () => <div>Status Strip</div>,
-}));
-
-vi.mock('../../components/revenue/setup-checklist', () => ({
-	RevenueSetupChecklist: ({ forceOpen }: { forceOpen?: boolean }) =>
-		forceOpen ? <div>Setup Checklist</div> : null,
 }));
 
 vi.mock('../../components/revenue/revenue-settings-dialog', () => ({
@@ -206,9 +211,9 @@ describe('RevenuePage', () => {
 		expect(screen.getByText('KPI Ribbon')).toBeDefined();
 		expect(screen.getByText('Status Strip')).toBeDefined();
 		expect(screen.getByText('Forecast Grid')).toBeDefined();
+		expect(screen.getByText('Exception Filter')).toBeDefined();
 		expect(screen.getByRole('button', { name: 'Revenue Settings' })).toBeDefined();
-		expect(screen.getByRole('button', { name: 'Setup' })).toBeDefined();
-		expect(screen.getByRole('button', { name: 'Calculate Revenue' })).toBeDefined();
+		expect(screen.getByText('Calculate')).toBeDefined();
 		expect(mockSetActivePage).toHaveBeenCalledWith('revenue');
 	});
 
@@ -250,6 +255,6 @@ describe('RevenuePage', () => {
 		expect(screen.getByText(/This version was imported/)).toBeDefined();
 		expect(screen.getByText(/Viewer access keeps this workspace/)).toBeDefined();
 		expect(screen.getByRole('button', { name: 'View Settings' })).toBeDefined();
-		expect(screen.queryByRole('button', { name: 'Calculate Revenue' })).toBeNull();
+		expect(screen.queryByText('Calculate')).toBeNull();
 	});
 });

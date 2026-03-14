@@ -40,6 +40,28 @@ vi.mock('./other-revenue-tab', () => ({
 	),
 }));
 
+const mockReadiness = {
+	feeGrid: { total: 90, complete: 90, ready: true },
+	tariffAssignment: { reconciled: true, ready: true },
+	discounts: { rpRate: '0.250000', r3Rate: '0.100000', ready: true },
+	derivedRevenueSettings: { exists: true, ready: true },
+	otherRevenue: { total: 20, configured: 20, ready: true },
+	overallReady: true,
+	readyCount: 5,
+	totalCount: 5 as const,
+};
+
+const mockIncompleteReadiness = {
+	feeGrid: { total: 90, complete: 0, ready: false },
+	tariffAssignment: { reconciled: false, ready: false },
+	discounts: { rpRate: null, r3Rate: null, ready: false },
+	derivedRevenueSettings: { exists: false, ready: false },
+	otherRevenue: { total: 20, configured: 0, ready: false },
+	overallReady: false,
+	readyCount: 0,
+	totalCount: 5 as const,
+};
+
 describe('RevenueSettingsDialog', () => {
 	beforeEach(() => {
 		useRevenueSettingsDialogStore.setState({ isOpen: true, activeTab: 'feeGrid' });
@@ -53,7 +75,14 @@ describe('RevenueSettingsDialog', () => {
 	});
 
 	it('renders the revenue settings dialog with tabs', () => {
-		render(<RevenueSettingsDialog versionId={1} isViewer={false} />);
+		render(
+			<RevenueSettingsDialog
+				versionId={1}
+				isViewer={false}
+				readiness={mockReadiness}
+				isImported={false}
+			/>
+		);
 
 		expect(screen.getByRole('dialog', { name: 'Revenue Settings' })).toBeDefined();
 		expect(screen.getByRole('tab', { name: 'Fee Grid' })).toBeDefined();
@@ -65,7 +94,14 @@ describe('RevenueSettingsDialog', () => {
 	it('shows an inline warning when switching away from a dirty tab', () => {
 		useRevenueSettingsDirtyStore.getState().markDirty('feeGrid', 'fee-grid-input');
 
-		render(<RevenueSettingsDialog versionId={1} isViewer={false} />);
+		render(
+			<RevenueSettingsDialog
+				versionId={1}
+				isViewer={false}
+				readiness={mockReadiness}
+				isImported={false}
+			/>
+		);
 		fireEvent.click(screen.getByRole('tab', { name: 'Discounts' }));
 
 		expect(screen.getByText('You have unsaved changes. Switch anyway?')).toBeDefined();
@@ -77,7 +113,14 @@ describe('RevenueSettingsDialog', () => {
 	it('shows discard confirmation when closing with dirty tabs', () => {
 		useRevenueSettingsDirtyStore.getState().markDirty('feeGrid', 'fee-grid-input');
 
-		render(<RevenueSettingsDialog versionId={1} isViewer={false} />);
+		render(
+			<RevenueSettingsDialog
+				versionId={1}
+				isViewer={false}
+				readiness={mockReadiness}
+				isImported={false}
+			/>
+		);
 		fireEvent.click(screen.getByLabelText('Close'));
 
 		expect(screen.getByText(/Discard and close\?/)).toBeDefined();
@@ -87,9 +130,39 @@ describe('RevenueSettingsDialog', () => {
 	});
 
 	it('shows viewer banner in read-only mode', () => {
-		render(<RevenueSettingsDialog versionId={1} isViewer />);
+		render(
+			<RevenueSettingsDialog versionId={1} isViewer readiness={mockReadiness} isImported={false} />
+		);
 
 		expect(screen.getByText(/Viewer mode is read-only/)).toBeDefined();
 		expect(screen.queryByRole('button', { name: 'Save Fee Grid' })).toBeNull();
+	});
+
+	it('shows progress bar when setup is incomplete', () => {
+		useRevenueSettingsDialogStore.setState({ isOpen: true, activeTab: 'feeGrid' });
+
+		render(
+			<RevenueSettingsDialog
+				versionId={1}
+				isViewer={false}
+				readiness={mockIncompleteReadiness}
+				isImported={false}
+			/>
+		);
+
+		expect(screen.getByText(/Complete 5 remaining steps/)).toBeDefined();
+	});
+
+	it('shows readiness progress summary below tab list', () => {
+		render(
+			<RevenueSettingsDialog
+				versionId={1}
+				isViewer={false}
+				readiness={mockReadiness}
+				isImported={false}
+			/>
+		);
+
+		expect(screen.getByText('5/5 complete')).toBeDefined();
 	});
 });

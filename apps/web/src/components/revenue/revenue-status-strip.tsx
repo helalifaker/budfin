@@ -1,21 +1,23 @@
 import type { RevenueReadinessResponse } from '@budfin/types';
-import { cn } from '../../lib/cn';
-import { formatDateTime } from '../../lib/format-date';
 import { StalePill } from '../shared/stale-pill';
 import { WorkspaceStatusStrip } from '../shared/workspace-status-strip';
-import { useRevenueSettingsDirtyStore } from '../../stores/revenue-settings-dirty-store';
+import type { StatusSection } from '../shared/workspace-status-strip';
 
 const STALE_LABELS: Record<string, string> = {
 	STAFFING: 'Staffing',
 	PNL: 'P&L',
 };
 
-function formatReadiness(readiness: RevenueReadinessResponse | undefined) {
-	if (!readiness) {
-		return 'Loading readiness...';
+function formatTimestamp(value: string | null): string {
+	if (!value) {
+		return 'Not yet calculated';
 	}
 
-	return `${readiness.readyCount} of ${readiness.totalCount} complete`;
+	return new Intl.DateTimeFormat('en-GB', {
+		timeZone: 'Asia/Riyadh',
+		dateStyle: 'medium',
+		timeStyle: 'short',
+	}).format(new Date(value));
 }
 
 export function RevenueStatusStrip({
@@ -29,55 +31,48 @@ export function RevenueStatusStrip({
 	downstreamStale: string[];
 	readiness: RevenueReadinessResponse | undefined;
 }) {
-	const dirtyFields = useRevenueSettingsDirtyStore((state) => state.dirtyFields);
-	const totalDirtyCount = [...dirtyFields.values()].reduce((sum, fields) => sum + fields.size, 0);
+	const sections: StatusSection[] = [];
 
-	return (
-		<WorkspaceStatusStrip>
-			<span>
-				<span className="font-semibold text-(--text-secondary)">Last calculated:</span>{' '}
-				<span
-					className={cn(
-						'font-medium',
-						lastCalculated ? 'text-(--text-secondary)' : 'text-(--color-warning)'
-					)}
-				>
-					{lastCalculated ? formatDateTime(lastCalculated) : 'Not yet calculated'}
-				</span>
-			</span>
+	sections.push({
+		key: 'lastCalculated',
+		label: 'Last calculated',
+		value: formatTimestamp(lastCalculated),
+		severity: lastCalculated ? 'default' : 'warning',
+		priority: 0,
+	});
 
-			<span>
-				<span className="font-semibold text-(--text-secondary)">Enrollment:</span>{' '}
-				<span
-					className={cn(
-						'font-medium',
-						enrollmentStale ? 'text-(--color-warning)' : 'text-(--text-secondary)'
-					)}
-				>
-					{enrollmentStale ? 'Stale' : 'Fresh'}
-				</span>
-			</span>
+	sections.push({
+		key: 'enrollment',
+		label: 'Enrollment',
+		value: enrollmentStale ? 'Stale' : 'Fresh',
+		severity: enrollmentStale ? 'warning' : 'success',
+		priority: 1,
+	});
 
-			{downstreamStale.length > 0 && (
+	if (downstreamStale.length > 0) {
+		sections.push({
+			key: 'downstream',
+			label: 'Downstream stale',
+			value: (
 				<span className="flex items-center gap-1.5">
-					<span className="font-semibold text-(--text-secondary)">Downstream stale:</span>
 					{downstreamStale.map((mod) => (
 						<StalePill key={mod} label={STALE_LABELS[mod] ?? mod} />
 					))}
 				</span>
-			)}
+			),
+			priority: 2,
+		});
+	}
 
-			{totalDirtyCount > 0 && (
-				<span className="font-medium text-(--color-warning)">
-					{totalDirtyCount} {totalDirtyCount === 1 ? 'setting changed' : 'settings changed'} since
-					last calculation
-				</span>
-			)}
+	if (readiness) {
+		sections.push({
+			key: 'config',
+			label: 'Config',
+			value: `${readiness.readyCount} of ${readiness.totalCount} complete`,
+			severity: readiness.overallReady ? 'success' : 'warning',
+			priority: 3,
+		});
+	}
 
-			<span>
-				<span className="font-semibold text-(--text-secondary)">Config:</span>{' '}
-				<span className="font-medium text-(--text-secondary)">{formatReadiness(readiness)}</span>
-			</span>
-		</WorkspaceStatusStrip>
-	);
+	return <WorkspaceStatusStrip sections={sections} />;
 }
