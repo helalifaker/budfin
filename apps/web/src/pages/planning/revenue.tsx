@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
-import { Button } from '../../components/ui/button';
 import { PageTransition } from '../../components/shared/page-transition';
+import { CalculateButton } from '../../components/shared/calculate-button';
 import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
 import { ForecastGrid } from '../../components/revenue/forecast-grid';
+import {
+	RevenueExceptionFilter,
+	type RevenueExceptionFilterValue,
+} from '../../components/revenue/revenue-exception-filter';
 import { RevenueExportButton } from '../../components/revenue/revenue-export-button';
 import { RevenueKpiRibbon } from '../../components/revenue/kpi-ribbon';
 import { RevenueSettingsDialog } from '../../components/revenue/revenue-settings-dialog';
-import { RevenueSetupChecklist } from '../../components/revenue/setup-checklist';
 import { RevenueStatusStrip } from '../../components/revenue/revenue-status-strip';
 import { useGradeLevels, type GradeBand } from '../../hooks/use-grade-levels';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
@@ -27,6 +30,7 @@ import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 import { useAuthStore } from '../../stores/auth-store';
+import { Button } from '../../components/ui/button';
 import '../../components/revenue/revenue-inspector';
 
 const BAND_FILTERS: Array<{ value: string; label: string }> = [
@@ -39,7 +43,7 @@ const BAND_FILTERS: Array<{ value: string; label: string }> = [
 
 function ImportedBanner() {
 	return (
-		<div className="rounded-lg border border-(--color-info) bg-(--color-info-bg) px-3 py-2 text-token-sm text-(--color-info)">
+		<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-3 py-2 text-token-sm text-(--color-info)">
 			This version was imported. Review the loaded assumptions before recalculating revenue.
 		</div>
 	);
@@ -47,7 +51,7 @@ function ImportedBanner() {
 
 function ViewerBanner() {
 	return (
-		<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-2 text-token-sm text-(--text-secondary)">
+		<div className="shrink-0 border-b border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-2 text-token-sm text-(--text-secondary)">
 			Viewer access keeps this workspace in review mode.
 		</div>
 	);
@@ -62,7 +66,7 @@ export function RevenuePage() {
 		'category'
 	);
 	const [bandFilter, setBandFilter] = useState<GradeBand | 'ALL'>('ALL');
-	const [setupOpen, setSetupOpen] = useState(false);
+	const [exceptionFilter, setExceptionFilter] = useState<RevenueExceptionFilterValue>('all');
 	const settingsButtonRef = useRef<HTMLButtonElement>(null);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
 	const closePanel = useRightPanelStore((state) => state.close);
@@ -161,7 +165,7 @@ export function RevenuePage() {
 
 	return (
 		<PageTransition>
-			<div className="space-y-4 pb-6">
+			<div className="flex h-full min-h-0 flex-col overflow-hidden">
 				{(currentVersion?.status ?? versionStatus) !== 'Draft' && (
 					<VersionLockBanner
 						status={currentVersion?.status ?? versionStatus ?? 'Draft'}
@@ -171,7 +175,7 @@ export function RevenuePage() {
 				{currentVersion?.dataSource === 'IMPORTED' && <ImportedBanner />}
 				{isViewer && <ViewerBanner />}
 
-				<div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3 shadow-(--shadow-xs)">
+				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--workspace-border) px-6 py-2">
 					<div className="flex flex-wrap items-center gap-3">
 						<ToggleGroup
 							type="single"
@@ -219,6 +223,8 @@ export function RevenuePage() {
 								))}
 							</ToggleGroup>
 						)}
+
+						<RevenueExceptionFilter value={exceptionFilter} onChange={setExceptionFilter} />
 					</div>
 
 					<div className="flex flex-wrap items-center gap-2">
@@ -238,18 +244,13 @@ export function RevenuePage() {
 						>
 							{isViewer ? 'View Settings' : 'Revenue Settings'}
 						</Button>
-						<Button type="button" variant="outline" size="sm" onClick={() => setSetupOpen(true)}>
-							Setup
-						</Button>
 						{!isViewer && (
-							<Button
-								type="button"
-								size="sm"
-								disabled={calculateMutation.isPending}
-								onClick={() => calculateMutation.mutate()}
-							>
-								{calculateMutation.isPending ? 'Calculating...' : 'Calculate Revenue'}
-							</Button>
+							<CalculateButton
+								onCalculate={() => calculateMutation.mutate()}
+								isPending={calculateMutation.isPending}
+								isSuccess={calculateMutation.isSuccess}
+								isError={calculateMutation.isError}
+							/>
 						)}
 					</div>
 				</div>
@@ -271,22 +272,14 @@ export function RevenuePage() {
 					readiness={readiness}
 				/>
 
-				<ForecastGrid
-					versionId={versionId}
-					viewMode={viewMode}
-					period={period}
-					bandFilter={bandFilter}
-				/>
-
-				{readiness && (
-					<RevenueSetupChecklist
+				<div className="flex-1 min-h-0 overflow-hidden">
+					<ForecastGrid
 						versionId={versionId}
-						lastCalculatedAt={currentVersion?.lastCalculatedAt}
-						readiness={readiness}
-						forceOpen={setupOpen}
-						onClose={() => setSetupOpen(false)}
+						viewMode={viewMode}
+						period={period}
+						bandFilter={bandFilter}
 					/>
-				)}
+				</div>
 
 				<RevenueSettingsDialog
 					versionId={versionId}

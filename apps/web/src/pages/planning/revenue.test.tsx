@@ -222,7 +222,7 @@ describe('RevenuePage', () => {
 		expect(screen.getByText('Status Strip')).toBeDefined();
 		expect(screen.getByText('Forecast Grid')).toBeDefined();
 		expect(screen.getByRole('button', { name: 'Revenue Settings' })).toBeDefined();
-		expect(screen.getByText('Calculate Revenue')).toBeDefined();
+		expect(screen.getByText('Calculate')).toBeDefined();
 		expect(mockSetActivePage).toHaveBeenCalledWith('revenue');
 	});
 

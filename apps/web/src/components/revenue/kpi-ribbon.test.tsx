@@ -7,7 +7,7 @@ afterEach(() => {
 });
 
 describe('RevenueKpiRibbon', () => {
-	it('renders five KPI cards with the new revenue totals', () => {
+	it('renders four KPI cards with the revenue totals', () => {
 		render(
 			<RevenueKpiRibbon
 				grossHt="58972254.0000"
@@ -20,12 +20,11 @@ describe('RevenueKpiRibbon', () => {
 			/>
 		);
 
-		expect(screen.getByText('Gross Tuition HT')).toBeDefined();
-		expect(screen.getByText('Total Discounts')).toBeDefined();
-		expect(screen.getByText('Net Revenue HT')).toBeDefined();
+		expect(screen.getByText('Net Tuition HT')).toBeDefined();
 		expect(screen.getByText('Other Revenue')).toBeDefined();
 		expect(screen.getByText('Total Operating Revenue')).toBeDefined();
-		expect(screen.getByText(/42.?114 SAR avg\/student/)).toBeDefined();
+		expect(screen.getByText('SAR per Student')).toBeDefined();
+		expect(screen.getAllByRole('listitem')).toHaveLength(4);
 	});
 
 	it('shows stale styling when revenue data is stale', () => {
@@ -41,7 +40,7 @@ describe('RevenueKpiRibbon', () => {
 			/>
 		);
 
-		expect(container.querySelectorAll('.opacity-60')).toHaveLength(5);
-		expect(container.querySelectorAll('.animate-pulse')).toHaveLength(5);
+		expect(container.querySelectorAll('.opacity-60')).toHaveLength(4);
+		expect(container.querySelectorAll('.animate-pulse')).toHaveLength(4);
 	});
 });

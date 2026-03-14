@@ -220,7 +220,7 @@ describe('ForecastGrid', () => {
 	it('renders the six category rows with negative and summer formatting', () => {
 		render(<ForecastGrid versionId={1} viewMode="category" period="both" />);
 
-		expect(screen.getByRole('grid', { name: 'Revenue forecast grid' })).toBeDefined();
+		expect(screen.getByRole('table', { name: 'Revenue forecast grid' })).toBeDefined();
 		expect(screen.getByText('Tuition Fees')).toBeDefined();
 		expect(screen.getByText('Discount Impact')).toBeDefined();
 		expect(screen.getByText('Grand Total')).toBeDefined();
@@ -230,7 +230,7 @@ describe('ForecastGrid', () => {
 
 	it('renders 20 grade rows including band subtotals and grand total', () => {
 		render(<ForecastGrid versionId={1} viewMode="grade" period="both" />);
-		const grid = screen.getByRole('grid', { name: 'Revenue forecast grid' });
+		const grid = screen.getByRole('table', { name: 'Revenue forecast grid' });
 
 		expect(screen.getByText('PS')).toBeDefined();
 		expect(screen.getByText('MS')).toBeDefined();
@@ -245,7 +245,7 @@ describe('ForecastGrid', () => {
 
 	it('filters visible columns by period', () => {
 		render(<ForecastGrid versionId={1} viewMode="category" period="AY1" />);
-		const grid = screen.getByRole('grid', { name: 'Revenue forecast grid' });
+		const grid = screen.getByRole('table', { name: 'Revenue forecast grid' });
 
 		expect(within(grid).getByRole('columnheader', { name: 'Jan' })).toBeDefined();
 		expect(within(grid).queryByRole('columnheader', { name: 'Sep' })).toBeNull();

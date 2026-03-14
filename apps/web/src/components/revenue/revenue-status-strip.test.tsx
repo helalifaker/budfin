@@ -26,12 +26,13 @@ describe('RevenueStatusStrip', () => {
 			/>
 		);
 
-		expect(screen.getByText(/Last calculated:/)).toBeDefined();
-		expect(screen.getByText(/Enrollment:/)).toBeDefined();
-		expect(screen.getByText(/Downstream:/)).toBeDefined();
-		expect(screen.getByText(/Config:/)).toBeDefined();
+		expect(screen.getByText(/Last calculated/)).toBeDefined();
+		expect(screen.getByText(/Enrollment/)).toBeDefined();
+		expect(screen.getByText(/Downstream/)).toBeDefined();
+		expect(screen.getByText(/Config/)).toBeDefined();
 		expect(screen.getByText(/5 of 5 complete/)).toBeDefined();
-		expect(screen.getByText(/Staffing, P&L/)).toBeDefined();
+		expect(screen.getByText('Staffing')).toBeDefined();
+		expect(screen.getByText('P&L')).toBeDefined();
 	});
 
 	it('renders enrollment as Fresh when not stale', () => {
