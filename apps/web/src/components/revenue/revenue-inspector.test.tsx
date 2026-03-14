@@ -222,8 +222,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('renders the active inspector view when a selection is set', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'category-tuition-fees',
+			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -236,8 +239,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('renders the view mode badge with correct text', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'category-tuition-fees',
+			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -247,8 +253,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('renders the grade view mode badge when in grade view', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'grade-PS',
+			code: 'PS',
 			label: 'PS',
 			viewMode: 'grade',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -258,8 +267,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('shows KPI cards with gross and net revenue values', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'category-tuition-fees',
+			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -270,8 +282,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('calls clearSelection when back button is clicked', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'category-tuition-fees',
+			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -283,8 +298,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('opens the mapped settings tab when Edit in Settings is clicked', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'category-tuition-fees',
+			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -297,8 +315,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('shows the formula card section', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'category-tuition-fees',
+			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -311,8 +332,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('shows band aggregate context in grade view', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'grade-PS',
+			code: 'PS',
 			label: 'PS',
 			viewMode: 'grade',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
@@ -322,8 +346,11 @@ describe('RevenueInspectorContent', () => {
 
 	it('renders contextual breakdowns for grade view mode', () => {
 		useRevenueSelectionStore.getState().selectRow({
+			id: 'grade-PS',
+			code: 'PS',
 			label: 'PS',
 			viewMode: 'grade',
+			rowType: 'data',
 		});
 
 		render(<RevenueInspectorContent />);
