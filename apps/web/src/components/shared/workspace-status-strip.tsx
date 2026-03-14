@@ -1,11 +1,29 @@
 import { cn } from '../../lib/cn';
 
+export interface StatusSection {
+	key: string;
+	label: string;
+	value: React.ReactNode;
+	severity?: 'default' | 'warning' | 'success' | 'error';
+	badge?: boolean;
+	priority?: number;
+}
+
 export type WorkspaceStatusStripProps = {
-	children: React.ReactNode;
+	sections: StatusSection[];
 	className?: string;
 };
 
-export function WorkspaceStatusStrip({ children, className }: WorkspaceStatusStripProps) {
+const SEVERITY_CLASSES: Record<string, string> = {
+	default: 'text-(--text-muted)',
+	warning: 'text-(--color-warning)',
+	success: 'text-(--color-success)',
+	error: 'text-(--color-error)',
+};
+
+export function WorkspaceStatusStrip({ sections, className }: WorkspaceStatusStripProps) {
+	const sorted = [...sections].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
+
 	return (
 		<div
 			role="status"
@@ -18,7 +36,18 @@ export function WorkspaceStatusStrip({ children, className }: WorkspaceStatusStr
 				className
 			)}
 		>
-			{children}
+			{sorted.map((section) => (
+				<span
+					key={section.key}
+					className={cn(
+						'flex items-center gap-1.5',
+						SEVERITY_CLASSES[section.severity ?? 'default']
+					)}
+				>
+					<span className="font-medium">{section.label}:</span>
+					{section.value}
+				</span>
+			))}
 		</div>
 	);
 }
