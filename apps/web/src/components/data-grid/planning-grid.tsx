@@ -41,6 +41,7 @@ export interface PlanningGridProps<T> {
 	onRowSelect?: (rowData: T) => void;
 	selectedRowPredicate?: (row: T) => boolean;
 	getRowClassName?: (row: T) => string | undefined;
+	forceGridRole?: boolean;
 	className?: string;
 	ariaLabel?: string;
 }
@@ -90,6 +91,7 @@ export function PlanningGrid<T>({
 	onRowSelect,
 	selectedRowPredicate,
 	getRowClassName,
+	forceGridRole = false,
 	className,
 	ariaLabel,
 }: PlanningGridProps<T>) {
@@ -106,8 +108,8 @@ export function PlanningGrid<T>({
 		[headerGroups]
 	);
 	const isEditable = (editableColumns?.length ?? 0) > 0;
-	const tableRole = isEditable ? 'grid' : 'table';
-	const cellRole = isEditable ? 'gridcell' : 'cell';
+	const tableRole = isEditable || forceGridRole ? 'grid' : 'table';
+	const cellRole = isEditable || forceGridRole ? 'gridcell' : 'cell';
 
 	// Build band groups when bandGrouping is provided
 	const bandedRows = useMemo(() => {
