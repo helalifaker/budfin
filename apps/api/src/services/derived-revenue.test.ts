@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	computeAllDerivedRevenue,
 	computeDAI,
+	computeExamFees,
 	deriveNewStudentGradeResults,
 	DerivedRevenueConfigurationError,
 	type CohortParamForDerived,
@@ -227,7 +228,86 @@ function buildSyntheticHeadcounts(): HeadcountForDerived[] {
 }
 
 describe('derived-revenue', () => {
+	describe('computeExamFees', () => {
+		it('returns 0.0000 for all exam types when headcounts is empty', () => {
+			const result = computeExamFees([], {
+				examBacPerStudent: '2000.0000',
+				examDnbPerStudent: '600.0000',
+				examEafPerStudent: '800.0000',
+			});
+			expect(result).toHaveLength(3);
+			const byName = new Map(result.map((r) => [r.lineItemName, r]));
+			expect(byName.get('BAC')?.annualAmount).toBe('0.0000');
+			expect(byName.get('DNB')?.annualAmount).toBe('0.0000');
+			expect(byName.get('EAF')?.annualAmount).toBe('0.0000');
+		});
+
+		it('returns 0.0000 when TERM, 3EME, and 1ERE grades have zero headcount', () => {
+			const headcounts: HeadcountForDerived[] = [
+				{ academicPeriod: 'AY1', gradeLevel: 'TERM', headcount: 0 },
+				{ academicPeriod: 'AY1', gradeLevel: '3EME', headcount: 0 },
+				{ academicPeriod: 'AY1', gradeLevel: '1ERE', headcount: 0 },
+			];
+			const result = computeExamFees(headcounts, {
+				examBacPerStudent: '2000.0000',
+				examDnbPerStudent: '600.0000',
+				examEafPerStudent: '800.0000',
+			});
+			const byName = new Map(result.map((r) => [r.lineItemName, r]));
+			expect(byName.get('BAC')?.annualAmount).toBe('0.0000');
+			expect(byName.get('DNB')?.annualAmount).toBe('0.0000');
+			expect(byName.get('EAF')?.annualAmount).toBe('0.0000');
+		});
+
+		it('computes BAC = rate * TERM headcount, DNB = rate * 3EME, EAF = rate * 1ERE', () => {
+			const headcounts: HeadcountForDerived[] = [
+				{ academicPeriod: 'AY1', gradeLevel: 'TERM', headcount: 10 },
+				{ academicPeriod: 'AY1', gradeLevel: '3EME', headcount: 8 },
+				{ academicPeriod: 'AY1', gradeLevel: '1ERE', headcount: 6 },
+			];
+			const result = computeExamFees(headcounts, {
+				examBacPerStudent: '2000.0000',
+				examDnbPerStudent: '600.0000',
+				examEafPerStudent: '800.0000',
+			});
+			const byName = new Map(result.map((r) => [r.lineItemName, r]));
+			expect(byName.get('BAC')?.annualAmount).toBe('20000.0000');
+			expect(byName.get('DNB')?.annualAmount).toBe('4800.0000');
+			expect(byName.get('EAF')?.annualAmount).toBe('4800.0000');
+		});
+	});
+
 	describe('computeDAI', () => {
+		it('throws DAI_RATE_MISSING when an AY2 fee grid entry exists with no Plein tariff', () => {
+			// Only an RP tariff exists for CP/Francais — no Plein tariff to serve as the DAI rate
+			expect(() =>
+				computeDAI(
+					[
+						{
+							academicPeriod: 'AY2',
+							gradeLevel: 'CP',
+							nationality: 'Francais',
+							tariff: 'RP',
+							headcount: 1,
+						},
+					],
+					[
+						{
+							academicPeriod: 'AY2',
+							gradeLevel: 'CP',
+							nationality: 'Francais',
+							tariff: 'RP',
+							dai: '4500.0000',
+						},
+					]
+				)
+			).toThrowError(
+				expect.objectContaining<Partial<DerivedRevenueConfigurationError>>({
+					code: 'DAI_RATE_MISSING',
+				})
+			);
+		});
+
 		it('rejects inconsistent AY2 DAI values across tariffs for the same grade and nationality', () => {
 			expect(() =>
 				computeDAI(

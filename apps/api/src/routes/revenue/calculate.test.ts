@@ -502,6 +502,38 @@ describe('POST /calculate/revenue', () => {
 		expect(res.json().code).toBe('DAI_MISMATCH');
 	});
 
+	it('updates dynamic OtherRevenueItem annualAmount with computed derived value', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+		mockCalculateRevenue.mockReturnValue(mockEngineResult);
+		// Return a single matching derived item
+		mockComputeAllDerivedRevenue.mockReturnValue([
+			{
+				lineItemName: 'DAI - Francais',
+				annualAmount: '7500.0000',
+				distributionMethod: 'SPECIFIC_PERIOD',
+				weightArray: null,
+				specificMonths: [5, 6],
+				ifrsCategory: 'Registration Fees',
+			},
+		]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_PREFIX}/revenue`,
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		// DAI - Francais is the first canonical item, id = 1 in the default mock
+		expect(mockPrisma.otherRevenueItem.update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: { id: 1 },
+				data: { annualAmount: '7500.0000' },
+			})
+		);
+	});
+
 	it('handles empty enrollment data gracefully', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
 		mockCalculateRevenue.mockReturnValue({

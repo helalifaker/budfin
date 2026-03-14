@@ -154,3 +154,18 @@ WHERE NOT EXISTS (
     WHERE o."version_id" = v."id"
       AND o."line_item_name" = c."line_item_name"
 );
+
+-- DOWN (not fully reversible — data seeding cannot be automatically undone; requires backup restore):
+-- DROP INDEX IF EXISTS "idx_version_revenue_settings_created_by";
+-- DROP INDEX IF EXISTS "version_revenue_settings_version_id_key";
+-- ALTER TABLE "version_revenue_settings" DROP CONSTRAINT IF EXISTS "version_revenue_settings_version_id_fkey";
+-- ALTER TABLE "version_revenue_settings" DROP CONSTRAINT IF EXISTS "version_revenue_settings_created_by_fkey";
+-- ALTER TABLE "version_revenue_settings" DROP CONSTRAINT IF EXISTS "version_revenue_settings_updated_by_fkey";
+-- DROP TABLE IF EXISTS "version_revenue_settings";
+-- ALTER TABLE "cohort_parameters"
+--   DROP COLUMN IF EXISTS "applied_retention_rate",
+--   DROP COLUMN IF EXISTS "retained_from_prior",
+--   DROP COLUMN IF EXISTS "historical_target_headcount",
+--   DROP COLUMN IF EXISTS "derived_laterals",
+--   DROP COLUMN IF EXISTS "uses_configured_retention";
+-- NOTE: compute_method backfill on other_revenue_items cannot be reversed without a backup restore.

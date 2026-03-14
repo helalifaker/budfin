@@ -176,10 +176,13 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				});
 			} catch (error) {
 				if (error instanceof DerivedRevenueConfigurationError) {
+					// Only expose details for codes with UI-actionable data (key/value pairs).
+					// Internal reconciliation details (headcount arrays) are stripped.
+					const safeDetailCodes = new Set(['DAI_MISMATCH', 'DAI_RATE_MISSING']);
 					return reply.status(422).send({
 						code: error.code,
 						message: error.message,
-						details: error.details,
+						...(safeDetailCodes.has(error.code) ? { details: error.details } : {}),
 					});
 				}
 				throw error;
@@ -339,17 +342,18 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 					});
 				}
 
-				// Update dynamic OtherRevenueItem annualAmount with computed values
-				for (const derived of derivedItems) {
-					// Find the matching dynamic OtherRevenueItem
-					const match = dynamicItems.find((d) => d.lineItemName === derived.lineItemName);
-					if (match) {
-						await txPrisma.otherRevenueItem.update({
-							where: { id: match.id },
-							data: { annualAmount: derived.annualAmount },
-						});
-					}
-				}
+				// Update dynamic OtherRevenueItem annualAmount with computed values (parallel batch)
+				await Promise.all(
+					derivedItems.map(async (derived) => {
+						const match = dynamicItems.find((d) => d.lineItemName === derived.lineItemName);
+						if (match) {
+							await txPrisma.otherRevenueItem.update({
+								where: { id: match.id },
+								data: { annualAmount: derived.annualAmount },
+							});
+						}
+					})
+				);
 
 				// Remove REVENUE from staleModules
 				const currentStale = new Set(version.staleModules);
