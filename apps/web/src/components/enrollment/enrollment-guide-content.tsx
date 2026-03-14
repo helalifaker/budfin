@@ -7,6 +7,7 @@ import {
 	Settings2,
 } from 'lucide-react';
 import { GuideSection } from '../shared/guide-section';
+import { registerGuideContent } from '../../lib/right-panel-registry';
 
 export function EnrollmentGuideContent() {
 	return (
@@ -136,3 +137,6 @@ export function EnrollmentGuideContent() {
 		</div>
 	);
 }
+
+// Register on module load
+registerGuideContent('enrollment', EnrollmentGuideContent);

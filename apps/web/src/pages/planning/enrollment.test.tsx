@@ -281,6 +281,7 @@ vi.mock('../../stores/enrollment-settings-store', () => ({
 }));
 
 vi.mock('../../components/enrollment/enrollment-inspector', () => ({}));
+vi.mock('../../components/enrollment/enrollment-guide-content', () => ({}));
 
 describe('EnrollmentPage', () => {
 	beforeEach(() => {

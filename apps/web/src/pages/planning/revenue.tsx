@@ -28,6 +28,7 @@ import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 import { useAuthStore } from '../../stores/auth-store';
 import '../../components/revenue/revenue-inspector';
+import '../../components/revenue/revenue-guide-content';
 
 function ImportedBanner() {
 	return (
