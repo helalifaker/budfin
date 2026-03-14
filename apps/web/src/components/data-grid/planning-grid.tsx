@@ -59,6 +59,80 @@ function isNumeric(columnId: string, numericColumns?: string[]): boolean {
 	return numericColumns?.includes(columnId) ?? false;
 }
 
+const BAND_COLOR_CLASS_MAP: Record<string, string> = {
+	'var(--badge-maternelle)': 'text-(--badge-maternelle)',
+	'var(--badge-elementaire)': 'text-(--badge-elementaire)',
+	'var(--badge-college)': 'text-(--badge-college)',
+	'var(--badge-lycee)': 'text-(--badge-lycee)',
+	'var(--color-info)': 'text-(--color-info)',
+	'var(--color-success)': 'text-(--color-success)',
+	'var(--color-warning)': 'text-(--color-warning)',
+	'var(--accent-600)': 'text-(--accent-600)',
+};
+
+const BAND_BG_CLASS_MAP: Record<string, string> = {
+	'var(--badge-maternelle-bg)': 'bg-(--badge-maternelle-bg)',
+	'var(--badge-elementaire-bg)': 'bg-(--badge-elementaire-bg)',
+	'var(--badge-college-bg)': 'bg-(--badge-college-bg)',
+	'var(--badge-lycee-bg)': 'bg-(--badge-lycee-bg)',
+	'var(--color-info-bg)': 'bg-(--color-info-bg)',
+	'var(--color-success-bg)': 'bg-(--color-success-bg)',
+	'var(--color-warning-bg)': 'bg-(--color-warning-bg)',
+	'var(--accent-50)': 'bg-(--accent-50)',
+};
+
+const BAND_BORDER_CLASS_MAP: Record<string, string> = {
+	'var(--badge-maternelle)': 'border-l-(--badge-maternelle)',
+	'var(--badge-elementaire)': 'border-l-(--badge-elementaire)',
+	'var(--badge-college)': 'border-l-(--badge-college)',
+	'var(--badge-lycee)': 'border-l-(--badge-lycee)',
+	'var(--color-info)': 'border-l-(--color-info)',
+	'var(--color-success)': 'border-l-(--color-success)',
+	'var(--color-warning)': 'border-l-(--color-warning)',
+	'var(--accent-600)': 'border-l-(--accent-600)',
+};
+
+const ROW_ENTER_DELAY_CLASSES = [
+	'row-enter-delay-0',
+	'row-enter-delay-25',
+	'row-enter-delay-50',
+	'row-enter-delay-75',
+	'row-enter-delay-100',
+	'row-enter-delay-125',
+	'row-enter-delay-150',
+	'row-enter-delay-175',
+	'row-enter-delay-200',
+	'row-enter-delay-225',
+	'row-enter-delay-250',
+	'row-enter-delay-275',
+	'row-enter-delay-300',
+	'row-enter-delay-325',
+	'row-enter-delay-350',
+	'row-enter-delay-375',
+	'row-enter-delay-400',
+	'row-enter-delay-425',
+	'row-enter-delay-450',
+	'row-enter-delay-475',
+	'row-enter-delay-500',
+];
+
+function getBandClasses(style: { color: string; bg: string } | undefined, isCompact: boolean) {
+	return {
+		backgroundClass: style ? BAND_BG_CLASS_MAP[style.bg] : undefined,
+		borderClass:
+			style && !isCompact ? cn('border-l-3', BAND_BORDER_CLASS_MAP[style.color]) : undefined,
+		textClass: style ? BAND_COLOR_CLASS_MAP[style.color] : undefined,
+	};
+}
+
+function getRowEnterDelayClass(animationIndex: number): string {
+	return (
+		ROW_ENTER_DELAY_CLASSES[Math.min(animationIndex, ROW_ENTER_DELAY_CLASSES.length - 1)] ??
+		ROW_ENTER_DELAY_CLASSES[0] ??
+		''
+	);
+}
+
 function ResizeHandle<T>({ header }: { header: Header<T, unknown> }) {
 	return (
 		<div
@@ -338,7 +412,7 @@ export function PlanningGrid<T>({
 				role={cellRole}
 				aria-selected={isActive}
 				onClick={() => handleCellClick(rowIndex, colIndex)}
-				style={{ width: cell.column.getSize() }}
+				width={cell.column.getSize()}
 				className={cn(
 					isCompact
 						? 'px-(--grid-compact-cell-px) py-(--grid-compact-cell-py) border-b border-b-(--grid-compact-border)'
@@ -389,12 +463,10 @@ export function PlanningGrid<T>({
 					isSelected && 'border-l-[3px] border-l-(--accent-500) bg-(--grid-selected-row)',
 					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
 					rowAnimation && 'animate-row-enter',
+					rowAnimation && getRowEnterDelayClass(animationIndex),
 					onRowSelect && 'cursor-pointer',
 					customRowClass
 				)}
-				style={
-					rowAnimation ? { animationDelay: `${Math.min(animationIndex, 20) * 25}ms` } : undefined
-				}
 			>
 				{headers.map((header, colIndex) => renderDataCell(row, rowIndex, colIndex, header.id))}
 			</tr>
@@ -405,22 +477,18 @@ export function PlanningGrid<T>({
 		if (!bandGrouping) return null;
 		const label = bandGrouping.bandLabels[band] ?? band;
 		const style = bandGrouping.bandStyles[band];
+		const { backgroundClass, borderClass, textClass } = getBandClasses(style, isCompact);
 		const isCollapsed = collapsedBands.has(band);
 
 		return (
 			<tr key={`band-${band}`} role="row" className="border-b border-(--workspace-border)">
 				<td
 					colSpan={cols}
-					className={cn('px-(--grid-cell-px) py-3', 'text-(--text-xs) font-semibold')}
-					style={{
-						borderLeft:
-							style && !isCompact
-								? `var(--grid-band-accent-width) solid ${style.color}`
-								: undefined,
-						background: style
-							? `color-mix(in srgb, ${style.bg} ${isCompact ? '50%' : '60%'}, white)`
-							: undefined,
-					}}
+					className={cn(
+						'px-(--grid-cell-px) py-3 text-token-xs font-semibold',
+						backgroundClass,
+						borderClass
+					)}
 				>
 					<span className="inline-flex items-center gap-2">
 						{bandGrouping.collapsible && (
@@ -445,22 +513,17 @@ export function PlanningGrid<T>({
 								/>
 							</button>
 						)}
-						<span
-							className="font-[family-name:var(--font-display)] uppercase tracking-[0.08em]"
-							style={{ color: style?.color }}
-						>
+						<span className={cn('font-token-display uppercase tracking-[0.08em]', textClass)}>
 							{label}
 						</span>
 						<span
 							className={cn(
 								'inline-flex items-center justify-center',
 								'min-w-6 rounded-full px-2 py-0.5',
-								'text-[11px] font-semibold'
+								'text-[11px] font-semibold',
+								backgroundClass,
+								textClass
 							)}
-							style={{
-								backgroundColor: style?.bg,
-								color: style?.color,
-							}}
 						>
 							{rowCount}
 						</span>
