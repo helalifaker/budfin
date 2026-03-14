@@ -103,6 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 					method: 'POST',
 					credentials: 'include',
 				});
+				if (response.status === 204) return false;
 				if (!response.ok) return false;
 				const data = await response.json();
 				get().setAuth(data.access_token, data.user);

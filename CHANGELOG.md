@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Per-version revenue rates: each budget version now stores its own DPI per-student, Frais de Dossier per-student, and exam/evaluation per-student rates, configurable via the Revenue Settings panel; rates default to EFIR workbook values and can be updated by Admin, BudgetOwner, and Editor roles (#196)
+- Dynamic computation mode for Other Revenue line items: rows flagged with a compute method (DAI, DPI, Dossier, exam fees, evaluation fees) are automatically calculated from student headcounts and per-version rates (#196)
+- GET/PUT `revenue/settings` endpoint for reading and updating per-version revenue rates (#196)
+
 - Weighted cohort retention algorithm for enrollment planning: configurable recent-year and historical-year weights determine AY2 headcounts from multi-year retention trends; lateral weight validation service prevents sum-to-1.0 errors for pure headcount adjustments (#185)
 - Enrollment settings API (GET/PUT) with version-scoped configuration for planning parameters including retention weights and rollover thresholds (#185)
 - Cohort history service aggregating multi-year enrollment actuals to compute per-grade retention trend baselines (#185)
@@ -179,6 +183,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Fee grid save now validates that AY2 DAI values are identical across tariffs for the same grade and nationality; inconsistent values are rejected with DAI_MISMATCH before running the engine, preventing silent revenue miscalculations (#196)
+- Session refresh no longer produces a spurious 401 when the refresh token cookie is absent (first page load with no prior session); the API now returns 204 No Content, allowing the app to initialize cleanly in the unauthenticated state (#196)
+- Revenue calculation now guards against stale enrollment data (409 ENROLLMENT_STALE) and missing per-version revenue settings (422 REVENUE_SETTINGS_MISSING) before running the engine (#196)
 - Positive manual adjustments (via `manualAdjustment`) no longer raise 422 `LATERAL_WEIGHT_SUM_INVALID` when all three nationality weights are zero; the lateral weight sum-to-1.0 check is skipped for zero-weight configurations that represent pure headcount adjustments with no lateral entry distribution (#185)
 - SQL injection vulnerability in employees.ts resolved: all `$queryRawUnsafe` calls replaced with `Prisma.sql` tagged templates with parameterized filter, encryption key, and body field values (#185)
 - `/revenue-results` route renamed to `/revenue` across API routes, frontend hooks, and tests to match the API contract (#185)

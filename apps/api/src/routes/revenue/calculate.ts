@@ -10,6 +10,18 @@ import {
 	type DiscountPolicyInput,
 	type OtherRevenueInput,
 } from '../../services/revenue-engine.js';
+import {
+	computeAllDerivedRevenue,
+	DerivedRevenueConfigurationError,
+} from '../../services/derived-revenue.js';
+import {
+	formatRevenueSettingsRecord,
+	validateCanonicalDynamicOtherRevenueItems,
+} from '../../services/revenue-config.js';
+import {
+	buildRevenueReportingTotals,
+	buildRevenueReportingView,
+} from '../../services/revenue-reporting.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -55,19 +67,146 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				});
 			}
 
+			if (version.staleModules.includes('ENROLLMENT')) {
+				return reply.status(409).send({
+					code: 'ENROLLMENT_STALE',
+					message: 'Recalculate enrollment before running revenue.',
+				});
+			}
+
 			// Fetch all inputs in parallel
-			const [enrollmentDetails, feeGrids, discountPolicies, otherRevenueItems] = await Promise.all([
+			const [
+				enrollmentDetails,
+				feeGrids,
+				discountPolicies,
+				otherRevenueItems,
+				enrollmentHeadcounts,
+				cohortParameters,
+				revenueSettings,
+			] = await Promise.all([
 				prisma.enrollmentDetail.findMany({ where: { versionId } }),
 				prisma.feeGrid.findMany({ where: { versionId } }),
 				prisma.discountPolicy.findMany({ where: { versionId } }),
 				prisma.otherRevenueItem.findMany({ where: { versionId } }),
+				prisma.enrollmentHeadcount.findMany({ where: { versionId } }),
+				prisma.cohortParameter.findMany({ where: { versionId } }),
+				prisma.versionRevenueSettings.findUnique({ where: { versionId } }),
 			]);
+
+			// Separate static vs dynamic other revenue items
+			const staticItems = otherRevenueItems.filter((o) => !o.computeMethod);
+			const dynamicItems = otherRevenueItems.filter((o) => o.computeMethod);
+
+			if (!revenueSettings) {
+				return reply.status(422).send({
+					code: 'REVENUE_SETTINGS_MISSING',
+					message: 'Version-scoped revenue settings are required before calculation.',
+				});
+			}
+
+			const dynamicValidation = validateCanonicalDynamicOtherRevenueItems(
+				dynamicItems.map((item) => ({
+					lineItemName: item.lineItemName,
+					computeMethod: item.computeMethod,
+					distributionMethod: item.distributionMethod,
+					weightArray: item.weightArray,
+					specificMonths: item.specificMonths,
+					ifrsCategory: item.ifrsCategory,
+				}))
+			);
+			if (
+				dynamicValidation.missing.length > 0 ||
+				dynamicValidation.unexpected.length > 0 ||
+				dynamicValidation.invalid.length > 0
+			) {
+				return reply.status(422).send({
+					code: 'DYNAMIC_OTHER_REVENUE_INVALID',
+					message: 'Dynamic other-revenue rows must match the canonical configuration.',
+				});
+			}
+
+			const settings = formatRevenueSettingsRecord({
+				dpiPerStudentHt: revenueSettings.dpiPerStudentHt,
+				dossierPerStudentHt: revenueSettings.dossierPerStudentHt,
+				examBacPerStudent: revenueSettings.examBacPerStudent,
+				examDnbPerStudent: revenueSettings.examDnbPerStudent,
+				examEafPerStudent: revenueSettings.examEafPerStudent,
+				evalPrimairePerStudent: revenueSettings.evalPrimairePerStudent,
+				evalSecondairePerStudent: revenueSettings.evalSecondairePerStudent,
+			});
+
+			// Compute derived revenue items
+			const mappedDetails = enrollmentDetails.map((d) => ({
+				academicPeriod: d.academicPeriod as 'AY1' | 'AY2',
+				gradeLevel: d.gradeLevel,
+				nationality: d.nationality,
+				tariff: d.tariff,
+				headcount: d.headcount,
+			}));
+
+			let derivedItems;
+			try {
+				derivedItems = computeAllDerivedRevenue({
+					enrollmentDetails: mappedDetails,
+					feeGrids: feeGrids.map((f) => ({
+						academicPeriod: f.academicPeriod as 'AY1' | 'AY2',
+						gradeLevel: f.gradeLevel,
+						nationality: f.nationality,
+						tariff: f.tariff,
+						dai: new Decimal(f.dai.toString()).toFixed(4),
+					})),
+					headcounts: enrollmentHeadcounts.map((h) => ({
+						academicPeriod: h.academicPeriod as 'AY1' | 'AY2',
+						gradeLevel: h.gradeLevel,
+						headcount: h.headcount,
+					})),
+					cohortParams: cohortParameters.map((cp) => ({
+						gradeLevel: cp.gradeLevel,
+						appliedRetentionRate:
+							cp.appliedRetentionRate === null
+								? null
+								: new Decimal(cp.appliedRetentionRate.toString()).toFixed(4),
+						retainedFromPrior: cp.retainedFromPrior,
+						historicalTargetHeadcount: cp.historicalTargetHeadcount,
+						derivedLaterals: cp.derivedLaterals,
+						usesConfiguredRetention: cp.usesConfiguredRetention,
+					})),
+					settings,
+				});
+			} catch (error) {
+				if (error instanceof DerivedRevenueConfigurationError) {
+					// Only expose details for codes with UI-actionable data (key/value pairs).
+					// Internal reconciliation details (headcount arrays) are stripped.
+					const safeDetailCodes = new Set(['DAI_MISMATCH', 'DAI_RATE_MISSING']);
+					return reply.status(422).send({
+						code: error.code,
+						message: error.message,
+						...(safeDetailCodes.has(error.code) ? { details: error.details } : {}),
+					});
+				}
+				throw error;
+			}
+
+			// Merge: derived computed items + static manual items
+			const mergedOtherRevenue: OtherRevenueInput[] = [
+				...derivedItems,
+				...staticItems.map(
+					(o): OtherRevenueInput => ({
+						lineItemName: o.lineItemName,
+						annualAmount: new Decimal(o.annualAmount.toString()).toFixed(4),
+						distributionMethod: o.distributionMethod as OtherRevenueInput['distributionMethod'],
+						weightArray: o.weightArray as number[] | null,
+						specificMonths: o.specificMonths.length > 0 ? o.specificMonths : null,
+						ifrsCategory: o.ifrsCategory,
+					})
+				),
+			];
 
 			// Map to engine input types
 			const engineInput = {
-				enrollmentDetails: enrollmentDetails.map(
+				enrollmentDetails: mappedDetails.map(
 					(d): EnrollmentDetailInput => ({
-						academicPeriod: d.academicPeriod as 'AY1' | 'AY2',
+						academicPeriod: d.academicPeriod,
 						gradeLevel: d.gradeLevel,
 						nationality: d.nationality,
 						tariff: d.tariff,
@@ -91,20 +230,50 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 						discountRate: new Decimal(p.discountRate.toString()).toFixed(6),
 					})
 				),
-				otherRevenueItems: otherRevenueItems.map(
-					(o): OtherRevenueInput => ({
-						lineItemName: o.lineItemName,
-						annualAmount: new Decimal(o.annualAmount.toString()).toFixed(4),
-						distributionMethod: o.distributionMethod as OtherRevenueInput['distributionMethod'],
-						weightArray: o.weightArray as number[] | null,
-						specificMonths: o.specificMonths.length > 0 ? o.specificMonths : null,
-						ifrsCategory: o.ifrsCategory,
-					})
-				),
+				otherRevenueItems: mergedOtherRevenue,
 			};
 
 			// Calculate
 			const results = calculateRevenue(engineInput);
+			const reporting = buildRevenueReportingView(
+				results.tuitionRevenue.map((row) => ({
+					academicPeriod: row.academicPeriod,
+					gradeLevel: row.gradeLevel,
+					month: row.month,
+					grossRevenueHt: row.grossRevenueHt,
+					discountAmount: row.discountAmount,
+					netRevenueHt: row.netRevenueHt,
+					vatAmount: row.vatAmount,
+				})),
+				results.otherRevenue.map((row) => ({
+					lineItemName: row.lineItemName,
+					ifrsCategory: row.ifrsCategory,
+					executiveCategory: row.executiveCategory,
+					month: row.month,
+					amount: row.amount,
+				}))
+			);
+			const reportingTotals = buildRevenueReportingTotals(
+				results.tuitionRevenue.map((row) => ({
+					academicPeriod: row.academicPeriod,
+					gradeLevel: row.gradeLevel,
+					month: row.month,
+					grossRevenueHt: row.grossRevenueHt,
+					discountAmount: row.discountAmount,
+					netRevenueHt: row.netRevenueHt,
+					vatAmount: row.vatAmount,
+				})),
+				reporting
+			);
+			const summary = {
+				grossRevenueHt: reportingTotals.grossRevenueHt,
+				totalDiscounts: reportingTotals.discountAmount,
+				netRevenueHt: reportingTotals.netRevenueHt,
+				totalVat: reportingTotals.vatAmount,
+				totalOtherRevenue: results.totals.totalOtherRevenue,
+				totalExecutiveOtherRevenue: reportingTotals.otherRevenueAmount,
+				totalOperatingRevenue: reportingTotals.totalOperatingRevenue,
+			};
 			const durationMs = Math.round(performance.now() - startTime);
 
 			// Persist results in a transaction
@@ -172,6 +341,19 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 					});
 				}
 
+				// Update dynamic OtherRevenueItem annualAmount with computed values (parallel batch)
+				await Promise.all(
+					derivedItems.map(async (derived) => {
+						const match = dynamicItems.find((d) => d.lineItemName === derived.lineItemName);
+						if (match) {
+							await txPrisma.otherRevenueItem.update({
+								where: { id: match.id },
+								data: { annualAmount: derived.annualAmount },
+							});
+						}
+					})
+				);
+
 				// Remove REVENUE from staleModules
 				const currentStale = new Set(version.staleModules);
 				currentStale.delete('REVENUE');
@@ -192,7 +374,7 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 						outputSummary: {
 							tuitionRows: results.tuitionRevenue.length,
 							otherRevenueRows: results.otherRevenue.length,
-							totals: results.totals,
+							totals: summary,
 						},
 					},
 				});
@@ -201,7 +383,7 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 			return {
 				runId,
 				durationMs,
-				summary: results.totals,
+				summary,
 				tuitionRowCount: results.tuitionRevenue.length,
 				otherRevenueRowCount: results.otherRevenue.length,
 			};

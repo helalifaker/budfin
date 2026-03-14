@@ -37,6 +37,14 @@ vi.mock('../lib/prisma.js', () => {
 			findMany: vi.fn().mockResolvedValue([]),
 			createMany: vi.fn().mockResolvedValue({ count: 0 }),
 		},
+		versionRevenueSettings: {
+			findUnique: vi.fn().mockResolvedValue(null),
+			create: vi.fn().mockResolvedValue({ id: 1 }),
+		},
+		otherRevenueItem: {
+			findMany: vi.fn().mockResolvedValue([]),
+			createMany: vi.fn().mockResolvedValue({ count: 14 }),
+		},
 		gradeLevel: {
 			findMany: vi.fn().mockResolvedValue([
 				{
@@ -76,6 +84,8 @@ vi.mock('../lib/prisma.js', () => {
 				enrollmentHeadcount: mockPrisma.enrollmentHeadcount,
 				enrollmentDetail: mockPrisma.enrollmentDetail,
 				monthlyBudgetSummary: mockPrisma.monthlyBudgetSummary,
+				versionRevenueSettings: mockPrisma.versionRevenueSettings,
+				otherRevenueItem: mockPrisma.otherRevenueItem,
 				gradeLevel: mockPrisma.gradeLevel,
 				auditEntry: mockPrisma.auditEntry,
 				cohortParameter: mockPrisma.cohortParameter,
@@ -103,6 +113,14 @@ const mockPrisma = prisma as unknown as {
 		createMany: ReturnType<typeof vi.fn>;
 	};
 	monthlyBudgetSummary: {
+		findMany: ReturnType<typeof vi.fn>;
+		createMany: ReturnType<typeof vi.fn>;
+	};
+	versionRevenueSettings: {
+		findUnique: ReturnType<typeof vi.fn>;
+		create: ReturnType<typeof vi.fn>;
+	};
+	otherRevenueItem: {
 		findMany: ReturnType<typeof vi.fn>;
 		createMany: ReturnType<typeof vi.fn>;
 	};

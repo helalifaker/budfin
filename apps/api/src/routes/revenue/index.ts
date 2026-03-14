@@ -4,8 +4,10 @@ import { discountRoutes } from './discounts.js';
 import { otherRevenueRoutes } from './other-revenue.js';
 import { revenueReadinessRoutes } from './readiness.js';
 import { revenueResultsRoutes } from './results.js';
+import { revenueSettingsRoutes } from './settings.js';
 
 export async function revenueRoutes(app: FastifyInstance) {
+	await app.register(revenueSettingsRoutes);
 	await app.register(feeGridRoutes);
 	await app.register(discountRoutes);
 	await app.register(otherRevenueRoutes);

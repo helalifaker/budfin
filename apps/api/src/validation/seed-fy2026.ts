@@ -54,6 +54,7 @@ interface OtherRevenueFixture {
 	weightArray: number[] | null;
 	specificMonths: number[] | null;
 	ifrsCategory: string;
+	computeMethod: string | null;
 }
 
 interface ExpectedRevenueFixture {
@@ -222,6 +223,7 @@ async function main() {
 				weightArray: o.weightArray ? JSON.parse(JSON.stringify(o.weightArray)) : undefined,
 				specificMonths: o.specificMonths ?? [],
 				ifrsCategory: o.ifrsCategory,
+				computeMethod: o.computeMethod ?? null,
 				createdBy: admin.id,
 			},
 		});

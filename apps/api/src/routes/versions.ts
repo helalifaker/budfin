@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { Decimal } from 'decimal.js';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
+import {
+	buildCanonicalDynamicOtherRevenueRows,
+	DEFAULT_VERSION_REVENUE_SETTINGS,
+	formatRevenueSettingsRecord,
+} from '../services/revenue-config.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -207,6 +212,92 @@ async function seedVersionCapacityConfig(
 	if (rows.length > 0) {
 		await tx.versionCapacityConfig.createMany({
 			data: rows,
+		});
+	}
+}
+
+async function seedVersionRevenueArtifacts(
+	tx: Pick<Prisma.TransactionClient, 'versionRevenueSettings' | 'otherRevenueItem'>,
+	{
+		targetVersionId,
+		sourceVersionId,
+		actorUserId,
+	}: {
+		targetVersionId: number;
+		sourceVersionId?: number | null;
+		actorUserId: number;
+	}
+) {
+	const [sourceSettings, sourceOtherRevenueItems] = await Promise.all([
+		sourceVersionId
+			? tx.versionRevenueSettings.findUnique({
+					where: { versionId: sourceVersionId },
+				})
+			: Promise.resolve(null),
+		sourceVersionId
+			? tx.otherRevenueItem.findMany({
+					where: { versionId: sourceVersionId },
+					orderBy: { id: 'asc' },
+				})
+			: Promise.resolve([]),
+	]);
+
+	const settings =
+		sourceSettings === null
+			? DEFAULT_VERSION_REVENUE_SETTINGS
+			: formatRevenueSettingsRecord({
+					dpiPerStudentHt: sourceSettings.dpiPerStudentHt,
+					dossierPerStudentHt: sourceSettings.dossierPerStudentHt,
+					examBacPerStudent: sourceSettings.examBacPerStudent,
+					examDnbPerStudent: sourceSettings.examDnbPerStudent,
+					examEafPerStudent: sourceSettings.examEafPerStudent,
+					evalPrimairePerStudent: sourceSettings.evalPrimairePerStudent,
+					evalSecondairePerStudent: sourceSettings.evalSecondairePerStudent,
+				});
+
+	await tx.versionRevenueSettings.create({
+		data: {
+			versionId: targetVersionId,
+			...settings,
+			createdBy: actorUserId,
+		},
+	});
+
+	const itemsToCreate = sourceOtherRevenueItems.map((item) => ({
+		lineItemName: item.lineItemName,
+		annualAmount: item.annualAmount.toString(),
+		distributionMethod: item.distributionMethod,
+		weightArray: item.weightArray ?? Prisma.JsonNull,
+		specificMonths: item.specificMonths,
+		ifrsCategory: item.ifrsCategory,
+		computeMethod: item.computeMethod,
+		createdBy: actorUserId,
+	}));
+
+	const seenLineItems = new Set(sourceOtherRevenueItems.map((item) => item.lineItemName));
+	for (const canonical of buildCanonicalDynamicOtherRevenueRows()) {
+		if (seenLineItems.has(canonical.lineItemName)) {
+			continue;
+		}
+
+		itemsToCreate.push({
+			lineItemName: canonical.lineItemName,
+			annualAmount: canonical.annualAmount,
+			distributionMethod: canonical.distributionMethod,
+			weightArray: Prisma.JsonNull,
+			specificMonths: canonical.specificMonths ?? [],
+			ifrsCategory: canonical.ifrsCategory,
+			computeMethod: canonical.computeMethod,
+			createdBy: actorUserId,
+		});
+	}
+
+	if (itemsToCreate.length > 0) {
+		await tx.otherRevenueItem.createMany({
+			data: itemsToCreate.map((item) => ({
+				versionId: targetVersionId,
+				...item,
+			})),
 		});
 	}
 }
@@ -772,6 +863,11 @@ export async function versionRoutes(app: FastifyInstance) {
 						targetVersionId: created.id,
 						sourceVersionId: sourceVersion?.id ?? null,
 					});
+					await seedVersionRevenueArtifacts(tx as Prisma.TransactionClient, {
+						targetVersionId: created.id,
+						sourceVersionId: sourceVersion?.id ?? null,
+						actorUserId: request.user.id,
+					});
 
 					// Clone data from source version if specified
 					if (body.sourceVersionId) {
@@ -926,6 +1022,11 @@ export async function versionRoutes(app: FastifyInstance) {
 						targetVersionId: newVersion.id,
 						sourceVersionId: id,
 					});
+					await seedVersionRevenueArtifacts(tx as Prisma.TransactionClient, {
+						targetVersionId: newVersion.id,
+						sourceVersionId: id,
+						actorUserId: request.user.id,
+					});
 
 					// Copy enrollment headcount rows
 					if (body.includeEnrollment !== false) {
@@ -992,6 +1093,11 @@ export async function versionRoutes(app: FastifyInstance) {
 							lateralWeightFr: true,
 							lateralWeightNat: true,
 							lateralWeightAut: true,
+							appliedRetentionRate: true,
+							retainedFromPrior: true,
+							historicalTargetHeadcount: true,
+							derivedLaterals: true,
+							usesConfiguredRetention: true,
 						},
 					});
 					if (cohortParams.length > 0) {
@@ -1004,6 +1110,11 @@ export async function versionRoutes(app: FastifyInstance) {
 								lateralWeightFr: cp.lateralWeightFr,
 								lateralWeightNat: cp.lateralWeightNat,
 								lateralWeightAut: cp.lateralWeightAut,
+								appliedRetentionRate: cp.appliedRetentionRate,
+								retainedFromPrior: cp.retainedFromPrior,
+								historicalTargetHeadcount: cp.historicalTargetHeadcount,
+								derivedLaterals: cp.derivedLaterals,
+								usesConfiguredRetention: cp.usesConfiguredRetention,
 							})),
 						});
 					}

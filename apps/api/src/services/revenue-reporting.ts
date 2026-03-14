@@ -50,6 +50,15 @@ export interface RevenueReportingView {
 	executiveSummary: RevenueExecutiveSummaryView;
 }
 
+export interface RevenueReportingTotals {
+	grossRevenueHt: string;
+	discountAmount: string;
+	netRevenueHt: string;
+	vatAmount: string;
+	otherRevenueAmount: string;
+	totalOperatingRevenue: string;
+}
+
 const ZERO = new Decimal(0);
 
 type MonthBucket = Decimal[];
@@ -133,13 +142,17 @@ function mapTuitionLine(gradeLevel: string): string {
 	}
 }
 
-function mapOtherRevenueLines(lineItemName: string): string[] {
-	if (lineItemName.startsWith('Frais de Dossier') || lineItemName.startsWith('DPI -')) {
-		return ['New Student Fees (Dossier+DPI)'];
+function mapOtherRevenueLines(lineItemName: string, executiveCategory: string | null): string[] {
+	// Use executiveCategory for primary grouping when available,
+	// with lineItemName patterns for specific line assignment
+
+	// Registration fees: DAI, DPI, Frais de Dossier, Evaluation
+	if (lineItemName.startsWith('DAI')) {
+		return ['Re-registration (DAI)'];
 	}
 
-	if (lineItemName.startsWith('DAI -')) {
-		return ['Re-registration (DAI)'];
+	if (lineItemName.startsWith('DPI') || lineItemName.startsWith('Frais de Dossier')) {
+		return ['New Student Fees (Dossier+DPI)'];
 	}
 
 	if (lineItemName.startsWith('Evaluation')) {
@@ -148,32 +161,56 @@ function mapOtherRevenueLines(lineItemName: string): string[] {
 		return ['New Student Fees (Dossier+DPI)', 'Evaluation Tests'];
 	}
 
-	if (lineItemName === 'After-School Activities (APS)') {
+	// Activities & Services
+	if (
+		lineItemName === 'APS' ||
+		lineItemName.startsWith('After-School') ||
+		lineItemName.startsWith('After School')
+	) {
 		return ['After-School Activities (APS)'];
 	}
 
-	if (lineItemName === 'Daycare (Garderie)') {
+	if (lineItemName.startsWith('Daycare') || lineItemName === 'Garderie') {
 		return ['Daycare (Garderie)'];
 	}
 
-	if (lineItemName === 'Class Photos') {
+	if (lineItemName.startsWith('Class Photos')) {
 		return ['Class Photos'];
 	}
 
-	if (lineItemName.startsWith('BAC Examination')) {
+	// Examination fees
+	if (
+		lineItemName === 'BAC' ||
+		lineItemName.startsWith('BAC ') ||
+		lineItemName.startsWith('Examination Fees')
+	) {
+		if (lineItemName.includes('DNB')) return ['DNB Examination Fees'];
+		if (lineItemName.includes('EAF')) return ['EAF Examination Fees'];
+		if (lineItemName.includes('SIELE')) return ['SIELE Examination Fees'];
 		return ['BAC Examination Fees'];
 	}
 
-	if (lineItemName.startsWith('DNB Examination')) {
+	if (lineItemName === 'DNB' || lineItemName.startsWith('DNB ')) {
 		return ['DNB Examination Fees'];
 	}
 
-	if (lineItemName.startsWith('EAF Examination')) {
+	if (lineItemName === 'EAF' || lineItemName.startsWith('EAF ')) {
 		return ['EAF Examination Fees'];
 	}
 
-	if (lineItemName.startsWith('SIELE Examination')) {
+	if (lineItemName === 'SIELE' || lineItemName.startsWith('SIELE ')) {
 		return ['SIELE Examination Fees'];
+	}
+
+	// Fallback: use executiveCategory to route unmapped items to the right section
+	if (executiveCategory === 'REGISTRATION_FEES') {
+		return ['New Student Fees (Dossier+DPI)'];
+	}
+	if (executiveCategory === 'ACTIVITIES_SERVICES') {
+		return ['After-School Activities (APS)'];
+	}
+	if (executiveCategory === 'EXAMINATION_FEES') {
+		return ['BAC Examination Fees'];
 	}
 
 	return [];
@@ -208,7 +245,7 @@ export function buildRevenueReportingView(
 	}
 
 	for (const row of otherRevenueRows) {
-		const mappedLines = mapOtherRevenueLines(row.lineItemName);
+		const mappedLines = mapOtherRevenueLines(row.lineItemName, row.executiveCategory);
 		if (mappedLines.length === 0) {
 			continue;
 		}
@@ -438,5 +475,50 @@ export function buildRevenueReportingView(
 			composition,
 			monthlyTrend,
 		},
+	};
+}
+
+export function buildRevenueReportingTotals(
+	tuitionRows: RevenueDetailRow[],
+	reporting: RevenueReportingView
+): RevenueReportingTotals {
+	let totalGross = ZERO;
+	let totalDiscount = ZERO;
+	let totalNet = ZERO;
+	let totalVat = ZERO;
+
+	for (const row of tuitionRows) {
+		totalGross = totalGross.plus(new Decimal(row.grossRevenueHt));
+		totalDiscount = totalDiscount.plus(new Decimal(row.discountAmount));
+		totalNet = totalNet.plus(new Decimal(row.netRevenueHt));
+		totalVat = totalVat.plus(new Decimal(row.vatAmount));
+	}
+
+	const compositionByLabel = new Map(
+		reporting.executiveSummary.composition.map((item) => [item.label, item.amount] as const)
+	);
+	const totalOperatingRevenue =
+		reporting.executiveSummary.rows[reporting.executiveSummary.rows.length - 1]?.annualTotal ??
+		'0.0000';
+	const registrationRevenue =
+		reporting.executiveSummary.rows.find((row) => row.label === 'Registration Fees')?.annualTotal ??
+		'0.0000';
+	const activitiesRevenue =
+		reporting.executiveSummary.rows.find((row) => row.label === 'Activities & Services')
+			?.annualTotal ?? '0.0000';
+	const examinationRevenue =
+		reporting.executiveSummary.rows.find((row) => row.label === 'Examination Fees')?.annualTotal ??
+		'0.0000';
+
+	return {
+		grossRevenueHt: totalGross.toFixed(4),
+		discountAmount: totalDiscount.toFixed(4),
+		netRevenueHt: compositionByLabel.get('Net Tuition') ?? totalNet.toFixed(4),
+		vatAmount: totalVat.toFixed(4),
+		otherRevenueAmount: new Decimal(registrationRevenue)
+			.plus(new Decimal(activitiesRevenue))
+			.plus(new Decimal(examinationRevenue))
+			.toFixed(4),
+		totalOperatingRevenue,
 	};
 }

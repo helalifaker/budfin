@@ -166,7 +166,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		expect(rc!.value).toBe('new-raw-token');
 	});
 
-	it('returns 401 MISSING_TOKEN without cookie', async () => {
+	it('returns 204 without cookie', async () => {
 		const app = await buildTestApp();
 
 		const res = await app.inject({
@@ -174,8 +174,7 @@ describe('POST /api/v1/auth/refresh', () => {
 			url: '/api/v1/auth/refresh',
 		});
 
-		expect(res.statusCode).toBe(401);
-		expect(res.json().code).toBe('MISSING_TOKEN');
+		expect(res.statusCode).toBe(204);
 	});
 
 	it('returns 401 INVALID_TOKEN for unknown token', async () => {

@@ -1,3 +1,15 @@
+export const OTHER_REVENUE_COMPUTE_METHODS = [
+	'DAI',
+	'DPI',
+	'FRAIS_DOSSIER',
+	'EXAM_BAC',
+	'EXAM_DNB',
+	'EXAM_EAF',
+	'EVAL_PRIMAIRE',
+	'EVAL_SECONDAIRE',
+] as const;
+export type OtherRevenueComputeMethod = (typeof OTHER_REVENUE_COMPUTE_METHODS)[number];
+
 export const DISTRIBUTION_METHODS = [
 	'ACADEMIC_10',
 	'YEAR_ROUND_12',
@@ -49,6 +61,17 @@ export interface OtherRevenueItem {
 	weightArray: number[] | null;
 	specificMonths: number[] | null;
 	ifrsCategory: IfrsCategory;
+	computeMethod: OtherRevenueComputeMethod | null;
+}
+
+export interface RevenueSettings {
+	dpiPerStudentHt: string;
+	dossierPerStudentHt: string;
+	examBacPerStudent: string;
+	examDnbPerStudent: string;
+	examEafPerStudent: string;
+	evalPrimairePerStudent: string;
+	evalSecondairePerStudent: string;
 }
 
 export interface MonthlyRevenueEntry {
@@ -120,6 +143,10 @@ export interface OtherRevenueReadiness extends RevenueReadinessAreaStatus {
 	configured: number;
 }
 
+export interface DerivedRevenueSettingsReadiness extends RevenueReadinessAreaStatus {
+	exists: boolean;
+}
+
 export interface RevenueExecutiveSummary {
 	rows: RevenueMatrixRow[];
 	composition: RevenueCompositionItem[];
@@ -133,10 +160,11 @@ export interface RevenueReadinessResponse {
 	feeGrid: FeeGridReadiness;
 	tariffAssignment: TariffAssignmentReadiness;
 	discounts: DiscountReadiness;
+	derivedRevenueSettings: DerivedRevenueSettingsReadiness;
 	otherRevenue: OtherRevenueReadiness;
 	overallReady: boolean;
 	readyCount: number;
-	totalCount: 4;
+	totalCount: 5;
 }
 
 export interface RevenueResultsResponse {

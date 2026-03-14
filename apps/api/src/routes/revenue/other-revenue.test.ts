@@ -6,6 +6,7 @@ import { generateKeyPair } from 'jose';
 import { auth } from '../../plugins/auth.js';
 import { otherRevenueRoutes } from './other-revenue.js';
 import { setKeys, signAccessToken } from '../../services/token.js';
+import { buildCanonicalDynamicOtherRevenueRows } from '../../services/revenue-config.js';
 
 // ── Mock Prisma ─────────────────────────────────────────────────────────────
 
@@ -91,6 +92,7 @@ beforeEach(async () => {
 	await app.register(otherRevenueRoutes, { prefix: ROUTE_PREFIX });
 	await app.ready();
 
+	mockPrisma.otherRevenueItem.findMany.mockResolvedValue([]);
 	mockPrisma.budgetVersion.update.mockResolvedValue({});
 	mockPrisma.otherRevenueItem.upsert.mockResolvedValue({});
 });
@@ -124,6 +126,7 @@ describe('GET /other-revenue', () => {
 				weightArray: null,
 				specificMonths: [],
 				ifrsCategory: 'Registration Fees',
+				computeMethod: null,
 			},
 		]);
 
@@ -167,7 +170,9 @@ describe('GET /other-revenue', () => {
 // ── PUT /other-revenue ──────────────────────────────────────────────────────
 
 describe('PUT /other-revenue', () => {
-	const validPayload = { items: [validItem] };
+	const validPayload = {
+		items: [...buildCanonicalDynamicOtherRevenueRows(), validItem],
+	};
 
 	it('upserts other revenue items and marks modules stale', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
@@ -181,8 +186,8 @@ describe('PUT /other-revenue', () => {
 		});
 
 		expect(res.statusCode).toBe(200);
-		expect(res.json().updated).toBe(1);
-		expect(mockPrisma.otherRevenueItem.upsert).toHaveBeenCalledOnce();
+		expect(res.json().updated).toBe(validPayload.items.length);
+		expect(mockPrisma.otherRevenueItem.upsert).toHaveBeenCalledTimes(validPayload.items.length);
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith(
 			expect.objectContaining({
 				where: { id: 1 },
@@ -236,6 +241,7 @@ describe('PUT /other-revenue', () => {
 			headers: authHeader(token),
 			payload: {
 				items: [
+					...buildCanonicalDynamicOtherRevenueRows(),
 					{
 						...validItem,
 						distributionMethod: 'CUSTOM_WEIGHTS',
@@ -248,6 +254,28 @@ describe('PUT /other-revenue', () => {
 		expect(res.statusCode).toBe(200);
 	});
 
+	it('rejects mutated dynamic rows', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/other-revenue`,
+			headers: authHeader(token),
+			payload: {
+				items: [
+					...buildCanonicalDynamicOtherRevenueRows().map((item) =>
+						item.lineItemName === 'BAC' ? { ...item, ifrsCategory: 'Other Revenue' } : item
+					),
+					validItem,
+				],
+			},
+		});
+
+		expect(res.statusCode).toBe(422);
+		expect(res.json().code).toBe('DYNAMIC_OTHER_REVENUE_INVALID');
+	});
+
 	it('returns 422 for CUSTOM_WEIGHTS with zero-sum weight array', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockVersion);
 
@@ -258,6 +286,7 @@ describe('PUT /other-revenue', () => {
 			headers: authHeader(token),
 			payload: {
 				items: [
+					...buildCanonicalDynamicOtherRevenueRows(),
 					{
 						...validItem,
 						distributionMethod: 'CUSTOM_WEIGHTS',
@@ -300,6 +329,7 @@ describe('PUT /other-revenue', () => {
 			headers: authHeader(token),
 			payload: {
 				items: [
+					...buildCanonicalDynamicOtherRevenueRows(),
 					{
 						...validItem,
 						distributionMethod: 'SPECIFIC_PERIOD',

@@ -83,6 +83,8 @@ model User {
   updatedFeeGrids      FeeGrid[]          @relation("FeeGridUpdater")
   createdDiscounts     DiscountPolicy[]   @relation("DiscountCreator")
   updatedDiscounts     DiscountPolicy[]   @relation("DiscountUpdater")
+  createdRevenueSettings VersionRevenueSettings[] @relation("VersionRevenueSettingsCreator")
+  updatedRevenueSettings VersionRevenueSettings[] @relation("VersionRevenueSettingsUpdater")
   createdOtherRevenue  OtherRevenueItem[] @relation("OtherRevenueCreator")
   updatedOtherRevenue  OtherRevenueItem[] @relation("OtherRevenueUpdater")
   calculatedRevenue    MonthlyRevenue[]   @relation("RevenueCalculator")
@@ -381,6 +383,7 @@ model BudgetVersion {
   // Revenue (Epic 2)
   feeGrids           FeeGrid[]
   discountPolicies   DiscountPolicy[]
+  revenueSettings    VersionRevenueSettings?
   otherRevenueItems  OtherRevenueItem[]
   monthlyRevenues    MonthlyRevenue[]
   monthlyOtherRevenues MonthlyOtherRevenue[]
@@ -564,6 +567,11 @@ model CohortParameter {
   lateralWeightFr   Decimal  @default(0) @map("lateral_weight_fr") @db.Decimal(5, 4)
   lateralWeightNat  Decimal  @default(0) @map("lateral_weight_nat") @db.Decimal(5, 4)
   lateralWeightAut  Decimal  @default(0) @map("lateral_weight_aut") @db.Decimal(5, 4)
+  appliedRetentionRate Decimal? @map("applied_retention_rate") @db.Decimal(5, 4)
+  retainedFromPrior Int?     @map("retained_from_prior")
+  historicalTargetHeadcount Int? @map("historical_target_headcount")
+  derivedLaterals   Int?     @map("derived_laterals")
+  usesConfiguredRetention Boolean? @map("uses_configured_retention")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -643,6 +651,29 @@ model DiscountPolicy {
   @@map("discount_policies")
 }
 
+model VersionRevenueSettings {
+  id                      Int      @id @default(autoincrement())
+  versionId               Int      @unique @map("version_id")
+  dpiPerStudentHt         Decimal  @map("dpi_per_student_ht") @db.Decimal(15, 4)
+  dossierPerStudentHt     Decimal  @map("dossier_per_student_ht") @db.Decimal(15, 4)
+  examBacPerStudent       Decimal  @map("exam_bac_per_student") @db.Decimal(15, 4)
+  examDnbPerStudent       Decimal  @map("exam_dnb_per_student") @db.Decimal(15, 4)
+  examEafPerStudent       Decimal  @map("exam_eaf_per_student") @db.Decimal(15, 4)
+  evalPrimairePerStudent  Decimal  @map("eval_primaire_per_student") @db.Decimal(15, 4)
+  evalSecondairePerStudent Decimal @map("eval_secondaire_per_student") @db.Decimal(15, 4)
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy               Int      @map("created_by")
+  updatedBy               Int?     @map("updated_by")
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  creator User          @relation("VersionRevenueSettingsCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  updater User?         @relation("VersionRevenueSettingsUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([createdBy], map: "idx_version_revenue_settings_created_by")
+  @@map("version_revenue_settings")
+}
+
 model OtherRevenueItem {
   id                 Int      @id @default(autoincrement())
   versionId          Int      @map("version_id")
@@ -652,6 +683,7 @@ model OtherRevenueItem {
   weightArray        Json?    @map("weight_array") @db.JsonB
   specificMonths     Int[]    @map("specific_months")
   ifrsCategory       String   @map("ifrs_category") @db.VarChar(50)
+  computeMethod      String?  @map("compute_method") @db.VarChar(30)
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
   createdBy          Int      @map("created_by")

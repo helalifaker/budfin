@@ -5,6 +5,7 @@ import type {
 	FeeGridEntry,
 	DiscountEntry,
 	OtherRevenueItem,
+	RevenueSettings,
 	RevenueReadinessResponse,
 	RevenueResultsResponse,
 	RevenueViewMode,
@@ -87,11 +88,41 @@ interface OtherRevenueResponse {
 	items: OtherRevenueItem[];
 }
 
+interface RevenueSettingsResponse {
+	settings: RevenueSettings;
+}
+
 export function useOtherRevenue(versionId: number | null) {
 	return useQuery({
 		queryKey: ['revenue', 'other-revenue', versionId],
 		queryFn: () => apiClient<OtherRevenueResponse>(`/versions/${versionId}/other-revenue`),
 		enabled: versionId !== null,
+	});
+}
+
+export function useRevenueSettings(versionId: number | null) {
+	return useQuery({
+		queryKey: ['revenue', 'settings', versionId],
+		queryFn: () => apiClient<RevenueSettingsResponse>(`/versions/${versionId}/revenue/settings`),
+		enabled: versionId !== null,
+	});
+}
+
+export function usePutRevenueSettings(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (settings: RevenueSettings) =>
+			apiClient<RevenueSettingsResponse>(`/versions/${versionId}/revenue/settings`, {
+				method: 'PUT',
+				body: JSON.stringify(settings),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'settings', versionId] });
+			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
 }
 
@@ -123,6 +154,7 @@ interface CalculateRevenueResponse {
 		totalDiscounts: string;
 		netRevenueHt: string;
 		totalVat: string;
+		totalOtherRevenue: string;
 		totalExecutiveOtherRevenue: string;
 		totalOperatingRevenue: string;
 	};
