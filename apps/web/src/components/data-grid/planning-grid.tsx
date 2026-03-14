@@ -182,8 +182,8 @@ export function PlanningGrid<T>({
 		[headerGroups]
 	);
 	const isEditable = (editableColumns?.length ?? 0) > 0;
-	const tableRole = isEditable || forceGridRole ? 'grid' : 'table';
-	const cellRole = isEditable || forceGridRole ? 'gridcell' : 'cell';
+	const _tableRole = isEditable || forceGridRole ? 'grid' : 'table';
+	const _cellRole = isEditable || forceGridRole ? 'gridcell' : 'cell';
 
 	// Build band groups when bandGrouping is provided
 	const bandedRows = useMemo(() => {
@@ -317,7 +317,7 @@ export function PlanningGrid<T>({
 					className
 				)}
 			>
-				<table role={tableRole} aria-label={ariaLabel} className="w-full text-left">
+				<table aria-label={ariaLabel} className="w-full text-left">
 					<tbody>
 						<GridSkeleton rows={10} cols={cols} />
 					</tbody>
@@ -328,7 +328,7 @@ export function PlanningGrid<T>({
 
 	const renderHeaderRow = () =>
 		headerGroups.map((hg) => (
-			<tr key={hg.id} role="row">
+			<tr key={hg.id}>
 				{hg.headers.map((header) => {
 					const isGroupHeader = header.colSpan > 1;
 					const pinned = isPinned(header.id, pinnedColumns);
@@ -345,7 +345,7 @@ export function PlanningGrid<T>({
 									isCompact && 'border border-(--grid-compact-border)',
 									isCompact && hasGroupSiblings && 'bg-(--grid-compact-group-bg)',
 									isCompact && !hasGroupSiblings && 'bg-(--grid-subheader-bg)',
-									pinned && 'sticky left-0 z-[1]'
+									pinned && 'sticky left-0 z-1'
 								)}
 							/>
 						);
@@ -354,9 +354,7 @@ export function PlanningGrid<T>({
 					return (
 						<th
 							key={header.id}
-							role="columnheader"
 							colSpan={header.colSpan}
-							style={{ width: isGroupHeader ? undefined : header.getSize() }}
 							className={cn(
 								'relative align-middle',
 								'text-[11px] font-semibold uppercase tracking-[0.12em]',
@@ -371,7 +369,7 @@ export function PlanningGrid<T>({
 									'bg-(--grid-subheader-bg) text-(--grid-subheader-text)',
 								!isGroupHeader && !isCompact && 'text-(--text-muted)',
 								!isGroupHeader && numeric && 'text-right',
-								pinned && 'sticky left-0 z-[1]',
+								pinned && 'sticky left-0 z-1',
 								pinned && isGroupHeader && isCompact && 'bg-(--grid-compact-group-bg)',
 								pinned && !isGroupHeader && isCompact && 'bg-(--grid-subheader-bg)',
 								pinned && !isCompact && 'bg-(--grid-header-bg)',
@@ -409,19 +407,15 @@ export function PlanningGrid<T>({
 		return (
 			<td
 				key={cell.id}
-				role={cellRole}
-				aria-selected={isActive}
 				onClick={() => handleCellClick(rowIndex, colIndex)}
-				width={cell.column.getSize()}
 				className={cn(
 					isCompact
 						? 'px-(--grid-compact-cell-px) py-(--grid-compact-cell-py) border-b border-b-(--grid-compact-border)'
 						: 'px-(--grid-cell-px) py-(--grid-cell-py)',
-					'align-middle text-(--text-sm)',
+					'align-middle text-token-sm',
 					'transition-[background-color,box-shadow,transform] duration-(--duration-fast)',
-					numeric &&
-						'text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
-					pinned && 'sticky left-0 z-[1]',
+					numeric && 'text-right font-mono tabular-nums text-(--text-primary)',
+					pinned && 'sticky left-0 z-1',
 					pinned && pinnedBackgroundClass,
 					pinned && (isCompact ? 'group-hover:bg-gray-50/60' : 'group-hover:bg-(--grid-row-hover)'),
 					pinned && isRowSelected && 'group-hover:bg-(--grid-selected-row)',
@@ -451,8 +445,6 @@ export function PlanningGrid<T>({
 		return (
 			<tr
 				key={row.id}
-				role="row"
-				aria-selected={isSelected || undefined}
 				onClick={() => handleRowClick(row)}
 				className={cn(
 					'group border-b border-(--workspace-border) last:border-0',
@@ -481,7 +473,7 @@ export function PlanningGrid<T>({
 		const isCollapsed = collapsedBands.has(band);
 
 		return (
-			<tr key={`band-${band}`} role="row" className="border-b border-(--workspace-border)">
+			<tr key={`band-${band}`} className="border-b border-(--workspace-border)">
 				<td
 					colSpan={cols}
 					className={cn(
@@ -491,29 +483,50 @@ export function PlanningGrid<T>({
 					)}
 				>
 					<span className="inline-flex items-center gap-2">
-						{bandGrouping.collapsible && (
-							<button
-								type="button"
-								onClick={() => toggleBand(band)}
-								aria-expanded={!isCollapsed}
-								aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${label}`}
-								className={cn(
-									'inline-flex items-center justify-center',
-									'h-5 w-5 rounded-sm',
-									'hover:bg-(--workspace-bg-muted)',
-									'transition-transform duration-(--duration-fast)'
-								)}
-							>
-								<ChevronDown
+						{bandGrouping.collapsible &&
+							(isCollapsed ? (
+								<button
+									type="button"
+									onClick={() => toggleBand(band)}
+									aria-expanded="false"
+									aria-label={`Expand ${label}`}
 									className={cn(
-										'h-3.5 w-3.5 transition-transform duration-(--duration-fast)',
-										isCollapsed && '-rotate-90'
+										'inline-flex items-center justify-center',
+										'h-5 w-5 rounded-sm',
+										'hover:bg-(--workspace-bg-muted)',
+										'transition-transform duration-(--duration-fast)'
 									)}
-									aria-hidden="true"
-								/>
-							</button>
-						)}
-						<span className={cn('font-token-display uppercase tracking-[0.08em]', textClass)}>
+								>
+									<ChevronDown
+										className="h-3.5 w-3.5 -rotate-90 transition-transform duration-(--duration-fast)"
+										aria-hidden="true"
+									/>
+								</button>
+							) : (
+								<button
+									type="button"
+									onClick={() => toggleBand(band)}
+									aria-expanded="true"
+									aria-label={`Collapse ${label}`}
+									className={cn(
+										'inline-flex items-center justify-center',
+										'h-5 w-5 rounded-sm',
+										'hover:bg-(--workspace-bg-muted)',
+										'transition-transform duration-(--duration-fast)'
+									)}
+								>
+									<ChevronDown
+										className="h-3.5 w-3.5 transition-transform duration-(--duration-fast)"
+										aria-hidden="true"
+									/>
+								</button>
+							))}
+						<span
+							className={cn(
+								'font-(family-name:--font-display) uppercase tracking-[0.08em]',
+								textClass
+							)}
+						>
 							{label}
 						</span>
 						<span
@@ -539,11 +552,10 @@ export function PlanningGrid<T>({
 		return (
 			<tr
 				key={key}
-				role="row"
 				className={cn(
 					'border-t border-(--workspace-border)',
 					summaryRow.type === 'grandtotal' &&
-						'font-semibold bg-(--grid-grandtotal-bg) text-(--grid-grandtotal-text) border-t-2 border-t-(--grid-grandtotal-border-top) sticky bottom-0 z-[2]',
+						'font-semibold bg-(--grid-grandtotal-bg) text-(--grid-grandtotal-text) border-t-2 border-t-(--grid-grandtotal-border-top) sticky bottom-0 z-2',
 					summaryRow.type === 'subtotal' &&
 						'bg-(--grid-subtotal-bg) text-(--grid-subtotal-text) font-semibold'
 				)}
@@ -557,14 +569,13 @@ export function PlanningGrid<T>({
 					return (
 						<td
 							key={`${key}-${header.id}`}
-							role={cellRole}
 							className={cn(
 								isCompact
 									? 'px-(--grid-compact-cell-px) py-(--grid-compact-cell-py) border-b border-b-(--grid-compact-border)'
 									: 'px-(--grid-cell-px) py-(--grid-cell-py)',
-								'align-middle text-(--text-sm)',
-								numeric && 'text-right font-[family-name:var(--font-mono)] tabular-nums',
-								pinned && 'sticky left-0 z-[1]',
+								'align-middle text-token-sm',
+								numeric && 'text-right font-mono tabular-nums',
+								pinned && 'sticky left-0 z-1',
 								lastPin && 'shadow-(--grid-pinned-shadow)',
 								summaryRow.type === 'grandtotal' &&
 									'bg-(--grid-grandtotal-bg) text-(--grid-grandtotal-text) py-3 font-bold',
@@ -590,7 +601,7 @@ export function PlanningGrid<T>({
 			return (
 				<tr>
 					<td colSpan={cols} className="px-4 py-12 text-center">
-						<p className="text-(--text-sm) text-(--text-muted)">No data available</p>
+						<p className="text-token-sm text-(--text-muted)">No data available</p>
 					</td>
 				</tr>
 			);
@@ -645,19 +656,23 @@ export function PlanningGrid<T>({
 		>
 			<table
 				ref={tableRef}
-				role={tableRole}
 				aria-label={ariaLabel}
 				onKeyDown={handleKeyDown}
 				tabIndex={keyboardNavigation ? 0 : undefined}
 				className={cn(
-					'w-full text-left text-(--text-sm)',
-					!isCompact && 'min-w-[980px]',
+					'w-full text-left text-token-sm',
+					!isCompact && 'min-w-245',
 					isCompact && 'border-collapse'
 				)}
 			>
+				<colgroup>
+					{leafHeaders.map((header) => (
+						<col key={header.id} width={header.getSize()} />
+					))}
+				</colgroup>
 				<thead
 					className={cn(
-						'sticky top-0 z-[2]',
+						'sticky top-0 z-2',
 						isCompact ? 'bg-(--grid-subheader-bg)' : 'bg-(--grid-header-bg)',
 						isCompact
 							? 'border-b-2 border-b-(--grid-frame-border)'

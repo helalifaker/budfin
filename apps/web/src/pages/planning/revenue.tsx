@@ -39,7 +39,7 @@ const BAND_FILTERS: Array<{ value: string; label: string }> = [
 
 function ImportedBanner() {
 	return (
-		<div className="rounded-lg border border-(--color-info) bg-(--color-info-bg) px-3 py-2 text-(--text-sm) text-(--color-info)">
+		<div className="rounded-lg border border-(--color-info) bg-(--color-info-bg) px-3 py-2 text-token-sm text-(--color-info)">
 			This version was imported. Review the loaded assumptions before recalculating revenue.
 		</div>
 	);
@@ -47,7 +47,7 @@ function ImportedBanner() {
 
 function ViewerBanner() {
 	return (
-		<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-2 text-(--text-sm) text-(--text-secondary)">
+		<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-2 text-token-sm text-(--text-secondary)">
 			Viewer access keeps this workspace in review mode.
 		</div>
 	);
