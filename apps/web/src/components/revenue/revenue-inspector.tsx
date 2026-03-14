@@ -15,14 +15,14 @@ import {
 } from '../../lib/revenue-workspace';
 import { BAND_LABELS } from '../../lib/enrollment-workspace';
 import { formatMoney } from '../../lib/format-money';
-import { BAND_DOT_COLORS, NATIONALITY_DOT_COLORS } from '../../lib/band-styles';
+import { BAND_DOT_COLORS, NATIONALITY_STYLES } from '../../lib/band-styles';
 import { useChartColor, useChartSeriesColors, CHART_TOOLTIP_STYLE } from '../../lib/chart-utils';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 import { InspectorSection } from '../shared/inspector-section';
 import { SummaryTable } from '../shared/summary-table';
 import { WorkflowStatusCard } from '../shared/workflow-status-card';
-import type { WorkflowVariant } from '../shared/workflow-status-card';
+type WorkflowVariant = 'success' | 'warning' | 'info';
 import { ReadinessIndicator } from '../shared/readiness-indicator';
 import { ChartWrapper } from '../shared/chart-wrapper';
 import { Button } from '../ui/button';
@@ -108,7 +108,7 @@ function getWorkflowStatus(readiness: RevenueReadinessResponse | undefined): {
 	variant: WorkflowVariant;
 } {
 	if (!readiness) {
-		return { text: 'Loading...', variant: 'neutral' };
+		return { text: 'Loading...', variant: 'info' };
 	}
 	if (readiness.overallReady) {
 		return { text: 'Setup complete', variant: 'success' };
@@ -331,7 +331,13 @@ function RevenueInspectorDefaultView() {
 	const { data: readiness } = useRevenueReadiness(versionId);
 	const { data: gradeLevelsData } = useGradeLevels();
 	const chartColor = useChartColor('primary');
-	const seriesColors = useChartSeriesColors(5);
+	const seriesColors = useChartSeriesColors([
+		'--chart-series-1',
+		'--chart-series-2',
+		'--chart-series-3',
+		'--chart-series-4',
+		'--chart-series-5',
+	]);
 
 	const gradeBandMap = useMemo(
 		() => new Map((gradeLevelsData?.gradeLevels ?? []).map((gl) => [gl.gradeCode, gl.band])),
@@ -372,65 +378,58 @@ function RevenueInspectorDefaultView() {
 			{/* Section 1: Workflow status card */}
 			<WorkflowStatusCard
 				label="Revenue Workflow"
-				statusText={workflowStatus.text}
-				description="Configure fees, assign tariffs, set discounts, then calculate revenue."
+				status={workflowStatus.text}
 				icon={ShieldCheck}
-				variant={workflowStatus.variant}
+				statusVariant={workflowStatus.variant as 'success' | 'warning' | 'info'}
 			/>
 
 			{/* Section 2: Readiness counters */}
 			<div className="grid gap-3 md:grid-cols-2">
-				<ReadinessIndicator
-					label="Config coverage"
-					value={`${readiness?.readyCount ?? 0}/${readiness?.totalCount ?? 5} ready`}
-				/>
-				<ReadinessIndicator label="Validation issues" value={String(validationIssueCount)} />
+				<InspectorSection title="Config coverage">
+					<ReadinessIndicator
+						ready={readiness?.readyCount ?? 0}
+						total={readiness?.totalCount ?? 5}
+					/>
+				</InspectorSection>
+				<InspectorSection title="Validation issues">
+					<p className="text-(--text-sm) font-medium">{validationIssueCount} issues</p>
+				</InspectorSection>
 			</div>
 
 			{/* Section 3: Revenue assumptions table */}
 			<InspectorSection title="Revenue assumptions">
 				<SummaryTable
-					columns={[
-						{ key: 'setting', label: 'Setting' },
-						{ key: 'value', label: 'Value', align: 'right' },
-					]}
 					rows={[
 						{
-							id: 'rp-discount',
-							cells: {
-								setting: 'RP discount rate',
-								value: readiness?.discounts.rpRate
-									? `${new Decimal(readiness.discounts.rpRate).mul(100).toFixed(1)}%`
-									: '--',
-							},
+							label: 'RP discount rate',
+							amount: readiness?.discounts.rpRate
+								? `${new Decimal(readiness.discounts.rpRate).mul(100).toFixed(1)}%`
+								: '--',
 						},
 						{
-							id: 'r3-discount',
-							cells: {
-								setting: 'R3+ discount rate',
-								value: readiness?.discounts.r3Rate
-									? `${new Decimal(readiness.discounts.r3Rate).mul(100).toFixed(1)}%`
-									: '--',
-							},
+							label: 'R3+ discount rate',
+							amount: readiness?.discounts.r3Rate
+								? `${new Decimal(readiness.discounts.r3Rate).mul(100).toFixed(1)}%`
+								: '--',
 						},
 						{
-							id: 'total-enrolled',
-							cells: {
-								setting: 'Enrolled students',
-								value: String(totalEnrolled),
-							},
+							label: 'Enrolled students',
+							amount: String(totalEnrolled),
 						},
 						{
-							id: 'data-source',
-							cells: {
-								setting: 'Enrollment source',
-								value: 'Cohort model',
-							},
+							label: 'Enrollment source',
+							amount: 'Cohort model',
 						},
 					]}
-					actionLabel="Open Revenue Settings"
-					onAction={() => openSettings('feeGrid')}
 				/>
+				<Button
+					variant="outline"
+					size="sm"
+					className="mt-3 w-full"
+					onClick={() => openSettings('feeGrid')}
+				>
+					Open Revenue Settings
+				</Button>
 			</InspectorSection>
 
 			{/* Section 4: Recommended workflow */}
@@ -521,46 +520,32 @@ function RevenueInspectorDefaultView() {
 			{/* Section 6: Revenue by Band summary */}
 			<InspectorSection title="Revenue by Band">
 				<SummaryTable
-					columns={[
-						{ key: 'band', label: 'Band' },
-						{ key: 'gross', label: 'Gross', align: 'right' },
-						{ key: 'net', label: 'Net', align: 'right' },
-						{ key: 'pct', label: '% Total', align: 'right' },
-					]}
-					rows={bandRevenue.map((row) => ({
-						id: row.band as string,
-						dotColor: BAND_DOT_COLORS[row.band] ?? '',
-						cells: {
-							band: row.label,
-							gross: formatMoney(row.gross),
-							net: formatMoney(row.net),
-							pct: row.pctOfTotal,
-						},
-					}))}
-					emptyMessage="No revenue data available."
+					header={{ label: 'Band', amount: 'Gross', percent: '% Total' }}
+					rows={bandRevenue.map((row) => {
+						const dot = BAND_DOT_COLORS[row.band];
+						return {
+							...(dot ? { dot } : {}),
+							label: row.label,
+							amount: formatMoney(row.gross),
+							percent: row.pctOfTotal,
+						};
+					})}
 				/>
 			</InspectorSection>
 
 			{/* Section 7: Revenue by Nationality summary */}
 			<InspectorSection title="Revenue by Nationality">
 				<SummaryTable
-					columns={[
-						{ key: 'nationality', label: 'Nationality' },
-						{ key: 'gross', label: 'Gross', align: 'right' },
-						{ key: 'net', label: 'Net', align: 'right' },
-						{ key: 'pct', label: '% Total', align: 'right' },
-					]}
-					rows={nationalityRevenue.map((row) => ({
-						id: row.nationality as string,
-						dotColor: NATIONALITY_DOT_COLORS[row.nationality] ?? '',
-						cells: {
-							nationality: row.nationality as string,
-							gross: formatMoney(row.gross),
-							net: formatMoney(row.net),
-							pct: row.pctOfTotal,
-						},
-					}))}
-					emptyMessage="No revenue data available."
+					header={{ label: 'Nationality', amount: 'Gross', percent: '% Total' }}
+					rows={nationalityRevenue.map((row) => {
+						const dot = NATIONALITY_STYLES[row.nationality as string]?.color;
+						return {
+							...(dot ? { dot } : {}),
+							label: row.nationality as string,
+							amount: formatMoney(row.gross),
+							percent: row.pctOfTotal,
+						};
+					})}
 				/>
 			</InspectorSection>
 

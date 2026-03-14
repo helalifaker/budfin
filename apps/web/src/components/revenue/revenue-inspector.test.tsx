@@ -200,7 +200,7 @@ describe('RevenueInspectorContent', () => {
 
 		// Section 2: Readiness counters
 		expect(screen.getByText('Config coverage')).toBeDefined();
-		expect(screen.getByText('5/5 ready')).toBeDefined();
+		expect(screen.getByText('5/5')).toBeDefined();
 		expect(screen.getByText('Validation issues')).toBeDefined();
 
 		// Section 3: Revenue assumptions
@@ -249,7 +249,7 @@ describe('RevenueInspectorContent', () => {
 		render(<RevenueInspectorContent />);
 
 		expect(screen.getByText('Setup pending')).toBeDefined();
-		expect(screen.getByText('3/5 ready')).toBeDefined();
+		expect(screen.getByText('3/5')).toBeDefined();
 
 		// Validation queue shows non-ready areas
 		expect(screen.getByText('Fee Grid')).toBeDefined();
