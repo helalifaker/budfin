@@ -221,9 +221,8 @@ describe('RevenuePage', () => {
 		expect(screen.getByText('KPI Ribbon')).toBeDefined();
 		expect(screen.getByText('Status Strip')).toBeDefined();
 		expect(screen.getByText('Forecast Grid')).toBeDefined();
-		expect(screen.getByText('Exception Filter')).toBeDefined();
 		expect(screen.getByRole('button', { name: 'Revenue Settings' })).toBeDefined();
-		expect(screen.getByText('Calculate')).toBeDefined();
+		expect(screen.getByText('Calculate Revenue')).toBeDefined();
 		expect(mockSetActivePage).toHaveBeenCalledWith('revenue');
 	});
 

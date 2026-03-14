@@ -76,7 +76,7 @@ export function ForecastGrid({
 
 	if (rows.length === 0) {
 		return (
-			<div className="flex h-48 items-center justify-center rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) text-(--text-sm) text-(--text-muted)">
+			<div className="flex h-48 items-center justify-center rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) text-token-sm text-(--text-muted)">
 				Run the revenue calculation to populate the forecast grid.
 			</div>
 		);
@@ -137,7 +137,7 @@ export function ForecastGrid({
 										return;
 									}
 
-									selectRow({ label: row.label, viewMode });
+									selectRow(row);
 								}}
 								onKeyDown={(event) => {
 									if (!isSelectable) {
@@ -146,7 +146,7 @@ export function ForecastGrid({
 
 									if (event.key === 'Enter' || event.key === ' ') {
 										event.preventDefault();
-										selectRow({ label: row.label, viewMode });
+										selectRow(row);
 									}
 								}}
 								tabIndex={isSelectable ? 0 : undefined}

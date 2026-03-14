@@ -256,9 +256,13 @@ describe('ForecastGrid', () => {
 
 		fireEvent.click(screen.getByText('RP'));
 
-		expect(useRevenueSelectionStore.getState().selection).toEqual({
+		const selection = useRevenueSelectionStore.getState().selection;
+		expect(selection).toMatchObject({
+			id: 'tariff-RP',
+			code: 'RP',
 			label: 'RP',
 			viewMode: 'tariff',
+			rowType: 'data',
 		});
 	});
 });
