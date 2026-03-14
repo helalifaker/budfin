@@ -56,7 +56,7 @@ Problems:
 
 **Formula per nationality:**
 
-```
+```text
 DAI_by_nationality = SUM over all grades of (
     AY2_enrollment_detail[grade, nationality, all tariffs].headcount
     x fee_grid[AY2, grade, nationality, Plein].dai
@@ -136,7 +136,7 @@ Problems:
 
 **Step 1 — Derive total new students per grade:**
 
-```
+```text
 For PS (entry grade):
     new_students[PS] = AY2_headcount[PS]     (all PS students are new)
 
@@ -148,7 +148,7 @@ For all other grades (MS through TERM):
 
 **Step 2 — Split new students by nationality:**
 
-```
+```text
 For each grade:
     total_new = new_students[grade]
     For each nationality (FR, NAT, AUT):
@@ -162,7 +162,7 @@ For each grade:
 
 **Step 3 — Compute DPI per nationality:**
 
-```
+```text
 DPI_francais  = SUM(new_by_nat[all grades, Francais]) x dpiPerStudentHt
 DPI_nationaux = SUM(new_by_nat[all grades, Nationaux]) x dpiPerStudentHt
 DPI_autres    = SUM(new_by_nat[all grades, Autres])    x dpiPerStudentHt
@@ -220,7 +220,7 @@ Distribution: SPECIFIC_PERIOD months [5, 6].
 
 **Identical logic to DPI** — uses the same new-student-by-nationality derivation:
 
-```
+```text
 Dossier_francais  = SUM(new_by_nat[all grades, Francais]) x dossierPerStudentHt
 Dossier_nationaux = SUM(new_by_nat[all grades, Nationaux]) x dossierPerStudentHt
 Dossier_autres    = SUM(new_by_nat[all grades, Autres])    x dossierPerStudentHt
@@ -269,7 +269,7 @@ User calculated: 111 TERM students x 2,000 SAR/student. Distribution: SPECIFIC_P
 
 ### After (Proposed: Dynamic)
 
-```
+```text
 BAC_fee = enrollment_headcount[AY1, TERM] x examBacPerStudent
 ```
 
@@ -310,7 +310,7 @@ User calculated: 103 students x 600 SAR. Distribution: SPECIFIC_PERIOD months [4
 
 ### After (Proposed: Dynamic)
 
-```
+```text
 DNB_fee = enrollment_headcount[AY1, 3EME] x examDnbPerStudent
 ```
 
@@ -351,7 +351,7 @@ User calculated: 120 students x 800 SAR. Distribution: SPECIFIC_PERIOD months [4
 
 ### After (Proposed: Dynamic)
 
-```
+```text
 EAF_fee = enrollment_headcount[AY1, 1ERE] x examEafPerStudent
 ```
 
@@ -392,7 +392,7 @@ User calculated: 110 new primaire students x 200 SAR. Distribution: SPECIFIC_PER
 
 ### After (Proposed: Dynamic)
 
-```
+```text
 new_primaire_students = SUM over grades CP, CE1, CE2, CM1, CM2 of (new_students[grade])
 Eval_Primaire = new_primaire_students x evalPrimairePerStudent
 ```
@@ -434,7 +434,7 @@ User calculated: 155 new secondaire students x 300 SAR. Distribution: SPECIFIC_P
 
 ### After (Proposed: Dynamic)
 
-```
+```text
 new_secondaire_students = SUM over grades 6EME..TERM of (new_students[grade])
 Eval_Secondaire = new_secondaire_students x evalSecondairePerStudent
 ```
@@ -502,7 +502,7 @@ Additionally, the `OtherRevenueItem` table needs a new field:
 
 ## Computation Dependency Chain
 
-```
+```text
                     ENROLLMENT MODULE (must run first)
                               |
          +--------------------+--------------------+
@@ -606,7 +606,7 @@ This is the key benefit: revenue projections update automatically with enrollmen
 
 ## Grade Progression Reference (for New Student Derivation)
 
-```
+```text
 PS → MS → GS → CP → CE1 → CE2 → CM1 → CM2 → 6EME → 5EME → 4EME → 3EME → 2NDE → 1ERE → TERM
 ```
 

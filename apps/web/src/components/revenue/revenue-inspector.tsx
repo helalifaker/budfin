@@ -1,90 +1,49 @@
 import { useMemo } from 'react';
+import { ArrowLeft, Sigma } from 'lucide-react';
 import { Bar, BarChart, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from 'recharts';
-import { Grid3x3, Percent, ShieldCheck, Tag, Calculator } from 'lucide-react';
 import Decimal from 'decimal.js';
-import type { RevenueReadinessResponse, RevenueResultsResponse } from '@budfin/types';
+import type { RevenueResultsResponse } from '@budfin/types';
 import { cn } from '../../lib/cn';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useRevenueReadiness, useRevenueResults } from '../../hooks/use-revenue';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
+import { useChartColors } from '../../hooks/use-chart-colors';
 import { registerPanelContent } from '../../lib/right-panel-registry';
 import {
 	buildRevenueForecastGridRows,
 	formatRevenueGridAmount,
 	formatRevenueGridPercent,
+	REVENUE_MONTH_LABELS,
 } from '../../lib/revenue-workspace';
 import { BAND_LABELS } from '../../lib/enrollment-workspace';
-import { formatMoney } from '../../lib/format-money';
-import { BAND_DOT_COLORS, NATIONALITY_STYLES } from '../../lib/band-styles';
-import { useChartColor, useChartSeriesColors, CHART_TOOLTIP_STYLE } from '../../lib/chart-utils';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
-import { InspectorSection } from '../shared/inspector-section';
-import { SummaryTable } from '../shared/summary-table';
-import { WorkflowStatusCard } from '../shared/workflow-status-card';
-type WorkflowVariant = 'success' | 'warning' | 'info';
-import { ReadinessIndicator } from '../shared/readiness-indicator';
-import { ChartWrapper } from '../shared/chart-wrapper';
 import { Button } from '../ui/button';
 
 type BreakdownDimension = 'band' | 'nationality' | 'tariff' | 'category';
 
-const BANDS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
-const NATIONALITIES = ['Francais', 'Nationaux', 'Autres'] as const;
-const REVENUE_MONTH_LABELS = [
-	'Jan',
-	'Feb',
-	'Mar',
-	'Apr',
-	'May',
-	'Jun',
-	'Jul',
-	'Aug',
-	'Sep',
-	'Oct',
-	'Nov',
-	'Dec',
-] as const;
+const CHART_COLORS = ['#2463EB', '#16A34A', '#D97706', '#DC2626', '#7C3AED'];
 
-const WORKFLOW_STEPS = [
-	{
-		icon: Grid3x3,
-		title: 'Configure fee grid',
-		description: 'Set tuition and registration fees for each grade and nationality.',
-	},
-	{
-		icon: Tag,
-		title: 'Assign tariffs',
-		description: 'Map students to RP, R3+, or Plein tariff profiles.',
-	},
-	{
-		icon: Percent,
-		title: 'Set discounts',
-		description: 'Configure RP and R3+ discount rates for the version.',
-	},
-	{
-		icon: Calculator,
-		title: 'Calculate revenue',
-		description: 'Run the revenue engine to produce monthly forecasts.',
-	},
-] as const;
+const BAND_DOT_COLORS: Record<string, string> = {
+	MATERNELLE: 'bg-(--badge-maternelle)',
+	ELEMENTAIRE: 'bg-(--badge-elementaire)',
+	COLLEGE: 'bg-(--badge-college)',
+	LYCEE: 'bg-(--badge-lycee)',
+};
 
-const READINESS_AREAS: Array<{
-	key: keyof Pick<
-		RevenueReadinessResponse,
-		'feeGrid' | 'tariffAssignment' | 'discounts' | 'derivedRevenueSettings' | 'otherRevenue'
-	>;
-	label: string;
-	tab: 'feeGrid' | 'tariffAssignment' | 'discounts' | 'otherRevenue';
-}> = [
-	{ key: 'feeGrid', label: 'Fee Grid', tab: 'feeGrid' },
-	{ key: 'tariffAssignment', label: 'Tariff Assignment', tab: 'tariffAssignment' },
-	{ key: 'discounts', label: 'Discounts', tab: 'discounts' },
-	{ key: 'derivedRevenueSettings', label: 'Derived Revenue Rates', tab: 'otherRevenue' },
-	{ key: 'otherRevenue', label: 'Other Revenue', tab: 'otherRevenue' },
-];
+const VIEW_MODE_BADGE_STYLES: Record<string, string> = {
+	category: 'bg-(--accent-50) text-(--accent-700)',
+	grade: 'bg-(--badge-elementaire-bg) text-(--badge-elementaire)',
+	nationality: 'bg-(--badge-college-bg) text-(--badge-college)',
+	tariff: 'bg-(--badge-lycee-bg) text-(--badge-lycee)',
+};
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+const VIEW_MODE_LABELS: Record<string, string> = {
+	category: 'Category',
+	grade: 'Grade',
+	nationality: 'Nationality',
+	tariff: 'Tariff',
+};
 
 function toNumber(value: string) {
 	return new Decimal(value).toNumber();
@@ -101,27 +60,6 @@ function formatChartTooltipValue(
 	const rawValue = Array.isArray(value) ? value[0] : value;
 	const numericValue = typeof rawValue === 'number' ? rawValue : Number(rawValue ?? 0);
 	return `${numericValue.toLocaleString('fr-FR')} SAR`;
-}
-
-function getWorkflowStatus(readiness: RevenueReadinessResponse | undefined): {
-	text: string;
-	variant: WorkflowVariant;
-} {
-	if (!readiness) {
-		return { text: 'Loading...', variant: 'info' };
-	}
-	if (readiness.overallReady) {
-		return { text: 'Setup complete', variant: 'success' };
-	}
-	if (readiness.readyCount > 0) {
-		return { text: 'Setup pending', variant: 'warning' };
-	}
-	return { text: 'Setup pending', variant: 'warning' };
-}
-
-function getValidationIssueCount(readiness: RevenueReadinessResponse | undefined): number {
-	if (!readiness) return 0;
-	return READINESS_AREAS.filter((area) => !readiness[area.key].ready).length;
 }
 
 function getCategoryTab(label: string) {
@@ -149,21 +87,21 @@ function getBreakdownDimensions(viewMode: 'category' | 'grade' | 'nationality' |
 			];
 		case 'grade':
 			return [
-				{ key: 'category' as const, title: 'By Category' },
 				{ key: 'nationality' as const, title: 'By Nationality' },
 				{ key: 'tariff' as const, title: 'By Tariff' },
+				{ key: 'category' as const, title: 'By Category' },
 			];
 		case 'nationality':
 			return [
-				{ key: 'category' as const, title: 'By Category' },
 				{ key: 'band' as const, title: 'By Band' },
 				{ key: 'tariff' as const, title: 'By Tariff' },
+				{ key: 'category' as const, title: 'By Category' },
 			];
 		case 'tariff':
 			return [
-				{ key: 'category' as const, title: 'By Category' },
 				{ key: 'band' as const, title: 'By Band' },
 				{ key: 'nationality' as const, title: 'By Nationality' },
+				{ key: 'category' as const, title: 'By Category' },
 			];
 	}
 }
@@ -247,125 +185,117 @@ function buildDimensionBreakdown({
 		.sort((left, right) => new Decimal(right.amount).cmp(new Decimal(left.amount)));
 }
 
-// ── Band/Nationality Revenue Summaries ──────────────────────────────────────
+function computeSelectedRowAggregates({
+	data,
+	label,
+	viewMode,
+}: {
+	data: RevenueResultsResponse | undefined;
+	label: string;
+	viewMode: 'category' | 'grade' | 'nationality' | 'tariff';
+}) {
+	let grossTotal = new Decimal(0);
+	let discountTotal = new Decimal(0);
+	let netTotal = new Decimal(0);
+	let headcount = 0;
 
-function buildBandRevenueSummary(
-	data: RevenueResultsResponse | undefined,
-	gradeBandMap: Map<string, string>
-) {
-	if (!data) return [];
+	for (const entry of data?.entries ?? []) {
+		let matchesSelection = true;
 
-	const bandTotals = new Map<string, { gross: Decimal; net: Decimal }>();
-	for (const band of BANDS) {
-		bandTotals.set(band, { gross: new Decimal(0), net: new Decimal(0) });
+		if (viewMode === 'grade') {
+			matchesSelection = entry.gradeLevel === label;
+		} else if (viewMode === 'nationality') {
+			matchesSelection = entry.nationality === label;
+		} else if (viewMode === 'tariff') {
+			matchesSelection = entry.tariff === label;
+		} else if (viewMode === 'category') {
+			matchesSelection = label === 'Tuition Fees' || label === 'Discount Impact';
+		}
+
+		if (!matchesSelection) {
+			continue;
+		}
+
+		grossTotal = grossTotal.plus(new Decimal(entry.grossRevenueHt));
+		discountTotal = discountTotal.plus(new Decimal(entry.discountAmount));
+		netTotal = netTotal.plus(new Decimal(entry.netRevenueHt));
+		headcount += 1;
 	}
 
-	for (const entry of data.entries) {
-		const band = gradeBandMap.get(entry.gradeLevel) ?? 'Other';
-		const existing = bandTotals.get(band);
-		if (!existing) continue;
-		existing.gross = existing.gross.plus(new Decimal(entry.grossRevenueHt));
-		existing.net = existing.net.plus(new Decimal(entry.netRevenueHt));
-	}
+	const discountImpact = grossTotal.eq(0)
+		? '0.0'
+		: discountTotal.div(grossTotal).mul(100).abs().toFixed(1);
 
-	const grandGross = [...bandTotals.values()].reduce(
-		(sum, val) => sum.plus(val.gross),
-		new Decimal(0)
-	);
-
-	return BANDS.map((band) => {
-		const totals = bandTotals.get(band) ?? { gross: new Decimal(0), net: new Decimal(0) };
-		const pctOfTotal = grandGross.isZero()
-			? '0.0%'
-			: `${totals.gross.div(grandGross).mul(100).toFixed(1)}%`;
-		return {
-			band,
-			label: BAND_LABELS[band] ?? band,
-			gross: totals.gross.toFixed(4),
-			net: totals.net.toFixed(4),
-			pctOfTotal,
-		};
-	});
+	return {
+		grossRevenue: grossTotal.toFixed(4),
+		netRevenue: netTotal.toFixed(4),
+		discountImpact,
+		headcount,
+	};
 }
 
-function buildNationalityRevenueSummary(data: RevenueResultsResponse | undefined) {
-	if (!data) return [];
-
-	const natTotals = new Map<string, { gross: Decimal; net: Decimal }>();
-	for (const nat of NATIONALITIES) {
-		natTotals.set(nat, { gross: new Decimal(0), net: new Decimal(0) });
+function getChartFillColor(
+	viewMode: 'category' | 'grade' | 'nationality' | 'tariff',
+	label: string,
+	gradeBandMap: Map<string, string>,
+	chartColors: ReturnType<typeof useChartColors>
+): string {
+	if (viewMode === 'grade') {
+		const band = gradeBandMap.get(label);
+		switch (band) {
+			case 'MATERNELLE':
+				return chartColors.maternelle;
+			case 'ELEMENTAIRE':
+				return chartColors.elementaire;
+			case 'COLLEGE':
+				return chartColors.college;
+			case 'LYCEE':
+				return chartColors.lycee;
+			default:
+				return chartColors.fallback;
+		}
 	}
 
-	for (const entry of data.entries) {
-		const existing = natTotals.get(entry.nationality);
-		if (!existing) continue;
-		existing.gross = existing.gross.plus(new Decimal(entry.grossRevenueHt));
-		existing.net = existing.net.plus(new Decimal(entry.netRevenueHt));
-	}
-
-	const grandGross = [...natTotals.values()].reduce(
-		(sum, val) => sum.plus(val.gross),
-		new Decimal(0)
-	);
-
-	return NATIONALITIES.map((nat) => {
-		const totals = natTotals.get(nat) ?? { gross: new Decimal(0), net: new Decimal(0) };
-		const pctOfTotal = grandGross.isZero()
-			? '0.0%'
-			: `${totals.gross.div(grandGross).mul(100).toFixed(1)}%`;
-		return {
-			nationality: nat,
-			gross: totals.gross.toFixed(4),
-			net: totals.net.toFixed(4),
-			pctOfTotal,
-		};
-	});
+	return CHART_COLORS[0]!;
 }
 
-// ── Default View (9 sections) ───────────────────────────────────────────────
+function getBreakdownDotColor(dimension: BreakdownDimension, rowLabel: string): string | null {
+	if (dimension === 'band') {
+		return BAND_DOT_COLORS[rowLabel] ?? null;
+	}
+
+	return null;
+}
+
+function buildFormulaString(
+	viewMode: 'category' | 'grade' | 'nationality' | 'tariff',
+	label: string
+): string {
+	switch (viewMode) {
+		case 'category':
+			if (label === 'Tuition Fees') {
+				return 'Gross Revenue = Headcount x Tuition Fee HT per student';
+			}
+
+			if (label === 'Discount Impact') {
+				return 'Discount = (RP headcount x RP rate + R3+ headcount x R3+ rate) x fee';
+			}
+
+			return 'Other Revenue = configured annual amount distributed across months';
+		case 'grade':
+			return 'Grade Revenue = Sum of (each nationality x tariff combination for this grade)';
+		case 'nationality':
+			return 'Nationality Revenue = Sum of (all grades x tariff for this nationality)';
+		case 'tariff':
+			return 'Tariff Revenue = Sum of (all grades x nationalities at this tariff level)';
+	}
+}
 
 function RevenueInspectorDefaultView() {
 	const { versionId } = useWorkspaceContext();
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
 	const { data } = useRevenueResults(versionId, 'category');
 	const { data: readiness } = useRevenueReadiness(versionId);
-	const { data: gradeLevelsData } = useGradeLevels();
-	const chartColor = useChartColor('primary');
-	const seriesColors = useChartSeriesColors([
-		'--chart-series-1',
-		'--chart-series-2',
-		'--chart-series-3',
-		'--chart-series-4',
-		'--chart-series-5',
-	]);
-
-	const gradeBandMap = useMemo(
-		() => new Map((gradeLevelsData?.gradeLevels ?? []).map((gl) => [gl.gradeCode, gl.band])),
-		[gradeLevelsData?.gradeLevels]
-	);
-
-	const bandRevenue = useMemo(
-		() => buildBandRevenueSummary(data, gradeBandMap),
-		[data, gradeBandMap]
-	);
-
-	const nationalityRevenue = useMemo(() => buildNationalityRevenueSummary(data), [data]);
-
-	const composition = data?.executiveSummary.composition ?? [];
-	const monthlyTrend = data?.executiveSummary.monthlyTrend ?? [];
-
-	const workflowStatus = getWorkflowStatus(readiness);
-	const validationIssueCount = getValidationIssueCount(readiness);
-	const nonReadyAreas = READINESS_AREAS.filter((area) => readiness && !readiness[area.key].ready);
-
-	const totalEnrolled = useMemo(() => {
-		if (!data) return 0;
-		const gradeSet = new Set<string>();
-		for (const entry of data.entries) {
-			gradeSet.add(`${entry.gradeLevel}-${entry.nationality}-${entry.tariff}`);
-		}
-		return gradeSet.size;
-	}, [data]);
 
 	if (!versionId) {
 		return (
@@ -373,186 +303,17 @@ function RevenueInspectorDefaultView() {
 		);
 	}
 
+	const composition = data?.executiveSummary.composition ?? [];
+	const monthlyTrend = data?.executiveSummary.monthlyTrend ?? [];
+
 	return (
 		<div className="space-y-5">
-			{/* Section 1: Workflow status card */}
-			<WorkflowStatusCard
-				label="Revenue Workflow"
-				status={workflowStatus.text}
-				icon={ShieldCheck}
-				statusVariant={workflowStatus.variant as 'success' | 'warning' | 'info'}
-			/>
-
-			{/* Section 2: Readiness counters */}
-			<div className="grid gap-3 md:grid-cols-2">
-				<InspectorSection title="Config coverage">
-					<ReadinessIndicator
-						ready={readiness?.readyCount ?? 0}
-						total={readiness?.totalCount ?? 5}
-					/>
-				</InspectorSection>
-				<InspectorSection title="Validation issues">
-					<p className="text-(--text-sm) font-medium">{validationIssueCount} issues</p>
-				</InspectorSection>
-			</div>
-
-			{/* Section 3: Revenue assumptions table */}
-			<InspectorSection title="Revenue assumptions">
-				<SummaryTable
-					rows={[
-						{
-							label: 'RP discount rate',
-							amount: readiness?.discounts.rpRate
-								? `${new Decimal(readiness.discounts.rpRate).mul(100).toFixed(1)}%`
-								: '--',
-						},
-						{
-							label: 'R3+ discount rate',
-							amount: readiness?.discounts.r3Rate
-								? `${new Decimal(readiness.discounts.r3Rate).mul(100).toFixed(1)}%`
-								: '--',
-						},
-						{
-							label: 'Enrolled students',
-							amount: String(totalEnrolled),
-						},
-						{
-							label: 'Enrollment source',
-							amount: 'Cohort model',
-						},
-					]}
-				/>
-				<Button
-					variant="outline"
-					size="sm"
-					className="mt-3 w-full"
-					onClick={() => openSettings('feeGrid')}
-				>
-					Open Revenue Settings
-				</Button>
-			</InspectorSection>
-
-			{/* Section 4: Recommended workflow */}
-			<InspectorSection title="Recommended workflow">
-				<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card)">
-					{WORKFLOW_STEPS.map((step, index) => {
-						const Icon = step.icon;
-						return (
-							<div
-								key={step.title}
-								className={cn(
-									'animate-stagger-reveal flex items-start gap-3 p-2.5',
-									'border-b border-(--workspace-border) last:border-b-0'
-								)}
-								style={{ animationDelay: `${index * 60}ms` }}
-							>
-								<span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-(--accent-50)">
-									<Icon className="h-3.5 w-3.5 text-(--accent-500)" aria-hidden="true" />
-								</span>
-								<div>
-									<p className="text-(--text-sm) font-medium text-(--text-primary)">{step.title}</p>
-									<p className="text-(--text-xs) text-(--text-muted)">{step.description}</p>
-								</div>
-							</div>
-						);
-					})}
-				</div>
-			</InspectorSection>
-
-			{/* Section 5: Validation queue */}
-			<InspectorSection title="Validation queue">
-				<div className="overflow-hidden rounded-lg border border-(--workspace-border)">
-					<table className="w-full text-(--text-sm)">
-						<thead>
-							<tr className="bg-(--workspace-bg-muted)">
-								<th className="px-3 py-1.5 text-left text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
-									Area
-								</th>
-								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
-									Status
-								</th>
-								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
-									Action
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{nonReadyAreas.length === 0 ? (
-								<tr>
-									<td
-										colSpan={3}
-										className="px-3 py-6 text-center text-(--text-sm) text-(--text-muted)"
-									>
-										All areas configured.
-									</td>
-								</tr>
-							) : (
-								nonReadyAreas.map((area) => (
-									<tr key={area.key} className="border-t border-(--workspace-border)">
-										<td className="px-3 py-1.5 font-medium">
-											<span className="inline-flex items-center gap-1.5">
-												<span
-													className="inline-block h-2 w-2 rounded-full bg-(--color-warning)"
-													aria-hidden="true"
-												/>
-												{area.label}
-											</span>
-										</td>
-										<td className="px-3 py-1.5 text-right text-(--text-muted)">Needs attention</td>
-										<td className="px-3 py-1.5 text-right">
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => openSettings(area.tab)}
-											>
-												Edit
-											</Button>
-										</td>
-									</tr>
-								))
-							)}
-						</tbody>
-					</table>
-				</div>
-			</InspectorSection>
-
-			{/* Section 6: Revenue by Band summary */}
-			<InspectorSection title="Revenue by Band">
-				<SummaryTable
-					header={{ label: 'Band', amount: 'Gross', percent: '% Total' }}
-					rows={bandRevenue.map((row) => {
-						const dot = BAND_DOT_COLORS[row.band];
-						return {
-							...(dot ? { dot } : {}),
-							label: row.label,
-							amount: formatMoney(row.gross),
-							percent: row.pctOfTotal,
-						};
-					})}
-				/>
-			</InspectorSection>
-
-			{/* Section 7: Revenue by Nationality summary */}
-			<InspectorSection title="Revenue by Nationality">
-				<SummaryTable
-					header={{ label: 'Nationality', amount: 'Gross', percent: '% Total' }}
-					rows={nationalityRevenue.map((row) => {
-						const dot = NATIONALITY_STYLES[row.nationality as string]?.color;
-						return {
-							...(dot ? { dot } : {}),
-							label: row.nationality as string,
-							amount: formatMoney(row.gross),
-							percent: row.pctOfTotal,
-						};
-					})}
-				/>
-			</InspectorSection>
-
-			{/* Section 8: Revenue composition donut chart */}
-			<InspectorSection title="Revenue composition">
-				<ChartWrapper height={200}>
-					<PieChart>
+			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
+				<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">
+					Revenue composition
+				</h3>
+				<div className="mt-3 flex justify-center">
+					<PieChart width={260} height={180}>
 						<Pie
 							data={composition.map((item) => ({
 								name: item.label,
@@ -564,41 +325,81 @@ function RevenueInspectorDefaultView() {
 							outerRadius={72}
 						>
 							{composition.map((item, index) => (
-								<Cell key={item.label} fill={seriesColors[index % seriesColors.length]!} />
+								<Cell
+									key={item.label}
+									fill={CHART_COLORS[index % CHART_COLORS.length] ?? CHART_COLORS[0]!}
+								/>
 							))}
 						</Pie>
-						<Tooltip
-							formatter={(value) => formatChartTooltipValue(value)}
-							contentStyle={CHART_TOOLTIP_STYLE}
-						/>
+						<Tooltip formatter={(value) => formatChartTooltipValue(value)} />
 					</PieChart>
-				</ChartWrapper>
-			</InspectorSection>
+				</div>
+			</section>
 
-			{/* Section 9: Monthly trend bar chart */}
-			<InspectorSection title="Monthly trend">
-				<ChartWrapper height={200}>
+			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
+				<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">Monthly trend</h3>
+				<div className="mt-3 flex justify-center">
 					<BarChart
+						width={300}
+						height={180}
 						data={monthlyTrend.map((item) => ({
-							month: REVENUE_MONTH_LABELS[item.month - 1] ?? `M${item.month}`,
+							month: item.month,
 							amount: toNumber(item.amount),
 						}))}
 					>
-						<XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+						<XAxis dataKey="month" tickLine={false} axisLine={false} />
 						<YAxis hide />
-						<Tooltip
-							formatter={(value) => formatChartTooltipValue(value)}
-							contentStyle={CHART_TOOLTIP_STYLE}
-						/>
-						<Bar dataKey="amount" fill={chartColor} radius={[6, 6, 0, 0]} />
+						<Tooltip formatter={(value) => formatChartTooltipValue(value)} />
+						<Bar dataKey="amount" fill="#2463EB" radius={[6, 6, 0, 0]} />
 					</BarChart>
-				</ChartWrapper>
-			</InspectorSection>
+				</div>
+			</section>
+
+			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
+				<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">
+					Readiness checklist
+				</h3>
+				<div className="mt-3 space-y-2 text-(--text-sm)">
+					{[
+						{ label: 'Fee Grid', ready: readiness?.feeGrid.ready ?? false },
+						{
+							label: 'Tariff Assignment',
+							ready: readiness?.tariffAssignment.ready ?? false,
+						},
+						{ label: 'Discounts', ready: readiness?.discounts.ready ?? false },
+						{
+							label: 'Derived Revenue Rates',
+							ready: readiness?.derivedRevenueSettings.ready ?? false,
+						},
+						{ label: 'Other Revenue', ready: readiness?.otherRevenue.ready ?? false },
+					].map((item) => (
+						<div key={item.label} className="flex items-center justify-between">
+							<span>{item.label}</span>
+							<span className={item.ready ? 'text-(--color-success)' : 'text-(--text-muted)'}>
+								{item.ready ? 'Ready' : 'Needs attention'}
+							</span>
+						</div>
+					))}
+				</div>
+			</section>
+
+			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
+				<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">Quick links</h3>
+				<div className="mt-3 flex flex-wrap gap-2">
+					<Button type="button" variant="outline" size="sm" onClick={() => openSettings('feeGrid')}>
+						Open Settings
+					</Button>
+					<Button type="button" variant="outline" size="sm">
+						Go to Enrollment
+					</Button>
+					<Button type="button" variant="outline" size="sm">
+						Calculation Log
+					</Button>
+				</div>
+			</section>
 		</div>
 	);
 }
-
-// ── Active View (row selected) ──────────────────────────────────────────────
 
 function RevenueInspectorActiveView({
 	label,
@@ -608,9 +409,12 @@ function RevenueInspectorActiveView({
 	viewMode: 'category' | 'grade' | 'nationality' | 'tariff';
 }) {
 	const { versionId } = useWorkspaceContext();
+	const clearSelection = useRevenueSelectionStore((state) => state.clearSelection);
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
 	const { data } = useRevenueResults(versionId, viewMode);
 	const { data: gradeLevelsData } = useGradeLevels();
+	const chartColors = useChartColors();
+
 	const gradeBandMap = useMemo(
 		() =>
 			new Map(
@@ -632,115 +436,375 @@ function RevenueInspectorActiveView({
 		[data, gradeLevelsData?.gradeLevels, label, viewMode]
 	);
 
-	const monthlyTrend = selectedRow?.monthlyAmounts.map((amount, index) => ({
-		month: index + 1,
-		amount: toNumber(amount),
-	}));
+	const aggregates = useMemo(
+		() => computeSelectedRowAggregates({ data, label, viewMode }),
+		[data, label, viewMode]
+	);
 
-	const breakdowns = getBreakdownDimensions(viewMode).map((dimension) => ({
-		...dimension,
-		rows: buildDimensionBreakdown({
-			data,
-			dimension: dimension.key,
-			label,
-			viewMode,
-			gradeBandMap,
-		}),
-	}));
+	const monthlyTrend = useMemo(
+		() =>
+			selectedRow?.monthlyAmounts.map((amount, index) => ({
+				month: REVENUE_MONTH_LABELS[index] ?? String(index + 1),
+				amount: toNumber(amount),
+			})) ?? [],
+		[selectedRow?.monthlyAmounts]
+	);
+
+	const chartFill = useMemo(
+		() => getChartFillColor(viewMode, label, gradeBandMap, chartColors),
+		[chartColors, gradeBandMap, label, viewMode]
+	);
+
+	const breakdowns = useMemo(
+		() =>
+			getBreakdownDimensions(viewMode).map((dimension) => ({
+				...dimension,
+				rows: buildDimensionBreakdown({
+					data,
+					dimension: dimension.key,
+					label,
+					viewMode,
+					gradeBandMap,
+				}),
+			})),
+		[data, gradeBandMap, label, viewMode]
+	);
+
+	const bandForGrade = viewMode === 'grade' ? (gradeBandMap.get(label) ?? null) : null;
+
+	const bandAggregateContext = useMemo(() => {
+		if (viewMode !== 'grade' || !bandForGrade) {
+			return null;
+		}
+
+		const gradesInBand = [...gradeBandMap.entries()]
+			.filter(([, band]) => band === bandForGrade)
+			.map(([gradeCode]) => gradeCode);
+
+		let bandGross = new Decimal(0);
+		let bandNet = new Decimal(0);
+		let bandHeadcount = 0;
+
+		for (const entry of data?.entries ?? []) {
+			if (gradesInBand.includes(entry.gradeLevel)) {
+				bandGross = bandGross.plus(new Decimal(entry.grossRevenueHt));
+				bandNet = bandNet.plus(new Decimal(entry.netRevenueHt));
+				bandHeadcount += 1;
+			}
+		}
+
+		return {
+			label: BAND_LABELS[bandForGrade] ?? bandForGrade,
+			grossRevenue: bandGross.toFixed(4),
+			netRevenue: bandNet.toFixed(4),
+			headcount: bandHeadcount,
+			gradeCount: gradesInBand.length,
+		};
+	}, [bandForGrade, data?.entries, gradeBandMap, viewMode]);
+
+	const formulaString = buildFormulaString(viewMode, label);
 
 	return (
 		<div className="space-y-5">
-			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
-				<div className="flex items-start justify-between gap-3">
-					<div>
-						<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
-							Selected row
-						</p>
-						<h3 className="mt-1 text-(--text-lg) font-semibold text-(--text-primary)">{label}</h3>
-						<p className="mt-1 text-(--text-sm) text-(--text-secondary)">
-							{selectedRow ? formatCompactSar(selectedRow.annualTotal) : 'SAR -'} •{' '}
-							{selectedRow
-								? `${formatRevenueGridPercent(selectedRow.percentageOfRevenue)} of revenue`
-								: ''}
-						</p>
-					</div>
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onClick={() => openSettings(getCategoryTab(label))}
-					>
-						Edit in Settings
-					</Button>
-				</div>
-			</section>
-
-			<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
-				<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">Monthly trend</h3>
-				<div className="mt-3 flex justify-center">
-					<BarChart width={300} height={160} data={monthlyTrend ?? []}>
-						<XAxis dataKey="month" tickLine={false} axisLine={false} />
-						<YAxis hide />
-						<Tooltip formatter={(value) => formatChartTooltipValue(value)} />
-						<Bar dataKey="amount" fill="#16A34A" radius={[6, 6, 0, 0]} />
-					</BarChart>
-				</div>
-			</section>
-
-			{breakdowns.map((breakdown) => (
-				<section
-					key={breakdown.title}
-					className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4"
+			{/* Header: back button, view mode badge, label heading, row code */}
+			<div className="flex items-center gap-2">
+				<button
+					type="button"
+					onClick={clearSelection}
+					className={cn(
+						'rounded-md p-1 text-(--text-muted)',
+						'transition-colors duration-(--duration-fast)',
+						'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)'
+					)}
+					aria-label="Back to overview"
 				>
-					<h3 className="text-(--text-sm) font-semibold text-(--text-primary)">
+					<ArrowLeft className="h-4 w-4" />
+				</button>
+				<span
+					className={cn(
+						'rounded-sm px-1.5 py-0.5 text-(--text-xs) font-medium',
+						VIEW_MODE_BADGE_STYLES[viewMode] ?? ''
+					)}
+				>
+					{VIEW_MODE_LABELS[viewMode] ?? viewMode}
+				</span>
+				<h3
+					className={cn(
+						'font-[family-name:var(--font-display)]',
+						'text-(--text-lg) font-semibold text-(--text-primary)'
+					)}
+				>
+					{label}
+				</h3>
+				<span
+					className={cn(
+						'rounded-full bg-(--workspace-bg-subtle)',
+						'px-2 py-0.5 text-(--text-xs) font-semibold text-(--text-muted)'
+					)}
+				>
+					{viewMode === 'category' ? getCategoryTab(label) : label}
+				</span>
+			</div>
+
+			{/* KPI Cards: Gross Revenue + Net Revenue */}
+			<div className="grid gap-3 md:grid-cols-2">
+				<div
+					className={cn(
+						'rounded-lg border border-(--inspector-section-border)',
+						'bg-(--workspace-bg-card) px-3 py-3'
+					)}
+				>
+					<p
+						className={cn(
+							'text-(--text-xs) font-semibold uppercase',
+							'tracking-[0.08em] text-(--text-muted)'
+						)}
+					>
+						Gross Revenue
+					</p>
+					<p
+						className={cn(
+							'mt-2 font-[family-name:var(--font-mono)]',
+							'text-(--text-xl) font-semibold text-(--text-primary)'
+						)}
+					>
+						{formatCompactSar(aggregates.grossRevenue)}
+					</p>
+					<p className="mt-1 text-(--text-xs) text-(--text-muted)">
+						{aggregates.headcount} revenue entries
+					</p>
+				</div>
+				<div
+					className={cn(
+						'rounded-lg border border-(--inspector-section-border)',
+						'bg-(--workspace-bg-card) px-3 py-3'
+					)}
+				>
+					<p
+						className={cn(
+							'text-(--text-xs) font-semibold uppercase',
+							'tracking-[0.08em] text-(--text-muted)'
+						)}
+					>
+						Net Revenue
+					</p>
+					<p
+						className={cn(
+							'mt-2 font-[family-name:var(--font-mono)]',
+							'text-(--text-xl) font-semibold text-(--text-primary)'
+						)}
+					>
+						{formatCompactSar(aggregates.netRevenue)}
+					</p>
+					<p className="mt-1 text-(--text-xs) text-(--text-muted)">
+						{aggregates.discountImpact}% discount impact
+					</p>
+				</div>
+			</div>
+
+			{/* Revenue share indicator */}
+			{selectedRow && (
+				<div
+					className={cn(
+						'rounded-lg border border-(--workspace-border)',
+						'bg-(--workspace-bg-subtle) px-3 py-2'
+					)}
+				>
+					<p className="text-(--text-sm) text-(--text-secondary)">
+						{formatRevenueGridPercent(selectedRow.percentageOfRevenue)} of total revenue
+					</p>
+				</div>
+			)}
+
+			{/* Monthly Trend Chart */}
+			<div>
+				<h4
+					className={cn(
+						'mb-2 text-(--text-xs) font-semibold uppercase',
+						'tracking-[0.06em] text-(--text-muted)'
+					)}
+				>
+					Monthly trend
+				</h4>
+				<div
+					className={cn(
+						'rounded-lg border border-(--inspector-section-border)',
+						'bg-(--workspace-bg-card) p-3'
+					)}
+				>
+					<div className="flex justify-center">
+						<BarChart width={300} height={160} data={monthlyTrend}>
+							<XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+							<YAxis hide />
+							<Tooltip formatter={(value) => formatChartTooltipValue(value)} />
+							<Bar dataKey="amount" fill={chartFill} radius={[6, 6, 0, 0]} />
+						</BarChart>
+					</div>
+				</div>
+			</div>
+
+			{/* Contextual Breakdowns */}
+			{breakdowns.map((breakdown) => (
+				<div key={breakdown.title}>
+					<h4
+						className={cn(
+							'mb-2 text-(--text-xs) font-semibold uppercase',
+							'tracking-[0.06em] text-(--text-muted)'
+						)}
+					>
 						{breakdown.title}
-					</h3>
-					<div className="mt-3 space-y-2 text-(--text-sm)">
+					</h4>
+					<div className={cn('overflow-hidden rounded-lg border', 'border-(--workspace-border)')}>
 						{breakdown.rows.length === 0 ? (
-							<p className="text-(--text-muted)">
+							<div className="px-3 py-6 text-center text-(--text-sm) text-(--text-muted)">
 								No additional breakdown is available for this row.
-							</p>
+							</div>
 						) : (
-							breakdown.rows.slice(0, 4).map((row) => (
-								<div
-									key={`${breakdown.title}-${row.label}`}
-									className="flex items-center justify-between gap-3"
-								>
-									<span className="text-(--text-secondary)">{row.label}</span>
-									<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
-										{formatCompactSar(row.amount)}
-									</span>
-								</div>
-							))
+							<div className="divide-y divide-(--workspace-border)">
+								{breakdown.rows.map((row) => {
+									const dot = getBreakdownDotColor(breakdown.key, row.label);
+									const rowTotal = new Decimal(aggregates.grossRevenue);
+									const rowAmount = new Decimal(row.amount);
+									const percent = rowTotal.eq(0)
+										? '0.0'
+										: rowAmount.div(rowTotal).mul(100).toFixed(1);
+
+									return (
+										<div
+											key={`${breakdown.title}-${row.label}`}
+											className={cn('flex items-center justify-between', 'gap-3 px-3 py-2')}
+										>
+											<span
+												className={cn(
+													'inline-flex items-center gap-1.5',
+													'text-(--text-sm) text-(--text-secondary)'
+												)}
+											>
+												{dot && (
+													<span
+														className={cn('inline-block h-2 w-2 rounded-full', dot)}
+														aria-hidden="true"
+													/>
+												)}
+												{row.label}
+											</span>
+											<span className="flex items-center gap-2">
+												<span
+													className={cn(
+														'font-[family-name:var(--font-mono)]',
+														'text-(--text-sm) tabular-nums',
+														'text-(--text-primary)'
+													)}
+												>
+													{formatCompactSar(row.amount)}
+												</span>
+												<span
+													className={cn('text-(--text-xs) tabular-nums', 'text-(--text-muted)')}
+												>
+													{percent}%
+												</span>
+											</span>
+										</div>
+									);
+								})}
+							</div>
 						)}
 					</div>
-				</section>
-			))}
-		</div>
-	);
-}
-
-// ── Content Wrapper ─────────────────────────────────────────────────────────
-
-function RevenueInspectorContent() {
-	const selection = useRevenueSelectionStore((state) => state.selection);
-
-	return (
-		<div className="relative min-h-full" aria-live="polite">
-			{!selection ? (
-				<div className="animate-inspector-crossfade">
-					<RevenueInspectorDefaultView />
 				</div>
-			) : (
-				<div
-					key={`${selection.viewMode}-${selection.label}`}
-					className="animate-inspector-crossfade"
+			))}
+
+			{/* Edit in Settings button */}
+			<div className="flex justify-end">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={() => openSettings(getCategoryTab(label))}
 				>
-					<RevenueInspectorActiveView label={selection.label} viewMode={selection.viewMode} />
+					Edit in Settings
+				</Button>
+			</div>
+
+			{/* Formula Card */}
+			<div>
+				<h4
+					className={cn(
+						'mb-2 text-(--text-xs) font-semibold uppercase',
+						'tracking-[0.06em] text-(--text-muted)'
+					)}
+				>
+					How revenue is calculated
+				</h4>
+				<div
+					className={cn(
+						'rounded-lg border border-(--inspector-section-border)',
+						'bg-(--workspace-bg-card) p-3'
+					)}
+				>
+					<div className="flex items-start gap-3">
+						<span
+							className={cn(
+								'mt-0.5 inline-flex h-8 w-8 items-center',
+								'justify-center rounded-lg bg-(--accent-50)'
+							)}
+						>
+							<Sigma className="h-4 w-4 text-(--accent-700)" aria-hidden="true" />
+						</span>
+						<div className="space-y-1">
+							<p className="text-(--text-sm) font-semibold text-(--text-primary)">
+								{formulaString}
+							</p>
+							<p className="text-(--text-xs) text-(--text-muted)">
+								All values are HT (hors taxe). Discount rates and tariff assignments are configured
+								in Revenue Settings.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Band aggregate context (grade view only) */}
+			{bandAggregateContext && (
+				<div
+					className={cn(
+						'rounded-lg border border-(--inspector-section-border)',
+						'bg-(--workspace-bg-card) px-3 py-2.5'
+					)}
+				>
+					<p
+						className={cn(
+							'text-(--text-xs) font-semibold uppercase',
+							'tracking-[0.08em] text-(--text-muted)'
+						)}
+					>
+						{bandAggregateContext.label} band context
+					</p>
+					<p
+						className={cn(
+							'mt-1 font-[family-name:var(--font-mono)]',
+							'text-(--text-sm) tabular-nums text-(--text-secondary)'
+						)}
+					>
+						Gross {formatCompactSar(bandAggregateContext.grossRevenue)}
+						{' \u00B7 '}
+						Net {formatCompactSar(bandAggregateContext.netRevenue)}
+						{' \u00B7 '}
+						{bandAggregateContext.gradeCount} grades
+					</p>
 				</div>
 			)}
 		</div>
 	);
+}
+
+function RevenueInspectorContent() {
+	const selection = useRevenueSelectionStore((state) => state.selection);
+
+	if (!selection) {
+		return <RevenueInspectorDefaultView />;
+	}
+
+	return <RevenueInspectorActiveView label={selection.label} viewMode={selection.viewMode} />;
 }
 
 registerPanelContent('revenue', RevenueInspectorContent);

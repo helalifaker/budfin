@@ -4,6 +4,7 @@ import { RevenueInspectorContent } from './revenue-inspector';
 import { useRevenueResults, useRevenueReadiness } from '../../hooks/use-revenue';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
+import { useChartColors } from '../../hooks/use-chart-colors';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 
@@ -20,20 +21,15 @@ vi.mock('../../hooks/use-grade-levels', () => ({
 	useGradeLevels: vi.fn(),
 }));
 
-vi.mock('recharts', async () => {
-	const actual = await vi.importActual<typeof import('recharts')>('recharts');
-	return {
-		...actual,
-		ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
-			<div data-testid="responsive-container">{children}</div>
-		),
-	};
-});
+vi.mock('../../hooks/use-chart-colors', () => ({
+	useChartColors: vi.fn(),
+}));
 
 const mockUseRevenueResults = vi.mocked(useRevenueResults);
 const mockUseRevenueReadiness = vi.mocked(useRevenueReadiness);
 const mockUseWorkspaceContext = vi.mocked(useWorkspaceContext);
 const mockUseGradeLevels = vi.mocked(useGradeLevels);
+const mockUseChartColors = vi.mocked(useChartColors);
 
 function makeRevenueData() {
 	return {
@@ -143,12 +139,35 @@ function makeRevenueData() {
 					isTotal: true,
 				},
 			],
-			composition: [{ label: 'Net Tuition', amount: '2700.0000', percentageOfRevenue: '1.000000' }],
+			composition: [
+				{
+					label: 'Net Tuition',
+					amount: '2700.0000',
+					percentageOfRevenue: '1.000000',
+				},
+			],
 			monthlyTrend: [
 				{ month: 1, amount: '900.0000' },
 				{ month: 9, amount: '1800.0000' },
 			],
 		},
+	};
+}
+
+function makeChartColors() {
+	return {
+		maternelle: '#4ade80',
+		elementaire: '#60a5fa',
+		college: '#f59e0b',
+		lycee: '#ef4444',
+		total: '#6b7280',
+		grid: '#e5e7eb',
+		axis: '#9ca3af',
+		tooltipBorder: '#d1d5db',
+		versionBudget: '#2463EB',
+		versionForecast: '#16A34A',
+		versionActual: '#D97706',
+		fallback: '#9ca3af',
 	};
 }
 
@@ -185,103 +204,90 @@ describe('RevenueInspectorContent', () => {
 				],
 			},
 		} as unknown as ReturnType<typeof useGradeLevels>);
+		mockUseChartColors.mockReturnValue(makeChartColors() as ReturnType<typeof useChartColors>);
 	});
 
 	afterEach(() => {
 		cleanup();
 	});
 
-	it('renders the 9-section default view when no row is selected', () => {
+	it('renders the default analytics view when no row is selected', () => {
 		render(<RevenueInspectorContent />);
 
-		// Section 1: Workflow status
-		expect(screen.getByText('Revenue Workflow')).toBeDefined();
-		expect(screen.getByText('Setup complete')).toBeDefined();
-
-		// Section 2: Readiness counters
-		expect(screen.getByText('Config coverage')).toBeDefined();
-		expect(screen.getByText('5/5')).toBeDefined();
-		expect(screen.getByText('Validation issues')).toBeDefined();
-
-		// Section 3: Revenue assumptions
-		expect(screen.getByText('Revenue assumptions')).toBeDefined();
-		expect(screen.getByText('RP discount rate')).toBeDefined();
-
-		// Section 4: Recommended workflow
-		expect(screen.getByText('Recommended workflow')).toBeDefined();
-		expect(screen.getByText('Configure fee grid')).toBeDefined();
-		expect(screen.getByText('Assign tariffs')).toBeDefined();
-		expect(screen.getByText('Set discounts')).toBeDefined();
-		expect(screen.getByText('Calculate revenue')).toBeDefined();
-
-		// Section 5: Validation queue
-		expect(screen.getByText('Validation queue')).toBeDefined();
-		expect(screen.getByText('All areas configured.')).toBeDefined();
-
-		// Section 6: Revenue by Band
-		expect(screen.getByText('Revenue by Band')).toBeDefined();
-
-		// Section 7: Revenue by Nationality
-		expect(screen.getByText('Revenue by Nationality')).toBeDefined();
-
-		// Section 8: Revenue composition
 		expect(screen.getByText('Revenue composition')).toBeDefined();
-
-		// Section 9: Monthly trend
 		expect(screen.getByText('Monthly trend')).toBeDefined();
+		expect(screen.getByText('Readiness checklist')).toBeDefined();
+		expect(screen.getByRole('button', { name: 'Open Settings' })).toBeDefined();
 	});
 
-	it('shows validation queue items when readiness areas are not ready', () => {
-		mockUseRevenueReadiness.mockReturnValue({
-			data: {
-				feeGrid: { total: 90, complete: 45, ready: false },
-				tariffAssignment: { reconciled: false, ready: false },
-				discounts: { rpRate: null, r3Rate: null, ready: true },
-				derivedRevenueSettings: { exists: true, ready: true },
-				otherRevenue: { total: 20, configured: 20, ready: true },
-				overallReady: false,
-				readyCount: 3,
-				totalCount: 5,
-			},
-			isLoading: false,
-		} as unknown as ReturnType<typeof useRevenueReadiness>);
-
-		render(<RevenueInspectorContent />);
-
-		expect(screen.getByText('Setup pending')).toBeDefined();
-		expect(screen.getByText('3/5')).toBeDefined();
-
-		// Validation queue shows non-ready areas
-		expect(screen.getByText('Fee Grid')).toBeDefined();
-		expect(screen.getByText('Tariff Assignment')).toBeDefined();
-	});
-
-	it('opens revenue settings when clicking the action button in assumptions', () => {
-		render(<RevenueInspectorContent />);
-
-		fireEvent.click(screen.getByRole('button', { name: 'Open Revenue Settings' }));
-
-		expect(useRevenueSettingsDialogStore.getState().isOpen).toBe(true);
-		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('feeGrid');
-	});
-
-	it('renders the active inspector view and opens the mapped settings tab', () => {
+	it('renders the active inspector view when a selection is set', () => {
 		useRevenueSelectionStore.getState().selectRow({
-			id: 'category-tuition-fees',
-			code: 'tuition-fees',
 			label: 'Tuition Fees',
 			viewMode: 'category',
-			rowType: 'data',
-			settingsTarget: 'feeGrid',
 		});
 
 		render(<RevenueInspectorContent />);
 
-		expect(screen.getByText('Selected row')).toBeDefined();
 		expect(screen.getByRole('heading', { name: 'Tuition Fees' })).toBeDefined();
 		expect(screen.getByText('By Band')).toBeDefined();
 		expect(screen.getByText('By Nationality')).toBeDefined();
 		expect(screen.getByText('By Tariff')).toBeDefined();
+	});
+
+	it('renders the view mode badge with correct text', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'Tuition Fees',
+			viewMode: 'category',
+		});
+
+		render(<RevenueInspectorContent />);
+
+		expect(screen.getByText('Category')).toBeDefined();
+	});
+
+	it('renders the grade view mode badge when in grade view', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'PS',
+			viewMode: 'grade',
+		});
+
+		render(<RevenueInspectorContent />);
+
+		expect(screen.getByText('Grade')).toBeDefined();
+	});
+
+	it('shows KPI cards with gross and net revenue values', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'Tuition Fees',
+			viewMode: 'category',
+		});
+
+		render(<RevenueInspectorContent />);
+
+		expect(screen.getByText('Gross Revenue')).toBeDefined();
+		expect(screen.getByText('Net Revenue')).toBeDefined();
+	});
+
+	it('calls clearSelection when back button is clicked', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'Tuition Fees',
+			viewMode: 'category',
+		});
+
+		render(<RevenueInspectorContent />);
+
+		fireEvent.click(screen.getByRole('button', { name: 'Back to overview' }));
+
+		expect(useRevenueSelectionStore.getState().selection).toBeNull();
+	});
+
+	it('opens the mapped settings tab when Edit in Settings is clicked', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'Tuition Fees',
+			viewMode: 'category',
+		});
+
+		render(<RevenueInspectorContent />);
 
 		fireEvent.click(screen.getByRole('button', { name: 'Edit in Settings' }));
 
@@ -289,11 +295,41 @@ describe('RevenueInspectorContent', () => {
 		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('feeGrid');
 	});
 
-	it('shows aria-live region on the container', () => {
+	it('shows the formula card section', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'Tuition Fees',
+			viewMode: 'category',
+		});
+
 		render(<RevenueInspectorContent />);
 
-		const container = screen.getByText('Revenue Workflow').closest('[aria-live]');
-		expect(container).toBeDefined();
-		expect(container?.getAttribute('aria-live')).toBe('polite');
+		expect(screen.getByText('How revenue is calculated')).toBeDefined();
+		expect(
+			screen.getByText('Gross Revenue = Headcount x Tuition Fee HT per student')
+		).toBeDefined();
+	});
+
+	it('shows band aggregate context in grade view', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'PS',
+			viewMode: 'grade',
+		});
+
+		render(<RevenueInspectorContent />);
+
+		expect(screen.getByText('Maternelle band context')).toBeDefined();
+	});
+
+	it('renders contextual breakdowns for grade view mode', () => {
+		useRevenueSelectionStore.getState().selectRow({
+			label: 'PS',
+			viewMode: 'grade',
+		});
+
+		render(<RevenueInspectorContent />);
+
+		expect(screen.getByText('By Nationality')).toBeDefined();
+		expect(screen.getByText('By Tariff')).toBeDefined();
+		expect(screen.getByText('By Category')).toBeDefined();
 	});
 });
