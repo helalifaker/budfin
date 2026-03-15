@@ -215,15 +215,36 @@ All screenshots captured via Chrome MCP browser automation on `localhost:3000`.
 
 ---
 
-## 9. Residual Risks
+## 9. Automated Review Agent Findings
 
-1. **Viewer mode not visually tested** — V7 was not exercised via browser automation. Code review confirms all inputs check `isReadOnly` prop, and the `viewer.epic7@efir.edu.sa` user exists. Low risk.
-2. **Prior-year data depends on FiscalPeriod linkage** — If no `FiscalPeriod` records have `actualVersionId` set, prior-year column shows dashes. This is expected behavior, not a bug.
-3. **"Recommended workflow" cards in inspector** still reference "Reconcile tariff assignment against enrollment" — this is pre-existing text from the workflow guidance module and is not part of this remediation scope.
+### Code Review Agent (APPROVE with minor follow-ups)
+
+- **WARNING-01** (FIXED): Stale "Recommended workflow" text referenced removed tariff assignment — updated in commit `df261dd`
+- **WARNING-02**: Dead hooks `useDiscounts`/`usePutDiscounts` in `use-revenue.ts` — legacy compat, non-blocking
+- **WARNING-03**: `DiscountsTab` render-time setState pattern — works in React 19, non-blocking
+- **WARNING-04**: `JSON.stringify` dirty detection on fee arrays — acceptable for <300 rows per ADR-016
+
+### Financial Precision Review (2 BLOCKERS in pre-existing code)
+
+- **BLOCKING-01/02**: `editable-cell.tsx` uses `parseFloat()` on monetary values — this is **pre-existing shared code** not modified by Epic 17. School-scale SAR amounts are within IEEE 754 safe range. Tracked as follow-up tech debt, not blocking for this PR.
+- **WARNING**: Several locations use `.toFixed(4)` without explicit `ROUND_HALF_UP` — Decimal.js defaults to correct mode, but inconsistency noted for future cleanup
+
+### Spec Compliance Audit (17/17 PASS, 1 WARNING)
+
+- **WARNING**: Engine flat discount algorithm has no dedicated test in `revenue-engine.test.ts` — implementation is correct, but the `flatDiscountPct > 0` code path is untested. Noted as follow-up item.
 
 ---
 
-## 10. Sign-off
+## 10. Residual Risks
+
+1. **Viewer mode not visually tested** — V7 was not exercised via browser automation. Code review confirms all inputs check `isReadOnly` prop. Low risk.
+2. **Prior-year data depends on FiscalPeriod linkage** — If no `FiscalPeriod` records have `actualVersionId` set, prior-year column shows dashes. Expected behavior.
+3. **Engine flat discount path untested** — The `flatDiscountPct > 0` branch in `revenue-engine.ts:224-232` has no unit test. Implementation is correct per code review, but a test should be added in a follow-up.
+4. **Pre-existing `parseFloat()` in `editable-cell.tsx`** — Shared component uses IEEE 754 conversion for monetary input. No precision loss at school-fee scale, but should be fixed project-wide in a tech debt ticket.
+
+---
+
+## 11. Sign-off
 
 | Criterion                  | Status                        |
 | -------------------------- | ----------------------------- |
