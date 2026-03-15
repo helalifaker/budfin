@@ -1422,6 +1422,116 @@ Update the fee grid (FR-REV-001 through FR-REV-006). Server validates `tuition_h
 
 ---
 
+#### GET /api/v1/versions/:versionId/fee-grid/prior-year
+
+Retrieve the fee grid from the prior fiscal year's actual version for year-over-year comparison. Returns empty entries when no prior-year actuals exist.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "entries": [
+        {
+            "academic_period": "AY1|AY2",
+            "grade_level": "string",
+            "nationality": "string",
+            "tariff": "string",
+            "dai": "string (decimal)",
+            "tuition_ttc": "string (decimal)",
+            "tuition_ht": "string (decimal)",
+            "term1_amount": "string (decimal)",
+            "term2_amount": "string (decimal)",
+            "term3_amount": "string (decimal)"
+        }
+    ],
+    "prior_fiscal_year": "number|null"
+}
+```
+
+---
+
+#### GET /api/v1/versions/:versionId/revenue/settings
+
+Retrieve per-version revenue settings including per-student fees and flat discount rate.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "settings": {
+        "dpi_per_student_ht": "string (decimal)",
+        "dossier_per_student_ht": "string (decimal)",
+        "exam_bac_per_student": "string (decimal)",
+        "exam_dnb_per_student": "string (decimal)",
+        "exam_eaf_per_student": "string (decimal)",
+        "eval_primaire_per_student": "string (decimal)",
+        "eval_secondaire_per_student": "string (decimal)",
+        "flat_discount_pct": "string (decimal, 0.000000-1.000000)"
+    }
+}
+```
+
+---
+
+#### PUT /api/v1/versions/:versionId/revenue/settings
+
+Update per-version revenue settings. Marks REVENUE module as stale.
+
+**RBAC:** Admin, BudgetOwner, Editor.
+
+**Request body:** Same shape as GET response `settings` object. All fields required.
+
+**Response 200:**
+
+```json
+{ "updated": true }
+```
+
+**Error responses:**
+
+| Status | Code           | Condition                     |
+| ------ | -------------- | ----------------------------- |
+| 409    | VERSION_LOCKED | Version is Locked or Archived |
+
+---
+
+#### GET /api/v1/versions/:versionId/revenue/readiness
+
+Check revenue configuration readiness across 3 areas: fee grid, discounts, other revenue.
+
+**RBAC:** All authenticated.
+
+**Response 200:**
+
+```json
+{
+    "feeGrid": {
+        "total": "number",
+        "complete": "number",
+        "settingsExist": "boolean",
+        "ready": "boolean"
+    },
+    "discounts": {
+        "flatRate": "string|null",
+        "ready": "boolean"
+    },
+    "otherRevenue": {
+        "total": "number",
+        "configured": "number",
+        "ready": "boolean"
+    },
+    "overallReady": "boolean",
+    "readyCount": "number (0-3)",
+    "totalCount": 3
+}
+```
+
+---
+
 #### GET /api/v1/versions/:versionId/discounts
 
 Retrieve discount policies by tariff and nationality.

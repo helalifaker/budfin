@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `GET /versions/:versionId/fee-grid/prior-year` endpoint returning fee grid entries from the prior fiscal year's actual version for year-over-year comparison (#197)
+- `usePriorYearFees` hook for fetching prior-year fee data on the frontend (#197)
+- `flatDiscountPct` column (`DECIMAL(7,6)`) on `VersionRevenueSettings` Prisma model with migration (#197)
+- `revenue-readiness.ts` utility module for 3-area readiness model and first-incomplete-tab routing (#197)
+- Prior-year fee seed script for FY2025 actuals data (`seed-prior-year-fees.ts`) (#197)
 - Per-version revenue rates: each budget version now stores its own DPI per-student, Frais de Dossier per-student, and exam/evaluation per-student rates, configurable via the Revenue Settings panel; rates default to EFIR workbook values and can be updated by Admin, BudgetOwner, and Editor roles (#196)
 - Dynamic computation mode for Other Revenue line items: rows flagged with a compute method (DAI, DPI, Dossier, exam fees, evaluation fees) are automatically calculated from student headcounts and per-version rates (#196)
 - GET/PUT `revenue/settings` endpoint for reading and updating per-version revenue rates (#196)
@@ -162,6 +167,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Revenue Settings dialog simplified from 4 tabs to 3: removed Tariff Assignment tab, consolidated Per-Student Fees into Fee Grid tab, kept Discounts and Other Revenue as standalone tabs (#197)
+- Discount model replaced per-tariff RP/R3+ rates with a single flat discount percentage stored as `flatDiscountPct` on `VersionRevenueSettings`; engine applies flat rate uniformly when > 0, falls back to per-tariff logic when 0 (#197)
+- Revenue readiness reduced from 5 areas to 3 (Fee Grid, Discounts, Other Revenue); `totalCount` changed from 5 to 3 in readiness response (#197)
+- Fee Grid tab now shows band-level tuition editing (5 bands x 3 nationalities) with prior-year comparison columns and increase percentage (#197)
+- Other Revenue tab filters to custom lines only; system-calculated rows (DAI, DPI, exams) hidden with info banner (#197)
 - Enrollment planning rules thresholds corrected: rollover threshold changed from 1.05 to 1.00 and capped retention from 0.97 to 0.98 to match EFIR workbook conventions; existing versions receive these corrected defaults via the database migration (#184)
 - Version cloning now carries planning rules forward: when a budget version is cloned, the source version's rollover threshold and capped retention are copied to the new version instead of reverting to system defaults (#184)
 - Grade Levels configuration now exposes a "Default AY2 Intake" field per grade, allowing administrators to set the expected new PS cohort intake without editing enrollment data directly (#184)
