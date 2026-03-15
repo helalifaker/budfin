@@ -182,8 +182,8 @@ export function PlanningGrid<T>({
 		[headerGroups]
 	);
 	const isEditable = (editableColumns?.length ?? 0) > 0;
-	const _tableRole = isEditable || forceGridRole ? 'grid' : 'table';
-	const _cellRole = isEditable || forceGridRole ? 'gridcell' : 'cell';
+	const tableRole = isEditable || forceGridRole ? 'grid' : 'table';
+	const cellRole = isEditable || forceGridRole ? 'gridcell' : 'cell';
 
 	// Build band groups when bandGrouping is provided
 	const bandedRows = useMemo(() => {
@@ -222,6 +222,17 @@ export function PlanningGrid<T>({
 		}
 	}, [activeCell, onActiveRowChange]);
 
+	useEffect(() => {
+		if (!keyboardNavigation || !activeCell || !tableRef.current) {
+			return;
+		}
+
+		const cell = tableRef.current.querySelector<HTMLElement>(
+			`[data-row-index="${activeCell.rowIndex}"][data-col-index="${activeCell.colIndex}"]`
+		);
+		cell?.focus();
+	}, [activeCell, keyboardNavigation]);
+
 	// Keyboard navigation
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent) => {
@@ -255,25 +266,24 @@ export function PlanningGrid<T>({
 					if (!(e.target instanceof HTMLInputElement)) move(0, 1);
 					break;
 				case 'Tab': {
-					if (!editableColumns?.length) break;
 					e.preventDefault();
 					const dir = e.shiftKey ? -1 : 1;
 					const allHeaders = leafHeaders;
 					let { colIndex, rowIndex } = activeCell;
-					// Find next editable cell
 					let steps = 0;
 					do {
 						colIndex += dir;
 						if (colIndex > maxCol) {
 							colIndex = 0;
-							rowIndex = Math.min(maxRow, rowIndex + 1);
+							rowIndex = rowIndex >= maxRow ? 0 : rowIndex + 1;
 						} else if (colIndex < 0) {
 							colIndex = maxCol;
-							rowIndex = Math.max(0, rowIndex - 1);
+							rowIndex = rowIndex <= 0 ? maxRow : rowIndex - 1;
 						}
 						steps++;
 					} while (
-						steps <= cols * rows.length &&
+						editableColumns?.length &&
+						steps <= cols * Math.max(rows.length, 1) &&
 						!editableColumns.includes(allHeaders[colIndex]?.id ?? '')
 					);
 					setActiveCell({ rowIndex, colIndex });
@@ -297,6 +307,14 @@ export function PlanningGrid<T>({
 	const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
 		setActiveCell({ rowIndex, colIndex });
 	}, []);
+
+	const handleTableFocus = useCallback(() => {
+		if (!keyboardNavigation || activeCell || rows.length === 0 || cols === 0) {
+			return;
+		}
+
+		setActiveCell({ rowIndex: 0, colIndex: 0 });
+	}, [activeCell, cols, keyboardNavigation, rows.length]);
 
 	const handleRowClick = useCallback(
 		(row: (typeof rows)[number]) => {
@@ -408,6 +426,11 @@ export function PlanningGrid<T>({
 			<td
 				key={cell.id}
 				onClick={() => handleCellClick(rowIndex, colIndex)}
+				role={cellRole}
+				data-grid-row-id={String((row.original as { id?: unknown }).id ?? row.id)}
+				data-row-index={rowIndex}
+				data-col-index={colIndex}
+				tabIndex={keyboardNavigation ? (isActive ? 0 : -1) : undefined}
 				className={cn(
 					isCompact
 						? 'px-(--grid-compact-cell-px) py-(--grid-compact-cell-py) border-b border-b-(--grid-compact-border)'
@@ -446,6 +469,8 @@ export function PlanningGrid<T>({
 			<tr
 				key={row.id}
 				onClick={() => handleRowClick(row)}
+				role="row"
+				aria-selected={isSelected ? 'true' : undefined}
 				className={cn(
 					'group border-b border-(--workspace-border) last:border-0',
 					'transition-colors duration-(--duration-fast)',
@@ -647,7 +672,7 @@ export function PlanningGrid<T>({
 	return (
 		<div
 			className={cn(
-				'overflow-x-auto',
+				'h-full overflow-auto',
 				isCompact
 					? 'rounded-lg border border-(--grid-frame-border) bg-(--workspace-bg-card)'
 					: 'rounded-[18px] border border-(--workspace-border) bg-(--workspace-bg-card) shadow-(--shadow-card)',
@@ -656,8 +681,12 @@ export function PlanningGrid<T>({
 		>
 			<table
 				ref={tableRef}
+				role={tableRole}
+				aria-rowcount={tableRole === 'grid' ? rows.length : undefined}
+				aria-colcount={tableRole === 'grid' ? cols : undefined}
 				aria-label={ariaLabel}
 				onKeyDown={handleKeyDown}
+				onFocus={handleTableFocus}
 				tabIndex={keyboardNavigation ? 0 : undefined}
 				className={cn(
 					'w-full text-left text-token-sm',

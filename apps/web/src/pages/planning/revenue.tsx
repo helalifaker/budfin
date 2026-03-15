@@ -24,8 +24,11 @@ import {
 import { useVersions } from '../../hooks/use-versions';
 import {
 	buildRevenueForecastGridRows,
+	filterRevenueForecastRows,
+	getRevenueTotalLabel,
 	type RevenueForecastPeriod,
 } from '../../lib/revenue-workspace';
+import { getFirstIncompleteRevenueTab } from '../../lib/revenue-readiness';
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
@@ -69,18 +72,25 @@ export function RevenuePage() {
 	const [exceptionFilter, setExceptionFilter] = useState<RevenueExceptionFilterValue>('all');
 	const settingsButtonRef = useRef<HTMLButtonElement>(null);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
 	const closePanel = useRightPanelStore((state) => state.close);
 	const selection = useRevenueSelectionStore((state) => state.selection);
 	const clearSelection = useRevenueSelectionStore((state) => state.clearSelection);
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
+	const autoPromptedVersionRef = useRef<number | null>(null);
+	const period = useMemo<RevenueForecastPeriod>(() => {
+		return academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
+	}, [academicPeriod]);
 	const { data: versionsData } = useVersions(fiscalYear);
-	const { data: revenueResults } = useRevenueResults(versionId, 'category');
+	const { data: revenueResults, isLoading: revenueLoading } = useRevenueResults(
+		versionId,
+		viewMode,
+		period
+	);
 	const { data: readiness } = useRevenueReadiness(versionId);
-	const { data: headcountData } = useHeadcount(versionId);
+	const { data: headcountData } = useHeadcount(versionId, period === 'both' ? undefined : period);
 	const { data: gradeLevelsData } = useGradeLevels();
 	const calculateMutation = useCalculateRevenue(versionId);
-
-	const isFiltered = bandFilter !== 'ALL';
 
 	useEffect(() => {
 		setActivePage('revenue');
@@ -90,33 +100,11 @@ export function RevenuePage() {
 		};
 	}, [clearSelection, setActivePage]);
 
-	// GP-09: Clear selection when filter hides the selected row
 	useEffect(() => {
-		if (!isFiltered || !selection) {
-			return;
+		if (!isPanelOpen) {
+			clearSelection();
 		}
-
-		// In grade view, check if the selected row's grade belongs to the active band
-		if (viewMode === 'grade' && gradeLevelsData?.gradeLevels) {
-			const gradeLevel = gradeLevelsData.gradeLevels.find((gl) => gl.gradeCode === selection.label);
-			if (gradeLevel && gradeLevel.band !== bandFilter) {
-				clearSelection();
-				closePanel();
-			}
-		}
-	}, [
-		bandFilter,
-		clearSelection,
-		closePanel,
-		gradeLevelsData?.gradeLevels,
-		isFiltered,
-		selection,
-		viewMode,
-	]);
-
-	const period = useMemo<RevenueForecastPeriod>(() => {
-		return academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
-	}, [academicPeriod]);
+	}, [clearSelection, isPanelOpen]);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId) {
@@ -136,14 +124,12 @@ export function RevenuePage() {
 		(moduleName) => moduleName === 'STAFFING' || moduleName === 'PNL'
 	);
 	const totalAy1Headcount =
-		headcountData?.entries
-			.filter((entry) => entry.academicPeriod === 'AY1')
-			.reduce((sum, entry) => sum + entry.headcount, 0) ?? 0;
+		headcountData?.entries.reduce((sum, entry) => sum + entry.headcount, 0) ?? 0;
 	const avgPerStudent =
 		revenueResults && totalAy1Headcount > 0
 			? new Decimal(revenueResults.totals.totalOperatingRevenue).div(totalAy1Headcount).toFixed(0)
 			: '0.0000';
-	const exportRows = useMemo(
+	const allGridRows = useMemo(
 		() =>
 			buildRevenueForecastGridRows({
 				data: revenueResults,
@@ -152,6 +138,50 @@ export function RevenuePage() {
 			}),
 		[gradeLevelsData?.gradeLevels, revenueResults, viewMode]
 	);
+	const visibleRows = useMemo(
+		() =>
+			filterRevenueForecastRows({
+				rows: allGridRows,
+				viewMode,
+				bandFilter,
+				exceptionFilter,
+			}),
+		[allGridRows, bandFilter, exceptionFilter, viewMode]
+	);
+	const totalLabel = useMemo(
+		() =>
+			getRevenueTotalLabel({
+				viewMode,
+				bandFilter,
+				exceptionFilter,
+			}),
+		[bandFilter, exceptionFilter, viewMode]
+	);
+
+	useEffect(() => {
+		if (!selection) {
+			return;
+		}
+
+		const selectedRowIsVisible = visibleRows.some((row) => row.id === selection.id);
+		if (!selectedRowIsVisible) {
+			clearSelection();
+			closePanel();
+		}
+	}, [clearSelection, closePanel, selection, visibleRows]);
+
+	useEffect(() => {
+		if (!versionId || isViewer || !readiness || readiness.overallReady) {
+			return;
+		}
+
+		if (autoPromptedVersionRef.current === versionId) {
+			return;
+		}
+
+		autoPromptedVersionRef.current = versionId;
+		openSettings(getFirstIncompleteRevenueTab(readiness));
+	}, [isViewer, openSettings, readiness, versionId]);
 
 	if (!versionId) {
 		return (
@@ -175,7 +205,7 @@ export function RevenuePage() {
 				{currentVersion?.dataSource === 'IMPORTED' && <ImportedBanner />}
 				{isViewer && <ViewerBanner />}
 
-				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--workspace-border) px-6 py-2">
+				<div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-(--workspace-border) px-6 py-2">
 					<div className="flex flex-wrap items-center gap-3">
 						<ToggleGroup
 							type="single"
@@ -183,7 +213,10 @@ export function RevenuePage() {
 							onValueChange={(value) => {
 								if (value) {
 									setViewMode(value as 'category' | 'grade' | 'nationality' | 'tariff');
+									setBandFilter('ALL');
+									setExceptionFilter('all');
 									clearSelection();
+									closePanel();
 								}
 							}}
 							aria-label="Revenue view mode"
@@ -197,7 +230,11 @@ export function RevenuePage() {
 						<ToggleGroup
 							type="single"
 							value={period}
-							onValueChange={(value) => setAcademicPeriod(value || 'both')}
+							onValueChange={(value) => {
+								setAcademicPeriod(value || 'both');
+								clearSelection();
+								closePanel();
+							}}
 							aria-label="Revenue period"
 						>
 							<ToggleGroupItem value="AY1">AY1</ToggleGroupItem>
@@ -229,11 +266,13 @@ export function RevenuePage() {
 
 					<div className="flex flex-wrap items-center gap-2">
 						<RevenueExportButton
-							rows={exportRows}
+							rows={visibleRows}
 							viewMode={viewMode}
 							period={period}
 							versionName={currentVersion?.name ?? 'revenue'}
 							bandFilter={bandFilter}
+							exceptionFilter={exceptionFilter}
+							totalLabel={totalLabel}
 						/>
 						<Button
 							ref={settingsButtonRef}
@@ -255,30 +294,37 @@ export function RevenuePage() {
 					</div>
 				</div>
 
-				<RevenueKpiRibbon
-					grossHt={revenueResults?.totals.grossRevenueHt ?? '0.0000'}
-					totalDiscounts={revenueResults?.totals.discountAmount ?? '0.0000'}
-					netRevenue={revenueResults?.totals.netRevenueHt ?? '0.0000'}
-					otherRevenue={revenueResults?.totals.otherRevenueAmount ?? '0.0000'}
-					totalOperatingRevenue={revenueResults?.totals.totalOperatingRevenue ?? '0.0000'}
-					avgPerStudent={avgPerStudent}
-					isStale={isStale}
-				/>
-
-				<RevenueStatusStrip
-					lastCalculated={currentVersion?.lastCalculatedAt ?? null}
-					enrollmentStale={enrollmentStale}
-					downstreamStale={downstreamStale}
-					readiness={readiness}
-				/>
-
-				<div className="flex-1 min-h-0 overflow-hidden">
-					<ForecastGrid
-						versionId={versionId}
-						viewMode={viewMode}
-						period={period}
-						bandFilter={bandFilter}
+				<div className="shrink-0 px-6 py-2">
+					<RevenueKpiRibbon
+						grossHt={revenueResults?.totals.grossRevenueHt ?? '0.0000'}
+						totalDiscounts={revenueResults?.totals.discountAmount ?? '0.0000'}
+						netRevenue={revenueResults?.totals.netRevenueHt ?? '0.0000'}
+						otherRevenue={revenueResults?.totals.otherRevenueAmount ?? '0.0000'}
+						totalOperatingRevenue={revenueResults?.totals.totalOperatingRevenue ?? '0.0000'}
+						avgPerStudent={avgPerStudent}
+						isStale={isStale}
 					/>
+				</div>
+
+				<div className="shrink-0">
+					<RevenueStatusStrip
+						lastCalculated={currentVersion?.lastCalculatedAt ?? null}
+						enrollmentStale={enrollmentStale}
+						downstreamStale={downstreamStale}
+						readiness={readiness}
+					/>
+				</div>
+
+				<div className="flex-1 min-h-0 overflow-hidden px-6 py-2">
+					<div className="h-full overflow-y-auto scrollbar-thin">
+						<ForecastGrid
+							rows={visibleRows}
+							viewMode={viewMode}
+							period={period}
+							isLoading={revenueLoading}
+							totalLabel={totalLabel}
+						/>
+					</div>
 				</div>
 
 				<RevenueSettingsDialog

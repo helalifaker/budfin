@@ -1,5 +1,5 @@
 import type { FeeGridEntry, FeeScheduleRow } from '@budfin/types';
-import { TUITION_BANDS } from './fee-schedule-builder';
+import Decimal from 'decimal.js';
 
 // ── Field mapping ───────────────────────────────────────────────────────────
 // Maps fee schedule display fields to FeeGridEntry property names.
@@ -7,33 +7,8 @@ import { TUITION_BANDS } from './fee-schedule-builder';
 const FIELD_MAP: Record<string, keyof FeeGridEntry> = {
 	dai: 'dai',
 	tuitionHt: 'tuitionHt',
-	term1: 'term1Amount',
-	term2: 'term2Amount',
-	term3: 'term3Amount',
-	totalTtc: 'tuitionTtc',
+	tuitionTtc: 'tuitionTtc',
 };
-
-/**
- * Resolve which grade codes a given FeeScheduleRow maps to,
- * based on the row ID convention: `tuition-{nationality}-{bandId}`.
- */
-function resolveGradeCodes(rowId: string): string[] {
-	for (const band of TUITION_BANDS) {
-		if (rowId.includes(band.id)) {
-			return band.grades;
-		}
-	}
-	return [];
-}
-
-/**
- * Extract the nationality from a tuition row ID.
- * Row IDs follow the pattern: `tuition-{nationality}-{bandId}`.
- */
-function resolveNationality(rowId: string): string | null {
-	const match = rowId.match(/^tuition-(\w+)-/);
-	return match?.[1] ?? null;
-}
 
 // ── Public API ──────────────────────────────────────────────────────────────
 
@@ -43,6 +18,8 @@ function resolveNationality(rowId: string): string | null {
  * - editable-source: 1:1 update (single grade)
  * - editable-fanout: update ALL underlying grade rows with the same new value
  * - summary-only: throws an error (should never be called for read-only rows)
+ *
+ * When tuitionTtc is edited, auto-derives tuitionHt and term amounts (40/30/30 split).
  */
 export function writebackFeeScheduleEdit(
 	originalEntries: FeeGridEntry[],
@@ -61,11 +38,11 @@ export function writebackFeeScheduleEdit(
 		);
 	}
 
-	const gradeCodes = resolveGradeCodes(editedRow.id);
-	const nationality = resolveNationality(editedRow.id);
+	const gradeCodes = editedRow.sourceGrades ?? [];
+	const nationality = editedRow.sourceNationality;
 
 	if (gradeCodes.length === 0 || !nationality) {
-		throw new Error(`Cannot resolve grade codes or nationality from row ID "${editedRow.id}".`);
+		throw new Error(`Cannot resolve fee grid sources for row "${editedRow.id}".`);
 	}
 
 	return originalEntries.map((entry) => {
@@ -78,6 +55,28 @@ export function writebackFeeScheduleEdit(
 			return entry;
 		}
 
-		return { ...entry, [entryField]: newValue };
+		const nextEntry = { ...entry, [entryField]: newValue };
+
+		if (entryField === 'tuitionTtc') {
+			const vatRate = entry.nationality === 'Nationaux' ? new Decimal(0) : new Decimal('0.15');
+			const ttc = new Decimal(newValue);
+			nextEntry.tuitionHt = ttc
+				.div(new Decimal(1).plus(vatRate))
+				.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+				.toFixed(4);
+			const term1 = ttc.mul(new Decimal('0.40')).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+			const term2 = ttc.mul(new Decimal('0.30')).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+			const term3 = ttc.minus(term1).minus(term2);
+			nextEntry.term1Amount = term1.toFixed(4);
+			nextEntry.term2Amount = term2.toFixed(4);
+			nextEntry.term3Amount = term3.toFixed(4);
+		}
+
+		if (entryField === 'tuitionHt') {
+			const vatRate = entry.nationality === 'Nationaux' ? new Decimal(0) : new Decimal('0.15');
+			nextEntry.tuitionTtc = new Decimal(newValue).mul(new Decimal(1).plus(vatRate)).toFixed(4);
+		}
+
+		return nextEntry;
 	});
 }

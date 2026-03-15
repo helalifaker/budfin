@@ -133,6 +133,7 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				examEafPerStudent: revenueSettings.examEafPerStudent,
 				evalPrimairePerStudent: revenueSettings.evalPrimairePerStudent,
 				evalSecondairePerStudent: revenueSettings.evalSecondairePerStudent,
+				flatDiscountPct: revenueSettings.flatDiscountPct,
 			});
 
 			// Compute derived revenue items
@@ -231,6 +232,7 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 					})
 				),
 				otherRevenueItems: mergedOtherRevenue,
+				flatDiscountPct: revenueSettings.flatDiscountPct.toString(),
 			};
 
 			// Calculate

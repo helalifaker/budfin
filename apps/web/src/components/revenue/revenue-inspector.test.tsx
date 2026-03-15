@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { RevenueInspectorContent } from './revenue-inspector';
 import { useRevenueResults, useRevenueReadiness } from '../../hooks/use-revenue';
+import { useDetail } from '../../hooks/use-enrollment';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useChartColors } from '../../hooks/use-chart-colors';
@@ -17,6 +18,10 @@ vi.mock('../../hooks/use-workspace-context', () => ({
 	useWorkspaceContext: vi.fn(),
 }));
 
+vi.mock('../../hooks/use-enrollment', () => ({
+	useDetail: vi.fn(),
+}));
+
 vi.mock('../../hooks/use-grade-levels', () => ({
 	useGradeLevels: vi.fn(),
 }));
@@ -27,6 +32,7 @@ vi.mock('../../hooks/use-chart-colors', () => ({
 
 const mockUseRevenueResults = vi.mocked(useRevenueResults);
 const mockUseRevenueReadiness = vi.mocked(useRevenueReadiness);
+const mockUseDetail = vi.mocked(useDetail);
 const mockUseWorkspaceContext = vi.mocked(useWorkspaceContext);
 const mockUseGradeLevels = vi.mocked(useGradeLevels);
 const mockUseChartColors = vi.mocked(useChartColors);
@@ -185,17 +191,34 @@ describe('RevenueInspectorContent', () => {
 		} as unknown as ReturnType<typeof useRevenueResults>);
 		mockUseRevenueReadiness.mockReturnValue({
 			data: {
-				feeGrid: { total: 90, complete: 90, ready: true },
-				tariffAssignment: { reconciled: true, ready: true },
-				discounts: { rpRate: '0.250000', r3Rate: '0.100000', ready: true },
-				derivedRevenueSettings: { exists: true, ready: true },
+				feeGrid: { total: 90, complete: 90, settingsExist: true, ready: true },
+				discounts: { flatRate: '0.000000', ready: true },
 				otherRevenue: { total: 20, configured: 20, ready: true },
 				overallReady: true,
-				readyCount: 5,
-				totalCount: 5,
+				readyCount: 3,
+				totalCount: 3,
 			},
 			isLoading: false,
 		} as unknown as ReturnType<typeof useRevenueReadiness>);
+		mockUseDetail.mockReturnValue({
+			data: {
+				entries: [
+					{
+						gradeLevel: 'PS',
+						nationality: 'Francais',
+						tariff: 'Plein',
+						headcount: 12,
+					},
+					{
+						gradeLevel: 'CP',
+						nationality: 'Autres',
+						tariff: 'RP',
+						headcount: 8,
+					},
+				],
+			},
+			isLoading: false,
+		} as unknown as ReturnType<typeof useDetail>);
 		mockUseGradeLevels.mockReturnValue({
 			data: {
 				gradeLevels: [
@@ -278,6 +301,7 @@ describe('RevenueInspectorContent', () => {
 
 		expect(screen.getByText('Gross Revenue')).toBeDefined();
 		expect(screen.getByText('Net Revenue')).toBeDefined();
+		expect(screen.getByText('20 students')).toBeDefined();
 	});
 
 	it('calls clearSelection when back button is clicked', () => {
@@ -342,6 +366,7 @@ describe('RevenueInspectorContent', () => {
 		render(<RevenueInspectorContent />);
 
 		expect(screen.getByText('Maternelle band context')).toBeDefined();
+		expect(screen.getByText(/1 grades/)).toBeDefined();
 	});
 
 	it('renders contextual breakdowns for grade view mode', () => {

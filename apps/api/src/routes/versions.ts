@@ -253,6 +253,7 @@ async function seedVersionRevenueArtifacts(
 					examEafPerStudent: sourceSettings.examEafPerStudent,
 					evalPrimairePerStudent: sourceSettings.evalPrimairePerStudent,
 					evalSecondairePerStudent: sourceSettings.evalSecondairePerStudent,
+					flatDiscountPct: sourceSettings.flatDiscountPct,
 				});
 
 	await tx.versionRevenueSettings.create({

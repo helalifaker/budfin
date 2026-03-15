@@ -1,12 +1,27 @@
+import { AlertTriangle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import Decimal from 'decimal.js';
-import type { FeeGridEntry, FeeScheduleRow, FeeScheduleSection } from '@budfin/types';
-import { useFeeGrid, usePutFeeGrid } from '../../hooks/use-revenue';
-import { EditableCell } from '../data-grid/editable-cell';
+import type {
+	FeeGridEntry,
+	FeeScheduleGroup,
+	FeeScheduleRow,
+	FeeScheduleSection,
+	RevenueSettings,
+} from '@budfin/types';
+import {
+	useFeeGrid,
+	usePriorYearFees,
+	usePutFeeGrid,
+	usePutRevenueSettings,
+	useRevenueSettings,
+} from '../../hooks/use-revenue';
+import { EditableCell } from '../shared/editable-cell';
 import { Button } from '../ui/button';
 import { buildFeeSchedule } from '../../lib/fee-schedule-builder';
 import { writebackFeeScheduleEdit } from '../../lib/fee-schedule-writeback';
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 
 interface FeeGridTabProps {
 	versionId: number;
@@ -14,50 +29,53 @@ interface FeeGridTabProps {
 	isReadOnly: boolean;
 }
 
-// ── SAR formatting ──────────────────────────────────────────────────────────
-
-function formatSar(value: string | undefined): string {
-	if (!value || value === '0' || value === '0.0000') return '-';
-	const d = new Decimal(value);
-	if (d.isZero()) return '-';
-	const rounded = d.abs().toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
-	const formatted = rounded.toNumber().toLocaleString('fr-FR', {
-		maximumFractionDigits: 0,
-	});
-	return d.lt(0) ? `(${formatted}) SAR` : `${formatted} SAR`;
-}
-
-// ── Nationality header colors ───────────────────────────────────────────────
-
-const NATIONALITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-	Francais: {
-		bg: 'bg-blue-50',
-		text: 'text-blue-800',
-		border: 'border-blue-200',
-	},
-	Nationaux: {
-		bg: 'bg-emerald-50',
-		text: 'text-emerald-800',
-		border: 'border-emerald-200',
-	},
-	Autres: {
-		bg: 'bg-amber-50',
-		text: 'text-amber-800',
-		border: 'border-amber-200',
-	},
-};
-
-// ── Shared table styles ─────────────────────────────────────────────────────
-
 const CELL_CLASS = 'px-3 py-2 text-xs font-[family-name:var(--font-mono)] tabular-nums text-right';
 const HEADER_CELL_CLASS =
 	'px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-right';
 const LABEL_CELL_CLASS = 'px-3 py-2 text-xs font-medium text-(--text-primary)';
 const TABLE_CLASS = 'w-full border-collapse text-left text-sm';
-const SECTION_WRAPPER_CLASS =
-	'overflow-x-auto rounded-lg border border-(--grid-frame-border) bg-(--workspace-bg-card)';
 
-// ── Section 1: Tuition Fees ─────────────────────────────────────────────────
+const PER_STUDENT_FEE_LABELS: Record<string, string> = {
+	dossierPerStudentHt: 'Frais de Dossier',
+	dpiPerStudentHt: 'DPI (1ere Inscription)',
+	examBacPerStudent: 'BAC Exam',
+	examDnbPerStudent: 'DNB Exam',
+	examEafPerStudent: 'EAF Exam',
+	evalPrimairePerStudent: 'Evaluation - Primaire',
+	evalSecondairePerStudent: 'Evaluation - College+Lycee',
+};
+
+const PER_STUDENT_FEE_FIELDS = Object.keys(PER_STUDENT_FEE_LABELS) as Array<
+	keyof Omit<RevenueSettings, 'flatDiscountPct'>
+>;
+
+function formatFeeMoney(value: string | undefined) {
+	if (!value) {
+		return '-';
+	}
+
+	const amount = new Decimal(value);
+	if (amount.eq(0)) {
+		return '-';
+	}
+
+	return formatMoney(amount, { showCurrency: true });
+}
+
+function normalizeCurrencyInput(value: number) {
+	return new Decimal(value || 0).toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
+}
+
+function SectionCard({ title, children }: { title: string; children: ReactNode }) {
+	return (
+		<div className="space-y-2">
+			<h3 className="text-sm font-semibold text-(--text-primary)">{title}</h3>
+			<div className="overflow-x-auto rounded-lg border border-(--grid-frame-border) bg-(--workspace-bg-card)">
+				{children}
+			</div>
+		</div>
+	);
+}
 
 function TuitionSection({
 	section,
@@ -71,62 +89,49 @@ function TuitionSection({
 	const groups = section.groups ?? [];
 
 	return (
-		<div className="space-y-1">
-			<h3 className="text-sm font-semibold text-(--text-primary)">{section.title}</h3>
-			<div className={SECTION_WRAPPER_CLASS}>
-				<table className={TABLE_CLASS} role="grid" aria-label={section.title}>
-					<thead className="sticky top-0 z-[2] bg-(--grid-subheader-bg) border-b-2 border-b-(--grid-frame-border)">
-						<tr role="row">
-							<th className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-left w-36">
-								Level
-							</th>
-							<th className={HEADER_CELL_CLASS}>DAI</th>
-							<th className={HEADER_CELL_CLASS}>Tuition HT</th>
-							<th className={HEADER_CELL_CLASS}>Term 1</th>
-							<th className={HEADER_CELL_CLASS}>Term 2</th>
-							<th className={HEADER_CELL_CLASS}>Term 3</th>
-							<th className={HEADER_CELL_CLASS}>Total TTC</th>
-						</tr>
-					</thead>
-					<tbody>
-						{groups.map((group) => {
-							const colors = NATIONALITY_COLORS[group.nationality] ?? {
-								bg: 'bg-gray-50',
-								text: 'text-gray-800',
-								border: 'border-gray-200',
-							};
-
-							return [
-								<tr
-									key={`header-${group.nationality}`}
-									role="row"
-									className={cn('border-b', colors.border, colors.bg)}
-								>
-									<td
-										colSpan={7}
-										className={cn(
-											'px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em]',
-											colors.text
-										)}
-									>
-										{group.nationalityLabel}
-									</td>
-								</tr>,
-								...group.rows.map((row) => (
-									<TuitionRow
-										key={row.id}
-										row={row}
-										isReadOnly={isReadOnly}
-										onCellEdit={onCellEdit}
-									/>
-								)),
-							];
-						})}
-					</tbody>
-				</table>
-			</div>
-		</div>
+		<SectionCard title={section.title}>
+			<table className={TABLE_CLASS} role="grid" aria-label={section.title}>
+				<thead className="sticky top-0 z-[2] border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
+					<tr>
+						<th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+							Band
+						</th>
+						<th className={HEADER_CELL_CLASS}>DAI</th>
+						<th className={HEADER_CELL_CLASS}>Tuition TTC</th>
+						<th className={HEADER_CELL_CLASS}>Prior Year</th>
+						<th className={HEADER_CELL_CLASS}>Increase (%)</th>
+						<th className={HEADER_CELL_CLASS}>Total TTC</th>
+					</tr>
+				</thead>
+				<tbody>
+					{groups.flatMap((group) => renderTuitionGroup(group, isReadOnly, onCellEdit))}
+				</tbody>
+			</table>
+		</SectionCard>
 	);
+}
+
+function renderTuitionGroup(
+	group: FeeScheduleGroup,
+	isReadOnly: boolean,
+	onCellEdit: (row: FeeScheduleRow, field: string, value: string) => void
+) {
+	return [
+		<tr
+			key={`header-${group.nationality}`}
+			className="border-b border-(--grid-compact-border) bg-(--workspace-bg-subtle)"
+		>
+			<td
+				colSpan={6}
+				className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-(--text-secondary)"
+			>
+				{group.nationalityLabel}
+			</td>
+		</tr>,
+		...group.rows.map((row) => (
+			<TuitionRow key={row.id} row={row} isReadOnly={isReadOnly} onCellEdit={onCellEdit} />
+		)),
+	];
 }
 
 function TuitionRow({
@@ -138,69 +143,58 @@ function TuitionRow({
 	isReadOnly: boolean;
 	onCellEdit: (row: FeeScheduleRow, field: string, value: string) => void;
 }) {
-	const isEditable = row.editability !== 'summary-only';
-	const showWarning = row.hasHeterogeneousValues;
+	const isEditable = row.editability === 'editable-source' || row.editability === 'editable-fanout';
 
 	return (
 		<tr
-			role="row"
 			className={cn(
 				'border-b border-(--grid-compact-border) last:border-0',
-				'hover:bg-gray-50/60 transition-colors duration-100',
-				showWarning && 'bg-amber-50/30'
+				'transition-colors duration-(--duration-fast) hover:bg-gray-50/60',
+				row.hasHeterogeneousValues && 'bg-(--color-warning-bg)/40'
 			)}
 		>
 			<td className={LABEL_CELL_CLASS}>
-				<span className="flex items-center gap-1.5">
-					{row.label}
-					{(row.underlyingGradeCount ?? 0) > 1 && (
-						<span className="inline-flex items-center justify-center min-w-4 rounded-full bg-(--workspace-bg-muted) px-1 py-0 text-[10px] font-medium text-(--text-muted)">
-							{row.underlyingGradeCount}
+				<div className="flex items-center gap-2">
+					<span>{row.label}</span>
+					{row.hasHeterogeneousValues && (
+						<span className="inline-flex items-center gap-1 rounded-full bg-(--color-warning-bg) px-2 py-0.5 text-[10px] font-semibold text-(--color-warning)">
+							<AlertTriangle className="h-3 w-3" aria-hidden="true" />
+							Mixed values
 						</span>
 					)}
-					{showWarning && (
-						<span
-							className="inline-block h-2 w-2 rounded-full bg-amber-400"
-							title="Underlying grades have different values"
-							aria-label="Heterogeneous values warning"
-						/>
-					)}
-				</span>
+				</div>
 			</td>
-			{renderTuitionCell(row, 'dai', isReadOnly && !isEditable, isReadOnly, onCellEdit)}
-			{renderTuitionCell(row, 'tuitionHt', isReadOnly && !isEditable, isReadOnly, onCellEdit)}
-			{renderTuitionCell(row, 'term1', isReadOnly && !isEditable, isReadOnly, onCellEdit)}
-			{renderTuitionCell(row, 'term2', isReadOnly && !isEditable, isReadOnly, onCellEdit)}
-			{renderTuitionCell(row, 'term3', isReadOnly && !isEditable, isReadOnly, onCellEdit)}
+			{renderEditableCell(row, 'dai', isReadOnly || !isEditable, onCellEdit)}
+			{renderEditableCell(row, 'tuitionTtc', isReadOnly || !isEditable, onCellEdit)}
+			<td className={cn(CELL_CLASS, 'text-(--text-secondary)')}>
+				{row.priorYearTtc ? formatFeeMoney(row.priorYearTtc) : '-'}
+			</td>
+			<td className={cn(CELL_CLASS, 'text-(--text-secondary)')}>
+				{row.increasePct ? `${row.increasePct}%` : '-'}
+			</td>
 			<td className={cn(CELL_CLASS, 'font-semibold text-(--text-primary)')}>
-				{formatSar(row.totalTtc)}
+				{formatFeeMoney(row.totalTtc)}
 			</td>
 		</tr>
 	);
 }
 
-function renderTuitionCell(
+function renderEditableCell(
 	row: FeeScheduleRow,
-	field: string,
+	field: 'dai' | 'tuitionTtc',
 	forceReadOnly: boolean,
-	isTabReadOnly: boolean,
 	onCellEdit: (row: FeeScheduleRow, field: string, value: string) => void
 ) {
-	const value = (row as Record<string, unknown>)[field] as string | undefined;
-	const isEditable = row.editability !== 'summary-only' && !isTabReadOnly;
-
-	if (!isEditable || forceReadOnly) {
-		return <td className={CELL_CLASS}>{formatSar(value)}</td>;
+	const value = row[field];
+	if (forceReadOnly) {
+		return <td className={CELL_CLASS}>{formatFeeMoney(value)}</td>;
 	}
 
 	return (
 		<td className={cn(CELL_CLASS, 'p-1')}>
 			<EditableCell
 				value={value ?? '0'}
-				onChange={(newVal) => {
-					const sanitized = String(Number(newVal.replace(/,/g, '.')) || 0);
-					onCellEdit(row, field, sanitized);
-				}}
+				onChange={(nextValue) => onCellEdit(row, field, normalizeCurrencyInput(nextValue))}
 				isReadOnly={false}
 				type="number"
 			/>
@@ -208,134 +202,86 @@ function renderTuitionCell(
 	);
 }
 
-// ── Section 2: Autres Frais ─────────────────────────────────────────────────
-
-function AutresFraisSection({ section }: { section: FeeScheduleSection }) {
-	const rows = section.rows ?? [];
-
+function PerStudentFeeBlock({
+	settings,
+	isReadOnly,
+	onSettingEdit,
+}: {
+	settings: RevenueSettings | null;
+	isReadOnly: boolean;
+	onSettingEdit: (field: keyof RevenueSettings, value: string) => void;
+}) {
 	return (
-		<div className="space-y-1">
-			<h3 className="text-sm font-semibold text-(--text-primary)">{section.title}</h3>
-			<div className={SECTION_WRAPPER_CLASS}>
-				<table className={TABLE_CLASS} role="table" aria-label={section.title}>
-					<thead className="sticky top-0 z-[2] bg-(--grid-subheader-bg) border-b-2 border-b-(--grid-frame-border)">
-						<tr role="row">
-							<th className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-left w-36">
-								Level
-							</th>
-							<th className={HEADER_CELL_CLASS}>DAI Francais</th>
-							<th className={HEADER_CELL_CLASS}>DAI Nationaux</th>
-							<th className={HEADER_CELL_CLASS}>DAI Autres</th>
-						</tr>
-					</thead>
-					<tbody>
-						{rows.map((row) => {
-							const daiData = row as Record<string, unknown>;
-							return (
-								<tr
-									key={row.id}
-									role="row"
-									className="border-b border-(--grid-compact-border) last:border-0 hover:bg-gray-50/60 transition-colors duration-100"
-								>
-									<td className={LABEL_CELL_CLASS}>{row.label}</td>
-									<td className={CELL_CLASS}>
-										{formatSar(daiData.dai_Francais as string | undefined)}
-									</td>
-									<td className={CELL_CLASS}>
-										{formatSar(daiData.dai_Nationaux as string | undefined)}
-									</td>
-									<td className={CELL_CLASS}>
-										{formatSar(daiData.dai_Autres as string | undefined)}
-									</td>
-								</tr>
-							);
-						})}
-						{rows.length === 0 && (
-							<tr>
-								<td colSpan={4} className="px-4 py-8 text-center text-sm text-(--text-muted)">
-									No DAI data available.
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
-}
-
-// ── Section 3: Tarifs Abattement ────────────────────────────────────────────
-
-function AbattementSection({ section }: { section: FeeScheduleSection }) {
-	const rows = section.rows ?? [];
-
-	return (
-		<div className="space-y-1">
-			<h3 className="text-sm font-semibold text-(--text-primary)">{section.title}</h3>
-			<div className={SECTION_WRAPPER_CLASS}>
-				<table className={TABLE_CLASS} role="table" aria-label={section.title}>
-					<thead className="sticky top-0 z-[2] bg-(--grid-subheader-bg) border-b-2 border-b-(--grid-frame-border)">
-						<tr role="row">
-							<th className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-left w-48">
-								Level / Tariff
-							</th>
-							<th className={HEADER_CELL_CLASS}>Tuition HT</th>
-							<th className={HEADER_CELL_CLASS}>Total TTC</th>
-						</tr>
-					</thead>
-					<tbody>
-						{rows.map((row) => (
+		<SectionCard title="Per-Student Fees">
+			<table className={TABLE_CLASS} role="table" aria-label="Per-Student Fees">
+				<thead className="sticky top-0 z-[2] border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
+					<tr>
+						<th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+							Fee Type
+						</th>
+						<th className={HEADER_CELL_CLASS}>Amount HT</th>
+					</tr>
+				</thead>
+				<tbody>
+					{PER_STUDENT_FEE_FIELDS.map((field) => {
+						const value = settings?.[field] ?? '0.0000';
+						return (
 							<tr
-								key={row.id}
-								role="row"
-								className="border-b border-(--grid-compact-border) last:border-0 hover:bg-gray-50/60 transition-colors duration-100"
+								key={field}
+								className="border-b border-(--grid-compact-border) last:border-0 hover:bg-gray-50/60"
 							>
-								<td className={LABEL_CELL_CLASS}>{row.label}</td>
-								<td className={CELL_CLASS}>{formatSar(row.tuitionHt)}</td>
-								<td className={CELL_CLASS}>{formatSar(row.totalTtc)}</td>
+								<td className={LABEL_CELL_CLASS}>{PER_STUDENT_FEE_LABELS[field]}</td>
+								{isReadOnly ? (
+									<td className={CELL_CLASS}>{formatFeeMoney(value)}</td>
+								) : (
+									<td className={cn(CELL_CLASS, 'p-1')}>
+										<EditableCell
+											value={value}
+											onChange={(nextValue) =>
+												onSettingEdit(field, normalizeCurrencyInput(nextValue))
+											}
+											isReadOnly={false}
+											type="number"
+										/>
+									</td>
+								)}
 							</tr>
-						))}
-						{rows.length === 0 && (
-							<tr>
-								<td colSpan={3} className="px-4 py-8 text-center text-sm text-(--text-muted)">
-									No abattement data available.
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
-		</div>
+						);
+					})}
+				</tbody>
+			</table>
+		</SectionCard>
 	);
 }
-
-// ── Empty state ─────────────────────────────────────────────────────────────
 
 function EmptyState() {
 	return (
 		<div className="flex flex-col items-center justify-center py-12 text-center">
-			<div className="mb-2 text-3xl text-(--text-muted)" aria-hidden="true">
-				~
-			</div>
-			<p className="text-sm text-(--text-muted)">No fee grid data is available for this period.</p>
+			<p className="text-sm text-(--text-muted)">
+				No fee schedule data is available for this version.
+			</p>
 		</div>
 	);
 }
 
-// ── Loading skeleton ────────────────────────────────────────────────────────
-
 function FeeGridSkeleton() {
 	return (
 		<div className="space-y-6 animate-pulse">
-			{[1, 2, 3].map((i) => (
-				<div key={i} className={SECTION_WRAPPER_CLASS}>
-					<div className="h-8 bg-(--workspace-bg-muted) rounded-t-lg" />
-					{Array.from({ length: 5 }).map((_, j) => (
-						<div key={j} className="flex gap-4 px-3 py-3 border-b border-(--grid-compact-border)">
-							<div className="h-4 w-24 bg-(--workspace-bg-muted) rounded" />
-							<div className="h-4 w-16 bg-(--workspace-bg-muted) rounded ml-auto" />
-							<div className="h-4 w-16 bg-(--workspace-bg-muted) rounded" />
-							<div className="h-4 w-16 bg-(--workspace-bg-muted) rounded" />
+			{[1, 2].map((index) => (
+				<div
+					key={index}
+					className="overflow-hidden rounded-lg border border-(--grid-frame-border) bg-(--workspace-bg-card)"
+				>
+					<div className="h-10 bg-(--workspace-bg-muted)" />
+					{Array.from({ length: 4 }).map((_, rowIndex) => (
+						<div
+							key={rowIndex}
+							className="flex gap-4 border-b border-(--grid-compact-border) px-3 py-3"
+						>
+							<div className="h-4 w-28 rounded bg-(--workspace-bg-muted)" />
+							<div className="ml-auto h-4 w-20 rounded bg-(--workspace-bg-muted)" />
+							<div className="h-4 w-20 rounded bg-(--workspace-bg-muted)" />
+							<div className="h-4 w-20 rounded bg-(--workspace-bg-muted)" />
 						</div>
 					))}
 				</div>
@@ -344,30 +290,59 @@ function FeeGridSkeleton() {
 	);
 }
 
-// ── Main component ──────────────────────────────────────────────────────────
-
 export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTabProps) {
 	const { data, isLoading } = useFeeGrid(versionId, academicPeriod);
-	const saveMutation = usePutFeeGrid(versionId);
+	const { data: settingsData, isLoading: settingsLoading } = useRevenueSettings(versionId);
+	const { data: priorYearData } = usePriorYearFees(versionId);
+	const saveFeeGridMutation = usePutFeeGrid(versionId);
+	const saveSettingsMutation = usePutRevenueSettings(versionId);
 	const sourceEntries = useMemo(() => data?.entries ?? [], [data?.entries]);
+	const sourceSettings = settingsData?.settings ?? null;
 	const [draftEntries, setDraftEntries] = useState<FeeGridEntry[]>([]);
+	const [draftSettings, setDraftSettings] = useState<RevenueSettings | null>(null);
 
 	useEffect(() => {
 		setDraftEntries(sourceEntries);
 	}, [sourceEntries]);
 
-	const isDirty = JSON.stringify(draftEntries) !== JSON.stringify(sourceEntries);
+	useEffect(() => {
+		setDraftSettings(sourceSettings);
+	}, [sourceSettings]);
+
+	const isEntriesDirty = JSON.stringify(draftEntries) !== JSON.stringify(sourceEntries);
+	const isSettingsDirty = JSON.stringify(draftSettings) !== JSON.stringify(sourceSettings);
+	const isDirty = isEntriesDirty || isSettingsDirty;
 
 	const sections: FeeScheduleSection[] = useMemo(
-		() => (draftEntries.length > 0 ? buildFeeSchedule(draftEntries) : []),
-		[draftEntries]
+		() =>
+			buildFeeSchedule({
+				entries: draftEntries,
+				settings: draftSettings,
+				priorYearEntries: priorYearData?.entries,
+			}),
+		[draftEntries, draftSettings, priorYearData?.entries]
 	);
 
-	const handleCellEdit = (editedRow: FeeScheduleRow, field: string, newValue: string) => {
+	const handleTuitionCellEdit = (editedRow: FeeScheduleRow, field: string, newValue: string) => {
 		setDraftEntries((current) => writebackFeeScheduleEdit(current, editedRow, field, newValue));
 	};
 
-	if (isLoading) {
+	const handleSettingEdit = (field: keyof RevenueSettings, newValue: string) => {
+		setDraftSettings((current) => (current === null ? current : { ...current, [field]: newValue }));
+	};
+
+	const handleSave = async () => {
+		const mutations: Promise<unknown>[] = [];
+		if (isEntriesDirty) {
+			mutations.push(saveFeeGridMutation.mutateAsync(draftEntries));
+		}
+		if (isSettingsDirty && draftSettings) {
+			mutations.push(saveSettingsMutation.mutateAsync(draftSettings));
+		}
+		await Promise.all(mutations);
+	};
+
+	if (isLoading || settingsLoading) {
 		return (
 			<div className="space-y-4">
 				<FeeGridHeader
@@ -381,7 +356,7 @@ export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTab
 		);
 	}
 
-	if (draftEntries.length === 0) {
+	if (draftEntries.length === 0 && !draftSettings) {
 		return (
 			<div className="space-y-4">
 				<FeeGridHeader
@@ -395,17 +370,16 @@ export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTab
 		);
 	}
 
-	const tuitionSection = sections[0];
-	const autresSection = sections[1];
-	const abattementSection = sections[2];
+	const [tuitionSection, perStudentSection] = sections;
+	const isPending = saveFeeGridMutation.isPending || saveSettingsMutation.isPending;
 
 	return (
 		<div className="space-y-4">
 			<FeeGridHeader
 				isReadOnly={isReadOnly}
 				isDirty={isDirty}
-				isPending={saveMutation.isPending}
-				onSave={() => saveMutation.mutate(draftEntries)}
+				isPending={isPending}
+				onSave={() => void handleSave()}
 			/>
 
 			<div className="space-y-6">
@@ -413,19 +387,20 @@ export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTab
 					<TuitionSection
 						section={tuitionSection}
 						isReadOnly={isReadOnly}
-						onCellEdit={handleCellEdit}
+						onCellEdit={handleTuitionCellEdit}
 					/>
 				)}
-
-				{autresSection && <AutresFraisSection section={autresSection} />}
-
-				{abattementSection && <AbattementSection section={abattementSection} />}
+				{perStudentSection && (
+					<PerStudentFeeBlock
+						settings={draftSettings}
+						isReadOnly={isReadOnly}
+						onSettingEdit={handleSettingEdit}
+					/>
+				)}
 			</div>
 		</div>
 	);
 }
-
-// ── Header bar ──────────────────────────────────────────────────────────────
 
 function FeeGridHeader({
 	isReadOnly,
@@ -441,15 +416,14 @@ function FeeGridHeader({
 	return (
 		<div className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-sm">
 			<div>
-				<div className="font-medium text-(--text-primary)">Fee Grid</div>
+				<div className="font-medium text-(--text-primary)">Fee Schedule</div>
 				<div className="text-(--text-muted)">
-					Edit tariff-level fees directly in the grid. The workbook logic still derives discounts
-					separately.
+					Tuition bands, per-student fees, and prior-year comparison.
 				</div>
 			</div>
 			{!isReadOnly && (
 				<Button size="sm" disabled={!isDirty || isPending} onClick={onSave}>
-					{isPending ? 'Saving...' : 'Save Fee Grid'}
+					{isPending ? 'Saving...' : 'Save Fee Schedule'}
 				</Button>
 			)}
 		</div>

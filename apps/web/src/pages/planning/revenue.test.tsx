@@ -97,14 +97,12 @@ vi.mock('../../hooks/use-revenue', () => ({
 	}),
 	useRevenueReadiness: () => ({
 		data: {
-			feeGrid: { total: 90, complete: 90, ready: true },
-			tariffAssignment: { reconciled: true, ready: true },
-			discounts: { rpRate: '0.250000', r3Rate: '0.100000', ready: true },
-			derivedRevenueSettings: { exists: true, ready: true },
+			feeGrid: { total: 90, complete: 90, settingsExist: true, ready: true },
+			discounts: { flatRate: '0.000000', ready: true },
 			otherRevenue: { total: 20, configured: 20, ready: true },
 			overallReady: true,
-			readyCount: 5,
-			totalCount: 5,
+			readyCount: 3,
+			totalCount: 3,
 		},
 	}),
 	useCalculateRevenue: () => ({

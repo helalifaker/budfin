@@ -14,6 +14,17 @@ const decimalString = z
 	.string()
 	.regex(/^\d+(\.\d{1,4})?$/, 'Must be a non-negative decimal string with up to 4 decimal places');
 
+const flatDiscountPctString = z
+	.string()
+	.regex(/^\d+(\.\d{1,6})?$/, 'Must be a non-negative decimal string with up to 6 decimal places')
+	.refine(
+		(val) => {
+			const n = new Decimal(val);
+			return n.gte(0) && n.lte(1);
+		},
+		{ message: 'flatDiscountPct must be between 0 and 1 inclusive' }
+	);
+
 const revenueSettingsSchema = z.object({
 	dpiPerStudentHt: decimalString,
 	dossierPerStudentHt: decimalString,
@@ -22,6 +33,7 @@ const revenueSettingsSchema = z.object({
 	examEafPerStudent: decimalString,
 	evalPrimairePerStudent: decimalString,
 	evalSecondairePerStudent: decimalString,
+	flatDiscountPct: flatDiscountPctString,
 });
 
 const SETTINGS_STALE_MODULES = ['REVENUE', 'PNL'] as const;
@@ -35,6 +47,7 @@ function toPersistencePayload(settings: RevenueSettings) {
 		examEafPerStudent: new Decimal(settings.examEafPerStudent).toFixed(4),
 		evalPrimairePerStudent: new Decimal(settings.evalPrimairePerStudent).toFixed(4),
 		evalSecondairePerStudent: new Decimal(settings.evalSecondairePerStudent).toFixed(4),
+		flatDiscountPct: new Decimal(settings.flatDiscountPct).toFixed(6),
 	};
 }
 
@@ -77,6 +90,7 @@ export async function revenueSettingsRoutes(app: FastifyInstance) {
 					examEafPerStudent: settings.examEafPerStudent,
 					evalPrimairePerStudent: settings.evalPrimairePerStudent,
 					evalSecondairePerStudent: settings.evalSecondairePerStudent,
+					flatDiscountPct: settings.flatDiscountPct,
 				}),
 			};
 		},

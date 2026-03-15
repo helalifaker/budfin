@@ -1,22 +1,11 @@
 import { Decimal } from 'decimal.js';
 import { useEffect, useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import type {
-	DistributionMethod,
-	IfrsCategory,
-	OtherRevenueItem,
-	RevenueSettings,
-} from '@budfin/types';
-import {
-	useOtherRevenue,
-	usePutOtherRevenue,
-	usePutRevenueSettings,
-	useRevenueSettings,
-} from '../../hooks/use-revenue';
+import type { DistributionMethod, IfrsCategory, OtherRevenueItem } from '@budfin/types';
+import { useOtherRevenue, usePutOtherRevenue } from '../../hooks/use-revenue';
 import { EditableCell } from '../data-grid/editable-cell';
 import { DataGrid } from '../data-grid/data-grid';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface OtherRevenueTabProps {
@@ -41,48 +30,6 @@ const CATEGORY_OPTIONS: IfrsCategory[] = [
 	'Activities & Services',
 	'Examination Fees',
 	'Other Revenue',
-];
-
-const REVENUE_SETTING_FIELDS: Array<{
-	key: keyof RevenueSettings;
-	label: string;
-	description: string;
-}> = [
-	{
-		key: 'dpiPerStudentHt',
-		label: 'DPI per Student (HT)',
-		description: 'Applied to all new students by nationality.',
-	},
-	{
-		key: 'dossierPerStudentHt',
-		label: 'Dossier per Student (HT)',
-		description: 'Applied to all new students by nationality.',
-	},
-	{
-		key: 'examBacPerStudent',
-		label: 'BAC Exam Fee',
-		description: 'AY1 TERM headcount x BAC fee.',
-	},
-	{
-		key: 'examDnbPerStudent',
-		label: 'DNB Exam Fee',
-		description: 'AY1 3EME headcount x DNB fee.',
-	},
-	{
-		key: 'examEafPerStudent',
-		label: 'EAF Exam Fee',
-		description: 'AY1 1ERE headcount x EAF fee.',
-	},
-	{
-		key: 'evalPrimairePerStudent',
-		label: 'Eval Primaire',
-		description: 'Applied to new CP-CM2 students.',
-	},
-	{
-		key: 'evalSecondairePerStudent',
-		label: 'Eval Secondaire',
-		description: 'Applied to new 6EME-TERM students.',
-	},
 ];
 
 const columnHelper = createColumnHelper<OtherRevenueDraftRow>();
@@ -136,25 +83,19 @@ function buildDistributionPreview(item: OtherRevenueDraftRow) {
 
 export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps) {
 	const { data, isLoading } = useOtherRevenue(versionId);
-	const { data: settingsData, isLoading: settingsLoading } = useRevenueSettings(versionId);
 	const saveMutation = usePutOtherRevenue(versionId);
-	const saveSettingsMutation = usePutRevenueSettings(versionId);
 	const sourceItems = useMemo(() => data?.items ?? [], [data?.items]);
-	const sourceSettings = settingsData?.settings ?? null;
+	const customSourceItems = useMemo(
+		() => sourceItems.filter((item) => item.computeMethod === null),
+		[sourceItems]
+	);
 	const [draftItems, setDraftItems] = useState<OtherRevenueDraftRow[]>([]);
-	const [draftSettings, setDraftSettings] = useState<RevenueSettings | null>(null);
 
 	useEffect(() => {
-		setDraftItems(sourceItems.map(toDraftRow));
-	}, [sourceItems]);
+		setDraftItems(customSourceItems.map(toDraftRow));
+	}, [customSourceItems]);
 
-	useEffect(() => {
-		setDraftSettings(sourceSettings);
-	}, [sourceSettings]);
-
-	const isDirty = JSON.stringify(draftItems) !== JSON.stringify(sourceItems.map(toDraftRow));
-	const settingsDirty =
-		draftSettings !== null && JSON.stringify(draftSettings) !== JSON.stringify(sourceSettings);
+	const isDirty = JSON.stringify(draftItems) !== JSON.stringify(customSourceItems.map(toDraftRow));
 
 	const updateRow = (
 		rowIndex: number,
@@ -165,46 +106,48 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 		);
 	};
 
+	const handleSave = () => {
+		const systemItems = sourceItems
+			.filter((item) => item.computeMethod !== null)
+			.map((item) => ({ ...item }));
+		const customItems = draftItems.map(fromDraftRow);
+		saveMutation.mutate([...systemItems, ...customItems]);
+	};
+
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('lineItemName', {
 				header: 'Line Item',
-				cell: (info) => {
-					const dynamicRow = info.row.original.computeMethod !== null;
-					return (
-						<EditableCell
-							value={info.getValue()}
-							onChange={(value) =>
-								updateRow(info.row.index, (row) => ({ ...row, lineItemName: value }))
-							}
-							isReadOnly={isReadOnly || dynamicRow}
-						/>
-					);
-				},
+				cell: (info) => (
+					<EditableCell
+						value={info.getValue()}
+						onChange={(value) =>
+							updateRow(info.row.index, (row) => ({ ...row, lineItemName: value }))
+						}
+						isReadOnly={isReadOnly}
+					/>
+				),
 			}),
 			columnHelper.accessor('annualAmount', {
 				header: 'Annual Amount',
-				cell: (info) => {
-					const dynamicRow = info.row.original.computeMethod !== null;
-					return (
-						<EditableCell
-							value={info.getValue()}
-							onChange={(value) =>
-								updateRow(info.row.index, (row) => ({
-									...row,
-									annualAmount: new Decimal(value || '0').toFixed(4),
-								}))
-							}
-							isReadOnly={isReadOnly || dynamicRow}
-							type="number"
-						/>
-					);
-				},
+				cell: (info) => (
+					<EditableCell
+						value={info.getValue()}
+						onChange={(value) =>
+							updateRow(info.row.index, (row) => ({
+								...row,
+								annualAmount: new Decimal(value || '0').toFixed(4),
+							}))
+						}
+						isReadOnly={isReadOnly}
+						type="number"
+					/>
+				),
 			}),
 			columnHelper.accessor('distributionMethod', {
 				header: 'Distribution',
 				cell: (info) =>
-					isReadOnly || info.row.original.computeMethod !== null ? (
+					isReadOnly ? (
 						<span className="text-xs text-(--text-secondary)">{info.getValue()}</span>
 					) : (
 						<Select
@@ -239,9 +182,12 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 							<EditableCell
 								value={row.weightArrayText}
 								onChange={(value) =>
-									updateRow(info.row.index, (current) => ({ ...current, weightArrayText: value }))
+									updateRow(info.row.index, (current) => ({
+										...current,
+										weightArrayText: value,
+									}))
 								}
-								isReadOnly={isReadOnly || row.computeMethod !== null}
+								isReadOnly={isReadOnly}
 							/>
 						);
 					}
@@ -256,7 +202,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 										specificMonthsText: value,
 									}))
 								}
-								isReadOnly={isReadOnly || row.computeMethod !== null}
+								isReadOnly={isReadOnly}
 							/>
 						);
 					}
@@ -269,7 +215,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 			columnHelper.accessor('ifrsCategory', {
 				header: 'Category',
 				cell: (info) =>
-					isReadOnly || info.row.original.computeMethod !== null ? (
+					isReadOnly ? (
 						<span className="text-xs text-(--text-secondary)">{info.getValue()}</span>
 					) : (
 						<Select
@@ -315,65 +261,23 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 
 	return (
 		<div className="space-y-4">
-			<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-4">
-				<div className="flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<div className="font-medium text-(--text-primary)">Derived Revenue Rates</div>
-						<div className="text-sm text-(--text-muted)">
-							These version-scoped rates drive the system-calculated DAI, DPI, dossier, exam, and
-							evaluation lines.
-						</div>
-					</div>
-					{!isReadOnly && (
-						<Button
-							size="sm"
-							disabled={!settingsDirty || saveSettingsMutation.isPending || draftSettings === null}
-							onClick={() => draftSettings && saveSettingsMutation.mutate(draftSettings)}
-						>
-							{saveSettingsMutation.isPending ? 'Saving...' : 'Save Rates'}
-						</Button>
-					)}
-				</div>
-
-				<div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-					{REVENUE_SETTING_FIELDS.map((field) => (
-						<label key={field.key} className="space-y-1">
-							<div className="text-sm font-medium text-(--text-primary)">{field.label}</div>
-							<Input
-								value={draftSettings?.[field.key] ?? ''}
-								onChange={(event) =>
-									setDraftSettings((current) =>
-										current === null
-											? current
-											: {
-													...current,
-													[field.key]: event.target.value,
-												}
-									)
-								}
-								disabled={isReadOnly || settingsLoading || draftSettings === null}
-								inputMode="decimal"
-							/>
-							<div className="text-xs text-(--text-muted)">{field.description}</div>
-						</label>
-					))}
-				</div>
+			<div className="rounded-md border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3">
+				<p className="text-xs text-(--text-secondary)">
+					System-calculated lines (DAI, DPI, exams, evaluations) are managed automatically and not
+					shown here. Only custom revenue lines appear below.
+				</p>
 			</div>
 
 			<div className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3 text-sm">
 				<div>
-					<div className="font-medium text-(--text-primary)">Other Revenue Drivers</div>
+					<div className="font-medium text-(--text-primary)">Custom Revenue Lines</div>
 					<div className="text-(--text-muted)">
-						System-calculated rows stay locked here and refresh on revenue calculation. Custom
-						weights accept relative values like the workbook. Example: `1, 1` means a 50/50 split.
+						Custom weights accept relative values like the workbook. Example: `1, 1` means a 50/50
+						split.
 					</div>
 				</div>
 				{!isReadOnly && (
-					<Button
-						size="sm"
-						disabled={!isDirty || saveMutation.isPending}
-						onClick={() => saveMutation.mutate(draftItems.map(fromDraftRow))}
-					>
+					<Button size="sm" disabled={!isDirty || saveMutation.isPending} onClick={handleSave}>
 						{saveMutation.isPending ? 'Saving...' : 'Save Other Revenue'}
 					</Button>
 				)}
@@ -385,7 +289,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 				showSkeleton
 				emptyState={
 					<p className="text-sm text-(--text-muted)">
-						No non-tuition revenue lines are configured for this version.
+						No custom revenue lines are configured for this version.
 					</p>
 				}
 			/>

@@ -1,12 +1,8 @@
 import { FilterPillMenu } from '../shared/filter-pill-menu';
 import type { FilterConfig } from '../shared/filter-pill-menu';
+import type { RevenueExceptionFilterValue } from '../../lib/revenue-workspace';
 
-export type RevenueExceptionFilterValue =
-	| 'all'
-	| 'missing-fees'
-	| 'missing-tariffs'
-	| 'high-discount'
-	| 'zero-revenue';
+export type { RevenueExceptionFilterValue } from '../../lib/revenue-workspace';
 
 const FILTERS: FilterConfig[] = [
 	{ value: 'all', label: 'All' },

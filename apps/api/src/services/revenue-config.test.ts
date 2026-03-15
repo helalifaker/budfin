@@ -64,6 +64,7 @@ describe('formatRevenueSettingsRecord', () => {
 			examEafPerStudent: '800',
 			evalPrimairePerStudent: '200',
 			evalSecondairePerStudent: '300',
+			flatDiscountPct: '0',
 		});
 		expect(result).toEqual(DEFAULT_VERSION_REVENUE_SETTINGS);
 	});
@@ -77,6 +78,7 @@ describe('formatRevenueSettingsRecord', () => {
 			examEafPerStudent: { toString: () => '800.0000' },
 			evalPrimairePerStudent: { toString: () => '200.0000' },
 			evalSecondairePerStudent: { toString: () => '300.0000' },
+			flatDiscountPct: { toString: () => '0.000000' },
 		});
 		expect(result.dpiPerStudentHt).toBe('2000.0000');
 	});

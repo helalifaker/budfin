@@ -70,6 +70,62 @@ function validateAy2DaiConsistency(entries: Array<z.infer<typeof feeGridEntrySch
 // ── Routes ────────────────────────────────────────────────────────────────────
 
 export async function feeGridRoutes(app: FastifyInstance) {
+	// GET /fee-grid/prior-year — fetch fee grid from the prior fiscal year's actual version
+	app.get('/fee-grid/prior-year', {
+		schema: { params: versionIdParamsSchema },
+		preHandler: [app.authenticate],
+		handler: async (request, reply) => {
+			const { versionId } = request.params as z.infer<typeof versionIdParamsSchema>;
+
+			const version = await prisma.budgetVersion.findUnique({
+				where: { id: versionId },
+				select: { fiscalYear: true },
+			});
+
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: `Version ${versionId} not found`,
+				});
+			}
+
+			const priorYear = version.fiscalYear - 1;
+
+			// Find a fiscal period from the prior year that has an actual version linked
+			const priorPeriod = await prisma.fiscalPeriod.findFirst({
+				where: {
+					fiscalYear: priorYear,
+					actualVersionId: { not: null },
+				},
+				select: { actualVersionId: true },
+			});
+
+			if (!priorPeriod || priorPeriod.actualVersionId === null) {
+				return { entries: [], priorFiscalYear: null };
+			}
+
+			const priorFeeGrids = await prisma.feeGrid.findMany({
+				where: { versionId: priorPeriod.actualVersionId },
+				orderBy: [{ academicPeriod: 'asc' }, { gradeLevel: 'asc' }, { nationality: 'asc' }],
+			});
+
+			const entries = priorFeeGrids.map((f) => ({
+				academicPeriod: f.academicPeriod,
+				gradeLevel: f.gradeLevel,
+				nationality: f.nationality,
+				tariff: f.tariff,
+				dai: new Decimal(f.dai.toString()).toFixed(4),
+				tuitionTtc: new Decimal(f.tuitionTtc.toString()).toFixed(4),
+				tuitionHt: new Decimal(f.tuitionHt.toString()).toFixed(4),
+				term1Amount: new Decimal(f.term1Amount.toString()).toFixed(4),
+				term2Amount: new Decimal(f.term2Amount.toString()).toFixed(4),
+				term3Amount: new Decimal(f.term3Amount.toString()).toFixed(4),
+			}));
+
+			return { entries, priorFiscalYear: priorYear };
+		},
+	});
+
 	// GET /fee-grid
 	app.get('/fee-grid', {
 		schema: {

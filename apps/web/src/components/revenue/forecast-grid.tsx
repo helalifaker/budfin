@@ -1,11 +1,9 @@
 import { useCallback, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import Decimal from 'decimal.js';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { RevenueViewMode } from '@budfin/types';
-import type { GradeBand } from '../../hooks/use-grade-levels';
-import { useGradeLevels } from '../../hooks/use-grade-levels';
-import { useRevenueResults } from '../../hooks/use-revenue';
 import {
-	buildRevenueForecastGridRows,
 	formatRevenueGridAmount,
 	formatRevenueGridPercent,
 	getVisibleRevenueMonths,
@@ -13,16 +11,23 @@ import {
 	type RevenueForecastGridRow,
 	type RevenueForecastPeriod,
 } from '../../lib/revenue-workspace';
-import { BAND_STYLES, BAND_LABELS } from '../../lib/band-styles';
+import {
+	BAND_STYLES,
+	NATIONALITY_LABELS,
+	NATIONALITY_STYLES,
+	TARIFF_LABELS,
+	TARIFF_STYLES,
+} from '../../lib/band-styles';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { PlanningGrid } from '../data-grid/planning-grid';
 import { cn } from '../../lib/cn';
 
 interface ForecastGridProps {
-	versionId: number;
+	rows: RevenueForecastGridRow[];
 	viewMode: RevenueViewMode;
 	period: RevenueForecastPeriod;
-	bandFilter?: GradeBand | 'ALL';
+	isLoading?: boolean;
+	totalLabel: string;
 }
 
 const columnHelper = createColumnHelper<RevenueForecastGridRow>();
@@ -49,39 +54,15 @@ function buildMonthColumn(monthIndex: number) {
 }
 
 export function ForecastGrid({
-	versionId,
+	rows,
 	viewMode,
 	period,
-	bandFilter = 'ALL',
+	isLoading = false,
+	totalLabel,
 }: ForecastGridProps) {
-	const { data, isLoading } = useRevenueResults(versionId, viewMode);
-	const { data: gradeLevelsData } = useGradeLevels();
 	const selection = useRevenueSelectionStore((state) => state.selection);
 	const selectRow = useRevenueSelectionStore((state) => state.selectRow);
 	const visibleMonths = useMemo(() => getVisibleRevenueMonths(period), [period]);
-	const isFiltered = bandFilter !== 'ALL';
-	const gradeLevels = gradeLevelsData?.gradeLevels;
-
-	const rows = useMemo(() => {
-		const allRows = buildRevenueForecastGridRows({
-			data,
-			viewMode,
-			gradeLevels,
-		});
-
-		// Filter out subtotal and total rows for banded views -- PlanningGrid handles those
-		const dataRows = allRows.filter((row) => row.rowType === 'data');
-
-		// Filter rows when bandFilter is active in grade view
-		if (viewMode !== 'grade' || !isFiltered || !gradeLevels) {
-			return dataRows;
-		}
-
-		return dataRows.filter((row) => {
-			const gradeLevel = gradeLevels.find((gl) => gl.gradeCode === row.label);
-			return gradeLevel?.band === bandFilter;
-		});
-	}, [bandFilter, data, gradeLevels, isFiltered, viewMode]);
 
 	const monthColumns = useMemo(
 		() => visibleMonths.map((monthIndex) => buildMonthColumn(monthIndex)),
@@ -93,13 +74,7 @@ export function ForecastGrid({
 			columnHelper.accessor('label', {
 				id: 'label',
 				header: viewMode === 'category' ? 'Revenue Category' : 'Label',
-				cell: ({ getValue, row }) => {
-					const label = getValue();
-					const totalLabel = isFiltered
-						? `Filtered Total (${BAND_LABELS[bandFilter] ?? bandFilter})`
-						: 'Grand Total';
-					return row.original.isTotal ? totalLabel : label;
-				},
+				cell: ({ getValue }) => getValue(),
 			}),
 			...monthColumns,
 			columnHelper.accessor('annualTotal', {
@@ -119,7 +94,7 @@ export function ForecastGrid({
 					row.original.isTotal ? '' : formatRevenueGridPercent(getValue()),
 			}),
 		],
-		[bandFilter, isFiltered, monthColumns, viewMode]
+		[monthColumns, viewMode]
 	);
 
 	const numericColumnIds = useMemo(
@@ -137,57 +112,53 @@ export function ForecastGrid({
 		if (viewMode === 'grade') {
 			return {
 				getBand: (row: RevenueForecastGridRow) => row.band ?? 'UNKNOWN',
-				bandLabels: BAND_LABELS,
+				bandLabels: {
+					MATERNELLE: 'Maternelle',
+					ELEMENTAIRE: 'Elementaire',
+					COLLEGE: 'College',
+					LYCEE: 'Lycee',
+				},
 				bandStyles: BAND_STYLES,
+				collapsible: false as const,
+				footerBuilder: (groupRows: RevenueForecastGridRow[], band: string) =>
+					buildSubtotalRow({
+						rows: groupRows,
+						label: `${
+							{
+								MATERNELLE: 'Maternelle',
+								ELEMENTAIRE: 'Elementaire',
+								COLLEGE: 'College',
+								LYCEE: 'Lycee',
+							}[band] ?? band
+						} Subtotal`,
+						visibleMonths,
+					}),
+			};
+		}
+		if (viewMode === 'nationality') {
+			return {
+				getBand: (row: RevenueForecastGridRow) => row.code,
+				bandLabels: NATIONALITY_LABELS,
+				bandStyles: NATIONALITY_STYLES,
+				collapsible: false as const,
+			};
+		}
+		if (viewMode === 'tariff') {
+			return {
+				getBand: (row: RevenueForecastGridRow) => row.code,
+				bandLabels: TARIFF_LABELS,
+				bandStyles: TARIFF_STYLES,
 				collapsible: false as const,
 			};
 		}
 		return undefined;
-	}, [viewMode]);
+	}, [viewMode, visibleMonths]);
 
 	const footerRows = useMemo(() => {
 		if (rows.length === 0) return [];
-
-		const allRows = buildRevenueForecastGridRows({
-			data,
-			viewMode,
-			gradeLevels,
-		});
-		const totalRow = allRows.find((r) => r.isTotal);
-		if (!totalRow) return [];
-
-		const totalLabel = isFiltered
-			? `Filtered Total (${BAND_LABELS[bandFilter] ?? bandFilter})`
-			: 'Grand Total';
-
-		const values: Record<string, React.ReactNode> = {
-			label: totalLabel,
-		};
-		for (const monthIndex of visibleMonths) {
-			const amount = formatRevenueGridAmount(
-				totalRow.monthlyAmounts[monthIndex] ?? '0',
-				monthIndex
-			);
-			values[`month-${monthIndex}`] = (
-				<span className={cn(amount.isNegative && 'text-(--color-error)')}>{amount.text}</span>
-			);
-		}
-		const annualAmount = formatRevenueGridAmount(totalRow.annualTotal);
-		values['annual'] = (
-			<span className={cn(annualAmount.isNegative && 'text-(--color-error)')}>
-				{annualAmount.text}
-			</span>
-		);
-		values['pctRev'] = '';
-
-		return [
-			{
-				label: totalLabel,
-				type: 'grandtotal' as const,
-				values,
-			},
-		];
-	}, [bandFilter, data, gradeLevels, isFiltered, rows.length, viewMode, visibleMonths]);
+		const values = buildSummaryValues(rows, visibleMonths, totalLabel);
+		return [{ label: totalLabel, type: 'grandtotal' as const, values }];
+	}, [rows, totalLabel, visibleMonths]);
 
 	const handleRowSelect = useCallback(
 		(row: RevenueForecastGridRow) => {
@@ -197,8 +168,7 @@ export function ForecastGrid({
 	);
 
 	const selectedRowPredicate = useCallback(
-		(row: RevenueForecastGridRow) =>
-			selection?.label === row.label && selection.viewMode === viewMode,
+		(row: RevenueForecastGridRow) => selection?.id === row.id && selection.viewMode === viewMode,
 		[selection, viewMode]
 	);
 
@@ -214,6 +184,63 @@ export function ForecastGrid({
 			footerRows={footerRows}
 			onRowSelect={handleRowSelect}
 			selectedRowPredicate={selectedRowPredicate}
+			getRowClassName={(row) =>
+				viewMode === 'category' && row.code === 'discount-impact'
+					? 'text-(--color-error)'
+					: undefined
+			}
 		/>
 	);
+}
+
+function buildSummaryValues(
+	rows: RevenueForecastGridRow[],
+	visibleMonths: number[],
+	label: string
+): Record<string, ReactNode> {
+	const monthTotals = new Map<number, Decimal>();
+	let annualTotal = new Decimal(0);
+
+	for (const row of rows) {
+		for (const monthIndex of visibleMonths) {
+			const amount = new Decimal(row.monthlyAmounts[monthIndex] ?? '0');
+			monthTotals.set(monthIndex, (monthTotals.get(monthIndex) ?? new Decimal(0)).plus(amount));
+		}
+		annualTotal = annualTotal.plus(new Decimal(row.annualTotal));
+	}
+
+	const values: Record<string, ReactNode> = { label };
+	for (const monthIndex of visibleMonths) {
+		const amount = formatRevenueGridAmount(
+			(monthTotals.get(monthIndex) ?? new Decimal(0)).toFixed(4),
+			monthIndex
+		);
+		values[`month-${monthIndex}`] = (
+			<span className={cn(amount.isNegative && 'text-(--color-error)')}>{amount.text}</span>
+		);
+	}
+	const annualAmount = formatRevenueGridAmount(annualTotal.toFixed(4));
+	values['annual'] = (
+		<span className={cn(annualAmount.isNegative && 'text-(--color-error)')}>
+			{annualAmount.text}
+		</span>
+	);
+	values['pctRev'] = '';
+	return values;
+}
+
+function buildSubtotalRow({
+	rows,
+	label,
+	visibleMonths,
+}: {
+	rows: RevenueForecastGridRow[];
+	label: string;
+	visibleMonths: number[];
+}) {
+	return {
+		label,
+		type: 'subtotal' as const,
+		values: buildSummaryValues(rows, visibleMonths, label),
+	};
 }

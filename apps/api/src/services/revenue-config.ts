@@ -32,6 +32,7 @@ export const DEFAULT_VERSION_REVENUE_SETTINGS: RevenueSettings = {
 	examEafPerStudent: '800.0000',
 	evalPrimairePerStudent: '200.0000',
 	evalSecondairePerStudent: '300.0000',
+	flatDiscountPct: '0.000000',
 };
 
 export const CANONICAL_DYNAMIC_OTHER_REVENUE_ITEMS: readonly CanonicalDynamicOtherRevenueItem[] = [
@@ -164,6 +165,7 @@ export function formatRevenueSettingsRecord(
 		examEafPerStudent: new Decimal(String(settings.examEafPerStudent)).toFixed(4),
 		evalPrimairePerStudent: new Decimal(String(settings.evalPrimairePerStudent)).toFixed(4),
 		evalSecondairePerStudent: new Decimal(String(settings.evalSecondairePerStudent)).toFixed(4),
+		flatDiscountPct: new Decimal(String(settings.flatDiscountPct)).toFixed(6),
 	};
 }
 

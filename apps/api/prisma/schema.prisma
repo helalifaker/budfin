@@ -661,6 +661,7 @@ model VersionRevenueSettings {
   examEafPerStudent       Decimal  @map("exam_eaf_per_student") @db.Decimal(15, 4)
   evalPrimairePerStudent  Decimal  @map("eval_primaire_per_student") @db.Decimal(15, 4)
   evalSecondairePerStudent Decimal @map("eval_secondaire_per_student") @db.Decimal(15, 4)
+  flatDiscountPct         Decimal  @default(0) @map("flat_discount_pct") @db.Decimal(7, 6)
   createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz
   createdBy               Int      @map("created_by")

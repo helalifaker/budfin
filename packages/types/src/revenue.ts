@@ -33,7 +33,7 @@ export type RevenueExecutiveCategory =
 
 export type RevenueViewMode = 'category' | 'grade' | 'nationality' | 'tariff';
 
-export type RevenueSettingsTab = 'feeGrid' | 'tariffAssignment' | 'discounts' | 'otherRevenue';
+export type RevenueSettingsTab = 'feeGrid' | 'discounts' | 'otherRevenue';
 
 export interface FeeGridEntry {
 	academicPeriod: 'AY1' | 'AY2';
@@ -72,6 +72,7 @@ export interface RevenueSettings {
 	examEafPerStudent: string;
 	evalPrimairePerStudent: string;
 	evalSecondairePerStudent: string;
+	flatDiscountPct: string;
 }
 
 export interface MonthlyRevenueEntry {
@@ -127,24 +128,16 @@ export interface RevenueReadinessAreaStatus {
 export interface FeeGridReadiness extends RevenueReadinessAreaStatus {
 	total: number;
 	complete: number;
-}
-
-export interface TariffAssignmentReadiness extends RevenueReadinessAreaStatus {
-	reconciled: boolean;
+	settingsExist: boolean;
 }
 
 export interface DiscountReadiness extends RevenueReadinessAreaStatus {
-	rpRate: string | null;
-	r3Rate: string | null;
+	flatRate: string | null;
 }
 
 export interface OtherRevenueReadiness extends RevenueReadinessAreaStatus {
 	total: number;
 	configured: number;
-}
-
-export interface DerivedRevenueSettingsReadiness extends RevenueReadinessAreaStatus {
-	exists: boolean;
 }
 
 export interface RevenueExecutiveSummary {
@@ -158,13 +151,11 @@ export interface RevenueExecutiveSummary {
 
 export interface RevenueReadinessResponse {
 	feeGrid: FeeGridReadiness;
-	tariffAssignment: TariffAssignmentReadiness;
 	discounts: DiscountReadiness;
-	derivedRevenueSettings: DerivedRevenueSettingsReadiness;
 	otherRevenue: OtherRevenueReadiness;
 	overallReady: boolean;
 	readyCount: number;
-	totalCount: 5;
+	totalCount: 3;
 }
 
 export interface RevenueResultsResponse {
@@ -188,15 +179,31 @@ export interface FeeScheduleRow {
 	label: string;
 	editability: FeeEditability;
 	dai?: string;
+	tuitionTtc?: string;
+	priorYearTtc?: string;
+	increasePct?: string;
 	tuitionHt?: string;
 	term1?: string;
 	term2?: string;
 	term3?: string;
 	totalTtc?: string;
+	pleinHt?: string;
+	rpHt?: string;
+	r3Ht?: string;
+	rpDiscount?: string;
+	r3Discount?: string;
+	francaisAmount?: string;
+	nationauxAmount?: string;
+	autresAmount?: string;
 	underlyingGradeCount?: number;
 	hasHeterogeneousValues?: boolean;
+	sourceGrades?: string[];
+	sourceNationality?: 'Francais' | 'Nationaux' | 'Autres';
+	settingsField?: keyof RevenueSettings;
+	childRows?: FeeScheduleRow[];
+	note?: string;
 	/** Dynamic per-nationality fields (e.g. dai_Francais, dai_Nationaux, dai_Autres) */
-	[key: string]: string | number | boolean | undefined;
+	[key: string]: string | number | boolean | string[] | FeeScheduleRow[] | undefined;
 }
 
 export interface FeeScheduleGroup {

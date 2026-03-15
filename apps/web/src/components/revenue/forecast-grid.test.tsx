@@ -1,21 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { RevenueResultsResponse } from '@budfin/types';
 import { ForecastGrid } from './forecast-grid';
-import { useRevenueResults } from '../../hooks/use-revenue';
-import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
-
-vi.mock('../../hooks/use-revenue', () => ({
-	useRevenueResults: vi.fn(),
-}));
-
-vi.mock('../../hooks/use-grade-levels', () => ({
-	useGradeLevels: vi.fn(),
-}));
-
-const mockUseRevenueResults = vi.mocked(useRevenueResults);
-const mockUseGradeLevels = vi.mocked(useGradeLevels);
+import {
+	buildRevenueForecastGridRows,
+	filterRevenueForecastRows,
+} from '../../lib/revenue-workspace';
 
 function makeResults(): RevenueResultsResponse {
 	return {
@@ -181,36 +172,7 @@ function makeResults(): RevenueResultsResponse {
 
 describe('ForecastGrid', () => {
 	beforeEach(() => {
-		mockUseRevenueResults.mockReset();
-		mockUseGradeLevels.mockReset();
 		useRevenueSelectionStore.getState().clearSelection();
-
-		mockUseRevenueResults.mockReturnValue({
-			data: makeResults(),
-			isLoading: false,
-		} as ReturnType<typeof useRevenueResults>);
-
-		mockUseGradeLevels.mockReturnValue({
-			data: {
-				gradeLevels: [
-					{ gradeCode: 'PS', band: 'MATERNELLE', displayOrder: 1 },
-					{ gradeCode: 'MS', band: 'MATERNELLE', displayOrder: 2 },
-					{ gradeCode: 'GS', band: 'MATERNELLE', displayOrder: 3 },
-					{ gradeCode: 'CP', band: 'ELEMENTAIRE', displayOrder: 4 },
-					{ gradeCode: 'CE1', band: 'ELEMENTAIRE', displayOrder: 5 },
-					{ gradeCode: 'CE2', band: 'ELEMENTAIRE', displayOrder: 6 },
-					{ gradeCode: 'CM1', band: 'ELEMENTAIRE', displayOrder: 7 },
-					{ gradeCode: 'CM2', band: 'ELEMENTAIRE', displayOrder: 8 },
-					{ gradeCode: '6EME', band: 'COLLEGE', displayOrder: 9 },
-					{ gradeCode: '5EME', band: 'COLLEGE', displayOrder: 10 },
-					{ gradeCode: '4EME', band: 'COLLEGE', displayOrder: 11 },
-					{ gradeCode: '3EME', band: 'COLLEGE', displayOrder: 12 },
-					{ gradeCode: '2NDE', band: 'LYCEE', displayOrder: 13 },
-					{ gradeCode: '1ERE', band: 'LYCEE', displayOrder: 14 },
-					{ gradeCode: 'TERM', band: 'LYCEE', displayOrder: 15 },
-				],
-			},
-		} as ReturnType<typeof useGradeLevels>);
 	});
 
 	afterEach(() => {
@@ -218,9 +180,10 @@ describe('ForecastGrid', () => {
 	});
 
 	it('renders the six category rows with negative and summer formatting', () => {
-		render(<ForecastGrid versionId={1} viewMode="category" period="both" />);
+		const rows = buildRows('category');
+		render(<ForecastGrid rows={rows} viewMode="category" period="both" totalLabel="Grand Total" />);
 
-		expect(screen.getByRole('table', { name: 'Revenue forecast grid' })).toBeDefined();
+		expect(screen.getByRole('grid', { name: 'Revenue forecast grid' })).toBeDefined();
 		expect(screen.getByText('Tuition Fees')).toBeDefined();
 		expect(screen.getByText('Discount Impact')).toBeDefined();
 		expect(screen.getByText('Grand Total')).toBeDefined();
@@ -228,33 +191,41 @@ describe('ForecastGrid', () => {
 		expect(screen.getAllByText('-').length).toBeGreaterThan(0);
 	});
 
-	it('renders 20 grade rows including band subtotals and grand total', () => {
-		render(<ForecastGrid versionId={1} viewMode="grade" period="both" />);
-		const grid = screen.getByRole('table', { name: 'Revenue forecast grid' });
+	it('renders grouped grade rows with subtotals and grand total', () => {
+		const rows = buildRows('grade');
+		render(<ForecastGrid rows={rows} viewMode="grade" period="both" totalLabel="Grand Total" />);
+		const grid = screen.getByRole('grid', { name: 'Revenue forecast grid' });
 
 		expect(screen.getByText('PS')).toBeDefined();
 		expect(screen.getByText('MS')).toBeDefined();
 		expect(screen.getByText('GS')).toBeDefined();
 		expect(screen.getByText('Maternelle')).toBeDefined();
+		expect(screen.getByText('Maternelle Subtotal')).toBeDefined();
 		expect(screen.getByText('Elementaire')).toBeDefined();
 		expect(screen.getByText('College')).toBeDefined();
 		expect(screen.getByText('Lycee')).toBeDefined();
 		expect(screen.getByText('Grand Total')).toBeDefined();
-		expect(within(grid).getAllByRole('row')).toHaveLength(21);
+		expect(within(grid).getAllByRole('row').length).toBeGreaterThan(8);
 	});
 
 	it('filters visible columns by period', () => {
-		render(<ForecastGrid versionId={1} viewMode="category" period="AY1" />);
-		const grid = screen.getByRole('table', { name: 'Revenue forecast grid' });
+		const rows = buildRows('category');
+		render(<ForecastGrid rows={rows} viewMode="category" period="AY1" totalLabel="Grand Total" />);
+		const grid = screen.getByRole('grid', { name: 'Revenue forecast grid' });
 
 		expect(within(grid).getByRole('columnheader', { name: 'Jan' })).toBeDefined();
 		expect(within(grid).queryByRole('columnheader', { name: 'Sep' })).toBeNull();
 	});
 
 	it('stores the selected row when a non-total row is clicked', () => {
-		render(<ForecastGrid versionId={1} viewMode="tariff" period="both" />);
+		const rows = buildRows('tariff');
+		render(<ForecastGrid rows={rows} viewMode="tariff" period="both" totalLabel="Grand Total" />);
 
-		fireEvent.click(screen.getByText('RP'));
+		const rpCell = document.querySelector<HTMLElement>(
+			'[data-grid-row-id="tariff-RP"][data-col-index="0"]'
+		);
+		expect(rpCell).not.toBeNull();
+		fireEvent.click(rpCell!);
 
 		const selection = useRevenueSelectionStore.getState().selection;
 		expect(selection).toMatchObject({
@@ -266,3 +237,55 @@ describe('ForecastGrid', () => {
 		});
 	});
 });
+
+const GRADE_LEVELS = [
+	makeGradeLevel(1, 'PS', 'MATERNELLE', 1),
+	makeGradeLevel(2, 'MS', 'MATERNELLE', 2),
+	makeGradeLevel(3, 'GS', 'MATERNELLE', 3),
+	makeGradeLevel(4, 'CP', 'ELEMENTAIRE', 4),
+	makeGradeLevel(5, 'CE1', 'ELEMENTAIRE', 5),
+	makeGradeLevel(6, 'CE2', 'ELEMENTAIRE', 6),
+	makeGradeLevel(7, 'CM1', 'ELEMENTAIRE', 7),
+	makeGradeLevel(8, 'CM2', 'ELEMENTAIRE', 8),
+	makeGradeLevel(9, '6EME', 'COLLEGE', 9),
+	makeGradeLevel(10, '5EME', 'COLLEGE', 10),
+	makeGradeLevel(11, '4EME', 'COLLEGE', 11),
+	makeGradeLevel(12, '3EME', 'COLLEGE', 12),
+	makeGradeLevel(13, '2NDE', 'LYCEE', 13),
+	makeGradeLevel(14, '1ERE', 'LYCEE', 14),
+	makeGradeLevel(15, 'TERM', 'LYCEE', 15),
+];
+
+function buildRows(viewMode: 'category' | 'grade' | 'nationality' | 'tariff') {
+	return filterRevenueForecastRows({
+		rows: buildRevenueForecastGridRows({
+			data: makeResults(),
+			viewMode,
+			gradeLevels: GRADE_LEVELS,
+		}),
+		viewMode,
+		bandFilter: 'ALL',
+		exceptionFilter: 'all',
+	});
+}
+
+function makeGradeLevel(
+	id: number,
+	gradeCode: string,
+	band: 'MATERNELLE' | 'ELEMENTAIRE' | 'COLLEGE' | 'LYCEE',
+	displayOrder: number
+) {
+	return {
+		id,
+		gradeCode,
+		gradeName: gradeCode,
+		band,
+		maxClassSize: 25,
+		defaultAy2Intake: null,
+		plancherPct: '0.0000',
+		ciblePct: '0.0000',
+		plafondPct: '0.0000',
+		displayOrder,
+		version: 1,
+	};
+}

@@ -16,14 +16,17 @@ import { CHART_TOOLTIP_STYLE, useChartColor, useChartSeriesColors } from '../../
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useRevenueReadiness, useRevenueResults } from '../../hooks/use-revenue';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
+import { useDetail } from '../../hooks/use-enrollment';
 import { useChartColors } from '../../hooks/use-chart-colors';
 import { registerPanelContent } from '../../lib/right-panel-registry';
 import {
 	buildRevenueForecastGridRows,
 	formatRevenueGridPercent,
 	REVENUE_MONTH_LABELS,
+	type RevenueGridRowIdentity,
 } from '../../lib/revenue-workspace';
-import { BAND_LABELS } from '../../lib/enrollment-workspace';
+import { BAND_LABELS } from '../../lib/band-styles';
+import { getRevenueReadinessAreas, getRevenueValidationQueue } from '../../lib/revenue-readiness';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 import { Button } from '../ui/button';
@@ -95,7 +98,7 @@ function getCategoryTab(label: string) {
 		case 'Examination Fees':
 			return 'otherRevenue' as const;
 		default:
-			return 'tariffAssignment' as const;
+			return 'feeGrid' as const;
 	}
 }
 
@@ -211,15 +214,21 @@ function computeSelectedRowAggregates({
 	data,
 	label,
 	viewMode,
+	detailEntries,
 }: {
 	data: RevenueResultsResponse | undefined;
 	label: string;
 	viewMode: 'category' | 'grade' | 'nationality' | 'tariff';
+	detailEntries: Array<{
+		gradeLevel: string;
+		nationality: string;
+		tariff: string;
+		headcount: number;
+	}>;
 }) {
 	let grossTotal = new Decimal(0);
 	let discountTotal = new Decimal(0);
 	let netTotal = new Decimal(0);
-	let headcount = 0;
 
 	for (const entry of data?.entries ?? []) {
 		let matchesSelection = true;
@@ -241,7 +250,25 @@ function computeSelectedRowAggregates({
 		grossTotal = grossTotal.plus(new Decimal(entry.grossRevenueHt));
 		discountTotal = discountTotal.plus(new Decimal(entry.discountAmount));
 		netTotal = netTotal.plus(new Decimal(entry.netRevenueHt));
-		headcount += 1;
+	}
+
+	let headcount = 0;
+	for (const entry of detailEntries) {
+		let matchesSelection = true;
+
+		if (viewMode === 'grade') {
+			matchesSelection = entry.gradeLevel === label;
+		} else if (viewMode === 'nationality') {
+			matchesSelection = entry.nationality === label;
+		} else if (viewMode === 'tariff') {
+			matchesSelection = entry.tariff === label;
+		} else if (viewMode === 'category') {
+			matchesSelection = label === 'Tuition Fees' || label === 'Discount Impact';
+		}
+
+		if (matchesSelection) {
+			headcount += entry.headcount;
+		}
 	}
 
 	const discountImpact = grossTotal.eq(0)
@@ -315,10 +342,12 @@ function buildFormulaString(
 }
 
 function RevenueInspectorDefaultView() {
-	const { versionId } = useWorkspaceContext();
+	const { versionId, academicPeriod } = useWorkspaceContext();
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
-	const { data } = useRevenueResults(versionId, 'category');
+	const period = academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
+	const { data } = useRevenueResults(versionId, 'category', period);
 	const { data: readiness } = useRevenueReadiness(versionId);
+	const { data: gradeLevelsData } = useGradeLevels();
 	const seriesColors = useChartSeriesColors(CHART_SERIES_TOKENS);
 	const primaryChartColor = useChartColor('--chart-series-1');
 
@@ -331,20 +360,12 @@ function RevenueInspectorDefaultView() {
 	const composition = data?.executiveSummary.composition ?? [];
 	const monthlyTrend = data?.executiveSummary.monthlyTrend ?? [];
 
-	const readinessItems = [
-		{ label: 'Fee Grid', ready: readiness?.feeGrid.ready ?? false },
-		{ label: 'Tariff Assignment', ready: readiness?.tariffAssignment.ready ?? false },
-		{ label: 'Discounts', ready: readiness?.discounts.ready ?? false },
-		{
-			label: 'Derived Revenue Rates',
-			ready: readiness?.derivedRevenueSettings.ready ?? false,
-		},
-		{ label: 'Other Revenue', ready: readiness?.otherRevenue.ready ?? false },
-	];
+	const readinessItems = getRevenueReadinessAreas(readiness);
 	const readyCount = readinessItems.filter((item) => item.ready).length;
+	const validationQueue = getRevenueValidationQueue(readiness);
 
 	const allReady = readyCount === readinessItems.length;
-	const workflowStatus = allReady ? 'All systems configured' : 'Configuration needed';
+	const workflowStatus = allReady ? 'Setup complete' : 'Setup pending';
 	const workflowVariant = allReady ? 'success' : 'warning';
 
 	const totalRevenue =
@@ -364,25 +385,61 @@ function RevenueInspectorDefaultView() {
 		};
 	});
 
-	const bandSummaryRows = (data?.executiveSummary.composition ?? [])
-		.filter((item) => BAND_LABELS[item.label] !== undefined)
-		.map((item) => ({
-			...(BAND_DOT_COLORS[item.label] ? { dot: BAND_DOT_COLORS[item.label] } : {}),
-			label: BAND_LABELS[item.label] ?? item.label,
-			amount: formatCompactSar(item.amount),
-		}));
+	const gradeBandMap = new Map(
+		(gradeLevelsData?.gradeLevels ?? []).map((gradeLevel) => [
+			gradeLevel.gradeCode,
+			gradeLevel.band,
+		])
+	);
+	const bandTotals = new Map<string, Decimal>();
+	const nationalityTotals = new Map<string, Decimal>();
 
-	const nationalitySummaryRows = (data?.executiveSummary.composition ?? [])
-		.filter((item) => !BAND_LABELS[item.label])
-		.map((item) => ({
-			label: item.label,
-			amount: formatCompactSar(item.amount),
-		}));
+	for (const entry of data?.entries ?? []) {
+		const band = gradeBandMap.get(entry.gradeLevel);
+		if (band) {
+			bandTotals.set(
+				band,
+				(bandTotals.get(band) ?? new Decimal(0)).plus(new Decimal(entry.netRevenueHt))
+			);
+		}
+		nationalityTotals.set(
+			entry.nationality,
+			(nationalityTotals.get(entry.nationality) ?? new Decimal(0)).plus(
+				new Decimal(entry.netRevenueHt)
+			)
+		);
+	}
 
-	const assumptionRows = readinessItems.map((item) => ({
-		label: item.label,
-		amount: item.ready ? 'Ready' : 'Needs attention',
+	const bandSummaryRows = [...bandTotals.entries()].map(([band, amount]) => ({
+		...(BAND_DOT_COLORS[band] ? { dot: BAND_DOT_COLORS[band] } : {}),
+		label: BAND_LABELS[band] ?? band,
+		amount: formatMoney(amount.toFixed(4)),
+		percent: totalRevenue.eq(0) ? '0.0%' : `${amount.div(totalRevenue).mul(100).toFixed(1)}%`,
 	}));
+
+	const nationalitySummaryRows = [...nationalityTotals.entries()].map(([label, amount]) => ({
+		label,
+		amount: formatMoney(amount.toFixed(4)),
+		percent: totalRevenue.eq(0) ? '0.0%' : `${amount.div(totalRevenue).mul(100).toFixed(1)}%`,
+	}));
+
+	const assumptionRows = [
+		{
+			label: 'Config coverage',
+			amount: `${readyCount}/${readinessItems.length} ready`,
+		},
+		{
+			label: 'Discount policy',
+			amount:
+				readiness?.discounts.flatRate !== null && readiness?.discounts.flatRate !== undefined
+					? `Flat ${new Decimal(readiness.discounts.flatRate).mul(100).toFixed(1)}%`
+					: 'Not configured',
+		},
+		{
+			label: 'Other revenue lines',
+			amount: `${readiness?.otherRevenue.configured ?? 0}/${readiness?.otherRevenue.total ?? 0} configured`,
+		},
+	];
 
 	return (
 		<div className="space-y-5">
@@ -396,9 +453,24 @@ function RevenueInspectorDefaultView() {
 
 			{/* Section 2: Readiness counters */}
 			<InspectorSection title="Readiness checklist">
-				<div className="flex items-center justify-between">
-					<span className="text-(--text-sm) text-(--text-secondary)">Subsystems ready</span>
-					<ReadinessIndicator ready={readyCount} total={readinessItems.length} />
+				<div className="grid gap-3 md:grid-cols-2">
+					<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-3">
+						<p className="text-(--text-xs) uppercase tracking-[0.08em] text-(--text-muted)">
+							Config coverage
+						</p>
+						<div className="mt-2 flex items-center justify-between">
+							<span className="text-(--text-sm) text-(--text-secondary)">Ready areas</span>
+							<ReadinessIndicator ready={readyCount} total={readinessItems.length} />
+						</div>
+					</div>
+					<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-3">
+						<p className="text-(--text-xs) uppercase tracking-[0.08em] text-(--text-muted)">
+							Validation issues
+						</p>
+						<p className="mt-2 text-(--text-lg) font-semibold text-(--text-primary)">
+							{validationQueue.length}
+						</p>
+					</div>
 				</div>
 			</InspectorSection>
 
@@ -409,11 +481,35 @@ function RevenueInspectorDefaultView() {
 
 			{/* Section 4: Recommended workflow */}
 			<InspectorSection title="Recommended workflow">
-				<div className="space-y-2 text-(--text-sm)">
-					<p className="text-(--text-secondary)">
-						Configure fee grid, assign tariffs, set discount rates, then calculate.
-					</p>
+				<div className="grid gap-2 text-(--text-sm) md:grid-cols-2">
+					{[
+						'1. Verify fee grid tuition and fee schedule inputs.',
+						'2. Reconcile tariff assignment against enrollment.',
+						'3. Confirm reduced-tariff rates and derived fee settings.',
+						'4. Save changes, then rerun Revenue calculation.',
+					].map((step) => (
+						<div
+							key={step}
+							className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-3 text-(--text-secondary)"
+						>
+							{step}
+						</div>
+					))}
 				</div>
+			</InspectorSection>
+
+			<InspectorSection title="Validation queue">
+				{validationQueue.length === 0 ? (
+					<p className="text-(--text-sm) text-(--text-secondary)">No blocking validation issues.</p>
+				) : (
+					<SummaryTable
+						rows={validationQueue.map((item) => ({
+							label: item.label,
+							amount: item.action,
+						}))}
+						header={{ label: 'Area', amount: 'Action' }}
+					/>
+				)}
 			</InspectorSection>
 
 			{/* Section 5: Revenue composition summary */}
@@ -496,32 +592,25 @@ function RevenueInspectorDefaultView() {
 					<Button type="button" variant="outline" size="sm" onClick={() => openSettings('feeGrid')}>
 						Open Settings
 					</Button>
-					<Button type="button" variant="outline" size="sm">
-						Go to Enrollment
-					</Button>
-					<Button type="button" variant="outline" size="sm">
-						Calculation Log
-					</Button>
 				</div>
 			</InspectorSection>
 		</div>
 	);
 }
 
-function RevenueInspectorActiveView({
-	label,
-	viewMode,
-}: {
-	label: string;
-	viewMode: 'category' | 'grade' | 'nationality' | 'tariff';
-}) {
-	const { versionId } = useWorkspaceContext();
+function RevenueInspectorActiveView({ selection }: { selection: RevenueGridRowIdentity }) {
+	const { versionId, academicPeriod } = useWorkspaceContext();
 	const clearSelection = useRevenueSelectionStore((state) => state.clearSelection);
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
-	const { data } = useRevenueResults(versionId, viewMode);
+	const period = academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
+	const { data } = useRevenueResults(versionId, selection.viewMode, period);
 	const { data: gradeLevelsData } = useGradeLevels();
+	const { data: detailData } = useDetail(versionId, period === 'both' ? undefined : period);
 	const chartColors = useChartColors();
 	const seriesPrimaryColor = useChartColor('--chart-series-1');
+	const label = selection.label;
+	const viewMode = selection.viewMode;
+	const selectionKey = viewMode === 'category' ? selection.label : selection.code;
 
 	const gradeBandMap = useMemo(
 		() =>
@@ -540,13 +629,19 @@ function RevenueInspectorActiveView({
 				data,
 				viewMode,
 				gradeLevels: gradeLevelsData?.gradeLevels,
-			}).find((row) => row.label === label),
-		[data, gradeLevelsData?.gradeLevels, label, viewMode]
+			}).find((row) => row.id === selection.id),
+		[data, gradeLevelsData?.gradeLevels, selection.id, viewMode]
 	);
 
 	const aggregates = useMemo(
-		() => computeSelectedRowAggregates({ data, label, viewMode }),
-		[data, label, viewMode]
+		() =>
+			computeSelectedRowAggregates({
+				data,
+				label: selectionKey,
+				viewMode,
+				detailEntries: detailData?.entries ?? [],
+			}),
+		[data, detailData?.entries, selectionKey, viewMode]
 	);
 
 	const monthlyTrend = useMemo(
@@ -559,8 +654,9 @@ function RevenueInspectorActiveView({
 	);
 
 	const chartFill = useMemo(
-		() => getChartFillColor(viewMode, label, gradeBandMap, chartColors, seriesPrimaryColor),
-		[chartColors, gradeBandMap, label, seriesPrimaryColor, viewMode]
+		() =>
+			getChartFillColor(viewMode, selection.code, gradeBandMap, chartColors, seriesPrimaryColor),
+		[chartColors, gradeBandMap, selection.code, seriesPrimaryColor, viewMode]
 	);
 
 	const breakdowns = useMemo(
@@ -570,15 +666,15 @@ function RevenueInspectorActiveView({
 				rows: buildDimensionBreakdown({
 					data,
 					dimension: dimension.key,
-					label,
+					label: selectionKey,
 					viewMode,
 					gradeBandMap,
 				}),
 			})),
-		[data, gradeBandMap, label, viewMode]
+		[data, gradeBandMap, selectionKey, viewMode]
 	);
 
-	const bandForGrade = viewMode === 'grade' ? (gradeBandMap.get(label) ?? null) : null;
+	const bandForGrade = viewMode === 'grade' ? (gradeBandMap.get(selection.code) ?? null) : null;
 
 	const bandAggregateContext = useMemo(() => {
 		if (viewMode !== 'grade' || !bandForGrade) {
@@ -591,15 +687,16 @@ function RevenueInspectorActiveView({
 
 		let bandGross = new Decimal(0);
 		let bandNet = new Decimal(0);
-		let bandHeadcount = 0;
-
 		for (const entry of data?.entries ?? []) {
 			if (gradesInBand.includes(entry.gradeLevel)) {
 				bandGross = bandGross.plus(new Decimal(entry.grossRevenueHt));
 				bandNet = bandNet.plus(new Decimal(entry.netRevenueHt));
-				bandHeadcount += 1;
 			}
 		}
+		const bandHeadcount =
+			detailData?.entries
+				.filter((detail) => gradesInBand.includes(detail.gradeLevel))
+				.reduce((sum, detail) => sum + detail.headcount, 0) ?? 0;
 
 		return {
 			label: BAND_LABELS[bandForGrade] ?? bandForGrade,
@@ -608,9 +705,19 @@ function RevenueInspectorActiveView({
 			headcount: bandHeadcount,
 			gradeCount: gradesInBand.length,
 		};
-	}, [bandForGrade, data?.entries, gradeBandMap, viewMode]);
+	}, [bandForGrade, data?.entries, detailData?.entries, gradeBandMap, viewMode]);
 
-	const formulaString = buildFormulaString(viewMode, label);
+	const formulaString = buildFormulaString(viewMode, selectionKey);
+	const handleBack = () => {
+		const selectedId = selection.id;
+		clearSelection();
+		requestAnimationFrame(() => {
+			const focusTarget = Array.from(
+				document.querySelectorAll<HTMLElement>('[data-grid-row-id][data-col-index="0"]')
+			).find((element) => element.dataset.gridRowId === selectedId);
+			focusTarget?.focus();
+		});
+	};
 
 	return (
 		<div className="space-y-5">
@@ -618,7 +725,7 @@ function RevenueInspectorActiveView({
 			<div className="flex items-center gap-2">
 				<button
 					type="button"
-					onClick={clearSelection}
+					onClick={handleBack}
 					className={cn(
 						'rounded-md p-1 text-(--text-muted)',
 						'transition-colors duration-(--duration-fast)',
@@ -650,7 +757,7 @@ function RevenueInspectorActiveView({
 						'px-2 py-0.5 text-(--text-xs) font-semibold text-(--text-muted)'
 					)}
 				>
-					{viewMode === 'category' ? getCategoryTab(label) : label}
+					{selection.code}
 				</span>
 			</div>
 
@@ -660,7 +767,7 @@ function RevenueInspectorActiveView({
 					label="Gross Revenue"
 					icon={DollarSign}
 					index={0}
-					subtitle={`${aggregates.headcount} revenue entries`}
+					subtitle={`${aggregates.headcount} students`}
 				>
 					{formatCompactSar(aggregates.grossRevenue)}
 				</KpiCard>
@@ -687,7 +794,7 @@ function RevenueInspectorActiveView({
 			<InspectorSection title="Monthly trend" icon={TrendingUp}>
 				<ChartWrapper height={160}>
 					<BarChart data={monthlyTrend}>
-						<XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+						<XAxis dataKey="month" tickLine={false} axisLine={false} />
 						<YAxis hide />
 						<Tooltip
 							formatter={(value) => formatChartTooltipValue(value)}
@@ -753,7 +860,7 @@ function RevenueInspectorActiveView({
 					type="button"
 					variant="outline"
 					size="sm"
-					onClick={() => openSettings(getCategoryTab(label))}
+					onClick={() => openSettings(selection.settingsTarget ?? getCategoryTab(label))}
 				>
 					Edit in Settings
 				</Button>
@@ -797,11 +904,8 @@ function RevenueInspectorContent() {
 	return (
 		<div aria-live="polite">
 			{selection ? (
-				<div
-					key={`active-${selection.label}-${selection.viewMode}`}
-					className="animate-inspector-crossfade"
-				>
-					<RevenueInspectorActiveView label={selection.label} viewMode={selection.viewMode} />
+				<div key={`active-${selection.id}`} className="animate-inspector-crossfade">
+					<RevenueInspectorActiveView selection={selection} />
 				</div>
 			) : (
 				<div key="default" className="animate-inspector-crossfade">

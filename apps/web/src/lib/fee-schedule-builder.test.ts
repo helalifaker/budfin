@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { FeeGridEntry } from '@budfin/types';
+import type { FeeGridEntry, RevenueSettings } from '@budfin/types';
 import { buildFeeSchedule, TUITION_BANDS } from './fee-schedule-builder';
 import { writebackFeeScheduleEdit } from './fee-schedule-writeback';
 
@@ -37,18 +37,47 @@ function makeFullFeeGrid(): FeeGridEntry[] {
 	);
 }
 
+function makeRevenueSettings(): RevenueSettings {
+	return {
+		dossierPerStudentHt: '500.0000',
+		dpiPerStudentHt: '1200.0000',
+		examBacPerStudent: '0.0000',
+		examDnbPerStudent: '0.0000',
+		examEafPerStudent: '0.0000',
+		evalPrimairePerStudent: '350.0000',
+		evalSecondairePerStudent: '450.0000',
+		flatDiscountPct: '0.000000',
+	};
+}
+
+function makePriorYearEntries(): FeeGridEntry[] {
+	const grades = TUITION_BANDS.flatMap((b) => b.grades);
+	const nationalities = ['Francais', 'Nationaux', 'Autres'] as const;
+
+	return grades.flatMap((gradeLevel) =>
+		nationalities.map((nationality) =>
+			makeFeeEntry({
+				gradeLevel,
+				nationality,
+				tariff: 'Plein',
+				tuitionTtc: '44000.0000',
+				tuitionHt: '38260.8696',
+			})
+		)
+	);
+}
+
 // ── Tests ───────────────────────────────────────────────────────────────────
 
 describe('buildFeeSchedule', () => {
-	it('returns 3 sections from a complete fee grid', () => {
+	it('returns 2 sections from a complete fee grid', () => {
 		const entries = makeFullFeeGrid();
 		const sections = buildFeeSchedule(entries);
 
-		expect(sections).toHaveLength(3);
+		expect(sections).toHaveLength(2);
 		expect(sections[0]!.id).toBe('tuition');
 		expect(sections[0]!.title).toContain('Tuition');
-		expect(sections[1]!.id).toBe('autres-frais');
-		expect(sections[2]!.id).toBe('abattement');
+		expect(sections[1]!.id).toBe('per-student-fees');
 	});
 
 	it('creates 3 nationality groups in the tuition section', () => {
@@ -109,6 +138,22 @@ describe('buildFeeSchedule', () => {
 		expect(lyceeRow.underlyingGradeCount).toBe(3);
 	});
 
+	it('includes tuitionTtc on each band row', () => {
+		const entries = makeFullFeeGrid();
+		const sections = buildFeeSchedule(entries);
+		const psRow = sections[0]!.groups![0]!.rows[0]!;
+
+		expect(psRow.tuitionTtc).toBe('46000.0000');
+	});
+
+	it('computes totalTtc as dai + tuitionTtc', () => {
+		const entries = makeFullFeeGrid();
+		const sections = buildFeeSchedule(entries);
+		const psRow = sections[0]!.groups![0]!.rows[0]!;
+
+		expect(psRow.totalTtc).toBe('51000.0000');
+	});
+
 	it('preserves monetary values via Decimal.js (no float precision loss)', () => {
 		const entries = [
 			makeFeeEntry({
@@ -127,16 +172,15 @@ describe('buildFeeSchedule', () => {
 	it('detects heterogeneous values when underlying grades differ', () => {
 		const entries = makeFullFeeGrid();
 
-		// Make MS and GS have different tuition values for Francais
 		const msEntry = entries.find(
 			(e) => e.gradeLevel === 'MS' && e.nationality === 'Francais' && e.tariff === 'Plein'
 		)!;
-		msEntry.tuitionHt = '35000.0000';
+		msEntry.tuitionTtc = '42000.0000';
 
 		const gsEntry = entries.find(
 			(e) => e.gradeLevel === 'GS' && e.nationality === 'Francais' && e.tariff === 'Plein'
 		)!;
-		gsEntry.tuitionHt = '38000.0000';
+		gsEntry.tuitionTtc = '48000.0000';
 
 		const sections = buildFeeSchedule(entries);
 		const msGsRow = sections[0]!.groups![0]!.rows[1]!;
@@ -146,7 +190,6 @@ describe('buildFeeSchedule', () => {
 
 	it('reports homogeneous when all underlying grades match', () => {
 		const entries = makeFullFeeGrid();
-		// All entries share the same values by default
 		const sections = buildFeeSchedule(entries);
 		const elemRow = sections[0]!.groups![0]!.rows[2]!;
 
@@ -159,54 +202,104 @@ describe('buildFeeSchedule', () => {
 				gradeLevel: 'MS',
 				nationality: 'Francais',
 				tariff: 'Plein',
-				tuitionHt: '30000.0000',
+				tuitionTtc: '30000.0000',
 			}),
 			makeFeeEntry({
 				gradeLevel: 'GS',
 				nationality: 'Francais',
 				tariff: 'Plein',
-				tuitionHt: '40000.0000',
+				tuitionTtc: '40000.0000',
 			}),
 		];
 
 		const sections = buildFeeSchedule(entries);
 		const msGsRow = sections[0]!.groups![0]!.rows[1]!;
 
-		expect(msGsRow.tuitionHt).toBe('35000.0000');
+		expect(msGsRow.tuitionTtc).toBe('35000.0000');
 	});
 
-	it('builds autres frais section with per-nationality DAI columns', () => {
+	it('builds per-student fees section with 7 rows', () => {
 		const entries = makeFullFeeGrid();
-		const sections = buildFeeSchedule(entries);
-		const autresFrais = sections[1]!;
+		const sections = buildFeeSchedule({
+			entries,
+			settings: makeRevenueSettings(),
+		});
+		const perStudentFees = sections[1]!;
 
-		expect(autresFrais.rows).toHaveLength(5);
-		const psRow = autresFrais.rows![0]! as Record<string, unknown>;
-		expect(psRow.dai_Francais).toBe('5000.0000');
-		expect(psRow.dai_Nationaux).toBe('5000.0000');
-		expect(psRow.dai_Autres).toBe('5000.0000');
-	});
-
-	it('builds abattement section with tariff-specific rows', () => {
-		const entries = makeFullFeeGrid();
-		const sections = buildFeeSchedule(entries);
-		const abattement = sections[2]!;
-
-		// 5 bands x up to 3 tariffs = up to 15 rows
-		expect(abattement.rows!.length).toBeGreaterThan(0);
-		expect(abattement.rows!.every((r) => r.editability === 'summary-only')).toBe(true);
+		expect(perStudentFees.rows).toHaveLength(7);
+		const dossierRow = perStudentFees.rows![0]!;
+		expect(dossierRow.label).toBe('Frais de Dossier');
+		expect(dossierRow.tuitionHt).toBe('500.0000');
 	});
 
 	it('handles empty entries gracefully', () => {
 		const sections = buildFeeSchedule([]);
 
-		expect(sections).toHaveLength(3);
+		expect(sections).toHaveLength(2);
 		expect(sections[0]!.groups).toHaveLength(3);
-		// Each nationality group should have 5 band rows (all with zero values)
 		for (const group of sections[0]!.groups!) {
 			expect(group.rows).toHaveLength(5);
-			expect(group.rows.every((r) => r.dai === '0')).toBe(true);
+			expect(group.rows.every((r) => r.dai === '0.0000')).toBe(true);
 		}
+	});
+
+	it('includes priorYearTtc when prior-year entries are provided', () => {
+		const entries = makeFullFeeGrid();
+		const priorYearEntries = makePriorYearEntries();
+
+		const sections = buildFeeSchedule({
+			entries,
+			settings: null,
+			priorYearEntries,
+		});
+
+		const psRow = sections[0]!.groups![0]!.rows[0]!;
+		expect(psRow.priorYearTtc).toBe('44000.0000');
+	});
+
+	it('computes increasePct from current vs prior-year tuitionTtc', () => {
+		const entries = makeFullFeeGrid();
+		const priorYearEntries = makePriorYearEntries();
+
+		const sections = buildFeeSchedule({
+			entries,
+			settings: null,
+			priorYearEntries,
+		});
+
+		const psRow = sections[0]!.groups![0]!.rows[0]!;
+		// (46000 - 44000) / 44000 * 100 = 4.5454...%
+		expect(psRow.increasePct).toBe('4.55');
+	});
+
+	it('omits priorYearTtc when no prior-year entries exist', () => {
+		const entries = makeFullFeeGrid();
+		const sections = buildFeeSchedule({
+			entries,
+			settings: null,
+		});
+
+		const psRow = sections[0]!.groups![0]!.rows[0]!;
+		expect(psRow.priorYearTtc).toBeUndefined();
+		expect(psRow.increasePct).toBeUndefined();
+	});
+
+	it('omits increasePct when prior-year tuitionTtc is zero', () => {
+		const entries = makeFullFeeGrid();
+		const priorYearEntries = makePriorYearEntries().map((e) => ({
+			...e,
+			tuitionTtc: '0.0000',
+		}));
+
+		const sections = buildFeeSchedule({
+			entries,
+			settings: null,
+			priorYearEntries,
+		});
+
+		const psRow = sections[0]!.groups![0]!.rows[0]!;
+		expect(psRow.priorYearTtc).toBe('0.0000');
+		expect(psRow.increasePct).toBeUndefined();
 	});
 });
 
@@ -223,7 +316,6 @@ describe('writebackFeeScheduleEdit', () => {
 		)!;
 		expect(updatedPs.dai).toBe('6000.0000');
 
-		// Other entries unchanged
 		const otherEntry = updated.find(
 			(e) => e.gradeLevel === 'MS' && e.nationality === 'Francais' && e.tariff === 'Plein'
 		)!;
@@ -260,13 +352,13 @@ describe('writebackFeeScheduleEdit', () => {
 	});
 
 	it('throws on summary-only row edit', () => {
-		const entries = makeFullFeeGrid();
+		const entries: FeeGridEntry[] = [];
 		const sections = buildFeeSchedule(entries);
-		const abattementRow = sections[2]!.rows![0]!;
+		const emptyRow = sections[0]!.groups![0]!.rows![0]!;
 
-		expect(() =>
-			writebackFeeScheduleEdit(entries, abattementRow, 'tuitionHt', '1000.0000')
-		).toThrow('summary-only');
+		expect(() => writebackFeeScheduleEdit(entries, emptyRow, 'tuitionHt', '1000.0000')).toThrow(
+			'summary-only'
+		);
 	});
 
 	it('throws on unknown field', () => {
@@ -279,21 +371,41 @@ describe('writebackFeeScheduleEdit', () => {
 		);
 	});
 
-	it('round-trip: transform -> edit -> writeback preserves Decimal exactness', () => {
+	it('auto-derives tuitionHt and terms when tuitionTtc is edited', () => {
 		const entries = makeFullFeeGrid();
 		const sections = buildFeeSchedule(entries);
-		const elemRow = sections[0]!.groups![1]!.rows[2]!; // Nationaux Elementaire
+		const psRow = sections[0]!.groups![0]!.rows[0]!;
 
-		// Edit term1 to a value with 4 decimal places
-		const newValue = '12345.6789';
-		const updated = writebackFeeScheduleEdit(entries, elemRow, 'term1', newValue);
+		const updated = writebackFeeScheduleEdit(entries, psRow, 'tuitionTtc', '50000.0000');
 
-		// Rebuild the schedule from the updated entries
-		const rebuiltSections = buildFeeSchedule(updated);
-		const rebuiltRow = rebuiltSections[0]!.groups![1]!.rows[2]!;
+		const updatedPs = updated.find(
+			(e) => e.gradeLevel === 'PS' && e.nationality === 'Francais' && e.tariff === 'Plein'
+		)!;
 
-		// The term1 value should be exactly what we set (homogeneous, so avg = value)
-		expect(rebuiltRow.term1).toBe(newValue);
+		expect(updatedPs.tuitionTtc).toBe('50000.0000');
+		// tuitionHt = 50000 / 1.15 = 43478.2609 (rounded to 4 dp)
+		expect(updatedPs.tuitionHt).toBe('43478.2609');
+		// term1 = 50000 * 0.40 = 20000
+		expect(updatedPs.term1Amount).toBe('20000.0000');
+		// term2 = 50000 * 0.30 = 15000
+		expect(updatedPs.term2Amount).toBe('15000.0000');
+		// term3 = 50000 - 20000 - 15000 = 15000
+		expect(updatedPs.term3Amount).toBe('15000.0000');
+	});
+
+	it('auto-derives tuitionHt without VAT for Nationaux', () => {
+		const entries = makeFullFeeGrid();
+		const sections = buildFeeSchedule(entries);
+		const natRow = sections[0]!.groups![1]!.rows[0]!; // Nationaux PS
+
+		const updated = writebackFeeScheduleEdit(entries, natRow, 'tuitionTtc', '50000.0000');
+
+		const updatedPs = updated.find(
+			(e) => e.gradeLevel === 'PS' && e.nationality === 'Nationaux' && e.tariff === 'Plein'
+		)!;
+
+		// Nationaux: 0% VAT, so tuitionHt = tuitionTtc
+		expect(updatedPs.tuitionHt).toBe('50000.0000');
 	});
 
 	it('does not modify entries for other nationalities', () => {
@@ -301,12 +413,11 @@ describe('writebackFeeScheduleEdit', () => {
 		const sections = buildFeeSchedule(entries);
 		const francaisElem = sections[0]!.groups![0]!.rows[2]!;
 
-		const updated = writebackFeeScheduleEdit(entries, francaisElem, 'tuitionHt', '99999.0000');
+		const updated = writebackFeeScheduleEdit(entries, francaisElem, 'tuitionTtc', '99999.0000');
 
-		// Nationaux Elementaire entries should be unchanged
 		const natEntry = updated.find(
 			(e) => e.gradeLevel === 'CP' && e.nationality === 'Nationaux' && e.tariff === 'Plein'
 		)!;
-		expect(natEntry.tuitionHt).toBe('40000.0000');
+		expect(natEntry.tuitionTtc).toBe('46000.0000');
 	});
 });
