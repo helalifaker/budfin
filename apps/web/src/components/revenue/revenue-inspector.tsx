@@ -484,8 +484,8 @@ function RevenueInspectorDefaultView() {
 				<div className="grid gap-2 text-(--text-sm) md:grid-cols-2">
 					{[
 						'1. Verify fee grid tuition and fee schedule inputs.',
-						'2. Reconcile tariff assignment against enrollment.',
-						'3. Confirm reduced-tariff rates and derived fee settings.',
+						'2. Configure the flat discount percentage.',
+						'3. Verify other revenue custom lines.',
 						'4. Save changes, then rerun Revenue calculation.',
 					].map((step) => (
 						<div
