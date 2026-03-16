@@ -1,6 +1,7 @@
 // Revenue calculation engine — pure functions, no DB dependencies
 // Epic 2, Story #102 (2.5): Revenue Engine
 
+import type { DistributionMethod, RevenueExecutiveCategory } from '@budfin/types';
 import { Decimal } from 'decimal.js';
 
 // ── Input Interfaces ──────────────────────────────────────────────────────────
@@ -28,11 +29,7 @@ export interface DiscountPolicyInput {
 	discountRate: string; // decimal string 0–1
 }
 
-export type DistributionMethod =
-	| 'ACADEMIC_10'
-	| 'YEAR_ROUND_12'
-	| 'CUSTOM_WEIGHTS'
-	| 'SPECIFIC_PERIOD';
+export type { DistributionMethod };
 
 export interface OtherRevenueInput {
 	lineItemName: string;
@@ -65,15 +62,12 @@ export interface MonthlyRevenueOutput {
 	vatAmount: string;
 }
 
-export type ExecutiveRevenueCategory =
-	| 'REGISTRATION_FEES'
-	| 'ACTIVITIES_SERVICES'
-	| 'EXAMINATION_FEES';
+export type { RevenueExecutiveCategory };
 
 export interface OtherRevenueOutput {
 	lineItemName: string;
 	ifrsCategory: string;
-	executiveCategory: ExecutiveRevenueCategory | null;
+	executiveCategory: RevenueExecutiveCategory | null;
 	month: number;
 	amount: string; // decimal string
 }
@@ -261,7 +255,7 @@ function resolveEffectiveTuitionAmounts(
 	};
 }
 
-function resolveExecutiveCategory(item: OtherRevenueInput): ExecutiveRevenueCategory | null {
+function resolveExecutiveCategory(item: OtherRevenueInput): RevenueExecutiveCategory | null {
 	if (item.ifrsCategory === 'Registration Fees') {
 		return 'REGISTRATION_FEES';
 	}

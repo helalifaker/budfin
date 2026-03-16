@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { cn } from '../../lib/cn';
 import type { Employee } from '../../hooks/use-staffing';
 
@@ -74,6 +75,7 @@ export function EmployeeForm({
 		register,
 		handleSubmit,
 		reset,
+		control,
 		formState: { errors },
 	} = useForm<EmployeeFormData>({
 		defaultValues: {
@@ -155,13 +157,24 @@ export function EmployeeForm({
 							/>
 						</Field>
 						<Field label="Status">
-							<select {...register('status')} disabled={isReadOnly} className={selectClass}>
-								{STATUSES.map((s) => (
-									<option key={s} value={s}>
-										{s}
-									</option>
-								))}
-							</select>
+							<Controller
+								control={control}
+								name="status"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
+										<SelectTrigger className={selectClass}>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{STATUSES.map((s) => (
+												<SelectItem key={s} value={s}>
+													{s}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
 						</Field>
 					</div>
 
@@ -175,13 +188,24 @@ export function EmployeeForm({
 
 					<div className="grid grid-cols-2 gap-3">
 						<Field label="Department">
-							<select {...register('department')} disabled={isReadOnly} className={selectClass}>
-								{DEPARTMENTS.map((d) => (
-									<option key={d} value={d}>
-										{d}
-									</option>
-								))}
-							</select>
+							<Controller
+								control={control}
+								name="department"
+								render={({ field }) => (
+									<Select value={field.value} onValueChange={field.onChange} disabled={isReadOnly}>
+										<SelectTrigger className={selectClass}>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{DEPARTMENTS.map((d) => (
+												<SelectItem key={d} value={d}>
+													{d}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
 						</Field>
 						<Field label="Function / Role" error={errors.functionRole?.message}>
 							<Input

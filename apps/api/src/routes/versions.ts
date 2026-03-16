@@ -825,7 +825,7 @@ export async function versionRoutes(app: FastifyInstance) {
 					if (body.sourceVersionId && !sourceVersion) {
 						throw Object.assign(new Error('Source version not found'), {
 							statusCode: 404,
-							code: 'SOURCE_NOT_FOUND',
+							code: 'SOURCE_VERSION_NOT_FOUND',
 						});
 					}
 

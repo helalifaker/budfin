@@ -1,3 +1,4 @@
+import type { RevenueMatrixRow, RevenueCompositionItem } from '@budfin/types';
 import { Decimal } from 'decimal.js';
 import { GRADE_BAND_MAP } from '../lib/enrollment-constants.js';
 
@@ -19,20 +20,7 @@ export interface OtherRevenueDetailRow {
 	amount: string;
 }
 
-export interface RevenueMatrixRow {
-	section: string;
-	label: string;
-	monthlyAmounts: string[];
-	annualTotal: string;
-	percentageOfRevenue: string;
-	isTotal: boolean;
-}
-
-export interface RevenueCompositionItem {
-	label: string;
-	amount: string;
-	percentageOfRevenue: string;
-}
+export type { RevenueMatrixRow, RevenueCompositionItem };
 
 export interface RevenueExecutiveSummaryView {
 	rows: RevenueMatrixRow[];

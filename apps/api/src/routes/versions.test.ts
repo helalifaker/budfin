@@ -462,7 +462,7 @@ describe('POST /api/v1/versions', () => {
 		});
 
 		expect(res.statusCode).toBe(404);
-		expect(res.json().code).toBe('SOURCE_NOT_FOUND');
+		expect(res.json().code).toBe('SOURCE_VERSION_NOT_FOUND');
 	});
 
 	it('returns 409 for Actual sourceVersionId', async () => {

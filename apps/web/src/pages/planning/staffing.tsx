@@ -134,7 +134,7 @@ export function StaffingPage() {
 
 	if (!versionId) {
 		return (
-			<div className="flex h-64 items-center justify-center text-[var(--text-muted)]">
+			<div className="flex h-64 items-center justify-center text-(--text-muted)">
 				Select a version from the context bar to begin staffing planning.
 			</div>
 		);
@@ -171,7 +171,7 @@ export function StaffingPage() {
 				{/* Status feedback */}
 				{calculateMutation.isSuccess && (
 					<div
-						className="rounded-lg border border-[var(--color-success)] bg-[var(--color-success-bg)] px-4 py-2 text-sm text-[var(--color-success)]"
+						className="rounded-lg border border-(--color-success) bg-(--color-success-bg) px-4 py-2 text-sm text-(--color-success)"
 						role="status"
 					>
 						Staffing calculated successfully.
@@ -179,7 +179,7 @@ export function StaffingPage() {
 				)}
 				{calculateMutation.isError && (
 					<div
-						className="rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm text-[var(--color-error)]"
+						className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
 						role="alert"
 					>
 						Calculation failed. Ensure enrollment and employee data are configured.

@@ -170,12 +170,12 @@ function groupEmployeesByDepartment(
 		groups.push({
 			department,
 			headcount: activeEmps.length,
-			totalMonthlyGross: totalMonthlyGross.toFixed(2),
-			totalAnnualCost: totalAnnualCost.toFixed(2),
-			totalEos: totalEos.times(12).toFixed(2),
-			totalAjeer: totalAjeer.times(12).toFixed(2),
-			totalGosi: totalGosi.times(12).toFixed(2),
-			departmentTotal: departmentTotal.toFixed(2),
+			totalMonthlyGross: totalMonthlyGross.toFixed(4),
+			totalAnnualCost: totalAnnualCost.toFixed(4),
+			totalEos: totalEos.times(12).toFixed(4),
+			totalAjeer: totalAjeer.times(12).toFixed(4),
+			totalGosi: totalGosi.times(12).toFixed(4),
+			departmentTotal: departmentTotal.toFixed(4),
 			employees: emps,
 		});
 	}

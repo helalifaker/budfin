@@ -276,7 +276,10 @@ export async function authRoutes(fastify: FastifyInstance) {
 			const ip = request.ip;
 
 			if (!rawToken) {
-				return reply.status(204).send();
+				return reply.status(401).send({
+					code: 'INVALID_REFRESH_TOKEN',
+					message: 'Missing refresh token',
+				});
 			}
 
 			const tokenHash = hashRefreshToken(rawToken);
@@ -289,7 +292,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
 			if (!existing) {
 				return reply.status(401).send({
-					code: 'INVALID_TOKEN',
+					code: 'INVALID_REFRESH_TOKEN',
 					message: 'Invalid refresh token',
 				});
 			}
