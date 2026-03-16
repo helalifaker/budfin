@@ -186,18 +186,35 @@ export function useRevenueReadiness(versionId: number | null) {
 	});
 }
 
+// ── Prior-Year Fees ─────────────────────────────────────────────────────────
+
+interface PriorYearFeesResponse {
+	entries: FeeGridEntry[];
+	priorFiscalYear: number | null;
+}
+
+export function usePriorYearFees(versionId: number | null) {
+	return useQuery({
+		queryKey: ['revenue', 'fee-grid', 'prior-year', versionId],
+		queryFn: () => apiClient<PriorYearFeesResponse>(`/versions/${versionId}/fee-grid/prior-year`),
+		enabled: versionId !== null,
+	});
+}
+
 // ── Revenue Results ──────────────────────────────────────────────────────────
 
 export function useRevenueResults(
 	versionId: number | null,
-	groupBy: RevenueViewMode | 'month' = 'month'
+	groupBy: RevenueViewMode | 'month' = 'month',
+	academicPeriod: 'AY1' | 'AY2' | 'both' = 'both'
 ) {
 	const params = new URLSearchParams();
+	params.set('academic_period', academicPeriod);
 	params.set('group_by', groupBy === 'category' ? 'month' : groupBy);
 	const query = params.toString();
 
 	return useQuery({
-		queryKey: ['revenue', 'results', versionId, groupBy],
+		queryKey: ['revenue', 'results', versionId, groupBy, academicPeriod],
 		queryFn: () => apiClient<RevenueResultsResponse>(`/versions/${versionId}/revenue?${query}`),
 		enabled: versionId !== null,
 	});

@@ -8,14 +8,12 @@ function makeReadiness(
 	overrides: Partial<RevenueReadinessResponse> = {}
 ): RevenueReadinessResponse {
 	return {
-		feeGrid: { total: 0, complete: 0, ready: false },
-		tariffAssignment: { reconciled: false, ready: false },
-		discounts: { rpRate: null, r3Rate: null, ready: false },
-		derivedRevenueSettings: { exists: false, ready: false },
+		feeGrid: { total: 0, complete: 0, settingsExist: false, ready: false },
+		discounts: { flatRate: null, ready: false },
 		otherRevenue: { total: 0, configured: 0, ready: false },
 		overallReady: false,
 		readyCount: 0,
-		totalCount: 5,
+		totalCount: 3,
 		...overrides,
 	};
 }

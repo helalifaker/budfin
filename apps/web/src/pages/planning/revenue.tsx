@@ -1,16 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
-import { Button } from '../../components/ui/button';
 import { PageTransition } from '../../components/shared/page-transition';
+import { CalculateButton } from '../../components/shared/calculate-button';
 import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
 import { ForecastGrid } from '../../components/revenue/forecast-grid';
+import {
+	RevenueExceptionFilter,
+	type RevenueExceptionFilterValue,
+} from '../../components/revenue/revenue-exception-filter';
 import { RevenueExportButton } from '../../components/revenue/revenue-export-button';
 import { RevenueKpiRibbon } from '../../components/revenue/kpi-ribbon';
 import { RevenueSettingsDialog } from '../../components/revenue/revenue-settings-dialog';
-import { RevenueSetupChecklist } from '../../components/revenue/setup-checklist';
 import { RevenueStatusStrip } from '../../components/revenue/revenue-status-strip';
-import { useGradeLevels } from '../../hooks/use-grade-levels';
+import { useGradeLevels, type GradeBand } from '../../hooks/use-grade-levels';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useHeadcount } from '../../hooks/use-enrollment';
 import {
@@ -21,17 +24,29 @@ import {
 import { useVersions } from '../../hooks/use-versions';
 import {
 	buildRevenueForecastGridRows,
+	filterRevenueForecastRows,
+	getRevenueTotalLabel,
 	type RevenueForecastPeriod,
 } from '../../lib/revenue-workspace';
+import { getFirstIncompleteRevenueTab } from '../../lib/revenue-readiness';
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
 import { useRevenueSettingsDialogStore } from '../../stores/revenue-settings-dialog-store';
 import { useAuthStore } from '../../stores/auth-store';
+import { Button } from '../../components/ui/button';
 import '../../components/revenue/revenue-inspector';
+
+const BAND_FILTERS: Array<{ value: string; label: string }> = [
+	{ value: 'ALL', label: 'All' },
+	{ value: 'MATERNELLE', label: 'Mat' },
+	{ value: 'ELEMENTAIRE', label: 'Elem' },
+	{ value: 'COLLEGE', label: 'Col' },
+	{ value: 'LYCEE', label: 'Lyc' },
+];
 
 function ImportedBanner() {
 	return (
-		<div className="rounded-lg border border-(--color-info) bg-(--color-info-bg) px-3 py-2 text-(--text-sm) text-(--color-info)">
+		<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-3 py-2 text-token-sm text-(--color-info)">
 			This version was imported. Review the loaded assumptions before recalculating revenue.
 		</div>
 	);
@@ -39,7 +54,7 @@ function ImportedBanner() {
 
 function ViewerBanner() {
 	return (
-		<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-2 text-(--text-sm) text-(--text-secondary)">
+		<div className="shrink-0 border-b border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-2 text-token-sm text-(--text-secondary)">
 			Viewer access keeps this workspace in review mode.
 		</div>
 	);
@@ -53,14 +68,27 @@ export function RevenuePage() {
 	const [viewMode, setViewMode] = useState<'category' | 'grade' | 'nationality' | 'tariff'>(
 		'category'
 	);
-	const [setupOpen, setSetupOpen] = useState(false);
+	const [bandFilter, setBandFilter] = useState<GradeBand | 'ALL'>('ALL');
+	const [exceptionFilter, setExceptionFilter] = useState<RevenueExceptionFilterValue>('all');
+	const settingsButtonRef = useRef<HTMLButtonElement>(null);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
+	const closePanel = useRightPanelStore((state) => state.close);
+	const selection = useRevenueSelectionStore((state) => state.selection);
 	const clearSelection = useRevenueSelectionStore((state) => state.clearSelection);
 	const openSettings = useRevenueSettingsDialogStore((state) => state.open);
+	const autoPromptedVersionRef = useRef<number | null>(null);
+	const period = useMemo<RevenueForecastPeriod>(() => {
+		return academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
+	}, [academicPeriod]);
 	const { data: versionsData } = useVersions(fiscalYear);
-	const { data: revenueResults } = useRevenueResults(versionId, 'category');
+	const { data: revenueResults, isLoading: revenueLoading } = useRevenueResults(
+		versionId,
+		viewMode,
+		period
+	);
 	const { data: readiness } = useRevenueReadiness(versionId);
-	const { data: headcountData } = useHeadcount(versionId);
+	const { data: headcountData } = useHeadcount(versionId, period === 'both' ? undefined : period);
 	const { data: gradeLevelsData } = useGradeLevels();
 	const calculateMutation = useCalculateRevenue(versionId);
 
@@ -72,9 +100,11 @@ export function RevenuePage() {
 		};
 	}, [clearSelection, setActivePage]);
 
-	const period = useMemo<RevenueForecastPeriod>(() => {
-		return academicPeriod === 'AY1' || academicPeriod === 'AY2' ? academicPeriod : 'both';
-	}, [academicPeriod]);
+	useEffect(() => {
+		if (!isPanelOpen) {
+			clearSelection();
+		}
+	}, [clearSelection, isPanelOpen]);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId) {
@@ -84,20 +114,22 @@ export function RevenuePage() {
 		return versionsData?.data.find((version) => version.id === versionId) ?? null;
 	}, [versionId, versionsData?.data]);
 
+	const handleSettingsClose = useCallback(() => {
+		settingsButtonRef.current?.focus();
+	}, []);
+
 	const isStale = currentVersion?.staleModules?.includes('REVENUE') ?? false;
 	const enrollmentStale = currentVersion?.staleModules?.includes('ENROLLMENT') ?? false;
 	const downstreamStale = (currentVersion?.staleModules ?? []).filter(
 		(moduleName) => moduleName === 'STAFFING' || moduleName === 'PNL'
 	);
 	const totalAy1Headcount =
-		headcountData?.entries
-			.filter((entry) => entry.academicPeriod === 'AY1')
-			.reduce((sum, entry) => sum + entry.headcount, 0) ?? 0;
+		headcountData?.entries.reduce((sum, entry) => sum + entry.headcount, 0) ?? 0;
 	const avgPerStudent =
 		revenueResults && totalAy1Headcount > 0
 			? new Decimal(revenueResults.totals.totalOperatingRevenue).div(totalAy1Headcount).toFixed(0)
 			: '0.0000';
-	const exportRows = useMemo(
+	const allGridRows = useMemo(
 		() =>
 			buildRevenueForecastGridRows({
 				data: revenueResults,
@@ -106,6 +138,50 @@ export function RevenuePage() {
 			}),
 		[gradeLevelsData?.gradeLevels, revenueResults, viewMode]
 	);
+	const visibleRows = useMemo(
+		() =>
+			filterRevenueForecastRows({
+				rows: allGridRows,
+				viewMode,
+				bandFilter,
+				exceptionFilter,
+			}),
+		[allGridRows, bandFilter, exceptionFilter, viewMode]
+	);
+	const totalLabel = useMemo(
+		() =>
+			getRevenueTotalLabel({
+				viewMode,
+				bandFilter,
+				exceptionFilter,
+			}),
+		[bandFilter, exceptionFilter, viewMode]
+	);
+
+	useEffect(() => {
+		if (!selection) {
+			return;
+		}
+
+		const selectedRowIsVisible = visibleRows.some((row) => row.id === selection.id);
+		if (!selectedRowIsVisible) {
+			clearSelection();
+			closePanel();
+		}
+	}, [clearSelection, closePanel, selection, visibleRows]);
+
+	useEffect(() => {
+		if (!versionId || isViewer || !readiness || readiness.overallReady) {
+			return;
+		}
+
+		if (autoPromptedVersionRef.current === versionId) {
+			return;
+		}
+
+		autoPromptedVersionRef.current = versionId;
+		openSettings(getFirstIncompleteRevenueTab(readiness));
+	}, [isViewer, openSettings, readiness, versionId]);
 
 	if (!versionId) {
 		return (
@@ -119,7 +195,7 @@ export function RevenuePage() {
 
 	return (
 		<PageTransition>
-			<div className="space-y-4 pb-6">
+			<div className="flex h-full min-h-0 flex-col overflow-hidden">
 				{(currentVersion?.status ?? versionStatus) !== 'Draft' && (
 					<VersionLockBanner
 						status={currentVersion?.status ?? versionStatus ?? 'Draft'}
@@ -129,7 +205,7 @@ export function RevenuePage() {
 				{currentVersion?.dataSource === 'IMPORTED' && <ImportedBanner />}
 				{isViewer && <ViewerBanner />}
 
-				<div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3 shadow-(--shadow-xs)">
+				<div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-(--workspace-border) px-6 py-2">
 					<div className="flex flex-wrap items-center gap-3">
 						<ToggleGroup
 							type="single"
@@ -137,7 +213,10 @@ export function RevenuePage() {
 							onValueChange={(value) => {
 								if (value) {
 									setViewMode(value as 'category' | 'grade' | 'nationality' | 'tariff');
+									setBandFilter('ALL');
+									setExceptionFilter('all');
 									clearSelection();
+									closePanel();
 								}
 							}}
 							aria-label="Revenue view mode"
@@ -151,23 +230,52 @@ export function RevenuePage() {
 						<ToggleGroup
 							type="single"
 							value={period}
-							onValueChange={(value) => setAcademicPeriod(value || 'both')}
+							onValueChange={(value) => {
+								setAcademicPeriod(value || 'both');
+								clearSelection();
+								closePanel();
+							}}
 							aria-label="Revenue period"
 						>
 							<ToggleGroupItem value="AY1">AY1</ToggleGroupItem>
 							<ToggleGroupItem value="AY2">AY2</ToggleGroupItem>
 							<ToggleGroupItem value="both">FY2026</ToggleGroupItem>
 						</ToggleGroup>
+
+						{viewMode === 'grade' && (
+							<ToggleGroup
+								type="single"
+								value={bandFilter}
+								onValueChange={(value) => {
+									if (value) {
+										setBandFilter(value as GradeBand | 'ALL');
+									}
+								}}
+								aria-label="Grade band filter"
+							>
+								{BAND_FILTERS.map((filter) => (
+									<ToggleGroupItem key={filter.value} value={filter.value}>
+										{filter.label}
+									</ToggleGroupItem>
+								))}
+							</ToggleGroup>
+						)}
+
+						<RevenueExceptionFilter value={exceptionFilter} onChange={setExceptionFilter} />
 					</div>
 
 					<div className="flex flex-wrap items-center gap-2">
 						<RevenueExportButton
-							rows={exportRows}
+							rows={visibleRows}
 							viewMode={viewMode}
 							period={period}
 							versionName={currentVersion?.name ?? 'revenue'}
+							bandFilter={bandFilter}
+							exceptionFilter={exceptionFilter}
+							totalLabel={totalLabel}
 						/>
 						<Button
+							ref={settingsButtonRef}
 							type="button"
 							variant="outline"
 							size="sm"
@@ -175,52 +283,55 @@ export function RevenuePage() {
 						>
 							{isViewer ? 'View Settings' : 'Revenue Settings'}
 						</Button>
-						<Button type="button" variant="outline" size="sm" onClick={() => setSetupOpen(true)}>
-							Setup
-						</Button>
 						{!isViewer && (
-							<Button
-								type="button"
-								size="sm"
-								disabled={calculateMutation.isPending}
-								onClick={() => calculateMutation.mutate()}
-							>
-								{calculateMutation.isPending ? 'Calculating...' : 'Calculate Revenue'}
-							</Button>
+							<CalculateButton
+								onCalculate={() => calculateMutation.mutate()}
+								isPending={calculateMutation.isPending}
+								isSuccess={calculateMutation.isSuccess}
+								isError={calculateMutation.isError}
+							/>
 						)}
 					</div>
 				</div>
 
-				<RevenueKpiRibbon
-					grossHt={revenueResults?.totals.grossRevenueHt ?? '0.0000'}
-					totalDiscounts={revenueResults?.totals.discountAmount ?? '0.0000'}
-					netRevenue={revenueResults?.totals.netRevenueHt ?? '0.0000'}
-					otherRevenue={revenueResults?.totals.otherRevenueAmount ?? '0.0000'}
-					totalOperatingRevenue={revenueResults?.totals.totalOperatingRevenue ?? '0.0000'}
-					avgPerStudent={avgPerStudent}
-					isStale={isStale}
-				/>
-
-				<RevenueStatusStrip
-					lastCalculated={currentVersion?.lastCalculatedAt ?? null}
-					enrollmentStale={enrollmentStale}
-					downstreamStale={downstreamStale}
-					readiness={readiness}
-				/>
-
-				<ForecastGrid versionId={versionId} viewMode={viewMode} period={period} />
-
-				{readiness && (
-					<RevenueSetupChecklist
-						versionId={versionId}
-						lastCalculatedAt={currentVersion?.lastCalculatedAt}
-						readiness={readiness}
-						forceOpen={setupOpen}
-						onClose={() => setSetupOpen(false)}
+				<div className="shrink-0 px-6 py-2">
+					<RevenueKpiRibbon
+						grossHt={revenueResults?.totals.grossRevenueHt ?? '0.0000'}
+						totalDiscounts={revenueResults?.totals.discountAmount ?? '0.0000'}
+						netRevenue={revenueResults?.totals.netRevenueHt ?? '0.0000'}
+						otherRevenue={revenueResults?.totals.otherRevenueAmount ?? '0.0000'}
+						totalOperatingRevenue={revenueResults?.totals.totalOperatingRevenue ?? '0.0000'}
+						avgPerStudent={avgPerStudent}
+						isStale={isStale}
 					/>
-				)}
+				</div>
 
-				<RevenueSettingsDialog versionId={versionId} isViewer={isViewer} />
+				<div className="shrink-0">
+					<RevenueStatusStrip
+						lastCalculated={currentVersion?.lastCalculatedAt ?? null}
+						enrollmentStale={enrollmentStale}
+						downstreamStale={downstreamStale}
+						readiness={readiness}
+					/>
+				</div>
+
+				<div className="flex-1 min-h-0 overflow-hidden px-6 py-2">
+					<div className="h-full overflow-y-auto scrollbar-thin">
+						<ForecastGrid
+							rows={visibleRows}
+							viewMode={viewMode}
+							period={period}
+							isLoading={revenueLoading}
+							totalLabel={totalLabel}
+						/>
+					</div>
+				</div>
+
+				<RevenueSettingsDialog
+					versionId={versionId}
+					isViewer={isViewer}
+					onClose={handleSettingsClose}
+				/>
 			</div>
 		</PageTransition>
 	);

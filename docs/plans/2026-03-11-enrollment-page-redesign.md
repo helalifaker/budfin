@@ -56,7 +56,7 @@ Treat this redesign as **high-potential, not yet final**. Approve the direction,
 
 Current layout stack (verified from source):
 
-```
+```text
 RootLayout (h-screen, flex, overflow-hidden)
   +-- Sidebar
   +-- Content (flex-1, flex-col, overflow-hidden)
@@ -92,20 +92,19 @@ The `<main>` in `planning-shell.tsx` (line 31-36) has `overflow-y-auto`. This me
 
 New enrollment page structure:
 
-```
-<div class="flex h-full flex-col overflow-hidden">
-  +-- Banners (conditional, shrink-0)
-  +-- Header zone (shrink-0, ~80px)
-  |   +-- Title + description
-  |   +-- Actions: Band filter | Exception filter | Export | Setup | Calculate
-  +-- KPI ribbon (shrink-0, ~48px)
-  |   +-- Total AY1 | Total AY2 | Util% | Alerts
-  +-- Status strip (shrink-0, ~36px)
-  |   +-- Baseline source | Last calculated | Enrollment freshness | Downstream stale pills
-  +-- Grid zone (flex-1, overflow-hidden, py-4)
-      +-- EnrollmentMasterGrid (h-full, overflow-y-auto)
-          +-- Sticky thead + scrollable tbody
-</div>
+```text
+flex h-full flex-col overflow-hidden
++-- Banners (conditional, shrink-0)
++-- Header zone (shrink-0, ~80px)
+|   +-- Title + description
+|   +-- Actions: Band filter | Exception filter | Export | Setup | Calculate
++-- KPI ribbon (shrink-0, ~48px)
+|   +-- Total AY1 | Total AY2 | Util% | Alerts
++-- Status strip (shrink-0, ~36px)
+|   +-- Baseline source | Last calculated | Enrollment freshness | Downstream stale pills
++-- Grid zone (flex-1, overflow-hidden, py-4)
+    +-- EnrollmentMasterGrid (h-full, overflow-y-auto)
+        +-- Sticky thead + scrollable tbody
 ```
 
 ### Operational UX gaps to close in the layout

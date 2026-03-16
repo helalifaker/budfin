@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { RevenuePage } from './revenue';
 
-const mockSetActivePage = vi.fn();
-const mockClearSelection = vi.fn();
+const { mockSetActivePage, mockClearSelection, mockPanelClose } = vi.hoisted(() => ({
+	mockSetActivePage: vi.fn(),
+	mockClearSelection: vi.fn(),
+	mockPanelClose: vi.fn(),
+}));
 
 type MockWorkspaceContext = {
 	versionId: number | null;
@@ -54,10 +57,16 @@ vi.mock('../../stores/auth-store', () => ({
 		selector({ user: { role: mockUserRole } }),
 }));
 
-vi.mock('../../stores/right-panel-store', () => ({
-	useRightPanelStore: (selector: (state: { setActivePage: typeof mockSetActivePage }) => unknown) =>
-		selector({ setActivePage: mockSetActivePage }),
-}));
+vi.mock('../../stores/right-panel-store', () => {
+	const storeState = {
+		setActivePage: mockSetActivePage,
+		isOpen: false,
+		close: mockPanelClose,
+	};
+	const hook = (selector: (state: typeof storeState) => unknown) => selector(storeState);
+	hook.getState = () => storeState;
+	return { useRightPanelStore: hook };
+});
 
 vi.mock('../../stores/revenue-selection-store', () => ({
 	useRevenueSelectionStore: (
@@ -88,19 +97,19 @@ vi.mock('../../hooks/use-revenue', () => ({
 	}),
 	useRevenueReadiness: () => ({
 		data: {
-			feeGrid: { total: 90, complete: 90, ready: true },
-			tariffAssignment: { reconciled: true, ready: true },
-			discounts: { rpRate: '0.250000', r3Rate: '0.100000', ready: true },
-			derivedRevenueSettings: { exists: true, ready: true },
+			feeGrid: { total: 90, complete: 90, settingsExist: true, ready: true },
+			discounts: { flatRate: '0.000000', ready: true },
 			otherRevenue: { total: 20, configured: 20, ready: true },
 			overallReady: true,
-			readyCount: 5,
-			totalCount: 5,
+			readyCount: 3,
+			totalCount: 3,
 		},
 	}),
 	useCalculateRevenue: () => ({
 		mutate: vi.fn(),
 		isPending: false,
+		isSuccess: false,
+		isError: false,
 	}),
 }));
 
@@ -137,6 +146,10 @@ vi.mock('../../components/shared/page-transition', () => ({
 	PageTransition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('../../components/shared/calculate-button', () => ({
+	CalculateButton: () => <button type="button">Calculate</button>,
+}));
+
 vi.mock('../../components/enrollment/version-lock-banner', () => ({
 	VersionLockBanner: () => <div>Version lock banner</div>,
 }));
@@ -149,6 +162,10 @@ vi.mock('../../components/revenue/revenue-export-button', () => ({
 	RevenueExportButton: () => <button type="button">Export</button>,
 }));
 
+vi.mock('../../components/revenue/revenue-exception-filter', () => ({
+	RevenueExceptionFilter: () => <div>Exception Filter</div>,
+}));
+
 vi.mock('../../components/revenue/kpi-ribbon', () => ({
 	RevenueKpiRibbon: () => <div>KPI Ribbon</div>,
 }));
@@ -157,21 +174,18 @@ vi.mock('../../components/revenue/revenue-status-strip', () => ({
 	RevenueStatusStrip: () => <div>Status Strip</div>,
 }));
 
-vi.mock('../../components/revenue/setup-checklist', () => ({
-	RevenueSetupChecklist: ({ forceOpen }: { forceOpen?: boolean }) =>
-		forceOpen ? <div>Setup Checklist</div> : null,
-}));
-
 vi.mock('../../components/revenue/revenue-settings-dialog', () => ({
 	RevenueSettingsDialog: () => <div>Settings Dialog</div>,
 }));
 
 vi.mock('../../components/revenue/revenue-inspector', () => ({}));
+vi.mock('../../components/revenue/revenue-guide-content', () => ({}));
 
 describe('RevenuePage', () => {
 	beforeEach(() => {
 		mockSetActivePage.mockClear();
 		mockClearSelection.mockClear();
+		mockPanelClose.mockClear();
 		mockWorkspaceContext = {
 			versionId: 16,
 			fiscalYear: 2026,
@@ -206,8 +220,7 @@ describe('RevenuePage', () => {
 		expect(screen.getByText('Status Strip')).toBeDefined();
 		expect(screen.getByText('Forecast Grid')).toBeDefined();
 		expect(screen.getByRole('button', { name: 'Revenue Settings' })).toBeDefined();
-		expect(screen.getByRole('button', { name: 'Setup' })).toBeDefined();
-		expect(screen.getByRole('button', { name: 'Calculate Revenue' })).toBeDefined();
+		expect(screen.getByText('Calculate')).toBeDefined();
 		expect(mockSetActivePage).toHaveBeenCalledWith('revenue');
 	});
 
@@ -249,6 +262,6 @@ describe('RevenuePage', () => {
 		expect(screen.getByText(/This version was imported/)).toBeDefined();
 		expect(screen.getByText(/Viewer access keeps this workspace/)).toBeDefined();
 		expect(screen.getByRole('button', { name: 'View Settings' })).toBeDefined();
-		expect(screen.queryByRole('button', { name: 'Calculate Revenue' })).toBeNull();
+		expect(screen.queryByText('Calculate')).toBeNull();
 	});
 });

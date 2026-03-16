@@ -27,7 +27,9 @@ pnpm lint:all      # lint + lint:md + format:check
 
 # Run for a single workspace
 pnpm --filter @budfin/api test
+pnpm --filter @budfin/web test
 pnpm --filter @budfin/api exec vitest run src/routes/auth.test.ts
+pnpm --filter @budfin/web exec vitest run src/components/revenue/revenue-matrix-table.test.tsx
 
 # Prisma
 pnpm --filter @budfin/api exec prisma generate
@@ -88,6 +90,59 @@ packages/types/    Shared TypeScript types (@budfin/types)
 - `tsconfig.base.json`: `moduleResolution: "Bundler"` — used by web.
 - `apps/api/tsconfig.json`: overrides to `module: "Node16"`, `moduleResolution: "Node16"`.
 
+### API route prefixes
+
+All routes registered in `apps/api/src/index.ts`:
+
+| Prefix                                   | Route group                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------- |
+| `/api/v1`                                | health, context                                                                       |
+| `/api/v1/auth`                           | authRoutes (login/logout/refresh)                                                     |
+| `/api/v1/users`                          | userRoutes                                                                            |
+| `/api/v1/audit`                          | auditRoutes                                                                           |
+| `/api/v1/system-config`                  | systemConfigRoutes                                                                    |
+| `/api/v1/master-data`                    | masterDataRoutes (accounts, grades, tariffs, nationalities, departments, assumptions) |
+| `/api/v1/versions`                       | versionRoutes (CRUD + lifecycle)                                                      |
+| `/api/v1/fiscal-periods`                 | fiscalPeriodRoutes                                                                    |
+| `/api/v1/enrollment`                     | enrollmentHistoricalRoutes (not version-scoped)                                       |
+| `/api/v1/versions/:versionId/enrollment` | enrollmentRoutes                                                                      |
+| `/api/v1/versions/:versionId/calculate`  | calculateRoutes + revenueCalculateRoutes + staffingCalculateRoutes                    |
+| `/api/v1/versions/:versionId`            | revenueRoutes, staffingRoutes (sub-paths registered internally)                       |
+
+### Calculation engine pattern
+
+Pure-function calculation services live in `apps/api/src/services/` with **no DB dependencies**. Calculate routes call these services, then persist results in transactions. Never add DB calls directly to engine files.
+
+| Engine file                                 | What it computes                                  |
+| ------------------------------------------- | ------------------------------------------------- |
+| `services/cohort-engine.ts`                 | AY2 headcounts from AY1 via retention rates       |
+| `services/capacity-engine.ts`               | Grade capacity against enrollment headcounts      |
+| `services/revenue-engine.ts`                | Monthly revenue (gross, discounts, other revenue) |
+| `services/revenue-reporting.ts`             | Aggregated revenue report views                   |
+| `services/staffing/cost-engine.ts`          | Monthly staff costs per employee                  |
+| `services/staffing/dhg-engine.ts`           | DHG grille calculations                           |
+| `services/staffing/monthly-gross.ts`        | Monthly gross salary from annual YEARFRAC         |
+| `services/staffing/yearfrac.ts`             | Excel-compatible YEARFRAC (TC-002)                |
+| `services/staffing/category-cost-engine.ts` | Category-level aggregated staff costs             |
+
+### Stale module propagation
+
+`BudgetVersion.staleModules` (string array) tracks which calculation modules are out-of-date. When enrollment changes, `REVENUE` is marked stale. When revenue changes, `STAFFING` and `PNL` are marked stale. The frontend reads `staleModules` from the version object to display warning indicators.
+
+Chain: **ENROLLMENT → REVENUE → STAFFING → PNL**
+
+### Right panel registry
+
+The docked `RightPanel` in `PlanningShell` uses a module-level registry (`apps/web/src/lib/right-panel-registry.ts`). Pages register their panel content at module load time via `registerPanelContent('page-key', renderer)` and guide content via `registerGuideContent`. Page components set the active key via `useRightPanelStore.setActivePage()`. The panel reads the current renderer from the registry — no prop drilling.
+
+### Frontend data layer
+
+All API calls go through `apps/web/src/lib/api-client.ts` (`apiClient<T>(path, options)`), which injects the Bearer token from `auth-store`. TanStack Query hooks in `apps/web/src/hooks/` wrap `apiClient` — one file per domain (e.g., `use-revenue.ts`, `use-enrollment.ts`, `use-staffing.ts`). Never call `apiClient` directly from components.
+
+### Tab-sync auth
+
+`apps/web/src/lib/tab-sync.ts` uses the Web `BroadcastChannel` API (`budfin-auth` channel) to propagate token refresh and logout events across browser tabs. When one tab refreshes its access token it broadcasts to all other tabs, preventing redundant refresh requests.
+
 ## Key Patterns and Gotchas
 
 ### Prisma 6 breaking changes
@@ -132,6 +187,18 @@ All budget-calculation routes are scoped under a version: `/api/v1/versions/:ver
 ### Frontend workspace context
 
 `workspace-context-store.ts` (Zustand) is the single source of truth for the active fiscal year, versionId, comparison version, and academic period. The `PlanningShell` reads from this store via `useWorkspaceContextStore`. The `GET /api/v1/context` endpoint provides the authenticated user's role and permission list to the frontend on login.
+
+### DataGrid component
+
+`apps/web/src/components/data-grid/data-grid.tsx` is the shared headless-table wrapper used by all planning grids (enrollment, revenue, staffing). It pairs TanStack Table v8 with shadcn/ui `<Table>`. Use `cell-renderers.tsx` for typed cell types (numeric, text, editable). Do not build ad-hoc table layouts — always compose from `DataGrid`.
+
+### Migration tooling
+
+`apps/api/src/migration/` contains one-shot importers for bootstrapping from historical Excel/CSV data (DHG grille, employees, master data). These run outside the normal API lifecycle via `apps/api/src/migration/index.ts`. They are not called by any route; run them directly with `tsx`.
+
+### Money formatting
+
+`apps/web/src/lib/format-money.ts` is the only place that converts `decimal.js` strings to display strings (SAR, compact notation, etc.). Import from here for all monetary display — never call `toLocaleString` directly on amounts.
 
 ## Workflow
 

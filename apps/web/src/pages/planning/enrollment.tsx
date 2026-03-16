@@ -43,6 +43,7 @@ import {
 	resolveEnrollmentGradeLevels,
 } from '../../lib/enrollment-workspace';
 import '../../components/enrollment/enrollment-inspector';
+import '../../components/enrollment/enrollment-guide-content';
 import { useEnrollmentSettingsSheetStore } from '../../stores/enrollment-settings-store';
 
 const BAND_FILTERS: Array<{ value: string; label: string }> = [
@@ -407,7 +408,6 @@ export function EnrollmentPage() {
 						</Button>
 						{editability === 'editable' && (
 							<CalculateButton
-								versionId={versionId}
 								onCalculate={() => calculateMutation.mutate()}
 								isPending={calculateMutation.isPending}
 								isSuccess={calculateMutation.isSuccess}

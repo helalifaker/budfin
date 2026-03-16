@@ -76,6 +76,7 @@ const mockSettings = {
 	examEafPerStudent: '800.0000',
 	evalPrimairePerStudent: '200.0000',
 	evalSecondairePerStudent: '300.0000',
+	flatDiscountPct: '0.000000',
 };
 
 beforeAll(async () => {
@@ -118,6 +119,7 @@ describe('GET /revenue/settings', () => {
 				examEafPerStudent: '800.0000',
 				evalPrimairePerStudent: '200.0000',
 				evalSecondairePerStudent: '300.0000',
+				flatDiscountPct: '0.000000',
 			},
 		});
 	});
@@ -177,6 +179,7 @@ describe('PUT /revenue/settings', () => {
 				examEafPerStudent: '800.0000',
 				evalPrimairePerStudent: '200.0000',
 				evalSecondairePerStudent: '300.0000',
+				flatDiscountPct: '0.000000',
 				updatedBy: 1,
 			},
 		});

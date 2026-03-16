@@ -166,7 +166,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		expect(rc!.value).toBe('new-raw-token');
 	});
 
-	it('returns 204 without cookie', async () => {
+	it('returns 401 INVALID_REFRESH_TOKEN without cookie', async () => {
 		const app = await buildTestApp();
 
 		const res = await app.inject({
@@ -174,10 +174,11 @@ describe('POST /api/v1/auth/refresh', () => {
 			url: '/api/v1/auth/refresh',
 		});
 
-		expect(res.statusCode).toBe(204);
+		expect(res.statusCode).toBe(401);
+		expect(res.json().code).toBe('INVALID_REFRESH_TOKEN');
 	});
 
-	it('returns 401 INVALID_TOKEN for unknown token', async () => {
+	it('returns 401 INVALID_REFRESH_TOKEN for unknown token', async () => {
 		const app = await buildTestApp();
 		mockRefreshTokenFindFirst.mockResolvedValue(null);
 
@@ -188,7 +189,7 @@ describe('POST /api/v1/auth/refresh', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
-		expect(res.json().code).toBe('INVALID_TOKEN');
+		expect(res.json().code).toBe('INVALID_REFRESH_TOKEN');
 	});
 
 	it('returns 401 TOKEN_EXPIRED for expired token', async () => {

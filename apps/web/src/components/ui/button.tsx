@@ -47,17 +47,13 @@ const SIZE: Record<ButtonSize, string> = {
 	icon: 'h-8 w-8 p-0',
 };
 
-export function Button({
-	variant = 'primary',
-	size = 'md',
-	loading = false,
-	className,
-	disabled,
-	children,
-	...props
-}: ButtonProps) {
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+	{ variant = 'primary', size = 'md', loading = false, className, disabled, children, ...props },
+	ref
+) {
 	return (
 		<button
+			ref={ref}
 			{...props}
 			disabled={disabled || loading}
 			className={cn(
@@ -92,4 +88,4 @@ export function Button({
 			{children}
 		</button>
 	);
-}
+});

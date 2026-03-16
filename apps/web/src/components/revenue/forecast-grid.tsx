@@ -1,159 +1,246 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import Decimal from 'decimal.js';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { RevenueViewMode } from '@budfin/types';
-import { useGradeLevels } from '../../hooks/use-grade-levels';
-import { useRevenueResults } from '../../hooks/use-revenue';
-import { cn } from '../../lib/cn';
 import {
-	buildRevenueForecastGridRows,
 	formatRevenueGridAmount,
 	formatRevenueGridPercent,
 	getVisibleRevenueMonths,
 	REVENUE_MONTH_LABELS,
+	type RevenueForecastGridRow,
 	type RevenueForecastPeriod,
 } from '../../lib/revenue-workspace';
+import {
+	BAND_STYLES,
+	NATIONALITY_LABELS,
+	NATIONALITY_STYLES,
+	TARIFF_LABELS,
+	TARIFF_STYLES,
+} from '../../lib/band-styles';
 import { useRevenueSelectionStore } from '../../stores/revenue-selection-store';
+import { PlanningGrid } from '../data-grid/planning-grid';
+import { cn } from '../../lib/cn';
 
 interface ForecastGridProps {
-	versionId: number;
+	rows: RevenueForecastGridRow[];
 	viewMode: RevenueViewMode;
 	period: RevenueForecastPeriod;
+	isLoading?: boolean;
+	totalLabel: string;
 }
 
-export function ForecastGrid({ versionId, viewMode, period }: ForecastGridProps) {
-	const { data, isLoading } = useRevenueResults(versionId, viewMode);
-	const { data: gradeLevelsData } = useGradeLevels();
+const columnHelper = createColumnHelper<RevenueForecastGridRow>();
+
+function buildMonthColumn(monthIndex: number) {
+	return columnHelper.accessor((row) => row.monthlyAmounts[monthIndex] ?? '0', {
+		id: `month-${monthIndex}`,
+		header: REVENUE_MONTH_LABELS[monthIndex] ?? `M${monthIndex + 1}`,
+		cell: (info) => {
+			const value = info.getValue() as string;
+			const amount = formatRevenueGridAmount(value, monthIndex);
+			return (
+				<span
+					className={cn(
+						amount.isNegative && 'text-(--color-error)',
+						amount.isMuted && 'text-(--text-muted)'
+					)}
+				>
+					{amount.text}
+				</span>
+			);
+		},
+	});
+}
+
+export function ForecastGrid({
+	rows,
+	viewMode,
+	period,
+	isLoading = false,
+	totalLabel,
+}: ForecastGridProps) {
 	const selection = useRevenueSelectionStore((state) => state.selection);
 	const selectRow = useRevenueSelectionStore((state) => state.selectRow);
 	const visibleMonths = useMemo(() => getVisibleRevenueMonths(period), [period]);
 
-	const rows = useMemo(
-		() =>
-			buildRevenueForecastGridRows({
-				data,
-				viewMode,
-				gradeLevels: gradeLevelsData?.gradeLevels,
-			}),
-		[data, gradeLevelsData?.gradeLevels, viewMode]
+	const monthColumns = useMemo(
+		() => visibleMonths.map((monthIndex) => buildMonthColumn(monthIndex)),
+		[visibleMonths]
 	);
 
-	if (isLoading) {
-		return (
-			<div className="flex h-48 items-center justify-center rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) text-(--text-sm) text-(--text-muted)">
-				Loading revenue forecast...
-			</div>
-		);
-	}
+	const columns = useMemo(
+		() => [
+			columnHelper.accessor('label', {
+				id: 'label',
+				header: viewMode === 'category' ? 'Revenue Category' : 'Label',
+				cell: ({ getValue }) => getValue(),
+			}),
+			...monthColumns,
+			columnHelper.accessor('annualTotal', {
+				id: 'annual',
+				header: 'Annual',
+				cell: ({ getValue }) => {
+					const amount = formatRevenueGridAmount(getValue());
+					return (
+						<span className={cn(amount.isNegative && 'text-(--color-error)')}>{amount.text}</span>
+					);
+				},
+			}),
+			columnHelper.accessor('percentageOfRevenue', {
+				id: 'pctRev',
+				header: '% Rev',
+				cell: ({ getValue, row }) =>
+					row.original.isTotal ? '' : formatRevenueGridPercent(getValue()),
+			}),
+		],
+		[monthColumns, viewMode]
+	);
 
-	if (rows.length === 0) {
-		return (
-			<div className="flex h-48 items-center justify-center rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) text-(--text-sm) text-(--text-muted)">
-				Run the revenue calculation to populate the forecast grid.
-			</div>
-		);
-	}
+	const numericColumnIds = useMemo(
+		() => [...visibleMonths.map((i) => `month-${i}`), 'annual', 'pctRev'],
+		[visibleMonths]
+	);
+
+	const table = useReactTable({
+		data: rows,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+	});
+
+	const bandGrouping = useMemo(() => {
+		if (viewMode === 'grade') {
+			return {
+				getBand: (row: RevenueForecastGridRow) => row.band ?? 'UNKNOWN',
+				bandLabels: {
+					MATERNELLE: 'Maternelle',
+					ELEMENTAIRE: 'Elementaire',
+					COLLEGE: 'College',
+					LYCEE: 'Lycee',
+				},
+				bandStyles: BAND_STYLES,
+				collapsible: false as const,
+				footerBuilder: (groupRows: RevenueForecastGridRow[], band: string) =>
+					buildSubtotalRow({
+						rows: groupRows,
+						label: `${
+							{
+								MATERNELLE: 'Maternelle',
+								ELEMENTAIRE: 'Elementaire',
+								COLLEGE: 'College',
+								LYCEE: 'Lycee',
+							}[band] ?? band
+						} Subtotal`,
+						visibleMonths,
+					}),
+			};
+		}
+		if (viewMode === 'nationality') {
+			return {
+				getBand: (row: RevenueForecastGridRow) => row.code,
+				bandLabels: NATIONALITY_LABELS,
+				bandStyles: NATIONALITY_STYLES,
+				collapsible: false as const,
+			};
+		}
+		if (viewMode === 'tariff') {
+			return {
+				getBand: (row: RevenueForecastGridRow) => row.code,
+				bandLabels: TARIFF_LABELS,
+				bandStyles: TARIFF_STYLES,
+				collapsible: false as const,
+			};
+		}
+		return undefined;
+	}, [viewMode, visibleMonths]);
+
+	const footerRows = useMemo(() => {
+		if (rows.length === 0) return [];
+		const values = buildSummaryValues(rows, visibleMonths, totalLabel);
+		return [{ label: totalLabel, type: 'grandtotal' as const, values }];
+	}, [rows, totalLabel, visibleMonths]);
+
+	const handleRowSelect = useCallback(
+		(row: RevenueForecastGridRow) => {
+			selectRow(row);
+		},
+		[selectRow]
+	);
+
+	const selectedRowPredicate = useCallback(
+		(row: RevenueForecastGridRow) => selection?.id === row.id && selection.viewMode === viewMode,
+		[selection, viewMode]
+	);
 
 	return (
-		<div className="overflow-x-auto rounded-2xl border border-(--workspace-border) bg-(--workspace-bg-card) shadow-(--shadow-xs)">
-			<table
-				role="grid"
-				aria-label="Revenue forecast grid"
-				className="min-w-[1120px] w-full text-(--text-sm)"
-			>
-				<thead className="border-b border-(--workspace-border) bg-(--workspace-bg-muted)">
-					<tr>
-						<th className="sticky left-0 z-10 min-w-[220px] border-r border-(--workspace-border) bg-(--workspace-bg-muted) px-4 py-3 text-left text-(--text-xs) font-medium uppercase tracking-wide text-(--text-secondary)">
-							{viewMode === 'category' ? 'Revenue Category' : 'Label'}
-						</th>
-						{visibleMonths.map((monthIndex) => (
-							<th
-								key={REVENUE_MONTH_LABELS[monthIndex]}
-								className="px-3 py-3 text-right text-(--text-xs) font-medium uppercase tracking-wide text-(--text-secondary)"
-							>
-								{REVENUE_MONTH_LABELS[monthIndex]}
-							</th>
-						))}
-						<th className="px-3 py-3 text-right text-(--text-xs) font-medium uppercase tracking-wide text-(--text-secondary)">
-							Annual
-						</th>
-						<th className="px-3 py-3 text-right text-(--text-xs) font-medium uppercase tracking-wide text-(--text-secondary)">
-							% Rev
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map((row) => {
-						const isSelectable = !row.isTotal && !row.isSubtotal;
-						const isSelected =
-							isSelectable && selection?.label === row.label && selection.viewMode === viewMode;
-
-						return (
-							<tr
-								key={row.id}
-								aria-selected={isSelected}
-								aria-label={row.isTotal ? 'Grand total' : row.label}
-								className={cn(
-									'border-b border-(--workspace-border) last:border-0',
-									row.isTotal && 'sticky bottom-0 bg-(--workspace-bg-muted) font-semibold',
-									row.isSubtotal && 'bg-(--workspace-bg-subtle) font-medium',
-									isSelectable && 'cursor-pointer hover:bg-(--accent-50)',
-									isSelected && 'bg-(--accent-50)'
-								)}
-								onClick={() => {
-									if (!isSelectable) {
-										return;
-									}
-
-									selectRow({ label: row.label, viewMode });
-								}}
-								onKeyDown={(event) => {
-									if (!isSelectable) {
-										return;
-									}
-
-									if (event.key === 'Enter' || event.key === ' ') {
-										event.preventDefault();
-										selectRow({ label: row.label, viewMode });
-									}
-								}}
-								tabIndex={isSelectable ? 0 : undefined}
-							>
-								<td className="sticky left-0 z-10 border-r border-(--workspace-border) bg-inherit px-4 py-3 text-left">
-									{row.label}
-								</td>
-								{visibleMonths.map((monthIndex) => {
-									const amount = formatRevenueGridAmount(
-										row.monthlyAmounts[monthIndex] ?? '0',
-										monthIndex
-									);
-									return (
-										<td
-											key={`${row.id}-${monthIndex}`}
-											className={cn(
-												'px-3 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums',
-												amount.isNegative && 'text-(--color-error)',
-												amount.isMuted && 'text-(--text-muted)'
-											)}
-										>
-											{amount.text}
-										</td>
-									);
-								})}
-								<td
-									className={cn(
-										'px-3 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums',
-										formatRevenueGridAmount(row.annualTotal).isNegative && 'text-(--color-error)'
-									)}
-								>
-									{formatRevenueGridAmount(row.annualTotal).text}
-								</td>
-								<td className="px-3 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
-									{row.isTotal ? '' : formatRevenueGridPercent(row.percentageOfRevenue)}
-								</td>
-							</tr>
-						);
-					})}
-				</tbody>
-			</table>
-		</div>
+		<PlanningGrid
+			table={table}
+			isLoading={isLoading}
+			ariaLabel="Revenue forecast grid"
+			forceGridRole={true}
+			pinnedColumns={['label']}
+			numericColumns={numericColumnIds}
+			{...(bandGrouping ? { bandGrouping } : {})}
+			footerRows={footerRows}
+			onRowSelect={handleRowSelect}
+			selectedRowPredicate={selectedRowPredicate}
+			getRowClassName={(row) =>
+				viewMode === 'category' && row.code === 'discount-impact'
+					? 'text-(--color-error)'
+					: undefined
+			}
+		/>
 	);
+}
+
+function buildSummaryValues(
+	rows: RevenueForecastGridRow[],
+	visibleMonths: number[],
+	label: string
+): Record<string, ReactNode> {
+	const monthTotals = new Map<number, Decimal>();
+	let annualTotal = new Decimal(0);
+
+	for (const row of rows) {
+		for (const monthIndex of visibleMonths) {
+			const amount = new Decimal(row.monthlyAmounts[monthIndex] ?? '0');
+			monthTotals.set(monthIndex, (monthTotals.get(monthIndex) ?? new Decimal(0)).plus(amount));
+		}
+		annualTotal = annualTotal.plus(new Decimal(row.annualTotal));
+	}
+
+	const values: Record<string, ReactNode> = { label };
+	for (const monthIndex of visibleMonths) {
+		const amount = formatRevenueGridAmount(
+			(monthTotals.get(monthIndex) ?? new Decimal(0)).toFixed(4),
+			monthIndex
+		);
+		values[`month-${monthIndex}`] = (
+			<span className={cn(amount.isNegative && 'text-(--color-error)')}>{amount.text}</span>
+		);
+	}
+	const annualAmount = formatRevenueGridAmount(annualTotal.toFixed(4));
+	values['annual'] = (
+		<span className={cn(annualAmount.isNegative && 'text-(--color-error)')}>
+			{annualAmount.text}
+		</span>
+	);
+	values['pctRev'] = '';
+	return values;
+}
+
+function buildSubtotalRow({
+	rows,
+	label,
+	visibleMonths,
+}: {
+	rows: RevenueForecastGridRow[];
+	label: string;
+	visibleMonths: number[];
+}) {
+	return {
+		label,
+		type: 'subtotal' as const,
+		values: buildSummaryValues(rows, visibleMonths, label),
+	};
 }

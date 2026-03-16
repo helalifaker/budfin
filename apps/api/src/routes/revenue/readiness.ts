@@ -8,50 +8,6 @@ const versionIdParamsSchema = z.object({
 	versionId: z.coerce.number().int().positive(),
 });
 
-function makeTariffAssignmentKey(academicPeriod: string, gradeLevel: string, nationality: string) {
-	return `${academicPeriod}|${gradeLevel}|${nationality}`;
-}
-
-function computeTariffAssignmentReadiness(
-	details: Array<{
-		academicPeriod: string;
-		gradeLevel: string;
-		nationality: string;
-		headcount: number;
-	}>,
-	nationalityBreakdown: Array<{
-		academicPeriod: string;
-		gradeLevel: string;
-		nationality: string;
-		headcount: number;
-	}>
-) {
-	if (details.length === 0 || nationalityBreakdown.length === 0) {
-		return { reconciled: false, ready: false };
-	}
-
-	const detailMap = new Map<string, number>();
-	for (const entry of details) {
-		const key = makeTariffAssignmentKey(entry.academicPeriod, entry.gradeLevel, entry.nationality);
-		detailMap.set(key, (detailMap.get(key) ?? 0) + entry.headcount);
-	}
-
-	const breakdownMap = new Map<string, number>();
-	for (const entry of nationalityBreakdown) {
-		const key = makeTariffAssignmentKey(entry.academicPeriod, entry.gradeLevel, entry.nationality);
-		breakdownMap.set(key, entry.headcount);
-	}
-
-	const breakdownKeys = [...breakdownMap.keys()];
-	const detailKeys = [...detailMap.keys()];
-	const reconciled =
-		breakdownKeys.length > 0 &&
-		breakdownKeys.every((key) => detailMap.get(key) === breakdownMap.get(key)) &&
-		detailKeys.every((key) => breakdownMap.has(key));
-
-	return { reconciled, ready: reconciled };
-}
-
 export async function revenueReadinessRoutes(app: FastifyInstance) {
 	app.get('/revenue/readiness', {
 		schema: { params: versionIdParamsSchema },
@@ -71,14 +27,7 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 				});
 			}
 
-			const [
-				feeGridTotal,
-				otherRevenueItems,
-				discountPolicies,
-				enrollmentDetails,
-				nationalityBreakdown,
-				revenueSettings,
-			] = await Promise.all([
+			const [feeGridTotal, otherRevenueItems, revenueSettings] = await Promise.all([
 				prisma.feeGrid.count({ where: { versionId } }),
 				prisma.otherRevenueItem.findMany({
 					where: { versionId },
@@ -92,64 +41,29 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 						computeMethod: true,
 					},
 				}),
-				prisma.discountPolicy.findMany({
-					where: {
-						versionId,
-						tariff: { in: ['RP', 'R3+'] },
-					},
-					select: {
-						tariff: true,
-						discountRate: true,
-					},
-					orderBy: { tariff: 'asc' },
-				}),
-				prisma.enrollmentDetail.findMany({
-					where: { versionId },
-					select: {
-						academicPeriod: true,
-						gradeLevel: true,
-						nationality: true,
-						headcount: true,
-					},
-				}),
-				prisma.nationalityBreakdown.findMany({
-					where: { versionId },
-					select: {
-						academicPeriod: true,
-						gradeLevel: true,
-						nationality: true,
-						headcount: true,
-					},
-				}),
 				prisma.versionRevenueSettings.findUnique({
 					where: { versionId },
-					select: { id: true },
+					select: { id: true, flatDiscountPct: true },
 				}),
 			]);
+
+			const settingsExist = revenueSettings !== null;
 
 			const feeGrid = {
 				total: feeGridTotal,
 				complete: feeGridTotal,
-				ready: feeGridTotal > 0,
+				settingsExist,
+				ready: feeGridTotal > 0 && settingsExist,
 			};
 
-			const tariffAssignment = computeTariffAssignmentReadiness(
-				enrollmentDetails,
-				nationalityBreakdown
-			);
-
-			const rpPolicy = discountPolicies.find((policy) => policy.tariff === 'RP');
-			const r3Policy = discountPolicies.find((policy) => policy.tariff === 'R3+');
-			const rpRate = rpPolicy ? new Decimal(rpPolicy.discountRate.toString()).toFixed(6) : null;
-			const r3Rate = r3Policy ? new Decimal(r3Policy.discountRate.toString()).toFixed(6) : null;
+			// Discounts: read flatDiscountPct from settings. Always ready when settings exist
+			// (0% flat discount is a valid configuration).
+			const flatRate = revenueSettings
+				? new Decimal(revenueSettings.flatDiscountPct.toString()).toFixed(6)
+				: null;
 			const discounts = {
-				rpRate,
-				r3Rate,
-				ready:
-					rpRate !== null &&
-					r3Rate !== null &&
-					new Decimal(rpRate).gt(0) &&
-					new Decimal(r3Rate).gt(0),
+				flatRate,
+				ready: settingsExist,
 			};
 
 			const staticOtherRevenueItems = otherRevenueItems.filter(
@@ -189,28 +103,17 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 					dynamicValidation.invalid.length === 0,
 			};
 
-			const derivedRevenueSettings = {
-				exists: revenueSettings !== null,
-				ready: revenueSettings !== null,
-			};
-
-			const readyCount = [
-				feeGrid.ready,
-				tariffAssignment.ready,
-				discounts.ready,
-				derivedRevenueSettings.ready,
-				otherRevenue.ready,
-			].filter(Boolean).length;
+			const readyCount = [feeGrid.ready, discounts.ready, otherRevenue.ready].filter(
+				Boolean
+			).length;
 
 			return {
 				feeGrid,
-				tariffAssignment,
 				discounts,
-				derivedRevenueSettings,
 				otherRevenue,
-				overallReady: readyCount === 5,
+				overallReady: readyCount === 3,
 				readyCount,
-				totalCount: 5 as const,
+				totalCount: 3 as const,
 			};
 		},
 	});

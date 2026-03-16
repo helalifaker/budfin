@@ -18,15 +18,6 @@ vi.mock('../../lib/prisma.js', () => {
 		otherRevenueItem: {
 			findMany: vi.fn(),
 		},
-		discountPolicy: {
-			findMany: vi.fn(),
-		},
-		enrollmentDetail: {
-			findMany: vi.fn(),
-		},
-		nationalityBreakdown: {
-			findMany: vi.fn(),
-		},
 		versionRevenueSettings: {
 			findUnique: vi.fn(),
 		},
@@ -40,9 +31,6 @@ const mockPrisma = prisma as unknown as {
 	budgetVersion: { findUnique: ReturnType<typeof vi.fn> };
 	feeGrid: { count: ReturnType<typeof vi.fn> };
 	otherRevenueItem: { findMany: ReturnType<typeof vi.fn> };
-	discountPolicy: { findMany: ReturnType<typeof vi.fn> };
-	enrollmentDetail: { findMany: ReturnType<typeof vi.fn> };
-	nationalityBreakdown: { findMany: ReturnType<typeof vi.fn> };
 	versionRevenueSettings: { findUnique: ReturnType<typeof vi.fn> };
 };
 
@@ -82,14 +70,14 @@ beforeEach(async () => {
 	mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 1 });
 	mockPrisma.feeGrid.count.mockResolvedValue(0);
 	mockPrisma.otherRevenueItem.findMany.mockResolvedValue([]);
-	mockPrisma.discountPolicy.findMany.mockResolvedValue([]);
-	mockPrisma.enrollmentDetail.findMany.mockResolvedValue([]);
-	mockPrisma.nationalityBreakdown.findMany.mockResolvedValue([]);
-	mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue({ id: 1 });
+	mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue({
+		id: 1,
+		flatDiscountPct: '0.000000',
+	});
 });
 
 describe('GET /revenue/readiness', () => {
-	it('returns overallReady true when all five areas are configured', async () => {
+	it('returns overallReady true when all three areas are configured', async () => {
 		mockPrisma.feeGrid.count.mockResolvedValue(90);
 		mockPrisma.otherRevenueItem.findMany.mockResolvedValue([
 			{
@@ -228,17 +216,6 @@ describe('GET /revenue/readiness', () => {
 				computeMethod: 'EVAL_SECONDAIRE',
 			},
 		]);
-		mockPrisma.discountPolicy.findMany.mockResolvedValue([
-			{ tariff: 'RP', discountRate: '0.250000' },
-			{ tariff: 'R3+', discountRate: '0.100000' },
-		]);
-		mockPrisma.enrollmentDetail.findMany.mockResolvedValue([
-			{ academicPeriod: 'AY1', gradeLevel: 'CP', nationality: 'Francais', headcount: 10 },
-			{ academicPeriod: 'AY1', gradeLevel: 'CP', nationality: 'Francais', headcount: 2 },
-		]);
-		mockPrisma.nationalityBreakdown.findMany.mockResolvedValue([
-			{ academicPeriod: 'AY1', gradeLevel: 'CP', nationality: 'Francais', headcount: 12 },
-		]);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -249,18 +226,18 @@ describe('GET /revenue/readiness', () => {
 
 		expect(res.statusCode).toBe(200);
 		expect(res.json()).toEqual({
-			feeGrid: { total: 90, complete: 90, ready: true },
-			tariffAssignment: { reconciled: true, ready: true },
-			discounts: { rpRate: '0.250000', r3Rate: '0.100000', ready: true },
-			derivedRevenueSettings: { exists: true, ready: true },
+			feeGrid: { total: 90, complete: 90, settingsExist: true, ready: true },
+			discounts: { flatRate: '0.000000', ready: true },
 			otherRevenue: { total: 15, configured: 15, ready: true },
 			overallReady: true,
-			readyCount: 5,
-			totalCount: 5,
+			readyCount: 3,
+			totalCount: 3,
 		});
 	});
 
 	it('returns all areas not ready when nothing is configured', async () => {
+		mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue(null);
+
 		const token = await makeToken('Viewer');
 		const res = await app.inject({
 			method: 'GET',
@@ -270,19 +247,16 @@ describe('GET /revenue/readiness', () => {
 
 		expect(res.statusCode).toBe(200);
 		expect(res.json()).toEqual({
-			feeGrid: { total: 0, complete: 0, ready: false },
-			tariffAssignment: { reconciled: false, ready: false },
-			discounts: { rpRate: null, r3Rate: null, ready: false },
-			derivedRevenueSettings: { exists: true, ready: true },
+			feeGrid: { total: 0, complete: 0, settingsExist: false, ready: false },
+			discounts: { flatRate: null, ready: false },
 			otherRevenue: { total: 0, configured: 0, ready: false },
 			overallReady: false,
-			readyCount: 1,
-			totalCount: 5,
+			readyCount: 0,
+			totalCount: 3,
 		});
 	});
 
-	it('returns partial readiness when only discounts and other revenue are configured', async () => {
-		mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue(null);
+	it('returns partial readiness when only discounts are configured', async () => {
 		mockPrisma.otherRevenueItem.findMany.mockResolvedValue([
 			{
 				lineItemName: 'APS',
@@ -303,10 +277,6 @@ describe('GET /revenue/readiness', () => {
 				computeMethod: null,
 			},
 		]);
-		mockPrisma.discountPolicy.findMany.mockResolvedValue([
-			{ tariff: 'RP', discountRate: '0.250000' },
-			{ tariff: 'R3+', discountRate: '0.100000' },
-		]);
 
 		const token = await makeToken();
 		const res = await app.inject({
@@ -320,9 +290,7 @@ describe('GET /revenue/readiness', () => {
 		expect(body.overallReady).toBe(false);
 		expect(body.readyCount).toBe(1);
 		expect(body.feeGrid.ready).toBe(false);
-		expect(body.tariffAssignment.ready).toBe(false);
 		expect(body.discounts.ready).toBe(true);
-		expect(body.derivedRevenueSettings.ready).toBe(false);
 		expect(body.otherRevenue.ready).toBe(false);
 	});
 

@@ -13,17 +13,12 @@ type RevenueSetupChecklistProps = {
 };
 
 const AREA_CONFIG: Array<{
-	key: keyof Pick<
-		RevenueReadinessResponse,
-		'feeGrid' | 'tariffAssignment' | 'discounts' | 'derivedRevenueSettings' | 'otherRevenue'
-	>;
+	key: keyof Pick<RevenueReadinessResponse, 'feeGrid' | 'discounts' | 'otherRevenue'>;
 	label: string;
 	tab: RevenueSettingsTab;
 }> = [
 	{ key: 'feeGrid', label: 'Fee Grid', tab: 'feeGrid' },
-	{ key: 'tariffAssignment', label: 'Tariff Assignment', tab: 'tariffAssignment' },
 	{ key: 'discounts', label: 'Discounts', tab: 'discounts' },
-	{ key: 'derivedRevenueSettings', label: 'Derived Revenue Rates', tab: 'otherRevenue' },
 	{ key: 'otherRevenue', label: 'Other Revenue', tab: 'otherRevenue' },
 ];
 

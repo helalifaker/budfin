@@ -1,6 +1,7 @@
 // Revenue calculation engine — pure functions, no DB dependencies
 // Epic 2, Story #102 (2.5): Revenue Engine
 
+import type { DistributionMethod, RevenueExecutiveCategory } from '@budfin/types';
 import { Decimal } from 'decimal.js';
 
 // ── Input Interfaces ──────────────────────────────────────────────────────────
@@ -28,11 +29,7 @@ export interface DiscountPolicyInput {
 	discountRate: string; // decimal string 0–1
 }
 
-export type DistributionMethod =
-	| 'ACADEMIC_10'
-	| 'YEAR_ROUND_12'
-	| 'CUSTOM_WEIGHTS'
-	| 'SPECIFIC_PERIOD';
+export type { DistributionMethod };
 
 export interface OtherRevenueInput {
 	lineItemName: string;
@@ -48,6 +45,7 @@ export interface RevenueEngineInput {
 	feeGrid: FeeGridInput[];
 	discountPolicies: DiscountPolicyInput[];
 	otherRevenueItems: OtherRevenueInput[];
+	flatDiscountPct?: string;
 }
 
 // ── Output Interfaces ─────────────────────────────────────────────────────────
@@ -64,15 +62,12 @@ export interface MonthlyRevenueOutput {
 	vatAmount: string;
 }
 
-export type ExecutiveRevenueCategory =
-	| 'REGISTRATION_FEES'
-	| 'ACTIVITIES_SERVICES'
-	| 'EXAMINATION_FEES';
+export type { RevenueExecutiveCategory };
 
 export interface OtherRevenueOutput {
 	lineItemName: string;
 	ifrsCategory: string;
-	executiveCategory: ExecutiveRevenueCategory | null;
+	executiveCategory: RevenueExecutiveCategory | null;
 	month: number;
 	amount: string; // decimal string
 }
@@ -206,7 +201,8 @@ function resolveEffectiveTuitionAmounts(
 	enrollment: EnrollmentDetailInput,
 	fee: FeeGridInput,
 	feeMap: Map<FeeKey, FeeGridInput>,
-	discountPolicies: DiscountPolicyInput[]
+	discountPolicies: DiscountPolicyInput[],
+	flatDiscountPct?: Decimal
 ): {
 	tuitionFeesPerStudentHt: Decimal;
 	discountPerStudentHt: Decimal;
@@ -218,6 +214,19 @@ function resolveEffectiveTuitionAmounts(
 		) ?? fee;
 
 	const pleinTuitionHt = new Decimal(referencePleinFee.tuitionHt);
+
+	// Flat discount mode: apply a uniform percentage to the Plein fee for ALL entries
+	if (flatDiscountPct && flatDiscountPct.gt(ZERO)) {
+		const tuitionFeesPerStudentHt = pleinTuitionHt.mul(ONE.minus(flatDiscountPct));
+		const discountPerStudentHt = pleinTuitionHt.mul(flatDiscountPct);
+		return {
+			tuitionFeesPerStudentHt,
+			discountPerStudentHt,
+			vatRate: enrollment.nationality === 'Nationaux' ? ZERO : VAT_RATE,
+		};
+	}
+
+	// Per-tariff discount logic (existing behavior)
 	const selectedTuitionHt = new Decimal(fee.tuitionHt);
 	const discountRate = resolveDiscountRate(enrollment.tariff, discountPolicies);
 
@@ -246,7 +255,7 @@ function resolveEffectiveTuitionAmounts(
 	};
 }
 
-function resolveExecutiveCategory(item: OtherRevenueInput): ExecutiveRevenueCategory | null {
+function resolveExecutiveCategory(item: OtherRevenueInput): RevenueExecutiveCategory | null {
 	if (item.ifrsCategory === 'Registration Fees') {
 		return 'REGISTRATION_FEES';
 	}
@@ -344,6 +353,11 @@ export function distributeAcrossMonths(
 export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult {
 	const { enrollmentDetails, feeGrid, discountPolicies, otherRevenueItems } = input;
 
+	const flatDiscountPct =
+		input.flatDiscountPct !== undefined && input.flatDiscountPct !== ''
+			? new Decimal(input.flatDiscountPct)
+			: undefined;
+
 	const feeMap = buildFeeMap(feeGrid);
 	const tuitionRevenue: MonthlyRevenueOutput[] = [];
 
@@ -374,7 +388,7 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 		const headcount = new Decimal(enrollment.headcount);
 		const months = enrollment.academicPeriod === 'AY1' ? AY1_MONTHS : AY2_MONTHS;
 		const { tuitionFeesPerStudentHt, discountPerStudentHt, vatRate } =
-			resolveEffectiveTuitionAmounts(enrollment, fee, feeMap, discountPolicies);
+			resolveEffectiveTuitionAmounts(enrollment, fee, feeMap, discountPolicies, flatDiscountPct);
 
 		const academicYearTuitionFees = headcount.mul(tuitionFeesPerStudentHt);
 		const academicYearDiscounts = headcount.mul(discountPerStudentHt);

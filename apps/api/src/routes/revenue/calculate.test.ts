@@ -218,6 +218,7 @@ beforeEach(async () => {
 		examEafPerStudent: '800.0000',
 		evalPrimairePerStudent: '200.0000',
 		evalSecondairePerStudent: '300.0000',
+		flatDiscountPct: '0.000000',
 	});
 	mockPrisma.budgetVersion.update.mockResolvedValue({});
 	mockComputeAllDerivedRevenue.mockReturnValue([]);

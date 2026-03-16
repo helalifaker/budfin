@@ -1,4 +1,5 @@
 import { Fragment } from 'react';
+import Decimal from 'decimal.js';
 import type { RevenueMatrixRow } from '@budfin/types';
 
 const MONTH_NAMES = [
@@ -17,12 +18,12 @@ const MONTH_NAMES = [
 ];
 
 function formatAmount(value: string) {
-	const numeric = Number(value);
-	if (Math.abs(numeric) < 0.0001) {
+	const d = new Decimal(value || '0');
+	if (d.abs().lessThan('0.0001')) {
 		return '-';
 	}
 
-	return numeric.toLocaleString('fr-FR', {
+	return Number(d.toFixed(2)).toLocaleString('fr-FR', {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	});
@@ -102,12 +103,12 @@ export function RevenueMatrixTable({ rows, ariaLabel }: RevenueMatrixTableProps)
 										{row.label}
 									</td>
 									{row.monthlyAmounts.map((amount, index) => {
-										const numeric = Number(amount);
+										const isNeg = new Decimal(amount || '0').isNeg();
 										return (
 											<td
 												key={`${row.label}-${MONTH_NAMES[index]}`}
 												className={`px-3 py-3 text-right tabular-nums ${
-													numeric < 0 ? 'text-(--color-error)' : ''
+													isNeg ? 'text-(--color-error)' : ''
 												}`}
 											>
 												{formatAmount(amount)}
@@ -116,7 +117,7 @@ export function RevenueMatrixTable({ rows, ariaLabel }: RevenueMatrixTableProps)
 									})}
 									<td
 										className={`px-3 py-3 text-right tabular-nums ${
-											Number(row.annualTotal) < 0 ? 'text-(--color-error)' : ''
+											new Decimal(row.annualTotal || '0').isNeg() ? 'text-(--color-error)' : ''
 										}`}
 									>
 										{formatAmount(row.annualTotal)}

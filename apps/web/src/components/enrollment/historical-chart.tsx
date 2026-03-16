@@ -125,17 +125,21 @@ export function HistoricalChart() {
 			<ResponsiveContainer width="100%" height={300}>
 				<LineChart data={chartData}>
 					<CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-					<XAxis dataKey="year" tick={{ fontSize: 12 }} stroke={chartColors.axis} />
-					<YAxis tick={{ fontSize: 12 }} stroke={chartColors.axis} />
+					<XAxis
+						dataKey="year"
+						tick={{ fontSize: 'var(--chart-tick-size)' }}
+						stroke={chartColors.axis}
+					/>
+					<YAxis tick={{ fontSize: 'var(--chart-tick-size)' }} stroke={chartColors.axis} />
 					<Tooltip
 						contentStyle={{
-							fontSize: 12,
-							borderRadius: 8,
+							fontSize: 'var(--chart-tooltip-size)',
+							borderRadius: 'var(--radius-md)',
 							border: `1px solid ${chartColors.tooltipBorder}`,
 						}}
 					/>
 					<Legend
-						wrapperStyle={{ fontSize: 12 }}
+						wrapperStyle={{ fontSize: 'var(--chart-tooltip-size)' }}
 						formatter={(value: string) => BAND_LABELS[value] ?? value}
 					/>
 					{Object.entries(bandColors).map(([band, color]) => (
