@@ -287,7 +287,7 @@ export function RevenueSettingsDialog({
 													academicPeriod="both"
 													isReadOnly={isViewer}
 												/>
-											</TabsContent>{' '}
+											</TabsContent>
 											<TabsContent value="discounts">
 												<DiscountsTab versionId={versionId} isReadOnly={isViewer} />
 											</TabsContent>

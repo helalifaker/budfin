@@ -14,21 +14,19 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 	const saveMutation = usePutRevenueSettings(versionId);
 	const sourceSettings = settingsData?.settings ?? null;
 
-	const sourcePctStr = sourceSettings
-		? new Decimal(sourceSettings.flatDiscountPct).mul(100).toFixed(2)
-		: '';
-
-	const [displayPct, setDisplayPct] = useState(sourcePctStr);
-	const [prevSourcePct, setPrevSourcePct] = useState(sourcePctStr);
-
-	if (sourcePctStr !== prevSourcePct) {
-		setPrevSourcePct(sourcePctStr);
-		setDisplayPct(sourcePctStr);
-	}
-
 	const sourcePct = sourceSettings
 		? new Decimal(sourceSettings.flatDiscountPct).mul(100).toFixed(2)
 		: '';
+
+	const [displayPct, setDisplayPct] = useState(sourcePct);
+	const [prevSourcePct, setPrevSourcePct] = useState(sourcePct);
+
+	// Sync display when server data changes (React-recommended derived state pattern)
+	if (sourcePct !== prevSourcePct) {
+		setPrevSourcePct(sourcePct);
+		setDisplayPct(sourcePct);
+	}
+
 	const isDirty = displayPct !== sourcePct;
 
 	const parsedPct = (() => {
@@ -93,7 +91,7 @@ export function DiscountsTab({ versionId, isReadOnly }: DiscountsTabProps) {
 							<span className="text-sm text-(--text-secondary)">%</span>
 						</div>
 						{!isValid && displayPct !== '' && (
-							<p className="text-xs text-(--color-danger)">Enter a value between 0 and 100.</p>
+							<p className="text-xs text-(--color-error)">Enter a value between 0 and 100.</p>
 						)}
 					</label>
 

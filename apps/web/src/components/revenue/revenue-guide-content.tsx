@@ -7,9 +7,9 @@ export function RevenueGuideContent() {
 		<div className="space-y-2">
 			<GuideSection title="Workflow Overview" icon={BookOpen} defaultOpen>
 				<p className="text-sm text-(--text-muted)">
-					Revenue planning follows a 4-step workflow: configure the fee grid, assign tariff tiers to
-					students, set discount policies, then calculate revenue. Each step must be completed
-					before calculation can run.
+					Revenue planning follows a 3-step workflow: configure the fee grid (band-level tuition and
+					per-student fees), set the flat discount percentage, then add custom other-revenue lines.
+					Once all three areas are ready, run the calculation.
 				</p>
 			</GuideSection>
 
@@ -30,27 +30,27 @@ export function RevenueGuideContent() {
 				</p>
 			</GuideSection>
 
-			<GuideSection title="Discount Policies" icon={Percent}>
+			<GuideSection title="Flat Discount" icon={Percent}>
 				<p className="text-sm text-(--text-muted)">
-					Two discount tiers exist: RP (Reduced Price) and R3+ (3rd child and above). Discounts
-					apply to tuition HT only, not to DAI or other fees. The discount rate is configured per
-					tariff tier in Revenue Settings.
+					A single flat discount percentage is applied uniformly to all students. The discount
+					reduces tuition HT only, not DAI or other fees. Configure the rate in the Discounts tab of
+					Revenue Settings.
 				</p>
 			</GuideSection>
 
-			<GuideSection title="Nationality-Tariff Mapping" icon={Globe}>
+			<GuideSection title="Nationality Groups" icon={Globe}>
 				<p className="text-sm text-(--text-muted)">
-					Each student is assigned a nationality group (Francais, Nationaux, Autres) and a tariff
-					tier (Plein, RP, R3+). Fee rates vary by nationality. Tariff assignment determines which
-					discount rate applies.
+					Students belong to one of three nationality groups (Francais, Nationaux, Autres). Fee
+					rates vary by nationality and grade band. Nationaux students are VAT-exempt; Francais and
+					Autres are charged 15% VAT on tuition HT.
 				</p>
 			</GuideSection>
 
-			<GuideSection title="Revenue Validation" icon={CheckCircle}>
+			<GuideSection title="Revenue Readiness" icon={CheckCircle}>
 				<p className="text-sm text-(--text-muted)">
-					Revenue validation checks 5 areas: fee grid completeness, tariff assignment coverage,
-					discount policy configuration, derived revenue rates, and other revenue drivers. All areas
-					must show green before calculation results are considered reliable.
+					Revenue readiness checks 3 areas: fee grid completeness, discount configuration, and other
+					revenue drivers. All areas must show green before calculation results are considered
+					reliable.
 				</p>
 			</GuideSection>
 		</div>

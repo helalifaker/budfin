@@ -91,12 +91,13 @@ export async function feeGridRoutes(app: FastifyInstance) {
 
 			const priorYear = version.fiscalYear - 1;
 
-			// Find a fiscal period from the prior year that has an actual version linked
+			// Find the latest fiscal period from the prior year that has an actual version linked
 			const priorPeriod = await prisma.fiscalPeriod.findFirst({
 				where: {
 					fiscalYear: priorYear,
 					actualVersionId: { not: null },
 				},
+				orderBy: { month: 'desc' },
 				select: { actualVersionId: true },
 			});
 
