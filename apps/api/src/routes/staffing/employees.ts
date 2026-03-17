@@ -4,6 +4,12 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { getEncryptionKey } from '../../services/staffing/crypto-helper.js';
 
+// ── Constants ──────────────────────────────────────────────────────────────
+
+const VALID_RECORD_TYPES = ['EMPLOYEE', 'VACANCY'] as const;
+const VALID_COST_MODES = ['LOCAL_PAYROLL', 'AEFE_RECHARGE', 'NO_LOCAL_COST'] as const;
+const VALID_BANDS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
+
 // ── Schemas ──────────────────────────────────────────────────────────────────
 
 const versionIdParams = z.object({
@@ -18,12 +24,20 @@ const employeeIdParams = z.object({
 const employeeListQuery = z.object({
 	department: z.string().optional(),
 	status: z.enum(['Existing', 'New', 'Departed']).optional(),
+	recordType: z.enum(VALID_RECORD_TYPES).optional(),
 	page: z.coerce.number().int().positive().default(1),
 	page_size: z.coerce.number().int().positive().max(100).default(50),
 });
 
+/**
+ * Base employee body schema.
+ * - hsaAmount is deliberately omitted (computed by pipeline only, AC-03).
+ * - When isTeaching is true, disciplineId/serviceProfileId/homeBand are
+ *   validated as required in the handler (superRefine cannot express this
+ *   cleanly with default values).
+ */
 const employeeBody = z.object({
-	employeeCode: z.string().min(1).max(20),
+	employeeCode: z.string().min(1).max(20).optional(),
 	name: z.string().min(1).max(200),
 	functionRole: z.string().min(1).max(100),
 	department: z.string().min(1).max(50),
@@ -34,15 +48,21 @@ const employeeBody = z.object({
 	isAjeer: z.boolean().default(false),
 	isTeaching: z.boolean().default(false),
 	hourlyPercentage: z.string().default('1.0000'),
-	baseSalary: z.string(),
-	housingAllowance: z.string(),
-	transportAllowance: z.string(),
+	baseSalary: z.string().nullable().default('0.0000'),
+	housingAllowance: z.string().nullable().default('0.0000'),
+	transportAllowance: z.string().nullable().default('0.0000'),
 	responsibilityPremium: z.string().default('0.0000'),
-	hsaAmount: z.string().default('0.0000'),
 	augmentation: z.string().default('0.0000'),
 	augmentationEffectiveDate: z.string().date().nullable().optional(),
 	ajeerAnnualLevy: z.string().default('0.0000'),
 	ajeerMonthlyFee: z.string().default('0.0000'),
+	// Epic 18 — new fields
+	recordType: z.enum(VALID_RECORD_TYPES).default('EMPLOYEE'),
+	costMode: z.enum(VALID_COST_MODES).default('LOCAL_PAYROLL'),
+	disciplineId: z.number().int().positive().nullable().optional(),
+	serviceProfileId: z.number().int().positive().nullable().optional(),
+	homeBand: z.enum(VALID_BANDS).nullable().optional(),
+	contractEndDate: z.string().date().nullable().optional(),
 });
 
 // ── Salary field encryption/decryption helpers ───────────────────────────────
@@ -70,6 +90,15 @@ interface DecryptedEmployee {
 	augmentation_effective_date: Date | null;
 	ajeer_annual_levy: string;
 	ajeer_monthly_fee: string;
+	// Epic 18 new fields
+	record_type: string;
+	cost_mode: string;
+	discipline_id: number | null;
+	service_profile_id: number | null;
+	home_band: string | null;
+	contract_end_date: Date | null;
+	discipline_name: string | null;
+	service_profile_name: string | null;
 	created_at: Date;
 	updated_at: Date;
 	created_by: number;
@@ -99,6 +128,15 @@ function formatEmployee(raw: DecryptedEmployee, redactSalary: boolean) {
 		augmentation_effective_date: raw.augmentation_effective_date,
 		ajeer_annual_levy: raw.ajeer_annual_levy,
 		ajeer_monthly_fee: raw.ajeer_monthly_fee,
+		// Epic 18 new fields (AC-01)
+		record_type: raw.record_type,
+		cost_mode: raw.cost_mode,
+		discipline_id: raw.discipline_id,
+		service_profile_id: raw.service_profile_id,
+		home_band: raw.home_band,
+		contract_end_date: raw.contract_end_date,
+		discipline_name: raw.discipline_name,
+		service_profile_name: raw.service_profile_name,
 		updated_at: raw.updated_at,
 	};
 }
@@ -145,8 +183,50 @@ function buildEmployeeSelect(salaryFragment: Prisma.Sql): Prisma.Sql {
 		e.augmentation_effective_date,
 		e.ajeer_annual_levy::text as ajeer_annual_levy,
 		e.ajeer_monthly_fee::text as ajeer_monthly_fee,
+		e.record_type, e.cost_mode, e.discipline_id,
+		e.service_profile_id, e.home_band, e.contract_end_date,
+		d.name as discipline_name,
+		sp.name as service_profile_name,
 		e.created_at, e.updated_at, e.created_by, e.updated_by
 	`;
+}
+
+/**
+ * Validates isTeaching constraint: when isTeaching is true,
+ * disciplineId, serviceProfileId, and homeBand must not be null (AC-02).
+ * Returns array of field-specific error messages, empty if valid.
+ */
+function validateTeachingFields(body: z.infer<typeof employeeBody>): string[] {
+	if (!body.isTeaching) return [];
+
+	const errors: string[] = [];
+	if (!body.disciplineId) {
+		errors.push('disciplineId is required when isTeaching is true');
+	}
+	if (!body.serviceProfileId) {
+		errors.push('serviceProfileId is required when isTeaching is true');
+	}
+	if (!body.homeBand) {
+		errors.push('homeBand is required when isTeaching is true');
+	}
+	return errors;
+}
+
+/**
+ * Generates the next vacancy code (VAC-NNN) for a given version (AC-04).
+ * Finds the max existing VAC-NNN code and increments.
+ */
+async function generateVacancyCode(versionId: number): Promise<string> {
+	const result = await prisma.$queryRaw<[{ max_num: number | null }]>`
+		SELECT MAX(
+			CAST(SUBSTRING(employee_code FROM 5) AS INTEGER)
+		) as max_num
+		FROM employees
+		WHERE version_id = ${versionId}
+		AND employee_code LIKE 'VAC-%'
+	`;
+	const nextNum = (result[0]?.max_num ?? 0) + 1;
+	return `VAC-${String(nextNum).padStart(3, '0')}`;
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
@@ -161,7 +241,7 @@ export async function employeeRoutes(app: FastifyInstance) {
 		preHandler: [app.authenticate],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
-			const { department, status, page, page_size } = request.query as z.infer<
+			const { department, status, recordType, page, page_size } = request.query as z.infer<
 				typeof employeeListQuery
 			>;
 
@@ -180,7 +260,6 @@ export async function employeeRoutes(app: FastifyInstance) {
 			const offset = (page - 1) * page_size;
 
 			const salaryFragment = redactSalary ? REDACTED_SALARY_SELECT : buildDecryptSelect(key);
-
 			const selectCols = buildEmployeeSelect(salaryFragment);
 
 			// Build WHERE conditions dynamically
@@ -191,11 +270,17 @@ export async function employeeRoutes(app: FastifyInstance) {
 			if (status) {
 				conditions.push(Prisma.sql`e.status = ${status}`);
 			}
+			if (recordType) {
+				conditions.push(Prisma.sql`e.record_type = ${recordType}`);
+			}
 			const whereClause = Prisma.join(conditions, ' AND ');
 
 			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
 				SELECT ${selectCols}
 				FROM employees e
+				LEFT JOIN disciplines d ON d.id = e.discipline_id
+				LEFT JOIN service_obligation_profiles sp
+					ON sp.id = e.service_profile_id
 				WHERE ${whereClause}
 				ORDER BY e.department, e.name
 				LIMIT ${page_size} OFFSET ${offset}
@@ -228,12 +313,14 @@ export async function employeeRoutes(app: FastifyInstance) {
 			const key = redactSalary ? '' : getEncryptionKey();
 
 			const salaryFragment = redactSalary ? REDACTED_SALARY_SELECT : buildDecryptSelect(key);
-
 			const selectCols = buildEmployeeSelect(salaryFragment);
 
 			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
 				SELECT ${selectCols}
 				FROM employees e
+				LEFT JOIN disciplines d ON d.id = e.discipline_id
+				LEFT JOIN service_obligation_profiles sp
+					ON sp.id = e.service_profile_id
 				WHERE e.version_id = ${versionId} AND e.id = ${id}
 			`;
 
@@ -259,6 +346,16 @@ export async function employeeRoutes(app: FastifyInstance) {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 			const body = request.body as z.infer<typeof employeeBody>;
 
+			// AC-02: isTeaching validation
+			const teachingErrors = validateTeachingFields(body);
+			if (teachingErrors.length > 0) {
+				return reply.status(400).send({
+					code: 'TEACHING_FIELDS_REQUIRED',
+					message: teachingErrors.join('; '),
+					errors: teachingErrors,
+				});
+			}
+
 			// Version guard
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
@@ -276,19 +373,30 @@ export async function employeeRoutes(app: FastifyInstance) {
 				});
 			}
 
+			// AC-04: VACANCY auto-generates employeeCode
+			let employeeCode = body.employeeCode;
+			if (body.recordType === 'VACANCY') {
+				employeeCode = await generateVacancyCode(versionId);
+			} else if (!employeeCode) {
+				return reply.status(400).send({
+					code: 'EMPLOYEE_CODE_REQUIRED',
+					message: 'employeeCode is required for non-vacancy records',
+				});
+			}
+
 			// Duplicate check
 			const existing = await prisma.employee.findUnique({
 				where: {
 					versionId_employeeCode: {
 						versionId,
-						employeeCode: body.employeeCode,
+						employeeCode: employeeCode!,
 					},
 				},
 			});
 			if (existing) {
 				return reply.status(409).send({
 					code: 'DUPLICATE_EMPLOYEE_CODE',
-					message: `Employee code ${body.employeeCode} already exists in version ${versionId}`,
+					message: `Employee code ${employeeCode} already exists` + ` in version ${versionId}`,
 				});
 			}
 
@@ -297,6 +405,18 @@ export async function employeeRoutes(app: FastifyInstance) {
 			const augEffDate = body.augmentationEffectiveDate
 				? Prisma.sql`${body.augmentationEffectiveDate}::date`
 				: Prisma.sql`NULL`;
+
+			const contractEnd = body.contractEndDate
+				? Prisma.sql`${body.contractEndDate}::date`
+				: Prisma.sql`NULL`;
+
+			// AC-04: For vacancies, salary fields can be null (null = zero cost)
+			const baseSalary = body.baseSalary ?? '0.0000';
+			const housingAllowance = body.housingAllowance ?? '0.0000';
+			const transportAllowance = body.transportAllowance ?? '0.0000';
+
+			// AC-03: hsaAmount always defaults to '0.0000' (computed by pipeline)
+			const hsaAmount = '0.0000';
 
 			// Insert with pgcrypto encryption for salary fields
 			const result = await prisma.$queryRaw<[{ id: number }]>`
@@ -307,22 +427,30 @@ export async function employeeRoutes(app: FastifyInstance) {
 					transport_allowance, responsibility_premium, hsa_amount,
 					augmentation, augmentation_effective_date,
 					ajeer_annual_levy, ajeer_monthly_fee,
+					record_type, cost_mode, discipline_id,
+					service_profile_id, home_band, contract_end_date,
 					created_by, created_at, updated_at
 				) VALUES (
-					${versionId}, ${body.employeeCode}, ${body.name},
+					${versionId}, ${employeeCode!}, ${body.name},
 					${body.functionRole}, ${body.department},
 					${body.status}, ${body.joiningDate}::date,
 					${body.paymentMethod},
 					${body.isSaudi}, ${body.isAjeer}, ${body.isTeaching},
 					${Number(body.hourlyPercentage)},
-					pgp_sym_encrypt(${body.baseSalary}, ${key}),
-					pgp_sym_encrypt(${body.housingAllowance}, ${key}),
-					pgp_sym_encrypt(${body.transportAllowance}, ${key}),
+					pgp_sym_encrypt(${baseSalary}, ${key}),
+					pgp_sym_encrypt(${housingAllowance}, ${key}),
+					pgp_sym_encrypt(${transportAllowance}, ${key}),
 					pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
-					pgp_sym_encrypt(${body.hsaAmount}, ${key}),
+					pgp_sym_encrypt(${hsaAmount}, ${key}),
 					pgp_sym_encrypt(${body.augmentation}, ${key}),
 					${augEffDate},
-					${Number(body.ajeerAnnualLevy)}, ${Number(body.ajeerMonthlyFee)},
+					${Number(body.ajeerAnnualLevy)},
+					${Number(body.ajeerMonthlyFee)},
+					${body.recordType}, ${body.costMode},
+					${body.disciplineId ?? null},
+					${body.serviceProfileId ?? null},
+					${body.homeBand ?? null},
+					${contractEnd},
 					${request.user.id}, NOW(), NOW()
 				)
 				RETURNING id
@@ -339,9 +467,10 @@ export async function employeeRoutes(app: FastifyInstance) {
 					tableName: 'employees',
 					recordId: result[0]!.id,
 					newValues: {
-						employee_code: body.employeeCode,
+						employee_code: employeeCode,
 						name: body.name,
 						department: body.department,
+						record_type: body.recordType,
 					} as unknown as Prisma.InputJsonValue,
 					ipAddress: request.ip,
 				},
@@ -353,7 +482,11 @@ export async function employeeRoutes(app: FastifyInstance) {
 
 			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
 				SELECT ${selectCols}
-				FROM employees e WHERE e.id = ${result[0]!.id}
+				FROM employees e
+				LEFT JOIN disciplines d ON d.id = e.discipline_id
+				LEFT JOIN service_obligation_profiles sp
+					ON sp.id = e.service_profile_id
+				WHERE e.id = ${result[0]!.id}
 			`;
 
 			return reply.status(201).send(formatEmployee(employees[0]!, false));
@@ -370,6 +503,16 @@ export async function employeeRoutes(app: FastifyInstance) {
 		handler: async (request, reply) => {
 			const { versionId, id } = request.params as z.infer<typeof employeeIdParams>;
 			const body = request.body as z.infer<typeof employeeBody>;
+
+			// AC-02: isTeaching validation
+			const teachingErrors = validateTeachingFields(body);
+			if (teachingErrors.length > 0) {
+				return reply.status(400).send({
+					code: 'TEACHING_FIELDS_REQUIRED',
+					message: teachingErrors.join('; '),
+					errors: teachingErrors,
+				});
+			}
 
 			// Version guard
 			const version = await prisma.budgetVersion.findUnique({
@@ -411,20 +554,24 @@ export async function employeeRoutes(app: FastifyInstance) {
 				}
 			}
 
+			// For PUT, use existing employeeCode if not provided, or
+			// existing vacancy code (vacancies keep their code on update)
+			const employeeCode = body.employeeCode ?? existing.employeeCode;
+
 			// Duplicate code check (if code changed)
-			if (body.employeeCode !== existing.employeeCode) {
+			if (employeeCode !== existing.employeeCode) {
 				const dup = await prisma.employee.findUnique({
 					where: {
 						versionId_employeeCode: {
 							versionId,
-							employeeCode: body.employeeCode,
+							employeeCode,
 						},
 					},
 				});
 				if (dup) {
 					return reply.status(409).send({
 						code: 'DUPLICATE_EMPLOYEE_CODE',
-						message: `Employee code ${body.employeeCode} already exists`,
+						message: `Employee code ${employeeCode} already exists`,
 					});
 				}
 			}
@@ -435,9 +582,21 @@ export async function employeeRoutes(app: FastifyInstance) {
 				? Prisma.sql`${body.augmentationEffectiveDate}::date`
 				: Prisma.sql`NULL`;
 
+			const contractEnd = body.contractEndDate
+				? Prisma.sql`${body.contractEndDate}::date`
+				: Prisma.sql`NULL`;
+
+			// AC-04: For vacancies, salary fields can be null
+			const baseSalary = body.baseSalary ?? '0.0000';
+			const housingAllowance = body.housingAllowance ?? '0.0000';
+			const transportAllowance = body.transportAllowance ?? '0.0000';
+
+			// AC-03: hsaAmount always '0.0000' (computed by pipeline)
+			const hsaAmount = '0.0000';
+
 			await prisma.$executeRaw`
 				UPDATE employees SET
-					employee_code = ${body.employeeCode},
+					employee_code = ${employeeCode},
 					name = ${body.name},
 					function_role = ${body.functionRole},
 					department = ${body.department},
@@ -448,15 +607,25 @@ export async function employeeRoutes(app: FastifyInstance) {
 					is_ajeer = ${body.isAjeer},
 					is_teaching = ${body.isTeaching},
 					hourly_percentage = ${Number(body.hourlyPercentage)},
-					base_salary = pgp_sym_encrypt(${body.baseSalary}, ${key}),
-					housing_allowance = pgp_sym_encrypt(${body.housingAllowance}, ${key}),
-					transport_allowance = pgp_sym_encrypt(${body.transportAllowance}, ${key}),
-					responsibility_premium = pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
-					hsa_amount = pgp_sym_encrypt(${body.hsaAmount}, ${key}),
-					augmentation = pgp_sym_encrypt(${body.augmentation}, ${key}),
+					base_salary = pgp_sym_encrypt(${baseSalary}, ${key}),
+					housing_allowance =
+						pgp_sym_encrypt(${housingAllowance}, ${key}),
+					transport_allowance =
+						pgp_sym_encrypt(${transportAllowance}, ${key}),
+					responsibility_premium =
+						pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
+					hsa_amount = pgp_sym_encrypt(${hsaAmount}, ${key}),
+					augmentation =
+						pgp_sym_encrypt(${body.augmentation}, ${key}),
 					augmentation_effective_date = ${augEffDate},
 					ajeer_annual_levy = ${Number(body.ajeerAnnualLevy)},
 					ajeer_monthly_fee = ${Number(body.ajeerMonthlyFee)},
+					record_type = ${body.recordType},
+					cost_mode = ${body.costMode},
+					discipline_id = ${body.disciplineId ?? null},
+					service_profile_id = ${body.serviceProfileId ?? null},
+					home_band = ${body.homeBand ?? null},
+					contract_end_date = ${contractEnd},
 					updated_by = ${request.user.id},
 					updated_at = NOW()
 				WHERE id = ${id} AND version_id = ${versionId}
@@ -473,7 +642,7 @@ export async function employeeRoutes(app: FastifyInstance) {
 					tableName: 'employees',
 					recordId: id,
 					newValues: {
-						employee_code: body.employeeCode,
+						employee_code: employeeCode,
 						department: body.department,
 					} as unknown as Prisma.InputJsonValue,
 					ipAddress: request.ip,
@@ -486,7 +655,11 @@ export async function employeeRoutes(app: FastifyInstance) {
 
 			const employees = await prisma.$queryRaw<DecryptedEmployee[]>`
 				SELECT ${selectCols}
-				FROM employees e WHERE e.id = ${id}
+				FROM employees e
+				LEFT JOIN disciplines d ON d.id = e.discipline_id
+				LEFT JOIN service_obligation_profiles sp
+					ON sp.id = e.service_profile_id
+				WHERE e.id = ${id}
 			`;
 
 			return formatEmployee(employees[0]!, false);

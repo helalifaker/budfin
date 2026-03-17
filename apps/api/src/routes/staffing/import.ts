@@ -37,6 +37,10 @@ const OPTIONAL_COLUMNS = [
 	'augmentation_effective_date',
 	'ajeer_annual_levy',
 	'ajeer_monthly_fee',
+	'record_type',
+	'cost_mode',
+	'home_band',
+	'contract_end_date',
 ] as const;
 
 const ALL_COLUMNS = [...REQUIRED_COLUMNS, ...OPTIONAL_COLUMNS];
@@ -103,6 +107,25 @@ interface ParsedEmployee {
 	augmentationEffectiveDate: Date | null;
 	ajeerAnnualLevy: string;
 	ajeerMonthlyFee: string;
+	// Epic 18 new fields
+	recordType: string;
+	costMode: string;
+	homeBand: string | null;
+	contractEndDate: Date | null;
+}
+
+/** Alias resolution result for discipline and service profile. */
+interface ResolvedFields {
+	disciplineId: number | null;
+	serviceProfileId: number | null;
+}
+
+/** Exception queue entry for import rows that could not be fully resolved. */
+interface ImportException {
+	row: number;
+	employeeCode: string;
+	field: string;
+	message: string;
 }
 
 const VALID_STATUSES = new Set(['Existing', 'New', 'Departed']);
@@ -113,6 +136,9 @@ const VALID_DEPARTMENTS = new Set([
 	'Management',
 	'Maintenance',
 ]);
+const VALID_RECORD_TYPES = new Set(['EMPLOYEE', 'VACANCY']);
+const VALID_COST_MODES = new Set(['LOCAL_PAYROLL', 'AEFE_RECHARGE', 'NO_LOCAL_COST']);
+const VALID_BANDS = new Set(['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE']);
 
 function validateRow(
 	colMap: Map<string, number>,
@@ -123,7 +149,7 @@ function validateRow(
 
 	function getCell(col: string): ExcelJS.Cell {
 		const idx = colMap.get(col);
-		if (idx === undefined) return row.getCell(1); // fallback, won't be used if required check passed
+		if (idx === undefined) return row.getCell(1);
 		return row.getCell(idx);
 	}
 
@@ -134,7 +160,11 @@ function validateRow(
 	// Required fields
 	const employeeCode = getStr('employee_code');
 	if (!employeeCode) {
-		errors.push({ row: rowNum, field: 'employee_code', message: 'Required' });
+		errors.push({
+			row: rowNum,
+			field: 'employee_code',
+			message: 'Required',
+		});
 	}
 
 	const name = getStr('name');
@@ -144,17 +174,26 @@ function validateRow(
 
 	const functionRole = getStr('function_role');
 	if (!functionRole) {
-		errors.push({ row: rowNum, field: 'function_role', message: 'Required' });
+		errors.push({
+			row: rowNum,
+			field: 'function_role',
+			message: 'Required',
+		});
 	}
 
 	const department = getStr('department');
 	if (!department) {
-		errors.push({ row: rowNum, field: 'department', message: 'Required' });
+		errors.push({
+			row: rowNum,
+			field: 'department',
+			message: 'Required',
+		});
 	} else if (!VALID_DEPARTMENTS.has(department)) {
 		errors.push({
 			row: rowNum,
 			field: 'department',
-			message: `Invalid department: "${department}". Expected: ${[...VALID_DEPARTMENTS].join(', ')}`,
+			message:
+				`Invalid department: "${department}". ` + `Expected: ${[...VALID_DEPARTMENTS].join(', ')}`,
 		});
 	}
 
@@ -206,7 +245,7 @@ function validateRow(
 		errors.push({
 			row: rowNum,
 			field: 'status',
-			message: `Invalid status: "${getStr('status')}". Expected: Existing, New, Departed`,
+			message: `Invalid status: "${getStr('status')}". ` + `Expected: Existing, New, Departed`,
 		});
 	}
 
@@ -238,6 +277,20 @@ function validateRow(
 	const ajeerFeeStr = getStr('ajeer_monthly_fee');
 	const ajeerMonthlyFee = ajeerFeeStr && !isNaN(Number(ajeerFeeStr)) ? ajeerFeeStr : '0';
 
+	// Epic 18 optional fields
+	const recordTypeRaw = getStr('record_type') || 'EMPLOYEE';
+	const recordType = VALID_RECORD_TYPES.has(recordTypeRaw) ? recordTypeRaw : 'EMPLOYEE';
+
+	const costModeRaw = getStr('cost_mode') || 'LOCAL_PAYROLL';
+	const costMode = VALID_COST_MODES.has(costModeRaw) ? costModeRaw : 'LOCAL_PAYROLL';
+
+	const homeBandRaw = getStr('home_band') || null;
+	const homeBand = homeBandRaw && VALID_BANDS.has(homeBandRaw) ? homeBandRaw : null;
+
+	const contractEndDate = colMap.has('contract_end_date')
+		? parseDateCell(getCell('contract_end_date'))
+		: null;
+
 	if (errors.length > 0) {
 		return { employee: null, errors };
 	}
@@ -264,9 +317,103 @@ function validateRow(
 			augmentationEffectiveDate: augDateRaw,
 			ajeerAnnualLevy,
 			ajeerMonthlyFee,
+			recordType,
+			costMode,
+			homeBand,
+			contractEndDate,
 		},
 		errors,
 	};
+}
+
+// ── Discipline Alias Resolution (AC-05) ─────────────────────────────────────
+
+/**
+ * Loads all discipline aliases into a case-insensitive lookup map.
+ * Key: lowercase alias -> disciplineId
+ */
+async function loadDisciplineAliasMap(): Promise<Map<string, number>> {
+	const aliases = await prisma.disciplineAlias.findMany({
+		select: { alias: true, disciplineId: true },
+	});
+	const map = new Map<string, number>();
+	for (const a of aliases) {
+		map.set(a.alias.toLowerCase(), a.disciplineId);
+	}
+	return map;
+}
+
+/**
+ * Resolves disciplineId from functionRole via DisciplineAlias lookup.
+ * Case-insensitive match on the functionRole string.
+ */
+function resolveDiscipline(functionRole: string, aliasMap: Map<string, number>): number | null {
+	return aliasMap.get(functionRole.toLowerCase()) ?? null;
+}
+
+// ── Service Profile Heuristic Resolution (AC-06) ────────────────────────────
+
+/**
+ * Loads service profiles into a code -> id map.
+ */
+async function loadServiceProfileMap(): Promise<Map<string, number>> {
+	const profiles = await prisma.serviceObligationProfile.findMany({
+		select: { code: true, id: true },
+	});
+	const map = new Map<string, number>();
+	for (const p of profiles) {
+		map.set(p.code, p.id);
+	}
+	return map;
+}
+
+/**
+ * Resolves service profile using ordered heuristics (AC-06):
+ * 1. maternelle/elementaire department -> PE
+ * 2. agrege/agrege role -> AGREGE
+ * 3. EPS/sport role -> EPS
+ * 4. arabe/islamic role -> ARABIC_ISLAMIC
+ * 5. documentaliste role -> DOCUMENTALISTE
+ * 6. isTeaching=true catch-all -> CERTIFIE
+ * 7. isTeaching=false -> null
+ */
+function resolveServiceProfile(
+	emp: ParsedEmployee,
+	profileMap: Map<string, number>
+): number | null {
+	if (!emp.isTeaching) return null;
+
+	const deptLower = emp.department.toLowerCase();
+	const roleLower = emp.functionRole.toLowerCase();
+
+	// (1) maternelle or elementaire department -> PE
+	if (deptLower.includes('maternelle') || deptLower.includes('elementaire')) {
+		return profileMap.get('PE') ?? null;
+	}
+
+	// (2) agrege/agrege role -> AGREGE
+	// Handles both accented and unaccented forms
+	if (roleLower.includes('agrege') || roleLower.includes('agrégé')) {
+		return profileMap.get('AGREGE') ?? null;
+	}
+
+	// (3) EPS/sport role -> EPS
+	if (roleLower.includes('eps') || roleLower.includes('sport')) {
+		return profileMap.get('EPS') ?? null;
+	}
+
+	// (4) arabe/islamic role -> ARABIC_ISLAMIC
+	if (roleLower.includes('arabe') || roleLower.includes('islamic')) {
+		return profileMap.get('ARABIC_ISLAMIC') ?? null;
+	}
+
+	// (5) documentaliste role -> DOCUMENTALISTE
+	if (roleLower.includes('documentaliste')) {
+		return profileMap.get('DOCUMENTALISTE') ?? null;
+	}
+
+	// (6) isTeaching=true catch-all -> CERTIFIE
+	return profileMap.get('CERTIFIE') ?? null;
 }
 
 // ── Duplicate Detection ─────────────────────────────────────────────────────
@@ -288,11 +435,13 @@ function detectDuplicates(employees: ParsedEmployee[]): DuplicateWarning[] {
 
 			if (a.name === b.name) matched.push('name');
 			if (a.department === b.department) matched.push('department');
-			if (a.joiningDate.getTime() === b.joiningDate.getTime()) matched.push('joining_date');
+			if (a.joiningDate.getTime() === b.joiningDate.getTime()) {
+				matched.push('joining_date');
+			}
 
 			if (matched.length >= 2) {
 				warnings.push({
-					row: j + 2, // 1-based, header is row 1
+					row: j + 2,
 					employeeCode: b.employeeCode,
 					matchedFields: matched,
 				});
@@ -306,7 +455,7 @@ function detectDuplicates(employees: ParsedEmployee[]): DuplicateWarning[] {
 // ── Route ───────────────────────────────────────────────────────────────────
 
 export async function employeeImportRoutes(app: FastifyInstance) {
-	await app.register(multipart, { limits: { fileSize: 5_242_880 } }); // 5 MB
+	await app.register(multipart, { limits: { fileSize: 5_242_880 } });
 
 	app.post('/employees/import', {
 		schema: { params: versionIdParams },
@@ -389,9 +538,10 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 
 			for (let r = 2; r <= sheet.rowCount; r++) {
 				const row = sheet.getRow(r);
-				// Skip entirely empty rows
 				const firstCell = cellStr(row.getCell(colMap.get('employee_code')!));
-				if (!firstCell && !cellStr(row.getCell(colMap.get('name')!))) continue;
+				if (!firstCell && !cellStr(row.getCell(colMap.get('name')!))) {
+					continue;
+				}
 
 				const { employee, errors } = validateRow(colMap, row, r);
 				allErrors.push(...errors);
@@ -423,10 +573,44 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 				.filter((e) => existingCodeSet.has(e.employeeCode))
 				.map((e) => e.employeeCode);
 
-			// Detect potential duplicates (fuzzy: 2+ of name/department/joining_date match)
+			// Detect potential duplicates (fuzzy)
 			const duplicateWarnings = detectDuplicates(validEmployees);
 
-			// Validate mode — return preview
+			// AC-05 & AC-06: Resolve discipline + service profile
+			const [aliasMap, profileMap] = await Promise.all([
+				loadDisciplineAliasMap(),
+				loadServiceProfileMap(),
+			]);
+
+			const exceptions: ImportException[] = [];
+			const resolvedFields: ResolvedFields[] = validEmployees.map((emp, idx) => {
+				const disciplineId = resolveDiscipline(emp.functionRole, aliasMap);
+				const serviceProfileId = resolveServiceProfile(emp, profileMap);
+
+				// Log exception for unresolvable discipline (AC-05)
+				if (emp.isTeaching && disciplineId === null) {
+					exceptions.push({
+						row: idx + 2,
+						employeeCode: emp.employeeCode,
+						field: 'disciplineId',
+						message: `Could not resolve discipline for ` + `functionRole "${emp.functionRole}"`,
+					});
+				}
+
+				// Log exception for unresolvable service profile
+				if (emp.isTeaching && serviceProfileId === null) {
+					exceptions.push({
+						row: idx + 2,
+						employeeCode: emp.employeeCode,
+						field: 'serviceProfileId',
+						message: `Could not resolve service profile for ` + `employee "${emp.name}"`,
+					});
+				}
+
+				return { disciplineId, serviceProfileId };
+			});
+
+			// Validate mode -- return preview
 			if (mode === 'validate') {
 				return {
 					totalRows: sheet.rowCount - 1,
@@ -434,21 +618,24 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 					errors: allErrors,
 					conflictingCodes,
 					duplicateWarnings,
-					preview: validEmployees.map((e) => ({
+					exceptions,
+					preview: validEmployees.map((e, i) => ({
 						employee_code: e.employeeCode,
 						name: e.name,
 						department: e.department,
 						status: e.status,
 						base_salary: e.baseSalary,
+						discipline_id: resolvedFields[i]!.disciplineId,
+						service_profile_id: resolvedFields[i]!.serviceProfileId,
 					})),
 				};
 			}
 
-			// Commit mode — persist
+			// Commit mode -- persist
 			if (allErrors.length > 0) {
 				return reply.status(422).send({
 					code: 'VALIDATION_ERRORS',
-					message: `${allErrors.length} validation error(s) must be fixed before committing`,
+					message: `${allErrors.length} validation error(s) ` + `must be fixed before committing`,
 					errors: allErrors,
 				});
 			}
@@ -456,7 +643,7 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 			if (conflictingCodes.length > 0) {
 				return reply.status(409).send({
 					code: 'DUPLICATE_EMPLOYEE_CODES',
-					message: `${conflictingCodes.length} employee code(s) already exist in this version`,
+					message: `${conflictingCodes.length} employee code(s) ` + `already exist in this version`,
 					conflictingCodes,
 				});
 			}
@@ -467,17 +654,26 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 				const txPrisma = tx as typeof prisma;
 				let inserted = 0;
 
-				for (const emp of validEmployees) {
-					// Use raw SQL for pgcrypto encryption of salary fields
+				for (let i = 0; i < validEmployees.length; i++) {
+					const emp = validEmployees[i]!;
+					const resolved = resolvedFields[i]!;
+
 					await txPrisma.$executeRawUnsafe(
 						`INSERT INTO employees (
-							version_id, employee_code, name, function_role, department,
+							version_id, employee_code, name,
+							function_role, department,
 							status, joining_date, payment_method,
-							is_saudi, is_ajeer, is_teaching, hourly_percentage,
-							base_salary, housing_allowance, transport_allowance,
-							responsibility_premium, hsa_amount, augmentation,
+							is_saudi, is_ajeer, is_teaching,
+							hourly_percentage,
+							base_salary, housing_allowance,
+							transport_allowance,
+							responsibility_premium,
+							hsa_amount, augmentation,
 							augmentation_effective_date,
 							ajeer_annual_levy, ajeer_monthly_fee,
+							record_type, cost_mode, discipline_id,
+							service_profile_id, home_band,
+							contract_end_date,
 							created_by, created_at, updated_at
 						) VALUES (
 							$1, $2, $3, $4, $5,
@@ -491,7 +687,10 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 							pgp_sym_encrypt($19, $14),
 							$20,
 							$21, $22,
-							$23, NOW(), NOW()
+							$23, $24, $25,
+							$26, $27,
+							$28,
+							$29, NOW(), NOW()
 						)`,
 						versionId,
 						emp.employeeCode,
@@ -515,6 +714,12 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 						emp.augmentationEffectiveDate,
 						new Decimal(emp.ajeerAnnualLevy).toFixed(4),
 						new Decimal(emp.ajeerMonthlyFee).toFixed(4),
+						emp.recordType,
+						emp.costMode,
+						resolved.disciplineId,
+						resolved.serviceProfileId,
+						emp.homeBand,
+						emp.contractEndDate,
 						request.user.id
 					);
 					inserted++;
@@ -544,6 +749,7 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 						newValues: {
 							employeesImported: inserted,
 							duplicateWarnings: duplicateWarnings.length,
+							exceptions: exceptions.length,
 						} as unknown as Prisma.InputJsonValue,
 					},
 				});
@@ -554,6 +760,7 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 			return reply.status(201).send({
 				imported: result.inserted,
 				duplicateWarnings,
+				exceptions,
 			});
 		},
 	});

@@ -46,6 +46,9 @@ vi.mock('../../lib/prisma.js', () => {
 		teachingRequirementSource: {
 			findMany: vi.fn(),
 		},
+		staffingAssignment: {
+			findMany: vi.fn().mockResolvedValue([]),
+		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
@@ -706,7 +709,8 @@ describe('GET /teaching-requirements', () => {
 		];
 		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue(mockLines);
 
-		const token = await makeToken('Viewer');
+		// Use Admin role to get cost fields in response
+		const token = await makeToken('Admin');
 		const res = await app.inject({
 			method: 'GET',
 			url: `${URL_PREFIX}/teaching-requirements`,
@@ -719,6 +723,57 @@ describe('GET /teaching-requirements', () => {
 		expect(body.lines[0].band).toBe('ELEMENTAIRE');
 		expect(body.lines[0].requiredFtePlanned).toBe('1.5000');
 		expect(body.lines[0].coverageStatus).toBe('PARTIAL');
+		expect(body.lines[0].directCostAnnual).toBe('120000.0000');
+		expect(body.lines[0].hsaCostAnnual).toBe('5000.0000');
+		expect(body.lines[0].assignedEmployees).toEqual([]);
+	});
+
+	it('strips cost fields for Viewer role (no salary:view)', async () => {
+		const mockLines = [
+			{
+				id: 1,
+				versionId: 1,
+				band: 'ELEMENTAIRE',
+				disciplineCode: 'MATH',
+				lineLabel: 'Mathematiques - Structural',
+				lineType: 'STRUCTURAL',
+				driverType: 'HOURS',
+				serviceProfileCode: 'ENS1D',
+				totalDriverUnits: 6,
+				totalWeeklyHours: { toString: () => '30.0000' },
+				baseOrs: { toString: () => '24.00' },
+				effectiveOrs: { toString: () => '24.00' },
+				requiredFteRaw: { toString: () => '1.2500' },
+				requiredFtePlanned: { toString: () => '1.5000' },
+				recommendedPositions: 2,
+				coveredFte: { toString: () => '1.0000' },
+				gapFte: { toString: () => '0.5000' },
+				coverageStatus: 'PARTIAL',
+				assignedStaffCount: 1,
+				vacancyCount: 1,
+				directCostAnnual: { toString: () => '120000.0000' },
+				hsaCostAnnual: { toString: () => '5000.0000' },
+				calculatedAt: '2026-03-17T10:00:00.000Z',
+			},
+		];
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue(mockLines);
+
+		const token = await makeToken('Viewer');
+		const res = await app.inject({
+			method: 'GET',
+			url: `${URL_PREFIX}/teaching-requirements`,
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.lines).toHaveLength(1);
+		// Viewer lacks salary:view — cost fields should be null
+		expect(body.lines[0].directCostAnnual).toBeNull();
+		expect(body.lines[0].hsaCostAnnual).toBeNull();
+		// Non-cost fields should still be present
+		expect(body.lines[0].band).toBe('ELEMENTAIRE');
+		expect(body.lines[0].requiredFtePlanned).toBe('1.5000');
 	});
 
 	it('returns 409 when STAFFING is stale', async () => {

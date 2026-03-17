@@ -6,18 +6,19 @@
 
 ## Related Specifications
 
-| Epic                            | Spec File                                           |
-| ------------------------------- | --------------------------------------------------- |
-| Epic 1 — Enrollment & Capacity  | `docs/specs/epic-1/enrollment-capacity.md`          |
-| Epic 2 — Revenue                | `docs/specs/epic-2/revenue.md`                      |
-| Epic 3 — DHG Staffing           | `docs/specs/epic-3/staffing-dhg.md`                 |
-| Epic 4 — Staff Costs            | `docs/specs/epic-4/staff-costs.md`                  |
-| Epic 7 — Master Data Management | `docs/specs/epic-7/master-data-management.md`       |
-| Epic 10 — Version Management    | `docs/specs/epic-10/version-management.md`          |
-| Epic 11 — Authentication & RBAC | `docs/specs/epic-11/authentication-rbac.md`         |
-| Epic 15 — UI/UX Clean-Slate     | `docs/specs/epic-15/ui-ux-remediation.md`           |
-| Epic 12 — Data Migration        | `docs/specs/epic-12/data-migration.md`              |
-| PR #184 — Enrollment Redesign   | `docs/plans/2026-03-11-enrollment-page-redesign.md` |
+| Epic                                      | Spec File                                             |
+| ----------------------------------------- | ----------------------------------------------------- |
+| Epic 1 — Enrollment & Capacity            | `docs/specs/epic-1/enrollment-capacity.md`            |
+| Epic 2 — Revenue                          | `docs/specs/epic-2/revenue.md`                        |
+| Epic 3 — DHG Staffing                     | `docs/specs/epic-3/staffing-dhg.md`                   |
+| Epic 4 — Staff Costs                      | `docs/specs/epic-4/staff-costs.md`                    |
+| Epic 7 — Master Data Management           | `docs/specs/epic-7/master-data-management.md`         |
+| Epic 10 — Version Management              | `docs/specs/epic-10/version-management.md`            |
+| Epic 11 — Authentication & RBAC           | `docs/specs/epic-11/authentication-rbac.md`           |
+| Epic 15 — UI/UX Clean-Slate               | `docs/specs/epic-15/ui-ux-remediation.md`             |
+| Epic 12 — Data Migration                  | `docs/specs/epic-12/data-migration.md`                |
+| PR #184 — Enrollment Redesign             | `docs/plans/2026-03-11-enrollment-page-redesign.md`   |
+| Epic 19 — Staffing Coverage & Cost Engine | `docs/specs/epic-19/staffing-coverage-cost-engine.md` |
 
 This appendix maps every functional requirement from PRD v2.0 to the TDD design sections, responsible components, implementing API endpoints, relevant database tables, and test types. The matrix ensures complete traceability from business requirements through technical design to verification.
 
@@ -488,31 +489,63 @@ This section maps each Epic 12 story to its implementation files, test files, an
 
 ---
 
+## Staffing Coverage & Cost Engine (Epic 19) -- Implementation Traceability
+
+This section maps each Epic 19 acceptance criterion to its implementation files, test files, and verification status. Epic 19 delivers the staffing assignment model, coverage engine, HSA engine, cost engine modifications, category cost engine enhancements, 10-step calculation orchestration pipeline, employee endpoint extensions (VACANCY, alias resolution), auto-suggest assignments, and version clone for staffing tables. All 7 stories implemented in PR #233 under `apps/api/src/`.
+
+| AC-ID | Story # | Description                                                                                                             | Spec File                        | Implementation File(s)                                                                                                            | Test File                                                                                         | Status |
+| ----- | ------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------ |
+| AC-01 | #216    | StaffingAssignment Prisma model with unique constraint and indexes                                                      | staffing-coverage-cost-engine.md | apps/api/prisma/migrations/20260317100000_add_staffing_assignments/migration.sql                                                  | apps/api/src/routes/staffing/assignments.test.ts                                                  | PASS   |
+| AC-02 | #216    | POST /staffing-assignments with FK validation, isTeaching check, FTE sum guard, stale marking                           | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/assignments.ts                                                                                       | apps/api/src/routes/staffing/assignments.test.ts                                                  | PASS   |
+| AC-03 | #216    | PUT and DELETE /staffing-assignments with validations and stale marking                                                 | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/assignments.ts                                                                                       | apps/api/src/routes/staffing/assignments.test.ts                                                  | PASS   |
+| AC-04 | #218    | Coverage engine joins assignments to requirement lines by (band, disciplineCode), computes coveredFte                   | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/coverage-engine.ts                                                                                 | apps/api/src/services/staffing/coverage-engine.test.ts                                            | PASS   |
+| AC-05 | #218    | Coverage status determination: UNCOVERED, DEFICIT, SURPLUS, COVERED based on gapFte thresholds                          | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/coverage-engine.ts                                                                                 | apps/api/src/services/staffing/coverage-engine.test.ts                                            | PASS   |
+| AC-06 | #218    | Coverage warnings: OVER_ASSIGNED, ORPHANED_ASSIGNMENT, DEPARTED_WITH_ASSIGNMENTS, UNASSIGNED_TEACHER, RECHARGE_COVERAGE | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/coverage-engine.ts                                                                                 | apps/api/src/services/staffing/coverage-engine.test.ts                                            | PASS   |
+| AC-07 | #218    | AEFE_RECHARGE employees count toward coveredFte; only departed excluded                                                 | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/coverage-engine.ts                                                                                 | apps/api/src/services/staffing/coverage-engine.test.ts                                            | PASS   |
+| AC-08 | #220    | HSA engine computes per-teacher monthly and annual cost from configurable rates                                         | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/hsa-engine.ts                                                                                      | apps/api/src/services/staffing/hsa-engine.test.ts                                                 | PASS   |
+| AC-09 | #220    | HSA eligibility: hsaEligible AND costMode LOCAL_PAYROLL; computed hsaCostPerMonth written to hsaAmount                  | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/hsa-engine.ts, apps/api/src/routes/staffing/calculate.ts                                           | apps/api/src/services/staffing/hsa-engine.test.ts, apps/api/src/routes/staffing/calculate.test.ts | PASS   |
+| AC-10 | #220    | AEFE_RECHARGE employees: individual cost skipped, zero-cost monthly rows returned                                       | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/cost-engine.ts                                                                                     | apps/api/src/services/staffing/cost-engine.test.ts                                                | PASS   |
+| AC-11 | #220    | NO_LOCAL_COST employees: skipped entirely, no output rows                                                               | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/cost-engine.ts                                                                                     | apps/api/src/services/staffing/cost-engine.test.ts                                                | PASS   |
+| AC-12 | #220    | LOCAL_PAYROLL employees: all existing cost behavior preserved (GOSI, Ajeer, EoS, augmentation, HSA)                     | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/cost-engine.ts                                                                                     | apps/api/src/services/staffing/cost-engine.test.ts                                                | PASS   |
+| AC-13 | #220    | Category cost engine: 3 modes (FLAT_ANNUAL, PERCENT_OF_PAYROLL, AMOUNT_PER_FTE)                                         | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/category-cost-engine.ts                                                                            | apps/api/src/services/staffing/category-cost-engine.test.ts                                       | PASS   |
+| AC-14 | #220    | 5 categories x 12 months = 60 CategoryMonthlyCost rows with calculationMode persisted                                   | staffing-coverage-cost-engine.md | apps/api/src/services/staffing/category-cost-engine.ts                                                                            | apps/api/src/services/staffing/category-cost-engine.test.ts                                       | PASS   |
+| AC-15 | #223    | 10-step atomic staffing calculation pipeline in single Prisma $transaction                                              | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/calculate.ts                                                                                         | apps/api/src/routes/staffing/calculate.test.ts                                                    | PASS   |
+| AC-16 | #223    | Pipeline returns summary: totalFteNeeded, totalFteCovered, totalGap, totalCost, warningCount, duration                  | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/calculate.ts                                                                                         | apps/api/src/routes/staffing/calculate.test.ts                                                    | PASS   |
+| AC-17 | #225    | Employee GET/POST/PUT include 6 new fields with isTeaching validation constraints                                       | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/employees.ts                                                                                         | apps/api/src/routes/staffing/employees.test.ts                                                    | PASS   |
+| AC-18 | #225    | VACANCY recordType with auto-generated VAC-NNN codes and nullable salary fields                                         | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/employees.ts                                                                                         | apps/api/src/routes/staffing/employees.test.ts                                                    | PASS   |
+| AC-19 | #225    | Import discipline alias resolution via DisciplineAlias and service profile heuristic assignment                         | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/import.ts                                                                                            | apps/api/src/routes/staffing/import.test.ts                                                       | PASS   |
+| AC-20 | #227    | Auto-suggest assignments: discipline + band matching with High/Medium confidence                                        | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/assignments.ts                                                                                       | apps/api/src/routes/staffing/assignments.test.ts                                                  | PASS   |
+| AC-21 | #229    | Version clone copies staffing tables with employee ID remapping; STAFFING marked stale                                  | staffing-coverage-cost-engine.md | apps/api/src/routes/versions.ts                                                                                                   | apps/api/src/routes/versions-clone.test.ts                                                        | PASS   |
+| AC-22 | #214    | Stale module propagation: mutations add STAFFING; pipeline removes STAFFING, adds PNL                                   | staffing-coverage-cost-engine.md | apps/api/src/routes/staffing/assignments.ts, apps/api/src/routes/staffing/employees.ts, apps/api/src/routes/staffing/calculate.ts | apps/api/src/routes/staffing/assignments.test.ts, apps/api/src/routes/staffing/calculate.test.ts  | PASS   |
+
+---
+
 ## Coverage Summary
 
-| Domain                           | MUST       | SHOULD | COULD    | Total              |
-| -------------------------------- | ---------- | ------ | -------- | ------------------ |
-| Version Management               | 6          | 0      | 0        | 6                  |
-| Actuals Management               | 3          | 1      | 0        | 4                  |
-| Enrollment & Historical Data     | 9          | 0      | 4        | 13                 |
-| Capacity Planning                | 6          | 1      | 0        | 7                  |
-| Revenue Module                   | 21         | 0      | 0        | 21                 |
-| DHG Staffing Module              | 15         | 3      | 3        | 21                 |
-| Staff Costs Module               | 19         | 4      | 2        | 25                 |
-| P&L and Financial Reporting      | 18         | 0      | 0        | 18                 |
-| Scenario Modeling                | 0          | 6      | 1        | 7                  |
-| Master Data Management           | 8          | 0      | 0        | 8                  |
-| Audit Trail                      | 3          | 0      | 0        | 3                  |
-| Dashboard                        | 0          | 5      | 0        | 5                  |
-| Input Management                 | 3          | 0      | 0        | 3                  |
-| Infrastructure & CI/CD (Epic 13) | 10 stories | 18 ACs | All PASS | 18                 |
-| Authentication & RBAC (Epic 11)  | 10 stories | 19 ACs | All PASS | 19                 |
-| Master Data Management (Epic 7)  | 12 stories | 20 ACs | All PASS | 20                 |
-| Version Management (Epic 10)     | 13 stories | 20 ACs | All PASS | 20                 |
-| Enrollment & Capacity (Epic 1)   | 13 stories | 18 ACs | All PASS | 18                 |
-| Workspace Refactor (PR #137)     | 1 PR       | 11 ACs | All PASS | 11                 |
-| Data Migration (Epic 12)         | 11 stories | 15 ACs | All PASS | 15                 |
-| Enrollment Redesign (PR #184)    | 1 PR       | 14 ACs | All PASS | 14                 |
-| **Total**                        | **111**    | **20** | **10**   | **141 + 135 impl** |
+| Domain                             | MUST       | SHOULD | COULD    | Total              |
+| ---------------------------------- | ---------- | ------ | -------- | ------------------ |
+| Version Management                 | 6          | 0      | 0        | 6                  |
+| Actuals Management                 | 3          | 1      | 0        | 4                  |
+| Enrollment & Historical Data       | 9          | 0      | 4        | 13                 |
+| Capacity Planning                  | 6          | 1      | 0        | 7                  |
+| Revenue Module                     | 21         | 0      | 0        | 21                 |
+| DHG Staffing Module                | 15         | 3      | 3        | 21                 |
+| Staff Costs Module                 | 19         | 4      | 2        | 25                 |
+| P&L and Financial Reporting        | 18         | 0      | 0        | 18                 |
+| Scenario Modeling                  | 0          | 6      | 1        | 7                  |
+| Master Data Management             | 8          | 0      | 0        | 8                  |
+| Audit Trail                        | 3          | 0      | 0        | 3                  |
+| Dashboard                          | 0          | 5      | 0        | 5                  |
+| Input Management                   | 3          | 0      | 0        | 3                  |
+| Infrastructure & CI/CD (Epic 13)   | 10 stories | 18 ACs | All PASS | 18                 |
+| Authentication & RBAC (Epic 11)    | 10 stories | 19 ACs | All PASS | 19                 |
+| Master Data Management (Epic 7)    | 12 stories | 20 ACs | All PASS | 20                 |
+| Version Management (Epic 10)       | 13 stories | 20 ACs | All PASS | 20                 |
+| Enrollment & Capacity (Epic 1)     | 13 stories | 18 ACs | All PASS | 18                 |
+| Workspace Refactor (PR #137)       | 1 PR       | 11 ACs | All PASS | 11                 |
+| Data Migration (Epic 12)           | 11 stories | 15 ACs | All PASS | 15                 |
+| Enrollment Redesign (PR #184)      | 1 PR       | 14 ACs | All PASS | 14                 |
+| Staffing Coverage & Cost (Epic 19) | 7 stories  | 22 ACs | All PASS | 22                 |
+| **Total**                          | **111**    | **20** | **10**   | **141 + 157 impl** |
 
-All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), Epic 1 (Enrollment & Capacity), and Epic 12 (Data Migration) implementation traceability sections confirm all acceptance criteria passing. PR #137 (Workspace Refactor) adds 11 additional acceptance criteria implementing FR-ENR-010 (cohort progression) and FR-ENR-011 (lateral entry weights) alongside the Continuous Planning Board UI pattern (ADR-024). Epic 12 adds 15 acceptance criteria covering the CLI-only data migration pipeline (ADR-026). PR #184 (Enrollment Planning Workspace Redesign) adds 14 acceptance criteria introducing version-scoped planning rules (ADR-027), PS grade default AY2 intake, last-calculated metadata, exception filtering, CSV export, and the fixed-viewport master grid replacing the continuous planning board for enrollment.
+All 111 MUST requirements are addressed in the MVP scope. All 20 SHOULD requirements are addressed in the Target scope. All 10 COULD requirements are addressed in the Stretch scope. Every functional requirement has at least one test type assigned. Epic 13 (Infrastructure), Epic 11 (Authentication & RBAC), Epic 7 (Master Data Management), Epic 10 (Version Management), Epic 1 (Enrollment & Capacity), and Epic 12 (Data Migration) implementation traceability sections confirm all acceptance criteria passing. PR #137 (Workspace Refactor) adds 11 additional acceptance criteria implementing FR-ENR-010 (cohort progression) and FR-ENR-011 (lateral entry weights) alongside the Continuous Planning Board UI pattern (ADR-024). Epic 12 adds 15 acceptance criteria covering the CLI-only data migration pipeline (ADR-026). PR #184 (Enrollment Planning Workspace Redesign) adds 14 acceptance criteria introducing version-scoped planning rules (ADR-027), PS grade default AY2 intake, last-calculated metadata, exception filtering, CSV export, and the fixed-viewport master grid replacing the continuous planning board for enrollment. Epic 19 (Staffing Coverage & Cost Engine) adds 22 acceptance criteria covering the StaffingAssignment model, coverage engine, HSA engine, cost mode support, category cost engine enhancements, 10-step atomic calculation pipeline (ADR-030), employee extensions (VACANCY, alias resolution), auto-suggest assignments, and version clone for staffing tables.

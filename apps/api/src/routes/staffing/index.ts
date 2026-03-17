@@ -4,6 +4,7 @@ import { employeeImportRoutes } from './import.js';
 import { dhgGrilleRoutes } from './dhg-grille.js';
 import { staffingResultRoutes } from './results.js';
 import { staffingSettingsRoutes } from './settings.js';
+import { staffingAssignmentRoutes } from './assignments.js';
 
 export async function staffingRoutes(app: FastifyInstance) {
 	await app.register(employeeRoutes);
@@ -11,6 +12,7 @@ export async function staffingRoutes(app: FastifyInstance) {
 	await app.register(dhgGrilleRoutes);
 	await app.register(staffingResultRoutes);
 	await app.register(staffingSettingsRoutes);
+	await app.register(staffingAssignmentRoutes);
 }
 
 export { staffingCalculateRoutes } from './calculate.js';
