@@ -32,7 +32,7 @@ export default tseslint.config(
 		},
 	},
 	{
-		files: ['**/prisma/seed.ts', '**/prisma/seed.*.ts'],
+		files: ['**/prisma/seed.ts', '**/prisma/seed.*.ts', '**/prisma/seeds/**/*.ts'],
 		rules: {
 			'no-console': 'off',
 		},
