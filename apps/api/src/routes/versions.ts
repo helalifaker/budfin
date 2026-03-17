@@ -1008,7 +1008,7 @@ export async function versionRoutes(app: FastifyInstance) {
 							sourceVersionId: id,
 							createdById: request.user.id,
 							modificationCount: 0,
-							staleModules: ['ENROLLMENT'],
+							staleModules: ['ENROLLMENT', 'STAFFING'],
 							status: 'Draft',
 							dataSource: source.dataSource,
 							rolloverThreshold: source.rolloverThreshold,
@@ -1145,6 +1145,173 @@ export async function versionRoutes(app: FastifyInstance) {
 							})),
 						});
 					}
+
+					// ── Staffing tables clone (Story 19-7) ────────────────
+					const txPrisma = tx as typeof prisma;
+
+					// Step 1: Copy employees via raw SQL to preserve
+					// encrypted salary bytes without needing the key
+					const employeeIdMap = new Map<number, number>();
+					const clonedEmployees = await txPrisma.$queryRaw<{ old_id: number; new_id: number }[]>`
+						INSERT INTO employees (
+							version_id, employee_code, name,
+							function_role, department,
+							status, joining_date, payment_method,
+							is_saudi, is_ajeer, is_teaching,
+							hourly_percentage,
+							base_salary, housing_allowance,
+							transport_allowance,
+							responsibility_premium,
+							hsa_amount, augmentation,
+							augmentation_effective_date,
+							ajeer_annual_levy, ajeer_monthly_fee,
+							record_type, cost_mode, discipline_id,
+							service_profile_id, home_band,
+							contract_end_date,
+							created_by, created_at, updated_at
+						)
+						SELECT
+							${newVersion.id}, employee_code, name,
+							function_role, department,
+							status, joining_date, payment_method,
+							is_saudi, is_ajeer, is_teaching,
+							hourly_percentage,
+							base_salary, housing_allowance,
+							transport_allowance,
+							responsibility_premium,
+							hsa_amount, augmentation,
+							augmentation_effective_date,
+							ajeer_annual_levy, ajeer_monthly_fee,
+							record_type, cost_mode, discipline_id,
+							service_profile_id, home_band,
+							contract_end_date,
+							${request.user.id}, NOW(), NOW()
+						FROM employees
+						WHERE version_id = ${id}
+						ORDER BY id
+						RETURNING id AS new_id, (
+							SELECT e2.id FROM employees e2
+							WHERE e2.version_id = ${id}
+								AND e2.employee_code = employees.employee_code
+							LIMIT 1
+						) AS old_id
+					`;
+					for (const row of clonedEmployees) {
+						employeeIdMap.set(row.old_id, row.new_id);
+					}
+
+					// Step 2: Copy VersionStaffingSettings (AC-01)
+					const srcSettings = await txPrisma.versionStaffingSettings.findUnique({
+						where: { versionId: id },
+					});
+					if (srcSettings) {
+						await txPrisma.versionStaffingSettings.create({
+							data: {
+								versionId: newVersion.id,
+								hsaTargetHours: srcSettings.hsaTargetHours,
+								hsaFirstHourRate: srcSettings.hsaFirstHourRate,
+								hsaAdditionalHourRate: srcSettings.hsaAdditionalHourRate,
+								hsaMonths: srcSettings.hsaMonths,
+								academicWeeks: srcSettings.academicWeeks,
+								ajeerAnnualLevy: srcSettings.ajeerAnnualLevy,
+								ajeerMonthlyFee: srcSettings.ajeerMonthlyFee,
+								reconciliationBaseline: srcSettings.reconciliationBaseline ?? Prisma.JsonNull,
+							},
+						});
+					}
+
+					// Step 3: Copy VersionServiceProfileOverride (AC-02)
+					const profileOverrides = await txPrisma.versionServiceProfileOverride.findMany({
+						where: { versionId: id },
+					});
+					if (profileOverrides.length > 0) {
+						await txPrisma.versionServiceProfileOverride.createMany({
+							data: profileOverrides.map((po) => ({
+								versionId: newVersion.id,
+								serviceProfileId: po.serviceProfileId,
+								weeklyServiceHours: po.weeklyServiceHours,
+								hsaEligible: po.hsaEligible,
+							})),
+						});
+					}
+
+					// Step 4: Copy VersionStaffingCostAssumption (AC-03)
+					const costAssumptions = await txPrisma.versionStaffingCostAssumption.findMany({
+						where: { versionId: id },
+					});
+					if (costAssumptions.length > 0) {
+						await txPrisma.versionStaffingCostAssumption.createMany({
+							data: costAssumptions.map((ca) => ({
+								versionId: newVersion.id,
+								category: ca.category,
+								calculationMode: ca.calculationMode,
+								value: ca.value,
+							})),
+						});
+					}
+
+					// Step 5: Copy VersionLyceeGroupAssumption (AC-04)
+					const lyceeAssumptions = await txPrisma.versionLyceeGroupAssumption.findMany({
+						where: { versionId: id },
+					});
+					if (lyceeAssumptions.length > 0) {
+						await txPrisma.versionLyceeGroupAssumption.createMany({
+							data: lyceeAssumptions.map((la) => ({
+								versionId: newVersion.id,
+								gradeLevel: la.gradeLevel,
+								disciplineId: la.disciplineId,
+								groupCount: la.groupCount,
+								hoursPerGroup: la.hoursPerGroup,
+							})),
+						});
+					}
+
+					// Step 6: Copy StaffingAssignment with employee ID
+					// remap (AC-05)
+					const srcAssignments = await txPrisma.staffingAssignment.findMany({
+						where: { versionId: id },
+					});
+					if (srcAssignments.length > 0) {
+						const assignmentData = srcAssignments
+							.filter((a) => employeeIdMap.has(a.employeeId))
+							.map((a) => ({
+								versionId: newVersion.id,
+								employeeId: employeeIdMap.get(a.employeeId)!,
+								band: a.band,
+								disciplineId: a.disciplineId,
+								hoursPerWeek: a.hoursPerWeek,
+								fteShare: a.fteShare,
+								source: a.source,
+								note: a.note,
+							}));
+						if (assignmentData.length > 0) {
+							await txPrisma.staffingAssignment.createMany({
+								data: assignmentData,
+							});
+						}
+					}
+
+					// Step 7: Copy DemandOverride (AC-06)
+					const demandOverrides = await txPrisma.demandOverride.findMany({
+						where: { versionId: id },
+					});
+					if (demandOverrides.length > 0) {
+						await txPrisma.demandOverride.createMany({
+							data: demandOverrides.map((d) => ({
+								versionId: newVersion.id,
+								band: d.band,
+								disciplineId: d.disciplineId,
+								lineType: d.lineType,
+								overrideFte: d.overrideFte,
+								reasonCode: d.reasonCode,
+								note: d.note,
+							})),
+						});
+					}
+
+					// AC-08: TeachingRequirementSource and
+					// TeachingRequirementLine are NOT copied
+					// (derived outputs — regenerated on calculate)
 
 					await (tx as typeof prisma).auditEntry.create({
 						data: {
