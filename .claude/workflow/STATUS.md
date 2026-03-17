@@ -1,7 +1,7 @@
 # BudFin — Current Status
 
 **Phase**: 7 — REVIEW
-**Current Epic**: Epic 19 — Staffing Coverage & Cost Engine (#214)
+**Current Epic**: Epic 20 — Staffing Frontend Redesign (#221)
 **Last updated**: 2026-03-17
 
 ## Phase History
@@ -91,8 +91,8 @@
 | 16 | Revenue Workspace Redesign | DONE | All 8 stories complete (8/8), merged PR #195 — 2026-03-14 |
 | 17 | Revenue Page — Enrollment Parity & Fee Grid Redesign | DONE | All stories complete, merged PR #209 — 2026-03-17 |
 | 18 | DHG & Staffing Foundations | DONE | All 6 stories complete (6/6), merged PR #232 — 2026-03-17 |
-| 19 | Staffing Coverage & Cost Engine | 7 | All 7 stories implemented, PR #233 open (#214) |
-| 20 | Staffing Frontend Redesign | 7 | All 6 stories complete (6/6), PR #239 open (#221) |
+| 19 | Staffing Coverage & Cost Engine | DONE | All 7 stories complete (7/7), merged PR #233 — 2026-03-17 |
+| 20 | Staffing Frontend Redesign | DONE | All 6 stories complete (6/6), merged PRs #234-#239 — 2026-03-17 |
 
 ## Update Instructions
 

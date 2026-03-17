@@ -1,3 +1,5 @@
+import Decimal from 'decimal.js';
+
 // ── Staffing Workspace Types & Utilities ────────────────────────────────────
 
 export type WorkspaceMode = 'teaching' | 'support';
@@ -234,16 +236,16 @@ export function buildSupportGridRows(
 
 	const groups: SupportDepartmentGroup[] = [];
 	for (const [department, emps] of deptMap) {
-		let subtotal = 0;
+		let subtotal = new Decimal(0);
 		for (const emp of emps) {
-			subtotal += parseFloat(emp.annualCost ?? '0');
+			subtotal = subtotal.plus(new Decimal(emp.annualCost ?? '0'));
 		}
 
 		groups.push({
 			department,
 			employees: emps,
 			employeeCount: emps.length,
-			subtotalAnnualCost: String(subtotal),
+			subtotalAnnualCost: subtotal.toFixed(4),
 		});
 	}
 

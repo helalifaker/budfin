@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useRef } from 'react';
+import Decimal from 'decimal.js';
 import { cn } from '../../lib/cn';
 import { formatMoney } from '../../lib/format-money';
 import { buildSupportGridRows } from '../../lib/staffing-workspace';
@@ -65,11 +66,11 @@ export function SupportAdminGrid({
 	const groups = useMemo(() => buildSupportGridRows(employees), [employees]);
 
 	const grandTotalAnnual = useMemo(() => {
-		let total = 0;
+		let total = new Decimal(0);
 		for (const g of groups) {
-			total += parseFloat(g.subtotalAnnualCost);
+			total = total.plus(new Decimal(g.subtotalAnnualCost));
 		}
-		return total;
+		return total.toNumber();
 	}, [groups]);
 
 	const announce = useCallback((message: string) => {

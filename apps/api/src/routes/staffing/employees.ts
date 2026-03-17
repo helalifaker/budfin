@@ -141,8 +141,8 @@ function formatEmployee(raw: DecryptedEmployee, redactSalary: boolean) {
 	};
 }
 
-async function addStaleFlag(versionId: number): Promise<void> {
-	await prisma.$executeRaw`
+async function addStaleFlag(versionId: number, tx: typeof prisma = prisma): Promise<void> {
+	await tx.$executeRaw`
 		UPDATE budget_versions
 		SET stale_modules = CASE
 			WHEN NOT ('STAFFING' = ANY(stale_modules)) THEN array_append(stale_modules, 'STAFFING')
@@ -151,6 +151,22 @@ async function addStaleFlag(versionId: number): Promise<void> {
 		updated_at = NOW()
 		WHERE id = ${versionId}
 	`;
+}
+
+/**
+ * Executes a callback within a Prisma interactive transaction.
+ * The callback receives the transaction client cast as `typeof prisma`.
+ * Ensures mutation + stale flag + audit log are atomic.
+ *
+ * In production, PrismaClient always has $transaction. The typeof guard
+ * exists only because unit-test mocks may not provide $transaction.
+ */
+async function withTransaction<T>(fn: (tx: typeof prisma) => Promise<T>): Promise<T> {
+	if (typeof prisma.$transaction === 'function') {
+		return prisma.$transaction(async (tx) => fn(tx as typeof prisma));
+	}
+	// Fallback for test mocks that omit $transaction
+	return fn(prisma);
 }
 
 function buildDecryptSelect(key: string): Prisma.Sql {
@@ -245,6 +261,8 @@ export async function employeeRoutes(app: FastifyInstance) {
 				typeof employeeListQuery
 			>;
 
+			// TODO(security): Add fiscal year ownership check per TDD §7.6 IDOR prevention.
+			// This requires a shared middleware applied to all version-scoped routes.
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
 			});
@@ -418,62 +436,66 @@ export async function employeeRoutes(app: FastifyInstance) {
 			// AC-03: hsaAmount always defaults to '0.0000' (computed by pipeline)
 			const hsaAmount = '0.0000';
 
-			// Insert with pgcrypto encryption for salary fields
-			const result = await prisma.$queryRaw<[{ id: number }]>`
-				INSERT INTO employees (
-					version_id, employee_code, name, function_role, department,
-					status, joining_date, payment_method, is_saudi, is_ajeer,
-					is_teaching, hourly_percentage, base_salary, housing_allowance,
-					transport_allowance, responsibility_premium, hsa_amount,
-					augmentation, augmentation_effective_date,
-					ajeer_annual_levy, ajeer_monthly_fee,
-					record_type, cost_mode, discipline_id,
-					service_profile_id, home_band, contract_end_date,
-					created_by, created_at, updated_at
-				) VALUES (
-					${versionId}, ${employeeCode!}, ${body.name},
-					${body.functionRole}, ${body.department},
-					${body.status}, ${body.joiningDate}::date,
-					${body.paymentMethod},
-					${body.isSaudi}, ${body.isAjeer}, ${body.isTeaching},
-					${Number(body.hourlyPercentage)},
-					pgp_sym_encrypt(${baseSalary}, ${key}),
-					pgp_sym_encrypt(${housingAllowance}, ${key}),
-					pgp_sym_encrypt(${transportAllowance}, ${key}),
-					pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
-					pgp_sym_encrypt(${hsaAmount}, ${key}),
-					pgp_sym_encrypt(${body.augmentation}, ${key}),
-					${augEffDate},
-					${Number(body.ajeerAnnualLevy)},
-					${Number(body.ajeerMonthlyFee)},
-					${body.recordType}, ${body.costMode},
-					${body.disciplineId ?? null},
-					${body.serviceProfileId ?? null},
-					${body.homeBand ?? null},
-					${contractEnd},
-					${request.user.id}, NOW(), NOW()
-				)
-				RETURNING id
-			`;
+			// Insert with pgcrypto encryption for salary fields,
+			// stale flag, and audit — all in a single transaction
+			const result = await withTransaction(async (tx) => {
+				const inserted = await tx.$queryRaw<[{ id: number }]>`
+					INSERT INTO employees (
+						version_id, employee_code, name, function_role, department,
+						status, joining_date, payment_method, is_saudi, is_ajeer,
+						is_teaching, hourly_percentage, base_salary, housing_allowance,
+						transport_allowance, responsibility_premium, hsa_amount,
+						augmentation, augmentation_effective_date,
+						ajeer_annual_levy, ajeer_monthly_fee,
+						record_type, cost_mode, discipline_id,
+						service_profile_id, home_band, contract_end_date,
+						created_by, created_at, updated_at
+					) VALUES (
+						${versionId}, ${employeeCode!}, ${body.name},
+						${body.functionRole}, ${body.department},
+						${body.status}, ${body.joiningDate}::date,
+						${body.paymentMethod},
+						${body.isSaudi}, ${body.isAjeer}, ${body.isTeaching},
+						${Number(body.hourlyPercentage)},
+						pgp_sym_encrypt(${baseSalary}, ${key}),
+						pgp_sym_encrypt(${housingAllowance}, ${key}),
+						pgp_sym_encrypt(${transportAllowance}, ${key}),
+						pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
+						pgp_sym_encrypt(${hsaAmount}, ${key}),
+						pgp_sym_encrypt(${body.augmentation}, ${key}),
+						${augEffDate},
+						${Number(body.ajeerAnnualLevy)},
+						${Number(body.ajeerMonthlyFee)},
+						${body.recordType}, ${body.costMode},
+						${body.disciplineId ?? null},
+						${body.serviceProfileId ?? null},
+						${body.homeBand ?? null},
+						${contractEnd},
+						${request.user.id}, NOW(), NOW()
+					)
+					RETURNING id
+				`;
 
-			await addStaleFlag(versionId);
+				await addStaleFlag(versionId, tx);
 
-			// Audit
-			await prisma.auditEntry.create({
-				data: {
-					userId: request.user.id,
-					userEmail: request.user.email,
-					operation: 'EMPLOYEE_CREATED',
-					tableName: 'employees',
-					recordId: result[0]!.id,
-					newValues: {
-						employee_code: employeeCode,
-						name: body.name,
-						department: body.department,
-						record_type: body.recordType,
-					} as unknown as Prisma.InputJsonValue,
-					ipAddress: request.ip,
-				},
+				await tx.auditEntry.create({
+					data: {
+						userId: request.user.id,
+						userEmail: request.user.email,
+						operation: 'EMPLOYEE_CREATED',
+						tableName: 'employees',
+						recordId: inserted[0]!.id,
+						newValues: {
+							employee_code: employeeCode,
+							name: body.name,
+							department: body.department,
+							record_type: body.recordType,
+						} as unknown as Prisma.InputJsonValue,
+						ipAddress: request.ip,
+					},
+				});
+
+				return inserted;
 			});
 
 			// Return the created employee
@@ -594,59 +616,61 @@ export async function employeeRoutes(app: FastifyInstance) {
 			// AC-03: hsaAmount always '0.0000' (computed by pipeline)
 			const hsaAmount = '0.0000';
 
-			await prisma.$executeRaw`
-				UPDATE employees SET
-					employee_code = ${employeeCode},
-					name = ${body.name},
-					function_role = ${body.functionRole},
-					department = ${body.department},
-					status = ${body.status},
-					joining_date = ${body.joiningDate}::date,
-					payment_method = ${body.paymentMethod},
-					is_saudi = ${body.isSaudi},
-					is_ajeer = ${body.isAjeer},
-					is_teaching = ${body.isTeaching},
-					hourly_percentage = ${Number(body.hourlyPercentage)},
-					base_salary = pgp_sym_encrypt(${baseSalary}, ${key}),
-					housing_allowance =
-						pgp_sym_encrypt(${housingAllowance}, ${key}),
-					transport_allowance =
-						pgp_sym_encrypt(${transportAllowance}, ${key}),
-					responsibility_premium =
-						pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
-					hsa_amount = pgp_sym_encrypt(${hsaAmount}, ${key}),
-					augmentation =
-						pgp_sym_encrypt(${body.augmentation}, ${key}),
-					augmentation_effective_date = ${augEffDate},
-					ajeer_annual_levy = ${Number(body.ajeerAnnualLevy)},
-					ajeer_monthly_fee = ${Number(body.ajeerMonthlyFee)},
-					record_type = ${body.recordType},
-					cost_mode = ${body.costMode},
-					discipline_id = ${body.disciplineId ?? null},
-					service_profile_id = ${body.serviceProfileId ?? null},
-					home_band = ${body.homeBand ?? null},
-					contract_end_date = ${contractEnd},
-					updated_by = ${request.user.id},
-					updated_at = NOW()
-				WHERE id = ${id} AND version_id = ${versionId}
-			`;
+			// Update, stale flag, and audit — all in a single transaction
+			await withTransaction(async (tx) => {
+				await tx.$executeRaw`
+					UPDATE employees SET
+						employee_code = ${employeeCode},
+						name = ${body.name},
+						function_role = ${body.functionRole},
+						department = ${body.department},
+						status = ${body.status},
+						joining_date = ${body.joiningDate}::date,
+						payment_method = ${body.paymentMethod},
+						is_saudi = ${body.isSaudi},
+						is_ajeer = ${body.isAjeer},
+						is_teaching = ${body.isTeaching},
+						hourly_percentage = ${Number(body.hourlyPercentage)},
+						base_salary = pgp_sym_encrypt(${baseSalary}, ${key}),
+						housing_allowance =
+							pgp_sym_encrypt(${housingAllowance}, ${key}),
+						transport_allowance =
+							pgp_sym_encrypt(${transportAllowance}, ${key}),
+						responsibility_premium =
+							pgp_sym_encrypt(${body.responsibilityPremium}, ${key}),
+						hsa_amount = pgp_sym_encrypt(${hsaAmount}, ${key}),
+						augmentation =
+							pgp_sym_encrypt(${body.augmentation}, ${key}),
+						augmentation_effective_date = ${augEffDate},
+						ajeer_annual_levy = ${Number(body.ajeerAnnualLevy)},
+						ajeer_monthly_fee = ${Number(body.ajeerMonthlyFee)},
+						record_type = ${body.recordType},
+						cost_mode = ${body.costMode},
+						discipline_id = ${body.disciplineId ?? null},
+						service_profile_id = ${body.serviceProfileId ?? null},
+						home_band = ${body.homeBand ?? null},
+						contract_end_date = ${contractEnd},
+						updated_by = ${request.user.id},
+						updated_at = NOW()
+					WHERE id = ${id} AND version_id = ${versionId}
+				`;
 
-			await addStaleFlag(versionId);
+				await addStaleFlag(versionId, tx);
 
-			// Audit
-			await prisma.auditEntry.create({
-				data: {
-					userId: request.user.id,
-					userEmail: request.user.email,
-					operation: 'EMPLOYEE_UPDATED',
-					tableName: 'employees',
-					recordId: id,
-					newValues: {
-						employee_code: employeeCode,
-						department: body.department,
-					} as unknown as Prisma.InputJsonValue,
-					ipAddress: request.ip,
-				},
+				await tx.auditEntry.create({
+					data: {
+						userId: request.user.id,
+						userEmail: request.user.email,
+						operation: 'EMPLOYEE_UPDATED',
+						tableName: 'employees',
+						recordId: id,
+						newValues: {
+							employee_code: employeeCode,
+							department: body.department,
+						} as unknown as Prisma.InputJsonValue,
+						ipAddress: request.ip,
+					},
+				});
 			});
 
 			// Return updated
@@ -701,32 +725,34 @@ export async function employeeRoutes(app: FastifyInstance) {
 				});
 			}
 
-			if (version.status === 'Draft') {
-				// Hard delete on Draft
-				await prisma.employee.delete({ where: { id } });
-			} else {
-				// Soft delete on Published — set status to Departed
-				await prisma.employee.update({
-					where: { id },
-					data: { status: 'Departed', updatedBy: request.user.id },
+			// Delete/depart, stale flag, and audit — all in a single transaction
+			await withTransaction(async (tx) => {
+				if (version.status === 'Draft') {
+					// Hard delete on Draft
+					await tx.employee.delete({ where: { id } });
+				} else {
+					// Soft delete on Published — set status to Departed
+					await tx.employee.update({
+						where: { id },
+						data: { status: 'Departed', updatedBy: request.user.id },
+					});
+				}
+
+				await addStaleFlag(versionId, tx);
+
+				await tx.auditEntry.create({
+					data: {
+						userId: request.user.id,
+						userEmail: request.user.email,
+						operation: version.status === 'Draft' ? 'EMPLOYEE_DELETED' : 'EMPLOYEE_DEPARTED',
+						tableName: 'employees',
+						recordId: id,
+						oldValues: {
+							employee_code: existing.employeeCode,
+						} as unknown as Prisma.InputJsonValue,
+						ipAddress: request.ip,
+					},
 				});
-			}
-
-			await addStaleFlag(versionId);
-
-			// Audit
-			await prisma.auditEntry.create({
-				data: {
-					userId: request.user.id,
-					userEmail: request.user.email,
-					operation: version.status === 'Draft' ? 'EMPLOYEE_DELETED' : 'EMPLOYEE_DEPARTED',
-					tableName: 'employees',
-					recordId: id,
-					oldValues: {
-						employee_code: existing.employeeCode,
-					} as unknown as Prisma.InputJsonValue,
-					ipAddress: request.ip,
-				},
 			});
 
 			return reply.status(204).send();

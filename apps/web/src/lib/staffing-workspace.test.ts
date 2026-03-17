@@ -84,7 +84,7 @@ describe('buildSupportGridRows', () => {
 		];
 
 		const groups = buildSupportGridRows(employees);
-		expect(groups[0]!.subtotalAnnualCost).toBe('110000');
+		expect(groups[0]!.subtotalAnnualCost).toBe('110000.0000');
 	});
 
 	it('computes employee count per department', () => {

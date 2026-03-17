@@ -202,30 +202,28 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 
 			// 2i: Employees (non-Departed) with decrypted salary fields
 			const key = getEncryptionKey();
-			const SALARY_FIELDS = [
-				'base_salary',
-				'housing_allowance',
-				'transport_allowance',
-				'responsibility_premium',
-				'hsa_amount',
-				'augmentation',
-			];
-			const salarySelect = SALARY_FIELDS.map(
-				(f) => `pgp_sym_decrypt(e.${f}, '${key}') as ${f}`
-			).join(', ');
 
-			const rawEmployees = await prisma.$queryRawUnsafe<RawEmployee[]>(`
-				SELECT e.id, e.employee_code, e.name, e.status, e.is_saudi, e.is_ajeer,
+			// Uses parameterized $queryRawUnsafe ($1=key, $2=versionId) to avoid
+			// interpolating the encryption key into the SQL string.
+			const rawEmployees = await prisma.$queryRawUnsafe<RawEmployee[]>(
+				`SELECT e.id, e.employee_code, e.name, e.status, e.is_saudi, e.is_ajeer,
 					e.is_teaching, e.joining_date,
-					${salarySelect},
+					pgp_sym_decrypt(e.base_salary, $1::text) as base_salary,
+					pgp_sym_decrypt(e.housing_allowance, $1::text) as housing_allowance,
+					pgp_sym_decrypt(e.transport_allowance, $1::text) as transport_allowance,
+					pgp_sym_decrypt(e.responsibility_premium, $1::text) as responsibility_premium,
+					pgp_sym_decrypt(e.hsa_amount, $1::text) as hsa_amount,
+					pgp_sym_decrypt(e.augmentation, $1::text) as augmentation,
 					e.ajeer_annual_levy::text as ajeer_annual_levy,
 					e.ajeer_monthly_fee::text as ajeer_monthly_fee,
 					e.cost_mode, e.record_type,
 					e.service_profile_id,
 					e.hourly_percentage::text as hourly_percentage
 				FROM employees e
-				WHERE e.version_id = ${versionId} AND e.status != 'Departed'
-			`);
+				WHERE e.version_id = $2 AND e.status != 'Departed'`,
+				key,
+				versionId
+			);
 
 			// 2j: Staffing assignments with discipline code resolved
 			const assignments = await prisma.staffingAssignment.findMany({

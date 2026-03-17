@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
+import Decimal from 'decimal.js';
 import { ArrowLeft, ShieldCheck, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { formatMoney } from '../../lib/format-money';
@@ -521,9 +522,9 @@ function InspectorRequirementView({
 	const bandBadgeStyle = BAND_BADGE_STYLES[band] ?? '';
 
 	const gapValue = parseFloat(line.gapFte);
-	const directCost = parseFloat(line.directCostAnnual);
-	const hsaCost = parseFloat(line.hsaCostAnnual);
-	const totalCost = directCost + hsaCost;
+	const directCost = new Decimal(line.directCostAnnual || '0');
+	const hsaCost = new Decimal(line.hsaCostAnnual || '0');
+	const totalCost = directCost.plus(hsaCost);
 
 	return (
 		<div className="space-y-4">
