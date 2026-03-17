@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
+import { ROLE_PERMISSIONS } from '../../lib/rbac.js';
 
 // ── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -725,6 +726,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 	// ── Teaching Requirements (read-only) ────────────────────────────────────
 
 	// GET /teaching-requirements — Lines with coverage data; 409 if STAFFING stale
+	// AC-14: salary:view check — strip cost fields if user lacks salary:view
 	app.get('/teaching-requirements', {
 		schema: { params: versionIdParams },
 		preHandler: [app.authenticate],
@@ -741,10 +743,51 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 				});
 			}
 
+			const hasSalaryView = ROLE_PERMISSIONS[request.user.role]?.has('salary:view');
+
 			const lines = await prisma.teachingRequirementLine.findMany({
 				where: { versionId },
 				orderBy: [{ band: 'asc' }, { disciplineCode: 'asc' }],
 			});
+
+			// Load lightweight assigned employees per line
+			const lineAssignments = await prisma.staffingAssignment.findMany({
+				where: { versionId },
+				include: {
+					employee: {
+						select: {
+							id: true,
+							name: true,
+							costMode: true,
+						},
+					},
+					discipline: {
+						select: { code: true },
+					},
+				},
+			});
+
+			// Group assignments by (band, disciplineCode)
+			const assignmentsByLine = new Map<
+				string,
+				Array<{
+					employeeId: number;
+					employeeName: string;
+					costMode: string;
+					fteShare: string;
+				}>
+			>();
+			for (const a of lineAssignments) {
+				const key = `${a.band}|${a.discipline.code}`;
+				const entry = assignmentsByLine.get(key) ?? [];
+				entry.push({
+					employeeId: a.employeeId,
+					employeeName: a.employee.name,
+					costMode: a.employee.costMode,
+					fteShare: a.fteShare.toString(),
+				});
+				assignmentsByLine.set(key, entry);
+			}
 
 			return {
 				lines: lines.map((l) => ({
@@ -768,8 +811,9 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 					coverageStatus: l.coverageStatus,
 					assignedStaffCount: l.assignedStaffCount,
 					vacancyCount: l.vacancyCount,
-					directCostAnnual: l.directCostAnnual.toString(),
-					hsaCostAnnual: l.hsaCostAnnual.toString(),
+					directCostAnnual: hasSalaryView ? l.directCostAnnual.toString() : null,
+					hsaCostAnnual: hasSalaryView ? l.hsaCostAnnual.toString() : null,
+					assignedEmployees: assignmentsByLine.get(`${l.band}|${l.disciplineCode}`) ?? [],
 					calculatedAt: l.calculatedAt,
 				})),
 			};
