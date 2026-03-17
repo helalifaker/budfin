@@ -38,11 +38,6 @@ export interface FeeGridFixture {
 	term3Amount: string;
 }
 
-export interface DiscountFixture {
-	tariff: string;
-	discountRate: string;
-}
-
 export interface EnrollmentDetailFixture {
 	academicPeriod: 'AY1' | 'AY2';
 	gradeLevel: string;

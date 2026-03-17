@@ -7,8 +7,8 @@ describe('seed data constants', () => {
 		expect(gradeLevels).toHaveLength(15);
 	});
 
-	it('has exactly 21 assumptions', () => {
-		expect(seedAssumptions).toHaveLength(21);
+	it('has exactly 20 assumptions', () => {
+		expect(seedAssumptions).toHaveLength(20);
 	});
 
 	it('grade levels have unique codes', () => {

@@ -27,25 +27,45 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 				});
 			}
 
-			const [feeGridTotal, otherRevenueItems, revenueSettings] = await Promise.all([
-				prisma.feeGrid.count({ where: { versionId } }),
-				prisma.otherRevenueItem.findMany({
-					where: { versionId },
-					select: {
-						lineItemName: true,
-						annualAmount: true,
-						distributionMethod: true,
-						weightArray: true,
-						specificMonths: true,
-						ifrsCategory: true,
-						computeMethod: true,
-					},
-				}),
-				prisma.versionRevenueSettings.findUnique({
-					where: { versionId },
-					select: { id: true, flatDiscountPct: true },
-				}),
-			]);
+			const [feeGridTotal, otherRevenueItems, revenueSettings, enrollmentDetails, feeGridEntries] =
+				await Promise.all([
+					prisma.feeGrid.count({ where: { versionId } }),
+					prisma.otherRevenueItem.findMany({
+						where: { versionId },
+						select: {
+							lineItemName: true,
+							annualAmount: true,
+							distributionMethod: true,
+							weightArray: true,
+							specificMonths: true,
+							ifrsCategory: true,
+							computeMethod: true,
+						},
+					}),
+					prisma.versionRevenueSettings.findUnique({
+						where: { versionId },
+						select: { id: true, flatDiscountPct: true },
+					}),
+					prisma.enrollmentDetail.findMany({
+						where: { versionId },
+						select: {
+							academicPeriod: true,
+							gradeLevel: true,
+							nationality: true,
+							tariff: true,
+							headcount: true,
+						},
+					}),
+					prisma.feeGrid.findMany({
+						where: { versionId },
+						select: {
+							academicPeriod: true,
+							gradeLevel: true,
+							nationality: true,
+							tariff: true,
+						},
+					}),
+				]);
 
 			const settingsExist = revenueSettings !== null;
 
@@ -103,17 +123,42 @@ export async function revenueReadinessRoutes(app: FastifyInstance) {
 					dynamicValidation.invalid.length === 0,
 			};
 
-			const readyCount = [feeGrid.ready, discounts.ready, otherRevenue.ready].filter(
-				Boolean
-			).length;
+			// Cross-validate enrollment segments against fee grid entries
+			const feeGridKeys = new Set(
+				feeGridEntries.map(
+					(f) => `${f.academicPeriod}|${f.gradeLevel}|${f.nationality}|${f.tariff}`
+				)
+			);
+			const unmatchedSegments = enrollmentDetails
+				.filter((e) => {
+					const key = `${e.academicPeriod}|${e.gradeLevel}|${e.nationality}|${e.tariff}`;
+					return !feeGridKeys.has(key) && e.headcount > 0;
+				})
+				.map((e) => ({
+					academicPeriod: e.academicPeriod,
+					gradeLevel: e.gradeLevel,
+					nationality: e.nationality,
+					tariff: e.tariff,
+					headcount: e.headcount,
+				}));
+
+			const enrollmentFeeGridAlignment = {
+				totalSegments: enrollmentDetails.filter((e) => e.headcount > 0).length,
+				matchedSegments:
+					enrollmentDetails.filter((e) => e.headcount > 0).length - unmatchedSegments.length,
+				unmatchedSegments,
+			};
+
+			const readyCount = [feeGrid.ready, otherRevenue.ready].filter(Boolean).length;
 
 			return {
 				feeGrid,
 				discounts,
 				otherRevenue,
-				overallReady: readyCount === 3,
+				overallReady: readyCount === 2,
 				readyCount,
-				totalCount: 3 as const,
+				totalCount: 2 as const,
+				enrollmentFeeGridAlignment,
 			};
 		},
 	});

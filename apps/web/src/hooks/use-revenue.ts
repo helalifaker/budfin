@@ -3,7 +3,6 @@ import { apiClient } from '../lib/api-client';
 import { toast } from '../components/ui/toast-state';
 import type {
 	FeeGridEntry,
-	DiscountEntry,
 	OtherRevenueItem,
 	RevenueSettings,
 	RevenueReadinessResponse,
@@ -42,38 +41,6 @@ export function usePutFeeGrid(versionId: number | null) {
 			}),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'fee-grid', versionId] });
-			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
-			queryClient.invalidateQueries({ queryKey: ['versions'] });
-		},
-		onError: (err) =>
-			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
-	});
-}
-
-// ── Discounts ────────────────────────────────────────────────────────────────
-
-interface DiscountsResponse {
-	entries: DiscountEntry[];
-}
-
-export function useDiscounts(versionId: number | null) {
-	return useQuery({
-		queryKey: ['revenue', 'discounts', versionId],
-		queryFn: () => apiClient<DiscountsResponse>(`/versions/${versionId}/discounts`),
-		enabled: versionId !== null,
-	});
-}
-
-export function usePutDiscounts(versionId: number | null) {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (entries: DiscountEntry[]) =>
-			apiClient<{ updated: number }>(`/versions/${versionId}/discounts`, {
-				method: 'PUT',
-				body: JSON.stringify({ entries }),
-			}),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['revenue', 'discounts', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['revenue', 'readiness', versionId] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 		},

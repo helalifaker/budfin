@@ -18,8 +18,8 @@ describe('RevenueStatusStrip', () => {
 					discounts: { flatRate: '0.000000', ready: true },
 					otherRevenue: { total: 20, configured: 20, ready: true },
 					overallReady: true,
-					readyCount: 3,
-					totalCount: 3,
+					readyCount: 2,
+					totalCount: 2,
 				}}
 			/>
 		);
@@ -28,7 +28,7 @@ describe('RevenueStatusStrip', () => {
 		expect(screen.getByText(/Enrollment/)).toBeDefined();
 		expect(screen.getByText(/Downstream/)).toBeDefined();
 		expect(screen.getByText(/Config/)).toBeDefined();
-		expect(screen.getByText(/3 of 3 complete/)).toBeDefined();
+		expect(screen.getByText(/2 of 2 complete/)).toBeDefined();
 		expect(screen.getByText('Staffing')).toBeDefined();
 		expect(screen.getByText('P&L')).toBeDefined();
 	});

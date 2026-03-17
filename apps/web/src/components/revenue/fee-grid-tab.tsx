@@ -254,6 +254,86 @@ function PerStudentFeeBlock({
 	);
 }
 
+function FlatDiscountBlock({
+	settings,
+	isReadOnly,
+	onSettingEdit,
+}: {
+	settings: RevenueSettings | null;
+	isReadOnly: boolean;
+	onSettingEdit: (field: keyof RevenueSettings, value: string) => void;
+}) {
+	const rawPct = settings?.flatDiscountPct ?? '0';
+	const displayPct = (() => {
+		try {
+			return new Decimal(rawPct).mul(100).toFixed(2);
+		} catch {
+			return '0.00';
+		}
+	})();
+
+	const handleChange = (nextValue: number) => {
+		const clamped = Math.max(0, Math.min(100, nextValue || 0));
+		const stored = new Decimal(clamped)
+			.div(100)
+			.toDecimalPlaces(6, Decimal.ROUND_HALF_UP)
+			.toFixed(6);
+		onSettingEdit('flatDiscountPct', stored);
+	};
+
+	const keptPct = (() => {
+		try {
+			return new Decimal(100).minus(new Decimal(rawPct).mul(100)).toFixed(2);
+		} catch {
+			return '100.00';
+		}
+	})();
+
+	return (
+		<SectionCard title="Flat Discount">
+			<div className="p-4">
+				<p className="text-xs text-(--text-muted) mb-3">
+					A single discount percentage applied uniformly to all students.
+				</p>
+				<table className={TABLE_CLASS} role="table" aria-label="Flat Discount">
+					<thead className="border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
+						<tr>
+							<th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+								Setting
+							</th>
+							<th className={HEADER_CELL_CLASS}>Value</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr className="border-b border-(--grid-compact-border) hover:bg-gray-50/60">
+							<td className={LABEL_CELL_CLASS}>Discount Rate</td>
+							{isReadOnly ? (
+								<td className={CELL_CLASS}>{displayPct}%</td>
+							) : (
+								<td className={cn(CELL_CLASS, 'p-1')}>
+									<div className="flex items-center justify-end gap-1">
+										<EditableCell
+											value={displayPct}
+											onChange={handleChange}
+											isReadOnly={false}
+											type="number"
+										/>
+										<span className="text-xs text-(--text-secondary)">%</span>
+									</div>
+								</td>
+							)}
+						</tr>
+						<tr className="hover:bg-gray-50/60">
+							<td className={LABEL_CELL_CLASS}>Billed Rate</td>
+							<td className={cn(CELL_CLASS, 'text-(--text-secondary)')}>{keptPct}%</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</SectionCard>
+	);
+}
+
 function EmptyState() {
 	return (
 		<div className="flex flex-col items-center justify-center py-12 text-center">
@@ -397,6 +477,11 @@ export function FeeGridTab({ versionId, academicPeriod, isReadOnly }: FeeGridTab
 						onSettingEdit={handleSettingEdit}
 					/>
 				)}
+				<FlatDiscountBlock
+					settings={draftSettings}
+					isReadOnly={isReadOnly}
+					onSettingEdit={handleSettingEdit}
+				/>
 			</div>
 		</div>
 	);

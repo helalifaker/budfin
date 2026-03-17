@@ -2,14 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { loadFixture, loadEnrollmentCsv } from './fixture-loader.js';
 
 describe('loadFixture', () => {
-	it('loads fy2026-discounts.json correctly', () => {
-		const discounts =
-			loadFixture<Array<{ tariff: string; discountRate: string }>>('fy2026-discounts.json');
-		expect(discounts).toHaveLength(3);
-		expect(discounts[0]).toHaveProperty('tariff');
-		expect(discounts[0]).toHaveProperty('discountRate');
-	});
-
 	it('loads grade-code-mapping.json with 15 grades', () => {
 		const grades = loadFixture<Array<{ appCode: string }>>('grade-code-mapping.json');
 		expect(grades).toHaveLength(15);

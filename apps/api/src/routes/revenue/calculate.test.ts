@@ -43,7 +43,6 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		enrollmentDetail: { findMany: vi.fn() },
 		feeGrid: { findMany: vi.fn() },
-		discountPolicy: { findMany: vi.fn() },
 		otherRevenueItem: { findMany: vi.fn(), update: vi.fn() },
 		enrollmentHeadcount: { findMany: vi.fn() },
 		cohortParameter: { findMany: vi.fn() },
@@ -79,7 +78,6 @@ const mockPrisma = prisma as unknown as {
 	};
 	enrollmentDetail: { findMany: ReturnType<typeof vi.fn> };
 	feeGrid: { findMany: ReturnType<typeof vi.fn> };
-	discountPolicy: { findMany: ReturnType<typeof vi.fn> };
 	otherRevenueItem: { findMany: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
 	enrollmentHeadcount: { findMany: ReturnType<typeof vi.fn> };
 	cohortParameter: { findMany: ReturnType<typeof vi.fn> };
@@ -176,7 +174,6 @@ beforeEach(async () => {
 
 	mockPrisma.enrollmentDetail.findMany.mockResolvedValue([]);
 	mockPrisma.feeGrid.findMany.mockResolvedValue([]);
-	mockPrisma.discountPolicy.findMany.mockResolvedValue([]);
 	mockPrisma.otherRevenueItem.findMany.mockResolvedValue(
 		buildCanonicalDynamicOtherRevenueRows().map((item, index) => ({
 			id: index + 1,

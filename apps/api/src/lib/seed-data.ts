@@ -176,14 +176,6 @@ export const seedAssumptions = [
 		valueType: 'PERCENTAGE' as const,
 	},
 	{
-		key: 'discountRate',
-		value: '5.0',
-		unit: '%',
-		section: 'financial',
-		label: 'Early Payment Discount',
-		valueType: 'PERCENTAGE' as const,
-	},
-	{
 		key: 'inflationRate',
 		value: '2.5',
 		unit: '%',

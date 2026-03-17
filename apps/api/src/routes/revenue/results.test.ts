@@ -149,8 +149,8 @@ describe('GET /revenue', () => {
 		expect(body.totals.grossRevenueHt).toBe('1800.0000');
 		expect(body.totals.discountAmount).toBe('150.0000');
 		expect(body.totals.netRevenueHt).toBe('1650.0000');
-		expect(body.totals.otherRevenueAmount).toBe('375.0000');
-		expect(body.totals.totalOperatingRevenue).toBe('2025.0000');
+		expect(body.totals.otherRevenueAmount).toBe('325.0000');
+		expect(body.totals.totalOperatingRevenue).toBe('1975.0000');
 
 		expect(
 			body.otherRevenueEntries.find(
@@ -168,12 +168,12 @@ describe('GET /revenue', () => {
 			body.executiveSummary.rows.find(
 				(row: { label: string; annualTotal: string }) => row.label === 'Registration Fees'
 			)?.annualTotal
-		).toBe('300.0000');
+		).toBe('250.0000');
 		expect(
 			body.executiveSummary.rows.find(
 				(row: { label: string; annualTotal: string }) => row.label === 'TOTAL OPERATING REVENUE'
 			)?.annualTotal
-		).toBe('2025.0000');
+		).toBe('1975.0000');
 	});
 
 	it('filters tuition rows by academic period while keeping other revenue available for reporting', async () => {

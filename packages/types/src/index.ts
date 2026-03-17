@@ -56,7 +56,6 @@ export type {
 	IfrsCategory,
 	OtherRevenueComputeMethod,
 	FeeGridEntry,
-	DiscountEntry,
 	RevenueViewMode,
 	RevenueSettingsTab,
 	OtherRevenueItem,

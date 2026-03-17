@@ -92,7 +92,7 @@ function getCategoryTab(label: string) {
 		case 'Tuition Fees':
 			return 'feeGrid' as const;
 		case 'Discount Impact':
-			return 'discounts' as const;
+			return 'feeGrid' as const;
 		case 'Registration Fees':
 		case 'Activities & Services':
 		case 'Examination Fees':
@@ -328,7 +328,7 @@ function buildFormulaString(
 			}
 
 			if (label === 'Discount Impact') {
-				return 'Discount = (RP headcount x RP rate + R3+ headcount x R3+ rate) x fee';
+				return 'Discount = grossRevenue x flatDiscountPct';
 			}
 
 			return 'Other Revenue = configured annual amount distributed across months';

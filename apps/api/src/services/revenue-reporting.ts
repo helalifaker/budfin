@@ -144,9 +144,7 @@ function mapOtherRevenueLines(lineItemName: string, executiveCategory: string | 
 	}
 
 	if (lineItemName.startsWith('Evaluation')) {
-		// Workbook parity: the "New Student Fees" subtotal already includes evaluation tests,
-		// and the revenue engine also surfaces evaluation as its own disclosure line.
-		return ['New Student Fees (Dossier+DPI)', 'Evaluation Tests'];
+		return ['Evaluation Tests'];
 	}
 
 	// Activities & Services

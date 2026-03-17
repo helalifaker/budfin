@@ -1,7 +1,7 @@
 import type { RevenueReadinessResponse, RevenueSettingsTab } from '@budfin/types';
 
 export interface RevenueReadinessArea {
-	key: 'feeGrid' | 'discounts' | 'otherRevenue';
+	key: 'feeGrid' | 'otherRevenue';
 	label: string;
 	tab: RevenueSettingsTab;
 	ready: boolean;
@@ -16,12 +16,6 @@ export function getRevenueReadinessAreas(
 			label: 'Fee Grid',
 			tab: 'feeGrid',
 			ready: readiness?.feeGrid.ready ?? false,
-		},
-		{
-			key: 'discounts',
-			label: 'Discounts',
-			tab: 'discounts',
-			ready: readiness?.discounts.ready ?? false,
 		},
 		{
 			key: 'otherRevenue',

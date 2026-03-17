@@ -57,7 +57,6 @@ async function validateRowCounts(
 ): Promise<ValidationResult> {
 	const expectedCounts: Record<string, number> = {
 		fee_grids: 270,
-		discount_policies: 3,
 		enrollment_detail: 214,
 		other_revenue_items: 21,
 	};
@@ -69,15 +68,6 @@ async function validateRowCounts(
 	});
 	if (feeGridCount !== expectedCounts.fee_grids) {
 		errors.push(`fee_grids: expected ${expectedCounts.fee_grids}, got ${feeGridCount}`);
-	}
-
-	const discountCount = await prisma.discountPolicy.count({
-		where: { versionId: budgetVersionId },
-	});
-	if (discountCount !== expectedCounts.discount_policies) {
-		errors.push(
-			`discount_policies: expected ${expectedCounts.discount_policies}, got ${discountCount}`
-		);
 	}
 
 	const detailCount = await prisma.enrollmentDetail.count({

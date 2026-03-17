@@ -81,8 +81,6 @@ model User {
   // Revenue relations (Epic 2)
   createdFeeGrids      FeeGrid[]          @relation("FeeGridCreator")
   updatedFeeGrids      FeeGrid[]          @relation("FeeGridUpdater")
-  createdDiscounts     DiscountPolicy[]   @relation("DiscountCreator")
-  updatedDiscounts     DiscountPolicy[]   @relation("DiscountUpdater")
   createdRevenueSettings VersionRevenueSettings[] @relation("VersionRevenueSettingsCreator")
   updatedRevenueSettings VersionRevenueSettings[] @relation("VersionRevenueSettingsUpdater")
   createdOtherRevenue  OtherRevenueItem[] @relation("OtherRevenueCreator")
@@ -382,7 +380,6 @@ model BudgetVersion {
 
   // Revenue (Epic 2)
   feeGrids           FeeGrid[]
-  discountPolicies   DiscountPolicy[]
   revenueSettings    VersionRevenueSettings?
   otherRevenueItems  OtherRevenueItem[]
   monthlyRevenues    MonthlyRevenue[]
@@ -631,26 +628,6 @@ model FeeGrid {
   @@map("fee_grids")
 }
 
-model DiscountPolicy {
-  id           Int      @id @default(autoincrement())
-  versionId    Int      @map("version_id")
-  tariff       String   @db.VarChar(10)
-  discountRate Decimal  @map("discount_rate") @db.Decimal(7, 6)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
-  createdBy    Int      @map("created_by")
-  updatedBy    Int?     @map("updated_by")
-
-  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  creator User          @relation("DiscountCreator", fields: [createdBy], references: [id], onDelete: Restrict)
-  updater User?         @relation("DiscountUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
-
-  @@unique([versionId, tariff], map: "uq_discount_policy")
-  @@index([versionId, tariff], map: "idx_discount_policies_calc")
-  @@index([createdBy], map: "idx_discount_policies_created_by")
-  @@map("discount_policies")
-}
-
 model VersionRevenueSettings {
   id                      Int      @id @default(autoincrement())
   versionId               Int      @unique @map("version_id")
@@ -711,6 +688,7 @@ model MonthlyRevenue {
   month                Int      @db.SmallInt
   grossRevenueHt       Decimal  @default(0) @map("gross_revenue_ht") @db.Decimal(15, 4)
   discountAmount       Decimal  @default(0) @map("discount_amount") @db.Decimal(15, 4)
+  /// Reserved for v2 scholarship model. Currently always 0.0000.
   scholarshipDeduction Decimal  @default(0) @map("scholarship_deduction") @db.Decimal(15, 4)
   netRevenueHt         Decimal  @default(0) @map("net_revenue_ht") @db.Decimal(15, 4)
   vatAmount            Decimal  @default(0) @map("vat_amount") @db.Decimal(15, 4)

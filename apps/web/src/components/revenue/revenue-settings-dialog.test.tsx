@@ -18,15 +18,6 @@ vi.mock('./fee-grid-tab', () => ({
 	),
 }));
 
-vi.mock('./discounts-tab', () => ({
-	DiscountsTab: ({ isReadOnly }: { isReadOnly: boolean }) => (
-		<div>
-			<input aria-label="Discounts Input" disabled={isReadOnly} />
-			{!isReadOnly && <button type="button">Save Discounts</button>}
-		</div>
-	),
-}));
-
 vi.mock('./other-revenue-tab', () => ({
 	OtherRevenueTab: ({ isReadOnly }: { isReadOnly: boolean }) => (
 		<div>
@@ -48,8 +39,8 @@ describe('RevenueSettingsDialog', () => {
 				discounts: { flatRate: '0.000000', ready: true },
 				otherRevenue: { total: 20, configured: 20, ready: true },
 				overallReady: true,
-				readyCount: 3,
-				totalCount: 3,
+				readyCount: 2,
+				totalCount: 2,
 			},
 			isLoading: false,
 		} as ReturnType<typeof useRevenueReadiness>);
@@ -62,15 +53,15 @@ describe('RevenueSettingsDialog', () => {
 		vi.clearAllMocks();
 	});
 
-	it('renders the revenue settings dialog with 3 tabs', () => {
+	it('renders the revenue settings dialog with 2 tabs', () => {
 		render(<RevenueSettingsDialog versionId={1} isViewer={false} />);
 
 		expect(screen.getByRole('dialog', { name: 'Revenue Settings' })).toBeDefined();
 		expect(screen.getByText('Setup progress')).toBeDefined();
-		expect(screen.getByText('3/3 complete')).toBeDefined();
+		expect(screen.getByText('2/2 complete')).toBeDefined();
 		expect(screen.getByRole('tab', { name: /Fee Grid/ })).toBeDefined();
-		expect(screen.getByRole('tab', { name: /Discounts/ })).toBeDefined();
 		expect(screen.getByRole('tab', { name: /Other Revenue/ })).toBeDefined();
+		expect(screen.queryByRole('tab', { name: /Discounts/ })).toBeNull();
 		expect(screen.queryByRole('tab', { name: /Tariff Assignment/ })).toBeNull();
 	});
 
@@ -78,12 +69,12 @@ describe('RevenueSettingsDialog', () => {
 		useRevenueSettingsDirtyStore.getState().markDirty('feeGrid', 'fee-grid-input');
 
 		render(<RevenueSettingsDialog versionId={1} isViewer={false} />);
-		fireEvent.click(screen.getByRole('tab', { name: /Discounts/ }));
+		fireEvent.click(screen.getByRole('tab', { name: /Other Revenue/ }));
 
 		expect(screen.getByText('You have unsaved changes. Switch anyway?')).toBeDefined();
 		fireEvent.click(screen.getByRole('button', { name: 'Switch' }));
 
-		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('discounts');
+		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('otherRevenue');
 	});
 
 	it('shows discard confirmation when closing with dirty tabs', () => {
@@ -109,18 +100,18 @@ describe('RevenueSettingsDialog', () => {
 		mockUseRevenueReadiness.mockReturnValue({
 			data: {
 				feeGrid: { total: 90, complete: 90, settingsExist: true, ready: true },
-				discounts: { flatRate: null, ready: false },
-				otherRevenue: { total: 20, configured: 20, ready: true },
+				discounts: { flatRate: '0.000000', ready: true },
+				otherRevenue: { total: 20, configured: 0, ready: false },
 				overallReady: false,
-				readyCount: 2,
-				totalCount: 3,
+				readyCount: 1,
+				totalCount: 2,
 			},
 			isLoading: false,
 		} as ReturnType<typeof useRevenueReadiness>);
 
 		render(<RevenueSettingsDialog versionId={1} isViewer={false} />);
 
-		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('discounts');
+		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('otherRevenue');
 
 		fireEvent.click(screen.getByRole('tab', { name: /Fee Grid/ }));
 

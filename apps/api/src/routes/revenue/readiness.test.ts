@@ -14,12 +14,16 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		feeGrid: {
 			count: vi.fn(),
+			findMany: vi.fn(),
 		},
 		otherRevenueItem: {
 			findMany: vi.fn(),
 		},
 		versionRevenueSettings: {
 			findUnique: vi.fn(),
+		},
+		enrollmentDetail: {
+			findMany: vi.fn(),
 		},
 	};
 	return { prisma: mockPrisma };
@@ -29,9 +33,10 @@ import { prisma } from '../../lib/prisma.js';
 
 const mockPrisma = prisma as unknown as {
 	budgetVersion: { findUnique: ReturnType<typeof vi.fn> };
-	feeGrid: { count: ReturnType<typeof vi.fn> };
+	feeGrid: { count: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
 	otherRevenueItem: { findMany: ReturnType<typeof vi.fn> };
 	versionRevenueSettings: { findUnique: ReturnType<typeof vi.fn> };
+	enrollmentDetail: { findMany: ReturnType<typeof vi.fn> };
 };
 
 let app: FastifyInstance;
@@ -69,11 +74,13 @@ beforeEach(async () => {
 
 	mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 1 });
 	mockPrisma.feeGrid.count.mockResolvedValue(0);
+	mockPrisma.feeGrid.findMany.mockResolvedValue([]);
 	mockPrisma.otherRevenueItem.findMany.mockResolvedValue([]);
 	mockPrisma.versionRevenueSettings.findUnique.mockResolvedValue({
 		id: 1,
 		flatDiscountPct: '0.000000',
 	});
+	mockPrisma.enrollmentDetail.findMany.mockResolvedValue([]);
 });
 
 describe('GET /revenue/readiness', () => {
@@ -225,13 +232,17 @@ describe('GET /revenue/readiness', () => {
 		});
 
 		expect(res.statusCode).toBe(200);
-		expect(res.json()).toEqual({
-			feeGrid: { total: 90, complete: 90, settingsExist: true, ready: true },
-			discounts: { flatRate: '0.000000', ready: true },
-			otherRevenue: { total: 15, configured: 15, ready: true },
-			overallReady: true,
-			readyCount: 3,
-			totalCount: 3,
+		const body = res.json();
+		expect(body.feeGrid).toEqual({ total: 90, complete: 90, settingsExist: true, ready: true });
+		expect(body.discounts).toEqual({ flatRate: '0.000000', ready: true });
+		expect(body.otherRevenue).toEqual({ total: 15, configured: 15, ready: true });
+		expect(body.overallReady).toBe(true);
+		expect(body.readyCount).toBe(2);
+		expect(body.totalCount).toBe(2);
+		expect(body.enrollmentFeeGridAlignment).toEqual({
+			totalSegments: 0,
+			matchedSegments: 0,
+			unmatchedSegments: [],
 		});
 	});
 
@@ -246,14 +257,13 @@ describe('GET /revenue/readiness', () => {
 		});
 
 		expect(res.statusCode).toBe(200);
-		expect(res.json()).toEqual({
-			feeGrid: { total: 0, complete: 0, settingsExist: false, ready: false },
-			discounts: { flatRate: null, ready: false },
-			otherRevenue: { total: 0, configured: 0, ready: false },
-			overallReady: false,
-			readyCount: 0,
-			totalCount: 3,
-		});
+		const body = res.json();
+		expect(body.feeGrid).toEqual({ total: 0, complete: 0, settingsExist: false, ready: false });
+		expect(body.discounts).toEqual({ flatRate: null, ready: false });
+		expect(body.otherRevenue).toEqual({ total: 0, configured: 0, ready: false });
+		expect(body.overallReady).toBe(false);
+		expect(body.readyCount).toBe(0);
+		expect(body.totalCount).toBe(2);
 	});
 
 	it('returns partial readiness when only discounts are configured', async () => {
@@ -288,10 +298,11 @@ describe('GET /revenue/readiness', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.overallReady).toBe(false);
-		expect(body.readyCount).toBe(1);
+		expect(body.readyCount).toBe(0);
 		expect(body.feeGrid.ready).toBe(false);
 		expect(body.discounts.ready).toBe(true);
 		expect(body.otherRevenue.ready).toBe(false);
+		expect(body.totalCount).toBe(2);
 	});
 
 	it('returns 404 for a missing version', async () => {

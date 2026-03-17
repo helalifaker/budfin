@@ -20,13 +20,11 @@ export interface FeeGridInput {
 	nationality: string;
 	tariff: string;
 	tuitionTtc: string; // decimal string
-	tuitionHt: string; // decimal string
+	tuitionHt: string; // decimal string — used for revenue recognition
 	dai: string; // decimal string
-}
-
-export interface DiscountPolicyInput {
-	tariff: string;
-	discountRate: string; // decimal string 0–1
+	// NOTE: term1Amount, term2Amount, term3Amount from fee_grids are payment-schedule
+	// fields (installment breakdown), not revenue-recognition inputs. Intentionally
+	// excluded from engine input.
 }
 
 export type { DistributionMethod };
@@ -43,7 +41,6 @@ export interface OtherRevenueInput {
 export interface RevenueEngineInput {
 	enrollmentDetails: EnrollmentDetailInput[];
 	feeGrid: FeeGridInput[];
-	discountPolicies: DiscountPolicyInput[];
 	otherRevenueItems: OtherRevenueInput[];
 	flatDiscountPct?: string;
 }
@@ -90,7 +87,6 @@ export interface RevenueEngineResult {
 
 const VAT_RATE = new Decimal('0.15');
 const ZERO = new Decimal(0);
-const ONE = new Decimal(1);
 const ACADEMIC_MONTH_COUNT = new Decimal(10);
 
 const AY1_MONTHS = [1, 2, 3, 4, 5, 6];
@@ -154,23 +150,6 @@ function distributeAcademicYearAcrossFiscalMonths(
 	return result;
 }
 
-// ── Helper: Resolve discount rate ─────────────────────────────────────────────
-
-function resolveDiscountRate(tariff: string, policies: DiscountPolicyInput[]): Decimal {
-	let maxRate = ZERO;
-
-	for (const policy of policies) {
-		if (policy.tariff === tariff) {
-			const rate = new Decimal(policy.discountRate);
-			if (rate.gt(maxRate)) {
-				maxRate = rate;
-			}
-		}
-	}
-
-	return maxRate;
-}
-
 // ── Helper: Build fee lookup map ──────────────────────────────────────────────
 
 type FeeKey = string;
@@ -193,65 +172,20 @@ function buildFeeMap(feeGrid: FeeGridInput[]): Map<FeeKey, FeeGridInput> {
 	return map;
 }
 
-function makePleinFeeKey(academicPeriod: string, gradeLevel: string, nationality: string): FeeKey {
-	return makeFeeKey(academicPeriod, gradeLevel, nationality, 'Plein');
-}
-
 function resolveEffectiveTuitionAmounts(
-	enrollment: EnrollmentDetailInput,
 	fee: FeeGridInput,
-	feeMap: Map<FeeKey, FeeGridInput>,
-	discountPolicies: DiscountPolicyInput[],
-	flatDiscountPct?: Decimal
+	nationality: string,
+	flatDiscountPct: Decimal
 ): {
-	tuitionFeesPerStudentHt: Decimal;
+	grossTuitionPerStudentHt: Decimal;
 	discountPerStudentHt: Decimal;
 	vatRate: Decimal;
 } {
-	const referencePleinFee =
-		feeMap.get(
-			makePleinFeeKey(enrollment.academicPeriod, enrollment.gradeLevel, enrollment.nationality)
-		) ?? fee;
-
-	const pleinTuitionHt = new Decimal(referencePleinFee.tuitionHt);
-
-	// Flat discount mode: apply a uniform percentage to the Plein fee for ALL entries
-	if (flatDiscountPct && flatDiscountPct.gt(ZERO)) {
-		const tuitionFeesPerStudentHt = pleinTuitionHt.mul(ONE.minus(flatDiscountPct));
-		const discountPerStudentHt = pleinTuitionHt.mul(flatDiscountPct);
-		return {
-			tuitionFeesPerStudentHt,
-			discountPerStudentHt,
-			vatRate: enrollment.nationality === 'Nationaux' ? ZERO : VAT_RATE,
-		};
-	}
-
-	// Per-tariff discount logic (existing behavior)
-	const selectedTuitionHt = new Decimal(fee.tuitionHt);
-	const discountRate = resolveDiscountRate(enrollment.tariff, discountPolicies);
-
-	let tuitionFeesPerStudentHt = selectedTuitionHt;
-
-	// Workbook parity:
-	// - If tariff rows already store discounted tuition, use them directly.
-	// - If non-Plein rows repeat Plein tuition, derive the effective tuition from the discount policy.
-	if (
-		enrollment.tariff !== 'Plein' &&
-		selectedTuitionHt.eq(pleinTuitionHt) &&
-		discountRate.gt(ZERO)
-	) {
-		tuitionFeesPerStudentHt = pleinTuitionHt.mul(ONE.minus(discountRate));
-	}
-
-	let discountPerStudentHt = pleinTuitionHt.minus(tuitionFeesPerStudentHt);
-	if (discountPerStudentHt.lt(ZERO)) {
-		discountPerStudentHt = ZERO;
-	}
-
+	const ownTuitionHt = new Decimal(fee.tuitionHt);
 	return {
-		tuitionFeesPerStudentHt,
-		discountPerStudentHt,
-		vatRate: enrollment.nationality === 'Nationaux' ? ZERO : VAT_RATE,
+		grossTuitionPerStudentHt: ownTuitionHt,
+		discountPerStudentHt: ownTuitionHt.mul(flatDiscountPct),
+		vatRate: nationality === 'Nationaux' ? ZERO : VAT_RATE,
 	};
 }
 
@@ -269,10 +203,6 @@ function resolveExecutiveCategory(item: OtherRevenueInput): RevenueExecutiveCate
 	}
 
 	return null;
-}
-
-function shouldDoubleCountInExecutiveSummary(item: OtherRevenueInput): boolean {
-	return item.lineItemName.startsWith('Evaluation');
 }
 
 // ── Public: Distribute across months ──────────────────────────────────────────
@@ -351,12 +281,12 @@ export function distributeAcrossMonths(
 // ── Public: Main calculation ──────────────────────────────────────────────────
 
 export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult {
-	const { enrollmentDetails, feeGrid, discountPolicies, otherRevenueItems } = input;
+	const { enrollmentDetails, feeGrid, otherRevenueItems } = input;
 
 	const flatDiscountPct =
 		input.flatDiscountPct !== undefined && input.flatDiscountPct !== ''
 			? new Decimal(input.flatDiscountPct)
-			: undefined;
+			: ZERO;
 
 	const feeMap = buildFeeMap(feeGrid);
 	const tuitionRevenue: MonthlyRevenueOutput[] = [];
@@ -375,11 +305,7 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 			enrollment.nationality,
 			enrollment.tariff
 		);
-		const fee =
-			feeMap.get(feeKey) ??
-			feeMap.get(
-				makePleinFeeKey(enrollment.academicPeriod, enrollment.gradeLevel, enrollment.nationality)
-			);
+		const fee = feeMap.get(feeKey);
 
 		if (!fee) {
 			continue;
@@ -387,16 +313,16 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 
 		const headcount = new Decimal(enrollment.headcount);
 		const months = enrollment.academicPeriod === 'AY1' ? AY1_MONTHS : AY2_MONTHS;
-		const { tuitionFeesPerStudentHt, discountPerStudentHt, vatRate } =
-			resolveEffectiveTuitionAmounts(enrollment, fee, feeMap, discountPolicies, flatDiscountPct);
+		const { grossTuitionPerStudentHt, discountPerStudentHt, vatRate } =
+			resolveEffectiveTuitionAmounts(fee, enrollment.nationality, flatDiscountPct);
 
-		const academicYearTuitionFees = headcount.mul(tuitionFeesPerStudentHt);
+		const academicYearGrossTuition = headcount.mul(grossTuitionPerStudentHt);
 		const academicYearDiscounts = headcount.mul(discountPerStudentHt);
-		const academicYearNetTuition = academicYearTuitionFees.minus(academicYearDiscounts);
-		const academicYearVat = academicYearTuitionFees.mul(vatRate);
+		const academicYearNetTuition = academicYearGrossTuition.minus(academicYearDiscounts);
+		const academicYearVat = academicYearNetTuition.mul(vatRate);
 
-		const tuitionFeesPerMonth = distributeAcademicYearAcrossFiscalMonths(
-			academicYearTuitionFees,
+		const grossPerMonth = distributeAcademicYearAcrossFiscalMonths(
+			academicYearGrossTuition,
 			months
 		);
 		const discountPerMonth = distributeAcademicYearAcrossFiscalMonths(
@@ -407,7 +333,7 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 		const vatPerMonth = distributeAcademicYearAcrossFiscalMonths(academicYearVat, months);
 
 		for (const month of months) {
-			const grossM = tuitionFeesPerMonth.get(month) ?? ZERO;
+			const grossM = grossPerMonth.get(month) ?? ZERO;
 			const discountM = discountPerMonth.get(month) ?? ZERO;
 			const netM = netPerMonth.get(month) ?? ZERO;
 			const vatM = vatPerMonth.get(month) ?? ZERO;
@@ -461,9 +387,6 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 			totalOtherRevenue = totalOtherRevenue.plus(amount);
 			if (executiveCategory !== null) {
 				totalExecutiveOtherRevenue = totalExecutiveOtherRevenue.plus(amount);
-				if (shouldDoubleCountInExecutiveSummary(item)) {
-					totalExecutiveOtherRevenue = totalExecutiveOtherRevenue.plus(amount);
-				}
 			}
 		}
 	}

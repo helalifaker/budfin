@@ -7,7 +7,6 @@ import {
 	calculateRevenue,
 	type EnrollmentDetailInput,
 	type FeeGridInput,
-	type DiscountPolicyInput,
 	type OtherRevenueInput,
 } from '../../services/revenue-engine.js';
 import {
@@ -78,7 +77,6 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 			const [
 				enrollmentDetails,
 				feeGrids,
-				discountPolicies,
 				otherRevenueItems,
 				enrollmentHeadcounts,
 				cohortParameters,
@@ -86,7 +84,6 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 			] = await Promise.all([
 				prisma.enrollmentDetail.findMany({ where: { versionId } }),
 				prisma.feeGrid.findMany({ where: { versionId } }),
-				prisma.discountPolicy.findMany({ where: { versionId } }),
 				prisma.otherRevenueItem.findMany({ where: { versionId } }),
 				prisma.enrollmentHeadcount.findMany({ where: { versionId } }),
 				prisma.cohortParameter.findMany({ where: { versionId } }),
@@ -225,12 +222,6 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 						dai: new Decimal(f.dai.toString()).toFixed(4),
 					})
 				),
-				discountPolicies: discountPolicies.map(
-					(p): DiscountPolicyInput => ({
-						tariff: p.tariff,
-						discountRate: new Decimal(p.discountRate.toString()).toFixed(6),
-					})
-				),
 				otherRevenueItems: mergedOtherRevenue,
 				flatDiscountPct: revenueSettings.flatDiscountPct.toString(),
 			};
@@ -293,7 +284,6 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 						inputSummary: {
 							enrollmentRows: engineInput.enrollmentDetails.length,
 							feeGridRows: engineInput.feeGrid.length,
-							discountPolicies: engineInput.discountPolicies.length,
 							otherRevenueItems: engineInput.otherRevenueItems.length,
 						},
 					},

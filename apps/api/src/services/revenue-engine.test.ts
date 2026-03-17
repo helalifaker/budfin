@@ -39,7 +39,6 @@ function makeInput(overrides: Partial<RevenueEngineInput> = {}): RevenueEngineIn
 	return {
 		enrollmentDetails: [makeEnrollment()],
 		feeGrid: [makeFee()],
-		discountPolicies: [],
 		otherRevenueItems: [],
 		...overrides,
 	};
@@ -63,6 +62,7 @@ describe('Revenue Engine', () => {
 			expect(result.tuitionRevenue.map((r) => r.month)).toEqual([1, 2, 3, 4, 5, 6]);
 
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			// FY share = 20 * 52173.9130 * 6/10 = 626,086.9560
 			expect(totalGross.toFixed(4)).toBe('626086.9560');
 		});
 
@@ -104,7 +104,7 @@ describe('Revenue Engine', () => {
 			expect(totalVat.toFixed(4)).toBe('0.0000');
 		});
 
-		it('should apply 15% VAT for Francais students', () => {
+		it('should apply 15% VAT for Francais students (on net, not gross)', () => {
 			const result = calculateRevenue(makeInput());
 			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
 			const totalVat = sumField(result.tuitionRevenue, 'vatAmount');
@@ -114,7 +114,7 @@ describe('Revenue Engine', () => {
 			expect(totalVat.toFixed(4)).toBe(expectedVat.toFixed(4));
 		});
 
-		it('should apply 15% VAT for Autres students', () => {
+		it('should apply 15% VAT for Autres students (on net, not gross)', () => {
 			const result = calculateRevenue(
 				makeInput({
 					enrollmentDetails: [makeEnrollment({ nationality: 'Autres' })],
@@ -129,51 +129,75 @@ describe('Revenue Engine', () => {
 		});
 	});
 
-	describe('Discount Application', () => {
-		it('should apply discount rate to gross revenue', () => {
+	describe('Flat Discount Application', () => {
+		it('should apply flatDiscountPct to gross revenue', () => {
 			const result = calculateRevenue(
 				makeInput({
-					enrollmentDetails: [makeEnrollment({ tariff: 'RP' })],
-					feeGrid: [makeFee({ tariff: 'RP' })],
-					discountPolicies: [{ tariff: 'RP', discountRate: '0.250000' }],
+					flatDiscountPct: '0.250000',
 				})
 			);
 
 			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
 			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
-			const potentialRevenue = totalGross.plus(totalDiscount);
-			const expectedDiscount = potentialRevenue.mul(new Decimal('0.25'));
+			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
+
+			// discountAmount = grossRevenueHt * flatDiscountPct
+			const expectedDiscount = totalGross.mul(new Decimal('0.25'));
 			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
+
+			// netRevenueHt = grossRevenueHt - discountAmount
+			const expectedNet = totalGross.minus(totalDiscount);
+			expect(totalNet.toFixed(4)).toBe(expectedNet.toFixed(4));
 		});
 
-		it('should apply the highest discount when duplicate tariff policies exist', () => {
+		it('should produce zero discount when flatDiscountPct is 0', () => {
 			const result = calculateRevenue(
 				makeInput({
-					enrollmentDetails: [makeEnrollment({ tariff: 'RP' })],
-					feeGrid: [makeFee({ tariff: 'RP' })],
-					discountPolicies: [
-						{ tariff: 'RP', discountRate: '0.200000' },
-						{ tariff: 'RP', discountRate: '0.300000' },
-					],
-				})
-			);
-
-			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
-			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
-			const potentialRevenue = totalGross.plus(totalDiscount);
-			const expectedDiscount = potentialRevenue.mul(new Decimal('0.30'));
-			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
-		});
-
-		it('should apply no discount for Plein tariff', () => {
-			const result = calculateRevenue(
-				makeInput({
-					discountPolicies: [{ tariff: 'RP', discountRate: '0.300000' }],
+					flatDiscountPct: '0',
 				})
 			);
 
 			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
 			expect(totalDiscount.toFixed(4)).toBe('0.0000');
+		});
+
+		it('should produce zero discount when flatDiscountPct is omitted', () => {
+			const result = calculateRevenue(makeInput());
+
+			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
+			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
+
+			expect(totalDiscount.toFixed(4)).toBe('0.0000');
+			expect(totalNet.toFixed(4)).toBe(totalGross.toFixed(4));
+		});
+
+		it('should apply flatDiscountPct uniformly across all tariffs', () => {
+			// Both Plein and RP rows get the same flat discount
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [
+						makeEnrollment({ tariff: 'Plein', headcount: 10 }),
+						makeEnrollment({ tariff: 'RP', headcount: 10 }),
+					],
+					feeGrid: [
+						makeFee({ tariff: 'Plein' }),
+						makeFee({ tariff: 'RP', tuitionHt: '40000.0000', tuitionTtc: '46000.0000' }),
+					],
+					flatDiscountPct: '0.100000',
+				})
+			);
+
+			const pleinRows = result.tuitionRevenue.filter((r) => r.tariff === 'Plein');
+			const rpRows = result.tuitionRevenue.filter((r) => r.tariff === 'RP');
+
+			const pleinGross = sumField(pleinRows, 'grossRevenueHt');
+			const pleinDiscount = sumField(pleinRows, 'discountAmount');
+			expect(pleinDiscount.toFixed(4)).toBe(pleinGross.mul(new Decimal('0.10')).toFixed(4));
+
+			const rpGross = sumField(rpRows, 'grossRevenueHt');
+			const rpDiscount = sumField(rpRows, 'discountAmount');
+			expect(rpDiscount.toFixed(4)).toBe(rpGross.mul(new Decimal('0.10')).toFixed(4));
 		});
 	});
 
@@ -340,7 +364,6 @@ describe('Revenue Engine', () => {
 			const result = calculateRevenue({
 				enrollmentDetails: [],
 				feeGrid: [],
-				discountPolicies: [],
 				otherRevenueItems: [],
 			});
 
@@ -436,6 +459,97 @@ describe('Revenue Engine', () => {
 			expect(result.totals.totalVat).toBe(rowVat.toFixed(4));
 
 			expect(result.totals.totalOtherRevenue).toBe('100000.0000');
+		});
+
+		it('should compute totalOperatingRevenue = netTuitionHt + executiveOtherRevenue', () => {
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ headcount: 10 })],
+					feeGrid: [makeFee()],
+					flatDiscountPct: '0.10',
+					otherRevenueItems: [
+						{
+							lineItemName: 'Registration',
+							annualAmount: '50000.0000',
+							distributionMethod: 'YEAR_ROUND_12',
+							ifrsCategory: 'Registration Fees',
+						},
+					],
+				})
+			);
+
+			const netTuition = new Decimal(result.totals.netRevenueHt);
+			const execOther = new Decimal(result.totals.totalExecutiveOtherRevenue);
+			expect(result.totals.totalOperatingRevenue).toBe(netTuition.plus(execOther).toFixed(4));
+		});
+	});
+
+	describe('Edge Cases: Discount Boundaries', () => {
+		it('should yield net=0 and VAT=0 when flatDiscountPct=1 (100% discount)', () => {
+			const result = calculateRevenue(
+				makeInput({
+					flatDiscountPct: '1.000000',
+				})
+			);
+
+			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
+			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
+			const totalVat = sumField(result.tuitionRevenue, 'vatAmount');
+
+			// Gross should still be positive (true pre-discount)
+			expect(totalGross.gt(new Decimal(0))).toBe(true);
+			// 100% discount: discount equals gross
+			expect(totalDiscount.toFixed(4)).toBe(totalGross.toFixed(4));
+			// Net and VAT should be zero
+			expect(totalNet.toFixed(4)).toBe('0.0000');
+			expect(totalVat.toFixed(4)).toBe('0.0000');
+		});
+
+		it('should apply flatDiscountPct on RP row using its own fee (not Plein fee)', () => {
+			const rpTuitionHt = '40000.0000';
+			const result = calculateRevenue(
+				makeInput({
+					enrollmentDetails: [makeEnrollment({ tariff: 'RP', headcount: 10 })],
+					feeGrid: [makeFee({ tariff: 'RP', tuitionHt: rpTuitionHt, tuitionTtc: '46000.0000' })],
+					flatDiscountPct: '0.050000',
+				})
+			);
+
+			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			const totalDiscount = sumField(result.tuitionRevenue, 'discountAmount');
+
+			// Gross is based on RP fee: 10 * 40000 * 6/10 = 240,000
+			const expectedGross = new Decimal(rpTuitionHt)
+				.mul(10)
+				.mul(6)
+				.div(10)
+				.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+			expect(totalGross.toFixed(4)).toBe(expectedGross.toFixed(4));
+
+			// Discount = gross * 0.05 (uses the RP fee, not a Plein fallback)
+			const expectedDiscount = totalGross.mul(new Decimal('0.05'));
+			expect(totalDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
+		});
+
+		it('should compute VAT on net (not gross) when discount is active', () => {
+			const result = calculateRevenue(
+				makeInput({
+					flatDiscountPct: '0.200000',
+				})
+			);
+
+			const totalGross = sumField(result.tuitionRevenue, 'grossRevenueHt');
+			const totalNet = sumField(result.tuitionRevenue, 'netRevenueHt');
+			const totalVat = sumField(result.tuitionRevenue, 'vatAmount');
+
+			// VAT must be on net, not gross
+			const vatOnNet = totalNet.mul(new Decimal('0.15'));
+			const vatOnGross = totalGross.mul(new Decimal('0.15'));
+
+			expect(totalVat.toFixed(4)).toBe(vatOnNet.toFixed(4));
+			// Since there is a discount, VAT on gross would be different
+			expect(totalVat.toFixed(4)).not.toBe(vatOnGross.toFixed(4));
 		});
 	});
 

@@ -28,11 +28,6 @@ interface FeeGridEntry {
 	dai: string;
 }
 
-interface DiscountEntry {
-	tariff: string;
-	discountRate: string;
-}
-
 interface OtherRevenueEntry {
 	lineItemName: string;
 	annualAmount: string;
@@ -151,40 +146,34 @@ async function main() {
 	// eslint-disable-next-line no-console
 	console.log(`Fee grid: ${feeGrid.length} entries`);
 
-	// 2. Parse DISCOUNTS (discount parameters + rate card)
-	const discounts = parseDiscounts(workbook);
-	// eslint-disable-next-line no-console
-	console.log(`Discounts: ${discounts.length} entries`);
-
-	// 3. Parse ENROLLMENT_DETAIL (matrix: grade × nationality × tariff)
+	// 2. Parse ENROLLMENT_DETAIL (matrix: grade × nationality × tariff)
 	const enrollmentDetail = parseEnrollmentDetail(workbook);
 	// eslint-disable-next-line no-console
 	console.log(`Enrollment detail: ${enrollmentDetail.length} entries`);
 
-	// 4. Parse OTHER_REVENUES (line items with monthly distribution)
+	// 3. Parse OTHER_REVENUES (line items with monthly distribution)
 	const otherRevenue = parseOtherRevenues(workbook);
 	// eslint-disable-next-line no-console
 	console.log(`Other revenue: ${otherRevenue.length} items`);
 
-	// 5. Parse EXECUTIVE_SUMMARY for expected monthly totals
+	// 4. Parse EXECUTIVE_SUMMARY for expected monthly totals
 	const expectedRevenue = parseExpectedRevenue(workbook);
 	// eslint-disable-next-line no-console
 	console.log(`Expected revenue: ${expectedRevenue.length} months`);
 
-	// 6. Build grade code mapping
+	// 5. Build grade code mapping
 	const gradeCodeMapping = buildGradeCodeMapping(enrollmentDetail);
 
-	// 7. Write fixtures
+	// 6. Write fixtures
 	// eslint-disable-next-line no-console
 	console.log('\n=== Writing Fixtures ===');
 	writeFixture('fy2026-fee-grid.json', feeGrid);
-	writeFixture('fy2026-discounts.json', discounts);
 	writeFixture('fy2026-other-revenue.json', otherRevenue);
 	writeFixture('fy2026-enrollment-detail.json', enrollmentDetail);
 	writeFixture('fy2026-expected-revenue.json', expectedRevenue);
 	writeFixture('grade-code-mapping.json', gradeCodeMapping);
 
-	// 8. Summary
+	// 7. Summary
 	// eslint-disable-next-line no-console
 	console.log('\n=== Taxonomy Summary ===');
 	// eslint-disable-next-line no-console
@@ -296,66 +285,6 @@ function parseFeeGrid(workbook: ExcelJS.Workbook): FeeGridEntry[] {
 			}
 		}
 	}
-
-	return results;
-}
-
-// ── DISCOUNTS Parser ─────────────────────────────────────────────────────────
-// Structure:
-//   Row 4: Reduit Personnel Rate | 0.75
-//   Row 5: Reduit 3+ Enfants Rate | 0.75
-// These are universal discount multipliers (paid = rate × Plein price)
-// So discount rate = 1 - 0.75 = 0.25 (25% discount)
-
-function parseDiscounts(workbook: ExcelJS.Workbook): DiscountEntry[] {
-	const sheet = workbook.getWorksheet('DISCOUNTS');
-	if (!sheet) return [];
-
-	const results: DiscountEntry[] = [];
-
-	// Extract discount parameters from top section
-	let rpRate = 0;
-	let r3Rate = 0;
-
-	for (let r = 1; r <= Math.min(sheet.rowCount, 10); r++) {
-		const row = sheet.getRow(r);
-		const label = cellVal(row.getCell(1)).toLowerCase();
-		const value = cellNum(row.getCell(2));
-
-		if (label.includes('personnel') || label.includes('reduit pers')) {
-			rpRate = value; // 0.75 means they pay 75% of full price
-		}
-		if (label.includes('3+') || label.includes('enfants')) {
-			r3Rate = value;
-		}
-	}
-
-	// eslint-disable-next-line no-console
-	console.log(`  Discount params: RP=${rpRate}, R3+=${r3Rate}`);
-
-	// Convert to discount rates (1 - payment rate = discount rate)
-	// RP pays 75% → gets 25% discount
-	if (rpRate > 0) {
-		const discountRate = new Decimal(1).minus(new Decimal(rpRate));
-		results.push({
-			tariff: 'Reduit Personnel',
-			discountRate: discountRate.toDecimalPlaces(6, Decimal.ROUND_HALF_UP).toFixed(6),
-		});
-	}
-
-	if (r3Rate > 0) {
-		const discountRate = new Decimal(1).minus(new Decimal(r3Rate));
-		results.push({
-			tariff: 'Reduit 3+',
-			discountRate: discountRate.toDecimalPlaces(6, Decimal.ROUND_HALF_UP).toFixed(6),
-		});
-	}
-
-	// Plein tariff has 0% discount
-	results.push({
-		tariff: 'Plein',
-		discountRate: '0.000000',
-	});
 
 	return results;
 }

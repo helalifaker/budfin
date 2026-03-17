@@ -13,7 +13,6 @@ import {
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { DiscountsTab } from './discounts-tab';
 import { FeeGridTab } from './fee-grid-tab';
 import { OtherRevenueTab } from './other-revenue-tab';
 
@@ -29,7 +28,6 @@ import { useRevenueSettingsDirtyStore } from '../../stores/revenue-settings-dirt
 
 const TAB_CONFIG: Array<{ id: RevenueSettingsTab; label: string }> = [
 	{ id: 'feeGrid', label: 'Fee Grid' },
-	{ id: 'discounts', label: 'Discounts' },
 	{ id: 'otherRevenue', label: 'Other Revenue' },
 ];
 
@@ -188,9 +186,7 @@ export function RevenueSettingsDialog({
 					<div className="flex h-full flex-col">
 						<DialogHeader className="border-b border-(--workspace-border) px-6 py-5">
 							<DialogTitle>Revenue Settings</DialogTitle>
-							<DialogDescription>
-								Manage fee grid, discounts, and other revenue drivers.
-							</DialogDescription>
+							<DialogDescription>Manage fee grid and other revenue drivers.</DialogDescription>
 							<div className="mt-4 space-y-2">
 								<div className="flex items-center justify-between text-(--text-sm)">
 									<span className="font-medium text-(--text-primary)">Setup progress</span>
@@ -287,9 +283,6 @@ export function RevenueSettingsDialog({
 													academicPeriod="both"
 													isReadOnly={isViewer}
 												/>
-											</TabsContent>
-											<TabsContent value="discounts">
-												<DiscountsTab versionId={versionId} isReadOnly={isViewer} />
 											</TabsContent>
 											<TabsContent value="otherRevenue">
 												<OtherRevenueTab versionId={versionId} isReadOnly={isViewer} />

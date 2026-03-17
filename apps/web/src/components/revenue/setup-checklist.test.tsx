@@ -13,7 +13,7 @@ function makeReadiness(
 		otherRevenue: { total: 0, configured: 0, ready: false },
 		overallReady: false,
 		readyCount: 0,
-		totalCount: 3,
+		totalCount: 2,
 		...overrides,
 	};
 }
@@ -79,14 +79,14 @@ describe('RevenueSetupChecklist', () => {
 			<RevenueSetupChecklist
 				versionId={42}
 				lastCalculatedAt={null}
-				readiness={makeReadiness({ readyCount: 2 })}
+				readiness={makeReadiness({ readyCount: 1 })}
 			/>
 		);
 
-		fireEvent.click(await screen.findByRole('button', { name: 'Edit Discounts' }));
+		fireEvent.click(await screen.findByRole('button', { name: 'Edit Other Revenue' }));
 
 		expect(useRevenueSettingsDialogStore.getState().isOpen).toBe(true);
-		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('discounts');
+		expect(useRevenueSettingsDialogStore.getState().activeTab).toBe('otherRevenue');
 	});
 
 	it('closes when Escape is pressed', async () => {

@@ -217,7 +217,7 @@ function resolveCategorySettingsTarget(label: string): RevenueSettingsTab {
 		case 'Tuition Fees':
 			return 'feeGrid';
 		case 'Discount Impact':
-			return 'discounts';
+			return 'feeGrid';
 		case 'Registration Fees':
 		case 'Activities & Services':
 		case 'Examination Fees':

@@ -33,7 +33,7 @@ export type RevenueExecutiveCategory =
 
 export type RevenueViewMode = 'category' | 'grade' | 'nationality' | 'tariff';
 
-export type RevenueSettingsTab = 'feeGrid' | 'discounts' | 'otherRevenue';
+export type RevenueSettingsTab = 'feeGrid' | 'otherRevenue';
 
 export interface FeeGridEntry {
 	academicPeriod: 'AY1' | 'AY2';
@@ -46,11 +46,6 @@ export interface FeeGridEntry {
 	term1Amount: string;
 	term2Amount: string;
 	term3Amount: string;
-}
-
-export interface DiscountEntry {
-	tariff: 'RP' | 'R3+';
-	discountRate: string;
 }
 
 export interface OtherRevenueItem {
@@ -155,7 +150,18 @@ export interface RevenueReadinessResponse {
 	otherRevenue: OtherRevenueReadiness;
 	overallReady: boolean;
 	readyCount: number;
-	totalCount: 3;
+	totalCount: 2;
+	enrollmentFeeGridAlignment?: {
+		totalSegments: number;
+		matchedSegments: number;
+		unmatchedSegments: Array<{
+			academicPeriod: string;
+			gradeLevel: string;
+			nationality: string;
+			tariff: string;
+			headcount: number;
+		}>;
+	};
 }
 
 export interface RevenueResultsResponse {

@@ -118,7 +118,7 @@ describe('buildRevenueReportingView', () => {
 		expect(regRow?.annualTotal).toBe('500.0000');
 	});
 
-	it('maps Evaluation to both New Student Fees and Evaluation Tests buckets', () => {
+	it('maps Evaluation to Evaluation Tests bucket only', () => {
 		const view = buildRevenueReportingView(
 			[],
 			[makeOtherRow({ lineItemName: 'Evaluation - Primaire' })]
@@ -127,8 +127,17 @@ describe('buildRevenueReportingView', () => {
 			(r) => r.label === 'New Student Fees (Dossier+DPI)'
 		);
 		const evalRow = view.revenueEngine.rows.find((r) => r.label === 'Evaluation Tests');
-		expect(newStudentRow?.annualTotal).toBe('500.0000');
+		expect(newStudentRow?.annualTotal).toBe('0.0000');
 		expect(evalRow?.annualTotal).toBe('500.0000');
+	});
+
+	it('does not double-count evaluation in registration total', () => {
+		const view = buildRevenueReportingView(
+			[],
+			[makeOtherRow({ lineItemName: 'Evaluation - Primaire', amount: '10000.0000' })]
+		);
+		const regTotalRow = view.revenueEngine.rows.find((r) => r.label === 'Total Registration Fees');
+		expect(regTotalRow?.annualTotal).toBe('10000.0000');
 	});
 
 	it('maps BAC to BAC Examination Fees bucket', () => {

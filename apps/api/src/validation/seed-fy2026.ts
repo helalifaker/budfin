@@ -12,7 +12,6 @@ import {
 	calculateRevenue,
 	type EnrollmentDetailInput,
 	type FeeGridInput,
-	type DiscountPolicyInput,
 	type OtherRevenueInput,
 } from '../services/revenue-engine.js';
 
@@ -32,11 +31,6 @@ interface FeeGridFixture {
 	tuitionTtc: string;
 	tuitionHt: string;
 	dai: string;
-}
-
-interface DiscountFixture {
-	tariff: string;
-	discountRate: string;
 }
 
 interface EnrollmentDetailFixture {
@@ -72,9 +66,6 @@ async function main() {
 	const feeGrid: FeeGridFixture[] = JSON.parse(
 		readFileSync(resolve(FIXTURES, 'fy2026-fee-grid.json'), 'utf-8')
 	);
-	const discounts: DiscountFixture[] = JSON.parse(
-		readFileSync(resolve(FIXTURES, 'fy2026-discounts.json'), 'utf-8')
-	);
 	const enrollmentDetail: EnrollmentDetailFixture[] = JSON.parse(
 		readFileSync(resolve(FIXTURES, 'fy2026-enrollment-detail.json'), 'utf-8')
 	);
@@ -87,7 +78,7 @@ async function main() {
 
 	// eslint-disable-next-line no-console
 	console.log(
-		`Fixtures loaded: ${feeGrid.length} fees, ${enrollmentDetail.length} enrollment, ${discounts.length} discounts, ${otherRevenue.length} other rev`
+		`Fixtures loaded: ${feeGrid.length} fees, ${enrollmentDetail.length} enrollment, ${otherRevenue.length} other rev`
 	);
 
 	// Find admin user
@@ -198,20 +189,6 @@ async function main() {
 	// eslint-disable-next-line no-console
 	console.log(`Inserted ${feeCount} fee grid entries (AY1)`);
 
-	// Insert discount policies
-	for (const d of discounts) {
-		await prisma.discountPolicy.create({
-			data: {
-				versionId: version.id,
-				tariff: d.tariff,
-				discountRate: d.discountRate,
-				createdBy: admin.id,
-			},
-		});
-	}
-	// eslint-disable-next-line no-console
-	console.log(`Inserted ${discounts.length} discount policies`);
-
 	// Insert other revenue items
 	for (const o of otherRevenue) {
 		await prisma.otherRevenueItem.create({
@@ -254,12 +231,6 @@ async function main() {
 				tuitionTtc: f.tuitionTtc,
 				tuitionHt: f.tuitionHt,
 				dai: f.dai,
-			})
-		),
-		discountPolicies: discounts.map(
-			(d): DiscountPolicyInput => ({
-				tariff: d.tariff,
-				discountRate: d.discountRate,
 			})
 		),
 		otherRevenueItems: otherRevenue.map(

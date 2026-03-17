@@ -1,11 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import { Decimal } from 'decimal.js';
-import type {
-	MigrationLog,
-	FeeGridFixture,
-	DiscountFixture,
-	EnrollmentDetailFixture,
-} from '../lib/types.js';
+import type { MigrationLog, FeeGridFixture, EnrollmentDetailFixture } from '../lib/types.js';
 import { MigrationLogger } from '../lib/logger.js';
 import { loadFixture } from '../lib/fixture-loader.js';
 
@@ -21,7 +16,6 @@ export async function importRevenue(
 	try {
 		// Load fixtures
 		const feeGrid = loadFixture<FeeGridFixture[]>('fy2026-fee-grid.json');
-		const discounts = loadFixture<DiscountFixture[]>('fy2026-discounts.json');
 		const enrollmentDetail = loadFixture<EnrollmentDetailFixture[]>(
 			'fy2026-enrollment-detail.json'
 		);
@@ -209,33 +203,6 @@ export async function importRevenue(
 			feeCount++;
 		}
 		logger.addRowCount('fee_grids', feeCount);
-
-		// 5. Insert discount policies
-		let discountCount = 0;
-		for (const d of discounts) {
-			const discountRate = new Decimal(d.discountRate);
-
-			await prisma.discountPolicy.upsert({
-				where: {
-					versionId_tariff: {
-						versionId,
-						tariff: d.tariff,
-					},
-				},
-				update: {
-					discountRate: discountRate.toFixed(6),
-					updatedBy: userId,
-				},
-				create: {
-					versionId,
-					tariff: d.tariff,
-					discountRate: discountRate.toFixed(6),
-					createdBy: userId,
-				},
-			});
-			discountCount++;
-		}
-		logger.addRowCount('discount_policies', discountCount);
 
 		return logger.complete('SUCCESS');
 	} catch (err) {
