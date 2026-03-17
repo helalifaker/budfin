@@ -15,6 +15,7 @@ export interface CategoryMonthlyCostOutput {
 	month: number;
 	category: string;
 	amount: Decimal;
+	calculationMode?: CalculationMode;
 }
 
 /**
@@ -70,6 +71,85 @@ export function calculateCategoryMonthlyCosts(
 			category: 'resident_logement',
 			amount: residentMonthlyLogement,
 		});
+	}
+
+	return results;
+}
+
+// ── Configurable Category Cost Engine (Epic 19, AC-13/AC-14) ────────────────
+// Supports 3 calculation modes per category from VersionStaffingCostAssumption.
+// Replaces the legacy fixed-config function in the calculation pipeline.
+
+export type CalculationMode = 'FLAT_ANNUAL' | 'PERCENT_OF_PAYROLL' | 'AMOUNT_PER_FTE';
+
+export interface CategoryAssumption {
+	category: string;
+	calculationMode: CalculationMode;
+	value: Decimal;
+}
+
+export interface ConfigurableCategoryCostInput {
+	/** Per-category assumptions from VersionStaffingCostAssumption */
+	assumptions: CategoryAssumption[];
+	/**
+	 * AC-09 (PERCENT_OF_PAYROLL): month -> subtotal of adjusted_gross for
+	 * LOCAL_PAYROLL employees only (AEFE_RECHARGE excluded)
+	 */
+	monthlySubtotals: Map<number, Decimal>;
+	/**
+	 * AC-10 (AMOUNT_PER_FTE): SUM(requiredFteRaw) from all teaching requirement
+	 * lines — curriculum demand, not HSA-adjusted planned FTE
+	 */
+	totalTeachingFteRaw: Decimal;
+}
+
+/**
+ * AC-13: Compute category-level monthly costs using configurable modes.
+ *
+ * Formulas:
+ *   - FLAT_ANNUAL:        monthlyAmount = value / 12
+ *   - PERCENT_OF_PAYROLL: monthlyAmount = monthlySubtotal * value
+ *   - AMOUNT_PER_FTE:     monthlyAmount = (value * totalTeachingFteRaw) / 12
+ *
+ * AC-14: Produces N categories x 12 months rows with calculationMode persisted
+ * on each row. With 5 categories, this yields 60 rows.
+ *
+ * @param input - Assumptions, monthly subtotals, and FTE total
+ * @returns Array of CategoryMonthlyCostOutput rows
+ */
+export function calculateConfigurableCategoryMonthlyCosts(
+	input: ConfigurableCategoryCostInput
+): CategoryMonthlyCostOutput[] {
+	const results: CategoryMonthlyCostOutput[] = [];
+
+	for (const assumption of input.assumptions) {
+		for (let month = 1; month <= 12; month++) {
+			let amount: Decimal;
+
+			switch (assumption.calculationMode) {
+				case 'FLAT_ANNUAL':
+					// value is the annual amount, divide by 12
+					amount = assumption.value.dividedBy(12);
+					break;
+
+				case 'PERCENT_OF_PAYROLL':
+					// value is a rate (e.g., 0.02 = 2%), multiply by LOCAL_PAYROLL subtotal
+					amount = (input.monthlySubtotals.get(month) ?? new Decimal(0)).times(assumption.value);
+					break;
+
+				case 'AMOUNT_PER_FTE':
+					// value is annual cost per FTE, multiply by total FTE, divide by 12
+					amount = assumption.value.times(input.totalTeachingFteRaw).dividedBy(12);
+					break;
+			}
+
+			results.push({
+				month,
+				category: assumption.category,
+				amount,
+				calculationMode: assumption.calculationMode,
+			});
+		}
 	}
 
 	return results;

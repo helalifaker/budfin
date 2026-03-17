@@ -82,6 +82,10 @@ export function calculateEoSProvision(input: EosInput): EosOutput {
 	return { yearsOfService: yos, eosBase, eosAnnual, eosMonthlyAccrual };
 }
 
+// ── Cost Mode Types (Epic 19, AC-10/AC-11) ──────────────────────────────────
+
+export type CostMode = 'LOCAL_PAYROLL' | 'AEFE_RECHARGE' | 'NO_LOCAL_COST';
+
 // ── Full Monthly Cost (AC-22) ────────────────────────────────────────────────
 
 export interface EmployeeCostInput {
@@ -99,6 +103,7 @@ export interface EmployeeCostInput {
 	ajeerMonthlyFee: string;
 	hireDate: Date;
 	asOfDate: Date;
+	costMode?: CostMode; // defaults to 'LOCAL_PAYROLL' for backwards compatibility
 }
 
 export interface MonthlyCostOutput {
@@ -166,13 +171,61 @@ export function calculateFullMonthlyCost(
 	};
 }
 
+// ── Zero-cost row helper (AC-10: AEFE_RECHARGE) ────────────────────────────
+
+const ZERO = new Decimal(0);
+
+function makeZeroCostRow(month: number): MonthlyCostOutput {
+	return {
+		month,
+		baseGross: ZERO,
+		adjustedGross: ZERO,
+		housingAllowance: ZERO,
+		transportAllowance: ZERO,
+		responsibilityPremium: ZERO,
+		hsaAmount: ZERO,
+		gosiAmount: ZERO,
+		ajeerAmount: ZERO,
+		eosMonthlyAccrual: ZERO,
+		totalCost: ZERO,
+	};
+}
+
+const ZERO_EOS: EosOutput = {
+	yearsOfService: ZERO,
+	eosBase: ZERO,
+	eosAnnual: ZERO,
+	eosMonthlyAccrual: ZERO,
+};
+
 /**
  * Compute all 12 months of cost for a single employee.
+ *
+ * AC-10: costMode === 'AEFE_RECHARGE' -> zero-cost monthly rows (12 rows, all amounts 0)
+ * AC-11: costMode === 'NO_LOCAL_COST' -> no output rows (empty array)
+ * AC-12: costMode === 'LOCAL_PAYROLL' (or omitted) -> existing full calculation
  */
 export function calculateEmployeeAnnualCost(input: EmployeeCostInput): {
 	months: MonthlyCostOutput[];
 	eos: EosOutput;
 } {
+	const costMode = input.costMode ?? 'LOCAL_PAYROLL';
+
+	// AC-11: NO_LOCAL_COST — skip entirely, no output rows
+	if (costMode === 'NO_LOCAL_COST') {
+		return { months: [], eos: ZERO_EOS };
+	}
+
+	// AC-10: AEFE_RECHARGE — return zero-cost rows for all 12 months
+	if (costMode === 'AEFE_RECHARGE') {
+		const months: MonthlyCostOutput[] = [];
+		for (let month = 1; month <= 12; month++) {
+			months.push(makeZeroCostRow(month));
+		}
+		return { months, eos: ZERO_EOS };
+	}
+
+	// LOCAL_PAYROLL — existing full calculation (AC-12)
 	const eos = calculateEoSProvision({
 		baseSalary: input.baseSalary,
 		housingAllowance: input.housingAllowance,

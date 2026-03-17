@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { Decimal } from 'decimal.js';
-import { calculateCategoryMonthlyCosts, type CategoryCostConfig } from './category-cost-engine.js';
+import {
+	calculateCategoryMonthlyCosts,
+	calculateConfigurableCategoryMonthlyCosts,
+	type CategoryCostConfig,
+	type ConfigurableCategoryCostInput,
+} from './category-cost-engine.js';
 
 const defaultConfig: CategoryCostConfig = {
 	remplacementsRate: '0.0200',
@@ -164,5 +169,319 @@ describe('calculateCategoryMonthlyCosts', () => {
 		// 33333.3333 / 12 — full precision
 		const expected = new Decimal('33333.3333').dividedBy(12);
 		expect(logement.amount.toString()).toBe(expected.toString());
+	});
+});
+
+// ── AC-13/AC-14: Configurable Category Monthly Costs (Epic 19) ──────────────
+
+function makeConfigInput(
+	overrides: Partial<ConfigurableCategoryCostInput> = {}
+): ConfigurableCategoryCostInput {
+	return {
+		assumptions: [
+			{
+				category: 'REMPLACEMENTS',
+				calculationMode: 'PERCENT_OF_PAYROLL',
+				value: new Decimal('0.0200'),
+			},
+			{
+				category: 'FORMATION',
+				calculationMode: 'PERCENT_OF_PAYROLL',
+				value: new Decimal('0.0100'),
+			},
+			{
+				category: 'RESIDENT_SALAIRES',
+				calculationMode: 'FLAT_ANNUAL',
+				value: new Decimal('180000'),
+			},
+			{
+				category: 'RESIDENT_LOGEMENT',
+				calculationMode: 'FLAT_ANNUAL',
+				value: new Decimal('60000'),
+			},
+			{
+				category: 'RESIDENT_PENSION',
+				calculationMode: 'AMOUNT_PER_FTE',
+				value: new Decimal('12000'),
+			},
+		],
+		monthlySubtotals: makeMonthlySubtotals('500000'),
+		totalTeachingFteRaw: new Decimal('25'),
+		...overrides,
+	};
+}
+
+describe('calculateConfigurableCategoryMonthlyCosts', () => {
+	// AC-14: 5 categories x 12 months = 60 rows
+	it('AC-14: returns 60 rows (5 categories x 12 months)', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+		expect(results).toHaveLength(60);
+	});
+
+	it('each month has all 5 categories', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+
+		for (let month = 1; month <= 12; month++) {
+			const monthRows = results.filter((r) => r.month === month);
+			expect(monthRows).toHaveLength(5);
+			const categories = monthRows.map((r) => r.category).sort();
+			expect(categories).toEqual([
+				'FORMATION',
+				'REMPLACEMENTS',
+				'RESIDENT_LOGEMENT',
+				'RESIDENT_PENSION',
+				'RESIDENT_SALAIRES',
+			]);
+		}
+	});
+
+	// ── AC-08: FLAT_ANNUAL mode ─────────────────────────────────────────────
+
+	it('AC-13: FLAT_ANNUAL — value / 12 for each month', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+
+		const salaires = results.filter((r) => r.category === 'RESIDENT_SALAIRES');
+		expect(salaires).toHaveLength(12);
+		for (const row of salaires) {
+			// 180000 / 12 = 15000
+			expect(row.amount.toFixed(4)).toBe('15000.0000');
+			expect(row.calculationMode).toBe('FLAT_ANNUAL');
+		}
+	});
+
+	it('FLAT_ANNUAL — same amount every month regardless of subtotals', () => {
+		const input = makeConfigInput({
+			monthlySubtotals: new Map<number, Decimal>([
+				[1, new Decimal('100000')],
+				[2, new Decimal('999999')],
+			]),
+		});
+		const results = calculateConfigurableCategoryMonthlyCosts(input);
+
+		const logement = results.filter((r) => r.category === 'RESIDENT_LOGEMENT');
+		for (const row of logement) {
+			// 60000 / 12 = 5000
+			expect(row.amount.toFixed(4)).toBe('5000.0000');
+		}
+	});
+
+	// ── AC-09: PERCENT_OF_PAYROLL mode ──────────────────────────────────────
+
+	it('AC-13: PERCENT_OF_PAYROLL — monthlySubtotal * value', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+
+		const remp = results.find((r) => r.month === 1 && r.category === 'REMPLACEMENTS')!;
+		// 500000 * 0.02 = 10000
+		expect(remp.amount.toFixed(4)).toBe('10000.0000');
+		expect(remp.calculationMode).toBe('PERCENT_OF_PAYROLL');
+	});
+
+	it('AC-09: PERCENT_OF_PAYROLL subtotal uses LOCAL_PAYROLL only (caller responsibility)', () => {
+		// The caller is responsible for computing monthlySubtotals from LOCAL_PAYROLL employees
+		// only. The engine simply multiplies. This test verifies varying subtotals produce
+		// varying amounts (the exclusion itself is enforced by the caller, not the engine).
+		const subtotals = new Map<number, Decimal>();
+		subtotals.set(1, new Decimal('100000'));
+		subtotals.set(2, new Decimal('200000'));
+		for (let m = 3; m <= 12; m++) {
+			subtotals.set(m, new Decimal('0'));
+		}
+
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({ monthlySubtotals: subtotals })
+		);
+
+		const rempM1 = results.find((r) => r.month === 1 && r.category === 'REMPLACEMENTS')!;
+		const rempM2 = results.find((r) => r.month === 2 && r.category === 'REMPLACEMENTS')!;
+		const rempM3 = results.find((r) => r.month === 3 && r.category === 'REMPLACEMENTS')!;
+		expect(rempM1.amount.toFixed(4)).toBe('2000.0000'); // 100000 * 0.02
+		expect(rempM2.amount.toFixed(4)).toBe('4000.0000'); // 200000 * 0.02
+		expect(rempM3.amount.toFixed(4)).toBe('0.0000'); // 0 * 0.02
+	});
+
+	it('PERCENT_OF_PAYROLL — missing month in subtotals defaults to 0', () => {
+		const subtotals = new Map<number, Decimal>();
+		subtotals.set(1, new Decimal('100000'));
+		// months 2-12 missing
+
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({ monthlySubtotals: subtotals })
+		);
+
+		const formM2 = results.find((r) => r.month === 2 && r.category === 'FORMATION')!;
+		expect(formM2.amount.toFixed(4)).toBe('0.0000');
+	});
+
+	// ── AC-10: AMOUNT_PER_FTE mode ──────────────────────────────────────────
+
+	it('AC-13: AMOUNT_PER_FTE — (value * totalTeachingFteRaw) / 12', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+
+		const pension = results.filter((r) => r.category === 'RESIDENT_PENSION');
+		expect(pension).toHaveLength(12);
+		for (const row of pension) {
+			// (12000 * 25) / 12 = 300000 / 12 = 25000
+			expect(row.amount.toFixed(4)).toBe('25000.0000');
+			expect(row.calculationMode).toBe('AMOUNT_PER_FTE');
+		}
+	});
+
+	it('AC-10: AMOUNT_PER_FTE uses requiredFteRaw — same every month', () => {
+		const input = makeConfigInput({
+			totalTeachingFteRaw: new Decimal('15.5'),
+		});
+		const results = calculateConfigurableCategoryMonthlyCosts(input);
+
+		const pension = results.filter((r) => r.category === 'RESIDENT_PENSION');
+		const expected = new Decimal('12000').times(new Decimal('15.5')).dividedBy(12);
+		for (const row of pension) {
+			expect(row.amount.toString()).toBe(expected.toString());
+		}
+	});
+
+	it('AMOUNT_PER_FTE — independent of monthly subtotals', () => {
+		const input = makeConfigInput({
+			monthlySubtotals: makeMonthlySubtotals('999999'), // should not affect AMOUNT_PER_FTE
+		});
+		const results = calculateConfigurableCategoryMonthlyCosts(input);
+
+		const pension = results.find((r) => r.month === 1 && r.category === 'RESIDENT_PENSION')!;
+		// (12000 * 25) / 12 = 25000 — not affected by subtotals
+		expect(pension.amount.toFixed(4)).toBe('25000.0000');
+	});
+
+	// ── Mixed modes ─────────────────────────────────────────────────────────
+
+	it('mixed modes: each category uses its own calculation mode', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+
+		const month1 = results.filter((r) => r.month === 1);
+
+		const remp = month1.find((r) => r.category === 'REMPLACEMENTS')!;
+		const form = month1.find((r) => r.category === 'FORMATION')!;
+		const sal = month1.find((r) => r.category === 'RESIDENT_SALAIRES')!;
+		const log = month1.find((r) => r.category === 'RESIDENT_LOGEMENT')!;
+		const pen = month1.find((r) => r.category === 'RESIDENT_PENSION')!;
+
+		// PERCENT_OF_PAYROLL: 500000 * 0.02 = 10000
+		expect(remp.amount.toFixed(4)).toBe('10000.0000');
+		expect(remp.calculationMode).toBe('PERCENT_OF_PAYROLL');
+
+		// PERCENT_OF_PAYROLL: 500000 * 0.01 = 5000
+		expect(form.amount.toFixed(4)).toBe('5000.0000');
+		expect(form.calculationMode).toBe('PERCENT_OF_PAYROLL');
+
+		// FLAT_ANNUAL: 180000 / 12 = 15000
+		expect(sal.amount.toFixed(4)).toBe('15000.0000');
+		expect(sal.calculationMode).toBe('FLAT_ANNUAL');
+
+		// FLAT_ANNUAL: 60000 / 12 = 5000
+		expect(log.amount.toFixed(4)).toBe('5000.0000');
+		expect(log.calculationMode).toBe('FLAT_ANNUAL');
+
+		// AMOUNT_PER_FTE: (12000 * 25) / 12 = 25000
+		expect(pen.amount.toFixed(4)).toBe('25000.0000');
+		expect(pen.calculationMode).toBe('AMOUNT_PER_FTE');
+	});
+
+	// ── Edge cases ──────────────────────────────────────────────────────────
+
+	it('empty assumptions array — returns 0 rows', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput({ assumptions: [] }));
+		expect(results).toHaveLength(0);
+	});
+
+	it('single category — returns 12 rows', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({
+				assumptions: [
+					{
+						category: 'CUSTOM',
+						calculationMode: 'FLAT_ANNUAL',
+						value: new Decimal('24000'),
+					},
+				],
+			})
+		);
+		expect(results).toHaveLength(12);
+		for (const row of results) {
+			expect(row.category).toBe('CUSTOM');
+			expect(row.amount.toFixed(4)).toBe('2000.0000'); // 24000 / 12
+		}
+	});
+
+	it('zero FTE raw — AMOUNT_PER_FTE produces zero', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({ totalTeachingFteRaw: new Decimal(0) })
+		);
+		const pension = results.filter((r) => r.category === 'RESIDENT_PENSION');
+		for (const row of pension) {
+			expect(row.amount.toFixed(4)).toBe('0.0000');
+		}
+	});
+
+	it('zero subtotals — PERCENT_OF_PAYROLL produces zero', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({ monthlySubtotals: makeMonthlySubtotals('0') })
+		);
+		const remp = results.filter((r) => r.category === 'REMPLACEMENTS');
+		for (const row of remp) {
+			expect(row.amount.toFixed(4)).toBe('0.0000');
+		}
+	});
+
+	it('all amounts are Decimal instances (TC-001)', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+		for (const row of results) {
+			expect(row.amount).toBeInstanceOf(Decimal);
+		}
+	});
+
+	it('calculationMode is persisted on each row (AC-14)', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(makeConfigInput());
+		for (const row of results) {
+			expect(row.calculationMode).toBeDefined();
+			expect(['FLAT_ANNUAL', 'PERCENT_OF_PAYROLL', 'AMOUNT_PER_FTE']).toContain(
+				row.calculationMode
+			);
+		}
+	});
+
+	it('no intermediate rounding (TC-004) — full precision maintained', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({
+				assumptions: [
+					{
+						category: 'TEST_FLAT',
+						calculationMode: 'FLAT_ANNUAL',
+						value: new Decimal('100000.0001'),
+					},
+					{
+						category: 'TEST_PCT',
+						calculationMode: 'PERCENT_OF_PAYROLL',
+						value: new Decimal('0.0333'),
+					},
+					{
+						category: 'TEST_FTE',
+						calculationMode: 'AMOUNT_PER_FTE',
+						value: new Decimal('7777.7777'),
+					},
+				],
+				monthlySubtotals: makeMonthlySubtotals('333333.3333'),
+				totalTeachingFteRaw: new Decimal('17.333'),
+			})
+		);
+
+		const flat = results.find((r) => r.month === 1 && r.category === 'TEST_FLAT')!;
+		const expected_flat = new Decimal('100000.0001').dividedBy(12);
+		expect(flat.amount.toString()).toBe(expected_flat.toString());
+
+		const pct = results.find((r) => r.month === 1 && r.category === 'TEST_PCT')!;
+		const expected_pct = new Decimal('333333.3333').times(new Decimal('0.0333'));
+		expect(pct.amount.toString()).toBe(expected_pct.toString());
+
+		const fte = results.find((r) => r.month === 1 && r.category === 'TEST_FTE')!;
+		const expected_fte = new Decimal('7777.7777').times(new Decimal('17.333')).dividedBy(12);
+		expect(fte.amount.toString()).toBe(expected_fte.toString());
 	});
 });

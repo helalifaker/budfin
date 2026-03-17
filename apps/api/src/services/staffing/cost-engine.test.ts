@@ -204,25 +204,26 @@ describe('calculateFullMonthlyCost', () => {
 // ── Annual Cost ──────────────────────────────────────────────────────────────
 
 describe('calculateEmployeeAnnualCost', () => {
-	it('returns 12 months', () => {
-		const input: EmployeeCostInput = {
-			baseSalary: '10000.0000',
-			housingAllowance: '2500.0000',
-			transportAllowance: '500.0000',
-			responsibilityPremium: '1000.0000',
-			hsaAmount: '1500.0000',
-			augmentation: '0.0300',
-			isTeaching: true,
-			isSaudi: false,
-			isAjeer: true,
-			status: 'Existing',
-			ajeerAnnualLevy: '9600.0000',
-			ajeerMonthlyFee: '100.0000',
-			hireDate: utcDate(2020, 1, 1),
-			asOfDate: utcDate(2025, 1, 1),
-		};
+	const makeAnnualInput = (overrides: Partial<EmployeeCostInput> = {}): EmployeeCostInput => ({
+		baseSalary: '10000.0000',
+		housingAllowance: '2500.0000',
+		transportAllowance: '500.0000',
+		responsibilityPremium: '1000.0000',
+		hsaAmount: '1500.0000',
+		augmentation: '0.0300',
+		isTeaching: true,
+		isSaudi: false,
+		isAjeer: true,
+		status: 'Existing',
+		ajeerAnnualLevy: '9600.0000',
+		ajeerMonthlyFee: '100.0000',
+		hireDate: utcDate(2020, 1, 1),
+		asOfDate: utcDate(2025, 1, 1),
+		...overrides,
+	});
 
-		const { months, eos } = calculateEmployeeAnnualCost(input);
+	it('returns 12 months', () => {
+		const { months, eos } = calculateEmployeeAnnualCost(makeAnnualInput());
 
 		expect(months).toHaveLength(12);
 		expect(months[0]!.month).toBe(1);
@@ -231,52 +232,124 @@ describe('calculateEmployeeAnnualCost', () => {
 	});
 
 	it('September costs are higher than August (augmentation)', () => {
-		const input: EmployeeCostInput = {
-			baseSalary: '10000.0000',
-			housingAllowance: '2500.0000',
-			transportAllowance: '500.0000',
-			responsibilityPremium: '1000.0000',
-			hsaAmount: '1500.0000',
-			augmentation: '0.0500', // 5%
-			isTeaching: false,
-			isSaudi: false,
-			isAjeer: false,
-			status: 'Existing',
-			ajeerAnnualLevy: '0.0000',
-			ajeerMonthlyFee: '0.0000',
-			hireDate: utcDate(2020, 1, 1),
-			asOfDate: utcDate(2025, 1, 1),
-		};
-
-		const { months } = calculateEmployeeAnnualCost(input);
+		const { months } = calculateEmployeeAnnualCost(
+			makeAnnualInput({
+				augmentation: '0.0500', // 5%
+				isTeaching: false,
+				isSaudi: false,
+				isAjeer: false,
+				ajeerAnnualLevy: '0.0000',
+				ajeerMonthlyFee: '0.0000',
+			})
+		);
 		const aug = months[7]!; // month 8
 		const sep = months[8]!; // month 9
 		expect(sep.totalCost.gt(aug.totalCost)).toBe(true);
 	});
 
 	it('all values are Decimal', () => {
-		const input: EmployeeCostInput = {
-			baseSalary: '10000.0000',
-			housingAllowance: '0.0000',
-			transportAllowance: '0.0000',
-			responsibilityPremium: '0.0000',
-			hsaAmount: '0.0000',
-			augmentation: '0.0000',
-			isTeaching: false,
-			isSaudi: false,
-			isAjeer: false,
-			status: 'Existing',
-			ajeerAnnualLevy: '0.0000',
-			ajeerMonthlyFee: '0.0000',
-			hireDate: utcDate(2023, 1, 1),
-			asOfDate: utcDate(2025, 1, 1),
-		};
-
-		const { months } = calculateEmployeeAnnualCost(input);
+		const { months } = calculateEmployeeAnnualCost(
+			makeAnnualInput({
+				housingAllowance: '0.0000',
+				transportAllowance: '0.0000',
+				responsibilityPremium: '0.0000',
+				hsaAmount: '0.0000',
+				augmentation: '0.0000',
+				isTeaching: false,
+				isSaudi: false,
+				isAjeer: false,
+				ajeerAnnualLevy: '0.0000',
+				ajeerMonthlyFee: '0.0000',
+				hireDate: utcDate(2023, 1, 1),
+			})
+		);
 		for (const m of months) {
 			expect(m.totalCost).toBeInstanceOf(Decimal);
 			expect(m.adjustedGross).toBeInstanceOf(Decimal);
 			expect(m.gosiAmount).toBeInstanceOf(Decimal);
 		}
+	});
+
+	// ── costMode: LOCAL_PAYROLL (default, AC-12) ────────────────────────────
+
+	it('AC-12: LOCAL_PAYROLL — existing behavior when costMode omitted', () => {
+		const { months, eos } = calculateEmployeeAnnualCost(makeAnnualInput());
+		expect(months).toHaveLength(12);
+		expect(eos.yearsOfService.gt(0)).toBe(true);
+		// Every month has positive totalCost
+		for (const m of months) {
+			expect(m.totalCost.gt(0)).toBe(true);
+		}
+	});
+
+	it('AC-12: LOCAL_PAYROLL — explicit costMode matches omitted', () => {
+		const withoutMode = calculateEmployeeAnnualCost(makeAnnualInput());
+		const withMode = calculateEmployeeAnnualCost(makeAnnualInput({ costMode: 'LOCAL_PAYROLL' }));
+		expect(withMode.months).toHaveLength(withoutMode.months.length);
+		for (let i = 0; i < 12; i++) {
+			expect(withMode.months[i]!.totalCost.toString()).toBe(
+				withoutMode.months[i]!.totalCost.toString()
+			);
+		}
+	});
+
+	// ── costMode: AEFE_RECHARGE (AC-10) ─────────────────────────────────────
+
+	it('AC-10: AEFE_RECHARGE — returns 12 zero-cost monthly rows', () => {
+		const { months, eos } = calculateEmployeeAnnualCost(
+			makeAnnualInput({ costMode: 'AEFE_RECHARGE' })
+		);
+		expect(months).toHaveLength(12);
+		for (const m of months) {
+			expect(m.totalCost.toString()).toBe('0');
+			expect(m.adjustedGross.toString()).toBe('0');
+			expect(m.baseGross.toString()).toBe('0');
+			expect(m.gosiAmount.toString()).toBe('0');
+			expect(m.ajeerAmount.toString()).toBe('0');
+			expect(m.eosMonthlyAccrual.toString()).toBe('0');
+			expect(m.hsaAmount.toString()).toBe('0');
+			expect(m.housingAllowance.toString()).toBe('0');
+			expect(m.transportAllowance.toString()).toBe('0');
+			expect(m.responsibilityPremium.toString()).toBe('0');
+		}
+		// EoS is also zero
+		expect(eos.eosAnnual.toString()).toBe('0');
+		expect(eos.yearsOfService.toString()).toBe('0');
+	});
+
+	it('AC-10: AEFE_RECHARGE — months are numbered 1-12', () => {
+		const { months } = calculateEmployeeAnnualCost(makeAnnualInput({ costMode: 'AEFE_RECHARGE' }));
+		for (let i = 0; i < 12; i++) {
+			expect(months[i]!.month).toBe(i + 1);
+		}
+	});
+
+	it('AC-10: AEFE_RECHARGE — zero-cost values are Decimal instances', () => {
+		const { months } = calculateEmployeeAnnualCost(makeAnnualInput({ costMode: 'AEFE_RECHARGE' }));
+		for (const m of months) {
+			expect(m.totalCost).toBeInstanceOf(Decimal);
+			expect(m.adjustedGross).toBeInstanceOf(Decimal);
+		}
+	});
+
+	// ── costMode: NO_LOCAL_COST (AC-11) ─────────────────────────────────────
+
+	it('AC-11: NO_LOCAL_COST — returns empty months array', () => {
+		const { months, eos } = calculateEmployeeAnnualCost(
+			makeAnnualInput({ costMode: 'NO_LOCAL_COST' })
+		);
+		expect(months).toHaveLength(0);
+		expect(eos.eosAnnual.toString()).toBe('0');
+		expect(eos.yearsOfService.toString()).toBe('0');
+	});
+
+	it('AC-11: NO_LOCAL_COST — no output rows at all', () => {
+		const { months } = calculateEmployeeAnnualCost(
+			makeAnnualInput({
+				costMode: 'NO_LOCAL_COST',
+				baseSalary: '50000.0000', // high salary to verify it is truly skipped
+			})
+		);
+		expect(months).toHaveLength(0);
 	});
 });
