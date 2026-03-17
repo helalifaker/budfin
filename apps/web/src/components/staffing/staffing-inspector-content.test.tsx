@@ -13,6 +13,9 @@ let mockSelection: {
 } | null = null;
 
 const mockClearSelection = vi.fn();
+const mockCreateAssignment = vi.fn();
+const mockUpdateAssignment = vi.fn();
+const mockDeleteAssignment = vi.fn();
 
 vi.mock('../../stores/staffing-selection-store', () => ({
 	useStaffingSelectionStore: (selector: (state: unknown) => unknown) =>
@@ -212,6 +215,68 @@ vi.mock('../../hooks/use-staffing', () => ({
 			],
 		},
 	}),
+	useCreateAssignment: () => ({
+		mutate: mockCreateAssignment,
+		mutateAsync: mockCreateAssignment,
+		isPending: false,
+	}),
+	useUpdateAssignment: () => ({
+		mutate: mockUpdateAssignment,
+		mutateAsync: mockUpdateAssignment,
+		isPending: false,
+	}),
+	useDeleteAssignment: () => ({
+		mutate: mockDeleteAssignment,
+		mutateAsync: mockDeleteAssignment,
+		isPending: false,
+	}),
+}));
+
+// Mock disciplines for employee filtering
+vi.mock('../../hooks/use-master-data', () => ({
+	useDisciplines: () => ({
+		data: {
+			data: [
+				{ id: 1, code: 'FR', label: 'Francais', band: 'MATERNELLE' },
+				{ id: 2, code: 'MATH', label: 'Mathematics', band: 'ELEMENTAIRE' },
+			],
+		},
+	}),
+	useServiceProfiles: () => ({
+		data: {
+			data: [{ id: 1, code: 'P1', label: 'Titulaire', defaultOrs: '24', isHsaEligible: true }],
+		},
+	}),
+}));
+
+// Mock alert dialog to be simple for testing
+vi.mock('../ui/alert-dialog', () => ({
+	AlertDialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
+		open !== false ? <div data-testid="alert-dialog">{children}</div> : null,
+	AlertDialogTrigger: ({
+		children,
+		asChild: _asChild,
+	}: {
+		children: React.ReactNode;
+		asChild?: boolean;
+	}) => <div data-testid="alert-trigger">{children}</div>,
+	AlertDialogContent: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="alert-content">{children}</div>
+	),
+	AlertDialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	AlertDialogTitle: ({ children }: { children: React.ReactNode }) => <h3>{children}</h3>,
+	AlertDialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+	AlertDialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	AlertDialogAction: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+		<button type="button" {...props}>
+			{children}
+		</button>
+	),
+	AlertDialogCancel: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+		<button type="button" {...props}>
+			{children}
+		</button>
+	),
 }));
 
 vi.mock('../../lib/format-money', () => ({
@@ -236,6 +301,9 @@ afterEach(() => {
 	cleanup();
 	mockSelection = null;
 	mockClearSelection.mockReset();
+	mockCreateAssignment.mockReset();
+	mockUpdateAssignment.mockReset();
+	mockDeleteAssignment.mockReset();
 });
 
 describe('StaffingInspectorContent', () => {
@@ -423,6 +491,117 @@ describe('StaffingInspectorContent', () => {
 
 			const animated = container.querySelector('.animate-inspector-slide-in');
 			expect(animated).not.toBeNull();
+		});
+	});
+
+	// ── AC-15: Assignment management in requirement line view ───────────────
+
+	describe('Assignment management (AC-15)', () => {
+		beforeEach(() => {
+			mockSelection = {
+				type: 'REQUIREMENT_LINE',
+				requirementLineId: 1,
+				band: 'MATERNELLE',
+				disciplineCode: 'FR',
+			};
+		});
+
+		it('shows "Assign Teacher" button when requirement line is selected', () => {
+			render(<StaffingInspectorContent />);
+			expect(screen.getByRole('button', { name: /assign teacher/i })).toBeDefined();
+		});
+
+		it('shows assignment form when "Assign Teacher" is clicked', () => {
+			render(<StaffingInspectorContent />);
+			fireEvent.click(screen.getByRole('button', { name: /assign teacher/i }));
+			// Form should contain employee selection and FTE input
+			expect(screen.getByLabelText(/employee/i)).toBeDefined();
+			expect(screen.getByLabelText(/fte share/i)).toBeDefined();
+		});
+
+		it('shows FTE share input with step 0.01', () => {
+			render(<StaffingInspectorContent />);
+			fireEvent.click(screen.getByRole('button', { name: /assign teacher/i }));
+			const fteInput = screen.getByLabelText(/fte share/i) as HTMLInputElement;
+			expect(fteInput.step).toBe('0.01');
+		});
+
+		it('shows hours/week as read-only derived display', () => {
+			render(<StaffingInspectorContent />);
+			fireEvent.click(screen.getByRole('button', { name: /assign teacher/i }));
+			const hoursDisplay = screen.getByLabelText(/hours.*week/i);
+			expect(hoursDisplay).toBeDefined();
+			// Should be read-only
+			expect(
+				(hoursDisplay as HTMLInputElement).readOnly ||
+					hoursDisplay.getAttribute('aria-readonly') === 'true'
+			).toBe(true);
+		});
+
+		it('shows note textarea with maxLength 500', () => {
+			render(<StaffingInspectorContent />);
+			fireEvent.click(screen.getByRole('button', { name: /assign teacher/i }));
+			const textarea = screen.getByLabelText(/note/i) as HTMLTextAreaElement;
+			expect(textarea).toBeDefined();
+			expect(textarea.maxLength).toBe(500);
+		});
+
+		it('shows edit button (pencil) for each existing assignment', () => {
+			render(<StaffingInspectorContent />);
+			const editButtons = screen.getAllByRole('button', { name: /edit/i });
+			// There are 2 assignments for requirement line 1
+			expect(editButtons.length).toBeGreaterThanOrEqual(2);
+		});
+
+		it('shows delete button (trash) for each existing assignment', () => {
+			render(<StaffingInspectorContent />);
+			const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+			expect(deleteButtons.length).toBeGreaterThanOrEqual(2);
+		});
+
+		it('shows confirmation dialog when delete button is clicked', () => {
+			render(<StaffingInspectorContent />);
+			const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+			fireEvent.click(deleteButtons[0]!);
+			expect(screen.getByText(/are you sure|confirm|delete this assignment/i)).toBeDefined();
+		});
+
+		it('calls deleteAssignment mutation when delete is confirmed', () => {
+			render(<StaffingInspectorContent />);
+			const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+			fireEvent.click(deleteButtons[0]!);
+			// Click the confirm/action button in the dialog
+			const confirmButton = screen.getByRole('button', { name: /confirm|yes|delete$/i });
+			fireEvent.click(confirmButton);
+			expect(mockDeleteAssignment).toHaveBeenCalledWith(10);
+		});
+
+		it('calls createAssignment mutation when form is submitted', () => {
+			render(<StaffingInspectorContent />);
+			fireEvent.click(screen.getByRole('button', { name: /assign teacher/i }));
+			// Fill form: select employee and FTE share
+			const employeeSelect = screen.getByLabelText(/employee/i);
+			fireEvent.change(employeeSelect, { target: { value: '100' } });
+			const fteInput = screen.getByLabelText(/fte share/i);
+			fireEvent.change(fteInput, { target: { value: '0.50' } });
+			// Submit
+			const submitButton = screen.getByRole('button', { name: /save|create|assign$/i });
+			fireEvent.click(submitButton);
+			expect(mockCreateAssignment).toHaveBeenCalled();
+		});
+
+		it('calls updateAssignment mutation when editing an existing assignment', () => {
+			render(<StaffingInspectorContent />);
+			// Click edit on first assignment
+			const editButtons = screen.getAllByRole('button', { name: /edit/i });
+			fireEvent.click(editButtons[0]!);
+			// Change FTE share
+			const fteInput = screen.getByLabelText(/fte share/i);
+			fireEvent.change(fteInput, { target: { value: '0.90' } });
+			// Save
+			const saveButton = screen.getByRole('button', { name: /save|update/i });
+			fireEvent.click(saveButton);
+			expect(mockUpdateAssignment).toHaveBeenCalled();
 		});
 	});
 });
