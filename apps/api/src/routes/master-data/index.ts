@@ -6,6 +6,7 @@ import { nationalityRoutes } from './nationalities.js';
 import { tariffRoutes } from './tariffs.js';
 import { departmentRoutes } from './departments.js';
 import { assumptionRoutes } from './assumptions.js';
+import { staffingMasterDataRoutes } from './staffing-master-data.js';
 
 export async function masterDataRoutes(app: FastifyInstance) {
 	await app.register(accountRoutes, { prefix: '/accounts' });
@@ -15,4 +16,5 @@ export async function masterDataRoutes(app: FastifyInstance) {
 	await app.register(tariffRoutes, { prefix: '/tariffs' });
 	await app.register(departmentRoutes, { prefix: '/departments' });
 	await app.register(assumptionRoutes, { prefix: '/assumptions' });
+	await app.register(staffingMasterDataRoutes);
 }

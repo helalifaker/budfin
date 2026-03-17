@@ -94,6 +94,14 @@ model User {
   costCalculations     MonthlyStaffCost[] @relation("CostCalculator")
   categoryCostCalculations CategoryMonthlyCost[] @relation("CategoryCostCalculator")
 
+  // DHG & Staffing Master Data relations (Epic 18)
+  createdServiceProfiles  ServiceObligationProfile[] @relation("ServiceProfileCreator")
+  updatedServiceProfiles  ServiceObligationProfile[] @relation("ServiceProfileUpdater")
+  createdDisciplines      Discipline[]               @relation("DisciplineCreator")
+  updatedDisciplines      Discipline[]               @relation("DisciplineUpdater")
+  updatedDemandOverrides  DemandOverride[]           @relation("DemandOverrideUpdater")
+  updatedAssignments      StaffingAssignment[]       @relation("AssignmentUpdater")
+
   @@map("users")
 }
 
@@ -393,6 +401,16 @@ model BudgetVersion {
   // Staff Costs — Category Level (Epic 8)
   categoryMonthlyCosts CategoryMonthlyCost[]
 
+  // DHG & Staffing (Epic 18)
+  staffingSettings          VersionStaffingSettings?
+  serviceProfileOverrides   VersionServiceProfileOverride[]
+  staffingCostAssumptions   VersionStaffingCostAssumption[]
+  lyceeGroupAssumptions     VersionLyceeGroupAssumption[]
+  demandOverrides           DemandOverride[]
+  teachingRequirementSources TeachingRequirementSource[]
+  teachingRequirementLines  TeachingRequirementLine[]
+  staffingAssignments       StaffingAssignment[]
+
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
   @@index([status], map: "idx_budget_versions_status")
@@ -506,6 +524,8 @@ model EnrollmentDetail {
 
 // ── DHG & Calculation Audit (Epic 1) ──────────────────────────────────────────
 
+/// @deprecated Replaced by TeachingRequirementLine + TeachingRequirementSource (Epic 18).
+/// Retained for backward compatibility during migration. Do not use in new code.
 model DhgRequirement {
   id              Int      @id @default(autoincrement())
   versionId       Int      @map("version_id")
@@ -731,6 +751,93 @@ model MonthlyOtherRevenue {
   @@map("monthly_other_revenue")
 }
 
+// ── DHG & Staffing Master Data (Epic 18) ──────────────────────────────────────
+
+model ServiceObligationProfile {
+  id                 Int      @id @default(autoincrement())
+  code               String   @unique @db.VarChar(20)
+  name               String   @db.VarChar(50)
+  weeklyServiceHours Decimal  @map("weekly_service_hours") @db.Decimal(4, 1)
+  hsaEligible        Boolean  @default(false) @map("hsa_eligible")
+  defaultCostMode    String   @default("LOCAL_PAYROLL") @map("default_cost_mode") @db.VarChar(20)
+  sortOrder          Int      @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy Int?     @map("created_by")
+  updatedBy Int?     @map("updated_by")
+
+  creator   User? @relation("ServiceProfileCreator", fields: [createdBy], references: [id])
+  updater   User? @relation("ServiceProfileUpdater", fields: [updatedBy], references: [id])
+  employees Employee[]
+  dhgRules  DhgRule[]
+  overrides VersionServiceProfileOverride[]
+
+  @@map("service_obligation_profiles")
+}
+
+model Discipline {
+  id        Int    @id @default(autoincrement())
+  code      String @unique @db.VarChar(50)
+  name      String @db.VarChar(100)
+  category  String @default("SUBJECT") @db.VarChar(20)
+  sortOrder Int    @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy Int?     @map("created_by")
+  updatedBy Int?     @map("updated_by")
+
+  creator                User?                        @relation("DisciplineCreator", fields: [createdBy], references: [id])
+  updater                User?                        @relation("DisciplineUpdater", fields: [updatedBy], references: [id])
+  aliases                DisciplineAlias[]
+  employees              Employee[]
+  dhgRules               DhgRule[]
+  demandOverrides        DemandOverride[]
+  lyceeGroupAssumptions  VersionLyceeGroupAssumption[]
+  requirementSources     TeachingRequirementSource[]
+  staffingAssignments    StaffingAssignment[]
+
+  @@map("disciplines")
+}
+
+model DisciplineAlias {
+  id           Int    @id @default(autoincrement())
+  alias        String @unique @db.VarChar(100)
+  disciplineId Int    @map("discipline_id")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  discipline Discipline @relation(fields: [disciplineId], references: [id])
+
+  @@map("discipline_aliases")
+}
+
+model DhgRule {
+  id               Int      @id @default(autoincrement())
+  gradeLevel       String   @map("grade_level") @db.VarChar(10)
+  disciplineId     Int      @map("discipline_id")
+  lineType         String   @default("STRUCTURAL") @map("line_type") @db.VarChar(20)
+  driverType       String   @default("HOURS") @map("driver_type") @db.VarChar(10)
+  hoursPerUnit     Decimal  @map("hours_per_unit") @db.Decimal(5, 2)
+  serviceProfileId Int      @map("service_profile_id")
+  languageCode     String?  @map("language_code") @db.VarChar(5)
+  groupingKey      String?  @map("grouping_key") @db.VarChar(50)
+  effectiveFromYear Int     @map("effective_from_year")
+  effectiveToYear  Int?     @map("effective_to_year")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  discipline     Discipline               @relation(fields: [disciplineId], references: [id])
+  serviceProfile ServiceObligationProfile @relation(fields: [serviceProfileId], references: [id])
+
+  @@unique([gradeLevel, disciplineId, lineType, languageCode, effectiveFromYear], map: "uq_dhg_rule")
+  @@index([gradeLevel], map: "idx_dhg_rule_grade")
+  @@index([effectiveFromYear], map: "idx_dhg_rule_year")
+  @@map("dhg_rules")
+}
+
 // ── Staffing & Staff Costs (Epic 3) ──────────────────────────────────────────
 
 model Employee {
@@ -767,6 +874,18 @@ model Employee {
   monthlyStaffCosts  MonthlyStaffCost[]
   eosProvision       EosProvision?
 
+  // Epic 18 — new fields
+  recordType       String    @default("EMPLOYEE") @map("record_type") @db.VarChar(10)
+  costMode         String    @default("LOCAL_PAYROLL") @map("cost_mode") @db.VarChar(20)
+  disciplineId     Int?      @map("discipline_id")
+  serviceProfileId Int?      @map("service_profile_id")
+  homeBand         String?   @map("home_band") @db.VarChar(15)
+  contractEndDate  DateTime? @map("contract_end_date") @db.Date
+
+  discipline     Discipline?               @relation(fields: [disciplineId], references: [id])
+  serviceProfile ServiceObligationProfile? @relation(fields: [serviceProfileId], references: [id])
+  assignments    StaffingAssignment[]
+
   @@unique([versionId, employeeCode], map: "uq_employee_code_version")
   @@index([versionId], map: "idx_employees_version")
   @@index([versionId, department], map: "idx_employees_department")
@@ -774,6 +893,8 @@ model Employee {
   @@map("employees")
 }
 
+/// @deprecated Replaced by DhgRule (Epic 18). Retained for migration reference.
+/// Do not use in new code.
 model DhgGrilleConfig {
   id                     Int      @id @default(autoincrement())
   gradeLevel             String   @map("grade_level") @db.VarChar(10)
@@ -844,11 +965,12 @@ model EosProvision {
 // ── Category Monthly Costs (Epic 8 — Contrats Locaux & Residents) ────────────
 
 model CategoryMonthlyCost {
-  id           Int      @id @default(autoincrement())
-  versionId    Int      @map("version_id")
-  month        Int      @db.SmallInt
-  category     String   @db.VarChar(40)
-  amount       Decimal  @db.Decimal(15, 4)
+  id              Int      @id @default(autoincrement())
+  versionId       Int      @map("version_id")
+  month           Int      @db.SmallInt
+  category        String   @db.VarChar(40)
+  amount          Decimal  @db.Decimal(15, 4)
+  calculationMode String   @default("PERCENT_OF_PAYROLL") @map("calculation_mode") @db.VarChar(25)
   calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
   calculatedBy Int?     @map("calculated_by")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -880,4 +1002,187 @@ model VersionCapacityConfig {
   @@unique([versionId, gradeLevel], map: "uq_version_capacity_config")
   @@index([versionId], map: "idx_version_capacity_config_version")
   @@map("version_capacity_config")
+}
+
+// ── DHG & Staffing Version-Scoped Models (Epic 18) ────────────────────────────
+
+model VersionStaffingSettings {
+  id        Int @id @default(autoincrement())
+  versionId Int @unique @map("version_id")
+
+  // HSA planning policy
+  hsaTargetHours        Decimal @default(1.5) @map("hsa_target_hours") @db.Decimal(4, 2)
+  hsaFirstHourRate      Decimal @default(500) @map("hsa_first_hour_rate") @db.Decimal(10, 2)
+  hsaAdditionalHourRate Decimal @default(400) @map("hsa_additional_hour_rate") @db.Decimal(10, 2)
+  hsaMonths             Int     @default(10) @map("hsa_months")
+
+  // Academic calendar
+  academicWeeks Int @default(36) @map("academic_weeks")
+
+  // Ajeer system defaults
+  ajeerAnnualLevy Decimal @default(9500) @map("ajeer_annual_levy") @db.Decimal(15, 4)
+  ajeerMonthlyFee Decimal @default(160) @map("ajeer_monthly_fee") @db.Decimal(15, 4)
+
+  // Reconciliation baseline
+  reconciliationBaseline Json? @map("reconciliation_baseline") @db.JsonB
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@map("version_staffing_settings")
+}
+
+model VersionServiceProfileOverride {
+  id                 Int      @id @default(autoincrement())
+  versionId          Int      @map("version_id")
+  serviceProfileId   Int      @map("service_profile_id")
+  weeklyServiceHours Decimal? @map("weekly_service_hours") @db.Decimal(4, 1)
+  hsaEligible        Boolean? @map("hsa_eligible")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version        BudgetVersion            @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  serviceProfile ServiceObligationProfile @relation(fields: [serviceProfileId], references: [id])
+
+  @@unique([versionId, serviceProfileId], map: "uq_version_profile_override")
+  @@map("version_service_profile_overrides")
+}
+
+model VersionStaffingCostAssumption {
+  id              Int     @id @default(autoincrement())
+  versionId       Int     @map("version_id")
+  category        String  @db.VarChar(30)
+  calculationMode String  @map("calculation_mode") @db.VarChar(25)
+  value           Decimal @db.Decimal(15, 4)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, category], map: "uq_version_cost_assumption")
+  @@map("version_staffing_cost_assumptions")
+}
+
+model VersionLyceeGroupAssumption {
+  id            Int     @id @default(autoincrement())
+  versionId     Int     @map("version_id")
+  gradeLevel    String  @map("grade_level") @db.VarChar(10)
+  disciplineId  Int     @map("discipline_id")
+  groupCount    Int     @map("group_count")
+  hoursPerGroup Decimal @map("hours_per_group") @db.Decimal(5, 2)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  discipline Discipline    @relation(fields: [disciplineId], references: [id])
+
+  @@unique([versionId, gradeLevel, disciplineId], map: "uq_lycee_group_assumption")
+  @@map("version_lycee_group_assumptions")
+}
+
+model DemandOverride {
+  id           Int     @id @default(autoincrement())
+  versionId    Int     @map("version_id")
+  band         String  @db.VarChar(15)
+  disciplineId Int     @map("discipline_id")
+  lineType     String  @map("line_type") @db.VarChar(20)
+  overrideFte  Decimal @map("override_fte") @db.Decimal(7, 4)
+  reasonCode   String  @map("reason_code") @db.VarChar(30)
+  note         String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  updatedBy Int?     @map("updated_by")
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  discipline Discipline    @relation(fields: [disciplineId], references: [id])
+  updater    User?         @relation("DemandOverrideUpdater", fields: [updatedBy], references: [id])
+
+  @@unique([versionId, band, disciplineId, lineType], map: "uq_demand_override")
+  @@map("demand_overrides")
+}
+
+model TeachingRequirementSource {
+  id               Int     @id @default(autoincrement())
+  versionId        Int     @map("version_id")
+  gradeLevel       String  @map("grade_level") @db.VarChar(10)
+  disciplineId     Int     @map("discipline_id")
+  lineType         String  @map("line_type") @db.VarChar(20)
+  driverType       String  @map("driver_type") @db.VarChar(10)
+  headcount        Int     @default(0)
+  maxClassSize     Int     @map("max_class_size")
+  driverUnits      Int     @default(0) @map("driver_units")
+  hoursPerUnit     Decimal @map("hours_per_unit") @db.Decimal(5, 2)
+  totalWeeklyHours Decimal @default(0) @map("total_weekly_hours") @db.Decimal(10, 4)
+  calculatedAt     DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  discipline Discipline    @relation(fields: [disciplineId], references: [id])
+
+  @@unique([versionId, gradeLevel, disciplineId, lineType], map: "uq_teaching_req_source")
+  @@index([versionId], map: "idx_teaching_req_source_version")
+  @@map("teaching_requirement_sources")
+}
+
+model TeachingRequirementLine {
+  id                   Int     @id @default(autoincrement())
+  versionId            Int     @map("version_id")
+  band                 String  @db.VarChar(15)
+  disciplineCode       String  @map("discipline_code") @db.VarChar(50)
+  lineLabel            String  @map("line_label") @db.VarChar(150)
+  lineType             String  @map("line_type") @db.VarChar(20)
+  driverType           String  @map("driver_type") @db.VarChar(10)
+  serviceProfileCode   String  @map("service_profile_code") @db.VarChar(20)
+  totalDriverUnits     Int     @default(0) @map("total_driver_units")
+  totalWeeklyHours     Decimal @default(0) @map("total_weekly_hours") @db.Decimal(10, 4)
+  baseOrs              Decimal @map("base_ors") @db.Decimal(5, 2)
+  effectiveOrs         Decimal @map("effective_ors") @db.Decimal(5, 2)
+  requiredFteRaw       Decimal @default(0) @map("required_fte_raw") @db.Decimal(7, 4)
+  requiredFtePlanned   Decimal @default(0) @map("required_fte_planned") @db.Decimal(7, 4)
+  recommendedPositions Int     @default(0) @map("recommended_positions")
+  coveredFte           Decimal @default(0) @map("covered_fte") @db.Decimal(7, 4)
+  gapFte               Decimal @default(0) @map("gap_fte") @db.Decimal(7, 4)
+  coverageStatus       String  @default("UNCOVERED") @map("coverage_status") @db.VarChar(10)
+  assignedStaffCount   Int     @default(0) @map("assigned_staff_count")
+  vacancyCount         Int     @default(0) @map("vacancy_count")
+  directCostAnnual     Decimal @default(0) @map("direct_cost_annual") @db.Decimal(15, 4)
+  hsaCostAnnual        Decimal @default(0) @map("hsa_cost_annual") @db.Decimal(15, 4)
+  calculatedAt         DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, band, disciplineCode, lineType], map: "uq_teaching_req_line")
+  @@index([versionId], map: "idx_teaching_req_line_version")
+  @@map("teaching_requirement_lines")
+}
+
+model StaffingAssignment {
+  id           Int     @id @default(autoincrement())
+  versionId    Int     @map("version_id")
+  employeeId   Int     @map("employee_id")
+  band         String  @db.VarChar(15)
+  disciplineId Int     @map("discipline_id")
+  hoursPerWeek Decimal @map("hours_per_week") @db.Decimal(5, 2)
+  fteShare     Decimal @map("fte_share") @db.Decimal(5, 4)
+  source       String  @default("MANUAL") @db.VarChar(20)
+  note         String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  updatedBy Int?     @map("updated_by")
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  employee   Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  discipline Discipline    @relation(fields: [disciplineId], references: [id])
+  updater    User?         @relation("AssignmentUpdater", fields: [updatedBy], references: [id])
+
+  @@unique([versionId, employeeId, band, disciplineId], map: "uq_staffing_assignment")
+  @@index([versionId], map: "idx_staffing_assignment_version")
+  @@index([versionId, band, disciplineId], map: "idx_staffing_assignment_demand")
+  @@map("staffing_assignments")
 }

@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { gradeLevels } from '../src/lib/seed-data.js';
 import { staffCostConfigs } from '../src/services/staffing/seed-config.js';
+import { seedStaffingMasterData } from './seeds/staffing-master-data.js';
 
 const prisma = new PrismaClient();
 
@@ -119,6 +120,9 @@ async function main() {
 		});
 	}
 	console.log(`Seeded ${gradeLevels.length} grade levels.`);
+
+	// Staffing master data (service profiles, disciplines, aliases)
+	await seedStaffingMasterData(prisma);
 }
 
 main()
