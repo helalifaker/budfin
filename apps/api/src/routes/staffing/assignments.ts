@@ -7,6 +7,16 @@ import { prisma } from '../../lib/prisma.js';
 // ── Schemas ──────────────────────────────────────────────────────────────────
 
 const VALID_BANDS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
+const VALID_SCOPES = ['HOME_BAND', 'CROSS_BAND'] as const;
+
+/**
+ * Cross-band matching pairs: College <-> Lycee are interchangeable
+ * for same-discipline matching at Medium confidence.
+ */
+const CROSS_BAND_PAIRS: ReadonlyMap<string, string> = new Map([
+	['COLLEGE', 'LYCEE'],
+	['LYCEE', 'COLLEGE'],
+]);
 const VALID_SOURCES = ['MANUAL', 'AUTO_SUGGESTED', 'IMPORTED'] as const;
 
 const versionIdParams = z.object({
@@ -565,6 +575,289 @@ export async function staffingAssignmentRoutes(app: FastifyInstance) {
 			});
 
 			return reply.status(204).send();
+		},
+	});
+
+	// POST /staffing-assignments/auto-suggest — propose assignments
+	// without persisting (AC-08)
+	app.post('/staffing-assignments/auto-suggest', {
+		schema: {
+			params: versionIdParams,
+			body: z.object({
+				scope: z.enum(VALID_SCOPES).default('HOME_BAND'),
+			}),
+		},
+		preHandler: [app.authenticate, app.requirePermission('data:edit')],
+		handler: async (request, reply) => {
+			const { versionId } = request.params as z.infer<typeof versionIdParams>;
+			const { scope } = request.body as { scope: string };
+
+			const version = await getVersionOrFail(versionId, reply);
+			if (!version) return;
+
+			// Step 1: Load requirement lines — 409 if none exist
+			const requirementLines = await prisma.teachingRequirementLine.findMany({
+				where: { versionId },
+			});
+
+			if (requirementLines.length === 0) {
+				return reply.status(409).send({
+					code: 'STAFFING_STALE',
+					message: 'No teaching requirement lines found. ' + 'Run the staffing calculation first.',
+				});
+			}
+
+			// Step 2: Load all teaching employees with discipline
+			// and homeBand for this version
+			const employees = await prisma.employee.findMany({
+				where: {
+					versionId,
+					isTeaching: true,
+					status: { not: 'Departed' },
+					disciplineId: { not: null },
+					homeBand: { not: null },
+				},
+				select: {
+					id: true,
+					name: true,
+					disciplineId: true,
+					homeBand: true,
+					hourlyPercentage: true,
+					discipline: {
+						select: {
+							id: true,
+							code: true,
+							name: true,
+						},
+					},
+				},
+				orderBy: { name: 'asc' },
+			});
+
+			// Step 3: Load existing assignments to compute
+			// remaining capacity per employee
+			const existingAssignments = await prisma.staffingAssignment.findMany({
+				where: { versionId },
+				select: {
+					employeeId: true,
+					fteShare: true,
+					band: true,
+					disciplineId: true,
+				},
+			});
+
+			// Map: employeeId -> total assigned FTE
+			const assignedFteMap = new Map<number, Decimal>();
+			// Track existing (employeeId, band, disciplineId) combos
+			const existingKeys = new Set<string>();
+
+			for (const a of existingAssignments) {
+				const prev = assignedFteMap.get(a.employeeId) ?? new Decimal(0);
+				assignedFteMap.set(a.employeeId, prev.plus(new Decimal(a.fteShare.toString())));
+				existingKeys.add(`${a.employeeId}:${a.band}:${a.disciplineId}`);
+			}
+
+			// Build line lookup by (band, disciplineCode).
+			// Track mutable remaining gap for greedy allocation.
+			interface LineEntry {
+				band: string;
+				disciplineCode: string;
+				remainingGap: Decimal;
+				effectiveOrs: Decimal;
+			}
+
+			const linesByKey = new Map<string, LineEntry[]>();
+
+			for (const line of requirementLines) {
+				const key = `${line.band}:${line.disciplineCode}`;
+				const gap = new Decimal(line.requiredFteRaw.toString())
+					.minus(new Decimal(line.coveredFte.toString()))
+					.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+
+				if (!linesByKey.has(key)) {
+					linesByKey.set(key, []);
+				}
+				linesByKey.get(key)!.push({
+					band: line.band,
+					disciplineCode: line.disciplineCode,
+					remainingGap: gap,
+					effectiveOrs: new Decimal(line.effectiveOrs.toString()),
+				});
+			}
+
+			// Step 4: Generate suggestions
+			interface Suggestion {
+				employeeId: number;
+				employeeName: string;
+				band: string;
+				disciplineId: number;
+				disciplineCode: string;
+				fteShare: string;
+				hoursPerWeek: string;
+				confidence: 'High' | 'Medium';
+				reason: string;
+			}
+
+			const suggestions: Suggestion[] = [];
+			// Track employees that got zero suggestions
+			let unassignedRemaining = 0;
+
+			for (const emp of employees) {
+				if (!emp.disciplineId || !emp.homeBand || !emp.discipline) {
+					continue;
+				}
+
+				const hourlyPct = new Decimal(emp.hourlyPercentage.toString());
+				const assignedFte = assignedFteMap.get(emp.id) ?? new Decimal(0);
+				let remainingCap = hourlyPct.minus(assignedFte).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+
+				// AC-07: fully assigned employees are excluded
+				if (remainingCap.lessThanOrEqualTo(0)) {
+					continue;
+				}
+
+				const discCode = emp.discipline.code;
+				let hadMatch = false;
+
+				// 4a: Exact band match -> High confidence (AC-02)
+				const exactKey = `${emp.homeBand}:${discCode}`;
+				const exactLines = linesByKey.get(exactKey);
+
+				if (exactLines) {
+					for (const line of exactLines) {
+						if (line.remainingGap.lessThanOrEqualTo(0)) {
+							continue;
+						}
+						if (remainingCap.lessThanOrEqualTo(0)) {
+							break;
+						}
+
+						// Skip if this exact assignment already exists
+						const aKey = `${emp.id}:${emp.homeBand}:` + `${emp.disciplineId}`;
+						if (existingKeys.has(aKey)) {
+							continue;
+						}
+
+						// AC-04: min(remaining capacity, gap)
+						const proposed = Decimal.min(remainingCap, line.remainingGap).toDecimalPlaces(
+							4,
+							Decimal.ROUND_HALF_UP
+						);
+
+						if (proposed.lessThanOrEqualTo(0)) {
+							continue;
+						}
+
+						const hours = line.effectiveOrs
+							.times(proposed)
+							.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+						suggestions.push({
+							employeeId: emp.id,
+							employeeName: emp.name,
+							band: emp.homeBand,
+							disciplineId: emp.disciplineId,
+							disciplineCode: discCode,
+							fteShare: proposed.toFixed(4),
+							hoursPerWeek: hours.toFixed(2),
+							confidence: 'High',
+							reason: `Exact match: ${discCode} ` + `in ${emp.homeBand}`,
+						});
+
+						// Update remaining capacity and line gap
+						remainingCap = remainingCap.minus(proposed).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+						line.remainingGap = line.remainingGap
+							.minus(proposed)
+							.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+
+						hadMatch = true;
+					}
+				}
+
+				// 4b: Cross-band College<->Lycee -> Medium (AC-03)
+				if (scope === 'CROSS_BAND' && remainingCap.greaterThan(0)) {
+					const crossBand = CROSS_BAND_PAIRS.get(emp.homeBand!);
+					if (crossBand) {
+						const crossKey = `${crossBand}:${discCode}`;
+						const crossLines = linesByKey.get(crossKey);
+
+						if (crossLines) {
+							for (const line of crossLines) {
+								if (line.remainingGap.lessThanOrEqualTo(0)) {
+									continue;
+								}
+								if (remainingCap.lessThanOrEqualTo(0)) {
+									break;
+								}
+
+								const aKey = `${emp.id}:${crossBand}:` + `${emp.disciplineId}`;
+								if (existingKeys.has(aKey)) {
+									continue;
+								}
+
+								const proposed = Decimal.min(remainingCap, line.remainingGap).toDecimalPlaces(
+									4,
+									Decimal.ROUND_HALF_UP
+								);
+
+								if (proposed.lessThanOrEqualTo(0)) {
+									continue;
+								}
+
+								const hours = line.effectiveOrs
+									.times(proposed)
+									.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+								suggestions.push({
+									employeeId: emp.id,
+									employeeName: emp.name,
+									band: crossBand,
+									disciplineId: emp.disciplineId!,
+									disciplineCode: discCode,
+									fteShare: proposed.toFixed(4),
+									hoursPerWeek: hours.toFixed(2),
+									confidence: 'Medium',
+									reason: `Cross-band: ` + `${discCode} ` + `${emp.homeBand} -> ` + `${crossBand}`,
+								});
+
+								remainingCap = remainingCap
+									.minus(proposed)
+									.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+								line.remainingGap = line.remainingGap
+									.minus(proposed)
+									.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+
+								hadMatch = true;
+							}
+						}
+					}
+				}
+
+				if (!hadMatch) {
+					unassignedRemaining++;
+				}
+			}
+
+			// Step 5: Sort by confidence (High first), then name
+			suggestions.sort((a, b) => {
+				if (a.confidence !== b.confidence) {
+					return a.confidence === 'High' ? -1 : 1;
+				}
+				return a.employeeName.localeCompare(b.employeeName);
+			});
+
+			const highCount = suggestions.filter((s) => s.confidence === 'High').length;
+			const mediumCount = suggestions.filter((s) => s.confidence === 'Medium').length;
+
+			return {
+				suggestions,
+				summary: {
+					totalSuggestions: suggestions.length,
+					highConfidence: highCount,
+					mediumConfidence: mediumCount,
+					unassignedRemaining,
+				},
+			};
 		},
 	});
 }

@@ -15,6 +15,7 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		employee: {
 			findFirst: vi.fn(),
+			findMany: vi.fn(),
 		},
 		discipline: {
 			findUnique: vi.fn(),
@@ -25,6 +26,9 @@ vi.mock('../../lib/prisma.js', () => {
 			create: vi.fn(),
 			update: vi.fn(),
 			delete: vi.fn(),
+		},
+		teachingRequirementLine: {
+			findMany: vi.fn(),
 		},
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
@@ -45,6 +49,7 @@ const mockPrisma = prisma as unknown as {
 	};
 	employee: {
 		findFirst: ReturnType<typeof vi.fn>;
+		findMany: ReturnType<typeof vi.fn>;
 	};
 	discipline: {
 		findUnique: ReturnType<typeof vi.fn>;
@@ -55,6 +60,9 @@ const mockPrisma = prisma as unknown as {
 		create: ReturnType<typeof vi.fn>;
 		update: ReturnType<typeof vi.fn>;
 		delete: ReturnType<typeof vi.fn>;
+	};
+	teachingRequirementLine: {
+		findMany: ReturnType<typeof vi.fn>;
 	};
 	auditEntry: { create: ReturnType<typeof vi.fn> };
 	$transaction: ReturnType<typeof vi.fn>;
@@ -832,5 +840,597 @@ describe('DELETE /staffing-assignments/:id', () => {
 
 		expect(res.statusCode).toBe(204);
 		expect(mockPrisma.budgetVersion.update).not.toHaveBeenCalled();
+	});
+});
+
+// ── POST /staffing-assignments/auto-suggest ──────────────────────────────────
+
+describe('POST /staffing-assignments/auto-suggest', () => {
+	const SUGGEST_URL = `${URL_PREFIX}/staffing-assignments/auto-suggest`;
+
+	const mockRequirementLine = (
+		overrides: Partial<{
+			band: string;
+			disciplineCode: string;
+			requiredFteRaw: string;
+			coveredFte: string;
+			effectiveOrs: string;
+		}> = {}
+	) => ({
+		id: 1,
+		versionId: 1,
+		band: overrides.band ?? 'COLLEGE',
+		disciplineCode: overrides.disciplineCode ?? 'MATH',
+		lineLabel: 'Mathematics',
+		lineType: 'STRUCTURAL',
+		driverType: 'HOURS',
+		serviceProfileCode: 'CERTIFIE',
+		totalDriverUnits: 90,
+		totalWeeklyHours: { toString: () => '24.00' },
+		baseOrs: { toString: () => '18.00' },
+		effectiveOrs: { toString: () => overrides.effectiveOrs ?? '19.50' },
+		requiredFteRaw: {
+			toString: () => overrides.requiredFteRaw ?? '1.2500',
+		},
+		requiredFtePlanned: { toString: () => '1.5000' },
+		recommendedPositions: 2,
+		coveredFte: { toString: () => overrides.coveredFte ?? '0.0000' },
+		gapFte: { toString: () => '1.2500' },
+		coverageStatus: 'UNCOVERED',
+		assignedStaffCount: 0,
+		vacancyCount: 0,
+		directCostAnnual: { toString: () => '0.0000' },
+		hsaCostAnnual: { toString: () => '0.0000' },
+		calculatedAt: new Date(),
+	});
+
+	const mockTeachingEmployee = (
+		overrides: Partial<{
+			id: number;
+			name: string;
+			disciplineId: number;
+			homeBand: string;
+			hourlyPercentage: string;
+			disciplineCode: string;
+		}> = {}
+	) => ({
+		id: overrides.id ?? 10,
+		name: overrides.name ?? 'Jean Dupont',
+		disciplineId: overrides.disciplineId ?? 5,
+		homeBand: overrides.homeBand ?? 'COLLEGE',
+		hourlyPercentage: {
+			toString: () => overrides.hourlyPercentage ?? '1.0000',
+		},
+		discipline: {
+			id: overrides.disciplineId ?? 5,
+			code: overrides.disciplineCode ?? 'MATH',
+			name: 'Mathematiques',
+		},
+	});
+
+	it('AC-01: returns proposed assignments for unassigned teaching employee', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([mockRequirementLine()]);
+		mockPrisma.employee.findMany.mockResolvedValue([mockTeachingEmployee()]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.suggestions).toHaveLength(1);
+		expect(body.suggestions[0].employeeId).toBe(10);
+		expect(body.suggestions[0].employeeName).toBe('Jean Dupont');
+		expect(body.suggestions[0].band).toBe('COLLEGE');
+		expect(body.suggestions[0].disciplineId).toBe(5);
+		expect(body.suggestions[0].disciplineCode).toBe('MATH');
+		expect(body.suggestions[0].confidence).toBe('High');
+		expect(body.suggestions[0].fteShare).toBeDefined();
+		expect(body.suggestions[0].hoursPerWeek).toBeDefined();
+		expect(body.suggestions[0].reason).toContain('Exact match');
+	});
+
+	it('AC-02: exact band + discipline match -> High confidence', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({ band: 'COLLEGE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ homeBand: 'COLLEGE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		const body = res.json();
+		expect(body.suggestions[0].confidence).toBe('High');
+		expect(body.summary.highConfidence).toBe(1);
+		expect(body.summary.mediumConfidence).toBe(0);
+	});
+
+	it('AC-03: cross-band College->Lycee -> Medium confidence', async () => {
+		// Line is LYCEE, employee is COLLEGE -> Medium confidence
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({ band: 'LYCEE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ homeBand: 'COLLEGE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: { scope: 'CROSS_BAND' },
+		});
+
+		const body = res.json();
+		expect(body.suggestions).toHaveLength(1);
+		expect(body.suggestions[0].confidence).toBe('Medium');
+		expect(body.suggestions[0].band).toBe('LYCEE');
+		expect(body.suggestions[0].reason).toContain('Cross-band');
+		expect(body.summary.mediumConfidence).toBe(1);
+	});
+
+	it('AC-04: fteShare = min(remaining capacity, gap FTE)', async () => {
+		// Employee has 1.0 capacity, line needs 0.5 -> propose 0.5
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({
+				requiredFteRaw: '0.5000',
+				coveredFte: '0.0000',
+				effectiveOrs: '18.00',
+			}),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ hourlyPercentage: '1.0000' }),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		const body = res.json();
+		expect(body.suggestions[0].fteShare).toBe('0.5000');
+		// hoursPerWeek = effectiveOrs * fteShare = 18 * 0.5 = 9.00
+		expect(body.suggestions[0].hoursPerWeek).toBe('9.00');
+	});
+
+	it('AC-05: response includes all required fields', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([mockRequirementLine()]);
+		mockPrisma.employee.findMany.mockResolvedValue([mockTeachingEmployee()]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		const body = res.json();
+		const s = body.suggestions[0];
+		expect(s).toHaveProperty('employeeId');
+		expect(s).toHaveProperty('employeeName');
+		expect(s).toHaveProperty('band');
+		expect(s).toHaveProperty('disciplineId');
+		expect(s).toHaveProperty('disciplineCode');
+		expect(s).toHaveProperty('fteShare');
+		expect(s).toHaveProperty('hoursPerWeek');
+		expect(s).toHaveProperty('confidence');
+		expect(s).toHaveProperty('reason');
+	});
+
+	it('AC-06: summary includes all required counts', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({ band: 'COLLEGE', disciplineCode: 'MATH' }),
+			mockRequirementLine({ band: 'LYCEE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ id: 10, homeBand: 'COLLEGE' }),
+			mockTeachingEmployee({
+				id: 11,
+				name: 'Marie Martin',
+				homeBand: 'COLLEGE',
+			}),
+			mockTeachingEmployee({
+				id: 12,
+				name: 'Pierre Bernard',
+				homeBand: 'ELEMENTAIRE',
+				disciplineCode: 'FR',
+				disciplineId: 6,
+			}),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: { scope: 'CROSS_BAND' },
+		});
+
+		const body = res.json();
+		expect(body.summary).toHaveProperty('totalSuggestions');
+		expect(body.summary).toHaveProperty('highConfidence');
+		expect(body.summary).toHaveProperty('mediumConfidence');
+		expect(body.summary).toHaveProperty('unassignedRemaining');
+		// Pierre has FR discipline but no FR line -> unassigned
+		expect(body.summary.unassignedRemaining).toBe(1);
+	});
+
+	it('AC-07: fully assigned employees are excluded', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({ requiredFteRaw: '2.0000' }),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ id: 10, hourlyPercentage: '1.0000' }),
+		]);
+		// Employee already assigned full 1.0
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([
+			{
+				employeeId: 10,
+				fteShare: { toString: () => '1.0000' },
+				band: 'COLLEGE',
+				disciplineId: 5,
+			},
+		]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		const body = res.json();
+		expect(body.suggestions).toHaveLength(0);
+		expect(body.summary.totalSuggestions).toBe(0);
+	});
+
+	it('AC-07: partially assigned uses remaining capacity', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({
+				requiredFteRaw: '2.0000',
+				effectiveOrs: '18.00',
+			}),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ id: 10, hourlyPercentage: '1.0000' }),
+		]);
+		// Employee has 0.5 assigned already
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([
+			{
+				employeeId: 10,
+				fteShare: { toString: () => '0.5000' },
+				band: 'COLLEGE',
+				disciplineId: 5,
+			},
+		]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		const body = res.json();
+		// Should still get a suggestion but the existing assignment key
+		// (10:COLLEGE:5) is already taken, so no duplicate suggestion
+		// is produced for the same band+discipline combo.
+		// The employee has remaining capacity but the exact key already
+		// exists in existingKeys. No suggestion for this exact combo.
+		expect(body.suggestions).toHaveLength(0);
+	});
+
+	it('AC-07: partially assigned with different band gets suggestion', async () => {
+		// Employee assigned to COLLEGE:MATH with 0.5,
+		// line for LYCEE:MATH also exists
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({
+				band: 'LYCEE',
+				disciplineCode: 'MATH',
+				requiredFteRaw: '1.0000',
+				effectiveOrs: '18.00',
+			}),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({
+				id: 10,
+				homeBand: 'COLLEGE',
+				hourlyPercentage: '1.0000',
+			}),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([
+			{
+				employeeId: 10,
+				fteShare: { toString: () => '0.5000' },
+				band: 'COLLEGE',
+				disciplineId: 5,
+			},
+		]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: { scope: 'CROSS_BAND' },
+		});
+
+		const body = res.json();
+		expect(body.suggestions).toHaveLength(1);
+		expect(body.suggestions[0].fteShare).toBe('0.5000');
+		expect(body.suggestions[0].band).toBe('LYCEE');
+		expect(body.suggestions[0].confidence).toBe('Medium');
+	});
+
+	it('AC-08: suggestions are NOT persisted', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([mockRequirementLine()]);
+		mockPrisma.employee.findMany.mockResolvedValue([mockTeachingEmployee()]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		// No create or update calls should be made
+		expect(mockPrisma.staffingAssignment.create).not.toHaveBeenCalled();
+		expect(mockPrisma.staffingAssignment.update).not.toHaveBeenCalled();
+		expect(mockPrisma.auditEntry.create).not.toHaveBeenCalled();
+	});
+
+	it('AC-09: requires data:edit permission (403 for Viewer)', async () => {
+		const token = await makeToken('Viewer');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		expect(res.statusCode).toBe(403);
+	});
+
+	it('AC-10: defaults to HOME_BAND scope (no cross-band suggestions)', async () => {
+		// Line is LYCEE, employee is COLLEGE -> no match in HOME_BAND
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({ band: 'LYCEE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ homeBand: 'COLLEGE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {}, // scope defaults to HOME_BAND
+		});
+
+		const body = res.json();
+		expect(body.suggestions).toHaveLength(0);
+		expect(body.summary.unassignedRemaining).toBe(1);
+	});
+
+	it('no match: discipline mismatch produces no suggestions', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({ disciplineCode: 'PHYS' }),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({ disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		const body = res.json();
+		expect(body.suggestions).toHaveLength(0);
+		expect(body.summary.unassignedRemaining).toBe(1);
+	});
+
+	it('multiple suggestions: 1 employee matches multiple lines', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({
+				band: 'COLLEGE',
+				disciplineCode: 'MATH',
+				requiredFteRaw: '0.3000',
+				effectiveOrs: '18.00',
+			}),
+			mockRequirementLine({
+				band: 'LYCEE',
+				disciplineCode: 'MATH',
+				requiredFteRaw: '0.5000',
+				effectiveOrs: '18.00',
+			}),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({
+				id: 10,
+				homeBand: 'COLLEGE',
+				hourlyPercentage: '1.0000',
+			}),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: { scope: 'CROSS_BAND' },
+		});
+
+		const body = res.json();
+		// Should get High for COLLEGE and Medium for LYCEE
+		expect(body.suggestions).toHaveLength(2);
+		const high = body.suggestions.find((s: { confidence: string }) => s.confidence === 'High');
+		const medium = body.suggestions.find((s: { confidence: string }) => s.confidence === 'Medium');
+		expect(high).toBeDefined();
+		expect(high.band).toBe('COLLEGE');
+		expect(high.fteShare).toBe('0.3000');
+		expect(medium).toBeDefined();
+		expect(medium.band).toBe('LYCEE');
+		expect(medium.fteShare).toBe('0.5000');
+	});
+
+	it('STAFFING stale: 409 when no requirement lines', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		expect(res.statusCode).toBe(409);
+		expect(res.json().code).toBe('STAFFING_STALE');
+	});
+
+	it('empty state: no employees -> empty suggestions', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([mockRequirementLine()]);
+		mockPrisma.employee.findMany.mockResolvedValue([]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		const body = res.json();
+		expect(body.suggestions).toHaveLength(0);
+		expect(body.summary.totalSuggestions).toBe(0);
+		expect(body.summary.unassignedRemaining).toBe(0);
+	});
+
+	it('returns 404 when version does not exist', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: {},
+		});
+
+		expect(res.statusCode).toBe(404);
+		expect(res.json().code).toBe('VERSION_NOT_FOUND');
+	});
+
+	it('returns 401 without authentication', async () => {
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			payload: {},
+		});
+
+		expect(res.statusCode).toBe(401);
+	});
+
+	it('sorts by confidence (High first), then by name', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({ band: 'COLLEGE', disciplineCode: 'MATH' }),
+			mockRequirementLine({ band: 'LYCEE', disciplineCode: 'MATH' }),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({
+				id: 10,
+				name: 'Zoe Alpha',
+				homeBand: 'COLLEGE',
+			}),
+			mockTeachingEmployee({
+				id: 11,
+				name: 'Anna Beta',
+				homeBand: 'LYCEE',
+			}),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: { scope: 'CROSS_BAND' },
+		});
+
+		const body = res.json();
+		// Both should have High matches first (COLLEGE->COLLEGE,
+		// LYCEE->LYCEE), then Medium. Within confidence, sorted by name.
+		const confidences = body.suggestions.map((s: { confidence: string }) => s.confidence);
+		const highEndIdx = confidences.lastIndexOf('High');
+		const mediumStartIdx = confidences.indexOf('Medium');
+		if (mediumStartIdx !== -1) {
+			expect(highEndIdx).toBeLessThan(mediumStartIdx);
+		}
+	});
+
+	it('cross-band: ELEMENTAIRE does not cross-match (only College<->Lycee)', async () => {
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([
+			mockRequirementLine({
+				band: 'COLLEGE',
+				disciplineCode: 'MATH',
+			}),
+		]);
+		mockPrisma.employee.findMany.mockResolvedValue([
+			mockTeachingEmployee({
+				id: 10,
+				homeBand: 'ELEMENTAIRE',
+				disciplineCode: 'MATH',
+			}),
+		]);
+		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
+
+		const token = await makeToken('Editor');
+		const res = await app.inject({
+			method: 'POST',
+			url: SUGGEST_URL,
+			headers: authHeader(token),
+			payload: { scope: 'CROSS_BAND' },
+		});
+
+		const body = res.json();
+		// ELEMENTAIRE cannot cross-match to COLLEGE
+		expect(body.suggestions).toHaveLength(0);
+		expect(body.summary.unassignedRemaining).toBe(1);
 	});
 });
