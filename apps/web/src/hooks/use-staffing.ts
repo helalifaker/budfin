@@ -27,6 +27,14 @@ export interface Employee {
 	ajeerAnnualLevy: string;
 	ajeerMonthlyFee: string;
 	updatedAt: string;
+	recordType: string;
+	costMode: string;
+	disciplineId: number | null;
+	serviceProfileId: number | null;
+	homeBand: string | null;
+	contractEndDate: string | null;
+	monthlyCost: string | null;
+	annualCost: string | null;
 }
 
 export interface EmployeeListResponse {
