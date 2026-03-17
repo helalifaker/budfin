@@ -258,8 +258,10 @@ export function calculateDemand(input: DemandEngineInput): DemandEngineOutput {
 						`Profiles with ORS=0 must use SECTION driver type.`
 				);
 			}
-			requiredFteRaw = agg.totalWeeklyHours.div(baseOrs);
-			requiredFtePlanned = agg.totalWeeklyHours.div(effectiveOrs);
+			requiredFteRaw = agg.totalWeeklyHours.div(baseOrs).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+			requiredFtePlanned = agg.totalWeeklyHours
+				.div(effectiveOrs)
+				.toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
 		}
 
 		// Omit zero-demand lines from output (retained in sources for audit)

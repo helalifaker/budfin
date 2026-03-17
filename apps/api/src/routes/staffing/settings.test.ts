@@ -235,14 +235,14 @@ describe('PUT /staffing-settings', () => {
 		expect(mockPrisma.versionStaffingSettings.upsert).toHaveBeenCalled();
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING'] },
+			data: { staleModules: ['STAFFING', 'PNL'] },
 		});
 	});
 
-	it('skips stale marking when STAFFING already stale', async () => {
+	it('skips stale marking when STAFFING and PNL already stale', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			...mockVersion,
-			staleModules: ['STAFFING'],
+			staleModules: ['STAFFING', 'PNL'],
 		});
 		mockPrisma.versionStaffingSettings.upsert.mockResolvedValue(mockSettings);
 
@@ -369,7 +369,7 @@ describe('PUT /service-profile-overrides', () => {
 		expect(mockPrisma.versionServiceProfileOverride.createMany).toHaveBeenCalled();
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING'] },
+			data: { staleModules: ['STAFFING', 'PNL'] },
 		});
 	});
 
@@ -394,8 +394,8 @@ describe('GET /cost-assumptions', () => {
 			{
 				id: 1,
 				versionId: 1,
-				category: 'GOSI_SAUDI',
-				calculationMode: 'PCT_OF_GROSS',
+				category: 'REMPLACEMENTS',
+				calculationMode: 'PERCENT_OF_PAYROLL',
 				value: { toString: () => '0.0975' },
 			},
 		];
@@ -411,7 +411,7 @@ describe('GET /cost-assumptions', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.assumptions).toHaveLength(1);
-		expect(body.assumptions[0].category).toBe('GOSI_SAUDI');
+		expect(body.assumptions[0].category).toBe('REMPLACEMENTS');
 		expect(body.assumptions[0].value).toBe('0.0975');
 	});
 });
@@ -424,8 +424,8 @@ describe('PUT /cost-assumptions', () => {
 			{
 				id: 10,
 				versionId: 1,
-				category: 'GOSI_SAUDI',
-				calculationMode: 'PCT_OF_GROSS',
+				category: 'REMPLACEMENTS',
+				calculationMode: 'PERCENT_OF_PAYROLL',
 				value: { toString: () => '0.0975' },
 			},
 		]);
@@ -438,8 +438,8 @@ describe('PUT /cost-assumptions', () => {
 			payload: {
 				assumptions: [
 					{
-						category: 'GOSI_SAUDI',
-						calculationMode: 'PCT_OF_GROSS',
+						category: 'REMPLACEMENTS',
+						calculationMode: 'PERCENT_OF_PAYROLL',
 						value: '0.0975',
 					},
 				],
@@ -536,7 +536,7 @@ describe('GET /demand-overrides', () => {
 			{
 				id: 1,
 				versionId: 1,
-				band: 'PRIMAIRE',
+				band: 'ELEMENTAIRE',
 				disciplineId: 1,
 				discipline: { code: 'MATH', name: 'Mathematiques' },
 				lineType: 'STRUCTURAL',
@@ -557,7 +557,7 @@ describe('GET /demand-overrides', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.overrides).toHaveLength(1);
-		expect(body.overrides[0].band).toBe('PRIMAIRE');
+		expect(body.overrides[0].band).toBe('ELEMENTAIRE');
 		expect(body.overrides[0].overrideFte).toBe('2.5000');
 		expect(body.overrides[0].reasonCode).toBe('CURRICULUM_CHANGE');
 	});
@@ -571,7 +571,7 @@ describe('PUT /demand-overrides', () => {
 			{
 				id: 10,
 				versionId: 1,
-				band: 'PRIMAIRE',
+				band: 'ELEMENTAIRE',
 				disciplineId: 1,
 				discipline: { code: 'MATH', name: 'Mathematiques' },
 				lineType: 'STRUCTURAL',
@@ -589,7 +589,7 @@ describe('PUT /demand-overrides', () => {
 			payload: {
 				overrides: [
 					{
-						band: 'PRIMAIRE',
+						band: 'ELEMENTAIRE',
 						disciplineId: 1,
 						lineType: 'STRUCTURAL',
 						overrideFte: '2.5000',
@@ -612,7 +612,7 @@ describe('DELETE /demand-overrides/:id', () => {
 		mockPrisma.demandOverride.findFirst.mockResolvedValue({
 			id: 5,
 			versionId: 1,
-			band: 'PRIMAIRE',
+			band: 'ELEMENTAIRE',
 			disciplineId: 1,
 			lineType: 'STRUCTURAL',
 		});
@@ -681,7 +681,7 @@ describe('GET /teaching-requirements', () => {
 			{
 				id: 1,
 				versionId: 1,
-				band: 'PRIMAIRE',
+				band: 'ELEMENTAIRE',
 				disciplineCode: 'MATH',
 				lineLabel: 'Mathematiques - Structural',
 				lineType: 'STRUCTURAL',
@@ -716,7 +716,7 @@ describe('GET /teaching-requirements', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.lines).toHaveLength(1);
-		expect(body.lines[0].band).toBe('PRIMAIRE');
+		expect(body.lines[0].band).toBe('ELEMENTAIRE');
 		expect(body.lines[0].requiredFtePlanned).toBe('1.5000');
 		expect(body.lines[0].coverageStatus).toBe('PARTIAL');
 	});

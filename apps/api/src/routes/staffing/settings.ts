@@ -39,8 +39,14 @@ const serviceProfileOverridesBody = z.object({
 });
 
 const costAssumptionItem = z.object({
-	category: z.string().min(1).max(30),
-	calculationMode: z.string().min(1).max(25),
+	category: z.enum([
+		'REMPLACEMENTS',
+		'FORMATION',
+		'RESIDENT_SALAIRES',
+		'RESIDENT_LOGEMENT',
+		'RESIDENT_PENSION',
+	]),
+	calculationMode: z.enum(['FLAT_ANNUAL', 'PERCENT_OF_PAYROLL', 'AMOUNT_PER_FTE']),
 	value: z.string().regex(/^\d+(\.\d{1,4})?$/),
 });
 
@@ -60,9 +66,9 @@ const lyceeGroupAssumptionsBody = z.object({
 });
 
 const demandOverrideItem = z.object({
-	band: z.string().min(1).max(15),
+	band: z.enum(['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE']),
 	disciplineId: z.number().int().positive(),
-	lineType: z.string().min(1).max(20),
+	lineType: z.enum(['STRUCTURAL', 'HOST_COUNTRY', 'AUTONOMY', 'SPECIALTY']),
 	overrideFte: z.string().regex(/^\d+(\.\d{1,4})?$/),
 	reasonCode: z.string().min(1).max(30),
 	note: z.string().max(1000).nullable().optional(),
@@ -74,15 +80,23 @@ const demandOverridesBody = z.object({
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+const STAFFING_STALE_MODULES = ['STAFFING', 'PNL'] as const;
+
 async function markStaffingStale(
 	tx: typeof prisma,
 	versionId: number,
 	currentStaleModules: string[]
 ): Promise<void> {
 	const staleSet = new Set(currentStaleModules);
-	if (staleSet.has('STAFFING')) return;
+	let changed = false;
+	for (const mod of STAFFING_STALE_MODULES) {
+		if (!staleSet.has(mod)) {
+			staleSet.add(mod);
+			changed = true;
+		}
+	}
+	if (!changed) return;
 
-	staleSet.add('STAFFING');
 	await tx.budgetVersion.update({
 		where: { id: versionId },
 		data: { staleModules: [...staleSet] },
