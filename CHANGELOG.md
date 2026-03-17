@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Staffing assignments: assign individual teachers and vacancies to teaching requirement lines with FTE tracking, enabling explicit supply-to-demand coverage planning for budget owners (#216)
+- Coverage engine: automatic computation of FTE coverage gaps per requirement line with status indicators (COVERED, DEFICIT, SURPLUS, UNCOVERED) and 5 warning types (over-assigned, orphaned assignment, unassigned teacher, departed with assignments, recharge coverage) (#218)
+- HSA (Heures Supplementaires Annualisees) engine: per-teacher HSA cost calculation based on configurable hours, rates, and months, applied only to HSA-eligible LOCAL_PAYROLL employees (#220)
+- Cost mode support on staffing calculations: AEFE_RECHARGE employees produce zero-cost rows (costs flow through category assumptions), NO_LOCAL_COST employees are skipped entirely, LOCAL_PAYROLL employees retain full cost computation (#220)
+- Category cost engine now supports 3 configurable calculation modes per cost category: FLAT_ANNUAL (fixed annual amount / 12), PERCENT_OF_PAYROLL (percentage of LOCAL_PAYROLL gross subtotal), and AMOUNT_PER_FTE (per-FTE amount based on curriculum demand) (#220)
+- 10-step atomic staffing calculation pipeline: validates prerequisites, loads inputs, runs demand + coverage + HSA + cost + category cost engines, aggregates costs to requirement lines, and persists all results in a single database transaction (#223)
+- Employee records now support VACANCY record type with auto-generated VAC-NNN codes and nullable salary fields for unfunded vacancy tracking (#225)
+- 6 new fields on employee records: record type, cost mode, discipline, service profile, home band, and contract end date; teaching employees require discipline, service profile, and home band (#225)
+- Discipline alias resolution on employee import: the import endpoint resolves discipline from function/role text via DisciplineAlias lookup and assigns service profiles via ordered heuristic rules (PE, AGREGE, EPS, ARABIC_ISLAMIC, DOCUMENTALISTE, CERTIFIE catch-all) (#225)
+- Auto-suggest assignments endpoint: proposes teacher-to-requirement-line assignments by matching discipline and band with High (exact match) or Medium (cross-band College/Lycee) confidence levels for user review (#227)
+- Version clone now copies all staffing tables (settings, service profile overrides, cost assumptions, lycee group assumptions, assignments with employee ID remapping, demand overrides) and marks STAFFING as stale on the cloned version (#229)
+
 - `GET /versions/:versionId/fee-grid/prior-year` endpoint returning fee grid entries from the prior fiscal year's actual version for year-over-year comparison (#197)
 - `usePriorYearFees` hook for fetching prior-year fee data on the frontend (#197)
 - `flatDiscountPct` column (`DECIMAL(7,6)`) on `VersionRevenueSettings` Prisma model with migration (#197)
@@ -166,6 +178,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Error banners in all version lifecycle dialogs display server error messages instead of failing silently (#14)
 
 ### Changed
+
+- Staffing calculation pipeline rewritten from a simple DHG + cost pass to a 10-step orchestration (demand, coverage, HSA, cost, category cost, aggregation) that produces comprehensive requirement-line-level output with coverage data and cost allocation (#223)
+- Employee create/update endpoints now validate that teaching employees provide discipline, service profile, and home band; HSA amount is computed by the pipeline and stripped from manual input (#225)
+- Employee import endpoint extended with discipline alias resolution and service profile heuristic assignment for improved data quality on bulk uploads (#225)
+- Staffing settings endpoint extended with HSA configuration fields (target hours, first hour rate, additional hour rate, HSA months) (#220)
 
 - Revenue Settings dialog simplified from 4 tabs to 3: removed Tariff Assignment tab, consolidated Per-Student Fees into Fee Grid tab, kept Discounts and Other Revenue as standalone tabs (#197)
 - Discount model replaced per-tariff RP/R3+ rates with a single flat discount percentage stored as `flatDiscountPct` on `VersionRevenueSettings`; engine applies flat rate uniformly when > 0, falls back to per-tariff logic when 0 (#197)

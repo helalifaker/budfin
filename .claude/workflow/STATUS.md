@@ -1,7 +1,7 @@
 # BudFin — Current Status
 
 **Phase**: 7 — REVIEW
-**Current Epic**: Epic 18 — DHG & Staffing Foundations (#210)
+**Current Epic**: Epic 19 — Staffing Coverage & Cost Engine (#214)
 **Last updated**: 2026-03-17
 
 ## Phase History
@@ -64,7 +64,11 @@
 | 4 — SPECIFY (Epic 18) | ✅ Complete | 2026-03-17 |
 | 5 — TDD RED (Epic 18) | ✅ Complete | 2026-03-17 |
 | 6 — IMPLEMENT (Epic 18) | ✅ Complete | 2026-03-17 |
-| 7 — REVIEW (Epic 18) | 🔄 In Progress | 2026-03-17 |
+| 7 — REVIEW (Epic 18) | ✅ Complete | 2026-03-17 |
+| 4 — SPECIFY (Epic 19) | ✅ Complete | 2026-03-17 |
+| 5 — TDD RED (Epic 19) | ✅ Complete | 2026-03-17 |
+| 6 — IMPLEMENT (Epic 19) | ✅ Complete | 2026-03-17 |
+| 7 — REVIEW (Epic 19) | 🔄 In Progress | 2026-03-17 |
 
 ## Feature Progress
 
@@ -86,8 +90,8 @@
 | 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
 | 16 | Revenue Workspace Redesign | DONE | All 8 stories complete (8/8), merged PR #195 — 2026-03-14 |
 | 17 | Revenue Page — Enrollment Parity & Fee Grid Redesign | DONE | All stories complete, merged PR #209 — 2026-03-17 |
-| 18 | DHG & Staffing Foundations | 7 | All 6 stories complete (6/6), PR #232 — 2026-03-17 |
-| 19 | Staffing Coverage & Cost Engine | 2 | Epic Created (#214) |
+| 18 | DHG & Staffing Foundations | DONE | All 6 stories complete (6/6), merged PR #232 — 2026-03-17 |
+| 19 | Staffing Coverage & Cost Engine | 7 | All 7 stories implemented, PR #233 open (#214) |
 | 20 | Staffing Frontend Redesign | 2 | Epic Created (#221) |
 
 ## Update Instructions
