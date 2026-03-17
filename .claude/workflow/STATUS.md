@@ -1,9 +1,8 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 17 — Revenue Page — Enrollment Parity & Fee Grid Redesign (#197)
-**Last updated**: 2026-03-16
-**Note**: Epic 17 revenue settings remediation implementation complete (Phases 1-9). 40 files changed, +2320/-1654 lines. All 1217 tests passing. Code review, documentation, spec compliance, and visual verification in progress (Phases 10-14).
+**Phase**: 5 — TDD RED
+**Current Epic**: Epic 18 — DHG & Staffing Foundations (#210)
+**Last updated**: 2026-03-17
 
 ## Phase History
 
@@ -61,7 +60,9 @@
 | 4 — SPECIFY (Epic 17) | ✅ Complete | 2026-03-14 |
 | 5 — TDD RED (Epic 17) | ✅ Complete | 2026-03-14 |
 | 6 — IMPLEMENT (Epic 17) | ✅ Complete | 2026-03-16 |
-| 7 — REVIEW (Epic 17) | 🔄 In Progress | 2026-03-16 |
+| 7 — REVIEW (Epic 17) | ✅ Complete | 2026-03-17 |
+| 4 — SPECIFY (Epic 18) | ✅ Complete | 2026-03-17 |
+| 5 — TDD RED (Epic 18) | 🔄 In Progress | 2026-03-17 |
 
 ## Feature Progress
 
@@ -82,7 +83,10 @@
 | 13 | Infrastructure & CI/CD | DONE | All 10 stories complete (10/10) — 2026-03-06 |
 | 15 | UI/UX Clean-Slate Rewrite | DONE | All 18 stories complete (18/18), merged PR #137 — 2026-03-08 |
 | 16 | Revenue Workspace Redesign | DONE | All 8 stories complete (8/8), merged PR #195 — 2026-03-14 |
-| 17 | Revenue Page — Enrollment Parity & Fee Grid Redesign | 7 | Implementation complete (Phases 1-9), review & validation in progress — 2026-03-16 |
+| 17 | Revenue Page — Enrollment Parity & Fee Grid Redesign | DONE | All stories complete, merged PR #209 — 2026-03-17 |
+| 18 | DHG & Staffing Foundations | 5 | Spec approved, stories created, entering TDD RED — 2026-03-17 |
+| 19 | Staffing Coverage & Cost Engine | 2 | Epic Created (#214) |
+| 20 | Staffing Frontend Redesign | 2 | Epic Created (#221) |
 
 ## Update Instructions
 
