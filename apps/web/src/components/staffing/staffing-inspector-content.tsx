@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { useMemo, useState, useCallback } from 'react';
+import { ArrowLeft, ShieldCheck, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { formatMoney } from '../../lib/format-money';
 import { registerPanelContent } from '../../lib/right-panel-registry';
@@ -11,8 +11,22 @@ import {
 	useStaffingAssignments,
 	useEmployees,
 	useEmployee,
+	useCreateAssignment,
+	useUpdateAssignment,
+	useDeleteAssignment,
 	type Employee,
+	type StaffingAssignment,
 } from '../../hooks/use-staffing';
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from '../ui/alert-dialog';
 
 // ── Band badge styles ────────────────────────────────────────────────────────
 
@@ -54,6 +68,218 @@ const COST_MODE_STYLES: Record<string, { bg: string; text: string; label: string
 		label: 'NO_COST',
 	},
 };
+
+// ── Assignment form ─────────────────────────────────────────────────────────
+
+interface AssignmentFormState {
+	employeeId: string;
+	fteShare: string;
+	note: string;
+}
+
+function AssignmentForm({
+	versionId,
+	requirementLineId,
+	employees,
+	editingAssignment,
+	onCancel,
+	onSaved,
+}: {
+	versionId: number;
+	requirementLineId: number;
+	employees: Employee[];
+	editingAssignment: StaffingAssignment | null;
+	onCancel: () => void;
+	onSaved: () => void;
+}) {
+	const createAssignment = useCreateAssignment(versionId);
+	const updateAssignment = useUpdateAssignment(versionId);
+
+	const [form, setForm] = useState<AssignmentFormState>({
+		employeeId: editingAssignment?.employeeId.toString() ?? '',
+		fteShare: editingAssignment?.fteShare ?? '',
+		note: editingAssignment?.note ?? '',
+	});
+
+	// Filter employees to isTeaching only
+	const teachingEmployees = useMemo(() => employees.filter((e) => e.isTeaching), [employees]);
+
+	// Derive hours/week from FTE share (using ORS of 24 as default)
+	const derivedHoursPerWeek = useMemo(() => {
+		const fte = parseFloat(form.fteShare);
+		if (isNaN(fte)) return '';
+		// ORS (Obligation Reglementaire de Service) default = 24 hours/week
+		return (fte * 24).toFixed(1);
+	}, [form.fteShare]);
+
+	const handleSubmit = useCallback(() => {
+		const employeeId = parseInt(form.employeeId, 10);
+		if (isNaN(employeeId) || !form.fteShare) return;
+
+		const data = {
+			requirementLineId,
+			employeeId,
+			fteShare: form.fteShare,
+			hoursPerWeek: derivedHoursPerWeek || '0',
+			note: form.note || null,
+		};
+
+		if (editingAssignment) {
+			updateAssignment.mutate({
+				id: editingAssignment.id,
+				data,
+			});
+		} else {
+			createAssignment.mutate(data);
+		}
+		onSaved();
+	}, [
+		form,
+		requirementLineId,
+		derivedHoursPerWeek,
+		editingAssignment,
+		createAssignment,
+		updateAssignment,
+		onSaved,
+	]);
+
+	return (
+		<div className="space-y-3 rounded-lg border border-(--accent-200) bg-(--accent-50) p-3">
+			<h5 className="text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--accent-700)">
+				{editingAssignment ? 'Edit assignment' : 'New assignment'}
+			</h5>
+
+			{/* Employee select */}
+			<div>
+				<label
+					htmlFor="assignment-employee"
+					className="mb-1 block text-(--text-xs) font-medium text-(--text-secondary)"
+				>
+					Employee
+				</label>
+				<select
+					id="assignment-employee"
+					value={form.employeeId}
+					onChange={(e) => setForm((prev) => ({ ...prev, employeeId: e.target.value }))}
+					className={cn(
+						'flex h-9 w-full rounded-md',
+						'border border-(--workspace-border) bg-white',
+						'px-3 py-2 text-(--text-sm) text-(--text-primary)',
+						'focus:outline-none focus:border-(--accent-500)'
+					)}
+				>
+					<option value="">Select employee...</option>
+					{teachingEmployees.map((emp) => (
+						<option key={emp.id} value={emp.id.toString()}>
+							{emp.name}
+						</option>
+					))}
+				</select>
+			</div>
+
+			{/* FTE share input */}
+			<div>
+				<label
+					htmlFor="assignment-fte-share"
+					className="mb-1 block text-(--text-xs) font-medium text-(--text-secondary)"
+				>
+					FTE share
+				</label>
+				<input
+					id="assignment-fte-share"
+					type="number"
+					step="0.01"
+					min="0"
+					max="1"
+					value={form.fteShare}
+					onChange={(e) => setForm((prev) => ({ ...prev, fteShare: e.target.value }))}
+					className={cn(
+						'flex h-9 w-full rounded-md',
+						'border border-(--workspace-border) bg-white',
+						'px-3 py-2 text-(--text-sm) text-(--text-primary)',
+						'focus:outline-none focus:border-(--accent-500)'
+					)}
+				/>
+			</div>
+
+			{/* Hours/week derived display */}
+			<div>
+				<label
+					htmlFor="assignment-hours-week"
+					className="mb-1 block text-(--text-xs) font-medium text-(--text-secondary)"
+				>
+					Hours/week
+				</label>
+				<input
+					id="assignment-hours-week"
+					type="text"
+					value={derivedHoursPerWeek}
+					readOnly
+					aria-readonly="true"
+					className={cn(
+						'flex h-9 w-full rounded-md',
+						'border border-(--workspace-border) bg-(--workspace-bg-muted)',
+						'px-3 py-2 text-(--text-sm) text-(--text-muted)',
+						'cursor-not-allowed'
+					)}
+				/>
+			</div>
+
+			{/* Note textarea */}
+			<div>
+				<label
+					htmlFor="assignment-note"
+					className="mb-1 block text-(--text-xs) font-medium text-(--text-secondary)"
+				>
+					Note
+				</label>
+				<textarea
+					id="assignment-note"
+					value={form.note}
+					onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
+					maxLength={500}
+					rows={2}
+					className={cn(
+						'flex min-h-[60px] w-full rounded-md',
+						'border border-(--workspace-border) bg-white',
+						'px-3 py-2 text-(--text-sm) text-(--text-primary)',
+						'focus:outline-none focus:border-(--accent-500)'
+					)}
+				/>
+			</div>
+
+			{/* Actions */}
+			<div className="flex justify-end gap-2">
+				<button
+					type="button"
+					onClick={onCancel}
+					className={cn(
+						'inline-flex h-8 items-center rounded-md px-3',
+						'text-(--text-xs) font-medium text-(--text-secondary)',
+						'border border-(--workspace-border)',
+						'hover:bg-(--workspace-bg-muted)',
+						'transition-colors duration-(--duration-fast)'
+					)}
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					onClick={handleSubmit}
+					aria-label={editingAssignment ? 'Save' : 'Assign'}
+					className={cn(
+						'inline-flex h-8 items-center rounded-md px-3',
+						'text-(--text-xs) font-medium text-white',
+						'bg-(--accent-500) hover:bg-(--accent-600)',
+						'transition-colors duration-(--duration-fast)'
+					)}
+				>
+					{editingAssignment ? 'Save' : 'Assign'}
+				</button>
+			</div>
+		</div>
+	);
+}
 
 // ── Default view ─────────────────────────────────────────────────────────────
 
@@ -222,12 +448,20 @@ function InspectorRequirementView({
 	requirementLineId: number;
 	band: string;
 }) {
-	const { versionId } = useWorkspaceContext();
+	const { versionId, versionStatus } = useWorkspaceContext();
 	const clearSelection = useStaffingSelectionStore((state) => state.clearSelection);
 	const { data: reqData } = useTeachingRequirements(versionId);
 	const { data: sourcesData } = useTeachingRequirementSources(versionId, requirementLineId);
 	const { data: assignmentsData } = useStaffingAssignments(versionId);
 	const { data: employeesData } = useEmployees(versionId);
+	const deleteAssignment = useDeleteAssignment(versionId);
+
+	// Assignment form state
+	const [showForm, setShowForm] = useState(false);
+	const [editingAssignment, setEditingAssignment] = useState<StaffingAssignment | null>(null);
+	const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+	const isEditable = versionStatus === 'Draft';
 
 	const line = useMemo(
 		() => reqData?.data.find((l) => l.id === requirementLineId) ?? null,
@@ -246,6 +480,33 @@ function InspectorRequirementView({
 		}
 		return map;
 	}, [employeesData?.data]);
+
+	const handleAssignTeacher = useCallback(() => {
+		setEditingAssignment(null);
+		setShowForm(true);
+	}, []);
+
+	const handleEditAssignment = useCallback((assignment: StaffingAssignment) => {
+		setEditingAssignment(assignment);
+		setShowForm(true);
+	}, []);
+
+	const handleDeleteConfirm = useCallback(() => {
+		if (deleteConfirmId !== null) {
+			deleteAssignment.mutate(deleteConfirmId);
+			setDeleteConfirmId(null);
+		}
+	}, [deleteConfirmId, deleteAssignment]);
+
+	const handleFormSaved = useCallback(() => {
+		setShowForm(false);
+		setEditingAssignment(null);
+	}, []);
+
+	const handleFormCancel = useCallback(() => {
+		setShowForm(false);
+		setEditingAssignment(null);
+	}, []);
 
 	if (!line) return null;
 
@@ -347,11 +608,44 @@ function InspectorRequirementView({
 				</div>
 			</div>
 
-			{/* Assigned Teachers list */}
+			{/* Assigned Teachers list with edit/delete actions */}
 			<div>
-				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
-					Assigned teachers
-				</h4>
+				<div className="mb-2 flex items-center justify-between">
+					<h4 className="text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+						Assigned teachers
+					</h4>
+					{isEditable && (
+						<button
+							type="button"
+							onClick={handleAssignTeacher}
+							aria-label="Assign Teacher"
+							className={cn(
+								'inline-flex items-center gap-1 rounded-md px-2 py-1',
+								'text-(--text-xs) font-medium text-(--accent-700)',
+								'bg-(--accent-50) hover:bg-(--accent-100)',
+								'transition-colors duration-(--duration-fast)'
+							)}
+						>
+							<UserPlus className="h-3 w-3" aria-hidden="true" />
+							Assign Teacher
+						</button>
+					)}
+				</div>
+
+				{/* Assignment form (shown when creating or editing) */}
+				{showForm && versionId && (
+					<div className="mb-3">
+						<AssignmentForm
+							versionId={versionId}
+							requirementLineId={requirementLineId}
+							employees={employeesData?.data ?? []}
+							editingAssignment={editingAssignment}
+							onCancel={handleFormCancel}
+							onSaved={handleFormSaved}
+						/>
+					</div>
+				)}
+
 				<div className="space-y-2">
 					{lineAssignments.map((assignment) => {
 						const emp = employeeMap.get(assignment.employeeId);
@@ -382,9 +676,39 @@ function InspectorRequirementView({
 										{costModeStyle.label}
 									</span>
 								</div>
-								<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-secondary)">
-									{assignment.fteShare}
-								</span>
+								<div className="flex items-center gap-2">
+									<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-secondary)">
+										{assignment.fteShare}
+									</span>
+									{isEditable && (
+										<>
+											<button
+												type="button"
+												onClick={() => handleEditAssignment(assignment)}
+												aria-label="Edit assignment"
+												className={cn(
+													'rounded-md p-1 text-(--text-muted)',
+													'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)',
+													'transition-colors duration-(--duration-fast)'
+												)}
+											>
+												<Pencil className="h-3.5 w-3.5" />
+											</button>
+											<button
+												type="button"
+												onClick={() => setDeleteConfirmId(assignment.id)}
+												aria-label="Delete assignment"
+												className={cn(
+													'rounded-md p-1 text-(--text-muted)',
+													'hover:bg-(--color-error-bg) hover:text-(--color-error)',
+													'transition-colors duration-(--duration-fast)'
+												)}
+											>
+												<Trash2 className="h-3.5 w-3.5" />
+											</button>
+										</>
+									)}
+								</div>
 							</div>
 						);
 					})}
@@ -393,6 +717,30 @@ function InspectorRequirementView({
 					)}
 				</div>
 			</div>
+
+			{/* Delete confirmation dialog */}
+			<AlertDialog
+				open={deleteConfirmId !== null}
+				onOpenChange={(open) => {
+					if (!open) setDeleteConfirmId(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete this assignment?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This action cannot be undone. The teacher will be unassigned from this requirement
+							line.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={() => setDeleteConfirmId(null)}>Cancel</AlertDialogCancel>
+						<AlertDialogAction onClick={handleDeleteConfirm} aria-label="Confirm delete">
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 
 			{/* Gap Analysis card */}
 			<div>

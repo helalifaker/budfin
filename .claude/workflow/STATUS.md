@@ -92,7 +92,7 @@
 | 17 | Revenue Page — Enrollment Parity & Fee Grid Redesign | DONE | All stories complete, merged PR #209 — 2026-03-17 |
 | 18 | DHG & Staffing Foundations | DONE | All 6 stories complete (6/6), merged PR #232 — 2026-03-17 |
 | 19 | Staffing Coverage & Cost Engine | 7 | All 7 stories implemented, PR #233 open (#214) |
-| 20 | Staffing Frontend Redesign | 2 | Epic Created (#221) |
+| 20 | Staffing Frontend Redesign | 7 | All 6 stories complete (6/6), PR #239 open (#221) |
 
 ## Update Instructions
 
