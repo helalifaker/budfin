@@ -94,14 +94,12 @@ export function buildTeachingGridRows(
 ): TeachingGridRow[] {
 	if (lines.length === 0) return [];
 
-	// Sort lines by band display order, preserving original order within each band
 	const sorted = [...lines].sort((a, b) => {
 		const orderA = BAND_ORDER[a.band] ?? 99;
 		const orderB = BAND_ORDER[b.band] ?? 99;
 		return orderA - orderB;
 	});
 
-	// Group by band
 	const bandGroups = new Map<string, typeof sorted>();
 	for (const line of sorted) {
 		const existing = bandGroups.get(line.band);
@@ -115,7 +113,6 @@ export function buildTeachingGridRows(
 	const result: TeachingGridRow[] = [];
 
 	for (const [band, bandLines] of bandGroups) {
-		// Add requirement rows for this band
 		for (const line of bandLines) {
 			result.push({
 				rowType: 'requirement',
@@ -141,7 +138,6 @@ export function buildTeachingGridRows(
 			});
 		}
 
-		// Compute band subtotals using requiredFteRaw (continuous decimal, not positions)
 		let sumFteRaw = 0;
 		let sumCovered = 0;
 		let sumGap = 0;
@@ -182,7 +178,6 @@ export function buildTeachingGridRows(
 /**
  * Filter teaching grid rows by band and coverage status.
  * Both filters are additive (applied simultaneously).
- * Only filters requirement rows (subtotal/total rows are excluded from filtering input).
  */
 export function filterTeachingRows(
 	rows: TeachingGridRow[],
@@ -222,12 +217,10 @@ export interface SupportDepartmentGroup {
 export function buildSupportGridRows(
 	employees: import('../hooks/use-staffing').Employee[]
 ): SupportDepartmentGroup[] {
-	// Filter to non-teaching employees only
 	const nonTeaching = employees.filter((emp) => !emp.isTeaching);
 
 	if (nonTeaching.length === 0) return [];
 
-	// Group by department
 	const deptMap = new Map<string, import('../hooks/use-staffing').Employee[]>();
 	for (const emp of nonTeaching) {
 		const dept = emp.department || 'Unassigned';
