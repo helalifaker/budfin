@@ -33,6 +33,14 @@ function makeEmployee(overrides: Partial<Employee> = {}): Employee {
 		ajeerAnnualLevy: '9660.00',
 		ajeerMonthlyFee: '805.00',
 		updatedAt: '2026-01-01T00:00:00Z',
+		recordType: 'EMPLOYEE',
+		costMode: 'LOCAL_PAYROLL',
+		disciplineId: null,
+		serviceProfileId: null,
+		homeBand: null,
+		contractEndDate: null,
+		monthlyCost: null,
+		annualCost: null,
 		...overrides,
 	};
 }
