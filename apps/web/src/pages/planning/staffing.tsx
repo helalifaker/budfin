@@ -1,136 +1,89 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
-import {
-	useEmployees,
-	useCreateEmployee,
-	useUpdateEmployee,
-	useDeleteEmployee,
-	useCalculateStaffing,
-	useDhgData,
-	useStaffCosts,
-	useStaffingSummary,
-	type Employee,
-} from '../../hooks/use-staffing';
+import { useRightPanelStore } from '../../stores/right-panel-store';
+import { useStaffingSelectionStore } from '../../stores/staffing-selection-store';
+import { useStaffingSettingsSheetStore } from '../../stores/staffing-settings-store';
+import { useCalculateStaffing } from '../../hooks/use-staffing';
 import { useVersions } from '../../hooks/use-versions';
-import { WorkspaceBoard } from '../../components/shared/workspace-board';
-import { WorkspaceBlock } from '../../components/shared/workspace-block';
-import { StaffingKpiRibbon } from '../../components/staffing/kpi-ribbon';
-import { EmployeeGrid } from '../../components/staffing/employee-grid';
-import { EmployeeForm, type EmployeeFormData } from '../../components/staffing/employee-form';
-import { EmployeeImportDialog } from '../../components/staffing/employee-import-dialog';
-import { DhgGrilleView, DhgRequirementsView } from '../../components/staffing/dhg-view';
-import { MonthlyCostGrid } from '../../components/staffing/monthly-cost-grid';
+import {
+	BAND_FILTERS,
+	COVERAGE_OPTIONS,
+	VIEW_PRESETS,
+	deriveStaffingEditability,
+	type BandFilter,
+	type CoverageFilter,
+	type ViewPreset,
+	type WorkspaceMode,
+} from '../../lib/staffing-workspace';
 import { Button } from '../../components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
 import { PageTransition } from '../../components/shared/page-transition';
 
 export function StaffingPage() {
-	const { versionId, fiscalYear } = useWorkspaceContext();
-	const user = useAuthStore((s) => s.user);
-	const isViewer = user?.role === 'Viewer';
+	const { versionId, fiscalYear, versionStatus } = useWorkspaceContext();
+	const user = useAuthStore((state) => state.user);
+	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
+	const clearSelection = useStaffingSelectionStore((state) => state.clearSelection);
+	const openSettings = useStaffingSettingsSheetStore((state) => state.open);
 
-	const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-	const [formOpen, setFormOpen] = useState(false);
-	const [importOpen, setImportOpen] = useState(false);
-	const costGroupBy: 'month' | 'department' | 'employee' = 'month';
+	const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>('teaching');
+	const [bandFilter, setBandFilter] = useState<BandFilter>('ALL');
+	const [coverageFilter, setCoverageFilter] = useState<CoverageFilter>('ALL');
+	const [viewPreset, setViewPreset] = useState<ViewPreset>('Full View');
 
-	// Data hooks
-	const { data: employeesData } = useEmployees(versionId);
-	const { data: dhgData } = useDhgData(versionId);
-	const { data: costData } = useStaffCosts(versionId, costGroupBy);
-	const { data: breakdownData, isLoading: isBreakdownLoading } = useStaffCosts(
-		versionId,
-		'employee',
-		true
-	);
-	const { data: summaryData, isLoading: isSummaryLoading } = useStaffingSummary(versionId);
 	const { data: versionsData } = useVersions(fiscalYear);
-
-	// Mutations
 	const calculateMutation = useCalculateStaffing(versionId);
-	const createMutation = useCreateEmployee(versionId);
-	const updateMutation = useUpdateEmployee(versionId);
-	const deleteMutation = useDeleteEmployee(versionId);
+
+	// Register right panel page key
+	useEffect(() => {
+		setActivePage('staffing');
+		return () => {
+			setActivePage(null);
+			clearSelection();
+		};
+	}, [clearSelection, setActivePage]);
+
+	// Clear selection when panel closes
+	useEffect(() => {
+		if (!isPanelOpen) {
+			clearSelection();
+		}
+	}, [clearSelection, isPanelOpen]);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId || !versionsData?.data) return null;
-		return versionsData.data.find((v) => v.id === versionId) ?? null;
+		return versionsData.data.find((version) => version.id === versionId) ?? null;
 	}, [versionId, versionsData]);
 
+	const editability = deriveStaffingEditability({
+		role: user?.role ?? null,
+		versionStatus: currentVersion?.status ?? versionStatus,
+	});
+	const isEditable = editability === 'editable';
+	const isLocked = editability === 'locked';
+	const isViewer = editability === 'viewer';
 	const isStale = currentVersion?.staleModules?.includes('STAFFING') ?? false;
-	const employees = useMemo(() => employeesData?.data ?? [], [employeesData?.data]);
+	const isUncalculated = !isStale && !currentVersion?.lastCalculatedAt;
 
-	const kpiData = useMemo(() => {
-		const activeEmployees = employees.filter((e) => e.status !== 'Departed');
-		const totalHeadcount = activeEmployees.length;
-		const totalAnnualStaffCost = Number(summaryData?.cost ?? 0);
-		const avgMonthlyCostPerEmployee =
-			totalHeadcount > 0 ? Math.round(totalAnnualStaffCost / totalHeadcount / 12) : 0;
-
-		// Sum GOSI, Ajeer, EoS from breakdown rows (API-provided values)
-		const breakdown = breakdownData?.breakdown ?? [];
-		let gosiTotal = 0;
-		let ajeerTotal = 0;
-		let eosTotal = 0;
-		for (const row of breakdown) {
-			gosiTotal += Number(row.gosi_amount);
-			ajeerTotal += Number(row.ajeer_amount);
-			eosTotal += Number(row.eos_monthly_accrual);
+	// Reset filters when workspace mode changes
+	const handleWorkspaceModeChange = (value: string) => {
+		if (value === 'teaching' || value === 'support') {
+			setWorkspaceMode(value);
+			setBandFilter('ALL');
+			setCoverageFilter('ALL');
 		}
+	};
 
-		return {
-			totalHeadcount,
-			totalAnnualStaffCost,
-			avgMonthlyCostPerEmployee,
-			gosiTotal: Math.round(gosiTotal),
-			ajeerTotal: Math.round(ajeerTotal),
-			eosTotal: Math.round(eosTotal),
-			isStale,
-			isLoading: isSummaryLoading || isBreakdownLoading,
-		};
-	}, [summaryData, breakdownData, employees, isStale, isSummaryLoading, isBreakdownLoading]);
-
-	const handleSelectEmployee = useCallback((emp: Employee) => {
-		setSelectedEmployee(emp);
-		setFormOpen(true);
-	}, []);
-
-	const handleNewEmployee = useCallback(() => {
-		setSelectedEmployee(null);
-		setFormOpen(true);
-	}, []);
-
-	const handleSave = useCallback(
-		(data: EmployeeFormData) => {
-			if (selectedEmployee) {
-				updateMutation.mutate(
-					{
-						id: selectedEmployee.id,
-						data: data as unknown as Partial<Employee>,
-						updatedAt: selectedEmployee.updatedAt,
-					},
-					{
-						onSuccess: () => setFormOpen(false),
-					}
-				);
-			} else {
-				createMutation.mutate(data as unknown as Partial<Employee>, {
-					onSuccess: () => setFormOpen(false),
-				});
-			}
-		},
-		[selectedEmployee, updateMutation, createMutation]
-	);
-
-	const handleDelete = useCallback(() => {
-		if (!selectedEmployee) return;
-		deleteMutation.mutate(selectedEmployee.id, {
-			onSuccess: () => {
-				setFormOpen(false);
-				setSelectedEmployee(null);
-			},
-		});
-	}, [selectedEmployee, deleteMutation]);
+	const isTeachingMode = workspaceMode === 'teaching';
+	const showCoverageFilter = isTeachingMode && viewPreset !== 'Need';
 
 	if (!versionId) {
 		return (
@@ -142,102 +95,163 @@ export function StaffingPage() {
 
 	return (
 		<PageTransition>
-			<WorkspaceBoard
-				title="Staffing & Staff Costs"
-				description="Manage employees, DHG requirements, and cost projections."
-				actions={
-					<>
-						{!isViewer && (
-							<>
-								<Button
-									size="sm"
-									disabled={calculateMutation.isPending}
-									onClick={() => calculateMutation.mutate()}
-								>
-									{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
-								</Button>
-								<Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-									Import xlsx
-								</Button>
-								<Button variant="outline" size="sm" onClick={handleNewEmployee}>
-									Add Employee
-								</Button>
-							</>
+			<div className="flex h-full min-h-0 flex-col overflow-hidden">
+				{/* Conditional banners */}
+				{isLocked && versionStatus && (
+					<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-4 py-3">
+						<p className="text-sm font-semibold text-(--color-info)">
+							This version is locked. Staffing data is read-only.
+						</p>
+					</div>
+				)}
+				{isViewer && (
+					<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-4 py-3">
+						<p className="text-sm font-semibold text-(--color-info)">You have view-only access.</p>
+					</div>
+				)}
+				{isUncalculated && (
+					<div className="shrink-0 border-b border-(--color-warning) bg-(--color-warning-bg) px-4 py-3">
+						<p className="text-sm font-semibold text-(--color-warning)">
+							Staffing has not been calculated. Click Calculate to generate.
+						</p>
+					</div>
+				)}
+
+				{/* Toolbar */}
+				<div className="flex shrink-0 items-center justify-between border-b border-(--workspace-border) px-6 py-2">
+					<div className="flex items-center gap-2">
+						{/* Workspace mode toggle */}
+						<ToggleGroup
+							type="single"
+							value={workspaceMode}
+							onValueChange={handleWorkspaceModeChange}
+							aria-label="Workspace mode"
+						>
+							<ToggleGroupItem value="teaching">Teaching</ToggleGroupItem>
+							<ToggleGroupItem value="support">Support &amp; Admin</ToggleGroupItem>
+						</ToggleGroup>
+
+						{/* Band filter — Teaching mode only */}
+						{isTeachingMode && (
+							<ToggleGroup
+								type="single"
+								value={bandFilter}
+								onValueChange={(value) => {
+									if (value) setBandFilter(value as BandFilter);
+								}}
+								aria-label="Band filter"
+							>
+								{BAND_FILTERS.map((filter) => (
+									<ToggleGroupItem key={filter.value} value={filter.value}>
+										{filter.label}
+									</ToggleGroupItem>
+								))}
+							</ToggleGroup>
 						)}
-					</>
-				}
-				kpiRibbon={<StaffingKpiRibbon {...kpiData} />}
-			>
-				{/* Status feedback */}
-				{calculateMutation.isSuccess && (
-					<div
-						className="rounded-lg border border-(--color-success) bg-(--color-success-bg) px-4 py-2 text-sm text-(--color-success)"
-						role="status"
-					>
-						Staffing calculated successfully.
+
+						{/* Coverage filter — Teaching mode only, hidden when Need */}
+						{showCoverageFilter && (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="outline" size="sm">
+										{COVERAGE_OPTIONS.find((opt) => opt.value === coverageFilter)?.label ??
+											'All Coverage'}
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									{COVERAGE_OPTIONS.map((option) => (
+										<DropdownMenuItem
+											key={option.value}
+											onClick={() => setCoverageFilter(option.value)}
+										>
+											{option.label}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						)}
 					</div>
-				)}
-				{calculateMutation.isError && (
-					<div
-						className="rounded-lg border border-(--color-error) bg-(--color-error-bg) px-4 py-2 text-sm text-(--color-error)"
-						role="alert"
-					>
-						Calculation failed. Ensure enrollment and employee data are configured.
+
+					<div className="flex items-center gap-2">
+						{/* View presets — Teaching mode only */}
+						{isTeachingMode && (
+							<ToggleGroup
+								type="single"
+								value={viewPreset}
+								onValueChange={(value) => {
+									if (value) setViewPreset(value as ViewPreset);
+								}}
+								aria-label="View preset"
+							>
+								{VIEW_PRESETS.map((preset) => (
+									<ToggleGroupItem key={preset.value} value={preset.value}>
+										{preset.label}
+									</ToggleGroupItem>
+								))}
+							</ToggleGroup>
+						)}
+
+						{/* Settings — always visible */}
+						<Button type="button" variant="outline" size="sm" onClick={openSettings}>
+							Settings
+						</Button>
+
+						{/* Import — editable only */}
+						{isEditable && (
+							<Button type="button" variant="outline" size="sm">
+								Import
+							</Button>
+						)}
+
+						{/* Add Employee — editable only */}
+						{isEditable && (
+							<Button type="button" variant="outline" size="sm">
+								Add Employee
+							</Button>
+						)}
+
+						{/* Auto-Suggest — Teaching mode + editable only */}
+						{isTeachingMode && isEditable && (
+							<Button type="button" variant="outline" size="sm">
+								Auto-Suggest
+							</Button>
+						)}
+
+						{/* Calculate — editable only */}
+						{isEditable && (
+							<Button
+								type="button"
+								size="sm"
+								disabled={calculateMutation.isPending}
+								onClick={() => calculateMutation.mutate()}
+							>
+								{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
+							</Button>
+						)}
 					</div>
-				)}
+				</div>
 
-				<WorkspaceBlock title="Employee Roster" count={employees.length} isStale={isStale}>
-					<EmployeeGrid
-						employees={employees}
-						isReadOnly={isViewer}
-						onSelect={handleSelectEmployee}
-						selectedId={selectedEmployee?.id ?? null}
-					/>
-				</WorkspaceBlock>
-
-				<WorkspaceBlock title="DHG Requirements" count={dhgData?.requirements?.length ?? 0}>
-					<DhgRequirementsView requirements={dhgData?.requirements ?? []} />
-				</WorkspaceBlock>
-
-				<WorkspaceBlock
-					title="DHG Grille Configuration"
-					count={dhgData?.grilles?.length ?? 0}
-					defaultOpen={false}
-				>
-					<DhgGrilleView grilles={dhgData?.grilles ?? []} />
-				</WorkspaceBlock>
-
-				<WorkspaceBlock title="Monthly Cost Budget">
-					<MonthlyCostGrid
-						data={costData?.data ?? []}
-						totals={costData?.totals ?? null}
-						isRedacted={isViewer}
-					/>
-				</WorkspaceBlock>
-
-				{/* Employee Form Panel */}
-				<EmployeeForm
-					open={formOpen}
-					onClose={() => {
-						setFormOpen(false);
-						setSelectedEmployee(null);
-					}}
-					employee={selectedEmployee}
-					isReadOnly={isViewer}
-					onSave={handleSave}
-					onDelete={handleDelete}
-					isPending={
-						createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
-					}
-				/>
-
-				{/* Import Dialog */}
-				<EmployeeImportDialog
-					open={importOpen}
-					onClose={() => setImportOpen(false)}
-					versionId={versionId}
-				/>
-			</WorkspaceBoard>
+				{/* Grid zone — flex-1, owns its own scroll */}
+				<div className="flex-1 min-h-0 overflow-hidden px-6 py-2">
+					<div className="h-full overflow-y-auto scrollbar-thin">
+						{isTeachingMode ? (
+							<div
+								data-testid="teaching-grid-placeholder"
+								className="flex h-full items-center justify-center text-(--text-muted)"
+							>
+								Teaching workspace
+							</div>
+						) : (
+							<div
+								data-testid="support-grid-placeholder"
+								className="flex h-full items-center justify-center text-(--text-muted)"
+							>
+								Support &amp; Admin workspace
+							</div>
+						)}
+					</div>
+				</div>
+			</div>
 		</PageTransition>
 	);
 }

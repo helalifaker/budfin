@@ -335,3 +335,334 @@ export function useImportEmployees(versionId: number | null) {
 		onError: (err) => toast.error(err instanceof Error ? err.message : 'Import failed'),
 	});
 }
+
+// ── Staffing Settings Hooks ─────────────────────────────────────────────────
+
+export interface StaffingSettings {
+	id: number;
+	versionId: number;
+	hsaTargetHoursPerWeek: string;
+	hsaRateFirstHour: string;
+	hsaRateAdditionalHour: string;
+	hsaMonths: number;
+}
+
+export interface StaffingSettingsResponse {
+	data: StaffingSettings;
+}
+
+export function useStaffingSettings(versionId: number | null) {
+	return useQuery({
+		queryKey: ['staffing-settings', versionId],
+		queryFn: () => apiClient<StaffingSettingsResponse>(`/versions/${versionId}/staffing-settings`),
+		enabled: versionId !== null,
+	});
+}
+
+export function usePutStaffingSettings(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: Partial<StaffingSettings>) =>
+			apiClient<StaffingSettingsResponse>(`/versions/${versionId}/staffing-settings`, {
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['staffing-settings', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Staffing settings saved');
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'Failed to save staffing settings'),
+	});
+}
+
+// ── Service Profile Override Hooks ──────────────────────────────────────────
+
+export interface ServiceProfileOverride {
+	serviceProfileId: number;
+	effectiveOrs: string;
+}
+
+export interface ServiceProfileOverridesResponse {
+	data: ServiceProfileOverride[];
+}
+
+export function useServiceProfileOverrides(versionId: number | null) {
+	return useQuery({
+		queryKey: ['service-profile-overrides', versionId],
+		queryFn: () =>
+			apiClient<ServiceProfileOverridesResponse>(
+				`/versions/${versionId}/service-profile-overrides`
+			),
+		enabled: versionId !== null,
+	});
+}
+
+export function usePutServiceProfileOverrides(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: ServiceProfileOverride[]) =>
+			apiClient<ServiceProfileOverridesResponse>(
+				`/versions/${versionId}/service-profile-overrides`,
+				{
+					method: 'PUT',
+					body: JSON.stringify({ overrides: data }),
+				}
+			),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['service-profile-overrides', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Service profile overrides saved');
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'Failed to save service profile overrides'),
+	});
+}
+
+// ── Cost Assumptions Hooks ──────────────────────────────────────────────────
+
+export interface CostAssumption {
+	category: string;
+	mode: string;
+	value: string;
+}
+
+export interface CostAssumptionsResponse {
+	data: CostAssumption[];
+}
+
+export function useCostAssumptions(versionId: number | null) {
+	return useQuery({
+		queryKey: ['cost-assumptions', versionId],
+		queryFn: () => apiClient<CostAssumptionsResponse>(`/versions/${versionId}/cost-assumptions`),
+		enabled: versionId !== null,
+	});
+}
+
+export function usePutCostAssumptions(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: CostAssumption[]) =>
+			apiClient<CostAssumptionsResponse>(`/versions/${versionId}/cost-assumptions`, {
+				method: 'PUT',
+				body: JSON.stringify({ assumptions: data }),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['cost-assumptions', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Cost assumptions saved');
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'Failed to save cost assumptions'),
+	});
+}
+
+// ── Lycee Group Assumptions Hooks ───────────────────────────────────────────
+
+export interface LyceeGroupAssumption {
+	disciplineCode: string;
+	groupCount: number;
+	hoursPerGroup: string;
+}
+
+export interface LyceeGroupAssumptionsResponse {
+	data: LyceeGroupAssumption[];
+}
+
+export function useLyceeGroupAssumptions(versionId: number | null) {
+	return useQuery({
+		queryKey: ['lycee-group-assumptions', versionId],
+		queryFn: () =>
+			apiClient<LyceeGroupAssumptionsResponse>(`/versions/${versionId}/lycee-group-assumptions`),
+		enabled: versionId !== null,
+	});
+}
+
+export function usePutLyceeGroupAssumptions(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: LyceeGroupAssumption[]) =>
+			apiClient<LyceeGroupAssumptionsResponse>(`/versions/${versionId}/lycee-group-assumptions`, {
+				method: 'PUT',
+				body: JSON.stringify({ assumptions: data }),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['lycee-group-assumptions', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Lycee group assumptions saved');
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'Failed to save lycee group assumptions'),
+	});
+}
+
+// ── Teaching Requirements Hooks ─────────────────────────────────────────────
+
+export interface TeachingRequirementLine {
+	id: number;
+	band: string;
+	disciplineCode: string;
+	lineLabel: string;
+	lineType: string;
+	serviceProfileCode: string;
+	totalDriverUnits: number;
+	totalWeeklyHours: string;
+	baseOrs: string;
+	effectiveOrs: string;
+	requiredFteRaw: string;
+	requiredFtePlanned: string;
+	recommendedPositions: number;
+	coveredFte: string;
+	gapFte: string;
+	coverageStatus: string;
+	assignedStaffCount: number;
+	directCostAnnual: string;
+	hsaCostAnnual: string;
+}
+
+export interface TeachingRequirementsResponse {
+	data: TeachingRequirementLine[];
+	totals: {
+		totalFteRaw: string;
+		totalFtePlanned: string;
+		totalFteCovered: string;
+		totalFteGap: string;
+	};
+}
+
+export function useTeachingRequirements(versionId: number | null) {
+	return useQuery({
+		queryKey: ['teaching-requirements', versionId],
+		queryFn: () =>
+			apiClient<TeachingRequirementsResponse>(`/versions/${versionId}/teaching-requirements`),
+		enabled: versionId !== null,
+	});
+}
+
+export interface TeachingRequirementSource {
+	gradeLevel: string;
+	headcount: number;
+	sections: number;
+	hoursPerUnit: string;
+	totalWeeklyHours: string;
+}
+
+export interface TeachingRequirementSourcesResponse {
+	data: TeachingRequirementSource[];
+}
+
+export function useTeachingRequirementSources(
+	versionId: number | null,
+	requirementId: number | null
+) {
+	return useQuery({
+		queryKey: ['teaching-requirement-sources', versionId, requirementId],
+		queryFn: () =>
+			apiClient<TeachingRequirementSourcesResponse>(
+				`/versions/${versionId}/teaching-requirements/${requirementId}/sources`
+			),
+		enabled: versionId !== null && requirementId !== null,
+	});
+}
+
+// ── Staffing Assignment Hooks ───────────────────────────────────────────────
+
+export interface StaffingAssignment {
+	id: number;
+	requirementLineId: number;
+	employeeId: number;
+	fteShare: string;
+	hoursPerWeek: string;
+	note: string | null;
+	source: string;
+}
+
+export interface StaffingAssignmentsResponse {
+	data: StaffingAssignment[];
+}
+
+export function useStaffingAssignments(versionId: number | null) {
+	return useQuery({
+		queryKey: ['staffing-assignments', versionId],
+		queryFn: () =>
+			apiClient<StaffingAssignmentsResponse>(`/versions/${versionId}/staffing-assignments`),
+		enabled: versionId !== null,
+	});
+}
+
+export function useCreateAssignment(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: Omit<StaffingAssignment, 'id' | 'source'>) =>
+			apiClient<StaffingAssignment>(`/versions/${versionId}/staffing-assignments`, {
+				method: 'POST',
+				body: JSON.stringify(data),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['staffing-assignments', versionId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['teaching-requirements', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Assignment created');
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'Failed to create assignment'),
+	});
+}
+
+export function useUpdateAssignment(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, data }: { id: number; data: Partial<StaffingAssignment> }) =>
+			apiClient<StaffingAssignment>(`/versions/${versionId}/staffing-assignments/${id}`, {
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['staffing-assignments', versionId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['teaching-requirements', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Assignment updated');
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'Failed to update assignment'),
+	});
+}
+
+export function useDeleteAssignment(versionId: number | null) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (id: number) =>
+			apiClient(`/versions/${versionId}/staffing-assignments/${id}`, {
+				method: 'DELETE',
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['staffing-assignments', versionId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['teaching-requirements', versionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Assignment deleted');
+		},
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'Failed to delete assignment'),
+	});
+}
