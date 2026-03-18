@@ -21,7 +21,6 @@ export type VersionDetailPanelProps = {
 const MODULE_ROUTES: Record<string, string> = {
 	ENROLLMENT: '/planning/enrollment',
 	REVENUE: '/planning/revenue',
-	DHG: '/planning/staffing',
 	STAFFING: '/planning/staffing',
 	PNL: '/planning/pnl',
 };

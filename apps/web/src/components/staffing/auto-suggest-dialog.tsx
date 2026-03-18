@@ -74,7 +74,8 @@ export function AutoSuggestDialog({
 				const s = suggestions[idx];
 				if (s) {
 					createAssignment.mutate({
-						requirementLineId: s.requirementLineId,
+						band: s.band,
+						disciplineId: s.disciplineId,
 						employeeId: s.employeeId,
 						fteShare: s.fteShare,
 						hoursPerWeek: '0',
@@ -154,7 +155,7 @@ export function AutoSuggestDialog({
 
 									return (
 										<tr
-											key={`${suggestion.employeeId}-${suggestion.requirementLineId}`}
+											key={`${suggestion.employeeId}-${suggestion.band}-${suggestion.disciplineId}`}
 											className="border-b border-(--workspace-border)"
 										>
 											<td className="px-3 py-2">

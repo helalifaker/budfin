@@ -412,7 +412,7 @@ describe('PUT /cohort-parameters', () => {
 
 		// All COHORT_STALE_MODULES should be added
 		expect(body.staleModules).toEqual(
-			expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'])
+			expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL'])
 		);
 
 		// Verify the upsert was called with correct compound key
@@ -442,7 +442,7 @@ describe('PUT /cohort-parameters', () => {
 			expect.objectContaining({
 				where: { id: 1 },
 				data: {
-					staleModules: expect.arrayContaining(['REVENUE', 'ENROLLMENT', 'DHG', 'STAFFING', 'PNL']),
+					staleModules: expect.arrayContaining(['REVENUE', 'ENROLLMENT', 'STAFFING', 'PNL']),
 				},
 			})
 		);

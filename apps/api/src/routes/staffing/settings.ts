@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { Decimal } from 'decimal.js';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { ROLE_PERMISSIONS } from '../../lib/rbac.js';
@@ -81,7 +82,7 @@ const demandOverridesBody = z.object({
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const STAFFING_STALE_MODULES = ['STAFFING', 'PNL'] as const;
+const STAFFING_STALE_MODULES = ['STAFFING'] as const;
 
 async function markStaffingStale(
 	tx: typeof prisma,
@@ -172,7 +173,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			}
 
 			return {
-				settings: {
+				data: {
 					id: settings.id,
 					versionId: settings.versionId,
 					hsaTargetHours: settings.hsaTargetHours.toString(),
@@ -247,7 +248,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				settings: {
+				data: {
 					id: updated.id,
 					versionId: updated.versionId,
 					hsaTargetHours: updated.hsaTargetHours.toString(),
@@ -282,7 +283,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				overrides: overrides.map((o) => ({
+				data: overrides.map((o) => ({
 					id: o.id,
 					versionId: o.versionId,
 					serviceProfileId: o.serviceProfileId,
@@ -352,7 +353,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				overrides: saved.map((o) => ({
+				data: saved.map((o) => ({
 					id: o.id,
 					versionId: o.versionId,
 					serviceProfileId: o.serviceProfileId,
@@ -383,7 +384,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				assumptions: assumptions.map((a) => ({
+				data: assumptions.map((a) => ({
 					id: a.id,
 					versionId: a.versionId,
 					category: a.category,
@@ -449,7 +450,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				assumptions: saved.map((a) => ({
+				data: saved.map((a) => ({
 					id: a.id,
 					versionId: a.versionId,
 					category: a.category,
@@ -479,7 +480,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				assumptions: assumptions.map((a) => ({
+				data: assumptions.map((a) => ({
 					id: a.id,
 					versionId: a.versionId,
 					gradeLevel: a.gradeLevel,
@@ -549,7 +550,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				assumptions: saved.map((a) => ({
+				data: saved.map((a) => ({
 					id: a.id,
 					versionId: a.versionId,
 					gradeLevel: a.gradeLevel,
@@ -582,7 +583,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				overrides: overrides.map((o) => ({
+				data: overrides.map((o) => ({
 					id: o.id,
 					versionId: o.versionId,
 					band: o.band,
@@ -657,7 +658,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				overrides: saved.map((o) => ({
+				data: saved.map((o) => ({
 					id: o.id,
 					versionId: o.versionId,
 					band: o.band,
@@ -789,6 +790,34 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 				assignmentsByLine.set(key, entry);
 			}
 
+			// Compute aggregated totals (BC-09)
+			let totalFteRaw = new Decimal(0);
+			let totalFteCovered = new Decimal(0);
+			let totalFteGap = new Decimal(0);
+			let totalDirectCost = new Decimal(0);
+			let totalHsaCost = new Decimal(0);
+
+			for (const l of lines) {
+				totalFteRaw = totalFteRaw.plus(l.requiredFteRaw.toString());
+				totalFteCovered = totalFteCovered.plus(l.coveredFte.toString());
+				totalFteGap = totalFteGap.plus(l.gapFte.toString());
+				totalDirectCost = totalDirectCost.plus(l.directCostAnnual.toString());
+				totalHsaCost = totalHsaCost.plus(l.hsaCostAnnual.toString());
+			}
+
+			// Build coverage warnings for lines that are not fully covered (BC-09)
+			const coverageWarnings = lines
+				.filter((l) => l.coverageStatus !== 'COVERED')
+				.map((l) => ({
+					band: l.band,
+					disciplineCode: l.disciplineCode,
+					lineType: l.lineType,
+					coverageStatus: l.coverageStatus,
+					requiredFtePlanned: l.requiredFtePlanned.toString(),
+					coveredFte: l.coveredFte.toString(),
+					gapFte: l.gapFte.toString(),
+				}));
+
 			return {
 				lines: lines.map((l) => ({
 					id: l.id,
@@ -804,6 +833,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 					baseOrs: l.baseOrs.toString(),
 					effectiveOrs: l.effectiveOrs.toString(),
 					requiredFteRaw: l.requiredFteRaw.toString(),
+					requiredFteCalculated: l.requiredFteCalculated?.toString() ?? null,
 					requiredFtePlanned: l.requiredFtePlanned.toString(),
 					recommendedPositions: l.recommendedPositions,
 					coveredFte: l.coveredFte.toString(),
@@ -816,6 +846,19 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 					assignedEmployees: assignmentsByLine.get(`${l.band}|${l.disciplineCode}`) ?? [],
 					calculatedAt: l.calculatedAt,
 				})),
+				totals: {
+					totalFteRaw: totalFteRaw.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+					totalFteCovered: totalFteCovered.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+					totalFteGap: totalFteGap.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+					totalDirectCost: hasSalaryView
+						? totalDirectCost.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4)
+						: null,
+					totalHsaCost: hasSalaryView
+						? totalHsaCost.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4)
+						: null,
+					lineCount: lines.length,
+				},
+				warnings: coverageWarnings,
 			};
 		},
 	});
@@ -844,7 +887,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				sources: sources.map((s) => ({
+				data: sources.map((s) => ({
 					id: s.id,
 					versionId: s.versionId,
 					gradeLevel: s.gradeLevel,

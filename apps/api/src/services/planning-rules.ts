@@ -12,13 +12,7 @@ export const DEFAULT_CAPPED_RETENTION = 0.98;
 export const DEFAULT_RETENTION_RECENT_WEIGHT = 0.6;
 export const DEFAULT_HISTORICAL_TARGET_RECENT_WEIGHT = 0.8;
 
-export const ENROLLMENT_RULES_STALE_MODULES = [
-	'ENROLLMENT',
-	'REVENUE',
-	'DHG',
-	'STAFFING',
-	'PNL',
-] as const;
+export const ENROLLMENT_RULES_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL'] as const;
 
 export function resolveEnrollmentPlanningRules(source?: {
 	rolloverThreshold?: Decimal.Value | null;

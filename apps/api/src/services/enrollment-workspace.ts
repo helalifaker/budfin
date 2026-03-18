@@ -18,13 +18,7 @@ const DEFAULT_NATIONALITY_WEIGHTS = {
 	Autres: '0.6400',
 } as const;
 
-export const ENROLLMENT_STALE_MODULES = [
-	'ENROLLMENT',
-	'REVENUE',
-	'DHG',
-	'STAFFING',
-	'PNL',
-] as const;
+export const ENROLLMENT_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL'] as const;
 
 export type EnrollmentTransaction = Prisma.TransactionClient;
 

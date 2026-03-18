@@ -159,14 +159,14 @@ describe('GET /staffing-assignments', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.assignments).toHaveLength(1);
-		expect(body.assignments[0].employeeName).toBe('Jean Dupont');
-		expect(body.assignments[0].employeeCode).toBe('EMP001');
-		expect(body.assignments[0].costMode).toBe('LOCAL_PAYROLL');
-		expect(body.assignments[0].disciplineCode).toBe('MATH');
-		expect(body.assignments[0].hoursPerWeek).toBe('6.00');
-		expect(body.assignments[0].fteShare).toBe('0.2500');
-		expect(body.assignments[0].band).toBe('ELEMENTAIRE');
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].employeeName).toBe('Jean Dupont');
+		expect(body.data[0].employeeCode).toBe('EMP001');
+		expect(body.data[0].costMode).toBe('LOCAL_PAYROLL');
+		expect(body.data[0].disciplineCode).toBe('MATH');
+		expect(body.data[0].hoursPerWeek).toBe('6.00');
+		expect(body.data[0].fteShare).toBe('0.2500');
+		expect(body.data[0].band).toBe('ELEMENTAIRE');
 	});
 
 	it('filters by band', async () => {
@@ -280,7 +280,7 @@ describe('POST /staffing-assignments', () => {
 		expect(body.fteShare).toBe('0.2500');
 	});
 
-	it('marks STAFFING and PNL stale after creation', async () => {
+	it('marks STAFFING stale after creation', async () => {
 		mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 		mockPrisma.discipline.findUnique.mockResolvedValue(mockDiscipline);
 		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
@@ -296,7 +296,7 @@ describe('POST /staffing-assignments', () => {
 
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING', 'PNL'] },
+			data: { staleModules: ['STAFFING'] },
 		});
 	});
 
@@ -539,7 +539,7 @@ describe('PUT /staffing-assignments/:id', () => {
 		expect(body.fteShare).toBe('0.3500');
 	});
 
-	it('marks STAFFING and PNL stale after update', async () => {
+	it('marks STAFFING stale after update', async () => {
 		mockPrisma.staffingAssignment.findFirst.mockResolvedValue(existingAssignment);
 		mockPrisma.discipline.findUnique.mockResolvedValue(mockDiscipline);
 		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
@@ -560,7 +560,7 @@ describe('PUT /staffing-assignments/:id', () => {
 
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING', 'PNL'] },
+			data: { staleModules: ['STAFFING'] },
 		});
 	});
 
@@ -742,7 +742,7 @@ describe('DELETE /staffing-assignments/:id', () => {
 		});
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING', 'PNL'] },
+			data: { staleModules: ['STAFFING'] },
 		});
 	});
 
@@ -826,7 +826,7 @@ describe('DELETE /staffing-assignments/:id', () => {
 	it('skips stale marking when already stale', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			...mockVersion,
-			staleModules: ['STAFFING', 'PNL'],
+			staleModules: ['STAFFING'],
 		});
 		mockPrisma.staffingAssignment.findFirst.mockResolvedValue(existingAssignment);
 		mockPrisma.staffingAssignment.delete.mockResolvedValue({});

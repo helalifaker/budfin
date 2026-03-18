@@ -109,13 +109,12 @@ export function gradeToBand(gradeLevel: string): string {
 
 // ── Line Label Builder ───────────────────────────────────────────────────────
 
-function buildLineLabel(band: string, disciplineCode: string, lineType: string): string {
-	const bandLabel = band.charAt(0) + band.slice(1).toLowerCase();
+function buildLineLabel(_band: string, disciplineCode: string, lineType: string): string {
 	const disciplineLabel = disciplineCode.replace(/_/g, ' ');
 	if (lineType !== 'STRUCTURAL') {
-		return `${bandLabel} — ${disciplineLabel} (${lineType.toLowerCase()})`;
+		return `${disciplineLabel} (${lineType.toLowerCase()})`;
 	}
-	return `${bandLabel} — ${disciplineLabel}`;
+	return disciplineLabel;
 }
 
 // ── Demand Engine (Pure Function) ────────────────────────────────────────────

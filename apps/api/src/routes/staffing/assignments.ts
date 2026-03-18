@@ -54,7 +54,7 @@ const assignmentUpdateBody = z.object({
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const STAFFING_STALE_MODULES = ['STAFFING', 'PNL'] as const;
+const STAFFING_STALE_MODULES = ['STAFFING'] as const;
 
 async function markStaffingStale(
 	tx: typeof prisma,
@@ -248,7 +248,7 @@ export async function staffingAssignmentRoutes(app: FastifyInstance) {
 			});
 
 			return {
-				assignments: (assignments as AssignmentRow[]).map(formatAssignment),
+				data: (assignments as AssignmentRow[]).map(formatAssignment),
 			};
 		},
 	});

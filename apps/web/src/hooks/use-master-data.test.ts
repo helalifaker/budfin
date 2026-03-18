@@ -113,7 +113,15 @@ describe('useDhgRules', () => {
 
 describe('useAutoSuggestAssignments', () => {
 	it('sends POST to auto-suggest endpoint', async () => {
-		const mockData = { data: [] };
+		const mockData = {
+			suggestions: [],
+			summary: {
+				totalSuggestions: 0,
+				highConfidence: 0,
+				mediumConfidence: 0,
+				unassignedRemaining: 0,
+			},
+		};
 		mockApiClient.mockResolvedValue(mockData);
 
 		const { result } = renderHook(() => useAutoSuggestAssignments(10), {

@@ -23,7 +23,10 @@ vi.mock('../../lib/prisma.js', () => {
 		monthlyStaffCost: {
 			findMany: vi.fn(),
 		},
-		dhgRequirement: {
+		teachingRequirementLine: {
+			findMany: vi.fn(),
+		},
+		categoryMonthlyCost: {
 			findMany: vi.fn(),
 		},
 	};
@@ -39,7 +42,10 @@ const mockPrisma = prisma as unknown as {
 	monthlyStaffCost: {
 		findMany: ReturnType<typeof vi.fn>;
 	};
-	dhgRequirement: {
+	teachingRequirementLine: {
+		findMany: ReturnType<typeof vi.fn>;
+	};
+	categoryMonthlyCost: {
 		findMany: ReturnType<typeof vi.fn>;
 	};
 };
@@ -147,7 +153,7 @@ describe('GET /staffing-summary', () => {
 
 	it('returns 200 when STAFFING is NOT in stale_modules', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockFreshVersion);
-		mockPrisma.dhgRequirement.findMany.mockResolvedValue([]);
+		mockPrisma.teachingRequirementLine.findMany.mockResolvedValue([]);
 		mockPrisma.monthlyStaffCost.findMany.mockResolvedValue([]);
 		const token = await makeToken();
 

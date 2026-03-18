@@ -150,14 +150,18 @@ function makeLine(overrides: Partial<TeachingRequirementLine> = {}): TeachingReq
 		baseOrs: '24.0',
 		effectiveOrs: '24.0',
 		requiredFteRaw: '0.63',
+		requiredFteCalculated: null,
 		requiredFtePlanned: '1.00',
 		recommendedPositions: 1,
 		coveredFte: '0.63',
 		gapFte: '0.00',
 		coverageStatus: 'COVERED',
 		assignedStaffCount: 1,
+		vacancyCount: 0,
+		driverType: 'SECTION',
 		directCostAnnual: '120000.00',
 		hsaCostAnnual: '5000.00',
+		assignedEmployees: [],
 		...overrides,
 	};
 }

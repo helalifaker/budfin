@@ -149,7 +149,7 @@ describe('PUT /planning-rules', () => {
 				cappedRetention: '0.9900',
 				retentionRecentWeight: '0.6500',
 				historicalTargetRecentWeight: '0.8500',
-				staleModules: ['REVENUE', 'ENROLLMENT', 'DHG', 'STAFFING', 'PNL'],
+				staleModules: ['REVENUE', 'ENROLLMENT', 'STAFFING', 'PNL'],
 			},
 			select: {
 				rolloverThreshold: true,
@@ -163,7 +163,7 @@ describe('PUT /planning-rules', () => {
 			cappedRetention: 0.99,
 			retentionRecentWeight: 0.65,
 			historicalTargetRecentWeight: 0.85,
-			staleModules: ['REVENUE', 'ENROLLMENT', 'DHG', 'STAFFING', 'PNL'],
+			staleModules: ['REVENUE', 'ENROLLMENT', 'STAFFING', 'PNL'],
 		});
 	});
 

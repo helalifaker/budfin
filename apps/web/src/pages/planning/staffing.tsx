@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useStaffingSelectionStore } from '../../stores/staffing-selection-store';
 import { useStaffingSettingsSheetStore } from '../../stores/staffing-settings-store';
-import { useCalculateStaffing } from '../../hooks/use-staffing';
+import {
+	useCalculateStaffing,
+	useTeachingRequirements,
+	useEmployees,
+	useStaffingSummary,
+	type Employee,
+} from '../../hooks/use-staffing';
 import { useVersions } from '../../hooks/use-versions';
 import {
 	BAND_FILTERS,
@@ -25,6 +31,14 @@ import {
 	DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
 import { PageTransition } from '../../components/shared/page-transition';
+import { TeachingMasterGrid } from '../../components/staffing/teaching-master-grid';
+import { SupportAdminGrid } from '../../components/staffing/support-admin-grid';
+import { StaffingKpiRibbonV2 } from '../../components/staffing/staffing-kpi-ribbon';
+import { StaffingStatusStrip } from '../../components/staffing/staffing-status-strip';
+import { StaffingSettingsSheet } from '../../components/staffing/staffing-settings-sheet';
+// Side-effect imports: register right-panel content for staffing page
+import '../../components/staffing/staffing-inspector-content';
+import '../../components/staffing/staffing-guide-content';
 
 export function StaffingPage() {
 	const { versionId, fiscalYear, versionStatus } = useWorkspaceContext();
@@ -41,6 +55,11 @@ export function StaffingPage() {
 
 	const { data: versionsData } = useVersions(fiscalYear);
 	const calculateMutation = useCalculateStaffing(versionId);
+
+	// Data hooks for grids and KPIs
+	const { data: teachingReqData, isError: teachingReqError } = useTeachingRequirements(versionId);
+	const { data: employeesData } = useEmployees(versionId);
+	const { data: summaryData } = useStaffingSummary(versionId);
 
 	// Register right panel page key
 	useEffect(() => {
@@ -84,6 +103,83 @@ export function StaffingPage() {
 
 	const isTeachingMode = workspaceMode === 'teaching';
 	const showCoverageFilter = isTeachingMode && viewPreset !== 'Need';
+
+	// Selected requirement line ID for teaching grid highlighting
+	const selection = useStaffingSelectionStore((state) => state.selection);
+	const selectSupportEmployee = useStaffingSelectionStore((state) => state.selectSupportEmployee);
+
+	const selectedLineId = useMemo(() => {
+		if (selection?.type === 'REQUIREMENT_LINE') return selection.requirementLineId;
+		return null;
+	}, [selection]);
+
+	// KPI ribbon values derived from teaching requirements totals and staffing summary
+	const kpiValues = useMemo(() => {
+		const totals = teachingReqData?.totals;
+		const totalFteGap = totals ? parseFloat(totals.totalFteGap) : 0;
+		const staffCost = summaryData ? parseFloat(summaryData.cost) : 0;
+
+		return {
+			totalHeadcount: employeesData?.total ?? 0,
+			fteGap: totalFteGap,
+			staffCost,
+			hsaBudget: 0,
+			heRatio: 0,
+			rechargeCost: 0,
+		};
+	}, [teachingReqData?.totals, summaryData, employeesData?.total]);
+
+	// Status strip values
+	const staleModules = useMemo(
+		() => currentVersion?.staleModules ?? [],
+		[currentVersion?.staleModules]
+	);
+
+	const supplyCount = useMemo(() => {
+		const employees = employeesData?.data ?? [];
+		let existing = 0;
+		let newCount = 0;
+		let vacancies = 0;
+		for (const emp of employees) {
+			if (emp.recordType === 'VACANCY') {
+				vacancies++;
+			} else if (emp.status === 'New') {
+				newCount++;
+			} else {
+				existing++;
+			}
+		}
+		return { existing, new: newCount, vacancies };
+	}, [employeesData?.data]);
+
+	const coverageSummary = useMemo(() => {
+		const lines = teachingReqData?.lines ?? [];
+		let deficit = 0;
+		let uncovered = 0;
+		let balanced = 0;
+		for (const line of lines) {
+			const status = line.coverageStatus;
+			if (status === 'DEFICIT') deficit++;
+			else if (status === 'UNCOVERED') uncovered++;
+			else balanced++;
+		}
+		return { deficit, uncovered, balanced };
+	}, [teachingReqData?.lines]);
+
+	const enrollmentStale = staleModules.includes('ENROLLMENT');
+	const enrollmentCalculatedAt = currentVersion?.lastCalculatedAt ?? null;
+
+	// Support grid callbacks
+	const handleEmployeeSelect = useCallback(
+		(employee: Employee) => {
+			selectSupportEmployee(employee.id, employee.department);
+		},
+		[selectSupportEmployee]
+	);
+
+	const handleEmployeeDoubleClick = useCallback((_employee: Employee) => {
+		// Future: open employee edit form
+	}, []);
 
 	if (!versionId) {
 		return (
@@ -231,26 +327,91 @@ export function StaffingPage() {
 					</div>
 				</div>
 
+				{/* Status strip */}
+				<div className="shrink-0 border-b border-(--workspace-border)">
+					<StaffingStatusStrip
+						lastCalculatedAt={currentVersion?.lastCalculatedAt ?? null}
+						staleModules={staleModules}
+						demandPeriod={fiscalYear ? `AY ${fiscalYear}` : 'N/A'}
+						enrollmentCalculatedAt={enrollmentCalculatedAt}
+						enrollmentStale={enrollmentStale}
+						supplyCount={supplyCount}
+						coverageSummary={coverageSummary}
+					/>
+				</div>
+
+				{/* KPI ribbon */}
+				<div className="shrink-0 px-6 py-3">
+					<StaffingKpiRibbonV2
+						totalHeadcount={kpiValues.totalHeadcount}
+						fteGap={kpiValues.fteGap}
+						staffCost={kpiValues.staffCost}
+						hsaBudget={kpiValues.hsaBudget}
+						heRatio={kpiValues.heRatio}
+						rechargeCost={kpiValues.rechargeCost}
+						isStale={isStale}
+					/>
+				</div>
+
 				{/* Grid zone — flex-1, owns its own scroll */}
 				<div className="flex-1 min-h-0 overflow-hidden px-6 py-2">
+					{isTeachingMode && (
+						<h2 className="mb-2 text-sm font-semibold text-(--text-primary)">
+							Teaching Requirements
+						</h2>
+					)}
 					<div className="h-full overflow-y-auto scrollbar-thin">
 						{isTeachingMode ? (
-							<div
-								data-testid="teaching-grid-placeholder"
-								className="flex h-full items-center justify-center text-(--text-muted)"
-							>
-								Teaching workspace
-							</div>
+							teachingReqData ? (
+								<TeachingMasterGrid
+									data={teachingReqData}
+									viewPreset={viewPreset}
+									bandFilter={bandFilter}
+									coverageFilter={coverageFilter}
+									selectedLineId={selectedLineId}
+								/>
+							) : teachingReqError || isStale ? (
+								<div
+									data-testid="teaching-grid-stale"
+									className="flex h-full flex-col items-center justify-center gap-3 text-(--text-muted)"
+								>
+									<p className="text-sm font-medium">
+										{isStale
+											? 'Staffing data is stale. Click Calculate to regenerate teaching requirements.'
+											: 'Unable to load teaching requirements.'}
+									</p>
+									{isEditable && (
+										<Button
+											type="button"
+											size="sm"
+											disabled={calculateMutation.isPending}
+											onClick={() => calculateMutation.mutate()}
+										>
+											{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
+										</Button>
+									)}
+								</div>
+							) : (
+								<div
+									data-testid="teaching-grid-loading"
+									className="flex h-full items-center justify-center text-(--text-muted)"
+								>
+									Loading teaching requirements...
+								</div>
+							)
 						) : (
-							<div
-								data-testid="support-grid-placeholder"
-								className="flex h-full items-center justify-center text-(--text-muted)"
-							>
-								Support &amp; Admin workspace
-							</div>
+							<SupportAdminGrid
+								employees={employeesData?.data ?? []}
+								editability={editability}
+								onEmployeeSelect={handleEmployeeSelect}
+								onEmployeeDoubleClick={handleEmployeeDoubleClick}
+							/>
 						)}
 					</div>
 				</div>
+
+				{/* Settings sheet (rendered always, visibility controlled by store) */}
+				<StaffingSettingsSheet versionId={versionId} isEditable={isEditable} />
 			</div>
 		</PageTransition>
 	);

@@ -45,6 +45,24 @@ const BAND_LABELS: Record<string, string> = {
 	LYCEE: 'Lycee',
 };
 
+const GRADE_TO_BAND: Record<string, string> = {
+	PS: 'MATERNELLE',
+	MS: 'MATERNELLE',
+	GS: 'MATERNELLE',
+	CP: 'ELEMENTAIRE',
+	CE1: 'ELEMENTAIRE',
+	CE2: 'ELEMENTAIRE',
+	CM1: 'ELEMENTAIRE',
+	CM2: 'ELEMENTAIRE',
+	'6EME': 'COLLEGE',
+	'5EME': 'COLLEGE',
+	'4EME': 'COLLEGE',
+	'3EME': 'COLLEGE',
+	'2NDE': 'LYCEE',
+	'1ERE': 'LYCEE',
+	TERM: 'LYCEE',
+};
+
 const COVERAGE_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
 	COVERED: { bg: 'bg-(--color-success-bg)', text: 'text-(--color-success)', label: 'Covered' },
 	DEFICIT: { bg: 'bg-(--color-error-bg)', text: 'text-(--color-error)', label: 'Deficit' },
@@ -80,16 +98,20 @@ interface AssignmentFormState {
 
 function AssignmentForm({
 	versionId,
-	requirementLineId,
+	band,
+	disciplineId,
 	employees,
 	editingAssignment,
+	effectiveOrs,
 	onCancel,
 	onSaved,
 }: {
 	versionId: number;
-	requirementLineId: number;
+	band: string;
+	disciplineId: number;
 	employees: Employee[];
 	editingAssignment: StaffingAssignment | null;
+	effectiveOrs: string;
 	onCancel: () => void;
 	onSaved: () => void;
 }) {
@@ -105,20 +127,21 @@ function AssignmentForm({
 	// Filter employees to isTeaching only
 	const teachingEmployees = useMemo(() => employees.filter((e) => e.isTeaching), [employees]);
 
-	// Derive hours/week from FTE share (using ORS of 24 as default)
+	// Derive hours/week from FTE share using the line's effective ORS
+	const orsValue = useMemo(() => parseFloat(effectiveOrs) || 24, [effectiveOrs]);
 	const derivedHoursPerWeek = useMemo(() => {
 		const fte = parseFloat(form.fteShare);
 		if (isNaN(fte)) return '';
-		// ORS (Obligation Reglementaire de Service) default = 24 hours/week
-		return (fte * 24).toFixed(1);
-	}, [form.fteShare]);
+		return (fte * orsValue).toFixed(1);
+	}, [form.fteShare, orsValue]);
 
 	const handleSubmit = useCallback(() => {
 		const employeeId = parseInt(form.employeeId, 10);
 		if (isNaN(employeeId) || !form.fteShare) return;
 
 		const data = {
-			requirementLineId,
+			band,
+			disciplineId,
 			employeeId,
 			fteShare: form.fteShare,
 			hoursPerWeek: derivedHoursPerWeek || '0',
@@ -136,7 +159,8 @@ function AssignmentForm({
 		onSaved();
 	}, [
 		form,
-		requirementLineId,
+		band,
+		disciplineId,
 		derivedHoursPerWeek,
 		editingAssignment,
 		createAssignment,
@@ -289,7 +313,7 @@ function InspectorDefaultView() {
 	const { data: reqData } = useTeachingRequirements(versionId);
 
 	const totals = reqData?.totals;
-	const lines = useMemo(() => reqData?.data ?? [], [reqData?.data]);
+	const lines = useMemo(() => reqData?.lines ?? [], [reqData?.lines]);
 
 	const coverageDist = useMemo(() => {
 		const dist = { covered: 0, deficit: 0, surplus: 0, uncovered: 0 };
@@ -452,7 +476,7 @@ function InspectorRequirementView({
 	const { versionId, versionStatus } = useWorkspaceContext();
 	const clearSelection = useStaffingSelectionStore((state) => state.clearSelection);
 	const { data: reqData } = useTeachingRequirements(versionId);
-	const { data: sourcesData } = useTeachingRequirementSources(versionId, requirementLineId);
+	const { data: sourcesData } = useTeachingRequirementSources(versionId);
 	const { data: assignmentsData } = useStaffingAssignments(versionId);
 	const { data: employeesData } = useEmployees(versionId);
 	const deleteAssignment = useDeleteAssignment(versionId);
@@ -465,22 +489,25 @@ function InspectorRequirementView({
 	const isEditable = versionStatus === 'Draft';
 
 	const line = useMemo(
-		() => reqData?.data.find((l) => l.id === requirementLineId) ?? null,
-		[reqData?.data, requirementLineId]
+		() => reqData?.lines.find((l) => l.id === requirementLineId) ?? null,
+		[reqData?.lines, requirementLineId]
 	);
+
+	// Derive disciplineId from sources for assignment creation
+	const lineDisciplineId = useMemo(() => {
+		if (!line) return 0;
+		const allSources = sourcesData?.data ?? [];
+		const match = allSources.find((s) => s.disciplineCode === line.disciplineCode);
+		return match?.disciplineId ?? 0;
+	}, [sourcesData?.data, line]);
 
 	const lineAssignments = useMemo(
-		() => (assignmentsData?.data ?? []).filter((a) => a.requirementLineId === requirementLineId),
-		[assignmentsData?.data, requirementLineId]
+		() =>
+			(assignmentsData?.data ?? []).filter(
+				(a) => line && a.band === line.band && a.disciplineCode === line.disciplineCode
+			),
+		[assignmentsData?.data, line]
 	);
-
-	const employeeMap = useMemo(() => {
-		const map = new Map<number, Employee>();
-		for (const emp of employeesData?.data ?? []) {
-			map.set(emp.id, emp);
-		}
-		return map;
-	}, [employeesData?.data]);
 
 	const handleAssignTeacher = useCallback(() => {
 		setEditingAssignment(null);
@@ -511,7 +538,12 @@ function InspectorRequirementView({
 
 	if (!line) return null;
 
-	const sources = sourcesData?.data ?? [];
+	const sources = (sourcesData?.data ?? []).filter(
+		(src) =>
+			src.disciplineCode === line.disciplineCode &&
+			src.lineType === line.lineType &&
+			GRADE_TO_BAND[src.gradeLevel] === line.band
+	);
 	const defaultCoverageStyle = {
 		bg: 'bg-(--color-success-bg)',
 		text: 'text-(--color-success)',
@@ -576,7 +608,7 @@ function InspectorRequirementView({
 									Headcount
 								</th>
 								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
-									Sections
+									Groups
 								</th>
 								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
 									Hrs/unit
@@ -594,7 +626,7 @@ function InspectorRequirementView({
 										{src.headcount}
 									</td>
 									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-										{src.sections}
+										{src.driverUnits}
 									</td>
 									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
 										{src.hoursPerUnit}
@@ -634,13 +666,15 @@ function InspectorRequirementView({
 				</div>
 
 				{/* Assignment form (shown when creating or editing) */}
-				{showForm && versionId && (
+				{showForm && versionId && line && (
 					<div className="mb-3">
 						<AssignmentForm
 							versionId={versionId}
-							requirementLineId={requirementLineId}
+							band={line.band}
+							disciplineId={lineDisciplineId}
 							employees={employeesData?.data ?? []}
 							editingAssignment={editingAssignment}
+							effectiveOrs={line?.effectiveOrs ?? '24'}
 							onCancel={handleFormCancel}
 							onSaved={handleFormSaved}
 						/>
@@ -649,14 +683,13 @@ function InspectorRequirementView({
 
 				<div className="space-y-2">
 					{lineAssignments.map((assignment) => {
-						const emp = employeeMap.get(assignment.employeeId);
 						const defaultCostMode = {
 							bg: 'bg-(--accent-50)',
 							text: 'text-(--accent-700)',
 							label: 'LOCAL',
 						};
 						const costModeStyle =
-							COST_MODE_STYLES[emp?.costMode ?? 'LOCAL_PAYROLL'] ?? defaultCostMode;
+							COST_MODE_STYLES[assignment.costMode ?? 'LOCAL_PAYROLL'] ?? defaultCostMode;
 
 						return (
 							<div
@@ -665,7 +698,7 @@ function InspectorRequirementView({
 							>
 								<div className="flex items-center gap-2">
 									<span className="text-sm font-medium text-(--text-primary)">
-										{emp?.name ?? `Employee #${assignment.employeeId}`}
+										{assignment.employeeName ?? `Employee #${assignment.employeeId}`}
 									</span>
 									<span
 										className={cn(

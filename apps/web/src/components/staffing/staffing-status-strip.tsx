@@ -5,9 +5,9 @@ import type { StatusSection } from '../shared/workspace-status-strip';
 const STALE_MODULE_LABELS: Record<string, string> = {
 	ENROLLMENT: 'Enrollment',
 	REVENUE: 'Revenue',
-	DHG: 'DHG',
 	STAFFING: 'Staffing',
 	PNL: 'P&L',
+	DHG: 'Staffing (legacy)',
 };
 
 function formatTimestamp(value: string | null | undefined): string {

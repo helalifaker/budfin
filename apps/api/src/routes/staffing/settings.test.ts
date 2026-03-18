@@ -175,9 +175,9 @@ describe('GET /staffing-settings', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.settings.hsaTargetHours).toBe('1.50');
-		expect(body.settings.hsaMonths).toBe(10);
-		expect(body.settings.academicWeeks).toBe(36);
+		expect(body.data.hsaTargetHours).toBe('1.50');
+		expect(body.data.hsaMonths).toBe(10);
+		expect(body.data.academicWeeks).toBe(36);
 	});
 
 	it('auto-creates settings with defaults when not found', async () => {
@@ -238,14 +238,14 @@ describe('PUT /staffing-settings', () => {
 		expect(mockPrisma.versionStaffingSettings.upsert).toHaveBeenCalled();
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING', 'PNL'] },
+			data: { staleModules: ['STAFFING'] },
 		});
 	});
 
-	it('skips stale marking when STAFFING and PNL already stale', async () => {
+	it('skips stale marking when STAFFING already stale', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			...mockVersion,
-			staleModules: ['STAFFING', 'PNL'],
+			staleModules: ['STAFFING'],
 		});
 		mockPrisma.versionStaffingSettings.upsert.mockResolvedValue(mockSettings);
 
@@ -328,9 +328,9 @@ describe('GET /service-profile-overrides', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.overrides).toHaveLength(1);
-		expect(body.overrides[0].serviceProfileCode).toBe('ENS2D');
-		expect(body.overrides[0].weeklyServiceHours).toBe('15.0');
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].serviceProfileCode).toBe('ENS2D');
+		expect(body.data[0].weeklyServiceHours).toBe('15.0');
 	});
 });
 
@@ -372,7 +372,7 @@ describe('PUT /service-profile-overrides', () => {
 		expect(mockPrisma.versionServiceProfileOverride.createMany).toHaveBeenCalled();
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING', 'PNL'] },
+			data: { staleModules: ['STAFFING'] },
 		});
 	});
 
@@ -413,9 +413,9 @@ describe('GET /cost-assumptions', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.assumptions).toHaveLength(1);
-		expect(body.assumptions[0].category).toBe('REMPLACEMENTS');
-		expect(body.assumptions[0].value).toBe('0.0975');
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].category).toBe('REMPLACEMENTS');
+		expect(body.data[0].value).toBe('0.0975');
 	});
 });
 
@@ -483,10 +483,10 @@ describe('GET /lycee-group-assumptions', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.assumptions).toHaveLength(1);
-		expect(body.assumptions[0].disciplineCode).toBe('MATH');
-		expect(body.assumptions[0].groupCount).toBe(3);
-		expect(body.assumptions[0].hoursPerGroup).toBe('4.00');
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].disciplineCode).toBe('MATH');
+		expect(body.data[0].groupCount).toBe(3);
+		expect(body.data[0].hoursPerGroup).toBe('4.00');
 	});
 });
 
@@ -559,10 +559,10 @@ describe('GET /demand-overrides', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.overrides).toHaveLength(1);
-		expect(body.overrides[0].band).toBe('ELEMENTAIRE');
-		expect(body.overrides[0].overrideFte).toBe('2.5000');
-		expect(body.overrides[0].reasonCode).toBe('CURRICULUM_CHANGE');
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].band).toBe('ELEMENTAIRE');
+		expect(body.data[0].overrideFte).toBe('2.5000');
+		expect(body.data[0].reasonCode).toBe('CURRICULUM_CHANGE');
 	});
 });
 
@@ -824,10 +824,10 @@ describe('GET /teaching-requirement-sources', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.sources).toHaveLength(1);
-		expect(body.sources[0].gradeLevel).toBe('CP');
-		expect(body.sources[0].disciplineCode).toBe('MATH');
-		expect(body.sources[0].headcount).toBe(25);
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].gradeLevel).toBe('CP');
+		expect(body.data[0].disciplineCode).toBe('MATH');
+		expect(body.data[0].headcount).toBe(25);
 	});
 
 	it('returns 409 when STAFFING is stale', async () => {

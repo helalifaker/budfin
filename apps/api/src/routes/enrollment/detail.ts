@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { VALID_GRADE_CODES } from '../../lib/enrollment-constants.js';
 
-const DETAIL_STALE_MODULES = ['REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+const DETAIL_STALE_MODULES = ['REVENUE', 'STAFFING', 'PNL'] as const;
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 

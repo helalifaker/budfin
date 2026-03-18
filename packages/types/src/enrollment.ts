@@ -29,7 +29,7 @@ export const GRADE_CODES = [
 ] as const;
 export type GradeCode = (typeof GRADE_CODES)[number];
 
-export const STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+export const STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL'] as const;
 export type StaleModule = (typeof STALE_MODULES)[number];
 
 export interface HeadcountEntry {

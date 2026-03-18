@@ -298,6 +298,15 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 				overrideLookup.set(ovKey, new Decimal(ov.overrideFte.toString()));
 			}
 
+			// Store pre-override requiredFtePlanned per line for provenance (BC-05).
+			// requiredFteCalculated preserves the demand-engine value before any
+			// manual demand overrides are applied.
+			const preOverrideFtePlanned = new Map<string, Decimal>();
+			for (const line of demandOutput.lines) {
+				const ovKey = `${line.band}|${line.disciplineCode}|${line.lineType}`;
+				preOverrideFtePlanned.set(ovKey, line.requiredFtePlanned);
+			}
+
 			const overriddenLines: RequirementLine[] = demandOutput.lines.map((line) => {
 				const ovKey = `${line.band}|${line.disciplineCode}|${line.lineType}`;
 				const overrideFte = overrideLookup.get(ovKey);
@@ -516,6 +525,7 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 				baseOrs: Decimal;
 				effectiveOrs: Decimal;
 				requiredFteRaw: Decimal;
+				requiredFteCalculated: Decimal;
 				requiredFtePlanned: Decimal;
 				recommendedPositions: number;
 				coveredFte: Decimal;
@@ -565,6 +575,10 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					baseOrs: demandLine.baseOrs,
 					effectiveOrs: demandLine.effectiveOrs,
 					requiredFteRaw: demandLine.requiredFteRaw,
+					requiredFteCalculated:
+						preOverrideFtePlanned.get(
+							`${demandLine.band}|${demandLine.disciplineCode}|${demandLine.lineType}`
+						) ?? demandLine.requiredFteRaw,
 					requiredFtePlanned: demandLine.requiredFtePlanned,
 					recommendedPositions: demandLine.recommendedPositions,
 					coveredFte: covLine.coveredFte,
@@ -653,6 +667,9 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 							requiredFteRaw: line.requiredFteRaw
 								.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
 								.toFixed(4),
+							requiredFteCalculated: line.requiredFteCalculated
+								.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+								.toFixed(4),
 							requiredFtePlanned: line.requiredFtePlanned
 								.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
 								.toFixed(4),
@@ -727,6 +744,22 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					await tx.$executeRawUnsafe(
 						`UPDATE employees SET hsa_amount = pgp_sym_encrypt($1, $2) ` + `WHERE id = $3`,
 						hsaOutput.hsaCostPerMonth.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+						key,
+						empId
+					);
+				}
+
+				// CI-01: Zero out HSA for employees NOT in the eligible set.
+				// Without this, employees who become ineligible (e.g. cost_mode changed
+				// away from LOCAL_PAYROLL, or service profile no longer HSA-eligible)
+				// retain stale non-zero hsa_amount values in the database.
+				const nonEligibleIds = rawEmployees
+					.map((e) => e.id)
+					.filter((id) => !hsaEligibleEmployeeIds.has(id));
+				for (const empId of nonEligibleIds) {
+					await tx.$executeRawUnsafe(
+						`UPDATE employees SET hsa_amount = pgp_sym_encrypt($1, $2) WHERE id = $3`,
+						'0.0000',
 						key,
 						empId
 					);

@@ -575,7 +575,7 @@ describe('line labels', () => {
 		};
 
 		const result = calculateDemand(input);
-		expect(result.lines[0]!.lineLabel).toBe('College — FRANCAIS');
+		expect(result.lines[0]!.lineLabel).toBe('FRANCAIS');
 	});
 
 	it('includes lineType in label for non-STRUCTURAL', () => {
@@ -599,7 +599,7 @@ describe('line labels', () => {
 		};
 
 		const result = calculateDemand(input);
-		expect(result.lines[0]!.lineLabel).toBe('Lycee — ARABE (host_country)');
+		expect(result.lines[0]!.lineLabel).toBe('ARABE (host_country)');
 	});
 });
 

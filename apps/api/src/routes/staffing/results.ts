@@ -196,11 +196,13 @@ export async function staffingResultRoutes(app: FastifyInstance) {
 				});
 			}
 
-			// FTE from DHG requirements
-			const dhgReqs = await prisma.dhgRequirement.findMany({
+			// FTE from teaching requirement lines (redesigned in Epic 20)
+			const reqLines = await prisma.teachingRequirementLine.findMany({
 				where: { versionId },
 			});
-			const totalFTE = dhgReqs.reduce((sum, r) => sum.plus(r.fte), new Decimal(0)).toFixed(4);
+			const totalFTE = reqLines
+				.reduce((sum, r) => sum.plus(r.requiredFteRaw.toString()), new Decimal(0))
+				.toFixed(4);
 
 			// Cost by department
 			const costs = await prisma.monthlyStaffCost.findMany({

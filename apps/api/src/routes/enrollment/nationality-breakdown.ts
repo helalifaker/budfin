@@ -32,7 +32,7 @@ const putBodySchema = z.object({
 	overrides: z.array(overrideEntrySchema).min(1),
 });
 
-const NATIONALITY_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'] as const;
+const NATIONALITY_STALE_MODULES = ['ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL'] as const;
 
 const WEIGHT_SUM_TOLERANCE = 0.0001;
 

@@ -424,7 +424,7 @@ describe('PUT /nationality-breakdown', () => {
 		const body = res.json();
 		expect(body.updated).toBe(3);
 		expect(body.staleModules).toEqual(
-			expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL'])
+			expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL'])
 		);
 
 		// Verify each override was upserted with academicPeriod='AY2'
@@ -461,7 +461,7 @@ describe('PUT /nationality-breakdown', () => {
 			expect.objectContaining({
 				where: { id: 1 },
 				data: {
-					staleModules: expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'DHG', 'STAFFING', 'PNL']),
+					staleModules: expect.arrayContaining(['ENROLLMENT', 'REVENUE', 'STAFFING', 'PNL']),
 				},
 			})
 		);

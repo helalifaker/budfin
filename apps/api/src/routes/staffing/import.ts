@@ -32,7 +32,6 @@ const OPTIONAL_COLUMNS = [
 	'is_teaching',
 	'hourly_percentage',
 	'responsibility_premium',
-	'hsa_amount',
 	'augmentation',
 	'augmentation_effective_date',
 	'ajeer_annual_levy',
@@ -102,7 +101,6 @@ interface ParsedEmployee {
 	housingAllowance: string;
 	transportAllowance: string;
 	responsibilityPremium: string;
-	hsaAmount: string;
 	augmentation: string;
 	augmentationEffectiveDate: Date | null;
 	ajeerAnnualLevy: string;
@@ -261,9 +259,6 @@ function validateRow(
 	const responsibilityPremium =
 		responsibilityStr && !isNaN(Number(responsibilityStr)) ? responsibilityStr : '0';
 
-	const hsaStr = getStr('hsa_amount');
-	const hsaAmount = hsaStr && !isNaN(Number(hsaStr)) ? hsaStr : '0';
-
 	const augStr = getStr('augmentation');
 	const augmentation = augStr && !isNaN(Number(augStr)) ? augStr : '0';
 
@@ -312,7 +307,6 @@ function validateRow(
 			housingAllowance: housingStr,
 			transportAllowance: transportStr,
 			responsibilityPremium,
-			hsaAmount,
 			augmentation,
 			augmentationEffectiveDate: augDateRaw,
 			ajeerAnnualLevy,
@@ -709,7 +703,7 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 						emp.housingAllowance,
 						emp.transportAllowance,
 						emp.responsibilityPremium,
-						emp.hsaAmount,
+						'0', // hsaAmount: computed-only by pipeline (AC-03)
 						emp.augmentation,
 						emp.augmentationEffectiveDate,
 						new Decimal(emp.ajeerAnnualLevy).toFixed(4),

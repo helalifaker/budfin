@@ -42,28 +42,6 @@ export interface EmployeeListResponse {
 	total: number;
 }
 
-export interface DhgGrilleEntry {
-	gradeLevel: string;
-	subject: string;
-	dhgType: string;
-	hoursPerWeekPerSection: string;
-}
-
-export interface DhgRequirement {
-	gradeLevel: string;
-	headcount: number;
-	maxClassSize: number;
-	sectionsNeeded: number;
-	totalWeeklyHours: string;
-	totalAnnualHours: string;
-	fte: string;
-}
-
-export interface DhgResponse {
-	grilles: DhgGrilleEntry[];
-	requirements: DhgRequirement[];
-}
-
 export interface StaffCostRow {
 	group_key: string;
 	total_gross_salary: string | null;
@@ -133,11 +111,14 @@ export interface StaffingSummaryResponse {
 }
 
 export interface CalculateStaffingResponse {
-	run_id: string;
-	duration_ms: number;
+	runId: string;
+	durationMs: number;
 	summary: {
-		total_fte: string;
-		total_annual_staff_costs: string;
+		totalFteNeeded: string;
+		totalFteCovered: string;
+		totalGap: string;
+		totalCost: string;
+		warningCount: number;
 	};
 }
 
@@ -244,16 +225,6 @@ export function useDeleteEmployee(versionId: number | null) {
 	});
 }
 
-// ── DHG Hooks ───────────────────────────────────────────────────────────────
-
-export function useDhgData(versionId: number | null) {
-	return useQuery({
-		queryKey: ['staffing', 'dhg', versionId],
-		queryFn: () => apiClient<DhgResponse>(`/versions/${versionId}/dhg-grilles`),
-		enabled: versionId !== null,
-	});
-}
-
 // ── Staff Cost Hooks ────────────────────────────────────────────────────────
 
 export function useStaffCosts(
@@ -311,7 +282,7 @@ export function useCalculateStaffing(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['staffing'] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 			toast.success(
-				`Staffing calculated: ${result.summary.total_fte} FTE, SAR ${Number(result.summary.total_annual_staff_costs).toLocaleString()}`
+				`Staffing calculated: ${result.summary.totalFteNeeded} FTE, SAR ${Number(result.summary.totalCost).toLocaleString()}`
 			);
 		},
 		onError: (err) =>
@@ -349,10 +320,14 @@ export function useImportEmployees(versionId: number | null) {
 export interface StaffingSettings {
 	id: number;
 	versionId: number;
-	hsaTargetHoursPerWeek: string;
-	hsaRateFirstHour: string;
-	hsaRateAdditionalHour: string;
+	hsaTargetHours: string;
+	hsaFirstHourRate: string;
+	hsaAdditionalHourRate: string;
 	hsaMonths: number;
+	academicWeeks: number;
+	ajeerAnnualLevy: string;
+	ajeerMonthlyFee: string;
+	reconciliationBaseline: unknown;
 }
 
 export interface StaffingSettingsResponse {
@@ -390,8 +365,13 @@ export function usePutStaffingSettings(versionId: number | null) {
 // ── Service Profile Override Hooks ──────────────────────────────────────────
 
 export interface ServiceProfileOverride {
+	id: number;
+	versionId: number;
 	serviceProfileId: number;
-	effectiveOrs: string;
+	serviceProfileCode: string;
+	serviceProfileName: string;
+	weeklyServiceHours: string | null;
+	hsaEligible: boolean;
 }
 
 export interface ServiceProfileOverridesResponse {
@@ -409,10 +389,16 @@ export function useServiceProfileOverrides(versionId: number | null) {
 	});
 }
 
+export interface ServiceProfileOverrideInput {
+	serviceProfileId: number;
+	weeklyServiceHours?: string | null;
+	hsaEligible?: boolean | null;
+}
+
 export function usePutServiceProfileOverrides(versionId: number | null) {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (data: ServiceProfileOverride[]) =>
+		mutationFn: (data: ServiceProfileOverrideInput[]) =>
 			apiClient<ServiceProfileOverridesResponse>(
 				`/versions/${versionId}/service-profile-overrides`,
 				{
@@ -435,8 +421,10 @@ export function usePutServiceProfileOverrides(versionId: number | null) {
 // ── Cost Assumptions Hooks ──────────────────────────────────────────────────
 
 export interface CostAssumption {
+	id: number;
+	versionId: number;
 	category: string;
-	mode: string;
+	calculationMode: string;
 	value: string;
 }
 
@@ -452,10 +440,16 @@ export function useCostAssumptions(versionId: number | null) {
 	});
 }
 
+export interface CostAssumptionInput {
+	category: string;
+	calculationMode: string;
+	value: string;
+}
+
 export function usePutCostAssumptions(versionId: number | null) {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (data: CostAssumption[]) =>
+		mutationFn: (data: CostAssumptionInput[]) =>
 			apiClient<CostAssumptionsResponse>(`/versions/${versionId}/cost-assumptions`, {
 				method: 'PUT',
 				body: JSON.stringify({ assumptions: data }),
@@ -527,24 +521,31 @@ export interface TeachingRequirementLine {
 	baseOrs: string;
 	effectiveOrs: string;
 	requiredFteRaw: string;
+	requiredFteCalculated: string | null;
 	requiredFtePlanned: string;
 	recommendedPositions: number;
 	coveredFte: string;
 	gapFte: string;
 	coverageStatus: string;
 	assignedStaffCount: number;
+	vacancyCount: number;
+	driverType: string;
 	directCostAnnual: string;
 	hsaCostAnnual: string;
+	assignedEmployees: unknown[];
 }
 
 export interface TeachingRequirementsResponse {
-	data: TeachingRequirementLine[];
+	lines: TeachingRequirementLine[];
 	totals: {
 		totalFteRaw: string;
-		totalFtePlanned: string;
 		totalFteCovered: string;
 		totalFteGap: string;
+		totalDirectCost: string | null;
+		totalHsaCost: string | null;
+		lineCount: number;
 	};
+	warnings: unknown[];
 }
 
 export function useTeachingRequirements(versionId: number | null) {
@@ -557,28 +558,35 @@ export function useTeachingRequirements(versionId: number | null) {
 }
 
 export interface TeachingRequirementSource {
+	id: number;
+	versionId: number;
+	disciplineId: number;
+	disciplineCode: string;
+	disciplineName: string;
 	gradeLevel: string;
 	headcount: number;
 	sections: number;
 	hoursPerUnit: string;
 	totalWeeklyHours: string;
+	lineType: string;
+	driverType: string;
+	maxClassSize: number;
+	driverUnits: number;
+	calculatedAt: string;
 }
 
 export interface TeachingRequirementSourcesResponse {
 	data: TeachingRequirementSource[];
 }
 
-export function useTeachingRequirementSources(
-	versionId: number | null,
-	requirementId: number | null
-) {
+export function useTeachingRequirementSources(versionId: number | null) {
 	return useQuery({
-		queryKey: ['teaching-requirement-sources', versionId, requirementId],
+		queryKey: ['teaching-requirement-sources', versionId],
 		queryFn: () =>
 			apiClient<TeachingRequirementSourcesResponse>(
-				`/versions/${versionId}/teaching-requirements/${requirementId}/sources`
+				`/versions/${versionId}/teaching-requirement-sources`
 			),
-		enabled: versionId !== null && requirementId !== null,
+		enabled: versionId !== null,
 	});
 }
 
@@ -586,12 +594,20 @@ export function useTeachingRequirementSources(
 
 export interface StaffingAssignment {
 	id: number;
-	requirementLineId: number;
+	versionId: number;
 	employeeId: number;
+	band: string;
+	disciplineId: number;
 	fteShare: string;
 	hoursPerWeek: string;
 	note: string | null;
 	source: string;
+	employeeName: string;
+	employeeCode: string;
+	costMode: string;
+	disciplineCode: string;
+	disciplineName: string;
+	updatedAt: string;
 }
 
 export interface StaffingAssignmentsResponse {
@@ -607,10 +623,19 @@ export function useStaffingAssignments(versionId: number | null) {
 	});
 }
 
+export interface CreateAssignmentInput {
+	employeeId: number;
+	band: string;
+	disciplineId: number;
+	hoursPerWeek: string;
+	fteShare: string;
+	note?: string | null;
+}
+
 export function useCreateAssignment(versionId: number | null) {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (data: Omit<StaffingAssignment, 'id' | 'source'>) =>
+		mutationFn: (data: CreateAssignmentInput) =>
 			apiClient<StaffingAssignment>(`/versions/${versionId}/staffing-assignments`, {
 				method: 'POST',
 				body: JSON.stringify(data),

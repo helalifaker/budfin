@@ -33,20 +33,24 @@ function makeLine(overrides: Partial<TeachingRequirementLine> = {}): TeachingReq
 		baseOrs: '24.0',
 		effectiveOrs: '24.0',
 		requiredFteRaw: '0.63',
+		requiredFteCalculated: null,
 		requiredFtePlanned: '1.00',
 		recommendedPositions: 1,
 		coveredFte: '0.63',
 		gapFte: '0.00',
 		coverageStatus: 'COVERED',
 		assignedStaffCount: 1,
+		vacancyCount: 0,
+		driverType: 'SECTION',
 		directCostAnnual: '120000.00',
 		hsaCostAnnual: '5000.00',
+		assignedEmployees: [],
 		...overrides,
 	};
 }
 
 const MOCK_DATA: TeachingRequirementsResponse = {
-	data: [
+	lines: [
 		makeLine({
 			id: 1,
 			band: 'MATERNELLE',
@@ -103,11 +107,14 @@ const MOCK_DATA: TeachingRequirementsResponse = {
 			assignedStaffCount: 1,
 		}),
 	],
+	warnings: [],
 	totals: {
 		totalFteRaw: '10.00',
-		totalFtePlanned: '10.00',
 		totalFteCovered: '8.00',
 		totalFteGap: '-2.00',
+		totalDirectCost: '1000000',
+		totalHsaCost: '50000',
+		lineCount: 5,
 	},
 };
 
@@ -232,15 +239,18 @@ describe('TeachingMasterGrid', () => {
 		});
 		it('shows totalFteRaw not sum of positions', () => {
 			const customData: TeachingRequirementsResponse = {
-				data: [
+				lines: [
 					makeLine({ id: 10, band: 'MATERNELLE', requiredFteRaw: '1.33', recommendedPositions: 2 }),
 					makeLine({ id: 11, band: 'MATERNELLE', requiredFteRaw: '0.67', recommendedPositions: 1 }),
 				],
+				warnings: [],
 				totals: {
 					totalFteRaw: '2.00',
-					totalFtePlanned: '2.00',
 					totalFteCovered: '1.50',
 					totalFteGap: '-0.50',
+					totalDirectCost: '200000',
+					totalHsaCost: '10000',
+					lineCount: 2,
 				},
 			};
 			render(<TeachingMasterGrid {...DEFAULT_PROPS} data={customData} />);

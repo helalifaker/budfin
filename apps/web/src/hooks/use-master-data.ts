@@ -43,22 +43,36 @@ export interface DhgRulesResponse {
 export interface AutoSuggestResult {
 	employeeId: number;
 	employeeName: string;
-	requirementLineId: number;
 	band: string;
+	disciplineId: number;
 	disciplineCode: string;
 	fteShare: string;
+	hoursPerWeek: string;
 	confidence: 'High' | 'Medium';
+	reason: string;
 }
 
 export interface AutoSuggestResponse {
-	data: AutoSuggestResult[];
+	suggestions: AutoSuggestResult[];
+	summary: {
+		totalSuggestions: number;
+		highConfidence: number;
+		mediumConfidence: number;
+		unassignedRemaining: number;
+	};
 }
 
 export interface DemandOverride {
 	id: number;
-	requirementLineId: number;
-	overrideType: string;
-	value: string;
+	versionId: number;
+	band: string;
+	disciplineId: number;
+	disciplineCode: string;
+	disciplineName: string;
+	lineType: string;
+	overrideFte: string;
+	reasonCode: string;
+	note: string | null;
 }
 
 export interface DemandOverridesResponse {

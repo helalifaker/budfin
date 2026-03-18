@@ -135,7 +135,7 @@ export function TeachingMasterGrid({
 	selectedLineId,
 }: TeachingMasterGridProps) {
 	const selectRequirementLine = useStaffingSelectionStore((s) => s.selectRequirementLine);
-	const allGridRows = useMemo(() => buildTeachingGridRows(data.data), [data.data]);
+	const allGridRows = useMemo(() => buildTeachingGridRows(data.lines), [data.lines]);
 	const requirementRows = useMemo(
 		() =>
 			filterTeachingRows(
@@ -189,7 +189,9 @@ export function TeachingMasterGrid({
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('baseOrs', {
 				id: 'baseOrs',
-				header: 'ORS',
+				header: () => (
+					<span title="Obligation Reglementaire de Service — base weekly teaching hours">ORS</span>
+				),
 				size: 55,
 				cell: ({ getValue }) => (
 					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
@@ -199,7 +201,7 @@ export function TeachingMasterGrid({
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('effectiveOrs', {
 				id: 'effectiveOrs',
-				header: 'Eff.ORS',
+				header: () => <span title="Effective ORS — base + HSA hours">Eff.ORS</span>,
 				size: 65,
 				cell: ({ row, getValue }) => {
 					const isBold = String(getValue()) !== row.original.baseOrs;
@@ -217,7 +219,7 @@ export function TeachingMasterGrid({
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('requiredFteRaw', {
 				id: 'requiredFteRaw',
-				header: 'Raw FTE',
+				header: () => <span title="Required FTE = total hours / base ORS">Raw FTE</span>,
 				size: 75,
 				cell: ({ getValue }) => (
 					<span className="font-bold font-[family-name:var(--font-mono)] tabular-nums">
@@ -227,7 +229,9 @@ export function TeachingMasterGrid({
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('requiredFtePlanned', {
 				id: 'requiredFtePlanned',
-				header: 'Plan FTE',
+				header: () => (
+					<span title="Planned FTE = total hours / effective ORS (with HSA)">Plan FTE</span>
+				),
 				size: 75,
 				cell: ({ getValue }) => (
 					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
@@ -237,7 +241,7 @@ export function TeachingMasterGrid({
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('recommendedPositions', {
 				id: 'recommendedPositions',
-				header: 'Rec.Pos',
+				header: () => <span title="Recommended positions (Raw FTE rounded up)">Rec.Pos</span>,
 				size: 65,
 				cell: ({ getValue }) => (
 					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
@@ -357,8 +361,6 @@ export function TeachingMasterGrid({
 	const grandTotalRow = useMemo(() => {
 		const values: Record<string, React.ReactNode> = {};
 		if (visibleCols.has('requiredFteRaw')) values.requiredFteRaw = data.totals.totalFteRaw;
-		if (visibleCols.has('requiredFtePlanned'))
-			values.requiredFtePlanned = data.totals.totalFtePlanned;
 		if (visibleCols.has('coveredFte')) values.coveredFte = data.totals.totalFteCovered;
 		if (visibleCols.has('gapFte')) values.gapFte = data.totals.totalFteGap;
 		return [

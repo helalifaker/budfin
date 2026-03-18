@@ -1259,6 +1259,7 @@ export async function versionRoutes(app: FastifyInstance) {
 							data: lyceeAssumptions.map((la) => ({
 								versionId: newVersion.id,
 								gradeLevel: la.gradeLevel,
+								// Disciplines are global master data (not version-scoped), no remap needed
 								disciplineId: la.disciplineId,
 								groupCount: la.groupCount,
 								hoursPerGroup: la.hoursPerGroup,
@@ -1278,6 +1279,7 @@ export async function versionRoutes(app: FastifyInstance) {
 								versionId: newVersion.id,
 								employeeId: employeeIdMap.get(a.employeeId)!,
 								band: a.band,
+								// Disciplines are global master data (not version-scoped), no remap needed
 								disciplineId: a.disciplineId,
 								hoursPerWeek: a.hoursPerWeek,
 								fteShare: a.fteShare,
@@ -1300,6 +1302,7 @@ export async function versionRoutes(app: FastifyInstance) {
 							data: demandOverrides.map((d) => ({
 								versionId: newVersion.id,
 								band: d.band,
+								// Disciplines are global master data (not version-scoped), no remap needed
 								disciplineId: d.disciplineId,
 								lineType: d.lineType,
 								overrideFte: d.overrideFte,

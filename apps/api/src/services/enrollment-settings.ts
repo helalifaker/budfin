@@ -8,7 +8,6 @@ const DECIMAL_PRECISION = 4;
 export const ENROLLMENT_SETTINGS_STALE_MODULES = [
 	'ENROLLMENT',
 	'REVENUE',
-	'DHG',
 	'STAFFING',
 	'PNL',
 ] as const;

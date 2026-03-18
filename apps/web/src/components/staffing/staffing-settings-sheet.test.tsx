@@ -8,9 +8,9 @@ let mockStaffingSettingsData: unknown = {
 	data: {
 		id: 1,
 		versionId: 42,
-		hsaTargetHoursPerWeek: '1.5',
-		hsaRateFirstHour: '250',
-		hsaRateAdditionalHour: '200',
+		hsaTargetHours: '1.5',
+		hsaFirstHourRate: '250',
+		hsaAdditionalHourRate: '200',
 		hsaMonths: 10,
 	},
 };
@@ -20,41 +20,63 @@ const mockPutStaffingSettingsMutate = vi.fn();
 let mockPutStaffingSettingsPending = false;
 
 let mockServiceProfilesData: unknown = {
-	data: [
-		{ id: 1, code: 'P1', label: 'Professeur Principal', defaultOrs: '18', isHsaEligible: true },
+	profiles: [
+		{
+			id: 1,
+			code: 'P1',
+			name: 'Professeur Principal',
+			weeklyServiceHours: '18',
+			hsaEligible: true,
+			defaultCostMode: 'LOCAL_PAYROLL',
+			sortOrder: 1,
+		},
 		{
 			id: 2,
 			code: 'P2',
-			label: 'Professeur Certifie',
-			defaultOrs: '18',
-			isHsaEligible: false,
+			name: 'Professeur Certifie',
+			weeklyServiceHours: '18',
+			hsaEligible: false,
+			defaultCostMode: 'LOCAL_PAYROLL',
+			sortOrder: 2,
 		},
 	],
 };
 
 let mockServiceProfileOverridesData: unknown = {
-	data: [{ serviceProfileId: 1, effectiveOrs: '17' }],
+	data: [
+		{
+			id: 1,
+			versionId: 42,
+			serviceProfileId: 1,
+			serviceProfileCode: 'P1',
+			serviceProfileName: 'Professeur Principal',
+			weeklyServiceHours: '17',
+			hsaEligible: true,
+		},
+	],
 };
 
 const mockPutServiceProfileOverridesMutate = vi.fn();
 
 let mockDhgRulesData: unknown = {
-	data: [
+	rules: [
 		{
 			id: 1,
-			band: 'MATERNELLE',
 			gradeLevel: 'PS',
 			disciplineCode: 'FR',
-			hoursPerWeekPerSection: '2',
-			dhgType: 'FIXED',
+			lineType: 'STRUCTURAL',
+			driverType: 'HOURS',
+			hoursPerUnit: '2',
+			serviceProfileCode: 'P1',
 		},
 		{
 			id: 2,
-			band: 'LYCEE',
 			gradeLevel: '2NDE',
 			disciplineCode: 'MATH',
-			hoursPerWeekPerSection: '4',
-			dhgType: 'GROUP',
+			lineType: 'STRUCTURAL',
+			driverType: 'GROUPS',
+			hoursPerUnit: '4',
+			serviceProfileCode: 'P1',
 		},
 	],
 };
@@ -67,11 +89,41 @@ const mockPutLyceeGroupMutate = vi.fn();
 
 let mockCostAssumptionsData: unknown = {
 	data: [
-		{ category: 'REMPLACEMENTS', mode: 'FLAT_ANNUAL', value: '50000' },
-		{ category: 'FORMATION', mode: 'PCT_PAYROLL', value: '0.02' },
-		{ category: 'RESIDENT_SALAIRES', mode: 'AMOUNT_PER_FTE', value: '5000' },
-		{ category: 'RESIDENT_LOGEMENT', mode: 'FLAT_ANNUAL', value: '30000' },
-		{ category: 'RESIDENT_PENSION', mode: 'FLAT_ANNUAL', value: '20000' },
+		{
+			id: 1,
+			versionId: 42,
+			category: 'REMPLACEMENTS',
+			calculationMode: 'FLAT_ANNUAL',
+			value: '50000',
+		},
+		{
+			id: 2,
+			versionId: 42,
+			category: 'FORMATION',
+			calculationMode: 'PERCENT_OF_PAYROLL',
+			value: '0.02',
+		},
+		{
+			id: 3,
+			versionId: 42,
+			category: 'RESIDENT_SALAIRES',
+			calculationMode: 'AMOUNT_PER_FTE',
+			value: '5000',
+		},
+		{
+			id: 4,
+			versionId: 42,
+			category: 'RESIDENT_LOGEMENT',
+			calculationMode: 'FLAT_ANNUAL',
+			value: '30000',
+		},
+		{
+			id: 5,
+			versionId: 42,
+			category: 'RESIDENT_PENSION',
+			calculationMode: 'FLAT_ANNUAL',
+			value: '20000',
+		},
 	],
 };
 
@@ -79,8 +131,22 @@ const mockPutCostAssumptionsMutate = vi.fn();
 
 let mockHeadcountData: unknown = {
 	entries: [
-		{ gradeLevel: 'PS', gradeName: 'PS', band: 'MATERNELLE', displayOrder: 1, ay2: 25 },
-		{ gradeLevel: 'MS', gradeName: 'MS', band: 'MATERNELLE', displayOrder: 2, ay2: 30 },
+		{
+			gradeLevel: 'PS',
+			gradeName: 'PS',
+			band: 'MATERNELLE',
+			displayOrder: 1,
+			headcount: 25,
+			academicPeriod: 'AY2',
+		},
+		{
+			gradeLevel: 'MS',
+			gradeName: 'MS',
+			band: 'MATERNELLE',
+			displayOrder: 2,
+			headcount: 30,
+			academicPeriod: 'AY2',
+		},
 	],
 };
 
@@ -187,52 +253,68 @@ function resetMockData() {
 		data: {
 			id: 1,
 			versionId: 42,
-			hsaTargetHoursPerWeek: '1.5',
-			hsaRateFirstHour: '250',
-			hsaRateAdditionalHour: '200',
+			hsaTargetHours: '1.5',
+			hsaFirstHourRate: '250',
+			hsaAdditionalHourRate: '200',
 			hsaMonths: 10,
 		},
 	};
 	mockStaffingSettingsLoading = false;
 	mockPutStaffingSettingsPending = false;
 	mockServiceProfilesData = {
-		data: [
+		profiles: [
 			{
 				id: 1,
 				code: 'P1',
-				label: 'Professeur Principal',
-				defaultOrs: '18',
-				isHsaEligible: true,
+				name: 'Professeur Principal',
+				weeklyServiceHours: '18',
+				hsaEligible: true,
+				defaultCostMode: 'LOCAL_PAYROLL',
+				sortOrder: 1,
 			},
 			{
 				id: 2,
 				code: 'P2',
-				label: 'Professeur Certifie',
-				defaultOrs: '18',
-				isHsaEligible: false,
+				name: 'Professeur Certifie',
+				weeklyServiceHours: '18',
+				hsaEligible: false,
+				defaultCostMode: 'LOCAL_PAYROLL',
+				sortOrder: 2,
 			},
 		],
 	};
 	mockServiceProfileOverridesData = {
-		data: [{ serviceProfileId: 1, effectiveOrs: '17' }],
-	};
-	mockDhgRulesData = {
 		data: [
 			{
 				id: 1,
-				band: 'MATERNELLE',
+				versionId: 42,
+				serviceProfileId: 1,
+				serviceProfileCode: 'P1',
+				serviceProfileName: 'Professeur Principal',
+				weeklyServiceHours: '17',
+				hsaEligible: true,
+			},
+		],
+	};
+	mockDhgRulesData = {
+		rules: [
+			{
+				id: 1,
 				gradeLevel: 'PS',
 				disciplineCode: 'FR',
-				hoursPerWeekPerSection: '2',
-				dhgType: 'FIXED',
+				lineType: 'STRUCTURAL',
+				driverType: 'HOURS',
+				hoursPerUnit: '2',
+				serviceProfileCode: 'P1',
 			},
 			{
 				id: 2,
-				band: 'LYCEE',
 				gradeLevel: '2NDE',
 				disciplineCode: 'MATH',
-				hoursPerWeekPerSection: '4',
-				dhgType: 'GROUP',
+				lineType: 'STRUCTURAL',
+				driverType: 'GROUPS',
+				hoursPerUnit: '4',
+				serviceProfileCode: 'P1',
 			},
 		],
 	};
@@ -241,17 +323,61 @@ function resetMockData() {
 	};
 	mockCostAssumptionsData = {
 		data: [
-			{ category: 'REMPLACEMENTS', mode: 'FLAT_ANNUAL', value: '50000' },
-			{ category: 'FORMATION', mode: 'PCT_PAYROLL', value: '0.02' },
-			{ category: 'RESIDENT_SALAIRES', mode: 'AMOUNT_PER_FTE', value: '5000' },
-			{ category: 'RESIDENT_LOGEMENT', mode: 'FLAT_ANNUAL', value: '30000' },
-			{ category: 'RESIDENT_PENSION', mode: 'FLAT_ANNUAL', value: '20000' },
+			{
+				id: 1,
+				versionId: 42,
+				category: 'REMPLACEMENTS',
+				calculationMode: 'FLAT_ANNUAL',
+				value: '50000',
+			},
+			{
+				id: 2,
+				versionId: 42,
+				category: 'FORMATION',
+				calculationMode: 'PERCENT_OF_PAYROLL',
+				value: '0.02',
+			},
+			{
+				id: 3,
+				versionId: 42,
+				category: 'RESIDENT_SALAIRES',
+				calculationMode: 'AMOUNT_PER_FTE',
+				value: '5000',
+			},
+			{
+				id: 4,
+				versionId: 42,
+				category: 'RESIDENT_LOGEMENT',
+				calculationMode: 'FLAT_ANNUAL',
+				value: '30000',
+			},
+			{
+				id: 5,
+				versionId: 42,
+				category: 'RESIDENT_PENSION',
+				calculationMode: 'FLAT_ANNUAL',
+				value: '20000',
+			},
 		],
 	};
 	mockHeadcountData = {
 		entries: [
-			{ gradeLevel: 'PS', gradeName: 'PS', band: 'MATERNELLE', displayOrder: 1, ay2: 25 },
-			{ gradeLevel: 'MS', gradeName: 'MS', band: 'MATERNELLE', displayOrder: 2, ay2: 30 },
+			{
+				gradeLevel: 'PS',
+				gradeName: 'PS',
+				band: 'MATERNELLE',
+				displayOrder: 1,
+				headcount: 25,
+				academicPeriod: 'AY2',
+			},
+			{
+				gradeLevel: 'MS',
+				gradeName: 'MS',
+				band: 'MATERNELLE',
+				displayOrder: 2,
+				headcount: 30,
+				academicPeriod: 'AY2',
+			},
 		],
 	};
 	mockStaffingSummaryData = {
@@ -396,7 +522,7 @@ describe('StaffingSettingsSheet', () => {
 			const cellTexts = cells.map((c) => c.textContent?.trim());
 			expect(cellTexts).toContain('PS');
 			expect(cellTexts).toContain('FR');
-			expect(cellTexts).toContain('FIXED');
+			expect(cellTexts).toContain('HOURS');
 		});
 
 		it('shows Edit in Master Data link', () => {
@@ -442,14 +568,15 @@ describe('StaffingSettingsSheet', () => {
 
 		it('hides Lycee Group tab when no GROUP-driver rules exist', () => {
 			mockDhgRulesData = {
-				data: [
+				rules: [
 					{
 						id: 1,
-						band: 'MATERNELLE',
 						gradeLevel: 'PS',
 						disciplineCode: 'FR',
-						hoursPerWeekPerSection: '2',
-						dhgType: 'FIXED',
+						lineType: 'STRUCTURAL',
+						driverType: 'HOURS',
+						hoursPerUnit: '2',
+						serviceProfileCode: 'P1',
 					},
 				],
 			};

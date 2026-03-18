@@ -47,8 +47,17 @@ vi.mock('../../stores/right-panel-store', () => ({
 
 vi.mock('../../stores/staffing-selection-store', () => ({
 	useStaffingSelectionStore: (
-		selector: (state: { clearSelection: typeof mockClearSelection }) => unknown
-	) => selector({ clearSelection: mockClearSelection }),
+		selector: (state: {
+			clearSelection: typeof mockClearSelection;
+			selection: null;
+			selectSupportEmployee: (id: number, department: string) => void;
+		}) => unknown
+	) =>
+		selector({
+			clearSelection: mockClearSelection,
+			selection: null,
+			selectSupportEmployee: vi.fn(),
+		}),
 }));
 
 vi.mock('../../stores/staffing-settings-store', () => ({
@@ -72,6 +81,26 @@ vi.mock('../../hooks/use-staffing', () => ({
 		isPending: false,
 		isSuccess: false,
 		isError: false,
+	}),
+	useTeachingRequirements: () => ({
+		data: {
+			lines: [],
+			totals: {
+				totalFteRaw: '0',
+				totalFteCovered: '0',
+				totalFteGap: '0',
+				totalDirectCost: '0',
+				totalHsaCost: '0',
+				lineCount: 0,
+			},
+			warnings: [],
+		},
+	}),
+	useEmployees: () => ({
+		data: { data: [], total: 0 },
+	}),
+	useStaffingSummary: () => ({
+		data: null,
 	}),
 }));
 
@@ -131,6 +160,29 @@ vi.mock('../../components/ui/dropdown-menu', () => ({
 vi.mock('../../components/shared/page-transition', () => ({
 	PageTransition: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
+
+vi.mock('../../components/staffing/teaching-master-grid', () => ({
+	TeachingMasterGrid: () => <div data-testid="teaching-master-grid">Teaching Grid</div>,
+}));
+
+vi.mock('../../components/staffing/support-admin-grid', () => ({
+	SupportAdminGrid: () => <div data-testid="support-admin-grid">Support Grid</div>,
+}));
+
+vi.mock('../../components/staffing/staffing-kpi-ribbon', () => ({
+	StaffingKpiRibbonV2: () => <div data-testid="staffing-kpi-ribbon">KPI Ribbon</div>,
+}));
+
+vi.mock('../../components/staffing/staffing-status-strip', () => ({
+	StaffingStatusStrip: () => <div data-testid="staffing-status-strip">Status Strip</div>,
+}));
+
+vi.mock('../../components/staffing/staffing-settings-sheet', () => ({
+	StaffingSettingsSheet: () => <div data-testid="staffing-settings-sheet" />,
+}));
+
+vi.mock('../../components/staffing/staffing-inspector-content', () => ({}));
+vi.mock('../../components/staffing/staffing-guide-content', () => ({}));
 
 describe('StaffingPage', () => {
 	beforeEach(() => {
@@ -331,16 +383,16 @@ describe('StaffingPage', () => {
 		expect(screen.queryByText('Auto-Suggest')).toBeNull();
 	});
 
-	it('shows Teaching workspace placeholder in teaching mode', () => {
+	it('renders teaching grid in teaching mode', () => {
 		render(<StaffingPage />);
-		expect(screen.getByText('Teaching workspace')).toBeTruthy();
+		expect(screen.getByTestId('teaching-master-grid')).toBeTruthy();
 	});
 
-	it('shows Support & Admin workspace placeholder in support mode', () => {
+	it('renders support grid in support mode', () => {
 		render(<StaffingPage />);
 		const supportButton = screen.getByText('Support & Admin');
 		fireEvent.click(supportButton);
-		expect(screen.getByText('Support & Admin workspace')).toBeTruthy();
+		expect(screen.getByTestId('support-admin-grid')).toBeTruthy();
 	});
 
 	it('Settings button is visible even when viewer', () => {

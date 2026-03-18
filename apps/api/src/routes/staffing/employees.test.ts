@@ -223,21 +223,21 @@ describe('GET /employees', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.employees).toHaveLength(1);
+		expect(body.data).toHaveLength(1);
 		expect(body.total).toBe(1);
 		expect(body.page).toBe(1);
 		expect(body.page_size).toBe(50);
-		expect(body.employees[0].base_salary).toBe('5000.0000');
+		expect(body.data[0].baseSalary).toBe('5000.0000');
 		// AC-01: new fields present in response
-		expect(body.employees[0].record_type).toBe('EMPLOYEE');
-		expect(body.employees[0].cost_mode).toBe('LOCAL_PAYROLL');
-		expect(body.employees[0].discipline_id).toBe(1);
-		expect(body.employees[0].service_profile_id).toBe(2);
-		expect(body.employees[0].home_band).toBe('COLLEGE');
-		expect(body.employees[0].contract_end_date).toBeNull();
+		expect(body.data[0].recordType).toBe('EMPLOYEE');
+		expect(body.data[0].costMode).toBe('LOCAL_PAYROLL');
+		expect(body.data[0].disciplineId).toBe(1);
+		expect(body.data[0].serviceProfileId).toBe(2);
+		expect(body.data[0].homeBand).toBe('COLLEGE');
+		expect(body.data[0].contractEndDate).toBeNull();
 		// AC-01: joined names
-		expect(body.employees[0].discipline_name).toBe('Mathematics');
-		expect(body.employees[0].service_profile_name).toBe('CERTIFIE');
+		expect(body.data[0].disciplineName).toBe('Mathematics');
+		expect(body.data[0].serviceProfileName).toBe('CERTIFIE');
 	});
 
 	it('respects page and page_size query params', async () => {
@@ -281,15 +281,15 @@ describe('GET /employees', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.employees[0].base_salary).toBeNull();
-		expect(body.employees[0].housing_allowance).toBeNull();
-		expect(body.employees[0].transport_allowance).toBeNull();
-		expect(body.employees[0].responsibility_premium).toBeNull();
-		expect(body.employees[0].hsa_amount).toBeNull();
-		expect(body.employees[0].augmentation).toBeNull();
+		expect(body.data[0].baseSalary).toBeNull();
+		expect(body.data[0].housingAllowance).toBeNull();
+		expect(body.data[0].transportAllowance).toBeNull();
+		expect(body.data[0].responsibilityPremium).toBeNull();
+		expect(body.data[0].hsaAmount).toBeNull();
+		expect(body.data[0].augmentation).toBeNull();
 		// Non-salary new fields still visible
-		expect(body.employees[0].record_type).toBe('EMPLOYEE');
-		expect(body.employees[0].cost_mode).toBe('LOCAL_PAYROLL');
+		expect(body.data[0].recordType).toBe('EMPLOYEE');
+		expect(body.data[0].costMode).toBe('LOCAL_PAYROLL');
 	});
 
 	it('filters by department query param', async () => {
@@ -363,16 +363,16 @@ describe('GET /employees/:id', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.id).toBe(42);
-		expect(body.employee_code).toBe('EMP001');
-		expect(body.base_salary).toBe('5000.0000');
+		expect(body.employeeCode).toBe('EMP001');
+		expect(body.baseSalary).toBe('5000.0000');
 		// AC-01: new fields and joined names
-		expect(body.record_type).toBe('EMPLOYEE');
-		expect(body.cost_mode).toBe('LOCAL_PAYROLL');
-		expect(body.discipline_id).toBe(1);
-		expect(body.discipline_name).toBe('Mathematics');
-		expect(body.service_profile_id).toBe(2);
-		expect(body.service_profile_name).toBe('CERTIFIE');
-		expect(body.home_band).toBe('COLLEGE');
+		expect(body.recordType).toBe('EMPLOYEE');
+		expect(body.costMode).toBe('LOCAL_PAYROLL');
+		expect(body.disciplineId).toBe(1);
+		expect(body.disciplineName).toBe('Mathematics');
+		expect(body.serviceProfileId).toBe(2);
+		expect(body.serviceProfileName).toBe('CERTIFIE');
+		expect(body.homeBand).toBe('COLLEGE');
 	});
 
 	it('returns 404 when employee not found', async () => {
@@ -410,8 +410,8 @@ describe('GET /employees/:id', () => {
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
-		expect(body.base_salary).toBeNull();
-		expect(body.housing_allowance).toBeNull();
+		expect(body.baseSalary).toBeNull();
+		expect(body.housingAllowance).toBeNull();
 	});
 });
 
@@ -507,10 +507,10 @@ describe('POST /employees', () => {
 		expect(res.statusCode).toBe(201);
 		const body = res.json();
 		expect(body.id).toBe(42);
-		expect(body.employee_code).toBe('EMP001');
-		expect(body.record_type).toBe('EMPLOYEE');
-		expect(body.cost_mode).toBe('LOCAL_PAYROLL');
-		expect(body.discipline_name).toBe('Mathematics');
+		expect(body.employeeCode).toBe('EMP001');
+		expect(body.recordType).toBe('EMPLOYEE');
+		expect(body.costMode).toBe('LOCAL_PAYROLL');
+		expect(body.disciplineName).toBe('Mathematics');
 		expect(mockPrisma.auditEntry.create).toHaveBeenCalledOnce();
 		expect(mockPrisma.$executeRaw).toHaveBeenCalled(); // stale flag
 	});
@@ -678,8 +678,8 @@ describe('POST /employees', () => {
 		});
 
 		expect(res.statusCode).toBe(201);
-		expect(res.json().employee_code).toBe('VAC-006');
-		expect(res.json().record_type).toBe('VACANCY');
+		expect(res.json().employeeCode).toBe('VAC-006');
+		expect(res.json().recordType).toBe('VACANCY');
 	});
 
 	it('auto-generates VAC-001 when no vacancies exist', async () => {
@@ -721,7 +721,7 @@ describe('POST /employees', () => {
 		});
 
 		expect(res.statusCode).toBe(201);
-		expect(res.json().employee_code).toBe('VAC-001');
+		expect(res.json().employeeCode).toBe('VAC-001');
 	});
 
 	// AC-04: Non-vacancy without employeeCode should fail
@@ -892,8 +892,8 @@ describe('PUT /employees/:id', () => {
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.id).toBe(42);
-		expect(body.record_type).toBe('EMPLOYEE');
-		expect(body.cost_mode).toBe('LOCAL_PAYROLL');
+		expect(body.recordType).toBe('EMPLOYEE');
+		expect(body.costMode).toBe('LOCAL_PAYROLL');
 		expect(mockPrisma.auditEntry.create).toHaveBeenCalledOnce();
 	});
 

@@ -146,7 +146,17 @@ describe('usePutServiceProfileOverrides', () => {
 
 describe('useCostAssumptions', () => {
 	it('fetches cost assumptions', async () => {
-		const mockData = { data: [{ category: 'formation', mode: 'fixed', value: '5000' }] };
+		const mockData = {
+			data: [
+				{
+					id: 1,
+					versionId: 10,
+					category: 'formation',
+					calculationMode: 'FLAT_ANNUAL',
+					value: '5000',
+				},
+			],
+		};
 		mockApiClient.mockResolvedValue(mockData);
 
 		const { result } = renderHook(() => useCostAssumptions(10), {
@@ -173,7 +183,7 @@ describe('usePutCostAssumptions', () => {
 			wrapper: createWrapper(),
 		});
 
-		const assumptions = [{ category: 'formation', mode: 'fixed', value: '5000' }];
+		const assumptions = [{ category: 'formation', calculationMode: 'FLAT_ANNUAL', value: '5000' }];
 		result.current.mutate(assumptions);
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -249,25 +259,20 @@ describe('useTeachingRequirements', () => {
 // ── useTeachingRequirementSources ───────────────────────────────────────────
 
 describe('useTeachingRequirementSources', () => {
-	it('fetches requirement sources for a specific line', async () => {
+	it('fetches all requirement sources for a version', async () => {
 		const mockData = { data: [] };
 		mockApiClient.mockResolvedValue(mockData);
 
-		const { result } = renderHook(() => useTeachingRequirementSources(10, 42), {
+		const { result } = renderHook(() => useTeachingRequirementSources(10), {
 			wrapper: createWrapper(),
 		});
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
-		expect(mockApiClient).toHaveBeenCalledWith('/versions/10/teaching-requirements/42/sources');
+		expect(mockApiClient).toHaveBeenCalledWith('/versions/10/teaching-requirement-sources');
 	});
 
 	it('does not fetch when versionId is null', () => {
-		renderHook(() => useTeachingRequirementSources(null, 42), { wrapper: createWrapper() });
-		expect(mockApiClient).not.toHaveBeenCalled();
-	});
-
-	it('does not fetch when requirementId is null', () => {
-		renderHook(() => useTeachingRequirementSources(10, null), { wrapper: createWrapper() });
+		renderHook(() => useTeachingRequirementSources(null), { wrapper: createWrapper() });
 		expect(mockApiClient).not.toHaveBeenCalled();
 	});
 });
@@ -304,7 +309,8 @@ describe('useCreateAssignment', () => {
 		});
 
 		result.current.mutate({
-			requirementLineId: 42,
+			band: 'MATERNELLE',
+			disciplineId: 42,
 			employeeId: 99,
 			fteShare: '1.0',
 			hoursPerWeek: '18',

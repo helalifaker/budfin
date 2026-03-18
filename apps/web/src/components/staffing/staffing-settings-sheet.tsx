@@ -49,7 +49,7 @@ const COST_CATEGORIES = [
 
 const COST_MODES = [
 	{ value: 'FLAT_ANNUAL', label: 'Flat Annual' },
-	{ value: 'PCT_PAYROLL', label: '% of Payroll' },
+	{ value: 'PERCENT_OF_PAYROLL', label: '% of Payroll' },
 	{ value: 'AMOUNT_PER_FTE', label: 'Amount per FTE' },
 ] as const;
 
@@ -63,9 +63,9 @@ const monoInputClass = cn(
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface DraftHsaSettings {
-	hsaTargetHoursPerWeek: string;
-	hsaRateFirstHour: string;
-	hsaRateAdditionalHour: string;
+	hsaTargetHours: string;
+	hsaFirstHourRate: string;
+	hsaAdditionalHourRate: string;
 	hsaMonths: string;
 }
 
@@ -88,13 +88,35 @@ interface DraftLyceeGroup {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
+const GRADE_TO_BAND: Record<string, string> = {
+	PS: 'MATERNELLE',
+	MS: 'MATERNELLE',
+	GS: 'MATERNELLE',
+	CP: 'ELEMENTAIRE',
+	CE1: 'ELEMENTAIRE',
+	CE2: 'ELEMENTAIRE',
+	CM1: 'ELEMENTAIRE',
+	CM2: 'ELEMENTAIRE',
+	'6EME': 'COLLEGE',
+	'5EME': 'COLLEGE',
+	'4EME': 'COLLEGE',
+	'3EME': 'COLLEGE',
+	'2NDE': 'LYCEE',
+	'1ERE': 'LYCEE',
+	TERM: 'LYCEE',
+};
+
+function gradeToBand(gradeLevel: string): string {
+	return GRADE_TO_BAND[gradeLevel] ?? 'MATERNELLE';
+}
+
 function computeMonthlyPreview(mode: string, value: string): string {
 	const num = Number(value);
 	if (!Number.isFinite(num) || num === 0) return '-';
 	if (mode === 'FLAT_ANNUAL') {
 		return new Decimal(value).dividedBy(12).toFixed(0);
 	}
-	if (mode === 'PCT_PAYROLL') {
+	if (mode === 'PERCENT_OF_PAYROLL') {
 		return `${new Decimal(value).times(100).toFixed(1)}%`;
 	}
 	return value;
@@ -130,21 +152,51 @@ export function StaffingSettingsSheet({
 	const { data: costResp } = useCostAssumptions(versionId);
 	const putCostAssumptions = usePutCostAssumptions(versionId);
 
-	const { data: headcountResp } = useHeadcount(versionId);
+	const { data: headcountResp } = useHeadcount(versionId, 'AY2');
 	const { data: summaryResp } = useStaffingSummary(versionId);
 
 	// ── Derived data ───────────────────────────────────────────────────────
 
 	const settings = (settingsResp as { data: StaffingSettings } | undefined)?.data ?? null;
-	const profiles = (profilesResp as { data: ServiceProfile[] } | undefined)?.data ?? [];
+
+	// API returns { profiles: [...] } with name/weeklyServiceHours/hsaEligible
+	const profiles: ServiceProfile[] = useMemo(() => {
+		const raw = profilesResp as { profiles?: Array<Record<string, unknown>> } | undefined;
+		return (raw?.profiles ?? []).map((p) => ({
+			id: Number(p.id),
+			code: String(p.code),
+			label: String(p.name ?? p.code),
+			defaultOrs: String(p.weeklyServiceHours ?? '18'),
+			isHsaEligible: Boolean(p.hsaEligible),
+		}));
+	}, [profilesResp]);
+
 	const overrides = useMemo(
 		() => (overridesResp as { data: ServiceProfileOverride[] } | undefined)?.data ?? [],
 		[overridesResp]
 	);
-	const dhgRules = useMemo(
-		() => (dhgRulesResp as { data: DhgRule[] } | undefined)?.data ?? [],
-		[dhgRulesResp]
-	);
+
+	// API returns { rules: [...] } with gradeLevel/lineType/driverType/hoursPerUnit
+	interface ApiDhgRule {
+		id: number;
+		gradeLevel: string;
+		disciplineCode: string;
+		lineType: string;
+		driverType: string;
+		hoursPerUnit: string;
+	}
+	const dhgRules: DhgRule[] = useMemo(() => {
+		const raw = dhgRulesResp as { rules?: ApiDhgRule[] } | undefined;
+		return (raw?.rules ?? []).map((r) => ({
+			id: r.id,
+			band: gradeToBand(r.gradeLevel),
+			gradeLevel: r.gradeLevel,
+			disciplineCode: r.disciplineCode,
+			hoursPerWeekPerSection: r.hoursPerUnit,
+			dhgType: r.driverType,
+		}));
+	}, [dhgRulesResp]);
+
 	const lyceeAssumptions = useMemo(
 		() => (lyceeResp as { data: LyceeGroupAssumption[] } | undefined)?.data ?? [],
 		[lyceeResp]
@@ -153,19 +205,23 @@ export function StaffingSettingsSheet({
 		() => (costResp as { data: CostAssumption[] } | undefined)?.data ?? [],
 		[costResp]
 	);
-	const headcountEntries = useMemo(
-		() =>
-			(
-				headcountResp as
-					| { entries: Array<{ gradeLevel: string; gradeName: string; ay2: number }> }
-					| undefined
-			)?.entries ?? [],
-		[headcountResp]
-	);
+
+	// API returns { entries: [{gradeLevel, academicPeriod, headcount, gradeName, ...}] }
+	const headcountEntries = useMemo(() => {
+		const raw = headcountResp as
+			| { entries: Array<{ gradeLevel: string; gradeName?: string; headcount: number }> }
+			| undefined;
+		return (raw?.entries ?? []).map((e) => ({
+			gradeLevel: e.gradeLevel,
+			gradeName: e.gradeName ?? e.gradeLevel,
+			ay2: e.headcount,
+		}));
+	}, [headcountResp]);
+
 	const summary = summaryResp as { fte: string; cost: string } | undefined;
 
 	const hasGroupDriverRules = useMemo(
-		() => dhgRules.some((r) => r.dhgType === 'GROUP'),
+		() => dhgRules.some((r) => r.dhgType === 'GROUPS'),
 		[dhgRules]
 	);
 
@@ -195,9 +251,9 @@ export function StaffingSettingsSheet({
 		startTransition(() => {
 			if (settings) {
 				setDraftHsa({
-					hsaTargetHoursPerWeek: settings.hsaTargetHoursPerWeek,
-					hsaRateFirstHour: settings.hsaRateFirstHour,
-					hsaRateAdditionalHour: settings.hsaRateAdditionalHour,
+					hsaTargetHours: settings.hsaTargetHours,
+					hsaFirstHourRate: settings.hsaFirstHourRate,
+					hsaAdditionalHourRate: settings.hsaAdditionalHourRate,
 					hsaMonths: String(settings.hsaMonths),
 				});
 			}
@@ -205,14 +261,14 @@ export function StaffingSettingsSheet({
 			setDraftOrs(
 				overrides.map((o) => ({
 					serviceProfileId: o.serviceProfileId,
-					effectiveOrs: o.effectiveOrs,
+					effectiveOrs: o.weeklyServiceHours ?? '',
 				}))
 			);
 
 			setDraftCost(
 				costAssumptions.map((c) => ({
 					category: c.category,
-					mode: c.mode,
+					mode: c.calculationMode,
 					value: c.value,
 				}))
 			);
@@ -232,9 +288,9 @@ export function StaffingSettingsSheet({
 	const hsaChanged = useMemo(() => {
 		if (!draftHsa || !settings) return false;
 		return (
-			draftHsa.hsaTargetHoursPerWeek !== settings.hsaTargetHoursPerWeek ||
-			draftHsa.hsaRateFirstHour !== settings.hsaRateFirstHour ||
-			draftHsa.hsaRateAdditionalHour !== settings.hsaRateAdditionalHour ||
+			draftHsa.hsaTargetHours !== settings.hsaTargetHours ||
+			draftHsa.hsaFirstHourRate !== settings.hsaFirstHourRate ||
+			draftHsa.hsaAdditionalHourRate !== settings.hsaAdditionalHourRate ||
 			draftHsa.hsaMonths !== String(settings.hsaMonths)
 		);
 	}, [draftHsa, settings]);
@@ -243,7 +299,7 @@ export function StaffingSettingsSheet({
 		if (draftOrs.length !== overrides.length) return true;
 		return draftOrs.some((d) => {
 			const orig = overrides.find((o) => o.serviceProfileId === d.serviceProfileId);
-			return !orig || orig.effectiveOrs !== d.effectiveOrs;
+			return !orig || (orig.weeklyServiceHours ?? '') !== d.effectiveOrs;
 		});
 	}, [draftOrs, overrides]);
 
@@ -251,7 +307,7 @@ export function StaffingSettingsSheet({
 		if (draftCost.length !== costAssumptions.length) return true;
 		return draftCost.some((d) => {
 			const orig = costAssumptions.find((c) => c.category === d.category);
-			return !orig || orig.mode !== d.mode || orig.value !== d.value;
+			return !orig || orig.calculationMode !== d.mode || orig.value !== d.value;
 		});
 	}, [draftCost, costAssumptions]);
 
@@ -280,9 +336,9 @@ export function StaffingSettingsSheet({
 
 		if (hsaChanged && draftHsa) {
 			putSettings.mutate({
-				hsaTargetHoursPerWeek: draftHsa.hsaTargetHoursPerWeek,
-				hsaRateFirstHour: draftHsa.hsaRateFirstHour,
-				hsaRateAdditionalHour: draftHsa.hsaRateAdditionalHour,
+				hsaTargetHours: draftHsa.hsaTargetHours,
+				hsaFirstHourRate: draftHsa.hsaFirstHourRate,
+				hsaAdditionalHourRate: draftHsa.hsaAdditionalHourRate,
 				hsaMonths: Number(draftHsa.hsaMonths),
 			});
 		}
@@ -291,7 +347,7 @@ export function StaffingSettingsSheet({
 			putOverrides.mutate(
 				draftOrs.map((d) => ({
 					serviceProfileId: d.serviceProfileId,
-					effectiveOrs: d.effectiveOrs,
+					weeklyServiceHours: d.effectiveOrs || null,
 				}))
 			);
 		}
@@ -300,7 +356,7 @@ export function StaffingSettingsSheet({
 			putCostAssumptions.mutate(
 				draftCost.map((d) => ({
 					category: d.category,
-					mode: d.mode,
+					calculationMode: d.mode,
 					value: d.value,
 				}))
 			);
@@ -321,7 +377,7 @@ export function StaffingSettingsSheet({
 		const draft = draftOrs.find((d) => d.serviceProfileId === profileId);
 		if (draft) return draft.effectiveOrs;
 		const override = overrides.find((o) => o.serviceProfileId === profileId);
-		return override?.effectiveOrs ?? defaultOrs;
+		return override?.weeklyServiceHours ?? defaultOrs;
 	}
 
 	function updateOrs(profileId: number, value: string) {
@@ -339,9 +395,9 @@ export function StaffingSettingsSheet({
 	// ── Render ─────────────────────────────────────────────────────────────
 
 	const hsa = draftHsa ?? {
-		hsaTargetHoursPerWeek: settings?.hsaTargetHoursPerWeek ?? '',
-		hsaRateFirstHour: settings?.hsaRateFirstHour ?? '',
-		hsaRateAdditionalHour: settings?.hsaRateAdditionalHour ?? '',
+		hsaTargetHours: settings?.hsaTargetHours ?? '',
+		hsaFirstHourRate: settings?.hsaFirstHourRate ?? '',
+		hsaAdditionalHourRate: settings?.hsaAdditionalHourRate ?? '',
 		hsaMonths: settings ? String(settings.hsaMonths) : '',
 	};
 
@@ -451,11 +507,11 @@ export function StaffingSettingsSheet({
 												min={0}
 												max={3}
 												step={0.5}
-												value={hsa.hsaTargetHoursPerWeek}
+												value={hsa.hsaTargetHours}
 												onChange={(e) =>
 													setDraftHsa((cur) => ({
 														...(cur ?? hsa),
-														hsaTargetHoursPerWeek: e.target.value,
+														hsaTargetHours: e.target.value,
 													}))
 												}
 												disabled={!isEditable}
@@ -475,11 +531,11 @@ export function StaffingSettingsSheet({
 												type="number"
 												min={0}
 												step={1}
-												value={hsa.hsaRateFirstHour}
+												value={hsa.hsaFirstHourRate}
 												onChange={(e) =>
 													setDraftHsa((cur) => ({
 														...(cur ?? hsa),
-														hsaRateFirstHour: e.target.value,
+														hsaFirstHourRate: e.target.value,
 													}))
 												}
 												disabled={!isEditable}
@@ -499,11 +555,11 @@ export function StaffingSettingsSheet({
 												type="number"
 												min={0}
 												step={1}
-												value={hsa.hsaRateAdditionalHour}
+												value={hsa.hsaAdditionalHourRate}
 												onChange={(e) =>
 													setDraftHsa((cur) => ({
 														...(cur ?? hsa),
-														hsaRateAdditionalHour: e.target.value,
+														hsaAdditionalHourRate: e.target.value,
 													}))
 												}
 												disabled={!isEditable}
@@ -548,7 +604,7 @@ export function StaffingSettingsSheet({
 											DHG Rules (Read-Only)
 										</p>
 										<a
-											href="/management/master-data"
+											href="/master-data/reference"
 											className="inline-flex items-center gap-1 text-(--text-sm) text-(--accent-600) hover:underline"
 										>
 											<ExternalLink className="h-3 w-3" />
@@ -763,7 +819,7 @@ export function StaffingSettingsSheet({
 																<Input
 																	type="number"
 																	min={0}
-																	step={mode === 'PCT_PAYROLL' ? 0.001 : 1}
+																	step={mode === 'PERCENT_OF_PAYROLL' ? 0.001 : 1}
 																	value={value}
 																	onChange={(e) =>
 																		setDraftCost((cur) =>
