@@ -2,7 +2,6 @@ import Decimal from 'decimal.js';
 
 // ── Staffing Workspace Types & Utilities ────────────────────────────────────
 
-export type WorkspaceMode = 'teaching' | 'support';
 export type WorkspaceTab = 'demand' | 'roster' | 'coverage' | 'costs';
 export type BandFilter = 'ALL' | 'MAT' | 'ELEM' | 'COL' | 'LYC';
 export type CoverageFilter = 'ALL' | 'DEFICIT' | 'SURPLUS' | 'UNCOVERED' | 'COVERED';
