@@ -935,6 +935,328 @@ function InspectorSupportView({ employeeId }: { employeeId: number }) {
 	);
 }
 
+// ── Employee view (Roster tab) ────────────────────────────────────────────────
+
+function InspectorEmployeeView({ employeeId }: { employeeId: number }) {
+	const { versionId } = useWorkspaceContext();
+	const clearSelection = useStaffingSelectionStore((state) => state.clearSelection);
+	const { data: empData } = useEmployee(versionId, employeeId);
+	const { data: assignmentsData } = useStaffingAssignments(versionId);
+
+	const employeeAssignments = useMemo(
+		() => (assignmentsData?.data ?? []).filter((a) => a.employeeId === employeeId),
+		[assignmentsData?.data, employeeId]
+	);
+
+	if (!empData) return null;
+
+	return (
+		<div className="space-y-4">
+			<div className="flex items-center gap-2">
+				<button
+					type="button"
+					onClick={clearSelection}
+					className={cn(
+						'rounded-md p-1 text-(--text-muted) transition-colors duration-(--duration-fast)',
+						'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)'
+					)}
+					aria-label="Back to overview"
+				>
+					<ArrowLeft className="h-4 w-4" />
+				</button>
+				<h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-(--text-primary)">
+					{empData.name}
+				</h3>
+				{empData.recordType === 'VACANCY' && (
+					<span className="rounded-full bg-(--color-warning-bg) px-2 py-0.5 text-(--text-xs) font-medium text-(--color-warning)">
+						Vacancy
+					</span>
+				)}
+			</div>
+
+			<div>
+				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+					Employment details
+				</h4>
+				<div className="space-y-2 rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-3">
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-(--text-secondary)">Code</span>
+						<span className="text-sm text-(--text-primary)">{empData.employeeCode}</span>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-(--text-secondary)">Role</span>
+						<span className="text-sm text-(--text-primary)">{empData.functionRole}</span>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-(--text-secondary)">Department</span>
+						<span className="text-sm text-(--text-primary)">{empData.department}</span>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-(--text-secondary)">Status</span>
+						<span className="text-sm text-(--text-primary)">{empData.status}</span>
+					</div>
+					{empData.disciplineName && (
+						<div className="flex items-center justify-between">
+							<span className="text-sm text-(--text-secondary)">Discipline</span>
+							<span className="text-sm text-(--text-primary)">{empData.disciplineName}</span>
+						</div>
+					)}
+					{empData.homeBand && (
+						<div className="flex items-center justify-between">
+							<span className="text-sm text-(--text-secondary)">Band</span>
+							<span className="text-sm text-(--text-primary)">{empData.homeBand}</span>
+						</div>
+					)}
+				</div>
+			</div>
+
+			{employeeAssignments.length > 0 && (
+				<div>
+					<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+						Teaching assignments
+					</h4>
+					<div className="space-y-2">
+						{employeeAssignments.map((a) => (
+							<div
+								key={a.id}
+								className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) px-3 py-2"
+							>
+								<div className="flex items-center gap-2">
+									<span className="text-sm text-(--text-primary)">
+										{a.disciplineName ?? a.disciplineCode}
+									</span>
+									<span
+										className={cn(
+											'rounded-sm px-1.5 py-0.5 text-(--text-xs) font-medium',
+											BAND_BADGE_STYLES[a.band] ?? ''
+										)}
+									>
+										{BAND_LABELS[a.band] ?? a.band}
+									</span>
+								</div>
+								<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-secondary)">
+									{a.fteShare} FTE
+								</span>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
+			<div>
+				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+					Cost summary
+				</h4>
+				<div className="space-y-2 rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-3">
+					{empData.monthlyCost && (
+						<div className="flex items-center justify-between">
+							<span className="text-sm text-(--text-secondary)">Monthly cost</span>
+							<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+								{formatMoney(empData.monthlyCost, { showCurrency: true })}
+							</span>
+						</div>
+					)}
+					{empData.annualCost && (
+						<div className="flex items-center justify-between">
+							<span className="text-sm text-(--text-secondary)">Annual cost</span>
+							<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+								{formatMoney(empData.annualCost, { showCurrency: true })}
+							</span>
+						</div>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+// ── Discipline summary view (Coverage tab) ────────────────────────────────────
+
+function InspectorDisciplineSummaryView({
+	disciplineCode,
+	scope,
+	contributingLineIds,
+}: {
+	disciplineCode: string;
+	scope: string;
+	contributingLineIds: number[];
+}) {
+	const { versionId } = useWorkspaceContext();
+	const clearSelection = useStaffingSelectionStore((state) => state.clearSelection);
+	const { data: reqData } = useTeachingRequirements(versionId);
+	const { data: assignmentsData } = useStaffingAssignments(versionId);
+	const { data: employeesData } = useEmployees(versionId);
+
+	const contributingLines = useMemo(
+		() => (reqData?.lines ?? []).filter((l) => contributingLineIds.includes(l.id)),
+		[reqData?.lines, contributingLineIds]
+	);
+
+	const lineAssignments = useMemo(() => {
+		const allAssignments = assignmentsData?.data ?? [];
+		return allAssignments.filter((a) =>
+			contributingLines.some((l) => a.band === l.band && a.disciplineCode === l.disciplineCode)
+		);
+	}, [assignmentsData?.data, contributingLines]);
+
+	const assignedEmployees = useMemo(() => {
+		const empMap = new Map<number, Employee>();
+		for (const a of lineAssignments) {
+			const emp = (employeesData?.data ?? []).find((e) => e.id === a.employeeId);
+			if (emp) empMap.set(emp.id, emp);
+		}
+		return Array.from(empMap.values());
+	}, [lineAssignments, employeesData?.data]);
+
+	const totalFte = useMemo(() => {
+		let sum = 0;
+		for (const l of contributingLines) sum += parseFloat(l.requiredFteRaw);
+		return sum;
+	}, [contributingLines]);
+
+	const totalCovered = useMemo(() => {
+		let sum = 0;
+		for (const l of contributingLines) sum += parseFloat(l.coveredFte);
+		return sum;
+	}, [contributingLines]);
+
+	const gap = totalCovered - totalFte;
+
+	return (
+		<div className="space-y-4">
+			<div className="flex items-center gap-2">
+				<button
+					type="button"
+					onClick={clearSelection}
+					className={cn(
+						'rounded-md p-1 text-(--text-muted) transition-colors duration-(--duration-fast)',
+						'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)'
+					)}
+					aria-label="Back to overview"
+				>
+					<ArrowLeft className="h-4 w-4" />
+				</button>
+				<h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-(--text-primary)">
+					{disciplineCode}
+				</h3>
+				<span className="rounded-sm bg-(--accent-50) px-1.5 py-0.5 text-(--text-xs) font-medium text-(--accent-700)">
+					{scope}
+				</span>
+			</div>
+
+			<div>
+				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+					Contributing requirement lines
+				</h4>
+				<div className="overflow-hidden rounded-lg border border-(--workspace-border)">
+					<table className="w-full text-sm">
+						<thead>
+							<tr className="bg-(--workspace-bg-muted)">
+								<th className="px-3 py-1.5 text-left text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									Line
+								</th>
+								<th className="px-3 py-1.5 text-left text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									Band
+								</th>
+								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									FTE
+								</th>
+								<th className="px-3 py-1.5 text-right text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
+									Covered
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{contributingLines.map((l) => (
+								<tr key={l.id} className="border-t border-(--workspace-border)">
+									<td className="px-3 py-1.5 font-medium">{l.lineLabel}</td>
+									<td className="px-3 py-1.5">
+										<span
+											className={cn(
+												'rounded-sm px-1.5 py-0.5 text-(--text-xs) font-medium',
+												BAND_BADGE_STYLES[l.band] ?? ''
+											)}
+										>
+											{BAND_LABELS[l.band] ?? l.band}
+										</span>
+									</td>
+									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+										{parseFloat(l.requiredFteRaw).toFixed(2)}
+									</td>
+									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+										{parseFloat(l.coveredFte).toFixed(2)}
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			{assignedEmployees.length > 0 && (
+				<div>
+					<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+						Assigned employees
+					</h4>
+					<div className="space-y-2">
+						{assignedEmployees.map((emp) => {
+							const empAssignments = lineAssignments.filter((a) => a.employeeId === emp.id);
+							const totalFteShare = empAssignments.reduce(
+								(sum, a) => sum + parseFloat(a.fteShare),
+								0
+							);
+							return (
+								<div
+									key={emp.id}
+									className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) px-3 py-2"
+								>
+									<span className="text-sm font-medium text-(--text-primary)">{emp.name}</span>
+									<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-secondary)">
+										{totalFteShare.toFixed(2)} FTE
+									</span>
+								</div>
+							);
+						})}
+					</div>
+				</div>
+			)}
+
+			<div>
+				<h4 className="mb-2 text-(--text-xs) font-semibold uppercase tracking-[0.06em] text-(--text-muted)">
+					Gap analysis
+				</h4>
+				<div className="space-y-2 rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-3">
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-(--text-secondary)">Total FTE needed</span>
+						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+							{totalFte.toFixed(2)}
+						</span>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-(--text-secondary)">Total covered</span>
+						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+							{totalCovered.toFixed(2)}
+						</span>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-(--text-secondary)">Gap</span>
+						<span
+							className={cn(
+								'font-[family-name:var(--font-mono)] text-sm tabular-nums font-semibold',
+								gap < 0 && 'text-(--color-error)',
+								gap > 0 && 'text-(--color-warning)',
+								gap === 0 && 'text-(--color-success)'
+							)}
+						>
+							{gap > 0 ? `+${gap.toFixed(2)}` : gap.toFixed(2)}
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
 // ── Main inspector content ───────────────────────────────────────────────────
 
 export function StaffingInspectorContent() {
@@ -955,6 +1277,29 @@ export function StaffingInspectorContent() {
 		return (
 			<div key={selection.employeeId} className="animate-inspector-slide-in">
 				<InspectorSupportView employeeId={selection.employeeId} />
+			</div>
+		);
+	}
+
+	if (selection?.type === 'EMPLOYEE') {
+		return (
+			<div key={selection.employeeId} className="animate-inspector-slide-in">
+				<InspectorEmployeeView employeeId={selection.employeeId} />
+			</div>
+		);
+	}
+
+	if (selection?.type === 'DISCIPLINE_SUMMARY') {
+		return (
+			<div
+				key={`${selection.disciplineCode}-${selection.scope}`}
+				className="animate-inspector-slide-in"
+			>
+				<InspectorDisciplineSummaryView
+					disciplineCode={selection.disciplineCode}
+					scope={selection.scope}
+					contributingLineIds={selection.contributingLineIds}
+				/>
 			</div>
 		);
 	}

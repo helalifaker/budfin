@@ -14,12 +14,35 @@ export interface StaffingSelectionSupportEmployee {
 	department: string;
 }
 
-export type StaffingSelection = StaffingSelectionRequirementLine | StaffingSelectionSupportEmployee;
+export interface StaffingSelectionEmployee {
+	type: 'EMPLOYEE';
+	employeeId: number;
+	department: string;
+}
+
+export interface StaffingSelectionDisciplineSummary {
+	type: 'DISCIPLINE_SUMMARY';
+	disciplineCode: string;
+	scope: string;
+	contributingLineIds: number[];
+}
+
+export type StaffingSelection =
+	| StaffingSelectionRequirementLine
+	| StaffingSelectionSupportEmployee
+	| StaffingSelectionEmployee
+	| StaffingSelectionDisciplineSummary;
 
 interface StaffingSelectionState {
 	selection: StaffingSelection | null;
 	selectRequirementLine: (requirementLineId: number, band: string, disciplineCode: string) => void;
 	selectSupportEmployee: (employeeId: number, department: string) => void;
+	selectEmployee: (employeeId: number, department: string) => void;
+	selectDisciplineSummary: (
+		disciplineCode: string,
+		scope: string,
+		contributingLineIds: number[]
+	) => void;
 	clearSelection: () => void;
 }
 
@@ -47,6 +70,34 @@ export const useStaffingSelectionStore = create<StaffingSelectionState>((set, ge
 			return;
 		}
 		set({ selection: { type: 'SUPPORT_EMPLOYEE', employeeId, department } });
+		useRightPanelStore.getState().open('details');
+	},
+
+	selectEmployee: (employeeId, department) => {
+		const current = get().selection;
+		if (current?.type === 'EMPLOYEE' && current.employeeId === employeeId) {
+			set({ selection: null });
+			useRightPanelStore.getState().close();
+			return;
+		}
+		set({ selection: { type: 'EMPLOYEE', employeeId, department } });
+		useRightPanelStore.getState().open('details');
+	},
+
+	selectDisciplineSummary: (disciplineCode, scope, contributingLineIds) => {
+		const current = get().selection;
+		if (
+			current?.type === 'DISCIPLINE_SUMMARY' &&
+			current.disciplineCode === disciplineCode &&
+			current.scope === scope
+		) {
+			set({ selection: null });
+			useRightPanelStore.getState().close();
+			return;
+		}
+		set({
+			selection: { type: 'DISCIPLINE_SUMMARY', disciplineCode, scope, contributingLineIds },
+		});
 		useRightPanelStore.getState().open('details');
 	},
 

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
@@ -42,6 +43,32 @@ import '../../components/staffing/staffing-inspector-content';
 import '../../components/staffing/staffing-guide-content';
 
 export function StaffingPage() {
+	const [searchParams] = useSearchParams();
+	const isV2 = searchParams.get('staffing') === 'v2';
+
+	if (isV2) {
+		return (
+			<Suspense
+				fallback={
+					<div className="flex h-64 items-center justify-center text-(--text-muted)">
+						Loading...
+					</div>
+				}
+			>
+				<StaffingPageV2 />
+			</Suspense>
+		);
+	}
+
+	return <StaffingPageV1 />;
+}
+
+// Lazy import for v2 to avoid loading unused code
+const StaffingPageV2 = React.lazy(() =>
+	import('../../components/staffing/staffing-page-v2').then((m) => ({ default: m.StaffingPageV2 }))
+);
+
+function StaffingPageV1() {
 	const { versionId, fiscalYear, versionStatus } = useWorkspaceContext();
 	const user = useAuthStore((state) => state.user);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);

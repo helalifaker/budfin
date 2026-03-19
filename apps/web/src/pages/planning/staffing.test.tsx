@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { MemoryRouter } from 'react-router';
 import { StaffingPage } from './staffing';
 
 const mockSetActivePage = vi.fn();
@@ -219,20 +220,32 @@ describe('StaffingPage', () => {
 	// AC-01: Page layout
 	it('renders select-version message when no versionId', () => {
 		mockWorkspaceContext = { ...mockWorkspaceContext, versionId: null };
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(
 			screen.getByText('Select a version from the context bar to begin staffing planning.')
 		).toBeTruthy();
 	});
 
 	it('renders the fixed-viewport layout container', () => {
-		const { container } = render(<StaffingPage />);
+		const { container } = render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		const layoutDiv = container.querySelector('.flex.h-full.min-h-0.flex-col.overflow-hidden');
 		expect(layoutDiv).toBeTruthy();
 	});
 
 	it('renders grid zone with correct CSS structure', () => {
-		const { container } = render(<StaffingPage />);
+		const { container } = render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		const gridZone = container.querySelector('.flex-1.min-h-0.overflow-hidden.px-6.py-2');
 		expect(gridZone).toBeTruthy();
 		const scrollContainer = gridZone?.querySelector('.h-full.overflow-y-auto.scrollbar-thin');
@@ -253,13 +266,21 @@ describe('StaffingPage', () => {
 				},
 			],
 		};
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('This version is locked. Staffing data is read-only.')).toBeTruthy();
 	});
 
 	it('renders viewer banner when user role is Viewer', () => {
 		mockUserRole = 'Viewer';
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('You have view-only access.')).toBeTruthy();
 	});
 
@@ -276,7 +297,11 @@ describe('StaffingPage', () => {
 				},
 			],
 		};
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(
 			screen.getByText('Staffing has not been calculated. Click Calculate to generate.')
 		).toBeTruthy();
@@ -284,18 +309,30 @@ describe('StaffingPage', () => {
 
 	// AC-02: Toolbar
 	it('renders workspace mode toggle with Teaching and Support & Admin options', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('Teaching')).toBeTruthy();
 		expect(screen.getByText('Support & Admin')).toBeTruthy();
 	});
 
 	it('renders band filter in Teaching mode', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByRole('group', { name: 'Band filter' })).toBeTruthy();
 	});
 
 	it('renders view presets in Teaching mode', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByRole('group', { name: 'View preset' })).toBeTruthy();
 		expect(screen.getByText('Need')).toBeTruthy();
 		expect(screen.getByText('Coverage')).toBeTruthy();
@@ -304,7 +341,11 @@ describe('StaffingPage', () => {
 	});
 
 	it('renders coverage filter in Teaching mode with non-Need preset', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		// Default viewPreset is 'Full View', so coverage filter should be visible.
 		// 'All Coverage' appears both in trigger button and menu item, so use getAllByText.
 		const allCoverageElements = screen.getAllByText('All Coverage');
@@ -312,25 +353,41 @@ describe('StaffingPage', () => {
 	});
 
 	it('renders Settings button always', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('Settings')).toBeTruthy();
 	});
 
 	it('renders Calculate, Import, Add Employee buttons when editable', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('Calculate')).toBeTruthy();
 		expect(screen.getByText('Import')).toBeTruthy();
 		expect(screen.getByText('Add Employee')).toBeTruthy();
 	});
 
 	it('renders Auto-Suggest in Teaching mode when editable', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('Auto-Suggest')).toBeTruthy();
 	});
 
 	it('hides Calculate, Import, Add Employee, Auto-Suggest when viewer', () => {
 		mockUserRole = 'Viewer';
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.queryByText('Calculate')).toBeNull();
 		expect(screen.queryByText('Import')).toBeNull();
 		expect(screen.queryByText('Add Employee')).toBeNull();
@@ -351,7 +408,11 @@ describe('StaffingPage', () => {
 				},
 			],
 		};
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.queryByText('Calculate')).toBeNull();
 		expect(screen.queryByText('Import')).toBeNull();
 		expect(screen.queryByText('Add Employee')).toBeNull();
@@ -359,7 +420,11 @@ describe('StaffingPage', () => {
 	});
 
 	it('hides band filter, coverage filter, and view presets in Support mode', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		// Default is Teaching mode — verify they exist first
 		expect(screen.getByRole('group', { name: 'Band filter' })).toBeTruthy();
 
@@ -373,7 +438,11 @@ describe('StaffingPage', () => {
 	});
 
 	it('hides Auto-Suggest in Support mode even when editable', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('Auto-Suggest')).toBeTruthy();
 
 		// Switch to Support mode
@@ -384,12 +453,20 @@ describe('StaffingPage', () => {
 	});
 
 	it('renders teaching grid in teaching mode', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByTestId('teaching-master-grid')).toBeTruthy();
 	});
 
 	it('renders support grid in support mode', () => {
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		const supportButton = screen.getByText('Support & Admin');
 		fireEvent.click(supportButton);
 		expect(screen.getByTestId('support-admin-grid')).toBeTruthy();
@@ -397,7 +474,11 @@ describe('StaffingPage', () => {
 
 	it('Settings button is visible even when viewer', () => {
 		mockUserRole = 'Viewer';
-		render(<StaffingPage />);
+		render(
+			<MemoryRouter>
+				<StaffingPage />
+			</MemoryRouter>
+		);
 		expect(screen.getByText('Settings')).toBeTruthy();
 	});
 });
