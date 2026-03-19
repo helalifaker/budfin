@@ -86,26 +86,34 @@ describe('useDisciplines', () => {
 // ── useDhgRules ─────────────────────────────────────────────────────────────
 
 describe('useDhgRules', () => {
-	it('fetches DHG rules from master data', async () => {
-		const mockData = {
-			data: [
-				{
-					id: 1,
-					band: 'COLLEGE',
-					gradeLevel: '6eme',
-					disciplineCode: 'MATHS',
-					hoursPerWeekPerSection: '4.5',
-					dhgType: 'STRUCTURAL',
-				},
-			],
-		};
-		mockApiClient.mockResolvedValue(mockData);
+	it('fetches DHG rules from master data and selects rules array', async () => {
+		const mockRules = [
+			{
+				id: 1,
+				gradeLevel: '6eme',
+				disciplineId: 1,
+				disciplineCode: 'MATHS',
+				disciplineName: 'Mathematiques',
+				lineType: 'STRUCTURAL',
+				driverType: 'HOURS',
+				hoursPerUnit: '4.5',
+				serviceProfileId: 1,
+				serviceProfileCode: 'ENS2D',
+				serviceProfileName: 'Enseignant 2nd degre',
+				languageCode: null,
+				groupingKey: null,
+				effectiveFromYear: 2025,
+				effectiveToYear: null,
+				updatedAt: '2026-01-01T00:00:00.000Z',
+			},
+		];
+		mockApiClient.mockResolvedValue({ rules: mockRules });
 
 		const { result } = renderHook(() => useDhgRules(), { wrapper: createWrapper() });
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 		expect(mockApiClient).toHaveBeenCalledWith('/master-data/dhg-rules');
-		expect(result.current.data).toEqual(mockData);
+		expect(result.current.data).toEqual(mockRules);
 	});
 });
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import type { Table as TanstackTable } from '@tanstack/react-table';
 import {
@@ -26,9 +27,18 @@ import {
 	useDeleteDepartment,
 } from '../../hooks/use-reference-data';
 import type { Nationality, Tariff, Department, BandMapping } from '../../hooks/use-reference-data';
+import {
+	useDhgRules,
+	useCreateDhgRule,
+	useUpdateDhgRule,
+	useDeleteDhgRule,
+} from '../../hooks/use-master-data';
+import type { DhgRuleDetail } from '../../hooks/use-master-data';
 import { NationalitySidePanel } from '../../components/master-data/nationality-side-panel';
 import { TariffSidePanel } from '../../components/master-data/tariff-side-panel';
 import { DepartmentSidePanel } from '../../components/master-data/department-side-panel';
+import { DhgRuleSidePanel } from '../../components/master-data/dhg-rule-side-panel';
+import type { DhgRuleFormValues } from '../../components/master-data/dhg-rule-side-panel';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -140,12 +150,13 @@ function BandBadge({ band }: { band: BandMapping }) {
 
 // --- Tab definitions ---
 
-type TabKey = 'nationalities' | 'tariffs' | 'departments';
+type TabKey = 'nationalities' | 'tariffs' | 'departments' | 'curriculum';
 
 const TABS: { key: TabKey; label: string }[] = [
 	{ key: 'nationalities', label: 'Nationalities' },
 	{ key: 'tariffs', label: 'Tariffs' },
 	{ key: 'departments', label: 'Departments' },
+	{ key: 'curriculum', label: 'Curriculum' },
 ];
 
 // --- Column helpers ---
@@ -153,6 +164,7 @@ const TABS: { key: TabKey; label: string }[] = [
 const natColumnHelper = createColumnHelper<Nationality>();
 const tariffColumnHelper = createColumnHelper<Tariff>();
 const deptColumnHelper = createColumnHelper<Department>();
+const dhgColumnHelper = createColumnHelper<DhgRuleDetail>();
 
 // --- Generic Data Grid ---
 
@@ -216,7 +228,11 @@ function DataGrid<T>({
 export function ReferencePage() {
 	const currentUser = useAuthStore((s) => s.user);
 	const isAdmin = currentUser?.role === 'Admin';
-	const [activeTab, setActiveTab] = useState<TabKey>('nationalities');
+	const [searchParams, setSearchParams] = useSearchParams();
+	const initialTab = TABS.some((t) => t.key === searchParams.get('tab'))
+		? (searchParams.get('tab') as TabKey)
+		: 'nationalities';
+	const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 	const [search, setSearch] = useState('');
 
 	// Panel state
@@ -224,6 +240,7 @@ export function ReferencePage() {
 	const [editingNationality, setEditingNationality] = useState<Nationality | null>(null);
 	const [editingTariff, setEditingTariff] = useState<Tariff | null>(null);
 	const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+	const [editingDhgRule, setEditingDhgRule] = useState<DhgRuleDetail | null>(null);
 
 	// Delete state
 	const [deleteTarget, setDeleteTarget] = useState<{
@@ -402,6 +419,12 @@ export function ReferencePage() {
 	const updateDept = useUpdateDepartment();
 	const deleteDept = useDeleteDepartment();
 
+	// --- Curriculum / DHG Rules ---
+	const { data: dhgRules = [], isLoading: dhgLoading } = useDhgRules();
+	const createDhg = useCreateDhgRule();
+	const updateDhg = useUpdateDhgRule();
+	const deleteDhg = useDeleteDhgRule();
+
 	const deptColumns = useMemo(
 		() => [
 			deptColumnHelper.accessor('code', {
@@ -470,12 +493,112 @@ export function ReferencePage() {
 		onGlobalFilterChange: setSearch,
 	});
 
+	const dhgColumns = useMemo(
+		() => [
+			dhgColumnHelper.accessor('gradeLevel', {
+				header: 'Grade Level',
+				cell: (info) => <span className="font-mono font-medium">{info.getValue()}</span>,
+			}),
+			dhgColumnHelper.accessor('disciplineName', {
+				header: 'Discipline',
+			}),
+			dhgColumnHelper.accessor('lineType', {
+				header: 'Line Type',
+				cell: (info) => (
+					<span className="inline-block rounded-sm bg-(--workspace-bg-muted) px-2 py-0.5 text-(--text-xs) font-medium">
+						{info.getValue().replace('_', ' ')}
+					</span>
+				),
+			}),
+			dhgColumnHelper.accessor('driverType', {
+				header: 'Driver Type',
+				cell: (info) => (
+					<span className="inline-block rounded-sm bg-(--workspace-bg-muted) px-2 py-0.5 text-(--text-xs) font-medium">
+						{info.getValue()}
+					</span>
+				),
+			}),
+			dhgColumnHelper.accessor('hoursPerUnit', {
+				header: 'Hours/Unit',
+				cell: (info) => (
+					<span className="font-mono tabular-nums text-right">{info.getValue()}</span>
+				),
+			}),
+			dhgColumnHelper.accessor('serviceProfileName', {
+				header: 'Service Profile',
+			}),
+			dhgColumnHelper.accessor('effectiveFromYear', {
+				header: 'Eff. From',
+				cell: (info) => <span className="font-mono tabular-nums">{info.getValue()}</span>,
+			}),
+			dhgColumnHelper.accessor('effectiveToYear', {
+				header: 'Eff. To',
+				cell: (info) => <span className="font-mono tabular-nums">{info.getValue() ?? '-'}</span>,
+			}),
+			dhgColumnHelper.display({
+				id: 'actions',
+				header: 'Actions',
+				cell: ({ row }) => {
+					if (!isAdmin) return null;
+					const item = row.original;
+					return (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
+									aria-label={`Actions for ${item.gradeLevel}-${item.disciplineCode}`}
+								>
+									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem
+									onSelect={() => {
+										setEditingDhgRule(item);
+										setPanelOpen(true);
+									}}
+								>
+									<Pencil className="h-4 w-4" /> Edit
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									destructive
+									onSelect={() =>
+										setDeleteTarget({
+											type: 'curriculum',
+											code: `${item.gradeLevel}-${item.disciplineCode}`,
+											id: item.id,
+										})
+									}
+								>
+									<Trash2 className="h-4 w-4" /> Delete
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					);
+				},
+			}),
+		],
+		[isAdmin]
+	);
+
+	const dhgTable = useReactTable({
+		data: dhgRules,
+		columns: dhgColumns,
+		getCoreRowModel: getCoreRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		state: { globalFilter: search },
+		onGlobalFilterChange: setSearch,
+	});
+
 	// --- Handlers ---
 
 	const handleAddNew = useCallback(() => {
 		setEditingNationality(null);
 		setEditingTariff(null);
 		setEditingDepartment(null);
+		setEditingDhgRule(null);
 		setPanelOpen(true);
 	}, []);
 
@@ -484,6 +607,7 @@ export function ReferencePage() {
 		setEditingNationality(null);
 		setEditingTariff(null);
 		setEditingDepartment(null);
+		setEditingDhgRule(null);
 	}, []);
 
 	const handleNationalitySave = useCallback(
@@ -588,6 +712,40 @@ export function ReferencePage() {
 		[editingDepartment, createDept, updateDept, handleClosePanel]
 	);
 
+	const handleDhgRuleSave = useCallback(
+		(data: DhgRuleFormValues) => {
+			if (editingDhgRule) {
+				updateDhg.mutate(
+					{
+						id: editingDhgRule.id,
+						updatedAt: editingDhgRule.updatedAt,
+						...data,
+					},
+					{
+						onSuccess: () => {
+							handleClosePanel();
+							toast.success('DHG rule updated successfully');
+						},
+						onError: () => {
+							toast.error('Failed to update DHG rule');
+						},
+					}
+				);
+			} else {
+				createDhg.mutate(data, {
+					onSuccess: () => {
+						handleClosePanel();
+						toast.success('DHG rule created successfully');
+					},
+					onError: () => {
+						toast.error('Failed to create DHG rule');
+					},
+				});
+			}
+		},
+		[editingDhgRule, createDhg, updateDhg, handleClosePanel]
+	);
+
 	const handleDeleteConfirm = useCallback(() => {
 		if (!deleteTarget) return;
 		const onSuccess = () => {
@@ -603,17 +761,21 @@ export function ReferencePage() {
 			deleteNat.mutate(deleteTarget.id, { onSuccess, onError });
 		} else if (deleteTarget.type === 'tariff') {
 			deleteTariff.mutate(deleteTarget.id, { onSuccess, onError });
-		} else {
+		} else if (deleteTarget.type === 'department') {
 			deleteDept.mutate(deleteTarget.id, { onSuccess, onError });
+		} else if (deleteTarget.type === 'curriculum') {
+			deleteDhg.mutate(deleteTarget.id, { onSuccess, onError });
 		}
-	}, [deleteTarget, deleteNat, deleteTariff, deleteDept]);
+	}, [deleteTarget, deleteNat, deleteTariff, deleteDept, deleteDhg]);
 
 	const isLoading =
 		activeTab === 'nationalities'
 			? natLoading
 			: activeTab === 'tariffs'
 				? tariffLoading
-				: deptLoading;
+				: activeTab === 'departments'
+					? deptLoading
+					: dhgLoading;
 
 	const showSkeleton = useDelayedSkeleton(isLoading);
 
@@ -635,7 +797,10 @@ export function ReferencePage() {
 						id={`tab-${tab.key}`}
 						aria-selected={activeTab === tab.key}
 						aria-controls={`panel-${tab.key}`}
-						onClick={() => setActiveTab(tab.key)}
+						onClick={() => {
+							setActiveTab(tab.key);
+							setSearchParams({ tab: tab.key }, { replace: true });
+						}}
 						className={cn(
 							'px-4 py-2 text-(--text-sm) font-medium -mb-px border-b-2',
 							activeTab === tab.key
@@ -687,6 +852,9 @@ export function ReferencePage() {
 				{activeTab === 'departments' && (
 					<DataGrid table={deptTable} isLoading={deptLoading} showSkeleton={showSkeleton} />
 				)}
+				{activeTab === 'curriculum' && (
+					<DataGrid table={dhgTable} isLoading={dhgLoading} showSkeleton={showSkeleton} />
+				)}
 			</div>
 
 			{/* Side Panels */}
@@ -720,6 +888,16 @@ export function ReferencePage() {
 				/>
 			)}
 
+			{activeTab === 'curriculum' && (
+				<DhgRuleSidePanel
+					open={panelOpen && activeTab === 'curriculum'}
+					onClose={handleClosePanel}
+					dhgRule={editingDhgRule}
+					onSave={handleDhgRuleSave}
+					loading={createDhg.isPending || updateDhg.isPending}
+				/>
+			)}
+
 			{/* Delete Confirmation */}
 			<DeleteConfirmDialog
 				open={!!deleteTarget}
@@ -727,7 +905,12 @@ export function ReferencePage() {
 				entityType={deleteTarget?.type ?? ''}
 				onConfirm={handleDeleteConfirm}
 				onCancel={() => setDeleteTarget(null)}
-				loading={deleteNat.isPending || deleteTariff.isPending || deleteDept.isPending}
+				loading={
+					deleteNat.isPending ||
+					deleteTariff.isPending ||
+					deleteDept.isPending ||
+					deleteDhg.isPending
+				}
 			/>
 		</div>
 	);

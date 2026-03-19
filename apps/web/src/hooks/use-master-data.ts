@@ -40,6 +40,25 @@ export interface DhgRulesResponse {
 	data: DhgRule[];
 }
 
+export interface DhgRuleDetail {
+	id: number;
+	gradeLevel: string;
+	disciplineId: number;
+	disciplineCode: string;
+	disciplineName: string;
+	lineType: string;
+	driverType: string;
+	hoursPerUnit: string;
+	serviceProfileId: number;
+	serviceProfileCode: string;
+	serviceProfileName: string;
+	languageCode: string | null;
+	groupingKey: string | null;
+	effectiveFromYear: number;
+	effectiveToYear: number | null;
+	updatedAt: string;
+}
+
 export interface AutoSuggestResult {
 	employeeId: number;
 	employeeName: string;
@@ -98,7 +117,76 @@ export function useDisciplines() {
 export function useDhgRules() {
 	return useQuery({
 		queryKey: ['master-data', 'dhg-rules'],
-		queryFn: () => apiClient<DhgRulesResponse>('/master-data/dhg-rules'),
+		queryFn: () => apiClient<{ rules: DhgRuleDetail[] }>('/master-data/dhg-rules'),
+		select: (data) => data.rules,
+	});
+}
+
+export function useCreateDhgRule() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (body: {
+			gradeLevel: string;
+			disciplineId: number;
+			lineType: string;
+			driverType: string;
+			hoursPerUnit: string;
+			serviceProfileId: number;
+			languageCode?: string | null | undefined;
+			groupingKey?: string | null | undefined;
+			effectiveFromYear: number;
+			effectiveToYear?: number | null | undefined;
+		}) =>
+			apiClient<DhgRuleDetail>('/master-data/dhg-rules', {
+				method: 'POST',
+				body: JSON.stringify(body),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['master-data', 'dhg-rules'] });
+		},
+	});
+}
+
+export function useUpdateDhgRule() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			id,
+			...body
+		}: {
+			id: number;
+			gradeLevel: string;
+			disciplineId: number;
+			lineType: string;
+			driverType: string;
+			hoursPerUnit: string;
+			serviceProfileId: number;
+			languageCode?: string | null | undefined;
+			groupingKey?: string | null | undefined;
+			effectiveFromYear: number;
+			effectiveToYear?: number | null | undefined;
+			updatedAt: string;
+		}) =>
+			apiClient<DhgRuleDetail>(`/master-data/dhg-rules/${id}`, {
+				method: 'PUT',
+				body: JSON.stringify(body),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['master-data', 'dhg-rules'] });
+		},
+	});
+}
+
+export function useDeleteDhgRule() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (id: number) =>
+			apiClient<void>(`/master-data/dhg-rules/${id}`, {
+				method: 'DELETE',
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['master-data', 'dhg-rules'] });
+		},
 	});
 }
 
