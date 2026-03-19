@@ -306,7 +306,7 @@ export function buildDisciplineDemandRows(
 			const scopeLabel = line.band === 'MATERNELLE' ? 'Mat' : 'Elem';
 			const totalHours = new Decimal(line.totalWeeklyHours);
 			const ors = new Decimal(line.effectiveOrs || '18');
-			const fte = totalHours.div(ors);
+			const fte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
 			const postes = Math.ceil(fte.toNumber());
 			const hsaHrs = new Decimal(postes).times(ors).minus(totalHours);
 
@@ -337,7 +337,7 @@ export function buildDisciplineDemandRows(
 
 		const totalHours = colHours.plus(lycHours);
 		const ors = new Decimal(allLines[0]?.effectiveOrs ?? '18');
-		const fte = totalHours.div(ors);
+		const fte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
 		const postes = Math.ceil(fte.toNumber());
 		const hsaHrs = new Decimal(postes).times(ors).minus(totalHours);
 
@@ -396,7 +396,7 @@ export function buildDisciplineSummaryRows(
 			const scopeLabel = line.band === 'MATERNELLE' ? 'Mat' : 'Elem';
 			const totalHours = new Decimal(line.totalWeeklyHours);
 			const ors = new Decimal(line.effectiveOrs || '18');
-			const fte = totalHours.div(ors);
+			const fte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
 			const postes = Math.ceil(fte.toNumber());
 			const hsaHrs = new Decimal(postes).times(ors).minus(totalHours);
 			const covered = new Decimal(line.coveredFte);
