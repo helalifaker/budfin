@@ -1,1343 +1,1205 @@
 # Staffing Page — Process Workflow
 
-> **Document Purpose**: This document provides a comprehensive, plain-language guide to the Staffing planning page. It explains the business process, technical implementation, user actions, and data flow. It serves as a reference for auditors, new developers, and business analysts to understand and propose improvements.
+> **Document Purpose**: This document provides a comprehensive, planner-friendly guide
+> to the Staffing planning page after the Epic 18-20 redesign (March 2026). It explains
+> the business process, technical implementation, user actions, calculations, and data
+> flow. It serves as a reference for budget planners, auditors, new developers, and
+> business analysts.
+>
+> **Confidence labels used throughout**:
+>
+> - **[Confirmed]** — verified against source code
+> - **[Inferred]** — derived from code patterns but not explicitly tested end-to-end
+> - **[Needs Validation]** — requires user/domain expert confirmation
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Business Context](#business-context)
-3. [User Roles & Permissions](#user-roles--permissions)
-4. [Pre-Conditions](#pre-conditions)
-5. [Page Layout & UI Elements](#page-layout--ui-elements)
-6. [Step-by-Step Workflow](#step-by-step-workflow)
-7. [Data Models & Database Schema](#data-models--database-schema)
-8. [API Endpoints](#api-endpoints)
-9. [TypeScript Types](#typescript-types)
-10. [Calculation Engine](#calculation-engine)
-11. [Audit Trail](#audit-trail)
-12. [Error Handling](#error-handling)
-13. [Improvements Required](#improvements-required)
+- [Part A: Review Summary (Old Document Audit)](#part-a-review-summary-old-document-audit)
+- [1. Document Purpose](#1-document-purpose)
+- [2. Executive Overview](#2-executive-overview)
+- [3. Planner View — What This Page Means Operationally](#3-planner-view--what-this-page-means-operationally)
+- [4. Page Context and Dependencies](#4-page-context-and-dependencies)
+- [5. Current UI Walkthrough](#5-current-ui-walkthrough)
+- [6. End-to-End User Workflow](#6-end-to-end-user-workflow)
+- [7. Inputs Required](#7-inputs-required)
+- [8. Calculations and Derived Logic](#8-calculations-and-derived-logic)
+- [9. Database and Data Model](#9-database-and-data-model)
+- [10. API and Data Flow](#10-api-and-data-flow)
+- [11. Business Rules and Guardrails](#11-business-rules-and-guardrails)
+- [12. Gaps Between Old Document and Actual Implementation](#12-gaps-between-old-document-and-actual-implementation)
+- [13. Recommended Documentation Improvements](#13-recommended-documentation-improvements)
+- [14. Appendix](#14-appendix)
 
 ---
 
-## Overview
+## Part A: Review Summary (Old Document Audit)
 
-| Attribute            | Value                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------ |
-| **Page Name**        | Staffing                                                                                         |
-| **URL Route**        | `/planning/staffing`                                                                             |
-| **Module**           | Epic 4 — Staffing & HR Planning                                                                  |
-| **Page File**        | `apps/web/src/pages/planning/staffing.tsx`                                                       |
-| **Primary Function** | Manage employee roster, DHG teaching hour requirements, and comprehensive staff cost projections |
+The previous version of this document (v1.0, 2026-03-10) was written as a baseline draft
+before the Epic 18-20 redesign. This section summarizes what was correct, what was wrong,
+and what was entirely missing.
 
-### What This Page Does
+### What Was Correct
 
-The Staffing page is the **HR planning hub** of the budget system. It allows users to:
+1. URL route `/planning/staffing` and page file location
+   (`apps/web/src/pages/planning/staffing.tsx`) [Confirmed]
+2. RBAC model with 4 roles (Admin, BudgetOwner, Editor, Viewer) and permission-gated
+   access [Confirmed]
+3. Enrollment as an upstream dependency concept [Confirmed]
+4. EoS formula structure uses a tiered model at the 5-year mark [Confirmed]
+5. Audit trail via `CalculationAuditLog` [Confirmed]
+6. Version lock rule: non-Draft versions are read-only [Confirmed]
+7. Salary encryption via pgcrypto with Docker secret key [Confirmed]
+8. YEARFRAC US 30/360 convention for EoS [Confirmed]
 
-1. View and manage the **employee roster** with complete employment details
-2. Review **DHG (Dotation Horaire Globale)** requirements — teaching hour needs derived from enrollment
-3. Configure **DHG Grille** — teaching hour allocations by grade and subject
-4. Analyze **staff costs by department** with detailed breakdowns
-5. View **monthly cost summary** projections throughout the fiscal year
-6. Review **monthly cost budget (Tab C)** — cost breakdown by budget category
-7. **Import employees** from Excel files for bulk onboarding
-8. Calculate comprehensive **staffing costs** including salaries, benefits, and statutory obligations
+### What Was Wrong
 
-**Critical Business Rule**: Changes to employee data or DHG calculations mark downstream modules (Staffing Costs, P&L) as "stale" — requiring recalculation to maintain data consistency.
+| #   | Old Claim                                                                            | Actual Implementation                                                                     | Source                            |
+| --- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------- |
+| 1   | 6 tabs (Roster, DHG Req, DHG Grille, Costs by Dept, Monthly Summary, Monthly Budget) | 2 workspace modes: Teaching / Support & Admin                                             | `staffing.tsx:51,220-228`         |
+| 2   | Employee status: Active / Pending / Inactive                                         | Existing / New / Departed                                                                 | `cost-engine.ts:19,101`           |
+| 3   | GOSI rate 12%                                                                        | 11.75% (Saudi only)                                                                       | `cost-engine.ts:7`                |
+| 4   | Salary: Base + Housing + Transport + Food + Other                                    | Base + Housing + Transport + ResponsibilityPremium + HSA + Augmentation                   | `monthly-gross.ts:3-10`           |
+| 5   | DHG Grille editable per-grade subject hours                                          | DHG Rules are read-only master data, viewed in Settings Curriculum tab                    | `staffing-settings-sheet.tsx:421` |
+| 6   | Slide-out employee detail panel                                                      | Right panel inspector: requirement line detail, assignments, gap analysis, cost split     | `staffing-inspector-content.tsx`  |
+| 7   | 5 database tables                                                                    | 18+ staffing models                                                                       | `schema.prisma:756-1165+`         |
+| 8   | Simple salary + GOSI + EOS calculation                                               | 10-step orchestration pipeline (demand -> coverage -> HSA -> cost -> category -> persist) | `calculate.ts:66-842`             |
+| 9   | Simple CSV import                                                                    | 3-step upload / validate / commit with discipline alias resolution                        | `import.ts`                       |
+| 10  | KPIs: Headcount / Annual Cost / Avg Monthly / GOSI / Ajeer / EOS                     | KPIs: Total Headcount / FTE Gap / Staff Cost / HSA Budget / H:E Ratio / Recharge Cost     | `staffing-kpi-ribbon.tsx:52-92`   |
+| 11  | EoS base includes Food allowance                                                     | EoS base = base + housing + transport + responsibilityPremium (HSA excluded)              | `cost-engine.ts:61-64`            |
+| 12  | EoS formula: half-month salary \* years                                              | Tiered: YoS <= 5: (base/2) _ YoS; YoS > 5: (base/2 _ 5) + base \* (YoS - 5)               | `cost-engine.ts:67-77`            |
 
----
+### What Was Missing Entirely
 
-## Business Context
-
-### Employment Status Types
-
-| Status       | Description                            | Budget Impact                 |
-| ------------ | -------------------------------------- | ----------------------------- |
-| **Active**   | Currently employed, full budget impact | Full monthly cost             |
-| **Pending**  | Hired but not yet started              | Prorated from joining date    |
-| **Inactive** | Terminated or on leave                 | No cost (or EOS accrual only) |
-
-### Employee Functions (Roles)
-
-| Function Category    | Examples                             | Salary Structure           |
-| -------------------- | ------------------------------------ | -------------------------- |
-| **Teaching Staff**   | Classroom teachers, specialists      | Base + DHG hours + Housing |
-| **Administrative**   | Directors, coordinators, admin staff | Base + Housing + Transport |
-| **Support Staff**    | Assistants, maintenance, security    | Base + Transport           |
-| **Ajeer (Contract)** | Contract workers                     | Daily rate, no benefits    |
-
-### Salary Components
-
-| Component                | Description                             | Tax/GOSI Treatment   |
-| ------------------------ | --------------------------------------- | -------------------- |
-| **Base Salary**          | Fixed monthly salary                    | GOSI applicable      |
-| **Housing Allowance**    | Accommodation allowance                 | GOSI applicable      |
-| **Transport Allowance**  | Commute allowance                       | GOSI applicable      |
-| **Food Allowance**       | Meal allowance                          | GOSI applicable      |
-| **Other Allowances**     | Special allowances                      | Varies               |
-| **GOSI (Employer)**      | Govt. Social Insurance (employer share) | 12% of GOSI wages    |
-| **EOS (End of Service)** | Severance accrual                       | YEARFRAC calculation |
-
-### DHG (Dotation Horaire Globale)
-
-The DHG system calculates required teaching hours based on:
-
-- Enrollment numbers (from Enrollment module)
-- Class sections needed per grade
-- Subject-specific hour allocations (from DHG Grille)
-- FTE (Full-Time Equivalent) teacher requirements
+- Demand engine, Coverage engine, HSA engine, Category cost engine
+- Staffing assignments model (teacher-to-requirement-line mapping)
+- Workspace mode toggle (Teaching / Support & Admin)
+- View presets (Need, Coverage, Cost, Full View)
+- Band filters (Mat, Elem, Col, Lyc) and coverage filters
+- Status strip (7 status sections)
+- Settings sheet (5-6 tabs including HSA, ORS overrides, cost assumptions)
+- Stale module propagation chain (ENROLLMENT -> REVENUE -> STAFFING -> PNL)
+- Cost modes (LOCAL_PAYROLL, AEFE_RECHARGE, NO_LOCAL_COST)
+- Record types (EMPLOYEE, VACANCY)
+- Demand overrides, ORS overrides, Lycee group assumptions
+- Auto-suggest button (UI present, not yet wired)
+- Augmentation (Sep-Dec salary increase percentage)
+- HSA summer exclusion (Jul-Aug for teaching staff)
+- Ajeer rules (Saudi exempt, new staff Sep-Dec only)
 
 ---
 
-## User Roles & Permissions
+## 1. Document Purpose
 
-| Role            | View Data | View Salary | Edit Employees | Import Excel | Run Calculations |
-| --------------- | --------- | ----------- | -------------- | ------------ | ---------------- |
-| **Admin**       | ✅        | ✅          | ✅             | ✅           | ✅               |
-| **BudgetOwner** | ✅        | ✅          | ✅             | ✅           | ✅               |
-| **Editor**      | ✅        | ✅          | ✅             | ❌           | ✅               |
-| **Viewer**      | ✅        | 🔒 Redacted | ❌             | ❌           | ❌               |
+**Audience**: Budget planners at EFIR, auditors, new developers, and business analysts.
 
-**Data Redaction Rule**: Viewers see employee names, codes, and departments, but salary fields display as "`[REDACTED]`" or hidden entirely.
+**Scope**: The Staffing planning page — its UI, workflows, calculations, data model,
+and API surface. Covers the state of the codebase after Epic 18-20 (March 2026).
 
-**Version Lock Rule**: All edit operations are blocked if the Budget Version status is not "Draft". Published, Locked, or Archived versions cannot be modified.
+**How to read this document**:
 
----
-
-## Pre-Conditions
-
-Before using this page, the following must be configured:
-
-### Required Master Data (via Admin → Master Data)
-
-1. **Departments** (`departments` table)
-    - Department codes: ADMIN, MATERNELLE, ELEMENTAIRE, COLLEGE, LYCEE, SUPPORT, etc.
-    - Department names and budget category mappings
-
-2. **Functions** (`functions` table)
-    - Job function codes and descriptions
-    - GOSI eligibility flags
-    - EOS eligibility flags
-
-3. **Grade Levels** (`grade_levels` table)
-    - Required for DHG Grille configuration
-    - Teaching hour allocations per subject
-
-4. **DHG Grille Configuration** (`dhg_grille_config` table)
-    - Subject codes (FR, EN, MATH, etc.)
-    - Hours per week by grade and subject
-    - Reference enrollment numbers
-
-### Required Budget Setup
-
-1. **Budget Version** must be created and selected in the workspace context bar
-2. The version must be in **"Draft"** status for edits
-3. **Fiscal Year** and **Academic Period** context must be set
-4. **Enrollment calculations** should be completed (for DHG requirements)
-
-### Required Security Setup
-
-1. **Salary encryption key** must be configured
-2. User must have appropriate role for intended actions
+- Planners: start with [Section 3](#3-planner-view--what-this-page-means-operationally)
+  and [Section 6](#6-end-to-end-user-workflow)
+- Developers: start with [Section 8](#8-calculations-and-derived-logic) and
+  [Section 10](#10-api-and-data-flow)
+- Auditors: start with [Section 11](#11-business-rules-and-guardrails) and
+  [Section 9](#9-database-and-data-model)
 
 ---
 
-## Page Layout & UI Elements
+## 2. Executive Overview
 
-### Header Section
+| Attribute            | Value                                                       |
+| -------------------- | ----------------------------------------------------------- |
+| **Page Name**        | Staffing                                                    |
+| **URL Route**        | `/planning/staffing`                                        |
+| **Module**           | Staffing & HR Planning (Epics 4, 18, 19, 20)                |
+| **Page File**        | `apps/web/src/pages/planning/staffing.tsx`                  |
+| **Shell**            | `PlanningShell` (shared `ContextBar` + docked `RightPanel`) |
+| **Primary Function** | Plan teaching demand, assign staff, calculate costs         |
 
+### What This Page Does [Confirmed]
+
+1. **Calculates teaching demand** from enrollment headcounts and curriculum rules
+   (DHG Rules), producing per-discipline FTE requirements grouped by school band
+   (Maternelle, Elementaire, College, Lycee).
+2. **Tracks staff supply** — employees (Existing, New, Departed) and vacancies — and
+   maps them to requirement lines via staffing assignments.
+3. **Computes coverage** — gap between demand FTE and covered FTE per discipline,
+   flagging deficits, surpluses, and uncovered lines.
+4. **Calculates per-employee monthly costs** — gross salary (with Sep-Dec augmentation),
+   GOSI (11.75%, Saudi only), Ajeer levies, HSA, and End-of-Service provisions.
+5. **Aggregates category-level costs** — Remplacements, Formation, Resident Salaires,
+   Resident Logement, Resident Pension — using configurable modes (flat annual,
+   % of payroll, amount per FTE).
+
+### Position in Calculation Chain [Confirmed]
+
+```text
+ENROLLMENT  -->  REVENUE  -->  STAFFING  -->  PNL
+                                  ^
+                            (this page)
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  Staffing                                                  [Calculate]      │
-│  Manage employees, DHG requirements, and cost projections  [Import Excel]   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  📊 KPI Ribbon                                                              │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐       │
-│  │ Headcount    │ │ Annual Cost  │ │ Avg Monthly  │ │ GOSI Total   │       │
-│  │ 89 employees │ │ 12.4M SAR    │ │ 11.6K SAR    │ │ 1.2M SAR     │       │
-│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘       │
-│  ┌──────────────┐ ┌──────────────┐                                           │
-│  │ Ajeer Total  │ │ EOS Total    │                                           │
-│  │ 340K SAR     │ │ 890K SAR     │                                           │
-│  └──────────────┘ └──────────────┘                                           │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
 
-### Filter Controls
-
-| Button                | Values                         | Function                |
-| --------------------- | ------------------------------ | ----------------------- |
-| **Status Filter**     | All, Active, Pending, Inactive | Filters employee roster |
-| **Department Filter** | All departments dropdown       | Filters by department   |
-| **Function Filter**   | All functions dropdown         | Filters by job function |
-
-### Action Buttons
-
-| Button           | Icon       | Role Required              | Action                         |
-| ---------------- | ---------- | -------------------------- | ------------------------------ |
-| **Calculate**    | Calculator | Admin, BudgetOwner, Editor | Runs staffing cost calculation |
-| **Import Excel** | Upload     | Admin, BudgetOwner         | Opens employee import panel    |
-| **Add Employee** | Plus       | Admin, BudgetOwner, Editor | Opens employee create dialog   |
-| **Export**       | Download   | Admin, BudgetOwner         | Exports employee data to Excel |
-
-### Tab Navigation
-
-| Tab                      | Content                | Description                     |
-| ------------------------ | ---------------------- | ------------------------------- |
-| **Employee Roster**      | Employee list table    | All employees with details      |
-| **DHG Requirements**     | Teaching hour needs    | Calculated from enrollment      |
-| **DHG Grille**           | Hour allocation config | Teaching hours by grade/subject |
-| **Staff Costs by Dept**  | Department breakdown   | Cost analysis by department     |
-| **Monthly Cost Summary** | Month-by-month view    | Projected costs per month       |
-| **Monthly Cost Budget**  | Tab C view             | Budget category breakdown       |
+Staffing consumes **enrollment AY2 headcounts** as its primary demand driver.
+When staffing data changes, it marks **PNL** as stale. When staffing is itself
+stale (e.g., enrollment was recalculated), the page shows a stale banner and
+returns HTTP 409 `STALE_DATA` on cost queries until recalculated.
 
 ---
 
-### Workspace Blocks (Main Content)
+## 3. Planner View — What This Page Means Operationally
 
-#### 1. Employee Roster
+### Teaching Staff Planning
 
-```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│ Employee Roster                                                [stale badge]   │
-├────────┬──────────────┬──────────────┬──────────────┬──────────┬───────────────┤
-│ Code   │ Name         │ Function     │ Department   │ Status   │ Joining Date  │
-├────────┼──────────────┼──────────────┼──────────────┼──────────┼───────────────┤
-│ EMP001 │ Ahmed Al-S.  │ Teacher      │ ELEMENTAIRE  │ Active   │ 2023-09-01    │
-│ EMP002 │ Sarah J.     │ Coordinator  │ ADMIN        │ Active   │ 2022-01-15    │
-│ EMP003 │ [Add New...] │              │              │          │               │
-└────────┴──────────────┴──────────────┴──────────────┴──────────┴───────────────┘
+As a planner, you use the **Teaching** workspace mode to answer one core question:
+_"Do we have enough teachers for next year's curriculum?"_
 
-[Click row to edit] [Delete selected]
-```
+The system calculates **demand** — how many FTE teachers each discipline needs based
+on projected enrollment — and compares it to **supply** — the teachers you have
+assigned. The gap tells you where to hire, redeploy, or accept vacancies.
 
-**Employee Detail Panel (Slide-out)**:
+**Key concepts**:
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│ Employee: EMP001 - Ahmed Al-Saud              [X]            │
-├──────────────────────────────────────────────────────────────┤
-│ BASIC INFORMATION                                            │
-│ ┌────────────────────────┐ ┌────────────────────────┐        │
-│ │ Code:      [ EMP001  ] │ │ Name:    [Ahmed A-S  ] │        │
-│ │ Function:  [Teacher ▼] │ │ Dept:    [Elementaire▼]│        │
-│ │ Status:    [Active  ▼] │ │ Joining: [2023-09-01 ] │        │
-│ └────────────────────────┘ └────────────────────────┘        │
-├──────────────────────────────────────────────────────────────┤
-│ SALARY COMPONENTS                                            │
-│ ┌────────────────────────┐ ┌────────────────────────┐        │
-│ │ Base Salary:  [8,500]  │ │ Housing:   [3,200]     │        │
-│ │ Transport:    [  500]  │ │ Food:      [  300]     │        │
-│ │ Other:        [    0]  │ │                        │        │
-│ └────────────────────────┘ └────────────────────────┘        │
-├──────────────────────────────────────────────────────────────┤
-│ STATUTORY COSTS                                              │
-│ ┌────────────────────────┐ ┌────────────────────────┐        │
-│ │ GOSI Employer:  [1,020]│ │ EOS Accrual: [  245]   │        │
-│ │ GOSI Employee:  [   0] │ │                        │        │
-│ └────────────────────────┘ └────────────────────────┘        │
-├──────────────────────────────────────────────────────────────┤
-│          [Cancel]                      [Save Changes]        │
-└──────────────────────────────────────────────────────────────┘
+- **Band**: School section grouping (Maternelle, Elementaire, College, Lycee).
+  Each band aggregates multiple grade levels. [Confirmed]
+- **Discipline**: Teaching subject (e.g., Francais, English, Maths). [Confirmed]
+- **Requirement Line**: One row per discipline per band, showing demand FTE,
+  covered FTE, gap, and cost. [Confirmed]
+- **ORS (Obligation Reglementaire de Service)**: The weekly teaching hours a
+  teacher is contractually required to deliver. Varies by service profile. [Confirmed]
+- **FTE**: Full-Time Equivalent = totalWeeklyHours / effectiveORS. [Confirmed]
+
+### Support & Admin Staff Planning
+
+The **Support & Admin** workspace mode shows non-teaching employees grouped by
+department. There is no demand engine here — the planner manages headcount and
+costs directly.
+
+### The Demand-Supply-Gap Model [Confirmed]
+
+```text
+DEMAND (from curriculum rules + enrollment)
+   - How many FTE does each discipline need?
+   - Driven by: sections x hoursPerUnit / ORS
+
+SUPPLY (from employee roster + assignments)
+   - How many FTE are assigned to each discipline?
+   - Driven by: SUM(assignment.fteShare)
+
+GAP = coveredFte - requiredFtePlanned
+   - Negative gap = DEFICIT (need more teachers)
+   - Positive gap = SURPLUS (overstaffed)
+   - Within ±0.25 = COVERED (balanced)
+   - No assignments = UNCOVERED
 ```
 
-**Editable Fields** (Admin, BudgetOwner, Editor):
+### Cost Components Explained [Confirmed]
 
-- **Code**: Unique employee identifier
-- **Name**: Full name
-- **Function**: Job function (dropdown)
-- **Department**: Department assignment (dropdown)
-- **Status**: Active/Pending/Inactive
-- **Joining Date**: Employment start date
-- **Salary Components**: Base, Housing, Transport, Food, Other (encrypted at rest)
+| Component                  | What It Is                                                            | Who Pays                    |
+| -------------------------- | --------------------------------------------------------------------- | --------------------------- |
+| **Base Salary**            | Monthly fixed salary                                                  | School                      |
+| **Housing Allowance**      | Accommodation stipend                                                 | School                      |
+| **Transport Allowance**    | Commute stipend                                                       | School                      |
+| **Responsibility Premium** | Management/role premium                                               | School                      |
+| **HSA**                    | Heures Supplementaires Annualisees — overtime hours compensation      | School (LOCAL_PAYROLL only) |
+| **Augmentation**           | Sep-Dec salary increase (%) applied to base + allowances (not HSA)    | School                      |
+| **GOSI**                   | Government Social Insurance — 11.75% of adjusted gross (Saudi only)   | School (employer share)     |
+| **Ajeer**                  | Work permit levy for non-Saudi staff (annual levy / 12 + monthly fee) | School                      |
+| **EoS**                    | End-of-Service provision accrual (Saudi labor law)                    | School                      |
+
+### Key Decisions the Planner Makes
+
+1. **Which employees to assign** to which requirement lines (and at what FTE share)
+2. **Whether to accept deficits** or create vacancy records to flag hiring needs
+3. **ORS overrides** per service profile (in Settings) to adjust FTE calculations
+4. **Cost assumptions** — how to compute Remplacements, Formation, and Resident
+   costs (mode and rate)
+5. **HSA parameters** — target hours, rates (in Settings)
+6. **Demand overrides** — manually adjust planned FTE for specific lines
+7. **When to recalculate** — after any data change, click Calculate to refresh
 
 ---
 
-#### 2. DHG Requirements
+## 4. Page Context and Dependencies
 
+### Upstream Dependencies [Confirmed]
+
+| Dependency                        | What It Provides                                              | Must Be Calculated First?          |
+| --------------------------------- | ------------------------------------------------------------- | ---------------------------------- |
+| **Enrollment**                    | AY2 headcounts per grade level                                | Yes — demand engine needs sections |
+| **Master Data: DHG Rules**        | Curriculum rules (discipline, grade, hours/unit, driver type) | Yes — static reference data        |
+| **Master Data: Service Profiles** | ORS values, HSA eligibility per teacher type                  | Yes — static reference data        |
+| **Master Data: Disciplines**      | Discipline codes and aliases                                  | Yes — static reference data        |
+| **Master Data: Grade Levels**     | Max class sizes per grade                                     | Yes — static reference data        |
+
+### Downstream Dependents [Confirmed]
+
+| Dependent | What It Consumes                     | Stale Propagation                           |
+| --------- | ------------------------------------ | ------------------------------------------- |
+| **PNL**   | Staff cost totals and category costs | PNL marked stale when staffing recalculates |
+
+### Stale Module Chain [Confirmed]
+
+```text
+ENROLLMENT changes
+    |
+    v
+REVENUE marked stale
+    |
+    v
+STAFFING marked stale  <-- this page shows warning banner
+    |
+    v
+PNL marked stale
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ DHG Requirements (Dotation Horaire Globale)                    [stale badge] │
-├──────────┬──────────┬─────────────┬──────────────┬───────────┬──────────────┤
-│ Grade    │ Period   │ Students    │ Sections     │ Total Hrs │ FTE Needed   │
-├──────────┼──────────┼─────────────┼──────────────┼───────────┼──────────────┤
-│ PS       │ AY1      │ 42          │ 3            │ 45.0      │ 1.29         │
-│ PS       │ AY2      │ 38          │ 2            │ 30.0      │ 0.86         │
-│ MS       │ AY1      │ 48          │ 2            │ 60.0      │ 1.71         │
-│ ...      │ ...      │ ...         │ ...          │ ...       │ ...          │
-├──────────┼──────────┼─────────────┴──────────────┴───────────┴──────────────┤
-│ TOTAL    │          │             │              │ 1,245.5   │ 35.6         │
-└──────────┴──────────┴────────────────────────────────────────────────────────┘
-```
 
-**Display Fields** (read-only, computed):
+When staffing is recalculated, it **removes STAFFING** from staleModules and
+**adds PNL**. [Confirmed: `calculate.ts:769-776`]
 
-- **Students**: Headcount from enrollment
-- **Sections**: Calculated class sections needed
-- **Total Hours**: Sum of teaching hours required
-- **FTE Needed**: Full-time equivalent teachers (Total Hrs ÷ 35)
+### Pre-Conditions [Confirmed]
+
+| Condition                        | Required? | What Happens If Missing                        |
+| -------------------------------- | --------- | ---------------------------------------------- |
+| Budget Version selected          | Yes       | Page shows "Select a version" placeholder      |
+| Version status = Draft           | For edits | Page shows "locked" banner, all edits disabled |
+| Enrollment AY2 calculated        | Yes       | Calculate returns 422 MISSING_PREREQUISITES    |
+| At least 1 non-Departed employee | Yes       | Calculate returns 422 MISSING_PREREQUISITES    |
+| User role != Viewer              | For edits | Page shows "view-only" banner                  |
+
+### RBAC Permission Matrix [Confirmed]
+
+| Action             | Admin | BudgetOwner | Editor | Viewer        |
+| ------------------ | ----- | ----------- | ------ | ------------- |
+| View staffing data | Yes   | Yes         | Yes    | Yes           |
+| View salary fields | Yes   | Yes         | Yes    | No (redacted) |
+| Edit employees     | Yes   | Yes         | Yes    | No            |
+| Import employees   | Yes   | Yes         | Yes    | No            |
+| Run calculation    | Yes   | Yes         | Yes    | No            |
+| Manage assignments | Yes   | Yes         | Yes    | No            |
+| Edit settings      | Yes   | Yes         | Yes    | No            |
+| Add employee       | Yes   | Yes         | Yes    | No            |
+
+> **Permission check**: All mutating routes require `data:edit`. Salary reads
+> require `salary:view`. [Confirmed: `calculate.ts:69`]
 
 ---
 
-#### 3. DHG Grille Configuration
+## 5. Current UI Walkthrough
 
+### Page Layout [Confirmed]
+
+```text
++===================================================================+
+| Context Bar (fiscal year, version, period selectors)    [PlanningShell]
++===================================================================+
+| [Locked banner]  or  [Viewer banner]  or  [Uncalculated banner]   |
++-------------------------------------------------------------------+
+| TOOLBAR                                                           |
+| Left:  [Teaching|Support&Admin]  [All|Mat|Elem|Col|Lyc]           |
+|        [Coverage filter dropdown]                                  |
+| Right: [Need|Coverage|Cost|Full View]  [Settings] [Import]        |
+|        [Add Employee] [Auto-Suggest]  [Calculate]                  |
++-------------------------------------------------------------------+
+| STATUS STRIP                                                      |
+| Last calculated | Stale | Demand | Source | Supply | Coverage     |
+| | Downstream                                                      |
++-------------------------------------------------------------------+
+| KPI RIBBON                                                        |
+| [Total Headcount] [FTE Gap] [Staff Cost] [HSA Budget]             |
+| [H:E Ratio] [Recharge Cost]                                       |
++-------------------------------------------------------------------+
+| GRID ZONE (flex-1, scrollable)                                    |
+|                                                                   |
+| Teaching mode: TeachingMasterGrid                                 |
+|   - Rows grouped by band (MAT -> ELEM -> COL -> LYC)             |
+|   - Subtotal row per band                                         |
+|   - Click row -> right panel inspector                            |
+|                                                                   |
+| Support mode: SupportAdminGrid                                    |
+|   - Rows grouped by department                                    |
+|   - Click row -> right panel inspector                            |
++-------------------------------------------------------------------+
+| RIGHT PANEL (docked, resizable)               [PlanningShell]     |
+| Inspector: requirement line detail, assignments, gap analysis     |
++===================================================================+
+| SETTINGS SHEET (overlay, triggered by Settings button)            |
++===================================================================+
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ DHG Grille Configuration                                                    │
-├──────────┬───────────┬───────────┬───────────┬───────────┬──────────────────┤
-│ Subject  │ PS        │ MS        │ GS        │ CP        │ ... (per grade)  │
-├──────────┼───────────┼───────────┼───────────┼───────────┼──────────────────┤
-│ FR       │ 15.0      │ 16.0      │ 16.0      │ 18.0      │ ...              │
-│ EN       │ 5.0       │ 5.0       │ 6.0       │ 6.0       │ ...              │
-│ MATH     │ -         │ -         │ 5.0       │ 5.0       │ ...              │
-│ ...      │ ...       │ ...       │ ...       │ ...       │ ...              │
-├──────────┼───────────┴───────────┴───────────┴───────────┴──────────────────┤
-│ Total/Wk │ 20.0      │ 21.0      │ 27.0      │ 29.0      │ ...              │
-└──────────┴──────────────────────────────────────────────────────────────────┘
-```
 
-**Editable Fields**:
+### Conditional Banners [Confirmed]
 
-- **Hour cells**: Teaching hours per subject per grade (editable by Admin/BudgetOwner)
-- Reference data from master data, can be overridden per version
+| Banner           | Condition                         | Message                                                          |
+| ---------------- | --------------------------------- | ---------------------------------------------------------------- |
+| **Locked**       | Version status != Draft           | "This version is locked. Staffing data is read-only."            |
+| **Viewer**       | User role = Viewer                | "You have view-only access."                                     |
+| **Uncalculated** | Not stale AND no lastCalculatedAt | "Staffing has not been calculated. Click Calculate to generate." |
+
+Source: `staffing.tsx:196-214`
+
+### Toolbar [Confirmed]
+
+**Left side**:
+
+- **Workspace mode toggle**: `Teaching` / `Support & Admin` — switches the grid
+  zone between teaching requirement grid and support employee grid.
+- **Band filter** (Teaching mode only): `All`, `Mat`, `Elem`, `Col`, `Lyc` — filters
+  requirement lines by school band.
+- **Coverage filter** (Teaching mode only, hidden in Need preset): dropdown with
+  `All Coverage`, `Deficit`, `Surplus`, `Uncovered`, `Covered`.
+
+**Right side**:
+
+- **View presets** (Teaching mode only): `Need`, `Coverage`, `Cost`, `Full View` —
+  controls which columns are visible in the teaching grid.
+- **Settings**: Opens the `StaffingSettingsSheet` overlay.
+- **Import**: (editable only) Opens employee import flow. [UI present]
+- **Add Employee**: (editable only) Opens employee create dialog. [UI present]
+- **Auto-Suggest**: (Teaching mode + editable only) Opens auto-suggest dialog.
+  [UI present, handler not yet wired]
+- **Calculate**: (editable only) Triggers the 10-step calculation pipeline.
+
+Source: `staffing.tsx:217-327`
+
+### Status Strip (7 Sections) [Confirmed]
+
+| #   | Key              | Label            | Example Value                                                        | Severity Logic                                      |
+| --- | ---------------- | ---------------- | -------------------------------------------------------------------- | --------------------------------------------------- |
+| 1   | `lastCalculated` | Last calculated  | "18 Mar 2026, 14:32" or "Not yet calculated"                         | Warning if null                                     |
+| 2   | `stale`          | Stale            | "Staffing data is stale — recalculate"                               | Warning (shown only when stale)                     |
+| 3   | `demandPeriod`   | Demand           | "AY 2026"                                                            | Default                                             |
+| 4   | `source`         | Source           | "Based on enrollment AY2 headcounts (calculated 18 Mar 2026, 14:00)" | Warning if enrollment stale                         |
+| 5   | `supply`         | Supply           | "85 employees (72 existing, 13 new) + 3 vacancies"                   | Default                                             |
+| 6   | `coverage`       | Coverage         | "4 deficit, 2 uncovered, 18 balanced"                                | Warning if any deficit/uncovered; success otherwise |
+| 7   | `downstream`     | Downstream stale | Pills for stale downstream modules (PNL)                             | Shown only when downstream modules are stale        |
+
+Source: `staffing-status-strip.tsx:50-144`
+
+### KPI Ribbon (6 Cards) [Confirmed]
+
+| Card                | Key              | Icon            | Formatter           | Conditional Styling                                    |
+| ------------------- | ---------------- | --------------- | ------------------- | ------------------------------------------------------ |
+| **Total Headcount** | `totalHeadcount` | Users           | Locale number       | Default accent                                         |
+| **FTE Gap**         | `fteGap`         | TrendingUp/Down | 2 decimal places    | Error if < -0.25, Warning if > 0.25, Success otherwise |
+| **Staff Cost**      | `staffCost`      | DollarSign      | Compact money (SAR) | Default accent                                         |
+| **HSA Budget**      | `hsaBudget`      | Clock           | Compact money (SAR) | Default accent                                         |
+| **H:E Ratio**       | `heRatio`        | BarChart3       | 2 decimal places    | Default accent                                         |
+| **Recharge Cost**   | `rechargeCost`   | ArrowUpRight    | Compact money (SAR) | Default accent                                         |
+
+When stale, a pulsing "Stale — recalculate to refresh" indicator appears below the
+ribbon. [Confirmed: `staffing-kpi-ribbon.tsx:181-195`]
+
+> **Note**: `hsaBudget`, `heRatio`, and `rechargeCost` are currently hardcoded to 0
+> in the KPI value derivation. [Confirmed: `staffing.tsx:126-128`] [Needs Validation:
+> > whether these are planned for future wiring or represent missing calculation]
+
+### Teaching Master Grid [Confirmed]
+
+The teaching grid displays requirement lines grouped by band, with columns controlled
+by the active view preset.
+
+**Column visibility by preset**:
+
+| Column                 | Need | Coverage | Cost | Full View |
+| ---------------------- | ---- | -------- | ---- | --------- |
+| `lineLabel`            | Yes  | Yes      | Yes  | Yes       |
+| `serviceProfileCode`   | Yes  | Yes      | -    | Yes       |
+| `totalDriverUnits`     | Yes  | Yes      | -    | Yes       |
+| `totalWeeklyHours`     | Yes  | Yes      | -    | Yes       |
+| `baseOrs`              | Yes  | -        | -    | Yes       |
+| `effectiveOrs`         | Yes  | -        | -    | Yes       |
+| `requiredFteRaw`       | Yes  | Yes      | -    | Yes       |
+| `requiredFtePlanned`   | Yes  | -        | -    | Yes       |
+| `recommendedPositions` | Yes  | -        | -    | Yes       |
+| `coveredFte`           | -    | Yes      | -    | Yes       |
+| `gapFte`               | -    | Yes      | -    | Yes       |
+| `coverageStatus`       | -    | Yes      | -    | Yes       |
+| `assignedStaffCount`   | -    | Yes      | -    | Yes       |
+| `directCostAnnual`     | -    | -        | Yes  | Yes       |
+| `hsaCostAnnual`        | -    | -        | Yes  | Yes       |
+
+Source: `teaching-master-grid.tsx:21-62`
+
+**Row types**: requirement (data row), subtotal (per band), total.
+**Grouping**: Rows sorted by band order (MAT -> ELEM -> COL -> LYC), with a subtotal
+row after each band group.
+
+**Row click**: Selecting a requirement line row updates the staffing selection store,
+which drives the right panel inspector to show that line's detail.
+
+### Support & Admin Grid [Confirmed]
+
+Displays non-teaching employees grouped by department. Each department group shows
+employee rows with a department subtotal for headcount and annual cost.
+
+Source: `staffing-workspace.ts:219-253`, `support-admin-grid.tsx`
+
+### Right Panel Inspector [Confirmed]
+
+The docked right panel (registered via side-effect import in `staffing.tsx:40-41`)
+shows contextual detail based on the current selection.
+
+**View modes**:
+
+1. **Requirement Line Detail** — when a teaching grid row is selected: shows band
+   badge, discipline, coverage status, demand/coverage metrics, and a list of
+   assigned employees with FTE share and cost mode badges. Includes an assignment
+   form to add/edit/delete assignments.
+2. **Support Employee Detail** — when a support grid row is selected: shows employee
+   info and department context.
+3. **Guide** — default content when no selection is active.
+
+Source: `staffing-inspector-content.tsx`
+
+### Settings Sheet (5-6 Tabs) [Confirmed]
+
+Opened via the Settings button. A `Sheet` (side overlay) with tabbed content.
+
+| Tab   | Label                  | Content                                                                                                                                                                               | Editable       |
+| ----- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| **1** | Service Profiles & HSA | ORS overrides per service profile + HSA parameters (target hours, first hour rate, additional hour rate, HSA months)                                                                  | Yes (if Draft) |
+| **2** | Curriculum             | Read-only view of DHG Rules grouped by band, with link to Master Data for editing                                                                                                     | No (view only) |
+| **3** | Lycee Group            | Group count and hours/group per discipline (only shown when GROUPS-type rules exist)                                                                                                  | Yes (if Draft) |
+| **4** | Cost Assumptions       | 5 cost categories (Remplacements, Formation, Resident Salaires, Resident Logement, Resident Pension) with mode selector (Flat Annual / % of Payroll / Amount per FTE) and value input | Yes (if Draft) |
+| **5** | Enrollment             | Read-only enrollment AY2 headcount by grade with stale warning                                                                                                                        | No (view only) |
+| **6** | Reconciliation         | Summary stats (FTE, cost) and navigation to related modules                                                                                                                           | No (view only) |
+
+Source: `staffing-settings-sheet.tsx:418-425`
 
 ---
 
-#### 4. Staff Costs by Department
+## 6. End-to-End User Workflow
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ Staff Costs by Department                                      [stale badge] │
-├──────────────────┬───────────┬───────────┬───────────┬───────────┬───────────┤
-│ Department       │ Headcount │ Base      │ Allowances│ GOSI      │ Total     │
-├──────────────────┼───────────┼───────────┼───────────┼───────────┼───────────┤
-│ ADMIN            │ 8         │ 84,000    │ 32,000    │ 13,920    │ 129,920   │
-│ MATERNELLE       │ 15        │ 142,500   │ 71,250    │ 25,650    │ 239,400   │
-│ ELEMENTAIRE      │ 22        │ 209,000   │ 104,500   │ 37,620    │ 351,120   │
-│ COLLEGE          │ 18        │ 171,000   │ 85,500    │ 30,780    │ 287,280   │
-│ LYCEE            │ 16        │ 168,000   │ 84,000    │ 30,240    │ 282,240   │
-│ SUPPORT          │ 10        │ 55,000    │ 22,000    │ 9,240     │ 86,240    │
-├──────────────────┼───────────┼───────────┴───────────┴───────────┴───────────┤
-│ TOTAL            │ 89        │ 829,500   │ 399,250   │ 147,450   │ 1,376,200 │
-└──────────────────┴───────────┴───────────────────────────────────────────────┘
-```
+A typical staffing planning cycle follows these steps:
 
-**Display Fields** (read-only, computed):
+### Step 1: Ensure Prerequisites [Confirmed]
 
-- **Headcount**: Number of employees in department
-- **Base**: Sum of base salaries
-- **Allowances**: Sum of housing, transport, food, other
-- **GOSI**: Employer GOSI contributions
-- **Total**: All costs combined (monthly)
+- Select the correct **Budget Version** (must be Draft) from the context bar.
+- Verify that **Enrollment** has been calculated (AY2 headcounts must exist).
+- Confirm at least one employee record exists for this version.
 
----
+### Step 2: Review Current State
 
-#### 5. Monthly Cost Summary
+- Open the Staffing page. Check the **status strip** for stale warnings.
+- If stale, click **Calculate** to regenerate all staffing data.
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ Monthly Cost Summary                                           [stale badge] │
-├───────────┬───────────┬───────────┬───────────┬───────────┬──────────────────┤
-│ Month     │ Salaries  │ GOSI      │ EOS       │ Ajeer     │ Total            │
-├───────────┼───────────┼───────────┼───────────┼───────────┼──────────────────┤
-│ Jan 2025  │ 1,228,750 │  147,450  │  102,395  │  28,500   │ 1,507,095        │
-│ Feb 2025  │ 1,228,750 │  147,450  │  102,395  │  28,500   │ 1,507,095        │
-│ Mar 2025  │ 1,245,000 │  149,400  │  103,750  │  28,500   │ 1,526,650        │
-│ ...       │ ...       │ ...       │ ...       │ ...       │ ...              │
-│ Dec 2025  │ 1,310,000 │  157,200  │  109,167  │  31,000   │ 1,607,367        │
-├───────────┼───────────┴───────────┴───────────┴───────────┴──────────────────┤
-│ ANNUAL    │ 15,456,000│ 1,854,720 │ 1,286,400 │  350,000  │ 18,947,120       │
-└───────────┴───────────────────────────────────────────────────────────────────┘
-```
+### Step 3: Configure Settings (if needed) [Confirmed]
 
-**Notes**:
+- Click **Settings** to open the settings sheet.
+- **Service Profiles tab**: Review and override ORS values per service profile.
+  Set HSA parameters (target hours, rates).
+- **Lycee Group tab**: If Lycee group-driver rules exist, set group counts and
+  hours per group per discipline.
+- **Cost Assumptions tab**: Configure each cost category's calculation mode and
+  value.
+- Save changes. Settings changes mark STAFFING as stale.
 
-- Costs vary by month due to joining dates, terminations, and salary changes
-- EOS accrual calculated using YEARFRAC US 30/360 convention
-- Ajeer (contract workers) tracked separately
+### Step 4: Import or Add Employees [Confirmed]
 
----
+- **Import**: Click Import to upload an employee file. The system runs a 3-step
+  flow: upload -> validate (with discipline alias resolution) -> commit.
+- **Add Employee**: Click Add Employee to create individual records.
+- Employees have statuses: **Existing** (returning), **New** (joining this year),
+  or **Departed** (leaving).
 
-#### 6. Monthly Cost Budget (Tab C View)
+### Step 5: Review Teaching Demand [Confirmed]
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ Monthly Cost Budget (Tab C Format)                             [stale badge] │
-├──────────────────────────┬───────────┬───────────┬───────────┬───────────────┤
-│ Category                 │ Q1        │ Q2        │ Q3        │ Q4            │
-├──────────────────────────┼───────────┼───────────┼───────────┼───────────────┤
-│ 6100 - Salaries & Wages  │ 3,682,500 │ 3,735,000 │ 3,870,000 │ 4,168,500     │
-│ 6200 - Social Charges    │   441,900 │   448,200 │   464,400 │   500,220     │
-│ 6300 - EOS Provision     │   306,135 │   310,260 │   321,510 │   346,335     │
-│ 6400 - Recruitment       │    25,000 │    15,000 │    35,000 │    45,000     │
-│ 6500 - Training          │    10,000 │     5,000 │    15,000 │    10,000     │
-├──────────────────────────┼───────────┼───────────┼───────────┼───────────────┤
-│ TOTAL                    │ 4,465,535 │ 4,513,460 │ 4,705,910 │ 5,070,055     │
-└──────────────────────────┴───────────┴───────────┴───────────┴───────────────┘
-```
+- Switch to **Teaching** workspace mode.
+- Use the **Need** view preset to see demand-side columns: weekly hours, ORS,
+  required FTE (raw and planned), recommended positions.
+- Use **band filters** to focus on one school section.
 
----
+### Step 6: Manage Assignments [Confirmed]
 
-## Step-by-Step Workflow
+- Click a requirement line row to open the **right panel inspector**.
+- In the inspector, view current assignments and their FTE shares.
+- Use the assignment form to **add**, **edit**, or **delete** teacher assignments.
+- Each assignment specifies: employee, FTE share (derived hours/week shown
+  automatically from FTE \* ORS).
 
-### Workflow 1: Add New Employee
+### Step 7: Review Coverage [Confirmed]
 
-**Actor**: Budget Owner or Editor
+- Switch to the **Coverage** view preset.
+- Review coverage status per line: COVERED, DEFICIT, SURPLUS, or UNCOVERED.
+- Use the **coverage filter** dropdown to focus on problem lines.
+- The FTE Gap KPI card shows the aggregate gap with color coding.
 
-| Step | Action                                      | UI Element    | API Call                                 | Result                         |
-| ---- | ------------------------------------------- | ------------- | ---------------------------------------- | ------------------------------ |
-| 1    | Select Budget Version from context bar      | Dropdown      | `GET /versions`                          | Version loaded                 |
-| 2    | Navigate to Staffing page                   | Sidebar menu  | -                                        | Page loads                     |
-| 3    | Click "Add Employee" button                 | Button        | -                                        | Employee create dialog opens   |
-| 4    | Enter employee code                         | Text input    | -                                        | Code validated (unique)        |
-| 5    | Enter full name                             | Text input    | -                                        | Name captured                  |
-| 6    | Select function from dropdown               | Select        | -                                        | Function selected              |
-| 7    | Select department from dropdown             | Select        | -                                        | Department selected            |
-| 8    | Set employment status                       | Select        | -                                        | Status selected                |
-| 9    | Enter joining date                          | Date picker   | -                                        | Date captured                  |
-| 10   | Enter base salary                           | Number input  | -                                        | Value encrypted client-side    |
-| 11   | Enter allowances (housing, transport, etc.) | Number inputs | -                                        | Values captured                |
-| 12   | Click "Save"                                | Button        | `POST /versions/{id}/staffing/employees` | Employee created               |
-| 13   | Observe stale indicator                     | Badge         | -                                        | "Stale" appears on Cost blocks |
+### Step 8: Apply Demand Overrides (if needed) [Confirmed]
 
-**Database Changes**:
+- If the calculated demand FTE needs manual adjustment (e.g., planned extra
+  positions), demand overrides can be applied via the API to set
+  `requiredFtePlanned` per line. [Inferred: no UI for this yet]
 
-- Insert record into `employees` table with encrypted salary fields
-- Update `budget_versions.stale_modules` array to include STAFFING, PNL
-- Insert `audit_entries` record with operation EMPLOYEE_CREATED
+### Step 9: Run Calculation [Confirmed]
+
+- Click **Calculate**. This runs the full 10-step pipeline:
+  validate -> load inputs -> demand -> overrides -> coverage -> HSA -> cost ->
+  category cost -> aggregate -> persist.
+- On success, stale flag is removed from STAFFING, PNL is marked stale.
+- The grid, KPIs, and status strip refresh with new data.
+
+### Step 10: Review Costs [Confirmed]
+
+- Switch to the **Cost** view preset to see `directCostAnnual` and
+  `hsaCostAnnual` per requirement line.
+- Check the **Staff Cost** KPI card for the total.
+- Switch to **Support & Admin** mode to review non-teaching staff costs by
+  department.
+
+### Step 11: Iterate and Finalize
+
+- Repeat steps 4-10 as needed: adjust employees, assignments, settings,
+  and recalculate until the staffing plan is satisfactory.
+- When satisfied, proceed to PNL calculation (which consumes staffing outputs).
 
 ---
 
-### Workflow 2: Edit Employee
+## 7. Inputs Required
 
-**Actor**: Budget Owner or Editor
+### User-Entered Inputs [Confirmed]
 
-| Step | Action                      | UI Element         | API Call                                        | Result                         |
-| ---- | --------------------------- | ------------------ | ----------------------------------------------- | ------------------------------ |
-| 1    | Locate employee in roster   | Grid row           | -                                               | Row identified                 |
-| 2    | Click employee row          | Row click          | `GET /versions/{id}/staffing/employees/{empId}` | Employee details loaded        |
-| 3    | Edit desired field(s)       | Various inputs     | -                                               | Values updated                 |
-| 4    | Click "Save Changes"        | Button             | `PUT /versions/{id}/staffing/employees/{empId}` | Changes saved                  |
-| 5    | Observe update confirmation | Toast notification | -                                               | "Employee updated" shown       |
-| 6    | Observe stale indicator     | Badge              | -                                               | Cost calculations marked stale |
+| Input                                                               | Where                       | When                         | Mandatory                                  |
+| ------------------------------------------------------------------- | --------------------------- | ---------------------------- | ------------------------------------------ |
+| **Employee records** (code, name, status, salary components, flags) | Import or Add Employee      | Before first calculation     | Yes (>= 1 non-Departed)                    |
+| **Staffing assignments** (employee -> discipline, FTE share)        | Right panel inspector       | After employees exist        | No (but coverage will be UNCOVERED)        |
+| **ORS overrides**                                                   | Settings > Service Profiles | Optional                     | No (defaults from master data)             |
+| **HSA parameters** (target hours, rates, months)                    | Settings > Service Profiles | Optional                     | No (defaults from version settings)        |
+| **Cost assumptions** (mode + value per category)                    | Settings > Cost Assumptions | Optional                     | No (defaults if no assumptions configured) |
+| **Lycee group assumptions** (group count, hours/group)              | Settings > Lycee Group      | When GROUPS-type rules exist | Conditional                                |
+| **Demand overrides** (manual FTE per line)                          | API only (no UI yet)        | Optional                     | No                                         |
 
-**Formula for Salary Update**:
+### System-Derived Inputs [Confirmed]
 
-```
-Total Monthly Cost = Base + Housing + Transport + Food + Other + GOSI_Employer
-GOSI_Employer = (Base + Housing + Transport + Food) × 0.12
-```
+| Input                         | Source                                   | Description                                                  |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
+| **Enrollment AY2 headcounts** | Enrollment module calculation            | Student count per grade for next year                        |
+| **DHG Rules**                 | Master Data (`DhgRule` table)            | Curriculum rules: hours/unit, driver type, discipline, grade |
+| **Service Profiles**          | Master Data (`ServiceObligationProfile`) | Default ORS hours, HSA eligibility per teacher type          |
+| **Grade max class sizes**     | Master Data + version overrides          | Maximum students per section per grade                       |
 
----
+### Context-Driven Inputs [Confirmed]
 
-### Workflow 3: Delete Employee
-
-**Actor**: Budget Owner or Editor
-
-| Step | Action                    | UI Element     | API Call                                           | Result                      |
-| ---- | ------------------------- | -------------- | -------------------------------------------------- | --------------------------- |
-| 1    | Locate employee in roster | Grid row       | -                                                  | Row identified              |
-| 2    | Select employee checkbox  | Checkbox       | -                                                  | Row selected                |
-| 3    | Click "Delete" button     | Button         | -                                                  | Confirmation dialog appears |
-| 4    | Confirm deletion          | Confirm button | `DELETE /versions/{id}/staffing/employees/{empId}` | Employee soft-deleted       |
-| 5    | Observe roster update     | Grid refresh   | -                                                  | Employee no longer listed   |
-
-**Note**: Employees are soft-deleted (status changed to "Inactive") to preserve audit trail and historical cost data.
+| Input              | Source                  | Description                                         |
+| ------------------ | ----------------------- | --------------------------------------------------- |
+| **Version ID**     | Workspace context store | Active budget version                               |
+| **Fiscal Year**    | Workspace context store | Determines effective DHG rules and asOfDate for EoS |
+| **Version Status** | Budget version record   | Controls editability (Draft = editable)             |
+| **User Role**      | Auth context            | Controls RBAC permissions                           |
 
 ---
 
-### Workflow 4: Import Employees from Excel
+## 8. Calculations and Derived Logic
 
-**Actor**: Budget Owner
+### 10-Step Calculation Pipeline Overview [Confirmed]
 
-| Step | Action                                | UI Element    | API Call                                                        | Result                                  |
-| ---- | ------------------------------------- | ------------- | --------------------------------------------------------------- | --------------------------------------- |
-| 1    | Click "Import Excel" button           | Button        | -                                                               | Import panel opens (right sidebar)      |
-| 2    | Click "Choose File"                   | File input    | -                                                               | File browser opens                      |
-| 3    | Select Excel file                     | File dialog   | -                                                               | File name displayed                     |
-| 4    | Click "Validate"                      | Button        | `POST /versions/{id}/staffing/employees/import` (mode=validate) | Validation runs                         |
-| 5    | Review validation results             | Results panel | -                                                               | Valid rows count, preview table, errors |
-| 6    | Click "Import" (if validation passes) | Button        | `POST /versions/{id}/staffing/employees/import` (mode=commit)   | Employees imported                      |
-| 7    | Close panel                           | Close button  | -                                                               | Panel closes, roster updated            |
+Source: `apps/api/src/routes/staffing/calculate.ts`
 
-**Excel Format Requirements**:
-
+```text
+Step  1: VALIDATE PREREQUISITES   — version exists, is Draft, enrollment + employees exist
+Step  2: LOAD ALL INPUTS           — settings, enrollments, DHG rules, profiles, overrides,
+                                     employees (decrypted), assignments, cost assumptions,
+                                     Lycee group assumptions, demand overrides
+Step  3: RUN DEMAND ENGINE         — calculate requirement lines from enrollment + rules
+Step  4: APPLY DEMAND OVERRIDES    — manual FTE adjustments per line
+Step  5: RUN COVERAGE ENGINE       — match assignments to requirement lines, compute gaps
+Step  6: RUN HSA ENGINE            — compute HSA cost per eligible teacher per month
+Step  7: RUN COST ENGINE           — compute 12-month cost per employee (gross, GOSI,
+                                     Ajeer, EoS)
+Step  8: RUN CATEGORY COST ENGINE  — compute configurable category costs (5 categories)
+Step  9: AGGREGATE COSTS           — sum employee costs onto requirement lines via
+                                     assignment fteShare
+Step 10: PERSIST IN TRANSACTION    — delete old rows, insert new sources/lines/costs/
+                                     EoS/categories, update HSA on employees, update
+                                     staleModules (remove STAFFING, add PNL)
+Step 11: AUDIT LOG + RETURN        — create CalculationAuditLog, return summary
 ```
-| code   | name          | function | department  | status  | joining_date | base_salary | housing | transport | food | other |
-|--------|---------------|----------|-------------|---------|--------------|-------------|---------|-----------|------|-------|
-| EMP001 | Ahmed Al-Saud | Teacher  | ELEMENTAIRE | Active  | 2023-09-01   | 8500        | 3200    | 500       | 300  | 0     |
-| EMP002 | Sarah Johnson | Admin    | ADMIN       | Active  | 2022-01-15   | 12000       | 0       | 800       | 0    | 500   |
+
+### Step 3: Demand Engine [Confirmed]
+
+Source: `apps/api/src/services/staffing/demand-engine.ts`
+
+**Purpose**: Compute teaching requirement lines from enrollment + curriculum rules.
+
+**Inputs**:
+
+- Enrollment AY2 headcounts per grade
+- DHG rules (grade, discipline, lineType, driverType, hoursPerUnit, serviceProfile)
+- Service profiles with merged ORS overrides
+- Lycee group assumptions
+- HSA target hours, academic weeks
+
+**Driver types**:
+
+- `SECTIONS`: driverUnits = ceil(headcount / maxClassSize)
+- `GROUPS`: driverUnits = from Lycee group assumptions
+- [Other driver types may exist] [Needs Validation]
+
+**FTE calculation**:
+
+```text
+totalWeeklyHours = SUM(driverUnits * hoursPerUnit)   per discipline per band
+requiredFteRaw   = totalWeeklyHours / effectiveORS
+requiredFtePlanned = ceil(requiredFteRaw) or custom rounding
+recommendedPositions = ceil(requiredFtePlanned)
 ```
+
+**Outputs**: `RequirementSource[]` (grade-level detail) and `RequirementLine[]`
+(band-level aggregated lines).
+
+### Step 5: Coverage Engine [Confirmed]
+
+Source: `apps/api/src/services/staffing/coverage-engine.ts`
+
+**Purpose**: Match assignments to requirement lines, compute coverage.
+
+**Per line**:
+
+```text
+coveredFte = SUM(assignment.fteShare)  for matching (band, disciplineCode)
+gapFte     = coveredFte - requiredFtePlanned
+```
+
+**Coverage status determination**:
+
+| Condition             | Status      |
+| --------------------- | ----------- |
+| No assignments at all | `UNCOVERED` |
+| gapFte < -0.25        | `DEFICIT`   |
+| gapFte > +0.25        | `SURPLUS`   |
+| Otherwise             | `COVERED`   |
+
+**Warnings generated**: [Confirmed: `coverage-engine.ts:34-39`]
+
+- `OVER_ASSIGNED` — employee assigned more than 100% FTE total
+- `ORPHANED_ASSIGNMENT` — assignment to non-existent requirement line
+- `UNASSIGNED_TEACHER` — teaching employee with no assignments
+- `DEPARTED_WITH_ASSIGNMENTS` — departed employee still assigned
+- `RECHARGE_COVERAGE` — AEFE_RECHARGE employee covering a line
+
+### Step 6: HSA Engine [Confirmed]
+
+Source: `apps/api/src/services/staffing/hsa-engine.ts`
+
+**Formula** (AC-08):
+
+```text
+additionalHours     = max(0, hsaTargetHours - 1)
+hsaCostPerMonth     = hsaFirstHourRate + additionalHours * hsaAdditionalHourRate
+hsaAnnualPerTeacher = hsaCostPerMonth * hsaMonths
+```
+
+Default example: `500 + max(0, 1.5 - 1) * 400 = 700 SAR/month * 10 = 7,000 SAR/year`
+
+**Eligibility** (AC-09): HSA applies only when `serviceProfile.hsaEligible === true`
+AND `costMode === 'LOCAL_PAYROLL'`. [Confirmed: `calculate.ts:386-395`]
+
+### Step 7: Monthly Gross Engine [Confirmed]
+
+Source: `apps/api/src/services/staffing/monthly-gross.ts`
+
+**Augmentation** (AC-13):
+
+- Months 1-8: pre-augmentation salary (multiplier = 1)
+- Months 9-12: augmentation applied to base, housing, transport, responsibility
+  premium (multiplier = 1 + augPct). **HSA is NOT subject to augmentation**.
+
+**HSA Summer Exclusion** (AC-14):
+
+- Teaching staff: HSA = 0 for months 7-8 (July-August)
+- Non-teaching staff: receive HSA year-round
+
+**Adjusted gross formula**:
+
+```text
+adjustedGross = adjBase + adjHousing + adjTransport + adjResponsibility + adjHSA
+```
+
+where `adj*` = component \* augMultiplier (except HSA).
+
+### Step 7: Cost Engine [Confirmed]
+
+Source: `apps/api/src/services/staffing/cost-engine.ts`
+
+**GOSI** (AC-15):
+
+```text
+gosiAmount = adjustedGross * 0.1175    (Saudi employees only)
+```
+
+Non-Saudi employees pay zero GOSI. [Confirmed: `cost-engine.ts:9-11`]
+
+**Ajeer** (AC-16, AC-17, AC-18):
+
+```text
+ajeerMonthly = ajeerAnnualLevy / 12 + ajeerMonthlyFee
+```
+
+- AC-16: Existing staff pay all 12 months [Confirmed]
+- AC-17: New staff only pay months 9-12 (Sep-Dec) [Confirmed]
+- AC-18: Saudi employees pay zero Ajeer [Confirmed]
+- Non-Ajeer employees pay zero [Confirmed]
+
+**End-of-Service (EoS)** (AC-19, AC-20, AC-21):
+
+```text
+yearsOfService = YEARFRAC(hireDate, asOfDate)   -- US 30/360 (TC-002)
+eosBase = baseSalary + housing + transport + responsibilityPremium
+          (HSA excluded from EoS base)
+
+if YoS <= 0:  eosAnnual = 0
+if YoS <= 5:  eosAnnual = (eosBase / 2) * YoS           -- half salary per year
+if YoS > 5:   eosAnnual = (eosBase / 2 * 5) + eosBase * (YoS - 5)  -- full salary after 5
+
+eosMonthlyAccrual = eosAnnual / 12
+```
+
+**Total monthly cost** (AC-22):
+
+```text
+totalCost = adjustedGross + gosiAmount + ajeerAmount + eosMonthlyAccrual
+```
+
+**Cost modes** (AC-10, AC-11, AC-12):
+
+| Mode            | Behavior                                                       |
+| --------------- | -------------------------------------------------------------- |
+| `LOCAL_PAYROLL` | Full cost calculation (default)                                |
+| `AEFE_RECHARGE` | 12 zero-cost monthly rows (employee tracked but no local cost) |
+| `NO_LOCAL_COST` | No output rows at all (employee skipped)                       |
+
+### Step 8: Category Cost Engine [Confirmed]
+
+Source: `apps/api/src/services/staffing/category-cost-engine.ts`
+
+**5 configurable categories**: [Confirmed: `staffing-settings-sheet.tsx:42-48`]
+
+1. `REMPLACEMENTS` — Replacements
+2. `FORMATION` — Training
+3. `RESIDENT_SALAIRES` — Resident Salaries
+4. `RESIDENT_LOGEMENT` — Resident Housing
+5. `RESIDENT_PENSION` — Resident Pension
+
+**3 calculation modes** (AC-13, AC-14):
+
+| Mode                 | Formula                                              |
+| -------------------- | ---------------------------------------------------- |
+| `FLAT_ANNUAL`        | monthlyAmount = value / 12                           |
+| `PERCENT_OF_PAYROLL` | monthlyAmount = monthlyLocalPayrollSubtotal \* value |
+| `AMOUNT_PER_FTE`     | monthlyAmount = (value \* totalTeachingFteRaw) / 12  |
+
+Output: 5 categories x 12 months = 60 rows (or fewer if not all categories configured).
+
+### YEARFRAC US 30/360 [Confirmed]
+
+Source: `apps/api/src/services/staffing/yearfrac.ts`
+
+Matches Excel `YEARFRAC(start, end, 0)` exactly (TC-002).
+
+```text
+Algorithm:
+  if day1 == 31: day1 = 30
+  if day2 == 31 AND day1 >= 30: day2 = 30
+  numerator = (year2 - year1) * 360 + (month2 - month1) * 30 + (day2 - day1)
+  result = numerator / 360
+```
+
+### Key Formulas Reference [Confirmed]
+
+| Formula                 | Expression                                                     | Source               |
+| ----------------------- | -------------------------------------------------------------- | -------------------- |
+| Sections needed         | `ceil(headcount / maxClassSize)`                               | `demand-engine.ts`   |
+| Required FTE            | `totalWeeklyHours / effectiveORS`                              | `demand-engine.ts`   |
+| FTE Gap                 | `coveredFte - requiredFtePlanned`                              | `coverage-engine.ts` |
+| HSA/month               | `firstHourRate + max(0, targetHours - 1) * additionalHourRate` | `hsa-engine.ts`      |
+| Monthly gross (Sep-Dec) | `(base + housing + transport + resp) * (1 + augPct) + HSA`     | `monthly-gross.ts`   |
+| GOSI                    | `adjustedGross * 0.1175` (Saudi only)                          | `cost-engine.ts`     |
+| Ajeer/month             | `annualLevy / 12 + monthlyFee`                                 | `cost-engine.ts`     |
+| EoS annual (<=5y)       | `(eosBase / 2) * YoS`                                          | `cost-engine.ts`     |
+| EoS annual (>5y)        | `(eosBase / 2 * 5) + eosBase * (YoS - 5)`                      | `cost-engine.ts`     |
+| Total monthly cost      | `adjustedGross + GOSI + Ajeer + eosMonthlyAccrual`             | `cost-engine.ts`     |
 
 ---
 
-### Workflow 5: Run Staffing Cost Calculation
+## 9. Database and Data Model
 
-**Actor**: Budget Owner or Editor
+### Entity Classification [Confirmed]
 
-| Step | Action                      | UI Element   | API Call                                 | Result                         |
-| ---- | --------------------------- | ------------ | ---------------------------------------- | ------------------------------ |
-| 1    | Click "Calculate" button    | Button       | `POST /versions/{id}/calculate/staffing` | Calculation initiated          |
-| 2    | Observe button state        | Spinner icon | -                                        | Shows "Calculating..."         |
-| 3    | Wait for completion         | Success icon | -                                        | Shows "Calculated"             |
-| 4    | Review Monthly Cost Summary | Tab click    | `GET /versions/{id}/staffing/costs`      | Month-by-month costs displayed |
-| 5    | Review Staff Costs by Dept  | Tab click    | -                                        | Department breakdown displayed |
-| 6    | Check DHG Requirements      | Tab click    | `GET /versions/{id}/staffing/dhg`        | Teaching hour needs displayed  |
+| Model                           | Type       | Purpose                                                 |
+| ------------------------------- | ---------- | ------------------------------------------------------- |
+| `Employee`                      | User Input | Staff records with encrypted salary fields              |
+| `StaffingAssignment`            | User Input | Teacher-to-discipline mapping with FTE share            |
+| `DemandOverride`                | User Input | Manual FTE adjustments per requirement line             |
+| `VersionStaffingSettings`       | User Input | HSA params, academic weeks per version                  |
+| `VersionServiceProfileOverride` | User Input | ORS overrides per service profile per version           |
+| `VersionStaffingCostAssumption` | User Input | Category cost modes and values per version              |
+| `VersionLyceeGroupAssumption`   | User Input | Lycee group counts per version                          |
+| `TeachingRequirementLine`       | Calculated | Aggregated demand/coverage/cost per discipline per band |
+| `TeachingRequirementSource`     | Calculated | Grade-level demand detail (provenance)                  |
+| `MonthlyStaffCost`              | Calculated | 12-month cost breakdown per employee                    |
+| `EosProvision`                  | Calculated | End-of-service provision per employee                   |
+| `CategoryMonthlyCost`           | Calculated | Category-level monthly costs                            |
+| `ServiceObligationProfile`      | Reference  | ORS defaults, HSA eligibility                           |
+| `Discipline`                    | Reference  | Teaching discipline codes                               |
+| `DisciplineAlias`               | Reference  | Import alias resolution                                 |
+| `DhgRule`                       | Reference  | Curriculum rules (hours, drivers, grades)               |
+| `GradeLevel`                    | Reference  | Grade codes, max class sizes                            |
+| `CalculationAuditLog`           | Audit      | Calculation run metadata                                |
 
-**Calculation Steps** (Backend):
+### Key Relationships [Confirmed]
 
-1. Fetch all employees for the version
-2. Calculate monthly base costs per employee
-3. Calculate prorated costs for joining/termination dates
-4. Calculate GOSI employer contributions (12%)
-5. Calculate EOS accrual using YEARFRAC US 30/360
-6. Calculate DHG requirements from enrollment data
-7. Aggregate costs by department
-8. Aggregate costs by month and category (Tab C format)
-9. Persist all results to database
-10. Remove STAFFING from stale modules
-11. Create calculation audit log
+```text
+Employee
+  ├── many MonthlyStaffCost (12 per calculation)
+  ├── one EosProvision (per calculation)
+  ├── many StaffingAssignment (teacher -> discipline)
+  └── belongs to BudgetVersion
+
+StaffingAssignment
+  ├── belongs to Employee
+  ├── belongs to Discipline
+  └── belongs to BudgetVersion
+
+TeachingRequirementLine
+  ├── belongs to BudgetVersion
+  └── has many TeachingRequirementSource (grade-level detail)
+
+DhgRule
+  ├── belongs to Discipline
+  └── belongs to ServiceObligationProfile
+```
+
+### Encryption [Confirmed]
+
+5 salary fields on `Employee` are encrypted with `pgp_sym_encrypt` / `pgp_sym_decrypt`:
+
+- `base_salary`
+- `housing_allowance`
+- `transport_allowance`
+- `responsibility_premium`
+- `hsa_amount`
+
+The encryption key is delivered via Docker secret at `/run/secrets/salary_encryption_key`.
+Decryption happens in raw SQL queries (see `calculate.ts:208-226`).
+
+The `augmentation` field is stored as a plain `DECIMAL` (not encrypted) since it is a
+percentage, not a monetary value. [Confirmed: `calculate.ts:54`]
 
 ---
 
-### Workflow 6: Configure DHG Grille
-
-**Actor**: Budget Owner or Editor
-
-| Step | Action                            | UI Element       | API Call                                 | Result                        |
-| ---- | --------------------------------- | ---------------- | ---------------------------------------- | ----------------------------- |
-| 1    | Click "DHG Grille" tab            | Tab              | `GET /versions/{id}/staffing/dhg-grille` | Grille configuration loaded   |
-| 2    | Click hour cell for grade/subject | EditableCell     | -                                        | Cell enters edit mode         |
-| 3    | Enter teaching hours              | Number input     | -                                        | Value displayed               |
-| 4    | Confirm entry                     | Blur/Enter       | `PUT /versions/{id}/staffing/dhg-grille` | Saved to database             |
-| 5    | Run calculation to see impact     | Calculate button | `POST /versions/{id}/calculate/staffing` | DHG requirements recalculated |
-
----
-
-## Data Models & Database Schema
-
-### Core Tables
-
-#### 1. employees
-
-Stores employee records with field-level encrypted salary data.
-
-```sql
-Table: employees
-┌─────────────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column                  │ Type            │ Description                                │
-├─────────────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                      │ SERIAL PK       │ Unique identifier                          │
-│ version_id              │ INTEGER FK      │ → budget_versions.id                       │
-│ code                    │ VARCHAR(20)     │ Employee code (unique within version)      │
-│ name                    │ VARCHAR(100)    │ Full name                                  │
-│ function_id             │ INTEGER FK      │ → functions.id                             │
-│ department_id           │ INTEGER FK      │ → departments.id                           │
-│ status                  │ VARCHAR(10)     │ 'Active', 'Pending', 'Inactive'            │
-│ joining_date            │ DATE            │ Employment start date                      │
-│ termination_date        │ DATE            │ Employment end date (nullable)             │
-│ base_salary_encrypted   │ BYTEA           │ AES-256 encrypted base salary              │
-│ housing_encrypted       │ BYTEA           │ AES-256 encrypted housing allowance        │
-│ transport_encrypted     │ BYTEA           │ AES-256 encrypted transport allowance      │
-│ food_encrypted          │ BYTEA           │ AES-256 encrypted food allowance           │
-│ other_encrypted         │ BYTEA           │ AES-256 encrypted other allowances         │
-│ gosi_wages              │ DECIMAL(15,4)   │ Computed GOSI-eligible wages               │
-│ created_by              │ INTEGER FK      │ → users.id                                 │
-│ updated_by              │ INTEGER FK      │ → users.id (nullable)                      │
-│ created_at              │ TIMESTAMPTZ     │ Record creation timestamp                  │
-│ updated_at              │ TIMESTAMPTZ     │ Last update timestamp                      │
-└─────────────────────────┴─────────────────┴────────────────────────────────────────────┘
-
-Unique Constraint: (version_id, code)
-```
-
-**Encryption Note**: Salary fields are encrypted using pgcrypto AES-256 with a key stored in Docker secrets (`/run/secrets/salary_encryption_key`).
-
-#### 2. dhg_requirements
-
-Stores calculated teaching hour requirements derived from enrollment.
-
-```sql
-Table: dhg_requirements
-┌────────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column             │ Type            │ Description                                │
-├────────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                 │ SERIAL PK       │ Unique identifier                          │
-│ version_id         │ INTEGER FK      │ → budget_versions.id                       │
-│ academic_period    │ VARCHAR(3)      │ 'AY1' or 'AY2'                             │
-│ grade_level        │ VARCHAR(10)     │ Grade code                                 │
-│ headcount          │ INTEGER         │ Student count from enrollment              │
-│ max_class_size     │ INTEGER         │ Maximum students per class                 │
-│ sections_needed    │ INTEGER         │ Number of class sections required          │
-│ total_weekly_hours │ DECIMAL(10,4)   │ Total teaching hours per week              │
-│ total_annual_hours │ DECIMAL(10,4)   │ Total teaching hours per year              │
-│ fte                │ DECIMAL(7,4)    │ Full-time equivalent teachers needed       │
-│ created_at         │ TIMESTAMPTZ     │ Record creation timestamp                  │
-│ updated_at         │ TIMESTAMPTZ     │ Last update timestamp                      │
-└────────────────────┴─────────────────┴────────────────────────────────────────────┘
-
-Unique Constraint: (version_id, academic_period, grade_level)
-```
-
-#### 3. dhg_grille_config
-
-Stores teaching hour allocation configuration by grade and subject.
-
-```sql
-Table: dhg_grille_config
-┌───────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column            │ Type            │ Description                                │
-├───────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                │ SERIAL PK       │ Unique identifier                          │
-│ version_id        │ INTEGER FK      │ → budget_versions.id (nullable for master) │
-│ grade_level       │ VARCHAR(10)     │ Grade code                                 │
-│ subject_code      │ VARCHAR(10)     │ Subject code (FR, EN, MATH, etc.)          │
-│ hours_per_week    │ DECIMAL(5,4)    │ Teaching hours per week                    │
-│ reference_enrollment│ INTEGER       │ Reference student count for calculation    │
-│ is_active         │ BOOLEAN         │ Whether this row is active                 │
-│ created_at        │ TIMESTAMPTZ     │ Record creation timestamp                  │
-│ updated_at        │ TIMESTAMPTZ     │ Last update timestamp                      │
-└───────────────────┴─────────────────┴────────────────────────────────────────────┘
-
-Unique Constraint: (version_id, grade_level, subject_code)
-```
-
-#### 4. monthly_staff_costs
-
-Stores calculated monthly costs per employee.
-
-```sql
-Table: monthly_staff_costs
-┌───────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column            │ Type            │ Description                                │
-├───────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                │ SERIAL PK       │ Unique identifier                          │
-│ version_id        │ INTEGER FK      │ → budget_versions.id                       │
-│ employee_id       │ INTEGER FK      │ → employees.id                             │
-│ fiscal_month      │ INTEGER         │ Month number (1-12)                        │
-│ fiscal_year       │ INTEGER         │ Fiscal year                                │
-│ base_cost         │ DECIMAL(15,4)   │ Base salary for month                      │
-│ housing_cost      │ DECIMAL(15,4)   │ Housing allowance for month                │
-│ transport_cost    │ DECIMAL(15,4)   │ Transport allowance for month              │
-│ food_cost         │ DECIMAL(15,4)   │ Food allowance for month                   │
-│ other_cost        │ DECIMAL(15,4)   │ Other allowances for month                 │
-│ gosi_employer     │ DECIMAL(15,4)   │ Employer GOSI contribution                 │
-│ gosi_employee     │ DECIMAL(15,4)   │ Employee GOSI contribution                 │
-│ eos_accrual       │ DECIMAL(15,4)   │ End of Service accrual                     │
-│ is_prorated       │ BOOLEAN         │ True if month is partial (joining/exit)    │
-│ proration_factor  │ DECIMAL(5,4)    │ Percentage of month worked                 │
-│ created_at        │ TIMESTAMPTZ     │ Record creation timestamp                  │
-│ updated_at        │ TIMESTAMPTZ     │ Last update timestamp                      │
-└───────────────────┴─────────────────┴────────────────────────────────────────────┘
-
-Unique Constraint: (version_id, employee_id, fiscal_month, fiscal_year)
-```
-
-#### 5. category_monthly_costs
-
-Stores aggregated costs by budget category (Tab C format).
-
-```sql
-Table: category_monthly_costs
-┌───────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column            │ Type            │ Description                                │
-├───────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                │ SERIAL PK       │ Unique identifier                          │
-│ version_id        │ INTEGER FK      │ → budget_versions.id                       │
-│ category_code     │ VARCHAR(10)     │ Budget category (6100, 6200, etc.)         │
-│ category_name     │ VARCHAR(50)     │ Category description                       │
-│ fiscal_month      │ INTEGER         │ Month number (1-12)                        │
-│ fiscal_year       │ INTEGER         │ Fiscal year                                │
-│ amount            │ DECIMAL(15,4)   │ Cost amount                                │
-│ is_calculated     │ BOOLEAN         │ True if from calculation, false if manual  │
-│ created_at        │ TIMESTAMPTZ     │ Record creation timestamp                  │
-│ updated_at        │ TIMESTAMPTZ     │ Last update timestamp                      │
-└───────────────────┴─────────────────┴────────────────────────────────────────────┘
-
-Unique Constraint: (version_id, category_code, fiscal_month, fiscal_year)
-```
-
-#### 6. calculation_audit_log
-
-Tracks all calculation runs for audit purposes.
-
-```sql
-Table: calculation_audit_log
-┌───────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column            │ Type            │ Description                                │
-├───────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                │ SERIAL PK       │ Unique identifier                          │
-│ version_id        │ INTEGER FK      │ → budget_versions.id                       │
-│ run_id            │ UUID            │ Unique calculation run ID                  │
-│ module            │ VARCHAR(20)     │ 'STAFFING', 'REVENUE', etc.                │
-│ status            │ VARCHAR(20)     │ 'STARTED', 'COMPLETED', 'FAILED'           │
-│ started_at        │ TIMESTAMPTZ     │ Calculation start time                     │
-│ completed_at      │ TIMESTAMPTZ     │ Calculation end time                       │
-│ duration_ms       │ INTEGER         │ Execution time in milliseconds             │
-│ input_summary     │ JSONB           │ Input data summary                         │
-│ output_summary    │ JSONB           │ Results summary                            │
-│ triggered_by      │ INTEGER FK      │ → users.id                                 │
-└───────────────────┴─────────────────┴────────────────────────────────────────────┘
-```
-
-#### 7. departments (Master Data)
-
-Reference table for department configuration.
-
-```sql
-Table: departments
-┌───────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column            │ Type            │ Description                                │
-├───────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                │ SERIAL PK       │ Unique identifier                          │
-│ code              │ VARCHAR(20)     │ Department code                            │
-│ name              │ VARCHAR(60)     │ Display name                               │
-│ budget_category   │ VARCHAR(10)     │ Default budget category mapping            │
-│ is_active         │ BOOLEAN         │ Whether department is active               │
-│ display_order     │ INTEGER         │ Sort order for UI display                  │
-└───────────────────┴─────────────────┴────────────────────────────────────────────┘
-```
-
-#### 8. functions (Master Data)
-
-Reference table for job functions.
-
-```sql
-Table: functions
-┌───────────────────┬─────────────────┬────────────────────────────────────────────┐
-│ Column            │ Type            │ Description                                │
-├───────────────────┼─────────────────┼────────────────────────────────────────────┤
-│ id                │ SERIAL PK       │ Unique identifier                          │
-│ code              │ VARCHAR(20)     │ Function code                              │
-│ name              │ VARCHAR(60)     │ Display name                               │
-│ gosi_eligible     │ BOOLEAN         │ Whether subject to GOSI                    │
-│ eos_eligible      │ BOOLEAN         │ Whether entitled to EOS                    │
-│ is_teaching       │ BOOLEAN         │ Whether DHG-eligible function              │
-│ is_active         │ BOOLEAN         │ Whether function is active                 │
-└───────────────────┴─────────────────┴────────────────────────────────────────────┘
-```
-
----
-
-## API Endpoints
-
-### Employee APIs
-
-| Method | Endpoint                                          | Description          | Auth | Role                       |
-| ------ | ------------------------------------------------- | -------------------- | ---- | -------------------------- |
-| GET    | `/versions/{versionId}/staffing/employees`        | List all employees   | JWT  | Any                        |
-| GET    | `/versions/{versionId}/staffing/employees/{id}`   | Get employee details | JWT  | Any                        |
-| POST   | `/versions/{versionId}/staffing/employees`        | Create new employee  | JWT  | Admin, BudgetOwner, Editor |
-| PUT    | `/versions/{versionId}/staffing/employees/{id}`   | Update employee      | JWT  | Admin, BudgetOwner, Editor |
-| DELETE | `/versions/{versionId}/staffing/employees/{id}`   | Delete employee      | JWT  | Admin, BudgetOwner, Editor |
-| POST   | `/versions/{versionId}/staffing/employees/import` | Import from Excel    | JWT  | Admin, BudgetOwner         |
-
-**POST Request Body** (Create Employee):
-
-```json
-{
-    "code": "EMP001",
-    "name": "Ahmed Al-Saud",
-    "functionId": 5,
-    "departmentId": 3,
-    "status": "Active",
-    "joiningDate": "2023-09-01",
-    "baseSalary": 8500.0,
-    "housing": 3200.0,
-    "transport": 500.0,
-    "food": 300.0,
-    "other": 0
-}
-```
-
-**POST Response**:
-
-```json
-{
-    "id": 123,
-    "code": "EMP001",
-    "name": "Ahmed Al-Saud",
-    "function": "Teacher",
-    "department": "ELEMENTAIRE",
-    "status": "Active",
-    "joiningDate": "2023-09-01",
-    "totalMonthlyCost": 13540.0,
-    "staleModules": ["STAFFING", "PNL"]
-}
-```
-
----
-
-### DHG APIs
-
-| Method | Endpoint                                    | Description           | Auth | Role                       |
-| ------ | ------------------------------------------- | --------------------- | ---- | -------------------------- |
-| GET    | `/versions/{versionId}/staffing/dhg`        | Get DHG requirements  | JWT  | Any                        |
-| GET    | `/versions/{versionId}/staffing/dhg-grille` | Get DHG grille config | JWT  | Any                        |
-| PUT    | `/versions/{versionId}/staffing/dhg-grille` | Update DHG grille     | JWT  | Admin, BudgetOwner, Editor |
-
-**GET DHG Response**:
-
-```json
-{
-    "requirements": [
-        {
-            "gradeLevel": "PS",
-            "academicPeriod": "AY1",
-            "headcount": 42,
-            "sectionsNeeded": 3,
-            "totalWeeklyHours": 45.0,
-            "totalAnnualHours": 1620.0,
-            "fte": 1.29
-        }
-    ],
-    "totals": {
-        "totalWeeklyHours": 1245.5,
-        "totalAnnualHours": 44838.0,
-        "totalFte": 35.6
-    }
-}
-```
-
----
-
-### Cost APIs
-
-| Method | Endpoint                                             | Description              | Auth | Role |
-| ------ | ---------------------------------------------------- | ------------------------ | ---- | ---- |
-| GET    | `/versions/{versionId}/staffing/costs`               | Get monthly cost summary | JWT  | Any  |
-| GET    | `/versions/{versionId}/staffing/costs/by-department` | Get costs by department  | JWT  | Any  |
-| GET    | `/versions/{versionId}/staffing/costs/by-category`   | Get Tab C budget view    | JWT  | Any  |
-
-**GET Costs Response**:
-
-```json
-{
-    "monthlyCosts": [
-        {
-            "month": 1,
-            "year": 2025,
-            "monthName": "January 2025",
-            "salaries": 1228750.0,
-            "gosi": 147450.0,
-            "eos": 102395.0,
-            "ajeer": 28500.0,
-            "total": 1507095.0
-        }
-    ],
-    "annualTotals": {
-        "salaries": 15456000.0,
-        "gosi": 1854720.0,
-        "eos": 1286400.0,
-        "ajeer": 350000.0,
-        "total": 18947120.0
-    }
-}
-```
-
----
-
-### Calculation APIs
-
-| Method | Endpoint                                   | Description       | Auth | Role                       |
-| ------ | ------------------------------------------ | ----------------- | ---- | -------------------------- |
-| POST   | `/versions/{versionId}/calculate/staffing` | Run staffing calc | JWT  | Admin, BudgetOwner, Editor |
-
-**Response**:
-
-```json
-{
-    "runId": "550e8400-e29b-41d4-a716-446655440000",
-    "durationMs": 892,
-    "summary": {
-        "totalEmployees": 89,
-        "activeEmployees": 87,
-        "totalAnnualCost": 18947120.0,
-        "totalGosi": 1854720.0,
-        "totalEos": 1286400.0,
-        "dhgFteRequired": 35.6
-    },
-    "results": {
-        "monthlyCostsUpdated": 1068,
-        "departmentCostsUpdated": 6,
-        "categoryCostsUpdated": 5
-    }
-}
-```
-
----
-
-## TypeScript Types
-
-### Core Types (`packages/types/src/staffing.ts`)
-
-```typescript
-// Employment status
-export type EmployeeStatus = 'Active' | 'Pending' | 'Inactive';
-
-// Salary components
-export interface SalaryComponents {
-    base: number;
-    housing: number;
-    transport: number;
-    food: number;
-    other: number;
-}
-
-// Employee entity
-export interface Employee {
-    id: number;
-    versionId: number;
-    code: string;
-    name: string;
-    functionId: number;
-    functionName: string;
-    departmentId: number;
-    departmentName: string;
-    status: EmployeeStatus;
-    joiningDate: string; // ISO date
-    terminationDate?: string; // ISO date
-    salary: SalaryComponents;
-    gosiWages: number;
-    createdAt: string;
-    updatedAt: string;
-}
-
-// Employee with computed costs
-export interface EmployeeWithCosts extends Employee {
-    totalMonthlyCost: number;
-    gosiEmployer: number;
-    gosiEmployee: number;
-    eosAccrual: number;
-}
-
-// DHG Requirement
-export interface DhgRequirement {
-    gradeLevel: GradeCode;
-    academicPeriod: AcademicPeriod;
-    headcount: number;
-    maxClassSize: number;
-    sectionsNeeded: number;
-    totalWeeklyHours: number;
-    totalAnnualHours: number;
-    fte: number;
-}
-
-// DHG Grille entry
-export interface DhgGrilleEntry {
-    gradeLevel: GradeCode;
-    subjectCode: string;
-    subjectName: string;
-    hoursPerWeek: number;
-    referenceEnrollment: number;
-}
-
-// Monthly cost entry
-export interface MonthlyCostEntry {
-    month: number;
-    year: number;
-    monthName: string;
-    salaries: number;
-    gosi: number;
-    eos: number;
-    ajeer: number;
-    total: number;
-}
-
-// Department cost entry
-export interface DepartmentCostEntry {
-    departmentId: number;
-    departmentName: string;
-    departmentCode: string;
-    headcount: number;
-    baseTotal: number;
-    allowancesTotal: number;
-    gosiTotal: number;
-    totalMonthly: number;
-}
-
-// Category cost entry (Tab C)
-export interface CategoryCostEntry {
-    categoryCode: string;
-    categoryName: string;
-    month: number;
-    year: number;
-    amount: number;
-    isCalculated: boolean;
-}
-
-// Staffing KPI data
-export interface StaffingKpiData {
-    totalHeadcount: number;
-    activeHeadcount: number;
-    totalAnnualCost: number;
-    averageMonthlyCost: number;
-    totalGosi: number;
-    totalAjeer: number;
-    totalEos: number;
-    dhgFteRequired: number;
-    isStale: boolean;
-}
-
-// Employee import row
-export interface EmployeeImportRow {
-    code: string;
-    name: string;
-    function: string;
-    department: string;
-    status: EmployeeStatus;
-    joiningDate: string;
-    baseSalary: number;
-    housing: number;
-    transport: number;
-    food: number;
-    other: number;
-}
-
-// Import validation result
-export interface ImportValidationResult {
-    totalRows: number;
-    validRows: number;
-    errors: Array<{
-        row: number;
-        field: string;
-        message: string;
-    }>;
-    preview: EmployeeImportRow[];
-}
+## 10. API and Data Flow
+
+### Staffing API Endpoints [Confirmed]
+
+All routes are prefixed with `/api/v1/versions/:versionId/`.
+
+| Method          | Path                                          | Description                    | Permission  | Source           |
+| --------------- | --------------------------------------------- | ------------------------------ | ----------- | ---------------- |
+| **Calculate**   |                                               |                                |             |                  |
+| POST            | `calculate/staffing`                          | Run 10-step pipeline           | `data:edit` | `calculate.ts`   |
+| **Employees**   |                                               |                                |             |                  |
+| GET             | `staffing/employees`                          | List employees                 | `data:view` | `employees.ts`   |
+| GET             | `staffing/employees/:id`                      | Get single employee            | `data:view` | `employees.ts`   |
+| POST            | `staffing/employees`                          | Create employee                | `data:edit` | `employees.ts`   |
+| PUT             | `staffing/employees/:id`                      | Update employee                | `data:edit` | `employees.ts`   |
+| DELETE          | `staffing/employees/:id`                      | Delete employee                | `data:edit` | `employees.ts`   |
+| **Import**      |                                               |                                |             |                  |
+| POST            | `staffing/import/validate`                    | Validate import file           | `data:edit` | `import.ts`      |
+| POST            | `staffing/import/commit`                      | Commit validated import        | `data:edit` | `import.ts`      |
+| **Assignments** |                                               |                                |             |                  |
+| GET             | `staffing/assignments`                        | List assignments               | `data:view` | `assignments.ts` |
+| POST            | `staffing/assignments`                        | Create assignment              | `data:edit` | `assignments.ts` |
+| PUT             | `staffing/assignments/:id`                    | Update assignment              | `data:edit` | `assignments.ts` |
+| DELETE          | `staffing/assignments/:id`                    | Delete assignment              | `data:edit` | `assignments.ts` |
+| POST            | `staffing/assignments/auto-suggest`           | Auto-suggest assignments       | `data:edit` | `assignments.ts` |
+| **Settings**    |                                               |                                |             |                  |
+| GET             | `staffing/settings`                           | Get version settings           | `data:view` | `settings.ts`    |
+| PUT             | `staffing/settings`                           | Update version settings        | `data:edit` | `settings.ts`    |
+| GET             | `staffing/settings/service-profile-overrides` | Get ORS overrides              | `data:view` | `settings.ts`    |
+| PUT             | `staffing/settings/service-profile-overrides` | Update ORS overrides           | `data:edit` | `settings.ts`    |
+| GET             | `staffing/settings/cost-assumptions`          | Get cost assumptions           | `data:view` | `settings.ts`    |
+| PUT             | `staffing/settings/cost-assumptions`          | Update cost assumptions        | `data:edit` | `settings.ts`    |
+| GET             | `staffing/settings/lycee-group-assumptions`   | Get Lycee groups               | `data:view` | `settings.ts`    |
+| PUT             | `staffing/settings/lycee-group-assumptions`   | Update Lycee groups            | `data:edit` | `settings.ts`    |
+| **Results**     |                                               |                                |             |                  |
+| GET             | `staffing/teaching-requirements`              | Get requirement lines + totals | `data:view` | `results.ts`     |
+| GET             | `staffing/teaching-requirements/:id/sources`  | Get source detail for a line   | `data:view` | `results.ts`     |
+| GET             | `staffing/summary`                            | Get FTE + cost summary         | `data:view` | `results.ts`     |
+
+### Stale Response Behavior [Confirmed]
+
+When a module is stale, cost query endpoints return HTTP `409 STALE_DATA` to force
+the frontend to show recalculation prompts rather than stale numbers.
+[Confirmed from CLAUDE.md: "API returns 409 STALE_DATA when module is stale"]
+
+### Data Flow Diagram [Confirmed]
+
+```text
+                    ┌──────────────┐
+                    │  Master Data │
+                    │  DHG Rules   │
+                    │  Profiles    │
+                    │  Grades      │
+                    └──────┬───────┘
+                           │
+     ┌──────────────┐      │      ┌──────────────┐
+     │  Enrollment  │      │      │   Settings   │
+     │  AY2 heads   │      │      │  HSA / ORS   │
+     │  per grade   │      │      │  Cost modes  │
+     └──────┬───────┘      │      └──────┬───────┘
+            │              │             │
+            v              v             v
+     ┌─────────────────────────────────────────┐
+     │          STEP 3: DEMAND ENGINE          │
+     │  enrollment + rules -> requirement lines │
+     └──────────────────┬──────────────────────┘
+                        │
+                        v
+     ┌─────────────────────────────────────────┐
+     │       STEP 4: DEMAND OVERRIDES          │
+     │  manual FTE adjustments per line        │
+     └──────────────────┬──────────────────────┘
+                        │
+     ┌──────────────┐   │
+     │  Employees   │   │
+     │  Assignments │   │
+     └──────┬───────┘   │
+            │           │
+            v           v
+     ┌─────────────────────────────────────────┐
+     │       STEP 5: COVERAGE ENGINE           │
+     │  assignments -> coverage per line       │
+     └──────────────────┬──────────────────────┘
+                        │
+                        v
+     ┌─────────────────────────────────────────┐
+     │         STEP 6: HSA ENGINE              │
+     │  settings -> HSA cost per teacher/month │
+     └──────────────────┬──────────────────────┘
+                        │
+                        v
+     ┌─────────────────────────────────────────┐
+     │         STEP 7: COST ENGINE             │
+     │  per employee: gross + GOSI + Ajeer +   │
+     │  EoS for 12 months                      │
+     └──────────────────┬──────────────────────┘
+                        │
+                        v
+     ┌─────────────────────────────────────────┐
+     │     STEP 8: CATEGORY COST ENGINE        │
+     │  5 categories x 12 months               │
+     └──────────────────┬──────────────────────┘
+                        │
+                        v
+     ┌─────────────────────────────────────────┐
+     │     STEP 9: AGGREGATE ONTO LINES        │
+     │  employee costs -> requirement lines    │
+     │  via fteShare proportional split        │
+     └──────────────────┬──────────────────────┘
+                        │
+                        v
+     ┌─────────────────────────────────────────┐
+     │     STEP 10: PERSIST IN $TRANSACTION    │
+     │  delete old -> insert new -> update HSA │
+     │  -> update staleModules                 │
+     └──────────────────┬──────────────────────┘
+                        │
+                        v
+     ┌─────────────────────────────────────────┐
+     │     STEP 11: AUDIT LOG + RESPONSE       │
+     │  totalFte, totalCost, warnings          │
+     └─────────────────────────────────────────┘
 ```
 
 ---
 
-## Calculation Engine
+## 11. Business Rules and Guardrails
 
-### Staffing Cost Calculation Logic
+### Version Lifecycle Rules [Confirmed]
 
-```typescript
-// 1. Calculate GOSI-eligible wages
-function calculateGosiWages(salary: SalaryComponents): Decimal {
-    return new Decimal(salary.base).plus(salary.housing).plus(salary.transport).plus(salary.food);
-}
+- Only **Draft** versions allow staffing edits and calculations.
+- **Published**, **Locked**, or **Archived** versions return `409 VERSION_LOCKED`.
+- The calculate endpoint checks version status before proceeding.
 
-// 2. Calculate GOSI employer contribution (12%)
-function calculateGosiEmployer(gosiWages: Decimal): Decimal {
-    return gosiWages.times(0.12);
-}
+### Stale Module Rules [Confirmed]
 
-// 3. Calculate monthly cost (full month)
-function calculateMonthlyCost(salary: SalaryComponents, gosiWages: Decimal): Decimal {
-    const gosiEmployer = calculateGosiEmployer(gosiWages);
-    return new Decimal(salary.base)
-        .plus(salary.housing)
-        .plus(salary.transport)
-        .plus(salary.food)
-        .plus(salary.other)
-        .plus(gosiEmployer);
-}
+- When staffing data is modified (employees, assignments, settings), STAFFING
+  is added to `staleModules`.
+- When staffing calculation completes, STAFFING is **removed** and PNL is **added**.
+- The frontend checks `staleModules` to display banners and stale indicators.
 
-// 4. Calculate proration factor for joining/termination
-function calculateProrationFactor(
-    joiningDate: Date,
-    terminationDate: Date | null,
-    monthStart: Date,
-    monthEnd: Date
-): Decimal {
-    const effectiveStart = joiningDate > monthStart ? joiningDate : monthStart;
-    const effectiveEnd = terminationDate && terminationDate < monthEnd ? terminationDate : monthEnd;
+### Cost Mode Rules [Confirmed]
 
-    const daysWorked = differenceInDays(effectiveEnd, effectiveStart) + 1;
-    const daysInMonth = differenceInDays(monthEnd, monthStart) + 1;
+| Mode            | Monthly Cost Rows | Included in Payroll Subtotal | Included in Coverage |
+| --------------- | ----------------- | ---------------------------- | -------------------- |
+| `LOCAL_PAYROLL` | 12 full-cost rows | Yes                          | Yes                  |
+| `AEFE_RECHARGE` | 12 zero-cost rows | No                           | Yes (with warning)   |
+| `NO_LOCAL_COST` | 0 rows            | No                           | No                   |
 
-    return new Decimal(daysWorked).dividedBy(daysInMonth);
-}
+### Coverage Thresholds [Confirmed]
 
-// 5. Calculate EOS accrual using YEARFRAC US 30/360
-function calculateEosAccrual(
-    joiningDate: Date,
-    calculationDate: Date,
-    totalMonthlySalary: Decimal
-): Decimal {
-    // YEARFRAC(start, end, 0) - US 30/360 convention
-    const yearFrac = calculateYearFracUS30360(joiningDate, calculationDate);
+| Gap Range             | Status      |
+| --------------------- | ----------- |
+| No assignments        | `UNCOVERED` |
+| gap < -0.25 FTE       | `DEFICIT`   |
+| gap > +0.25 FTE       | `SURPLUS`   |
+| -0.25 <= gap <= +0.25 | `COVERED`   |
 
-    // EOS = half-month salary per year of service
-    const yearsOfService = Math.floor(yearFrac);
-    const monthlySalaryForEos = totalMonthlySalary.times(0.5);
+Source: `coverage-engine.ts:64-65`
 
-    return monthlySalaryForEos.times(yearsOfService);
-}
-```
+### Temporal Rules [Confirmed]
 
-### YEARFRAC US 30/360 Implementation
+| Rule                     | Months                     | Applies To                                                 |
+| ------------------------ | -------------------------- | ---------------------------------------------------------- |
+| **Augmentation**         | Sep-Dec (months 9-12)      | Base, housing, transport, responsibility premium (NOT HSA) |
+| **HSA summer exclusion** | Jul-Aug (months 7-8)       | Teaching staff only (non-teaching receive HSA year-round)  |
+| **Ajeer new staff**      | Sep-Dec (months 9-12) only | New (non-Saudi, non-Ajeer-exempt) employees                |
 
-```typescript
-/**
- * Calculate YEARFRAC using US 30/360 day-count convention.
- * Must match Excel's YEARFRAC(start, end, 0) exactly.
- *
- * US 30/360 rules:
- * - If start date is last day of month, change to 30th
- * - If end date is last day of month and start date is 30th or 31st, change to 30th
- * - Days = (endYear - startYear) × 360 + (endMonth - startMonth) × 30 + (endDay - startDay)
- * - YEARFRAC = Days / 360
- */
-function calculateYearFracUS30360(startDate: Date, endDate: Date): number {
-    let startDay = startDate.getDate();
-    let startMonth = startDate.getMonth() + 1;
-    let startYear = startDate.getFullYear();
+### Financial Precision [Confirmed]
 
-    let endDay = endDate.getDate();
-    let endMonth = endDate.getMonth() + 1;
-    let endYear = endDate.getFullYear();
+- All monetary calculations use `decimal.js` with `ROUND_HALF_UP`.
+- PostgreSQL stores monetary values as `DECIMAL(15,4)`.
+- Frontend uses `decimal.js` for display rounding only (via `format-money.ts`).
+- The `toDecimalPlaces(4, Decimal.ROUND_HALF_UP)` pattern is used consistently
+  in the persist step.
 
-    // US 30/360 adjustments
-    const startIsLastDayOfMonth = startDay === new Date(startYear, startMonth, 0).getDate();
-    const endIsLastDayOfMonth = endDay === new Date(endYear, endMonth, 0).getDate();
+### Salary Encryption [Confirmed]
 
-    if (startIsLastDayOfMonth) {
-        startDay = 30;
-    }
+- 5 salary fields encrypted via `pgp_sym_encrypt` / `pgp_sym_decrypt`.
+- Key from Docker secret (`/run/secrets/salary_encryption_key`).
+- Decryption happens in raw SQL (`$queryRawUnsafe` with parameterized key).
+- Viewer role users cannot see salary data (`salary:view` permission required).
 
-    if (endIsLastDayOfMonth && startDay >= 30) {
-        endDay = 30;
-    }
+### Optimistic Concurrency [Inferred]
 
-    if (startDay === 31) {
-        startDay = 30;
-    }
-
-    if (endDay === 31 && startDay >= 30) {
-        endDay = 30;
-    }
-
-    const days = (endYear - startYear) * 360 + (endMonth - startMonth) * 30 + (endDay - startDay);
-
-    return days / 360;
-}
-```
-
-### DHG Calculation Logic
-
-```typescript
-// 1. Calculate sections needed
-sectionsNeeded = ceil(headcount / maxClassSize);
-
-// 2. Calculate total weekly hours per grade
-for each subject in dhgGrilleConfig:
-  if subject.hoursPerWeek > 0:
-    weeklyHours += sectionsNeeded × subject.hoursPerWeek;
-
-// 3. Calculate annual hours (36 instructional weeks)
-annualHours = weeklyHours × 36;
-
-// 4. Calculate FTE (based on 35-hour work week)
-fte = weeklyHours / 35;
-```
-
-### Category Mapping (Tab C)
-
-| Cost Component       | Budget Category | Category Name                              |
-| -------------------- | --------------- | ------------------------------------------ |
-| Base salaries        | 6100            | Salaires et traitements                    |
-| Housing allowances   | 6100            | Salaires et traitements                    |
-| Transport allowances | 6100            | Salaires et traitements                    |
-| Food allowances      | 6100            | Salaires et traitements                    |
-| Other allowances     | 6100            | Salaires et traitements                    |
-| GOSI Employer        | 6200            | Charges sociales                           |
-| EOS Accrual          | 6300            | Provision pour indemnité de fin de contrat |
-| Ajeer (contract)     | 6100            | Salaires et traitements                    |
-| Recruitment costs    | 6400            | Recrutement                                |
-| Training costs       | 6500            | Formation                                  |
+- The calculation pipeline uses `$transaction` for atomic persistence.
+- Old calculated data is deleted before new data is inserted (replace pattern).
+- No explicit optimistic concurrency (e.g., version counters) on individual
+  employee edits. [Needs Validation]
 
 ---
 
-## Audit Trail
+## 12. Gaps Between Old Document and Actual Implementation
 
-### Operations Logged
-
-| Operation               | Table                 | Data Captured                   |
-| ----------------------- | --------------------- | ------------------------------- |
-| EMPLOYEE_CREATED        | employees             | All fields (salaries encrypted) |
-| EMPLOYEE_UPDATED        | employees             | Changed fields, old/new values  |
-| EMPLOYEE_DELETED        | employees             | Employee ID, code, name         |
-| DHG_GRILLE_UPDATED      | dhg_grille_config     | Grade, subject, old/new hours   |
-| STAFFING_CALC_STARTED   | calculation_audit_log | Run ID, inputs                  |
-| STAFFING_CALC_COMPLETED | calculation_audit_log | Duration, outputs               |
-| EMPLOYEES_IMPORTED      | employees             | Import batch summary            |
-
-### Audit Entry Schema
-
-```typescript
-{
-  userId: number;
-  userEmail: string;
-  operation: string;
-  tableName: string;
-  recordId: number;
-  ipAddress: string;
-  oldValues?: Json;      // For updates (salary values masked)
-  newValues: Json;       // New/updated data (salary values masked)
-  createdAt: Date;
-}
-```
-
-**Security Note**: Salary values in audit logs are masked (shown as `[ENCRYPTED]`) to prevent exposure in plaintext logs.
+| ID   | Old Claim                                            | Actual State                                                    | Severity                                     |
+| ---- | ---------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------- |
+| G-01 | 6 tabs UI structure                                  | 2 workspace modes (Teaching / Support & Admin)                  | Critical — wrong mental model                |
+| G-02 | Employee status: Active/Pending/Inactive             | Existing/New/Departed                                           | Critical — wrong enum values                 |
+| G-03 | GOSI at 12%                                          | 11.75% (Saudi only)                                             | Critical — wrong rate                        |
+| G-04 | Food allowance in salary                             | No Food; replaced by ResponsibilityPremium + HSA + Augmentation | Critical — wrong components                  |
+| G-05 | 5 database tables                                    | 18+ models                                                      | Major — massively understated                |
+| G-06 | Simple calc: salary + GOSI + EOS                     | 10-step pipeline with 6 engines                                 | Major — fundamentally different architecture |
+| G-07 | DHG Grille editable per version                      | DHG Rules are read-only master data                             | Major — wrong editability                    |
+| G-08 | Slide-out employee detail panel                      | Docked right panel with inspector registry                      | Moderate — different UI pattern              |
+| G-09 | KPIs: Headcount/AnnualCost/AvgMonthly/GOSI/Ajeer/EOS | KPIs: Headcount/FTEGap/StaffCost/HSA/HERatio/Recharge           | Major — completely different KPIs            |
+| G-10 | No mention of cost modes                             | 3 cost modes (LOCAL_PAYROLL, AEFE_RECHARGE, NO_LOCAL_COST)      | Major — missing feature                      |
+| G-11 | No mention of demand/coverage model                  | Full demand-supply-gap model with 4 coverage statuses           | Major — missing core concept                 |
+| G-12 | No mention of assignments                            | Staffing assignments are a core data model                      | Major — missing feature                      |
+| G-13 | No mention of augmentation                           | Sep-Dec augmentation is a key cost driver                       | Moderate — missing business rule             |
+| G-14 | No mention of HSA                                    | HSA engine, eligibility rules, summer exclusion                 | Major — missing feature                      |
+| G-15 | Client-side salary encryption                        | Server-side pgcrypto (always was)                               | Minor — incorrectly described                |
+| G-16 | No mention of settings sheet                         | 5-6 tab settings sheet with HSA, ORS, cost assumptions          | Major — missing UI                           |
 
 ---
 
-## Error Handling
+## 13. Recommended Documentation Improvements
 
-### Common Error Codes
+**Priority 1 (High)**:
 
-| Code                     | HTTP Status | Description                          | User Action                         |
-| ------------------------ | ----------- | ------------------------------------ | ----------------------------------- |
-| VERSION_NOT_FOUND        | 404         | Budget version does not exist        | Select valid version                |
-| VERSION_LOCKED           | 409         | Version is Published/Locked/Archived | Create new version or unlock        |
-| EMPLOYEE_NOT_FOUND       | 404         | Employee ID does not exist           | Check employee code                 |
-| DUPLICATE_EMPLOYEE_CODE  | 409         | Employee code already exists         | Use unique code                     |
-| INVALID_FUNCTION         | 422         | Function ID not recognized           | Check function list                 |
-| INVALID_DEPARTMENT       | 422         | Department ID not recognized         | Check department list               |
-| NEGATIVE_SALARY          | 422         | Salary value is negative             | Enter non-negative amount           |
-| INVALID_JOINING_DATE     | 422         | Date format invalid                  | Use YYYY-MM-DD format               |
-| IMPORT_VALIDATION_FAILED | 422         | Excel validation errors              | Review error details, fix and retry |
-| ENCRYPTION_ERROR         | 500         | Salary encryption failed             | Contact administrator               |
-| UNAUTHORIZED             | 401         | User not authenticated               | Log in                              |
-| FORBIDDEN                | 403         | User lacks required role             | Contact administrator               |
+1. Add screenshots or screen recordings of the actual UI (Teaching grid, Support grid,
+   inspector panel, settings sheet) to supplement the ASCII diagrams.
+2. Document the employee import file format and validation rules with a real example.
+3. Document the auto-suggest algorithm once it is fully wired.
 
----
+**Priority 2 (Medium)**:
 
-## Improvements Required
+4. Add a worked example: one complete cycle from enrollment through staffing to PNL,
+   showing real numbers at each step.
+5. Document demand override workflow (currently API-only, no UI).
+6. Document the `hsaBudget`, `heRatio`, and `rechargeCost` KPI cards — are they
+   planned for future implementation or already computed elsewhere?
 
-This section documents known issues, technical debt, and proposed enhancements for the Staffing module.
+**Priority 3 (Low)**:
 
-### High Priority
-
-| ID      | Issue                          | Impact                                      | Proposed Solution                                  |
-| ------- | ------------------------------ | ------------------------------------------- | -------------------------------------------------- |
-| STF-001 | **No bulk edit for employees** | Users must edit employees one-by-one        | Add multi-select with bulk update dialog           |
-| STF-002 | **No salary history tracking** | Cannot see salary progression over time     | Add salary_history table with effective dates      |
-| STF-003 | **Limited import validation**  | No data type checking for salary fields     | Add schema validation with detailed error messages |
-| STF-004 | **No employee search/filter**  | Difficult to find employees in large roster | Add global search and advanced filters             |
-
-### Medium Priority
-
-| ID      | Issue                              | Impact                                  | Proposed Solution                              |
-| ------- | ---------------------------------- | --------------------------------------- | ---------------------------------------------- |
-| STF-005 | **No real-time collaboration**     | Multiple users can overwrite each other | Implement optimistic locking or real-time sync |
-| STF-006 | **No org chart view**              | Cannot visualize reporting structure    | Add hierarchical department/function view      |
-| STF-007 | **Limited export options**         | Cannot export specific views            | Add "Export Current View" with filters         |
-| STF-008 | **No budget vs actual comparison** | Cannot compare planned vs actual costs  | Add variance analysis dashboard                |
-
-### Low Priority / Technical Debt
-
-| ID      | Issue                              | Impact                           | Proposed Solution                              |
-| ------- | ---------------------------------- | -------------------------------- | ---------------------------------------------- |
-| STF-009 | **Sequential database operations** | N+1 query pattern in calculation | Consider batch operations or stored procedures |
-| STF-010 | **Hardcoded category mappings**    | Tab C categories in code         | Move to configuration table                    |
-| STF-011 | **No unit tests for YEARFRAC**     | Edge case calculation errors     | Add comprehensive test coverage matching Excel |
-| STF-012 | **Client-side salary encryption**  | Potential exposure in transit    | Move encryption to server-side with TLS        |
-
-### Feature Requests
-
-| ID      | Feature                          | Business Value                          | Complexity |
-| ------- | -------------------------------- | --------------------------------------- | ---------- |
-| STF-F01 | **Contract management**          | Track contract expiry and renewals      | Medium     |
-| STF-F02 | **Leave management integration** | Factor leave costs in projections       | High       |
-| STF-F03 | **Performance bonus modeling**   | Include variable compensation           | Medium     |
-| STF-F04 | **Recruitment pipeline**         | Track open positions and candidates     | High       |
-| STF-F05 | **Skills matrix**                | Track qualifications and certifications | Low        |
+7. Add an entity-relationship diagram (ERD) for the staffing data model.
+8. Document edge cases: what happens with 0 enrollment, 0 employees, all Departed, etc.
+9. Add version history tracking for this document.
 
 ---
 
-## Appendix A: Salary Structure Examples
+## 14. Appendix
 
-### Example 1: Teaching Staff
+### A. Glossary
 
-```
-Employee: EMP001 - Ahmed Al-Saud
-Function: Classroom Teacher
-Department: ELEMENTAIRE
+| Term             | Full Name                                        | Definition                                                                                                  |
+| ---------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| **ORS**          | Obligation Reglementaire de Service              | Weekly teaching hours a teacher must deliver. Varies by service profile.                                    |
+| **HSA**          | Heures Supplementaires Annualisees               | Annualized overtime hours compensation for eligible teachers.                                               |
+| **FTE**          | Full-Time Equivalent                             | Ratio of total weekly hours to ORS (e.g., 18h demand / 18h ORS = 1.0 FTE).                                  |
+| **DHG**          | Dotation Horaire Globale                         | Global hourly allocation — the French system's method for computing teaching demand.                        |
+| **GOSI**         | General Organization for Social Insurance        | Saudi government social insurance. Employer rate: 11.75% of gross salary.                                   |
+| **Ajeer**        | Ajeer Platform                                   | Saudi work permit system for non-Saudi employees. Comprises an annual levy and monthly fee.                 |
+| **EoS**          | End of Service                                   | Saudi labor law severance provision. Tiered formula based on years of service.                              |
+| **AEFE**         | Agence pour l'Enseignement Francais a l'Etranger | French agency managing overseas French schools. Recharge employees are paid by AEFE, not locally.           |
+| **Band**         | School Band                                      | Grouping of grade levels: Maternelle (PS-GS), Elementaire (CP-CM2), College (6eme-3eme), Lycee (2nde-Term). |
+| **YEARFRAC**     | Year Fraction                                    | Excel-compatible day-count function using US 30/360 convention. Used for EoS years-of-service.              |
+| **Augmentation** | Salary Augmentation                              | Annual salary increase percentage, applied Sep-Dec to base + allowances (not HSA).                          |
 
-Salary Components:
-- Base Salary:     8,500 SAR
-- Housing:         3,200 SAR
-- Transport:         500 SAR
-- Food:              300 SAR
-- Other:               0 SAR
-─────────────────────────────────
-GOSI Wages:       12,500 SAR
-GOSI Employer:     1,500 SAR (12%)
-─────────────────────────────────
-Total Monthly:    14,300 SAR
-Total Annual:    171,600 SAR
-```
+### B. Grade-to-Band Mapping [Confirmed]
 
-### Example 2: Administrative Staff
+| Grade                  | Band        |
+| ---------------------- | ----------- |
+| PS, MS, GS             | MATERNELLE  |
+| CP, CE1, CE2, CM1, CM2 | ELEMENTAIRE |
+| 6EME, 5EME, 4EME, 3EME | COLLEGE     |
+| 2NDE, 1ERE, TERM       | LYCEE       |
 
-```
-Employee: EMP002 - Sarah Johnson
-Function: Academic Coordinator
-Department: ADMIN
+Source: `staffing-settings-sheet.tsx:91-107`
 
-Salary Components:
-- Base Salary:    12,000 SAR
-- Housing:             0 SAR (company accommodation)
-- Transport:         800 SAR
-- Food:                0 SAR
-- Other:             500 SAR (phone allowance)
-─────────────────────────────────
-GOSI Wages:       12,800 SAR
-GOSI Employer:     1,536 SAR (12%)
-─────────────────────────────────
-Total Monthly:    14,836 SAR
-Total Annual:    178,032 SAR
-```
+### C. Coverage Status Badge Styling [Confirmed]
 
----
+| Status      | Color           | Label       |
+| ----------- | --------------- | ----------- |
+| `COVERED`   | Green (success) | "Covered"   |
+| `DEFICIT`   | Red (error)     | "! Deficit" |
+| `SURPLUS`   | Amber (warning) | "+ Surplus" |
+| `UNCOVERED` | Red (error)     | "Uncovered" |
 
-## Appendix B: Stale Module Cascade
+Source: `staffing-inspector-content.tsx:66-71`, `teaching-master-grid.tsx:70-80`
 
-When staffing data changes, the following modules become stale:
+### D. Cost Categories and Modes [Confirmed]
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  STAFFING (user changes employee data)                       │
-│        │                                                     │
-│        ▼                                                     │
-│  ┌─────────────┐                                             │
-│  │     PNL     │                                             │
-│  │  (profit)   │                                             │
-│  └─────────────┘                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+| Category Key        | Label             | Default Mode |
+| ------------------- | ----------------- | ------------ |
+| `REMPLACEMENTS`     | Remplacements     | Configurable |
+| `FORMATION`         | Formation         | Configurable |
+| `RESIDENT_SALAIRES` | Resident Salaires | Configurable |
+| `RESIDENT_LOGEMENT` | Resident Logement | Configurable |
+| `RESIDENT_PENSION`  | Resident Pension  | Configurable |
 
-Users must run calculations in the Staffing module to clear stale flags before P&L calculations can be considered current.
+Available modes: `FLAT_ANNUAL`, `PERCENT_OF_PAYROLL`, `AMOUNT_PER_FTE`.
 
----
+Source: `staffing-settings-sheet.tsx:42-54`
 
-## Appendix C: DHG Subject Codes
+### E. Settings Sheet Tab Summary [Confirmed]
 
-| Code | Subject Name        | Notes                 |
-| ---- | ------------------- | --------------------- |
-| FR   | Français            | French language       |
-| EN   | English             | English language      |
-| MATH | Mathématiques       | Mathematics           |
-| SCI  | Sciences            | General science       |
-| HG   | Histoire-Géographie | History and geography |
-| ART  | Arts                | Art and music         |
-| EPS  | EPS                 | Physical education    |
-| ISL  | Islamique           | Islamic studies       |
-| ARA  | Arabe               | Arabic language       |
+| #   | Tab                    | Key Settings                                                                                                          | Saveable |
+| --- | ---------------------- | --------------------------------------------------------------------------------------------------------------------- | -------- |
+| 1   | Service Profiles & HSA | ORS overrides (effectiveOrs per profile), HSA target hours, HSA first hour rate, HSA additional hour rate, HSA months | Yes      |
+| 2   | Curriculum             | DHG Rules by band (read-only, link to Master Data)                                                                    | No       |
+| 3   | Lycee Group            | Group count, hours/group per discipline (conditional tab)                                                             | Yes      |
+| 4   | Cost Assumptions       | 5 categories x (mode, value)                                                                                          | Yes      |
+| 5   | Enrollment             | AY2 headcount by grade (read-only, stale warning)                                                                     | No       |
+| 6   | Reconciliation         | FTE/cost summary, module navigation                                                                                   | No       |
 
 ---
 
 ## Document History
 
-| Version | Date       | Author       | Changes                   |
-| ------- | ---------- | ------------ | ------------------------- |
-| 1.0     | 2026-03-10 | AI Assistant | Initial document creation |
+| Version | Date       | Author       | Changes                                                                                                                             |
+| ------- | ---------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-03-10 | AI Assistant | Initial document creation                                                                                                           |
+| 2.0     | 2026-03-18 | AI Assistant | Complete rewrite reflecting Epic 18-20 redesign. 14-section structure. All claims verified against codebase with confidence labels. |
 
 ---
 
