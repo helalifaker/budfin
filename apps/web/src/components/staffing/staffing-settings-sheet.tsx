@@ -145,7 +145,7 @@ export function StaffingSettingsSheet({
 	const { data: overridesResp } = useServiceProfileOverrides(versionId);
 	const putOverrides = usePutServiceProfileOverrides(versionId);
 
-	const { data: dhgRulesResp } = useDhgRules();
+	const { data: dhgRulesData } = useDhgRules();
 	const { data: lyceeResp } = useLyceeGroupAssumptions(versionId);
 	const putLyceeGroup = usePutLyceeGroupAssumptions(versionId);
 
@@ -176,18 +176,8 @@ export function StaffingSettingsSheet({
 		[overridesResp]
 	);
 
-	// API returns { rules: [...] } with gradeLevel/lineType/driverType/hoursPerUnit
-	interface ApiDhgRule {
-		id: number;
-		gradeLevel: string;
-		disciplineCode: string;
-		lineType: string;
-		driverType: string;
-		hoursPerUnit: string;
-	}
 	const dhgRules: DhgRule[] = useMemo(() => {
-		const raw = dhgRulesResp as { rules?: ApiDhgRule[] } | undefined;
-		return (raw?.rules ?? []).map((r) => ({
+		return (dhgRulesData ?? []).map((r) => ({
 			id: r.id,
 			band: gradeToBand(r.gradeLevel),
 			gradeLevel: r.gradeLevel,
@@ -195,7 +185,7 @@ export function StaffingSettingsSheet({
 			hoursPerWeekPerSection: r.hoursPerUnit,
 			dhgType: r.driverType,
 		}));
-	}, [dhgRulesResp]);
+	}, [dhgRulesData]);
 
 	const lyceeAssumptions = useMemo(
 		() => (lyceeResp as { data: LyceeGroupAssumption[] } | undefined)?.data ?? [],
@@ -603,13 +593,17 @@ export function StaffingSettingsSheet({
 										<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 											DHG Rules (Read-Only)
 										</p>
-										<a
-											href="/master-data/reference"
+										<button
+											type="button"
+											onClick={() => {
+												setOpen(false);
+												navigate('/master-data/reference?tab=curriculum');
+											}}
 											className="inline-flex items-center gap-1 text-(--text-sm) text-(--accent-600) hover:underline"
 										>
 											<ExternalLink className="h-3 w-3" />
 											Edit in Master Data
-										</a>
+										</button>
 									</div>
 
 									{BAND_ORDER.map((band) => {

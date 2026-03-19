@@ -36,6 +36,7 @@ import { SupportAdminGrid } from '../../components/staffing/support-admin-grid';
 import { StaffingKpiRibbonV2 } from '../../components/staffing/staffing-kpi-ribbon';
 import { StaffingStatusStrip } from '../../components/staffing/staffing-status-strip';
 import { StaffingSettingsSheet } from '../../components/staffing/staffing-settings-sheet';
+import { StaffingExportButton } from '../../components/staffing/staffing-export-button';
 // Side-effect imports: register right-panel content for staffing page
 import '../../components/staffing/staffing-inspector-content';
 import '../../components/staffing/staffing-guide-content';
@@ -285,6 +286,18 @@ export function StaffingPage() {
 									</ToggleGroupItem>
 								))}
 							</ToggleGroup>
+						)}
+
+						{/* Export — Teaching mode with data */}
+						{isTeachingMode && teachingReqData && (
+							<StaffingExportButton
+								versionId={versionId}
+								data={teachingReqData}
+								employeesData={employeesData ?? { data: [], total: 0 }}
+								summaryData={summaryData}
+								versionName={currentVersion?.name ?? 'unknown'}
+								kpiValues={kpiValues}
+							/>
 						)}
 
 						{/* Settings — always visible */}

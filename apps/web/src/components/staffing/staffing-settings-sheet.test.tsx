@@ -58,28 +58,26 @@ let mockServiceProfileOverridesData: unknown = {
 
 const mockPutServiceProfileOverridesMutate = vi.fn();
 
-let mockDhgRulesData: unknown = {
-	rules: [
-		{
-			id: 1,
-			gradeLevel: 'PS',
-			disciplineCode: 'FR',
-			lineType: 'STRUCTURAL',
-			driverType: 'HOURS',
-			hoursPerUnit: '2',
-			serviceProfileCode: 'P1',
-		},
-		{
-			id: 2,
-			gradeLevel: '2NDE',
-			disciplineCode: 'MATH',
-			lineType: 'STRUCTURAL',
-			driverType: 'GROUPS',
-			hoursPerUnit: '4',
-			serviceProfileCode: 'P1',
-		},
-	],
-};
+let mockDhgRulesData: unknown = [
+	{
+		id: 1,
+		gradeLevel: 'PS',
+		disciplineCode: 'FR',
+		lineType: 'STRUCTURAL',
+		driverType: 'HOURS',
+		hoursPerUnit: '2',
+		serviceProfileCode: 'P1',
+	},
+	{
+		id: 2,
+		gradeLevel: '2NDE',
+		disciplineCode: 'MATH',
+		lineType: 'STRUCTURAL',
+		driverType: 'GROUPS',
+		hoursPerUnit: '4',
+		serviceProfileCode: 'P1',
+	},
+];
 
 let mockLyceeGroupData: unknown = {
 	data: [{ disciplineCode: 'MATH', groupCount: 3, hoursPerGroup: '2' }],
@@ -296,28 +294,26 @@ function resetMockData() {
 			},
 		],
 	};
-	mockDhgRulesData = {
-		rules: [
-			{
-				id: 1,
-				gradeLevel: 'PS',
-				disciplineCode: 'FR',
-				lineType: 'STRUCTURAL',
-				driverType: 'HOURS',
-				hoursPerUnit: '2',
-				serviceProfileCode: 'P1',
-			},
-			{
-				id: 2,
-				gradeLevel: '2NDE',
-				disciplineCode: 'MATH',
-				lineType: 'STRUCTURAL',
-				driverType: 'GROUPS',
-				hoursPerUnit: '4',
-				serviceProfileCode: 'P1',
-			},
-		],
-	};
+	mockDhgRulesData = [
+		{
+			id: 1,
+			gradeLevel: 'PS',
+			disciplineCode: 'FR',
+			lineType: 'STRUCTURAL',
+			driverType: 'HOURS',
+			hoursPerUnit: '2',
+			serviceProfileCode: 'P1',
+		},
+		{
+			id: 2,
+			gradeLevel: '2NDE',
+			disciplineCode: 'MATH',
+			lineType: 'STRUCTURAL',
+			driverType: 'GROUPS',
+			hoursPerUnit: '4',
+			serviceProfileCode: 'P1',
+		},
+	];
 	mockLyceeGroupData = {
 		data: [{ disciplineCode: 'MATH', groupCount: 3, hoursPerGroup: '2' }],
 	};
@@ -567,19 +563,17 @@ describe('StaffingSettingsSheet', () => {
 		});
 
 		it('hides Lycee Group tab when no GROUP-driver rules exist', () => {
-			mockDhgRulesData = {
-				rules: [
-					{
-						id: 1,
-						gradeLevel: 'PS',
-						disciplineCode: 'FR',
-						lineType: 'STRUCTURAL',
-						driverType: 'HOURS',
-						hoursPerUnit: '2',
-						serviceProfileCode: 'P1',
-					},
-				],
-			};
+			mockDhgRulesData = [
+				{
+					id: 1,
+					gradeLevel: 'PS',
+					disciplineCode: 'FR',
+					lineType: 'STRUCTURAL',
+					driverType: 'HOURS',
+					hoursPerUnit: '2',
+					serviceProfileCode: 'P1',
+				},
+			];
 
 			render(<StaffingSettingsSheet versionId={42} isEditable={true} />);
 			expect(screen.queryByRole('tab', { name: /Lycee Group/i })).toBeNull();
