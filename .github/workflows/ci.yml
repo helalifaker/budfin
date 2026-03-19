@@ -111,7 +111,10 @@ jobs:
             apps/*/node_modules
             packages/*/node_modules
           key: deps-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm audit --audit-level high
+      # xlsx (GHSA-4r6h-8v6p-xvw6, GHSA-5pgg-2g8v-p4x9): prototype pollution + ReDoS.
+      # SheetJS has not published free patches (patched-versions: <0.0.0 — commercial only).
+      # xlsx is used only in auth-gated import routes and migration scripts. Reviewed 2026-03-19.
+      - run: pnpm audit --audit-level high --ignore-unfixable
 
   format:
     needs: install

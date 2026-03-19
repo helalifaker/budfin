@@ -392,6 +392,7 @@ ribbon. [Confirmed: `staffing-kpi-ribbon.tsx:181-195`]
 
 > **Note**: `hsaBudget`, `heRatio`, and `rechargeCost` are currently hardcoded to 0
 > in the KPI value derivation. [Confirmed: `staffing.tsx:126-128`] [Needs Validation:
+>
 > > whether these are planned for future wiring or represent missing calculation]
 
 ### Teaching Master Grid [Confirmed]
