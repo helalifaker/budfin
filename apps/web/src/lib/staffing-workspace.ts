@@ -335,7 +335,7 @@ export function buildDisciplineDemandRows(
 		for (const l of group.lyc) lycHours = lycHours.plus(l.totalWeeklyHours);
 
 		const totalHours = colHours.plus(lycHours);
-		const ors = new Decimal(allLines[0]?.effectiveOrs ?? '18');
+		const ors = new Decimal(allLines[0]?.effectiveOrs || '18');
 		const fte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
 		const postes = Math.ceil(fte.toNumber());
 		const hsaHrs = new Decimal(postes).times(ors).minus(totalHours);
@@ -433,8 +433,8 @@ export function buildDisciplineSummaryRows(
 			if (l.coverageStatus !== 'UNCOVERED') allUncovered = false;
 		}
 
-		const ors = new Decimal(groupLines[0]?.effectiveOrs ?? '18');
-		const fte = totalHours.div(ors);
+		const ors = new Decimal(groupLines[0]?.effectiveOrs || '18');
+		const fte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
 		const postes = Math.ceil(fte.toNumber());
 		const hsaHrs = new Decimal(postes).times(ors).minus(totalHours);
 		const gap = totalCovered.minus(fte);

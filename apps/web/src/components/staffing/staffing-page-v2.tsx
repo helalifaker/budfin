@@ -366,6 +366,7 @@ export function StaffingPageV2() {
 								employeesData={employeesData}
 								isEditable={isEditable}
 								canViewSalary={canViewSalary}
+								versionStatus={currentVersion?.status ?? versionStatus ?? null}
 							/>
 						)}
 
