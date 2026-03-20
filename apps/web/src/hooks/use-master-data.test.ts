@@ -52,34 +52,49 @@ afterEach(() => {
 // ── useServiceProfiles ──────────────────────────────────────────────────────
 
 describe('useServiceProfiles', () => {
-	it('fetches service profiles from master data', async () => {
-		const mockData = {
-			data: [{ id: 1, code: 'CERT', label: 'Certifie', defaultOrs: '18', isHsaEligible: true }],
-		};
-		mockApiClient.mockResolvedValue(mockData);
+	it('fetches service profiles and selects profiles array', async () => {
+		const mockProfiles = [
+			{
+				id: 1,
+				code: 'CERTIFIE',
+				name: 'Professeur Certifie',
+				weeklyServiceHours: '18.0',
+				hsaEligible: true,
+				defaultCostMode: 'LOCAL_PAYROLL',
+				sortOrder: 2,
+			},
+		];
+		mockApiClient.mockResolvedValue({ profiles: mockProfiles });
 
 		const { result } = renderHook(() => useServiceProfiles(), { wrapper: createWrapper() });
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 		expect(mockApiClient).toHaveBeenCalledWith('/master-data/service-profiles');
-		expect(result.current.data).toEqual(mockData);
+		expect(result.current.data).toEqual(mockProfiles);
 	});
 });
 
 // ── useDisciplines ──────────────────────────────────────────────────────────
 
 describe('useDisciplines', () => {
-	it('fetches disciplines from master data', async () => {
-		const mockData = {
-			data: [{ id: 1, code: 'MATHS', label: 'Mathematics', band: null }],
-		};
-		mockApiClient.mockResolvedValue(mockData);
+	it('fetches disciplines and selects disciplines array', async () => {
+		const mockDisciplines = [
+			{
+				id: 1,
+				code: 'MATHEMATIQUES',
+				name: 'Mathematiques',
+				category: 'SUBJECT',
+				sortOrder: 2,
+				aliases: [{ id: 1, alias: 'Maths' }],
+			},
+		];
+		mockApiClient.mockResolvedValue({ disciplines: mockDisciplines });
 
 		const { result } = renderHook(() => useDisciplines(), { wrapper: createWrapper() });
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 		expect(mockApiClient).toHaveBeenCalledWith('/master-data/disciplines');
-		expect(result.current.data).toEqual(mockData);
+		expect(result.current.data).toEqual(mockDisciplines);
 	});
 });
 

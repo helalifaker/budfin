@@ -7,24 +7,33 @@ import { toast } from '../components/ui/toast-state';
 export interface ServiceProfile {
 	id: number;
 	code: string;
-	label: string;
-	defaultOrs: string;
-	isHsaEligible: boolean;
+	name: string;
+	weeklyServiceHours: string;
+	hsaEligible: boolean;
+	defaultCostMode: string;
+	sortOrder: number;
 }
 
 export interface ServiceProfilesResponse {
-	data: ServiceProfile[];
+	profiles: ServiceProfile[];
+}
+
+export interface DisciplineAlias {
+	id: number;
+	alias: string;
 }
 
 export interface Discipline {
 	id: number;
 	code: string;
-	label: string;
-	band: string | null;
+	name: string;
+	category: string;
+	sortOrder: number;
+	aliases: DisciplineAlias[];
 }
 
 export interface DisciplinesResponse {
-	data: Discipline[];
+	disciplines: Discipline[];
 }
 
 export interface DhgRule {
@@ -104,6 +113,7 @@ export function useServiceProfiles() {
 	return useQuery({
 		queryKey: ['master-data', 'service-profiles'],
 		queryFn: () => apiClient<ServiceProfilesResponse>('/master-data/service-profiles'),
+		select: (data) => data.profiles,
 	});
 }
 
@@ -111,6 +121,7 @@ export function useDisciplines() {
 	return useQuery({
 		queryKey: ['master-data', 'disciplines'],
 		queryFn: () => apiClient<DisciplinesResponse>('/master-data/disciplines'),
+		select: (data) => data.disciplines,
 	});
 }
 

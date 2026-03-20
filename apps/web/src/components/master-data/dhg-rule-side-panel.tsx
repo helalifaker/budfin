@@ -43,6 +43,8 @@ export type DhgRuleSidePanelProps = {
 	dhgRule?: DhgRuleDetail | null;
 	onSave: (data: DhgRuleFormValues) => void;
 	loading?: boolean;
+	prefillGradeLevel?: string | undefined;
+	prefillDisciplineId?: number | undefined;
 };
 
 const DEFAULT_VALUES: DhgRuleFormValues = {
@@ -64,17 +66,17 @@ export function DhgRuleSidePanel({
 	dhgRule,
 	onSave,
 	loading = false,
+	prefillGradeLevel,
+	prefillDisciplineId,
 }: DhgRuleSidePanelProps) {
 	const panelRef = useRef<HTMLDivElement>(null);
 	const isEdit = !!dhgRule;
 
 	const { data: gradeLevelsData } = useGradeLevels();
-	const { data: disciplinesData } = useDisciplines();
-	const { data: serviceProfilesData } = useServiceProfiles();
+	const { data: disciplines = [] } = useDisciplines();
+	const { data: serviceProfiles = [] } = useServiceProfiles();
 
 	const gradeLevels = gradeLevelsData?.gradeLevels ?? [];
-	const disciplines = disciplinesData?.data ?? [];
-	const serviceProfiles = serviceProfilesData?.data ?? [];
 
 	const form = useForm<DhgRuleFormValues>({
 		resolver: zodResolver(dhgRuleFormSchema),
@@ -99,9 +101,13 @@ export function DhgRuleSidePanel({
 
 	useEffect(() => {
 		if (open && !dhgRule) {
-			form.reset(DEFAULT_VALUES);
+			form.reset({
+				...DEFAULT_VALUES,
+				...(prefillGradeLevel ? { gradeLevel: prefillGradeLevel } : {}),
+				...(prefillDisciplineId ? { disciplineId: prefillDisciplineId } : {}),
+			});
 		}
-	}, [open, dhgRule, form]);
+	}, [open, dhgRule, form, prefillGradeLevel, prefillDisciplineId]);
 
 	useEffect(() => {
 		if (!open) return;
@@ -222,7 +228,7 @@ export function DhgRuleSidePanel({
 										<SelectContent>
 											{disciplines.map((d) => (
 												<SelectItem key={d.id} value={String(d.id)}>
-													{d.label}
+													{d.name}
 												</SelectItem>
 											))}
 										</SelectContent>
@@ -338,7 +344,7 @@ export function DhgRuleSidePanel({
 										<SelectContent>
 											{serviceProfiles.map((sp) => (
 												<SelectItem key={sp.id} value={String(sp.id)}>
-													{sp.label}
+													{sp.name}
 												</SelectItem>
 											))}
 										</SelectContent>
