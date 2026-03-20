@@ -1,8 +1,8 @@
 # BudFin — Current Status
 
-**Phase**: 7 — REVIEW
-**Current Epic**: Epic 20 — Staffing Frontend Redesign (#221)
-**Last updated**: 2026-03-17
+**Phase**: 4 — SPECIFY
+**Current Epic**: Epic 5 — P&L Reporting (#11) *(next up)*
+**Last updated**: 2026-03-20
 
 ## Phase History
 
@@ -70,7 +70,7 @@
 | 6 — IMPLEMENT (Epic 19) | ✅ Complete | 2026-03-17 |
 | 7 — REVIEW (Epic 19) | ✅ Complete | 2026-03-17 |
 | 6 — IMPLEMENT (Epic 20) | ✅ Complete | 2026-03-19 |
-| 7 — REVIEW (Epic 20) | ✅ Complete | 2026-03-19 |
+| 7 — REVIEW (Epic 20) | ✅ Complete | 2026-03-20 |
 
 ## Feature Progress
 
