@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { cleanup, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { StaffingPage } from './staffing';
 
 const mockSetActivePage = vi.fn();
@@ -60,18 +60,18 @@ vi.mock('../../stores/staffing-selection-store', () => ({
 		}),
 }));
 
-vi.mock('../../stores/staffing-settings-store', () => ({
-	useStaffingSettingsSheetStore: (
+vi.mock('../../stores/staffing-settings-dialog-store', () => ({
+	useStaffingSettingsDialogStore: (
 		selector: (state: {
 			open: typeof mockOpenSettings;
 			isOpen: boolean;
-			setOpen: (open: boolean) => void;
+			activeTab: string;
 		}) => unknown
 	) =>
 		selector({
 			open: mockOpenSettings,
 			isOpen: false,
-			setOpen: vi.fn(),
+			activeTab: 'profiles',
 		}),
 }));
 
@@ -102,6 +102,12 @@ vi.mock('../../hooks/use-staffing', () => ({
 	useStaffingSummary: () => ({
 		data: null,
 	}),
+	useStaffingAssignments: () => ({
+		data: { data: [] },
+	}),
+	useCategoryCosts: () => ({
+		data: null,
+	}),
 }));
 
 vi.mock('../../hooks/use-versions', () => ({
@@ -111,62 +117,34 @@ vi.mock('../../hooks/use-versions', () => ({
 }));
 
 vi.mock('../../components/ui/button', () => ({
-	Button: ({ children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => (
+	Button: ({
+		children,
+		...props
+	}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) => (
 		<button type="button" {...props}>
 			{children}
 		</button>
 	),
 }));
 
-// Mock ToggleGroup that calls onValueChange when a ToggleGroupItem is clicked
-let capturedOnValueChange: ((value: string) => void) | undefined;
-
-vi.mock('../../components/ui/toggle-group', () => ({
-	ToggleGroup: ({
+vi.mock('../../components/ui/tabs', () => ({
+	Tabs: ({
 		children,
-		'aria-label': ariaLabel,
-		onValueChange,
 	}: {
 		children: ReactNode;
-		'aria-label'?: string;
-		onValueChange?: (value: string) => void;
-	}) => {
-		// Capture the first ToggleGroup's onValueChange (Workspace mode)
-		if (ariaLabel === 'Workspace mode') {
-			capturedOnValueChange = onValueChange;
-		}
-		return (
-			<div role="group" aria-label={ariaLabel}>
-				{children}
-			</div>
-		);
-	},
-	ToggleGroupItem: ({ children, value }: { children: ReactNode; value: string }) => (
-		<button type="button" data-value={value} onClick={() => capturedOnValueChange?.(value)}>
+		value: string;
+		onValueChange?: (v: string) => void;
+	}) => <div data-testid="tabs-root">{children}</div>,
+	TabsList: ({ children }: { children: ReactNode }) => <div role="tablist">{children}</div>,
+	TabsTrigger: ({ children, value }: { children: ReactNode; value: string }) => (
+		<button type="button" role="tab" data-value={value}>
 			{children}
 		</button>
 	),
 }));
 
-vi.mock('../../components/ui/dropdown-menu', () => ({
-	DropdownMenu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-	DropdownMenuTrigger: ({ children }: { children: ReactNode; asChild?: boolean }) => (
-		<div>{children}</div>
-	),
-	DropdownMenuContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-	DropdownMenuItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}));
-
 vi.mock('../../components/shared/page-transition', () => ({
 	PageTransition: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
-
-vi.mock('../../components/staffing/teaching-master-grid', () => ({
-	TeachingMasterGrid: () => <div data-testid="teaching-master-grid">Teaching Grid</div>,
-}));
-
-vi.mock('../../components/staffing/support-admin-grid', () => ({
-	SupportAdminGrid: () => <div data-testid="support-admin-grid">Support Grid</div>,
 }));
 
 vi.mock('../../components/staffing/staffing-kpi-ribbon', () => ({
@@ -177,8 +155,28 @@ vi.mock('../../components/staffing/staffing-status-strip', () => ({
 	StaffingStatusStrip: () => <div data-testid="staffing-status-strip">Status Strip</div>,
 }));
 
-vi.mock('../../components/staffing/staffing-settings-sheet', () => ({
-	StaffingSettingsSheet: () => <div data-testid="staffing-settings-sheet" />,
+vi.mock('../../components/staffing/staffing-settings-dialog', () => ({
+	StaffingSettingsDialog: () => <div data-testid="staffing-settings-dialog" />,
+}));
+
+vi.mock('../../components/staffing/staffing-export-button', () => ({
+	StaffingExportButton: () => <div data-testid="staffing-export-button" />,
+}));
+
+vi.mock('../../components/staffing/demand-tab-content', () => ({
+	DemandTabContent: () => <div data-testid="demand-tab-content">Demand Content</div>,
+}));
+
+vi.mock('../../components/staffing/roster-tab-content', () => ({
+	RosterTabContent: () => <div data-testid="roster-tab-content">Roster Content</div>,
+}));
+
+vi.mock('../../components/staffing/coverage-tab-content', () => ({
+	CoverageTabContent: () => <div data-testid="coverage-tab-content">Coverage Content</div>,
+}));
+
+vi.mock('../../components/staffing/costs-tab-content', () => ({
+	CostsTabContent: () => <div data-testid="costs-tab-content">Costs Content</div>,
 }));
 
 vi.mock('../../components/staffing/staffing-inspector-content', () => ({}));
@@ -189,7 +187,6 @@ describe('StaffingPage', () => {
 		mockSetActivePage.mockClear();
 		mockClearSelection.mockClear();
 		mockOpenSettings.mockClear();
-		capturedOnValueChange = undefined;
 		mockWorkspaceContext = {
 			versionId: 20,
 			fiscalYear: 2026,
@@ -229,14 +226,6 @@ describe('StaffingPage', () => {
 		const { container } = render(<StaffingPage />);
 		const layoutDiv = container.querySelector('.flex.h-full.min-h-0.flex-col.overflow-hidden');
 		expect(layoutDiv).toBeTruthy();
-	});
-
-	it('renders grid zone with correct CSS structure', () => {
-		const { container } = render(<StaffingPage />);
-		const gridZone = container.querySelector('.flex-1.min-h-0.overflow-hidden.px-6.py-2');
-		expect(gridZone).toBeTruthy();
-		const scrollContainer = gridZone?.querySelector('.h-full.overflow-y-auto.scrollbar-thin');
-		expect(scrollContainer).toBeTruthy();
 	});
 
 	it('renders locked banner when version is locked', () => {
@@ -282,62 +271,41 @@ describe('StaffingPage', () => {
 		).toBeTruthy();
 	});
 
-	// AC-02: Toolbar
-	it('renders workspace mode toggle with Teaching and Support & Admin options', () => {
+	// AC-02: 4-tab navigation
+	it('renders 4 tab triggers: Demand, Roster, Coverage, Costs', () => {
 		render(<StaffingPage />);
-		expect(screen.getByText('Teaching')).toBeTruthy();
-		expect(screen.getByText('Support & Admin')).toBeTruthy();
-	});
-
-	it('renders band filter in Teaching mode', () => {
-		render(<StaffingPage />);
-		expect(screen.getByRole('group', { name: 'Band filter' })).toBeTruthy();
-	});
-
-	it('renders view presets in Teaching mode', () => {
-		render(<StaffingPage />);
-		expect(screen.getByRole('group', { name: 'View preset' })).toBeTruthy();
-		expect(screen.getByText('Need')).toBeTruthy();
+		const tabs = screen.getAllByRole('tab');
+		expect(tabs.length).toBe(4);
+		expect(screen.getByText('Demand')).toBeTruthy();
+		expect(screen.getByText('Roster')).toBeTruthy();
 		expect(screen.getByText('Coverage')).toBeTruthy();
-		expect(screen.getByText('Cost')).toBeTruthy();
-		expect(screen.getByText('Full View')).toBeTruthy();
+		expect(screen.getByText('Costs')).toBeTruthy();
 	});
 
-	it('renders coverage filter in Teaching mode with non-Need preset', () => {
+	// AC-03: Demand tab renders by default
+	it('renders Demand tab content by default', () => {
 		render(<StaffingPage />);
-		// Default viewPreset is 'Full View', so coverage filter should be visible.
-		// 'All Coverage' appears both in trigger button and menu item, so use getAllByText.
-		const allCoverageElements = screen.getAllByText('All Coverage');
-		expect(allCoverageElements.length).toBeGreaterThanOrEqual(1);
+		expect(screen.getByTestId('demand-tab-content')).toBeTruthy();
 	});
 
+	// AC-04: Toolbar buttons
 	it('renders Settings button always', () => {
 		render(<StaffingPage />);
 		expect(screen.getByText('Settings')).toBeTruthy();
 	});
 
-	it('renders Calculate, Import, Add Employee buttons when editable', () => {
+	it('renders Calculate button when editable', () => {
 		render(<StaffingPage />);
 		expect(screen.getByText('Calculate')).toBeTruthy();
-		expect(screen.getByText('Import')).toBeTruthy();
-		expect(screen.getByText('Add Employee')).toBeTruthy();
 	});
 
-	it('renders Auto-Suggest in Teaching mode when editable', () => {
-		render(<StaffingPage />);
-		expect(screen.getByText('Auto-Suggest')).toBeTruthy();
-	});
-
-	it('hides Calculate, Import, Add Employee, Auto-Suggest when viewer', () => {
+	it('hides Calculate when viewer', () => {
 		mockUserRole = 'Viewer';
 		render(<StaffingPage />);
 		expect(screen.queryByText('Calculate')).toBeNull();
-		expect(screen.queryByText('Import')).toBeNull();
-		expect(screen.queryByText('Add Employee')).toBeNull();
-		expect(screen.queryByText('Auto-Suggest')).toBeNull();
 	});
 
-	it('hides editable buttons when version is locked', () => {
+	it('hides Calculate when version is locked', () => {
 		mockWorkspaceContext = { ...mockWorkspaceContext, versionStatus: 'Locked' };
 		mockVersionsData = {
 			data: [
@@ -353,51 +321,32 @@ describe('StaffingPage', () => {
 		};
 		render(<StaffingPage />);
 		expect(screen.queryByText('Calculate')).toBeNull();
-		expect(screen.queryByText('Import')).toBeNull();
-		expect(screen.queryByText('Add Employee')).toBeNull();
-		expect(screen.queryByText('Auto-Suggest')).toBeNull();
 	});
 
-	it('hides band filter, coverage filter, and view presets in Support mode', () => {
-		render(<StaffingPage />);
-		// Default is Teaching mode — verify they exist first
-		expect(screen.getByRole('group', { name: 'Band filter' })).toBeTruthy();
-
-		// Switch to Support mode by clicking the Support & Admin button
-		const supportButton = screen.getByText('Support & Admin');
-		fireEvent.click(supportButton);
-
-		// After switching, band filter should not be in the DOM
-		expect(screen.queryByRole('group', { name: 'Band filter' })).toBeNull();
-		expect(screen.queryByRole('group', { name: 'View preset' })).toBeNull();
-	});
-
-	it('hides Auto-Suggest in Support mode even when editable', () => {
-		render(<StaffingPage />);
-		expect(screen.getByText('Auto-Suggest')).toBeTruthy();
-
-		// Switch to Support mode
-		const supportButton = screen.getByText('Support & Admin');
-		fireEvent.click(supportButton);
-
-		expect(screen.queryByText('Auto-Suggest')).toBeNull();
-	});
-
-	it('renders teaching grid in teaching mode', () => {
-		render(<StaffingPage />);
-		expect(screen.getByTestId('teaching-master-grid')).toBeTruthy();
-	});
-
-	it('renders support grid in support mode', () => {
-		render(<StaffingPage />);
-		const supportButton = screen.getByText('Support & Admin');
-		fireEvent.click(supportButton);
-		expect(screen.getByTestId('support-admin-grid')).toBeTruthy();
-	});
-
-	it('Settings button is visible even when viewer', () => {
+	it('shows View Settings label when viewer', () => {
 		mockUserRole = 'Viewer';
 		render(<StaffingPage />);
-		expect(screen.getByText('Settings')).toBeTruthy();
+		expect(screen.getByText('View Settings')).toBeTruthy();
+	});
+
+	// AC-05: Shared components
+	it('renders KPI ribbon', () => {
+		render(<StaffingPage />);
+		expect(screen.getByTestId('staffing-kpi-ribbon')).toBeTruthy();
+	});
+
+	it('renders status strip', () => {
+		render(<StaffingPage />);
+		expect(screen.getByTestId('staffing-status-strip')).toBeTruthy();
+	});
+
+	it('renders settings dialog', () => {
+		render(<StaffingPage />);
+		expect(screen.getByTestId('staffing-settings-dialog')).toBeTruthy();
+	});
+
+	it('renders export button', () => {
+		render(<StaffingPage />);
+		expect(screen.getByTestId('staffing-export-button')).toBeTruthy();
 	});
 });

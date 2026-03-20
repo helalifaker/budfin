@@ -35,6 +35,8 @@ export interface Employee {
 	contractEndDate: string | null;
 	monthlyCost: string | null;
 	annualCost: string | null;
+	disciplineName: string | null;
+	serviceProfileName: string | null;
 }
 
 export interface EmployeeListResponse {

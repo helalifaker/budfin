@@ -340,6 +340,67 @@ vi.mock('../../lib/right-panel-registry', () => ({
 	registerGuideContent: vi.fn(),
 }));
 
+// Mock Radix Select as a native <select> so fireEvent.change works in JSDOM.
+// The factory inspects JSX children to extract id/aria-label from SelectTrigger
+// and options from SelectContent > SelectItem, then renders a single native <select>.
+vi.mock('../ui/select', async () => {
+	const React = await import('react');
+	return {
+		Select: ({
+			value = '',
+			onValueChange,
+			disabled,
+			children,
+		}: {
+			value?: string;
+			onValueChange?: (v: string) => void;
+			disabled?: boolean;
+			children?: React.ReactNode;
+		}) => {
+			const options: React.ReactNode[] = [];
+			let id: string | undefined;
+			let ariaLabel: string | undefined;
+
+			React.Children.forEach(children, (child) => {
+				if (!React.isValidElement(child)) return;
+				const props = child.props as Record<string, unknown>;
+				if (props.id) id = props.id as string;
+				if (props['aria-label']) ariaLabel = props['aria-label'] as string;
+				if (props.children) {
+					React.Children.forEach(props.children as React.ReactNode, (item) => {
+						if (!React.isValidElement(item)) return;
+						const ip = item.props as Record<string, unknown>;
+						if (ip.value !== undefined) {
+							options.push(
+								<option key={ip.value as string} value={ip.value as string}>
+									{ip.children as React.ReactNode}
+								</option>
+							);
+						}
+					});
+				}
+			});
+
+			return (
+				<select
+					id={id}
+					aria-label={ariaLabel}
+					value={value}
+					onChange={(e) => onValueChange?.(e.target.value)}
+					disabled={disabled}
+				>
+					<option value="">Select...</option>
+					{options}
+				</select>
+			);
+		},
+		SelectTrigger: () => null,
+		SelectContent: () => null,
+		SelectItem: () => null,
+		SelectValue: () => null,
+	};
+});
+
 afterEach(() => {
 	cleanup();
 	mockSelection = null;

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { createElement, useCallback, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { getGuideContent, getPanelContent } from '../../lib/right-panel-registry';
@@ -39,14 +39,14 @@ function DefaultDetailsContent() {
 function DelegatedDetailsContent() {
 	const activePage = useRightPanelStore((s) => s.activePage);
 	const renderer = activePage ? getPanelContent(activePage) : undefined;
-	if (renderer) return <>{renderer()}</>;
+	if (renderer) return createElement(renderer);
 	return <DefaultDetailsContent />;
 }
 
 function DelegatedGuideContent() {
 	const activePage = useRightPanelStore((s) => s.activePage);
 	const renderer = activePage ? getGuideContent(activePage) : undefined;
-	if (renderer) return <>{renderer()}</>;
+	if (renderer) return createElement(renderer);
 	return (
 		<p className="text-(--text-sm) text-(--text-muted)">Contextual help for the current module.</p>
 	);

@@ -37,6 +37,8 @@ function makeEmployee(overrides: Partial<Employee> & { id: number; name: string 
 		contractEndDate: null,
 		monthlyCost: null,
 		annualCost: null,
+		disciplineName: null,
+		serviceProfileName: null,
 		...overrides,
 	};
 }
