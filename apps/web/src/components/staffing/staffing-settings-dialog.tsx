@@ -212,7 +212,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 	const { data: settingsResp, isLoading: settingsLoading } = useStaffingSettings(versionId);
 	const putSettings = usePutStaffingSettings(versionId);
 
-	const { data: profilesResp } = useServiceProfiles();
+	const { data: profilesData } = useServiceProfiles();
 	const { data: overridesResp } = useServiceProfileOverrides(versionId);
 	const putOverrides = usePutServiceProfileOverrides(versionId);
 
@@ -230,16 +230,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 
 	const settings = (settingsResp as { data: StaffingSettings } | undefined)?.data ?? null;
 
-	const profiles: ServiceProfile[] = useMemo(() => {
-		const raw = profilesResp as { profiles?: Array<Record<string, unknown>> } | undefined;
-		return (raw?.profiles ?? []).map((p) => ({
-			id: Number(p.id),
-			code: String(p.code),
-			label: String(p.name ?? p.code),
-			defaultOrs: String(p.weeklyServiceHours ?? '18'),
-			isHsaEligible: Boolean(p.hsaEligible),
-		}));
-	}, [profilesResp]);
+	const profiles: ServiceProfile[] = profilesData ?? [];
 
 	const overrides = useMemo(
 		() => (overridesResp as { data: ServiceProfileOverride[] } | undefined)?.data ?? [],
@@ -684,14 +675,14 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																		<td className="px-3 py-2 font-medium text-(--text-primary)">
 																			{p.code}
 																		</td>
-																		<td className="px-3 py-2 text-(--text-secondary)">{p.label}</td>
+																		<td className="px-3 py-2 text-(--text-secondary)">{p.name}</td>
 																		<td className="px-3 py-2">
 																			<Input
 																				type="number"
 																				min={0}
 																				max={30}
 																				step={0.5}
-																				value={getOrsValue(p.id, p.defaultOrs)}
+																				value={getOrsValue(p.id, p.weeklyServiceHours)}
 																				onChange={(e) => updateOrs(p.id, e.target.value)}
 																				disabled={!isEditable}
 																				aria-label={`${p.code} ORS`}
@@ -699,7 +690,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																			/>
 																		</td>
 																		<td className="px-3 py-2 text-center text-(--text-secondary)">
-																			{p.isHsaEligible ? 'Yes' : 'No'}
+																			{p.hsaEligible ? 'Yes' : 'No'}
 																		</td>
 																	</tr>
 																))}

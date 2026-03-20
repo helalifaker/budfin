@@ -278,17 +278,30 @@ vi.mock('../../hooks/use-staffing', () => ({
 // Mock disciplines for employee filtering
 vi.mock('../../hooks/use-master-data', () => ({
 	useDisciplines: () => ({
-		data: {
-			data: [
-				{ id: 1, code: 'FR', label: 'Francais', band: 'MATERNELLE' },
-				{ id: 2, code: 'MATH', label: 'Mathematics', band: 'ELEMENTAIRE' },
-			],
-		},
+		data: [
+			{ id: 1, code: 'FR', name: 'Francais', category: 'SUBJECT', sortOrder: 1, aliases: [] },
+			{
+				id: 2,
+				code: 'MATH',
+				name: 'Mathematiques',
+				category: 'SUBJECT',
+				sortOrder: 2,
+				aliases: [],
+			},
+		],
 	}),
 	useServiceProfiles: () => ({
-		data: {
-			data: [{ id: 1, code: 'P1', label: 'Titulaire', defaultOrs: '24', isHsaEligible: true }],
-		},
+		data: [
+			{
+				id: 1,
+				code: 'P1',
+				name: 'Titulaire',
+				weeklyServiceHours: '24',
+				hsaEligible: true,
+				defaultCostMode: 'LOCAL_PAYROLL',
+				sortOrder: 1,
+			},
+		],
 	}),
 }));
 
