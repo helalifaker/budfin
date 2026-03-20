@@ -28,6 +28,10 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from '../ui/alert-dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Textarea } from '../ui/textarea';
 
 // ── Band badge styles ────────────────────────────────────────────────────────
 
@@ -182,24 +186,22 @@ function AssignmentForm({
 				>
 					Employee
 				</label>
-				<select
-					id="assignment-employee"
+				<Select
 					value={form.employeeId}
-					onChange={(e) => setForm((prev) => ({ ...prev, employeeId: e.target.value }))}
-					className={cn(
-						'flex h-9 w-full rounded-md',
-						'border border-(--workspace-border) bg-white',
-						'px-3 py-2 text-(--text-sm) text-(--text-primary)',
-						'focus:outline-none focus:border-(--accent-500)'
-					)}
+					onValueChange={(val) => setForm((prev) => ({ ...prev, employeeId: val }))}
+					disabled={!teachingEmployees.length}
 				>
-					<option value="">Select employee...</option>
-					{teachingEmployees.map((emp) => (
-						<option key={emp.id} value={emp.id.toString()}>
-							{emp.name}
-						</option>
-					))}
-				</select>
+					<SelectTrigger id="assignment-employee" aria-label="Select employee">
+						<SelectValue placeholder="Select employee..." />
+					</SelectTrigger>
+					<SelectContent>
+						{teachingEmployees.map((emp) => (
+							<SelectItem key={emp.id} value={emp.id.toString()}>
+								{emp.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 
 			{/* FTE share input */}
@@ -210,20 +212,14 @@ function AssignmentForm({
 				>
 					FTE share
 				</label>
-				<input
+				<Input
 					id="assignment-fte-share"
 					type="number"
 					step="0.01"
-					min="0"
-					max="1"
+					min={0}
+					max={1}
 					value={form.fteShare}
 					onChange={(e) => setForm((prev) => ({ ...prev, fteShare: e.target.value }))}
-					className={cn(
-						'flex h-9 w-full rounded-md',
-						'border border-(--workspace-border) bg-white',
-						'px-3 py-2 text-(--text-sm) text-(--text-primary)',
-						'focus:outline-none focus:border-(--accent-500)'
-					)}
 				/>
 			</div>
 
@@ -235,18 +231,13 @@ function AssignmentForm({
 				>
 					Hours/week
 				</label>
-				<input
+				<Input
 					id="assignment-hours-week"
 					type="text"
 					value={derivedHoursPerWeek}
 					readOnly
 					aria-readonly="true"
-					className={cn(
-						'flex h-9 w-full rounded-md',
-						'border border-(--workspace-border) bg-(--workspace-bg-muted)',
-						'px-3 py-2 text-(--text-sm) text-(--text-muted)',
-						'cursor-not-allowed'
-					)}
+					className="cursor-not-allowed bg-(--workspace-bg-muted) text-(--text-muted)"
 				/>
 			</div>
 
@@ -258,49 +249,29 @@ function AssignmentForm({
 				>
 					Note
 				</label>
-				<textarea
+				<Textarea
 					id="assignment-note"
 					value={form.note}
 					onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
 					maxLength={500}
 					rows={2}
-					className={cn(
-						'flex min-h-[60px] w-full rounded-md',
-						'border border-(--workspace-border) bg-white',
-						'px-3 py-2 text-(--text-sm) text-(--text-primary)',
-						'focus:outline-none focus:border-(--accent-500)'
-					)}
+					className="min-h-[60px]"
 				/>
 			</div>
 
 			{/* Actions */}
 			<div className="flex justify-end gap-2">
-				<button
-					type="button"
-					onClick={onCancel}
-					className={cn(
-						'inline-flex h-8 items-center rounded-md px-3',
-						'text-(--text-xs) font-medium text-(--text-secondary)',
-						'border border-(--workspace-border)',
-						'hover:bg-(--workspace-bg-muted)',
-						'transition-colors duration-(--duration-fast)'
-					)}
-				>
+				<Button type="button" variant="outline" size="sm" onClick={onCancel}>
 					Cancel
-				</button>
-				<button
+				</Button>
+				<Button
 					type="button"
+					size="sm"
 					onClick={handleSubmit}
 					aria-label={editingAssignment ? 'Save' : 'Assign'}
-					className={cn(
-						'inline-flex h-8 items-center rounded-md px-3',
-						'text-(--text-xs) font-medium text-white',
-						'bg-(--accent-500) hover:bg-(--accent-600)',
-						'transition-colors duration-(--duration-fast)'
-					)}
 				>
 					{editingAssignment ? 'Save' : 'Assign'}
-				</button>
+				</Button>
 			</div>
 		</div>
 	);
@@ -562,17 +533,9 @@ function InspectorRequirementView({
 		<div className="space-y-4">
 			{/* Header with back button */}
 			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					onClick={clearSelection}
-					className={cn(
-						'rounded-md p-1 text-(--text-muted) transition-colors duration-(--duration-fast)',
-						'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)'
-					)}
-					aria-label="Back to overview"
-				>
+				<Button variant="ghost" size="icon" onClick={clearSelection} aria-label="Back to overview">
 					<ArrowLeft className="h-4 w-4" />
-				</button>
+				</Button>
 				<span
 					className={cn('rounded-sm px-1.5 py-0.5 text-(--text-xs) font-medium', bandBadgeStyle)}
 				>
@@ -648,20 +611,16 @@ function InspectorRequirementView({
 						Assigned teachers
 					</h4>
 					{isEditable && (
-						<button
-							type="button"
+						<Button
+							variant="ghost"
+							size="sm"
 							onClick={handleAssignTeacher}
 							aria-label="Assign Teacher"
-							className={cn(
-								'inline-flex items-center gap-1 rounded-md px-2 py-1',
-								'text-(--text-xs) font-medium text-(--accent-700)',
-								'bg-(--accent-50) hover:bg-(--accent-100)',
-								'transition-colors duration-(--duration-fast)'
-							)}
+							className="gap-1 text-(--text-xs) text-(--accent-700)"
 						>
 							<UserPlus className="h-3 w-3" aria-hidden="true" />
 							Assign Teacher
-						</button>
+						</Button>
 					)}
 				</div>
 
@@ -716,30 +675,23 @@ function InspectorRequirementView({
 									</span>
 									{isEditable && (
 										<>
-											<button
-												type="button"
+											<Button
+												variant="ghost"
+												size="icon"
 												onClick={() => handleEditAssignment(assignment)}
 												aria-label="Edit assignment"
-												className={cn(
-													'rounded-md p-1 text-(--text-muted)',
-													'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)',
-													'transition-colors duration-(--duration-fast)'
-												)}
 											>
 												<Pencil className="h-3.5 w-3.5" />
-											</button>
-											<button
-												type="button"
+											</Button>
+											<Button
+												variant="ghost"
+												size="icon"
 												onClick={() => setDeleteConfirmId(assignment.id)}
 												aria-label="Delete assignment"
-												className={cn(
-													'rounded-md p-1 text-(--text-muted)',
-													'hover:bg-(--color-error-bg) hover:text-(--color-error)',
-													'transition-colors duration-(--duration-fast)'
-												)}
+												className="hover:bg-(--color-error-bg) hover:text-(--color-error)"
 											>
 												<Trash2 className="h-3.5 w-3.5" />
-											</button>
+											</Button>
 										</>
 									)}
 								</div>
@@ -864,17 +816,9 @@ function InspectorSupportView({ employeeId }: { employeeId: number }) {
 		<div className="space-y-4">
 			{/* Header with back button */}
 			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					onClick={clearSelection}
-					className={cn(
-						'rounded-md p-1 text-(--text-muted) transition-colors duration-(--duration-fast)',
-						'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)'
-					)}
-					aria-label="Back to overview"
-				>
+				<Button variant="ghost" size="icon" onClick={clearSelection} aria-label="Back to overview">
 					<ArrowLeft className="h-4 w-4" />
-				</button>
+				</Button>
 				<h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-(--text-primary)">
 					{empData.name}
 				</h3>
@@ -953,17 +897,9 @@ function InspectorEmployeeView({ employeeId }: { employeeId: number }) {
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					onClick={clearSelection}
-					className={cn(
-						'rounded-md p-1 text-(--text-muted) transition-colors duration-(--duration-fast)',
-						'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)'
-					)}
-					aria-label="Back to overview"
-				>
+				<Button variant="ghost" size="icon" onClick={clearSelection} aria-label="Back to overview">
 					<ArrowLeft className="h-4 w-4" />
-				</button>
+				</Button>
 				<h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-(--text-primary)">
 					{empData.name}
 				</h3>
@@ -1125,17 +1061,9 @@ function InspectorDisciplineSummaryView({
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					onClick={clearSelection}
-					className={cn(
-						'rounded-md p-1 text-(--text-muted) transition-colors duration-(--duration-fast)',
-						'hover:bg-(--workspace-bg-muted) hover:text-(--text-primary)'
-					)}
-					aria-label="Back to overview"
-				>
+				<Button variant="ghost" size="icon" onClick={clearSelection} aria-label="Back to overview">
 					<ArrowLeft className="h-4 w-4" />
-				</button>
+				</Button>
 				<h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-(--text-primary)">
 					{disciplineCode}
 				</h3>

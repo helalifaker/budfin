@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Decimal from 'decimal.js';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
@@ -94,7 +95,7 @@ export function StaffingPageV2() {
 		() => ({
 			totalHeadcount: employeesData?.total ?? 0,
 			fteGap: parseFloat(teachingReqData?.totals.totalFteGap ?? '0'),
-			staffCost: parseFloat(summaryData?.cost ?? '0'),
+			staffCost: new Decimal(summaryData?.cost ?? '0').toNumber(),
 			hsaBudget: 0,
 			heRatio: 0,
 			rechargeCost: 0,

@@ -68,7 +68,9 @@
 | 4 — SPECIFY (Epic 19) | ✅ Complete | 2026-03-17 |
 | 5 — TDD RED (Epic 19) | ✅ Complete | 2026-03-17 |
 | 6 — IMPLEMENT (Epic 19) | ✅ Complete | 2026-03-17 |
-| 7 — REVIEW (Epic 19) | 🔄 In Progress | 2026-03-17 |
+| 7 — REVIEW (Epic 19) | ✅ Complete | 2026-03-17 |
+| 6 — IMPLEMENT (Epic 20) | ✅ Complete | 2026-03-19 |
+| 7 — REVIEW (Epic 20) | ✅ Complete | 2026-03-19 |
 
 ## Feature Progress
 
@@ -92,7 +94,7 @@
 | 17 | Revenue Page — Enrollment Parity & Fee Grid Redesign | DONE | All stories complete, merged PR #209 — 2026-03-17 |
 | 18 | DHG & Staffing Foundations | DONE | All 6 stories complete (6/6), merged PR #232 — 2026-03-17 |
 | 19 | Staffing Coverage & Cost Engine | DONE | All 7 stories complete (7/7), merged PR #233 — 2026-03-17 |
-| 20 | Staffing Frontend Redesign | DONE | All 6 stories complete (6/6), merged PRs #234-#239 — 2026-03-17 |
+| 20 | Staffing Frontend Redesign | DONE | All 7 stories complete (7/7), merged PRs #234-#240 — 2026-03-19 |
 
 ## Update Instructions
 

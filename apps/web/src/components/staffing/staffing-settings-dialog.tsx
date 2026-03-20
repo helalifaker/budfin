@@ -14,6 +14,7 @@ import {
 } from '../ui/alert-dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import {
 	useStaffingSettings,
@@ -149,12 +150,12 @@ function SidebarItem({
 }: SidebarItemProps) {
 	if (isHidden) return null;
 	return (
-		<button
-			type="button"
+		<Button
+			variant="ghost"
 			onClick={onClick}
 			aria-current={isActive ? 'page' : undefined}
 			className={cn(
-				'flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-(--text-sm) transition-colors duration-(--duration-fast)',
+				'h-auto w-full justify-between rounded-xl border px-3 py-2 text-left text-(--text-sm)',
 				isActive
 					? 'border-(--workspace-border) bg-(--workspace-bg-card) font-medium text-(--text-primary)'
 					: 'border-transparent text-(--text-secondary) hover:bg-(--workspace-bg-card)'
@@ -176,7 +177,7 @@ function SidebarItem({
 					aria-label={isReady ? `${label} configured` : `${label} not configured`}
 				/>
 			</span>
-		</button>
+		</Button>
 	);
 }
 
@@ -817,17 +818,18 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 															DHG Rules (Read-Only)
 														</p>
-														<button
-															type="button"
+														<Button
+															variant="ghost"
+															size="sm"
 															onClick={() => {
 																close();
 																navigate('/master-data/reference?tab=curriculum');
 															}}
-															className="inline-flex items-center gap-1 text-(--text-sm) text-(--accent-600) hover:underline"
+															className="gap-1 text-(--text-sm) text-(--accent-600) hover:underline"
 														>
 															<ExternalLink className="h-3 w-3" />
 															Edit in Master Data
-														</button>
+														</Button>
 													</div>
 
 													{BAND_ORDER.map((band) => {
@@ -1008,27 +1010,31 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																				{cat.label}
 																			</td>
 																			<td className="px-3 py-2">
-																				<select
+																				<Select
 																					value={mode}
-																					onChange={(e) =>
+																					onValueChange={(val) =>
 																						setDraftCost((cur) =>
 																							cur.map((d) =>
-																								d.category === cat.key
-																									? { ...d, mode: e.target.value }
-																									: d
+																								d.category === cat.key ? { ...d, mode: val } : d
 																							)
 																						)
 																					}
 																					disabled={!isEditable}
-																					aria-label={`${cat.label} mode`}
-																					className="rounded-md border border-(--workspace-border) bg-white px-2 py-1 text-(--text-sm)"
 																				>
-																					{COST_MODES.map((m) => (
-																						<option key={m.value} value={m.value}>
-																							{m.label}
-																						</option>
-																					))}
-																				</select>
+																					<SelectTrigger
+																						aria-label={`${cat.label} mode`}
+																						className="h-8 w-36"
+																					>
+																						<SelectValue />
+																					</SelectTrigger>
+																					<SelectContent>
+																						{COST_MODES.map((m) => (
+																							<SelectItem key={m.value} value={m.value}>
+																								{m.label}
+																							</SelectItem>
+																						))}
+																					</SelectContent>
+																				</Select>
 																			</td>
 																			<td className="px-3 py-2">
 																				<Input

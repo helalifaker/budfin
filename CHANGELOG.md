@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Staffing page redesigned as a 4-tab planning pipeline (Demand, Roster, Coverage, Costs): budget planners can now move linearly through demand review, employee roster management, coverage gap analysis, and cost review without switching between separate workspace modes; each tab shows a live badge for stale data or unresolved issues (#240)
+- Staffing Settings panel converted from a slide-out sheet to a full-screen dialog with a left sidebar for section navigation; unsaved-change indicators (orange dot) and readiness indicators (green dot) on each section make it immediately clear what is configured and what needs attention (#240)
+- Staffing export workbook available from any tab: the Export button generates an Excel workbook containing the teaching demand grid, employee roster, coverage summary, cost breakdown, and KPI snapshot without needing to navigate to a specific tab (#240)
+
 - Staffing assignments: assign individual teachers and vacancies to teaching requirement lines with FTE tracking, enabling explicit supply-to-demand coverage planning for budget owners (#216)
 - Coverage engine: automatic computation of FTE coverage gaps per requirement line with status indicators (COVERED, DEFICIT, SURPLUS, UNCOVERED) and 5 warning types (over-assigned, orphaned assignment, unassigned teacher, departed with assignments, recharge coverage) (#218)
 - HSA (Heures Supplementaires Annualisees) engine: per-teacher HSA cost calculation based on configurable hours, rates, and months, applied only to HSA-eligible LOCAL_PAYROLL employees (#220)

@@ -224,7 +224,7 @@ export function DisciplineSummaryGrid({
 		<div className={cn('overflow-x-auto rounded-md', 'border border-(--workspace-border)')}>
 			<table
 				className="w-full border-collapse text-sm"
-				role="grid"
+				role="table"
 				aria-label="Discipline coverage summary"
 			>
 				<thead>
