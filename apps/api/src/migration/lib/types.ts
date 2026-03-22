@@ -61,6 +61,10 @@ export interface StaffCostsFixture {
 	name: string;
 	functionRole: string;
 	department: string;
+	costMode: string;
+	subject: string;
+	homeBand: string | null;
+	level: string;
 	status: string;
 	joiningDate: string;
 	paymentMethod: string;

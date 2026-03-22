@@ -91,17 +91,44 @@ export function StaffingPageV2() {
 	const isUncalculated = !isStale && !currentVersion?.lastCalculatedAt;
 
 	// Global stable KPIs for export (DC-3)
-	const exportKpis: KpiValues = useMemo(
-		() => ({
+	const exportKpis: KpiValues = useMemo(() => {
+		// HSA Budget: sum of hsaCostAnnual across all requirement lines
+		const hsaBudget = (teachingReqData?.lines ?? [])
+			.reduce((sum, line) => sum.plus(line.hsaCostAnnual ?? '0'), new Decimal(0))
+			.toNumber();
+
+		// H/E Ratio: Host (local) / Expatriate (AEFE) count
+		const employees = employeesData?.data ?? [];
+		const localCount = employees.filter(
+			(e) => e.costMode !== 'AEFE_RECHARGE' && e.status !== 'Departed'
+		).length;
+		const aefeCount = employees.filter(
+			(e) => e.costMode === 'AEFE_RECHARGE' && e.status !== 'Departed'
+		).length;
+		const heRatio = aefeCount > 0 ? +(localCount / aefeCount).toFixed(2) : 0;
+
+		// Recharge Cost: sum of RESIDENT_* category costs (annualized)
+		const rechargeCost = (categoryCosts?.data ?? [])
+			.reduce((sum, entry) => {
+				let monthTotal = new Decimal(0);
+				for (const [key, val] of Object.entries(entry)) {
+					if (key.startsWith('RESIDENT_') && typeof val === 'string') {
+						monthTotal = monthTotal.plus(val);
+					}
+				}
+				return sum.plus(monthTotal);
+			}, new Decimal(0))
+			.toNumber();
+
+		return {
 			totalHeadcount: employeesData?.total ?? 0,
 			fteGap: parseFloat(teachingReqData?.totals.totalFteGap ?? '0'),
 			staffCost: new Decimal(summaryData?.cost ?? '0').toNumber(),
-			hsaBudget: 0,
-			heRatio: 0,
-			rechargeCost: 0,
-		}),
-		[employeesData?.total, teachingReqData?.totals, summaryData?.cost]
-	);
+			hsaBudget,
+			heRatio,
+			rechargeCost,
+		};
+	}, [employeesData, teachingReqData, summaryData, categoryCosts]);
 
 	// Tab-specific KPIs (available for future per-tab ribbon enhancement)
 	const _tabKpis = useMemo(

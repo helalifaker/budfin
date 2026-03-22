@@ -68,29 +68,19 @@ const serviceProfiles = [
  * Categories: SUBJECT (taught disciplines), ROLE (functional roles), POOL (hour pools).
  */
 const disciplines = [
-	// SUBJECT disciplines
+	// SUBJECT disciplines — Tronc commun
 	{ code: 'FRANCAIS', name: 'Francais', category: 'SUBJECT', sortOrder: 1 },
 	{ code: 'MATHEMATIQUES', name: 'Mathematiques', category: 'SUBJECT', sortOrder: 2 },
 	{ code: 'HISTOIRE_GEO', name: 'Histoire-Geographie', category: 'SUBJECT', sortOrder: 3 },
 	{ code: 'ANGLAIS_LV1', name: 'Anglais LV1', category: 'SUBJECT', sortOrder: 4 },
 	{ code: 'ARABE', name: 'Arabe', category: 'SUBJECT', sortOrder: 5 },
-	{ code: 'ISLAMIQUE', name: 'Islamique', category: 'SUBJECT', sortOrder: 6 },
+	{ code: 'FLE', name: 'Francais Langue Etrangere', category: 'SUBJECT', sortOrder: 6 },
 	{ code: 'EPS', name: 'Education Physique et Sportive', category: 'SUBJECT', sortOrder: 7 },
 	{ code: 'PHYSIQUE_CHIMIE', name: 'Physique-Chimie', category: 'SUBJECT', sortOrder: 8 },
 	{ code: 'SVT', name: 'Sciences de la Vie et de la Terre', category: 'SUBJECT', sortOrder: 9 },
 	{ code: 'TECHNOLOGIE', name: 'Technologie', category: 'SUBJECT', sortOrder: 10 },
-	{
-		code: 'ARTS_PLASTIQUES',
-		name: 'Arts Plastiques',
-		category: 'SUBJECT',
-		sortOrder: 11,
-	},
-	{
-		code: 'EDUCATION_MUSICALE',
-		name: 'Education Musicale',
-		category: 'SUBJECT',
-		sortOrder: 12,
-	},
+	{ code: 'ARTS_PLASTIQUES', name: 'Arts Plastiques', category: 'SUBJECT', sortOrder: 11 },
+	{ code: 'EDUCATION_MUSICALE', name: 'Education Musicale', category: 'SUBJECT', sortOrder: 12 },
 	{ code: 'PHILOSOPHIE', name: 'Philosophie', category: 'SUBJECT', sortOrder: 13 },
 	{
 		code: 'SES',
@@ -99,10 +89,58 @@ const disciplines = [
 		sortOrder: 14,
 	},
 	{
-		code: 'NSI',
-		name: 'Numerique et Sciences Informatiques',
+		code: 'ENS_SCIENTIFIQUE',
+		name: 'Enseignement Scientifique',
+		category: 'SCIENCE',
+		sortOrder: 14,
+	},
+	{
+		code: 'EMC',
+		name: 'Enseignement Moral et Civique',
+		category: 'HUMANITIES',
+		sortOrder: 15,
+	},
+	{
+		code: 'SNT',
+		name: 'Sciences Numeriques et Technologie',
 		category: 'SUBJECT',
 		sortOrder: 15,
+	},
+
+	// SPECIALTY disciplines (Lycee specialites offered at EFIR)
+	{
+		code: 'HGGSP',
+		name: 'Histoire-Geographie, Geopolitique et Sciences Politiques',
+		category: 'SPECIALTY',
+		sortOrder: 30,
+	},
+	{
+		code: 'HLP',
+		name: 'Humanites, Litterature et Philosophie',
+		category: 'SPECIALTY',
+		sortOrder: 31,
+	},
+	{
+		code: 'LLCER',
+		name: 'Langues, Litteratures et Cultures Etrangeres et Regionales',
+		category: 'SPECIALTY',
+		sortOrder: 32,
+	},
+
+	// OPTION disciplines
+	{ code: 'ESPAGNOL', name: 'Espagnol', category: 'OPTION', sortOrder: 5 },
+	{ code: 'ALLEMAND', name: 'Allemand', category: 'OPTION', sortOrder: 40 },
+	{
+		code: 'MATHS_COMP',
+		name: 'Mathematiques complementaires',
+		category: 'OPTION',
+		sortOrder: 42,
+	},
+	{
+		code: 'MATHS_EXPERTES',
+		name: 'Mathematiques expertes',
+		category: 'OPTION',
+		sortOrder: 43,
 	},
 
 	// ROLE disciplines
@@ -132,9 +170,30 @@ const disciplineAliases = [
 	{ alias: 'Maths', disciplineCode: 'MATHEMATIQUES' },
 	{ alias: 'Histoire-Geographie', disciplineCode: 'HISTOIRE_GEO' },
 	{ alias: 'Histoire Géographie', disciplineCode: 'HISTOIRE_GEO' },
+	{ alias: 'Histoire-Geo', disciplineCode: 'HISTOIRE_GEO' },
+	{ alias: 'Histoire-Géographie', disciplineCode: 'HISTOIRE_GEO' },
 	{ alias: 'Education Physique', disciplineCode: 'EPS' },
+	{ alias: 'EPS', disciplineCode: 'EPS' },
 	{ alias: 'Sciences Physiques', disciplineCode: 'PHYSIQUE_CHIMIE' },
+	{ alias: 'Sciences physiques', disciplineCode: 'PHYSIQUE_CHIMIE' },
 	{ alias: 'Arts Visuels', disciplineCode: 'ARTS_PLASTIQUES' },
+	{ alias: 'Musique', disciplineCode: 'EDUCATION_MUSICALE' },
+	{ alias: 'Arts plastiques', disciplineCode: 'ARTS_PLASTIQUES' },
+	{ alias: 'Generaliste', disciplineCode: 'PRIMARY_HOMEROOM' },
+	{ alias: 'FLE', disciplineCode: 'FLE' },
+	{ alias: 'Sciences economiques', disciplineCode: 'SES' },
+	{ alias: 'Sciences Economiques', disciplineCode: 'SES' },
+	{ alias: 'Sciences eco.', disciplineCode: 'SES' },
+	{ alias: 'PDMQDC', disciplineCode: 'PRIMARY_HOMEROOM' },
+	{ alias: 'Espagnol', disciplineCode: 'ESPAGNOL' },
+	{ alias: 'Anglais', disciplineCode: 'ANGLAIS_LV1' },
+	{ alias: 'Francais', disciplineCode: 'FRANCAIS' },
+	{ alias: 'Arabe', disciplineCode: 'ARABE' },
+	{ alias: 'SVT', disciplineCode: 'SVT' },
+	{ alias: 'Allemand', disciplineCode: 'ALLEMAND' },
+	{ alias: 'ASEM', disciplineCode: 'ASEM' },
+	{ alias: 'Technologie / SNT', disciplineCode: 'TECHNOLOGIE' },
+	{ alias: 'Technologie', disciplineCode: 'TECHNOLOGIE' },
 ] as const;
 
 /**
