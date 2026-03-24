@@ -33,12 +33,38 @@ const COST_ASSUMPTION_DEFAULTS: Array<{
 	category: string;
 	calculationMode: string;
 	value: string;
+	excludeSummerMonths: boolean;
 }> = [
-	{ category: 'REMPLACEMENTS', calculationMode: 'PERCENT_OF_PAYROLL', value: '0.0113' },
-	{ category: 'FORMATION', calculationMode: 'PERCENT_OF_PAYROLL', value: '0.0127' },
-	{ category: 'RESIDENT_SALAIRES', calculationMode: 'FLAT_ANNUAL', value: '0' },
-	{ category: 'RESIDENT_LOGEMENT', calculationMode: 'FLAT_ANNUAL', value: '0' },
-	{ category: 'RESIDENT_PENSION', calculationMode: 'FLAT_ANNUAL', value: '837000.0000' },
+	{
+		category: 'REMPLACEMENTS',
+		calculationMode: 'PERCENT_OF_PAYROLL',
+		value: '0.0113',
+		excludeSummerMonths: true,
+	},
+	{
+		category: 'FORMATION',
+		calculationMode: 'PERCENT_OF_PAYROLL',
+		value: '0.0127',
+		excludeSummerMonths: false,
+	},
+	{
+		category: 'RESIDENT_SALAIRES',
+		calculationMode: 'FLAT_ANNUAL',
+		value: '0',
+		excludeSummerMonths: true,
+	},
+	{
+		category: 'RESIDENT_LOGEMENT',
+		calculationMode: 'FLAT_ANNUAL',
+		value: '0',
+		excludeSummerMonths: true,
+	},
+	{
+		category: 'RESIDENT_PENSION',
+		calculationMode: 'FLAT_ANNUAL',
+		value: '837000.0000',
+		excludeSummerMonths: true,
+	},
 ];
 
 // ── Heuristic mapping helpers ────────────────────────────────────────────────

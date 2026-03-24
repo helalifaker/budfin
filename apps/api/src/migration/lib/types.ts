@@ -79,8 +79,6 @@ export interface StaffCostsFixture {
 	hsaAmount: string;
 	augmentation: string;
 	augmentationEffectiveDate: string | null;
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
 }
 
 export interface GradeCodeMapping {

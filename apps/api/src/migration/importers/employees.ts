@@ -54,7 +54,6 @@ export async function importEmployees(
 					base_salary, housing_allowance, transport_allowance,
 					responsibility_premium, hsa_amount, augmentation,
 					augmentation_effective_date,
-					ajeer_annual_levy, ajeer_monthly_fee,
 					created_by, created_at, updated_at
 				) VALUES (
 					$1, $2, $3, $4, $5,
@@ -67,8 +66,7 @@ export async function importEmployees(
 					pgp_sym_encrypt($18, $14),
 					pgp_sym_encrypt($19, $14),
 					$20,
-					$21::numeric, $22::numeric,
-					$23, NOW(), NOW()
+					$21, NOW(), NOW()
 				)
 				ON CONFLICT (version_id, employee_code)
 				DO UPDATE SET
@@ -89,8 +87,6 @@ export async function importEmployees(
 					hsa_amount = EXCLUDED.hsa_amount,
 					augmentation = EXCLUDED.augmentation,
 					augmentation_effective_date = EXCLUDED.augmentation_effective_date,
-					ajeer_annual_levy = EXCLUDED.ajeer_annual_levy,
-					ajeer_monthly_fee = EXCLUDED.ajeer_monthly_fee,
 					updated_by = EXCLUDED.created_by,
 					updated_at = NOW()`,
 				versionId,
@@ -113,8 +109,6 @@ export async function importEmployees(
 				emp.hsaAmount,
 				emp.augmentation,
 				augEffDate,
-				new Decimal(emp.ajeerAnnualLevy).toFixed(4),
-				new Decimal(emp.ajeerMonthlyFee).toFixed(4),
 				userId
 			);
 			count++;

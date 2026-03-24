@@ -781,10 +781,6 @@ async function main() {
 		const isSaudi = false;
 		const isAjeer = false;
 
-		// Ajeer costs — no Ajeer Costs sheet in new format, default to 0
-		const ajeerAnnualLevy = new Decimal('0');
-		const ajeerMonthlyFee = new Decimal('0');
-
 		// ── Build fixture entry ──────────────────────────────────────────
 
 		fixtures.push({
@@ -810,8 +806,6 @@ async function main() {
 			hsaAmount: dec4(hsaAmount),
 			augmentation: dec4(augmentation),
 			augmentationEffectiveDate,
-			ajeerAnnualLevy: dec4(ajeerAnnualLevy),
-			ajeerMonthlyFee: dec4(ajeerMonthlyFee),
 		});
 	}
 

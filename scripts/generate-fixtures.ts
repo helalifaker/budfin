@@ -1079,8 +1079,6 @@ function generateStaffCosts() {
 		hsaAmount: string;
 		augmentation: string;
 		augmentationEffectiveDate: string | null;
-		ajeerAnnualLevy: string;
-		ajeerMonthlyFee: string;
 	}> = [];
 
 	let empNum = 1;
@@ -1100,8 +1098,6 @@ function generateStaffCosts() {
 			hsa: number;
 			aug: number;
 			augDate: string;
-			ajeerLevy: number;
-			ajeerFee: number;
 			status: string;
 			joining: string;
 			payment: string;
@@ -1204,8 +1200,6 @@ function generateStaffCosts() {
 			hsaAmount: (opts.hsa ?? 0).toFixed(4),
 			augmentation: (opts.aug ?? 0).toFixed(4),
 			augmentationEffectiveDate: opts.augDate ?? null,
-			ajeerAnnualLevy: (opts.ajeerLevy ?? 0).toFixed(4),
-			ajeerMonthlyFee: (opts.ajeerFee ?? 0).toFixed(4),
 		});
 	}
 
@@ -1288,15 +1282,11 @@ function generateStaffCosts() {
 		addEmp('Chauffeur', 'SUPPORT', false, 4000, 1500, {
 			isSaudi: true,
 			isAjeer: true,
-			ajeerLevy: 9600,
-			ajeerFee: 200,
 		});
 	for (let i = 0; i < 3; i++)
 		addEmp('Agent de Securite', 'SUPPORT', false, 3500, 1200, {
 			isSaudi: true,
 			isAjeer: true,
-			ajeerLevy: 9600,
-			ajeerFee: 200,
 		});
 
 	// Maintenance (8)
@@ -1306,8 +1296,6 @@ function generateStaffCosts() {
 		addEmp('Agent Entretien', 'MAINT', false, 3500, 1200, {
 			isSaudi: false,
 			isAjeer: true,
-			ajeerLevy: 9600,
-			ajeerFee: 200,
 		});
 
 	return employees;
@@ -1347,18 +1335,18 @@ function generateEnrollmentCsvs() {
 function writeJson(filename: string, data: unknown) {
 	const path = resolve(FIXTURES, filename);
 	writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
-	// eslint-disable-next-line no-console
+	 
 	console.log(`  Wrote ${path}`);
 }
 
 function writeCsv(filename: string, content: string) {
 	const path = resolve(ENROLLMENT, filename);
 	writeFileSync(path, content);
-	// eslint-disable-next-line no-console
+	 
 	console.log(`  Wrote ${path}`);
 }
 
-// eslint-disable-next-line no-console
+ 
 console.log('=== Generating BudFin Migration Fixtures ===\n');
 
 // 1. Grade code mapping
@@ -1367,7 +1355,7 @@ writeJson('grade-code-mapping.json', mapping);
 
 // 2. Fee grid
 const feeGrid = generateFeeGrid();
-// eslint-disable-next-line no-console
+ 
 console.log(`  fee_grids: ${feeGrid.length} rows (expected 270)`);
 writeJson('fy2026-fee-grid.json', feeGrid);
 
@@ -1380,7 +1368,7 @@ const enrollmentDetail = generateEnrollmentDetail();
 const ay1Total = enrollmentDetail
 	.filter((e) => e.academicPeriod === 'AY1')
 	.reduce((sum, e) => sum + e.headcount, 0);
-// eslint-disable-next-line no-console
+ 
 console.log(
 	`  enrollment_detail: ${enrollmentDetail.length} rows, AY1 total: ${ay1Total} (expected 1753)`
 );
@@ -1388,7 +1376,7 @@ writeJson('fy2026-enrollment-detail.json', enrollmentDetail);
 
 // 5. Other revenue
 const otherRevenue = generateOtherRevenue();
-// eslint-disable-next-line no-console
+ 
 console.log(`  other_revenue: ${otherRevenue.length} items (expected 21)`);
 writeJson('fy2026-other-revenue.json', otherRevenue);
 
@@ -1398,7 +1386,7 @@ writeJson('fy2026-dhg-structure.json', dhg);
 
 // 7. Staff costs
 const staff = generateStaffCosts();
-// eslint-disable-next-line no-console
+ 
 console.log(`  employees: ${staff.length} records`);
 writeJson('fy2026-staff-costs.json', staff);
 
@@ -1408,5 +1396,5 @@ for (const [yearKey, content] of Object.entries(csvs)) {
 	writeCsv(`enrollment_${yearKey}.csv`, content);
 }
 
-// eslint-disable-next-line no-console
+ 
 console.log('\n=== Fixture generation complete ===');
