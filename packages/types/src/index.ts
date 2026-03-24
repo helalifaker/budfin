@@ -167,3 +167,12 @@ export type {
 	ExportJobRequest,
 	ExportJobResponse,
 } from './pnl.js';
+
+export { SCENARIO_NAMES } from './scenario.js';
+
+export type {
+	ScenarioName,
+	ScenarioParameters,
+	ScenarioComparisonRow,
+	ScenarioComparisonResponse,
+} from './scenario.js';

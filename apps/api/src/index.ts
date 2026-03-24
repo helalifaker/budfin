@@ -26,6 +26,7 @@ import { staffingRoutes, staffingCalculateRoutes } from './routes/staffing/index
 import { opExRoutes, opExCalculateRoutes } from './routes/opex/index.js';
 import { pnlRoutes } from './routes/pnl/index.js';
 import { pnlCalculateRoutes } from './routes/pnl/calculate.js';
+import { scenarioRoutes } from './routes/scenarios/index.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -93,6 +94,9 @@ export async function buildApp() {
 	});
 	await app.register(pnlCalculateRoutes, {
 		prefix: '/api/v1/versions/:versionId/calculate',
+	});
+	await app.register(scenarioRoutes, {
+		prefix: '/api/v1/versions/:versionId',
 	});
 
 	return app;

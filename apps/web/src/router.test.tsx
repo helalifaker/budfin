@@ -17,8 +17,8 @@ vi.mock('./pages/planning/revenue', () => ({
 	RevenuePage: () => <div>Revenue Page</div>,
 }));
 
-vi.mock('./pages/placeholder', () => ({
-	PlaceholderPage: ({ title }: { title: string }) => <div>{title}</div>,
+vi.mock('./pages/planning/scenarios', () => ({
+	ScenarioPage: () => <div>Scenario Page</div>,
 }));
 
 vi.mock('./pages/management/versions', () => ({

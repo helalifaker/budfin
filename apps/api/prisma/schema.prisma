@@ -428,6 +428,9 @@ model BudgetVersion {
   teachingRequirementLines  TeachingRequirementLine[]
   staffingAssignments       StaffingAssignment[]
 
+  // Scenario Modeling (Epic 6)
+  scenarioParameters        ScenarioParameters[]
+
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
   @@index([status], map: "idx_budget_versions_status")
@@ -1311,4 +1314,26 @@ model ExportJob {
   @@index([versionId], map: "idx_export_job_version")
   @@index([status], map: "idx_export_job_status")
   @@map("export_jobs")
+}
+
+// ── Scenario Modeling (Epic 6) ──────────────────────────────────────────────
+
+model ScenarioParameters {
+  id                    Int      @id @default(autoincrement())
+  versionId             Int      @map("version_id")
+  scenarioName          String   @map("scenario_name") @db.VarChar(20)
+  newEnrollmentFactor   Decimal  @default(1.000000) @map("new_enrollment_factor") @db.Decimal(7, 6)
+  retentionAdjustment   Decimal  @default(1.000000) @map("retention_adjustment") @db.Decimal(7, 6)
+  feeCollectionRate     Decimal  @default(1.000000) @map("fee_collection_rate") @db.Decimal(7, 6)
+  scholarshipAllocation Decimal  @default(0.000000) @map("scholarship_allocation") @db.Decimal(7, 6)
+  attritionRate         Decimal  @default(0.000000) @map("attrition_rate") @db.Decimal(7, 6)
+  orsHours              Decimal  @default(18.0000) @map("ors_hours") @db.Decimal(5, 4)
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, scenarioName], map: "uq_scenario_params")
+  @@index([versionId], map: "idx_scenario_params_version")
+  @@map("scenario_parameters")
 }

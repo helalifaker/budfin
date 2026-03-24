@@ -21,7 +21,7 @@ import { SettingsPage } from './pages/admin/settings';
 import { StaffingPage } from './pages/planning/staffing';
 import { OpExPage } from './pages/planning/opex';
 import { PnlPage } from './pages/planning/pnl';
-import { PlaceholderPage } from './pages/placeholder';
+import { ScenarioPage } from './pages/planning/scenarios';
 
 export const routes: RouteObject[] = [
 	{ path: '/login', element: <LoginPage /> },
@@ -65,12 +65,7 @@ export const routes: RouteObject[] = [
 							},
 							{
 								path: '/planning/scenarios',
-								element: (
-									<PlaceholderPage
-										title="Scenario Modeling"
-										description="Compare budget scenarios and what-if analysis"
-									/>
-								),
+								element: <ScenarioPage />,
 							},
 						],
 					},
