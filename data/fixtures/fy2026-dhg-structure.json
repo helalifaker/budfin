@@ -508,10 +508,10 @@
 			}
 		},
 		{
-			"subject": "[Host-Country] Islamic Studies",
+			"subject": "Langue Vivante (Anglais)",
 			"hoursPerWeek": {
-				"PS": 1,
-				"MS": 1,
+				"PS": 0,
+				"MS": 0,
 				"GS": 1
 			}
 		}
@@ -625,16 +625,6 @@
 				"CE2": 4,
 				"CM1": 3,
 				"CM2": 3
-			}
-		},
-		{
-			"subject": "[Host-Country] Islamic Studies",
-			"hoursPerWeek": {
-				"CP": 2,
-				"CE1": 2,
-				"CE2": 2,
-				"CM1": 1,
-				"CM2": 1
 			}
 		}
 	],
@@ -995,34 +985,6 @@
 			"hoursPerWeekPerStudent": 3,
 			"totalHoursPerWeek": 12,
 			"sections": 4
-		},
-		{
-			"level": "6EME",
-			"discipline": "[Host-Country] Islamic Studies",
-			"hoursPerWeekPerStudent": 1,
-			"totalHoursPerWeek": 6,
-			"sections": 6
-		},
-		{
-			"level": "5EME",
-			"discipline": "[Host-Country] Islamic Studies",
-			"hoursPerWeekPerStudent": 1,
-			"totalHoursPerWeek": 6,
-			"sections": 6
-		},
-		{
-			"level": "4EME",
-			"discipline": "[Host-Country] Islamic Studies",
-			"hoursPerWeekPerStudent": 1,
-			"totalHoursPerWeek": 5,
-			"sections": 5
-		},
-		{
-			"level": "3EME",
-			"discipline": "[Host-Country] Islamic Studies",
-			"hoursPerWeekPerStudent": 1,
-			"totalHoursPerWeek": 4,
-			"sections": 4
 		}
 	],
 	"lyceeDHG": {
@@ -1324,13 +1286,6 @@
 				"hoursPerWeekPerStudent": 2,
 				"totalHoursPerWeek": 2,
 				"sections": 2
-			},
-			{
-				"level": "TERM",
-				"discipline": "[Specialite] Islamic Studies",
-				"hoursPerWeekPerStudent": 1,
-				"totalHoursPerWeek": 1,
-				"sections": 1
 			}
 		]
 	},
@@ -1340,120 +1295,105 @@
 			"sections": 3,
 			"frenchTeachers": 3,
 			"asemAssistants": 3,
-			"arabicHours": 6,
-			"islamicHours": 3
+			"arabicHours": 6
 		},
 		{
 			"level": "MS",
 			"sections": 4,
 			"frenchTeachers": 4,
 			"asemAssistants": 4,
-			"arabicHours": 12,
-			"islamicHours": 4
+			"arabicHours": 12
 		},
 		{
 			"level": "GS",
 			"sections": 6,
 			"frenchTeachers": 6,
 			"asemAssistants": 6,
-			"arabicHours": 18,
-			"islamicHours": 6
+			"arabicHours": 18
 		},
 		{
 			"level": "CP",
 			"sections": 5,
 			"frenchTeachers": 5,
 			"asemAssistants": 0,
-			"arabicHours": 20,
-			"islamicHours": 10
+			"arabicHours": 20
 		},
 		{
 			"level": "CE1",
 			"sections": 5,
 			"frenchTeachers": 5,
 			"asemAssistants": 0,
-			"arabicHours": 20,
-			"islamicHours": 10
+			"arabicHours": 20
 		},
 		{
 			"level": "CE2",
 			"sections": 6,
 			"frenchTeachers": 6,
 			"asemAssistants": 0,
-			"arabicHours": 24,
-			"islamicHours": 12
+			"arabicHours": 24
 		},
 		{
 			"level": "CM1",
 			"sections": 5,
 			"frenchTeachers": 5,
 			"asemAssistants": 0,
-			"arabicHours": 15,
-			"islamicHours": 5
+			"arabicHours": 15
 		},
 		{
 			"level": "CM2",
 			"sections": 5,
 			"frenchTeachers": 5,
 			"asemAssistants": 0,
-			"arabicHours": 15,
-			"islamicHours": 5
+			"arabicHours": 15
 		},
 		{
 			"level": "6ème",
 			"sections": 6,
 			"frenchTeachers": 8.92,
 			"asemAssistants": 0,
-			"arabicHours": 18,
-			"islamicHours": 6
+			"arabicHours": 18
 		},
 		{
 			"level": "5ème",
 			"sections": 6,
 			"frenchTeachers": 8.92,
 			"asemAssistants": 0,
-			"arabicHours": 18,
-			"islamicHours": 6
+			"arabicHours": 18
 		},
 		{
 			"level": "4ème",
 			"sections": 5,
 			"frenchTeachers": 7.44,
 			"asemAssistants": 0,
-			"arabicHours": 15,
-			"islamicHours": 5
+			"arabicHours": 15
 		},
 		{
 			"level": "3ème",
 			"sections": 4,
 			"frenchTeachers": 5.95,
 			"asemAssistants": 0,
-			"arabicHours": 12,
-			"islamicHours": 4
+			"arabicHours": 12
 		},
 		{
 			"level": "2nde",
 			"sections": 5,
 			"frenchTeachers": 9.87,
 			"asemAssistants": 0,
-			"arabicHours": 10,
-			"islamicHours": 5
+			"arabicHours": 10
 		},
 		{
 			"level": "1ère",
 			"sections": 5,
 			"frenchTeachers": 8.77,
 			"asemAssistants": 0,
-			"arabicHours": 10,
-			"islamicHours": 5
+			"arabicHours": 10
 		},
 		{
 			"level": "Terminale",
 			"sections": 4,
 			"frenchTeachers": 7.9,
 			"asemAssistants": 0,
-			"arabicHours": 8,
-			"islamicHours": 4
+			"arabicHours": 8
 		}
 	],
 	"subjectList": [
@@ -1484,11 +1424,9 @@
 		"Technologie",
 		"Total Student Hours / Week",
 		"[Host-Country] Arabic Language",
-		"[Host-Country] Islamic Studies",
 		"[Specialite] Arabic Language",
 		"[Specialite] HGGSP",
 		"[Specialite] Heures d'autonomie (8h/division)",
-		"[Specialite] Islamic Studies",
 		"[Specialite] Maths Tronc Commun (non-spé, 1.5h)",
 		"[Specialite] Mathématiques",
 		"[Specialite] NSI",
@@ -1504,5 +1442,1195 @@
 		"[Tronc Commun] LVB — Espagnol",
 		"[Tronc Commun] Philosophie",
 		"Éducation Musicale"
+	],
+	"dhgRules": [
+		{
+			"gradeLevel": "PS",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "PS",
+			"disciplineCode": "ASEM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "ASEM"
+		},
+		{
+			"gradeLevel": "MS",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "MS",
+			"disciplineCode": "ASEM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "ASEM"
+		},
+		{
+			"gradeLevel": "GS",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "GS",
+			"disciplineCode": "ASEM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "ASEM"
+		},
+		{
+			"gradeLevel": "PS",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "MS",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "GS",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.67",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "GS",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.67",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "CP",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "CE1",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "CE2",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "CM1",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "CM2",
+			"disciplineCode": "PRIMARY_HOMEROOM",
+			"lineType": "STRUCTURAL",
+			"driverType": "SECTION",
+			"hoursPerUnit": "0.00",
+			"serviceProfileCode": "PE"
+		},
+		{
+			"gradeLevel": "CP",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "CE1",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "CE2",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "CM1",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "CM2",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "CP",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "CE1",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "CE2",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "CM1",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "CM2",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "FRANCAIS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "FRANCAIS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "FRANCAIS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "FRANCAIS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "MATHEMATIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "MATHEMATIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "MATHEMATIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "MATHEMATIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "SOUTIEN",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "HISTOIRE_GEO",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "HISTOIRE_GEO",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "HISTOIRE_GEO",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "HISTOIRE_GEO",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "EMC",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "EMC",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "EMC",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "EMC",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "ARABE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_AR"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "ESPAGNOL",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_ES"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "ALLEMAND",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_DE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "ARABE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_AR"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "ESPAGNOL",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_ES"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "ALLEMAND",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_DE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "ARABE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_AR"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "ESPAGNOL",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_ES"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "ALLEMAND",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_DE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "SVT",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "SVT",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "SVT",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "SVT",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "PHYSIQUE_CHIMIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "PHYSIQUE_CHIMIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "PHYSIQUE_CHIMIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "PHYSIQUE_CHIMIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "TECHNOLOGIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "TECHNOLOGIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "TECHNOLOGIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "ARTS_PLASTIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "ARTS_PLASTIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "ARTS_PLASTIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "ARTS_PLASTIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "EDUCATION_MUSICALE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "EDUCATION_MUSICALE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "EDUCATION_MUSICALE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "EDUCATION_MUSICALE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "EPS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "EPS"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "EPS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "EPS"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "EPS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "EPS"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "EPS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "EPS"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "6EME",
+			"disciplineCode": "AUTONOMY",
+			"lineType": "AUTONOMY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "5EME",
+			"disciplineCode": "AUTONOMY",
+			"lineType": "AUTONOMY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "4EME",
+			"disciplineCode": "AUTONOMY",
+			"lineType": "AUTONOMY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "3EME",
+			"disciplineCode": "AUTONOMY",
+			"lineType": "AUTONOMY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "FRANCAIS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "HISTOIRE_GEO",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "ESPAGNOL",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_ES"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "ARABE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_AR"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "ALLEMAND",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.50",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_DE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "SES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "MATHEMATIQUES",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "PHYSIQUE_CHIMIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "SVT",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "EPS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "EPS"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "EMC",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "SNT",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "AUTONOMY",
+			"lineType": "AUTONOMY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "12.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "2NDE",
+			"disciplineCode": "EDUCATION_ISLAMIQUE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "FRANCAIS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "HISTOIRE_GEO",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "ESPAGNOL",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_ES"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "ARABE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_AR"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "ALLEMAND",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_DE"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "ENS_SCIENTIFIQUE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "EPS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "EPS"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "EMC",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "MATHEMATIQUES",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_MATHS"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "PHYSIQUE_CHIMIE",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_PC"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "SVT",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_SVT"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "SES",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_SES"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "HGGSP",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_HGGSP"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "HLP",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_HLP"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "NSI",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_NSI"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "LLCER",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_LLCER"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "AUTONOMY",
+			"lineType": "AUTONOMY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "8.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "1ERE",
+			"disciplineCode": "EDUCATION_ISLAMIQUE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "PHILOSOPHIE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "4.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "HISTOIRE_GEO",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "ANGLAIS_LV1",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "ESPAGNOL",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_ES"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "ARABE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_AR"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "ALLEMAND",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "LV2_DE"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "ENS_SCIENTIFIQUE",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "EPS",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "EPS"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "EMC",
+			"lineType": "STRUCTURAL",
+			"driverType": "HOURS",
+			"hoursPerUnit": "0.50",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "MATHEMATIQUES",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_MATHS"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "PHYSIQUE_CHIMIE",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_PC"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "SVT",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_SVT"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "SES",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_SES"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "HGGSP",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_HGGSP"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "HLP",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_HLP"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "NSI",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_NSI"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "LLCER",
+			"lineType": "SPECIALTY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "6.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "SPE_LLCER"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "MATHS_COMP",
+			"lineType": "OPTION",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "OPT_MCOMP"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "MATHS_EXPERTES",
+			"lineType": "OPTION",
+			"driverType": "HOURS",
+			"hoursPerUnit": "3.00",
+			"serviceProfileCode": "CERTIFIE",
+			"groupingKey": "OPT_MEXP"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "AUTONOMY",
+			"lineType": "AUTONOMY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "8.00",
+			"serviceProfileCode": "CERTIFIE"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "ARABE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "2.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		},
+		{
+			"gradeLevel": "TERM",
+			"disciplineCode": "EDUCATION_ISLAMIQUE",
+			"lineType": "HOST_COUNTRY",
+			"driverType": "HOURS",
+			"hoursPerUnit": "1.00",
+			"serviceProfileCode": "ARABIC_ISLAMIC"
+		}
 	]
 }
