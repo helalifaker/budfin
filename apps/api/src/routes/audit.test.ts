@@ -14,6 +14,10 @@ vi.mock('../lib/prisma.js', () => ({
 			count: vi.fn(),
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
+		calculationAuditLog: {
+			findMany: vi.fn(),
+			count: vi.fn(),
+		},
 	},
 }));
 
@@ -181,5 +185,166 @@ describe('GET /api/v1/audit', () => {
 			headers: authHeader(token),
 		});
 		expect(res.json().total).toBe(150);
+	});
+});
+
+// ── Calculation History Tests ────────────────────────────────────────────────
+
+const mockCalcEntry = {
+	id: 10,
+	runId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+	versionId: 1,
+	module: 'REVENUE',
+	status: 'COMPLETED',
+	startedAt: new Date('2026-03-20T08:00:00Z'),
+	completedAt: new Date('2026-03-20T08:00:02Z'),
+	durationMs: 2000,
+	triggeredBy: 1,
+	inputSummary: { versionId: 1 },
+	outputSummary: { rowsUpserted: 120 },
+	version: { name: 'Budget v1', fiscalYear: 2026 },
+	triggerer: { email: 'admin@budfin.app' },
+};
+
+describe('GET /api/v1/audit/calculation', () => {
+	it('returns paginated calculation history for Admin', async () => {
+		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([mockCalcEntry]);
+		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(1);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.entries).toHaveLength(1);
+		expect(body.entries[0].module).toBe('REVENUE');
+		expect(body.entries[0].status).toBe('COMPLETED');
+		expect(body.entries[0].version_name).toBe('Budget v1');
+		expect(body.entries[0].triggered_by).toBe('admin@budfin.app');
+		expect(body.entries[0].duration_ms).toBe(2000);
+		expect(body.page).toBe(1);
+		expect(body.page_size).toBe(20);
+	});
+
+	it('allows BudgetOwner access', async () => {
+		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([]);
+		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(0);
+
+		const token = await makeToken({ role: 'BudgetOwner' });
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(200);
+	});
+
+	it('returns 403 for Editor role', async () => {
+		const token = await makeToken({ role: 'Editor' });
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(403);
+	});
+
+	it('returns 403 for Viewer role', async () => {
+		const token = await makeToken({ role: 'Viewer' });
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(403);
+	});
+
+	it('filters by version_id', async () => {
+		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([]);
+		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(0);
+
+		const token = await makeToken();
+		await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation?version_id=3',
+			headers: authHeader(token),
+		});
+
+		const call = vi.mocked(prisma.calculationAuditLog.findMany).mock.calls[0]![0];
+		expect(call?.where?.versionId).toBe(3);
+	});
+
+	it('filters by module', async () => {
+		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([]);
+		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(0);
+
+		const token = await makeToken();
+		await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation?module=STAFFING',
+			headers: authHeader(token),
+		});
+
+		const call = vi.mocked(prisma.calculationAuditLog.findMany).mock.calls[0]![0];
+		expect(call?.where?.module).toBe('STAFFING');
+	});
+
+	it('filters by date range (from/to)', async () => {
+		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([]);
+		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(0);
+
+		const token = await makeToken();
+		const from = '2026-03-01T00:00:00Z';
+		const to = '2026-03-31T23:59:59Z';
+		await app.inject({
+			method: 'GET',
+			url: `/api/v1/audit/calculation?from=${from}&to=${to}`,
+			headers: authHeader(token),
+		});
+
+		const call = vi.mocked(prisma.calculationAuditLog.findMany).mock.calls[0]![0];
+		expect(call?.where?.startedAt).toMatchObject({
+			gte: new Date(from),
+			lte: new Date(to),
+		});
+	});
+
+	it('respects page_size max of 100', async () => {
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation?page_size=200',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(400);
+	});
+
+	it('handles null version and triggerer gracefully', async () => {
+		const entryWithNulls = {
+			...mockCalcEntry,
+			versionId: null,
+			triggeredBy: null,
+			completedAt: null,
+			durationMs: null,
+			version: null,
+			triggerer: null,
+		};
+		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([entryWithNulls]);
+		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(1);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/audit/calculation',
+			headers: authHeader(token),
+		});
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.entries[0].version_name).toBeNull();
+		expect(body.entries[0].triggered_by).toBeNull();
+		expect(body.entries[0].completed_at).toBeNull();
 	});
 });
