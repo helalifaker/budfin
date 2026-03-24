@@ -16,6 +16,7 @@ import {
 	Settings,
 	ChevronsLeft,
 	LogOut,
+	Receipt,
 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
@@ -44,6 +45,7 @@ const navGroups: NavGroup[] = [
 			{ to: '/planning/enrollment', label: 'Enrollment', icon: UserRound },
 			{ to: '/planning/revenue', label: 'Revenue', icon: DollarSign },
 			{ to: '/planning/staffing', label: 'Staffing', icon: Briefcase },
+			{ to: '/planning/opex', label: 'Operating Expenses', icon: Receipt },
 			{ to: '/planning/pnl', label: 'P&L', icon: BarChart2 },
 			{ to: '/planning/scenarios', label: 'Scenarios', icon: GitBranch },
 		],

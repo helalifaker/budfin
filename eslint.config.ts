@@ -38,6 +38,13 @@ export default tseslint.config(
 		},
 	},
 	{
+		// One-shot CLI migration scripts run via tsx — console output is intentional
+		files: ['**/migration/scripts/**/*.ts', '**/scripts/**/*.ts'],
+		rules: {
+			'no-console': 'off',
+		},
+	},
+	{
 		files: ['apps/web/**/*.{ts,tsx}'],
 		languageOptions: {
 			globals: {

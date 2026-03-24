@@ -19,6 +19,7 @@ import { UsersPage } from './pages/admin/users';
 import { AuditPage } from './pages/admin/audit';
 import { SettingsPage } from './pages/admin/settings';
 import { StaffingPage } from './pages/planning/staffing';
+import { OpExPage } from './pages/planning/opex';
 import { PlaceholderPage } from './pages/placeholder';
 
 export const routes: RouteObject[] = [
@@ -52,6 +53,10 @@ export const routes: RouteObject[] = [
 							{
 								path: '/planning/staffing',
 								element: <StaffingPage />,
+							},
+							{
+								path: '/planning/opex',
+								element: <OpExPage />,
 							},
 							{
 								path: '/planning/pnl',

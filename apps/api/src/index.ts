@@ -23,6 +23,7 @@ import {
 } from './routes/enrollment/index.js';
 import { revenueRoutes, revenueCalculateRoutes } from './routes/revenue/index.js';
 import { staffingRoutes, staffingCalculateRoutes } from './routes/staffing/index.js';
+import { opExRoutes, opExCalculateRoutes } from './routes/opex/index.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -77,6 +78,12 @@ export async function buildApp() {
 		prefix: '/api/v1/versions/:versionId',
 	});
 	await app.register(staffingCalculateRoutes, {
+		prefix: '/api/v1/versions/:versionId/calculate',
+	});
+	await app.register(opExRoutes, {
+		prefix: '/api/v1/versions/:versionId',
+	});
+	await app.register(opExCalculateRoutes, {
 		prefix: '/api/v1/versions/:versionId/calculate',
 	});
 
