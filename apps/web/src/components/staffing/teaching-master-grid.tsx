@@ -2,7 +2,6 @@ import type React from 'react';
 import { useMemo, useCallback } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/react-table';
-import { AlertTriangle, CheckCircle, MinusCircle, PlusCircle } from 'lucide-react';
 import type { TeachingRequirementsResponse } from '../../hooks/use-staffing';
 import {
 	buildTeachingGridRows,
@@ -17,6 +16,7 @@ import { useStaffingSelectionStore } from '../../stores/staffing-selection-store
 import { PlanningGrid } from '../data-grid/planning-grid';
 import { BAND_LABELS, BAND_STYLES } from '../../lib/band-styles';
 import { cn } from '../../lib/cn';
+import { CoverageBadge, getGapTintClass } from './coverage-badges';
 
 const COLUMN_VISIBILITY: Record<ViewPreset, Set<string>> = {
 	Need: new Set([
@@ -60,62 +60,6 @@ const COLUMN_VISIBILITY: Record<ViewPreset, Set<string>> = {
 		'hsaCostAnnual',
 	]),
 };
-
-interface CoverageBadgeConfig {
-	label: string;
-	Icon: typeof AlertTriangle;
-	className: string;
-}
-
-function getCoverageBadgeConfig(status: string): CoverageBadgeConfig {
-	switch (status) {
-		case 'DEFICIT':
-			return { label: '! Deficit', Icon: AlertTriangle, className: 'bg-red-600 text-white' };
-		case 'COVERED':
-			return { label: '\u2713 Covered', Icon: CheckCircle, className: 'bg-green-600 text-white' };
-		case 'SURPLUS':
-			return {
-				label: '+ Surplus',
-				Icon: PlusCircle,
-				className: 'bg-amber-200 text-(--text-primary)',
-			};
-		case 'UNCOVERED':
-			return {
-				label: '\u2014 None',
-				Icon: MinusCircle,
-				className: 'bg-(--workspace-bg-muted) text-(--text-muted)',
-			};
-		default:
-			return {
-				label: status,
-				Icon: MinusCircle,
-				className: 'bg-(--workspace-bg-muted) text-(--text-muted)',
-			};
-	}
-}
-
-function CoverageBadge({ status, gap }: { status: string; gap: string }) {
-	const config = getCoverageBadgeConfig(status);
-	return (
-		<span
-			className={cn(
-				'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-				config.className
-			)}
-			aria-label={`Coverage: ${status}, Gap: ${gap} FTE`}
-		>
-			<config.Icon className="h-3 w-3" aria-hidden="true" />
-			{config.label}
-		</span>
-	);
-}
-
-function getGapTintClass(gap: string): string {
-	const num = parseFloat(gap);
-	if (num < 0) return 'bg-red-50';
-	if (num > 0) return 'bg-amber-50';
-	return 'bg-green-50';
-}
 
 export interface TeachingMasterGridProps {
 	data: TeachingRequirementsResponse;

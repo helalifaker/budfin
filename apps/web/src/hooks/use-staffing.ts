@@ -24,8 +24,6 @@ export interface Employee {
 	hsaAmount: string | null;
 	augmentation: string | null;
 	augmentationEffectiveDate: string | null;
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
 	updatedAt: string;
 	recordType: string;
 	costMode: string;
@@ -157,7 +155,8 @@ export interface ImportCommitResponse {
 export function useEmployees(versionId: number | null) {
 	return useQuery({
 		queryKey: ['staffing', 'employees', versionId],
-		queryFn: () => apiClient<EmployeeListResponse>(`/versions/${versionId}/employees`),
+		queryFn: () =>
+			apiClient<EmployeeListResponse>(`/versions/${versionId}/employees?page_size=500`),
 		enabled: versionId !== null,
 	});
 }
@@ -327,8 +326,7 @@ export interface StaffingSettings {
 	hsaAdditionalHourRate: string;
 	hsaMonths: number;
 	academicWeeks: number;
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
+	ajeerAnnualFee: string;
 	reconciliationBaseline: unknown;
 }
 
@@ -428,6 +426,7 @@ export interface CostAssumption {
 	category: string;
 	calculationMode: string;
 	value: string;
+	excludeSummerMonths: boolean;
 }
 
 export interface CostAssumptionsResponse {
@@ -446,6 +445,7 @@ export interface CostAssumptionInput {
 	category: string;
 	calculationMode: string;
 	value: string;
+	excludeSummerMonths: boolean;
 }
 
 export function usePutCostAssumptions(versionId: number | null) {

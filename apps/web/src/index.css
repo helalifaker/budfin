@@ -219,6 +219,19 @@
 	--delta-negative: var(--color-error);
 	--delta-zero: var(--text-muted);
 
+	/* ── Coverage / Gap / Indicator ── */
+	--coverage-deficit: var(--color-error);
+	--coverage-deficit-bg: var(--color-error-bg);
+	--coverage-covered: var(--color-success);
+	--coverage-covered-bg: var(--color-success-bg);
+	--coverage-surplus: var(--color-warning);
+	--coverage-surplus-bg: var(--color-warning-bg);
+	--gap-negative-bg: var(--color-error-bg);
+	--gap-positive-bg: var(--color-warning-bg);
+	--gap-zero-bg: var(--color-success-bg);
+	--indicator-ready: var(--color-success);
+	--indicator-dirty: var(--color-warning);
+
 	/* ── Band/Department Badge Colors ── */
 	--badge-maternelle: #be185d;
 	--badge-maternelle-bg: #fce7f3;

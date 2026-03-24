@@ -28,8 +28,6 @@ function makeEmployee(overrides: Partial<Employee> & { id: number; name: string 
 		hsaAmount: null,
 		augmentation: null,
 		augmentationEffectiveDate: null,
-		ajeerAnnualLevy: '0',
-		ajeerMonthlyFee: '0',
 		updatedAt: '2026-03-01T00:00:00Z',
 		recordType: 'EMPLOYEE',
 		costMode: 'LOCAL_PAYROLL',
@@ -68,11 +66,12 @@ const defaultProps = {
 
 describe('EmployeeForm — new fields', () => {
 	describe('recordType field', () => {
-		it('renders recordType radio with Employee and Vacancy options', () => {
+		it('renders recordType radio with Employee, Vacancy, and Replacement options', () => {
 			render(<EmployeeForm {...defaultProps} />);
 
 			expect(screen.getByLabelText('Employee')).toBeDefined();
 			expect(screen.getByLabelText('Vacancy')).toBeDefined();
+			expect(screen.getByLabelText('Replacement')).toBeDefined();
 		});
 
 		it('defaults to Employee for new employees', () => {
@@ -302,8 +301,19 @@ describe('EmployeeForm — conditional visibility', () => {
 		});
 	});
 
-	describe('Ajeer section visibility', () => {
-		it('shows Ajeer section when isAjeer=true AND costMode=LOCAL_PAYROLL', () => {
+	describe('Ajeer flag visibility', () => {
+		it('shows Ajeer checkbox for EMPLOYEE recordType', () => {
+			const employee = makeEmployee({
+				id: 1,
+				name: 'Regular Employee',
+				costMode: 'LOCAL_PAYROLL',
+			});
+			render(<EmployeeForm {...defaultProps} employee={employee} />);
+
+			expect(screen.getByLabelText('Ajeer')).toBeDefined();
+		});
+
+		it('no per-employee ajeer fee fields exist (moved to settings)', () => {
 			const ajeerEmployee = makeEmployee({
 				id: 1,
 				name: 'Ajeer Worker',
@@ -312,34 +322,8 @@ describe('EmployeeForm — conditional visibility', () => {
 			});
 			render(<EmployeeForm {...defaultProps} employee={ajeerEmployee} />);
 
-			expect(screen.getByText(/Annual Levy/)).toBeDefined();
-			expect(screen.getByText(/Monthly Fee/)).toBeDefined();
-		});
-
-		it('hides Ajeer section when isAjeer=false', () => {
-			const nonAjeer = makeEmployee({
-				id: 1,
-				name: 'Regular Employee',
-				isAjeer: false,
-				costMode: 'LOCAL_PAYROLL',
-			});
-			render(<EmployeeForm {...defaultProps} employee={nonAjeer} />);
-
-			// Ajeer section title should not be visible
-			// (the "Ajeer" checkbox label is visible but the section itself is hidden)
 			expect(screen.queryByText(/Annual Levy/)).toBeNull();
-		});
-
-		it('hides Ajeer section when costMode is not LOCAL_PAYROLL', () => {
-			const ajeerRecharge = makeEmployee({
-				id: 1,
-				name: 'AEFE Ajeer',
-				isAjeer: true,
-				costMode: 'AEFE_RECHARGE',
-			});
-			render(<EmployeeForm {...defaultProps} employee={ajeerRecharge} />);
-
-			expect(screen.queryByText(/Annual Levy/)).toBeNull();
+			expect(screen.queryByText(/Monthly Fee/)).toBeNull();
 		});
 	});
 });

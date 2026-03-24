@@ -183,7 +183,14 @@ describe('usePutCostAssumptions', () => {
 			wrapper: createWrapper(),
 		});
 
-		const assumptions = [{ category: 'formation', calculationMode: 'FLAT_ANNUAL', value: '5000' }];
+		const assumptions = [
+			{
+				category: 'formation',
+				calculationMode: 'FLAT_ANNUAL',
+				value: '5000',
+				excludeSummerMonths: false,
+			},
+		];
 		result.current.mutate(assumptions);
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));

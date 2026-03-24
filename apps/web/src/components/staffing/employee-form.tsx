@@ -28,8 +28,6 @@ export interface EmployeeFormData {
 	hsaAmount: string;
 	augmentation: string;
 	augmentationEffectiveDate: string;
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
 	recordType: string;
 	costMode: string;
 	disciplineId: string;
@@ -157,8 +155,6 @@ export function EmployeeForm({
 			hsaAmount: '0',
 			augmentation: '0',
 			augmentationEffectiveDate: '',
-			ajeerAnnualLevy: '0',
-			ajeerMonthlyFee: '0',
 			recordType: 'EMPLOYEE',
 			costMode: 'LOCAL_PAYROLL',
 			disciplineId: '',
@@ -172,18 +168,16 @@ export function EmployeeForm({
 	const watchRecordType = watch('recordType');
 	const watchCostMode = watch('costMode');
 	const watchIsTeaching = watch('isTeaching');
-	const watchIsAjeer = watch('isAjeer');
-
 	// Derived visibility flags
 	const isVacancy = watchRecordType === 'VACANCY';
+	const isReplacement = watchRecordType === 'REPLACEMENT';
 	const isLocalPayroll = watchCostMode === 'LOCAL_PAYROLL';
 	const isAefeRecharge = watchCostMode === 'AEFE_RECHARGE';
 	const _isNoCost = watchCostMode === 'NO_LOCAL_COST';
 
 	const showTeachingProfile = watchIsTeaching === true;
 	const showCompensation = isLocalPayroll && !isVacancy;
-	const showAjeerSection = watchIsAjeer === true && isLocalPayroll && !isVacancy;
-	const showSaudiAjeerFlags = !isVacancy;
+	const showSaudiAjeerFlags = !isVacancy && !isReplacement;
 	const showSalaryInfoBanner = isAefeRecharge && !isVacancy;
 
 	// Auto-generate vacancy code when switching to VACANCY
@@ -210,8 +204,6 @@ export function EmployeeForm({
 				hsaAmount: employee.hsaAmount ?? '0',
 				augmentation: employee.augmentation ?? '0',
 				augmentationEffectiveDate: employee.augmentationEffectiveDate?.split('T')[0] ?? '',
-				ajeerAnnualLevy: employee.ajeerAnnualLevy ?? '0',
-				ajeerMonthlyFee: employee.ajeerMonthlyFee ?? '0',
 				recordType: employee.recordType ?? 'EMPLOYEE',
 				costMode: employee.costMode ?? 'LOCAL_PAYROLL',
 				disciplineId: employee.disciplineId ? String(employee.disciplineId) : '',
@@ -344,6 +336,16 @@ export function EmployeeForm({
 									className="rounded"
 								/>
 								Vacancy
+							</label>
+							<label className="flex items-center gap-2 text-sm">
+								<input
+									type="radio"
+									value="REPLACEMENT"
+									{...register('recordType')}
+									disabled={isReadOnly}
+									className="rounded"
+								/>
+								Replacement
 							</label>
 						</div>
 					</Field>
@@ -587,31 +589,6 @@ export function EmployeeForm({
 									<Input
 										type="date"
 										{...register('augmentationEffectiveDate')}
-										className={inputClass}
-									/>
-								</Field>
-							</div>
-						</>
-					)}
-
-					{/* Section 6: Ajeer Details (isAjeer AND LOCAL_PAYROLL, not VACANCY) */}
-					{showAjeerSection && !isReadOnly && (
-						<>
-							<SectionHeader title="Ajeer Details" />
-							<div className="grid grid-cols-2 gap-3">
-								<Field label="Annual Levy">
-									<Input
-										type="number"
-										step="0.01"
-										{...register('ajeerAnnualLevy')}
-										className={inputClass}
-									/>
-								</Field>
-								<Field label="Monthly Fee">
-									<Input
-										type="number"
-										step="0.01"
-										{...register('ajeerMonthlyFee')}
 										className={inputClass}
 									/>
 								</Field>

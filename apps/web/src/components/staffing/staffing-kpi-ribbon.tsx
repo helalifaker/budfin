@@ -54,7 +54,7 @@ const kpiDefs: KpiDef[] = [
 		label: 'Total Headcount',
 		key: 'totalHeadcount',
 		icon: Users,
-		formatter: (v: number) => v.toLocaleString(),
+		formatter: (v: number) => new Intl.NumberFormat('fr-FR').format(v),
 	},
 	{
 		label: 'FTE Gap',
@@ -69,13 +69,13 @@ const kpiDefs: KpiDef[] = [
 		label: 'Staff Cost',
 		key: 'staffCost',
 		icon: DollarSign,
-		formatter: (v: number) => formatMoney(v, { compact: true, showCurrency: true }),
+		formatter: (v: number) => formatMoney(v, { millions: true, showCurrency: true }),
 	},
 	{
 		label: 'HSA Budget',
 		key: 'hsaBudget',
 		icon: Clock,
-		formatter: (v: number) => formatMoney(v, { compact: true, showCurrency: true }),
+		formatter: (v: number) => formatMoney(v, { millions: true, showCurrency: true }),
 	},
 	{
 		label: 'H/E Ratio',
@@ -87,7 +87,7 @@ const kpiDefs: KpiDef[] = [
 		label: 'Recharge Cost',
 		key: 'rechargeCost',
 		icon: ArrowUpRight,
-		formatter: (v: number) => formatMoney(v, { compact: true, showCurrency: true }),
+		formatter: (v: number) => formatMoney(v, { millions: true, showCurrency: true }),
 	},
 ];
 
@@ -140,8 +140,9 @@ export function StaffingKpiRibbonV2({
 								'animate-kpi-enter relative overflow-hidden',
 								'rounded-xl',
 								'border border-(--workspace-border)',
-								'shadow-(--shadow-card)',
-								'bg-(--workspace-bg-card) p-3',
+								'shadow-(--shadow-card-elevated)',
+								'bg-(--workspace-bg-card) p-4',
+								'hover:shadow-(--shadow-card-hover) transition-shadow duration-(--duration-fast)',
 								'border-l-[3px]',
 								borderClass
 							)}
@@ -166,7 +167,7 @@ export function StaffingKpiRibbonV2({
 										value={value}
 										formatter={kpi.formatter}
 										className={cn(
-											'truncate text-xl',
+											'truncate text-3xl',
 											'font-bold text-(--text-primary)',
 											'font-[family-name:var(--font-display)]'
 										)}

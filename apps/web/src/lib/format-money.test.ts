@@ -64,4 +64,30 @@ describe('formatMoney', () => {
 		const result = formatMoney(0.49);
 		expect(result).toBe('0');
 	});
+
+	describe('millions option', () => {
+		it('formats a basic value in millions', () => {
+			expect(formatMoney('5400000', { millions: true })).toBe('5.4M');
+		});
+
+		it('formats millions with currency', () => {
+			expect(formatMoney('5400000', { millions: true, showCurrency: true })).toBe('5.4M SAR');
+		});
+
+		it('formats a value less than 1M', () => {
+			expect(formatMoney('500000', { millions: true })).toBe('0.5M');
+		});
+
+		it('formats zero in millions', () => {
+			expect(formatMoney('0', { millions: true })).toBe('0.0M');
+		});
+
+		it('formats negative value in millions', () => {
+			expect(formatMoney('-2000000', { millions: true })).toBe('-2.0M');
+		});
+
+		it('formats a large value in millions with rounding', () => {
+			expect(formatMoney('12345678', { millions: true })).toBe('12.3M');
+		});
+	});
 });

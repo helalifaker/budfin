@@ -20,8 +20,16 @@ vi.mock('../shared/counter', () => ({
 }));
 
 vi.mock('../../lib/format-money', () => ({
-	formatMoney: (value: string | number, opts?: { compact?: boolean; showCurrency?: boolean }) => {
+	formatMoney: (
+		value: string | number,
+		opts?: { compact?: boolean; millions?: boolean; showCurrency?: boolean }
+	) => {
 		const num = typeof value === 'string' ? parseFloat(value) : value;
+		if (opts?.millions) {
+			const mVal = num / 1_000_000;
+			const formatted = mVal.toFixed(1);
+			return opts.showCurrency ? `${formatted}M SAR` : `${formatted}M`;
+		}
 		if (opts?.compact) {
 			if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M SAR`;
 			if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K SAR`;
@@ -66,12 +74,12 @@ describe('StaffingKpiRibbonV2', () => {
 	it('displays compact SAR values for monetary KPIs', () => {
 		render(<StaffingKpiRibbonV2 {...defaultProps} />);
 
-		// Staff Cost should show compact SAR
+		// Staff Cost should show millions SAR
 		expect(screen.getByText('5.4M SAR')).toBeDefined();
 		// HSA Budget
-		expect(screen.getByText('180K SAR')).toBeDefined();
+		expect(screen.getByText('0.2M SAR')).toBeDefined();
 		// Recharge Cost
-		expect(screen.getByText('360K SAR')).toBeDefined();
+		expect(screen.getByText('0.4M SAR')).toBeDefined();
 	});
 
 	it('displays H/E Ratio with 2 decimal places', () => {

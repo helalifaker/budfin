@@ -52,11 +52,6 @@ export const EXPECTED_COVERAGE: ExpectedCoverageEntry[] = [
 	// Host country languages & culture
 	{
 		disciplineCode: 'ARABE',
-		gradeCodes: ['PS', 'MS', 'GS', 'CP', 'CE1', 'CE2', 'CM1', 'CM2', '5EME', '4EME', '3EME'],
-		label: 'Arabe',
-	},
-	{
-		disciplineCode: 'EDUCATION_ISLAMIQUE',
 		gradeCodes: [
 			'PS',
 			'MS',
@@ -70,12 +65,29 @@ export const EXPECTED_COVERAGE: ExpectedCoverageEntry[] = [
 			'5EME',
 			'4EME',
 			'3EME',
+			'2NDE',
+			'1ERE',
+			'TERM',
 		],
-		label: 'Education Islamique',
+		label: 'Arabe',
 	},
 	{
 		disciplineCode: 'ANGLAIS_LV1',
-		gradeCodes: ['CP', 'CE1', 'CE2', 'CM1', 'CM2', '6EME', '5EME', '4EME', '3EME'],
+		gradeCodes: [
+			'GS',
+			'CP',
+			'CE1',
+			'CE2',
+			'CM1',
+			'CM2',
+			'6EME',
+			'5EME',
+			'4EME',
+			'3EME',
+			'2NDE',
+			'1ERE',
+			'TERM',
+		],
 		label: 'Anglais LV1',
 	},
 
@@ -92,17 +104,17 @@ export const EXPECTED_COVERAGE: ExpectedCoverageEntry[] = [
 	},
 	{
 		disciplineCode: 'HISTOIRE_GEO',
-		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'],
+		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TERM'],
 		label: 'Histoire-Geographie',
 	},
 	{
 		disciplineCode: 'EPS',
-		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'],
+		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TERM'],
 		label: 'EPS',
 	},
 	{
 		disciplineCode: 'EMC',
-		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'],
+		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TERM'],
 		label: 'Enseignement Moral et Civique',
 	},
 
@@ -148,55 +160,55 @@ export const EXPECTED_COVERAGE: ExpectedCoverageEntry[] = [
 	},
 	{
 		disciplineCode: 'ENS_SCIENTIFIQUE',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		label: 'Enseignement Scientifique',
 	},
 	{
 		disciplineCode: 'PHILOSOPHIE',
-		gradeCodes: ['TLE'],
+		gradeCodes: ['TERM'],
 		label: 'Philosophie',
 	},
 
 	// Lycee specialties (1ere: 4h, Terminale: 6h)
 	{
 		disciplineCode: 'MATHEMATIQUES',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		lineType: 'SPECIALTY',
 		label: 'Mathematiques (Specialite)',
 	},
 	{
 		disciplineCode: 'PHYSIQUE_CHIMIE',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		lineType: 'SPECIALTY',
 		label: 'Physique-Chimie (Specialite)',
 	},
 	{
 		disciplineCode: 'SVT',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		lineType: 'SPECIALTY',
 		label: 'SVT (Specialite)',
 	},
 	{
 		disciplineCode: 'SES',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		lineType: 'SPECIALTY',
 		label: 'SES (Specialite)',
 	},
 	{
 		disciplineCode: 'HGGSP',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		lineType: 'SPECIALTY',
 		label: 'HGGSP (Specialite)',
 	},
 	{
 		disciplineCode: 'HLP',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		lineType: 'SPECIALTY',
 		label: 'HLP (Specialite)',
 	},
 	{
 		disciplineCode: 'LLCER',
-		gradeCodes: ['1ERE', 'TLE'],
+		gradeCodes: ['1ERE', 'TERM'],
 		lineType: 'SPECIALTY',
 		label: 'LLCER (Specialite)',
 	},
@@ -204,29 +216,29 @@ export const EXPECTED_COVERAGE: ExpectedCoverageEntry[] = [
 	// Options
 	{
 		disciplineCode: 'ALLEMAND',
-		gradeCodes: ['5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'],
+		gradeCodes: ['5EME', '4EME', '3EME', '2NDE', '1ERE', 'TERM'],
 		label: 'Allemand (LV3)',
 	},
 	{
 		disciplineCode: 'ESPAGNOL',
-		gradeCodes: ['5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'],
+		gradeCodes: ['5EME', '4EME', '3EME', '2NDE', '1ERE', 'TERM'],
 		label: 'Espagnol (LV3)',
 	},
 	{
 		disciplineCode: 'MATHS_COMP',
-		gradeCodes: ['TLE'],
+		gradeCodes: ['TERM'],
 		label: 'Mathematiques Complementaires',
 	},
 	{
 		disciplineCode: 'MATHS_EXPERTES',
-		gradeCodes: ['TLE'],
+		gradeCodes: ['TERM'],
 		label: 'Mathematiques Expertes',
 	},
 
 	// Autonomy pool
 	{
 		disciplineCode: 'AUTONOMY',
-		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'],
+		gradeCodes: ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TERM'],
 		label: "Heures d'Autonomie",
 	},
 ];
@@ -243,7 +255,7 @@ export const DISCIPLINE_DISPLAY_GROUPS: DisciplineDisplayGroup[] = [
 	{
 		key: 'host-country',
 		label: 'Langues du Pays Hote',
-		disciplineCodes: ['ARABE', 'EDUCATION_ISLAMIQUE'],
+		disciplineCodes: ['ARABE'],
 	},
 	{
 		key: 'tronc-commun',

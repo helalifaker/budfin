@@ -83,6 +83,7 @@ interface DraftCostAssumption {
 	category: string;
 	mode: string;
 	value: string;
+	excludeSummerMonths: boolean;
 }
 
 interface DraftLyceeGroup {
@@ -165,14 +166,14 @@ function SidebarItem({
 			<span className="flex items-center gap-1">
 				{isDirty && (
 					<span
-						className="h-2 w-2 rounded-full bg-orange-400"
+						className="h-2 w-2 rounded-full bg-(--indicator-dirty)"
 						aria-label={`${label} has unsaved changes`}
 					/>
 				)}
 				<span
 					className={cn(
 						'h-2 w-2 rounded-full',
-						isReady ? 'bg-green-500' : 'bg-(--workspace-border)'
+						isReady ? 'bg-(--indicator-ready)' : 'bg-(--workspace-border)'
 					)}
 					aria-label={isReady ? `${label} configured` : `${label} not configured`}
 				/>
@@ -291,6 +292,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 	// ── Draft state ────────────────────────────────────────────────────────
 
 	const [draftHsa, setDraftHsa] = useState<DraftHsaSettings | null>(null);
+	const [draftAjeerFee, setDraftAjeerFee] = useState<string>('0');
 	const [draftOrs, setDraftOrs] = useState<DraftOrsOverride[]>([]);
 	const [draftCost, setDraftCost] = useState<DraftCostAssumption[]>([]);
 	const [draftLycee, setDraftLycee] = useState<DraftLyceeGroup[]>([]);
@@ -306,6 +308,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 					hsaAdditionalHourRate: settings.hsaAdditionalHourRate,
 					hsaMonths: String(settings.hsaMonths),
 				});
+				setDraftAjeerFee(settings.ajeerAnnualFee ?? '0');
 			}
 
 			setDraftOrs(
@@ -320,6 +323,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 					category: c.category,
 					mode: c.calculationMode,
 					value: c.value,
+					excludeSummerMonths: c.excludeSummerMonths ?? false,
 				}))
 			);
 
@@ -345,6 +349,11 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 		);
 	}, [draftHsa, settings]);
 
+	const ajeerChanged = useMemo(() => {
+		if (!settings) return false;
+		return draftAjeerFee !== (settings.ajeerAnnualFee ?? '0');
+	}, [draftAjeerFee, settings]);
+
 	const orsChanged = useMemo(() => {
 		if (draftOrs.length !== overrides.length) return true;
 		return draftOrs.some((d) => {
@@ -357,7 +366,12 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 		if (draftCost.length !== costAssumptions.length) return true;
 		return draftCost.some((d) => {
 			const orig = costAssumptions.find((c) => c.category === d.category);
-			return !orig || orig.calculationMode !== d.mode || orig.value !== d.value;
+			return (
+				!orig ||
+				orig.calculationMode !== d.mode ||
+				orig.value !== d.value ||
+				(orig.excludeSummerMonths ?? false) !== d.excludeSummerMonths
+			);
 		});
 	}, [draftCost, costAssumptions]);
 
@@ -373,12 +387,12 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 
 	// Sync local change detection into dirty store
 	useEffect(() => {
-		if (hsaChanged || orsChanged) {
+		if (hsaChanged || orsChanged || ajeerChanged) {
 			markDirty('profiles');
 		} else {
 			markClean('profiles');
 		}
-	}, [hsaChanged, orsChanged, markDirty, markClean]);
+	}, [hsaChanged, orsChanged, ajeerChanged, markDirty, markClean]);
 
 	useEffect(() => {
 		if (costChanged) {
@@ -460,15 +474,20 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 
 	async function handleSaveProfiles() {
 		if (!isEditable) return;
+		const settingsPayload: Partial<StaffingSettings> = {};
+		if (hsaChanged && draftHsa) {
+			settingsPayload.hsaTargetHours = draftHsa.hsaTargetHours;
+			settingsPayload.hsaFirstHourRate = draftHsa.hsaFirstHourRate;
+			settingsPayload.hsaAdditionalHourRate = draftHsa.hsaAdditionalHourRate;
+			settingsPayload.hsaMonths = Number(draftHsa.hsaMonths);
+		}
+		if (ajeerChanged) {
+			settingsPayload.ajeerAnnualFee = draftAjeerFee;
+		}
+		const hasSettingsChange = Object.keys(settingsPayload).length > 0;
+
 		const results = await Promise.allSettled([
-			hsaChanged && draftHsa
-				? putSettings.mutateAsync({
-						hsaTargetHours: draftHsa.hsaTargetHours,
-						hsaFirstHourRate: draftHsa.hsaFirstHourRate,
-						hsaAdditionalHourRate: draftHsa.hsaAdditionalHourRate,
-						hsaMonths: Number(draftHsa.hsaMonths),
-					})
-				: Promise.resolve(),
+			hasSettingsChange ? putSettings.mutateAsync(settingsPayload) : Promise.resolve(),
 			orsChanged
 				? putOverrides.mutateAsync(
 						draftOrs.map((d) => ({
@@ -490,6 +509,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 				category: d.category,
 				calculationMode: d.mode,
 				value: d.value,
+				excludeSummerMonths: d.excludeSummerMonths,
 			}))
 		);
 		markClean('costAssumptions');
@@ -551,7 +571,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 		(activeTab === 'lyceeGroups' && hasGroupDriverRules);
 
 	const activeTabHasChanges =
-		(activeTab === 'profiles' && (hsaChanged || orsChanged)) ||
+		(activeTab === 'profiles' && (hsaChanged || orsChanged || ajeerChanged)) ||
 		(activeTab === 'costAssumptions' && costChanged) ||
 		(activeTab === 'lyceeGroups' && lyceeChanged);
 
@@ -799,6 +819,44 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 															/>
 														</div>
 													</div>
+
+													{/* Ajeer settings */}
+													<div className="mt-6">
+														<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															Ajeer Fee
+														</p>
+														<div className="mt-2 grid gap-3 md:grid-cols-2">
+															<div>
+																<label
+																	htmlFor="ajeer-annual-fee"
+																	className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+																>
+																	Annual Ajeer Fee (SAR)
+																</label>
+																<Input
+																	id="ajeer-annual-fee"
+																	type="number"
+																	min={0}
+																	step={1}
+																	value={draftAjeerFee}
+																	onChange={(e) => setDraftAjeerFee(e.target.value)}
+																	disabled={!isEditable}
+																	aria-label="Annual Ajeer Fee"
+																	className={cn(monoInputClass, 'mt-2')}
+																/>
+															</div>
+															<div>
+																<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	Monthly (computed)
+																</label>
+																<p className="mt-2 px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																	{Number(draftAjeerFee) > 0
+																		? new Decimal(draftAjeerFee).dividedBy(12).toFixed(2)
+																		: '-'}
+																</p>
+															</div>
+														</div>
+													</div>
 												</section>
 											)}
 
@@ -985,6 +1043,9 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 																		Monthly
 																	</th>
+																	<th className="px-3 py-2 text-center text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																		Summer Excl.
+																	</th>
 																</tr>
 															</thead>
 															<tbody>
@@ -992,6 +1053,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																	const draft = draftCost.find((d) => d.category === cat.key);
 																	const mode = draft?.mode ?? 'FLAT_ANNUAL';
 																	const value = draft?.value ?? '0';
+																	const excludeSummer = draft?.excludeSummerMonths ?? false;
 																	return (
 																		<tr
 																			key={cat.key}
@@ -1049,6 +1111,27 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																			</td>
 																			<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
 																				{computeMonthlyPreview(mode, value)}
+																			</td>
+																			<td className="px-3 py-2 text-center">
+																				<input
+																					type="checkbox"
+																					checked={excludeSummer}
+																					onChange={(e) =>
+																						setDraftCost((cur) =>
+																							cur.map((d) =>
+																								d.category === cat.key
+																									? {
+																											...d,
+																											excludeSummerMonths: e.target.checked,
+																										}
+																									: d
+																							)
+																						)
+																					}
+																					disabled={!isEditable}
+																					aria-label={`${cat.label} exclude summer months`}
+																					className="rounded"
+																				/>
 																			</td>
 																		</tr>
 																	);

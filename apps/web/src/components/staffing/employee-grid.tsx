@@ -4,11 +4,11 @@ import {
 	flexRender,
 	getCoreRowModel,
 	getSortedRowModel,
-	getFilteredRowModel,
 	useReactTable,
 	type SortingState,
 } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 import type { Employee } from '../../hooks/use-staffing';
 
 const columnHelper = createColumnHelper<Employee>();
@@ -37,11 +37,17 @@ export type EmployeeGridProps = {
 	isReadOnly: boolean;
 	onSelect: (employee: Employee) => void;
 	selectedId: number | null;
+	totalCount?: number;
 };
 
-export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: EmployeeGridProps) {
+export function EmployeeGrid({
+	employees,
+	isReadOnly,
+	onSelect,
+	selectedId,
+	totalCount,
+}: EmployeeGridProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
-	const [globalFilter, setGlobalFilter] = useState('');
 	const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set());
 	const liveRegionRef = useRef<HTMLDivElement>(null);
 
@@ -131,7 +137,7 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 							size: 110,
 							cell: (info) => {
 								const val = info.getValue();
-								return val ? `SAR ${Number(val).toLocaleString()}` : '\u2014';
+								return val ? formatMoney(val, { showCurrency: true }) : '\u2014';
 							},
 						}),
 					]),
@@ -142,16 +148,14 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 	const table = useReactTable({
 		data: employees,
 		columns,
-		state: { sorting, globalFilter },
+		state: { sorting },
 		onSortingChange: setSorting,
-		onGlobalFilterChange: setGlobalFilter,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
 	});
 
-	// Group filtered rows by department
-	const filteredRows = table.getFilteredRowModel().rows;
+	// Group rows by department
+	const filteredRows = table.getSortedRowModel().rows;
 	const departmentGroups = useMemo(() => {
 		const groups = new Map<string, Employee[]>();
 		for (const row of filteredRows) {
@@ -194,21 +198,6 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 			{/* Screen reader live region */}
 			<div ref={liveRegionRef} aria-live="polite" aria-atomic="true" className="sr-only" />
 
-			<input
-				type="text"
-				placeholder="Search employees..."
-				value={globalFilter}
-				onChange={(e) => setGlobalFilter(e.target.value)}
-				className={cn(
-					'w-full max-w-xs rounded-md',
-					'border border-(--workspace-border) bg-(--workspace-bg)',
-					'px-3 py-1.5 text-sm text-(--text-primary)',
-					'placeholder:text-(--text-muted)',
-					'focus:outline-none focus:ring-2 focus:ring-(--accent-500)'
-				)}
-				aria-label="Search employees"
-			/>
-
 			<div className={cn('overflow-x-auto rounded-md', 'border border-(--workspace-border)')}>
 				<table
 					className="w-full border-collapse text-sm"
@@ -222,9 +211,9 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 						<tr className="bg-(--workspace-bg-subtle)">
 							<th
 								className={cn(
-									'w-9 px-2 py-2 text-left font-medium',
+									'w-9 px-2 py-2 text-left font-semibold',
 									'text-(--text-muted)',
-									'text-(length:--text-xs) uppercase tracking-wider',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								aria-label="Expand or collapse"
@@ -233,8 +222,8 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 								<th
 									key={header.id}
 									className={cn(
-										'px-3 py-2 text-left font-medium text-(--text-muted)',
-										'text-(length:--text-xs) uppercase tracking-wider',
+										'px-3 py-2 text-left font-semibold text-(--text-muted)',
+										'text-[11px] uppercase tracking-[0.12em]',
 										'border-b border-(--workspace-border)',
 										header.column.getCanSort() && 'cursor-pointer select-none'
 									)}
@@ -289,8 +278,11 @@ export function EmployeeGrid({ employees, isReadOnly, onSelect, selectedId }: Em
 			</div>
 
 			<div className="text-(length:--text-xs) text-(--text-muted)">
-				{table.getFilteredRowModel().rows.length} employee(s) in {departmentGroups.length}{' '}
-				department(s)
+				{employees.length}
+				{totalCount !== undefined && totalCount !== employees.length
+					? ` of ${totalCount}`
+					: ''}{' '}
+				employee(s) in {departmentGroups.length} department(s)
 			</div>
 		</div>
 	);
@@ -439,7 +431,7 @@ function DepartmentRows({
 									'border-b border-(--workspace-border)'
 								)}
 							>
-								{emp.baseSalary ? `SAR ${Number(emp.baseSalary).toLocaleString()}` : '\u2014'}
+								{emp.baseSalary ? formatMoney(emp.baseSalary, { showCurrency: true }) : '\u2014'}
 							</td>
 						)}
 					</tr>

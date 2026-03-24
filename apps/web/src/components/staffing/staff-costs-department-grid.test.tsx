@@ -30,8 +30,6 @@ function makeEmployee(overrides: Partial<Employee> = {}): Employee {
 		hsaAmount: '0.00',
 		augmentation: '0.00',
 		augmentationEffectiveDate: null,
-		ajeerAnnualLevy: '9660.00',
-		ajeerMonthlyFee: '805.00',
 		updatedAt: '2026-01-01T00:00:00Z',
 		recordType: 'EMPLOYEE',
 		costMode: 'LOCAL_PAYROLL',

@@ -60,6 +60,46 @@ export function DropdownMenuItem({
 	);
 }
 
+export function DropdownMenuCheckboxItem({
+	className,
+	children,
+	checked = false,
+	...props
+}: React.ComponentPropsWithoutRef<typeof P.CheckboxItem>) {
+	return (
+		<P.CheckboxItem
+			className={cn(
+				'relative flex cursor-default select-none items-center gap-2',
+				'rounded-sm py-1.5 pl-8 pr-3 text-(--text-sm) outline-none',
+				'transition-colors duration-(--duration-fast)',
+				'focus:bg-(--accent-50)',
+				'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+				className
+			)}
+			checked={checked}
+			{...props}
+		>
+			<span className="absolute left-2 flex h-4 w-4 items-center justify-center">
+				<P.ItemIndicator>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="3"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						className="h-3.5 w-3.5"
+					>
+						<polyline points="20 6 9 17 4 12" />
+					</svg>
+				</P.ItemIndicator>
+			</span>
+			{children}
+		</P.CheckboxItem>
+	);
+}
+
 export function DropdownMenuSeparator({
 	className,
 	...props

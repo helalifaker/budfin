@@ -120,8 +120,10 @@ export function StaffingPageV2() {
 			}, new Decimal(0))
 			.toNumber();
 
+		const totalHeadcount = employees.filter((e) => e.recordType !== 'REPLACEMENT').length;
+
 		return {
-			totalHeadcount: employeesData?.total ?? 0,
+			totalHeadcount,
 			fteGap: parseFloat(teachingReqData?.totals.totalFteGap ?? '0'),
 			staffCost: new Decimal(summaryData?.cost ?? '0').toNumber(),
 			hsaBudget,

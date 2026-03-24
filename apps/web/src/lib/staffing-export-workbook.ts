@@ -219,8 +219,7 @@ function buildSettingsSheet(ctx: BuildContext) {
 		['HSA Additional Rate', settings.hsaAdditionalHourRate, 'HSA_ADDL_RATE'],
 		['HSA Months', settings.hsaMonths, 'HSA_MONTHS'],
 		['Academic Weeks', settings.academicWeeks, 'ACADEMIC_WEEKS'],
-		['Ajeer Annual Levy', settings.ajeerAnnualLevy, 'AJEER_LEVY'],
-		['Ajeer Monthly Fee', settings.ajeerMonthlyFee, 'AJEER_FEE'],
+		['Ajeer Annual Fee', settings.ajeerAnnualFee, 'AJEER_FEE'],
 	];
 
 	for (const [label, value, namedRange] of params) {

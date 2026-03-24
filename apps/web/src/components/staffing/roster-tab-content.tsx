@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Button } from '../ui/button';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { EmployeeGrid } from './employee-grid';
 import { SupportAdminGrid } from './support-admin-grid';
 import { EmployeeForm, type EmployeeFormData } from './employee-form';
 import { EmployeeImportDialog } from './employee-import-dialog';
+import { RosterFilterBar } from './roster-filter-bar';
 import { useStaffingSelectionStore } from '../../stores/staffing-selection-store';
 import {
 	useCreateEmployee,
@@ -15,6 +16,12 @@ import {
 } from '../../hooks/use-staffing';
 import { deriveStaffingEditability } from '../../lib/staffing-workspace';
 import { useAuthStore } from '../../stores/auth-store';
+import {
+	type RosterFilters,
+	EMPTY_FILTERS,
+	applyRosterFilters,
+	extractDepartments,
+} from '../../lib/roster-filters';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,8 +56,6 @@ function formDataToPayload(data: EmployeeFormData): Partial<Employee> {
 		responsibilityPremium: data.responsibilityPremium || null,
 		augmentation: data.augmentation || null,
 		augmentationEffectiveDate: data.augmentationEffectiveDate || null,
-		ajeerAnnualLevy: data.ajeerAnnualLevy,
-		ajeerMonthlyFee: data.ajeerMonthlyFee,
 		recordType: data.recordType,
 		costMode: data.costMode,
 		disciplineId: data.disciplineId ? parseInt(data.disciplineId, 10) : null,
@@ -74,6 +79,7 @@ export function RosterTabContent({
 	const [importOpen, setImportOpen] = useState(false);
 	const [activeSubView, setActiveSubView] = useState<SubView>('all');
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+	const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS);
 
 	const user = useAuthStore((s) => s.user);
 	const selectEmployee = useStaffingSelectionStore((s) => s.selectEmployee);
@@ -90,14 +96,25 @@ export function RosterTabContent({
 	// ── Filtered employee lists ──────────────────────────────────────────────
 
 	const allEmployees = employeesData.data;
+	const allDepartments = useMemo(() => extractDepartments(allEmployees), [allEmployees]);
+	const filteredEmployees = useMemo(
+		() => applyRosterFilters(allEmployees, filters),
+		[allEmployees, filters]
+	);
 
 	const visibleEmployees = useCallback(
 		(subView: SubView) => {
-			if (subView === 'teaching') return allEmployees.filter((e) => e.isTeaching);
-			if (subView === 'support') return allEmployees.filter((e) => !e.isTeaching);
-			return allEmployees;
+			if (subView === 'teaching') return filteredEmployees.filter((e) => e.isTeaching);
+			if (subView === 'support') return filteredEmployees.filter((e) => !e.isTeaching);
+			return filteredEmployees;
 		},
-		[allEmployees]
+		[filteredEmployees]
+	);
+
+	const currentVisible = visibleEmployees(activeSubView);
+	const visibleDepartmentCount = useMemo(
+		() => new Set(currentVisible.map((e) => e.department)).size,
+		[currentVisible]
 	);
 
 	// ── Handlers ─────────────────────────────────────────────────────────────
@@ -188,6 +205,16 @@ export function RosterTabContent({
 				)}
 			</div>
 
+			{/* Filters */}
+			<RosterFilterBar
+				filters={filters}
+				onFiltersChange={setFilters}
+				departments={allDepartments}
+				totalCount={allEmployees.length}
+				visibleCount={currentVisible.length}
+				departmentCount={visibleDepartmentCount}
+			/>
+
 			{/* Grid */}
 			{activeSubView === 'support' ? (
 				<SupportAdminGrid
@@ -198,10 +225,11 @@ export function RosterTabContent({
 				/>
 			) : (
 				<EmployeeGrid
-					employees={visibleEmployees(activeSubView)}
+					employees={currentVisible}
 					isReadOnly={!canViewSalary}
 					onSelect={handleSelect}
 					selectedId={selectedEmployeeId}
+					totalCount={allEmployees.length}
 				/>
 			)}
 

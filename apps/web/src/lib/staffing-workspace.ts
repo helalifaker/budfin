@@ -147,13 +147,13 @@ export function buildTeachingGridRows(
 			});
 		}
 
-		let sumFteRaw = 0;
-		let sumCovered = 0;
-		let sumGap = 0;
+		let sumFteRaw = new Decimal(0);
+		let sumCovered = new Decimal(0);
+		let sumGap = new Decimal(0);
 		for (const line of bandLines) {
-			sumFteRaw += parseFloat(line.requiredFteRaw);
-			sumCovered += parseFloat(line.coveredFte);
-			sumGap += parseFloat(line.gapFte);
+			sumFteRaw = sumFteRaw.plus(new Decimal(line.requiredFteRaw || '0'));
+			sumCovered = sumCovered.plus(new Decimal(line.coveredFte || '0'));
+			sumGap = sumGap.plus(new Decimal(line.gapFte || '0'));
 		}
 
 		result.push({
@@ -395,9 +395,14 @@ export function buildDisciplineSummaryRows(
 			const scopeLabel = line.band === 'MATERNELLE' ? 'Mat' : 'Elem';
 			const totalHours = new Decimal(line.totalWeeklyHours);
 			const ors = new Decimal(line.effectiveOrs || '18');
-			const fte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
+			const isSection = line.driverType === 'SECTION';
+			const fte = isSection
+				? new Decimal(line.requiredFteRaw)
+				: ors.isZero()
+					? new Decimal(0)
+					: totalHours.div(ors);
 			const postes = Math.ceil(fte.toNumber());
-			const hsaHrs = new Decimal(postes).times(ors).minus(totalHours);
+			const hsaHrs = isSection ? new Decimal(0) : new Decimal(postes).times(ors).minus(totalHours);
 			const covered = new Decimal(line.coveredFte);
 			const gap = covered.minus(fte);
 			const cost = new Decimal(line.directCostAnnual || '0').plus(line.hsaCostAnnual || '0');
@@ -425,18 +430,26 @@ export function buildDisciplineSummaryRows(
 		let totalCovered = new Decimal(0);
 		let totalCost = new Decimal(0);
 		let allUncovered = true;
+		let totalSectionFte = new Decimal(0);
+		let hasSection = false;
 
 		for (const l of groupLines) {
-			totalHours = totalHours.plus(l.totalWeeklyHours);
+			if (l.driverType === 'SECTION') {
+				totalSectionFte = totalSectionFte.plus(l.requiredFteRaw);
+				hasSection = true;
+			} else {
+				totalHours = totalHours.plus(l.totalWeeklyHours);
+			}
 			totalCovered = totalCovered.plus(l.coveredFte);
 			totalCost = totalCost.plus(l.directCostAnnual || '0').plus(l.hsaCostAnnual || '0');
 			if (l.coverageStatus !== 'UNCOVERED') allUncovered = false;
 		}
 
 		const ors = new Decimal(groupLines[0]?.effectiveOrs || '18');
-		const fte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
+		const hoursFte = ors.isZero() ? new Decimal(0) : totalHours.div(ors);
+		const fte = hasSection ? totalSectionFte.plus(hoursFte) : hoursFte;
 		const postes = Math.ceil(fte.toNumber());
-		const hsaHrs = new Decimal(postes).times(ors).minus(totalHours);
+		const hsaHrs = hasSection ? new Decimal(0) : new Decimal(postes).times(ors).minus(totalHours);
 		const gap = totalCovered.minus(fte);
 
 		let status: string;
@@ -496,13 +509,16 @@ export function deriveTabKpis(
 			};
 		case 'roster': {
 			const employees = employeesData?.data ?? [];
+			const nonReplacement = employees.filter((e) => e.recordType !== 'REPLACEMENT');
 			const assignedIds = new Set((assignmentsData?.data ?? []).map((a) => a.employeeId));
-			const teachingCount = employees.filter((e) => e.isTeaching).length;
-			const assignedCount = employees.filter((e) => e.isTeaching && assignedIds.has(e.id)).length;
-			const vacancyCount = employees.filter((e) => e.recordType === 'VACANCY').length;
+			const teachingCount = nonReplacement.filter((e) => e.isTeaching).length;
+			const assignedCount = nonReplacement.filter(
+				(e) => e.isTeaching && assignedIds.has(e.id)
+			).length;
+			const vacancyCount = nonReplacement.filter((e) => e.recordType === 'VACANCY').length;
 			return {
 				items: [
-					{ label: 'Total Headcount', value: employeesData?.total ?? 0 },
+					{ label: 'Total Headcount', value: nonReplacement.length },
 					{ label: 'Teaching Assigned', value: `${assignedCount}/${teachingCount}` },
 					{ label: 'Vacancies', value: vacancyCount },
 				],
@@ -530,17 +546,20 @@ export function deriveTabKpis(
 				],
 			};
 		}
-		case 'costs':
+		case 'costs': {
+			const costEmployees = employeesData?.data ?? [];
+			const costHeadcount = costEmployees.filter((e) => e.recordType !== 'REPLACEMENT').length;
 			return {
 				items: [
 					{ label: 'Total Cost', value: summaryData?.cost ?? '0' },
-					{ label: 'Headcount', value: employeesData?.total ?? 0 },
+					{ label: 'Headcount', value: costHeadcount },
 					{
 						label: 'Category Total',
 						value: categoryCosts?.grand_total ?? '0',
 					},
 				],
 			};
+		}
 		default:
 			return { items: [] };
 	}

@@ -327,7 +327,8 @@ describe('MonthlyCostBudgetGrid', () => {
 			// category costs (24000 + 1200 + 36000 + 0) = 228,520
 			const grandTotalRow = screen.getByText('GRAND TOTAL').closest('tr');
 			expect(grandTotalRow).not.toBeNull();
-			expect(grandTotalRow!.textContent).toContain('228,520');
+			// formatMoney uses fr-FR locale (narrow no-break space U+202F as thousands separator)
+			expect(grandTotalRow!.textContent).toMatch(/228\s*520/);
 		});
 	});
 
@@ -353,7 +354,7 @@ describe('MonthlyCostBudgetGrid', () => {
 	});
 
 	describe('TC-001: Decimal.js currency formatting', () => {
-		it('formats monetary values with SAR prefix and proper grouping', () => {
+		it('formats monetary values with SAR suffix and proper grouping', () => {
 			render(
 				<MonthlyCostBudgetGrid
 					staffCostData={buildMockStaffData()}
@@ -365,7 +366,8 @@ describe('MonthlyCostBudgetGrid', () => {
 			// Existing Staff annual total is 124,000
 			const existingStaffRow = screen.getByText('Existing Staff').closest('tr');
 			expect(existingStaffRow).not.toBeNull();
-			expect(existingStaffRow!.textContent).toContain('124,000');
+			// formatMoney uses fr-FR locale (narrow no-break space U+202F as thousands separator)
+			expect(existingStaffRow!.textContent).toMatch(/124\s*000/);
 		});
 	});
 
@@ -481,7 +483,8 @@ describe('MonthlyCostBudgetGrid', () => {
 			// Existing Staff AY1 = 10000 * 6 = 60,000
 			const existingRow = screen.getByText('Existing Staff').closest('tr');
 			expect(existingRow).not.toBeNull();
-			expect(existingRow!.textContent).toContain('60,000');
+			// formatMoney uses fr-FR locale (narrow no-break space U+202F as thousands separator)
+			expect(existingRow!.textContent).toMatch(/60\s*000/);
 		});
 	});
 });

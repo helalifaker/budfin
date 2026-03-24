@@ -5,11 +5,11 @@ import {
 	getCoreRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
-import { AlertTriangle, CheckCircle, MinusCircle, PlusCircle } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { BAND_STYLES } from '../../lib/band-styles';
 import { formatMoney } from '../../lib/format-money';
 import type { DisciplineSummaryRow } from '../../lib/staffing-workspace';
+import { CoverageBadge, getGapTintClass } from './coverage-badges';
 
 // ── Scope badge ──────────────────────────────────────────────────────────────
 
@@ -34,66 +34,6 @@ function ScopeBadge({ scope }: { scope: string }) {
 			{scope}
 		</span>
 	);
-}
-
-// ── Coverage badge ───────────────────────────────────────────────────────────
-
-interface CoverageBadgeConfig {
-	label: string;
-	Icon: typeof AlertTriangle;
-	className: string;
-}
-
-function getCoverageBadgeConfig(status: string): CoverageBadgeConfig {
-	switch (status) {
-		case 'DEFICIT':
-			return { label: '! Deficit', Icon: AlertTriangle, className: 'bg-red-600 text-white' };
-		case 'COVERED':
-			return { label: '\u2713 Covered', Icon: CheckCircle, className: 'bg-green-600 text-white' };
-		case 'SURPLUS':
-			return {
-				label: '+ Surplus',
-				Icon: PlusCircle,
-				className: 'bg-amber-200 text-(--text-primary)',
-			};
-		case 'UNCOVERED':
-			return {
-				label: '\u2014 None',
-				Icon: MinusCircle,
-				className: 'bg-(--workspace-bg-muted) text-(--text-muted)',
-			};
-		default:
-			return {
-				label: status,
-				Icon: MinusCircle,
-				className: 'bg-(--workspace-bg-muted) text-(--text-muted)',
-			};
-	}
-}
-
-function CoverageBadge({ status }: { status: string }) {
-	const config = getCoverageBadgeConfig(status);
-	return (
-		<span
-			className={cn(
-				'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-				config.className
-			)}
-			aria-label={`Coverage: ${status}`}
-		>
-			<config.Icon className="h-3 w-3" aria-hidden="true" />
-			{config.label}
-		</span>
-	);
-}
-
-// ── Gap cell ─────────────────────────────────────────────────────────────────
-
-function getGapTintClass(gap: string): string {
-	const num = parseFloat(gap);
-	if (num < 0) return 'bg-red-50';
-	if (num > 0) return 'bg-amber-50';
-	return 'bg-green-50';
 }
 
 // ── Props ────────────────────────────────────────────────────────────────────
@@ -233,8 +173,8 @@ export function DisciplineSummaryGrid({
 							<th
 								key={header.id}
 								className={cn(
-									'px-3 py-2 text-left font-medium text-(--text-muted)',
-									'text-(length:--text-xs) uppercase tracking-wider',
+									'px-3 py-2 text-left font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: header.getSize() }}

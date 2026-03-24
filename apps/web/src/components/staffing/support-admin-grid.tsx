@@ -159,17 +159,17 @@ export function SupportAdminGrid({
 						<tr className="bg-(--workspace-bg-subtle)">
 							<th
 								className={cn(
-									'w-9 px-2 py-2 text-left font-medium',
+									'w-9 px-2 py-2 text-left font-semibold',
 									'text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								aria-label="Expand or collapse"
 							/>
 							<th
 								className={cn(
-									'px-3 py-2 text-left font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-left font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 200 }}
@@ -178,8 +178,8 @@ export function SupportAdminGrid({
 							</th>
 							<th
 								className={cn(
-									'px-3 py-2 text-left font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-left font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 150 }}
@@ -188,8 +188,8 @@ export function SupportAdminGrid({
 							</th>
 							<th
 								className={cn(
-									'px-3 py-2 text-center font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-center font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 90 }}
@@ -198,8 +198,8 @@ export function SupportAdminGrid({
 							</th>
 							<th
 								className={cn(
-									'px-3 py-2 text-right font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-right font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 60 }}
@@ -208,8 +208,8 @@ export function SupportAdminGrid({
 							</th>
 							<th
 								className={cn(
-									'px-3 py-2 text-center font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-center font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 90 }}
@@ -218,8 +218,8 @@ export function SupportAdminGrid({
 							</th>
 							<th
 								className={cn(
-									'px-3 py-2 text-center font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-center font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 90 }}
@@ -228,8 +228,8 @@ export function SupportAdminGrid({
 							</th>
 							<th
 								className={cn(
-									'px-3 py-2 text-right font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-right font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 100 }}
@@ -238,8 +238,8 @@ export function SupportAdminGrid({
 							</th>
 							<th
 								className={cn(
-									'px-3 py-2 text-right font-medium text-(--text-muted)',
-									'text-xs uppercase tracking-wider',
+									'px-3 py-2 text-right font-semibold text-(--text-muted)',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'border-b border-(--workspace-border)'
 								)}
 								style={{ width: 110 }}

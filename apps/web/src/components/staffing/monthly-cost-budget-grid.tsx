@@ -3,6 +3,7 @@ import { Decimal } from 'decimal.js';
 import { cn } from '../../lib/cn';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { formatMoney } from '../../lib/format-money';
 import type { CategoryMonthData, CategoryCostData } from '../../hooks/use-staffing';
 
 const MONTH_LABELS = [
@@ -40,12 +41,6 @@ type GridRow = {
 	monthlyAmounts: (string | null)[];
 	annualTotal: string | null;
 };
-
-function formatSar(val: string | null): string {
-	if (val === null) return '\u2014';
-	const num = Number(val);
-	return `SAR ${num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
 
 function sumMonthArrays(...arrays: ((string | null)[] | null | undefined)[]): string[] {
 	const result: string[] = [];
@@ -337,7 +332,7 @@ export function MonthlyCostBudgetGrid({
 					>
 						<thead>
 							<tr className="bg-(--workspace-bg-subtle)">
-								<th className="sticky left-0 z-10 bg-(--workspace-bg-subtle) px-3 py-2 text-left text-xs font-medium text-(--text-muted) uppercase tracking-wider min-w-[180px]">
+								<th className="sticky left-0 z-10 bg-(--workspace-bg-subtle) px-3 py-2 text-left text-[11px] font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[180px]">
 									Category
 								</th>
 								{MONTH_LABELS.map((m, idx) => {
@@ -347,7 +342,7 @@ export function MonthlyCostBudgetGrid({
 										<th
 											key={m}
 											className={cn(
-												'px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider min-w-[100px]',
+												'px-3 py-2 text-right text-[11px] font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[100px]',
 												isSep && 'bg-(--color-warning-bg)/30'
 											)}
 											aria-description={isSep ? 'New positions start in September' : undefined}
@@ -371,7 +366,7 @@ export function MonthlyCostBudgetGrid({
 										</th>
 									);
 								})}
-								<th className="px-3 py-2 text-right text-xs font-medium text-(--text-muted) uppercase tracking-wider min-w-[110px]">
+								<th className="px-3 py-2 text-right text-[11px] font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[110px]">
 									Annual
 								</th>
 							</tr>
@@ -403,7 +398,7 @@ export function MonthlyCostBudgetGrid({
 												isGrandTotal && 'bg-(--workspace-bg-muted)',
 												isSubtotal && 'bg-(--workspace-bg-subtle)',
 												isParent && 'bg-(--workspace-bg-subtle)',
-												!isGrandTotal && !isSubtotal && !isParent && 'bg-white',
+												!isGrandTotal && !isSubtotal && !isParent && 'bg-(--workspace-bg-card)',
 												isChild && 'pl-6'
 											)}
 										>
@@ -441,7 +436,7 @@ export function MonthlyCostBudgetGrid({
 														isSep && 'bg-(--color-warning-bg)/30'
 													)}
 												>
-													{formatSar(val)}
+													{val === null ? '\u2014' : formatMoney(val, { showCurrency: true })}
 												</td>
 											);
 										})}
@@ -452,7 +447,7 @@ export function MonthlyCostBudgetGrid({
 												(isSubtotal || isGrandTotal) && 'font-bold'
 											)}
 										>
-											{formatSar(periodAnnual)}
+											{formatMoney(periodAnnual, { showCurrency: true })}
 										</td>
 									</tr>
 								);

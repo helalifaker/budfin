@@ -175,8 +175,6 @@ function makeEmployee(
 		hsaAmount: null,
 		augmentation: null,
 		augmentationEffectiveDate: null,
-		ajeerAnnualLevy: '0',
-		ajeerMonthlyFee: '0',
 		updatedAt: '2026-03-01T00:00:00Z',
 		recordType: 'EMPLOYEE',
 		costMode: 'LOCAL_PAYROLL',

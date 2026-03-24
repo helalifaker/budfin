@@ -3,6 +3,7 @@ import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tan
 import { ChevronRight } from 'lucide-react';
 import Decimal from 'decimal.js';
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 import { Skeleton } from '../ui/skeleton';
 import type { Employee, StaffCostBreakdown } from '../../hooks/use-staffing';
 
@@ -57,11 +58,6 @@ function StatusBadge({ status }: { status: string }) {
 	);
 }
 
-function formatCurrency(val: string | null): string {
-	if (val === null || val === undefined) return '--';
-	return new Decimal(val).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
 function formatDate(dateStr: string | null): string {
 	if (!dateStr) return '--';
 	try {
@@ -90,7 +86,6 @@ function computeSharePercent(departmentTotal: string, grandTotal: string): strin
 // ── Pinned column widths ───────────────────────────────────────────────────
 
 const PINNED_COL_WIDTHS = [100, 160, 140]; // Employee Code, Name, Function/Role
-const _PINNED_TOTAL_WIDTH = PINNED_COL_WIDTHS.reduce((a, b) => a + b, 0); // 400px
 
 function getPinnedStyle(colIndex: number): CSSProperties {
 	if (colIndex >= PINNED_COL_WIDTHS.length) return {};
@@ -254,70 +249,130 @@ function buildEmployeeColumns(
 			accessorKey: 'baseSalary',
 			header: 'Base Salary',
 			size: 120,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'housingAllowance',
 			accessorKey: 'housingAllowance',
 			header: 'Housing (IL)',
 			size: 110,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'transportAllowance',
 			accessorKey: 'transportAllowance',
 			header: 'Transport (IT)',
 			size: 110,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'responsibilityPremium',
 			accessorKey: 'responsibilityPremium',
 			header: 'Premium',
 			size: 110,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'hsaAmount',
 			accessorKey: 'hsaAmount',
 			header: 'HSA',
 			size: 100,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'augmentation',
 			accessorKey: 'augmentation',
 			header: 'Augmentation',
 			size: 110,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'monthlyGross',
 			accessorKey: 'monthlyGross',
 			header: 'Monthly Gross',
 			size: 130,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'gosiAmount',
 			accessorKey: 'gosiAmount',
 			header: 'GOSI',
 			size: 110,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'ajeerAmount',
 			accessorKey: 'ajeerAmount',
 			header: 'Ajeer',
 			size: 110,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 		{
 			id: 'eosMonthly',
 			accessorKey: 'eosMonthly',
 			header: 'EoS Monthly',
 			size: 110,
-			cell: ({ getValue }) => (isReadOnly ? '--' : formatCurrency(getValue() as string | null)),
+			cell: ({ getValue }) =>
+				isReadOnly
+					? '--'
+					: (() => {
+							const v = getValue() as string | null;
+							return v ? formatMoney(v) : '--';
+						})(),
 		},
 	];
 }
@@ -361,13 +416,11 @@ function DepartmentGridSkeleton() {
 
 function EmployeeSubTable({
 	employees,
-	isReadOnly: _isReadOnly,
 	onSelectEmployee,
 	selectedEmployeeId,
 	columns,
 }: {
 	employees: EmployeeDetailRow[];
-	isReadOnly: boolean;
 	onSelectEmployee: (emp: Employee) => void;
 	selectedEmployeeId: number | null;
 	columns: ColumnDef<EmployeeDetailRow>[];
@@ -486,22 +539,22 @@ function GrandTotalRow({ groups, isReadOnly }: { groups: DepartmentGroup[]; isRe
 				{totals.headcount}
 			</td>
 			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
-				{formatCurrency(totals.monthlyGross)}
+				{formatMoney(totals.monthlyGross)}
 			</td>
 			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
-				{formatCurrency(totals.annualCost)}
+				{formatMoney(totals.annualCost)}
 			</td>
 			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
-				{formatCurrency(totals.eos)}
+				{formatMoney(totals.eos)}
 			</td>
 			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
-				{formatCurrency(totals.ajeer)}
+				{formatMoney(totals.ajeer)}
 			</td>
 			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
-				{formatCurrency(totals.gosi)}
+				{formatMoney(totals.gosi)}
 			</td>
 			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] font-bold text-(--accent-700)">
-				{formatCurrency(totals.grandTotal)}
+				{formatMoney(totals.grandTotal)}
 			</td>
 		</tr>
 	);
@@ -582,8 +635,8 @@ export function StaffCostsDepartmentGrid({
 							<th
 								key={col.key}
 								className={cn(
-									'px-2 py-2 font-medium',
-									'text-(--text-xs) uppercase tracking-wider',
+									'px-2 py-2 font-semibold',
+									'text-[11px] uppercase tracking-[0.12em]',
 									'text-(--text-muted)',
 									'border-b border-(--workspace-border)',
 									col.key !== 'expand' &&
@@ -715,38 +768,38 @@ function DepartmentSection({
 					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
 					style={{ width: 140 }}
 				>
-					{isReadOnly ? '--' : formatCurrency(group.totalMonthlyGross)}
+					{isReadOnly ? '--' : formatMoney(group.totalMonthlyGross)}
 				</td>
 				<td
 					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
 					style={{ width: 140 }}
 				>
-					{isReadOnly ? '--' : formatCurrency(group.totalAnnualCost)}
+					{isReadOnly ? '--' : formatMoney(group.totalAnnualCost)}
 				</td>
 				<td
 					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
 					style={{ width: 120 }}
 				>
-					{isReadOnly ? '--' : formatCurrency(group.totalEos)}
+					{isReadOnly ? '--' : formatMoney(group.totalEos)}
 				</td>
 				<td
 					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
 					style={{ width: 120 }}
 				>
-					{isReadOnly ? '--' : formatCurrency(group.totalAjeer)}
+					{isReadOnly ? '--' : formatMoney(group.totalAjeer)}
 				</td>
 				<td
 					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
 					style={{ width: 120 }}
 				>
-					{isReadOnly ? '--' : formatCurrency(group.totalGosi)}
+					{isReadOnly ? '--' : formatMoney(group.totalGosi)}
 				</td>
 				<td
 					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] font-bold text-(--accent-700)"
 					style={{ width: 140 }}
 				>
 					<div className="flex flex-col items-end">
-						<span>{isReadOnly ? '--' : formatCurrency(group.departmentTotal)}</span>
+						<span>{isReadOnly ? '--' : formatMoney(group.departmentTotal)}</span>
 						{!isReadOnly && (
 							<span
 								className="text-(--text-xs) font-normal text-(--text-muted)"
@@ -773,8 +826,8 @@ function DepartmentSection({
 								<th
 									key={col.id ?? i}
 									className={cn(
-										'px-2 py-1.5 font-medium',
-										'text-(--text-xs) uppercase tracking-wider',
+										'px-2 py-1.5 font-semibold',
+										'text-[11px] uppercase tracking-[0.12em]',
 										'text-(--text-muted)',
 										'border-b border-(--workspace-border)',
 										isPinned && 'bg-(--workspace-bg-subtle)',
@@ -802,7 +855,6 @@ function DepartmentSection({
 
 					<EmployeeSubTable
 						employees={group.employees}
-						isReadOnly={isReadOnly}
 						onSelectEmployee={onSelectEmployee}
 						selectedEmployeeId={selectedEmployeeId}
 						columns={employeeColumns}

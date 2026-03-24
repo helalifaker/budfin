@@ -83,11 +83,11 @@ describe('buildRuleIndex', () => {
 	});
 
 	it('handles single rule correctly', () => {
-		const rules = [makeRule({ gradeLevel: 'TLE', disciplineCode: 'PHILOSOPHIE' })];
+		const rules = [makeRule({ gradeLevel: 'TERM', disciplineCode: 'PHILOSOPHIE' })];
 		const index = buildRuleIndex(rules);
 
 		expect(index.size).toBe(1);
-		expect(index.get('TLE::PHILOSOPHIE')).toHaveLength(1);
+		expect(index.get('TERM::PHILOSOPHIE')).toHaveLength(1);
 	});
 });
 
@@ -223,7 +223,7 @@ describe('computeCoverageGaps', () => {
 		const expected = [
 			{
 				disciplineCode: 'SVT',
-				gradeCodes: ['TLE'],
+				gradeCodes: ['TERM'],
 				lineType: 'SPECIALTY',
 				label: 'SVT (Specialite)',
 			},
@@ -267,7 +267,7 @@ describe('computeCurriculumKpis', () => {
 		['3EME', 'COLLEGE'],
 		['2NDE', 'LYCEE'],
 		['1ERE', 'LYCEE'],
-		['TLE', 'LYCEE'],
+		['TERM', 'LYCEE'],
 	]);
 
 	const miniExpected = [
@@ -453,7 +453,7 @@ describe('isExpectedCell', () => {
 	});
 
 	it('returns false for an unexpected grade', () => {
-		expect(isExpectedCell('TLE', 'FRANCAIS', miniExpected)).toBe(false);
+		expect(isExpectedCell('TERM', 'FRANCAIS', miniExpected)).toBe(false);
 	});
 
 	it('returns false for an unexpected discipline', () => {
@@ -492,7 +492,7 @@ describe('isGapCell', () => {
 	it('returns false when cell is not expected (even without rules)', () => {
 		const index = buildRuleIndex([]);
 
-		expect(isGapCell('TLE', 'FRANCAIS', index, miniExpected)).toBe(false);
+		expect(isGapCell('TERM', 'FRANCAIS', index, miniExpected)).toBe(false);
 	});
 
 	it('returns false for unexpected discipline without rules', () => {
@@ -539,9 +539,9 @@ describe('EXPECTED_COVERAGE', () => {
 
 		expect(specialties.length).toBeGreaterThan(0);
 		for (const s of specialties) {
-			// All specialties should be 1ERE and/or TLE
+			// All specialties should be 1ERE and/or TERM
 			for (const grade of s.gradeCodes) {
-				expect(['1ERE', 'TLE']).toContain(grade);
+				expect(['1ERE', 'TERM']).toContain(grade);
 			}
 		}
 	});
