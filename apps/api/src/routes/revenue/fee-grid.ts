@@ -43,7 +43,7 @@ const putBodySchema = z.object({
 
 const VAT_RATE = new Decimal('0.15');
 const VAT_TOLERANCE = new Decimal('0.01');
-const FEE_GRID_STALE_MODULES = ['REVENUE', 'PNL'] as const;
+const FEE_GRID_STALE_MODULES = ['REVENUE', 'OPEX', 'PNL'] as const;
 
 function validateAy2DaiConsistency(entries: Array<z.infer<typeof feeGridEntrySchema>>) {
 	const grouped = new Map<string, Set<string>>();

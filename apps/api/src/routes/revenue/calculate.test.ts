@@ -341,7 +341,7 @@ describe('POST /calculate/revenue', () => {
 
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['PNL', 'STAFFING'] },
+			data: { staleModules: ['PNL', 'STAFFING', 'OPEX'] },
 		});
 	});
 
@@ -361,7 +361,7 @@ describe('POST /calculate/revenue', () => {
 
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING', 'PNL'] },
+			data: { staleModules: ['STAFFING', 'OPEX', 'PNL'] },
 		});
 	});
 
@@ -381,7 +381,7 @@ describe('POST /calculate/revenue', () => {
 
 		expect(mockPrisma.budgetVersion.update).toHaveBeenCalledWith({
 			where: { id: 1 },
-			data: { staleModules: ['STAFFING', 'PNL'] },
+			data: { staleModules: ['STAFFING', 'OPEX', 'PNL'] },
 		});
 	});
 

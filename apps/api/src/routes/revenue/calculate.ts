@@ -350,6 +350,7 @@ export async function revenueCalculateRoutes(app: FastifyInstance) {
 				const currentStale = new Set(version.staleModules);
 				currentStale.delete('REVENUE');
 				currentStale.add('STAFFING');
+				currentStale.add('OPEX');
 				currentStale.add('PNL');
 				await txPrisma.budgetVersion.update({
 					where: { id: versionId },

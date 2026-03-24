@@ -79,7 +79,7 @@ const putBodySchema = z.object({
 	items: z.array(otherRevenueItemSchema).min(1),
 });
 
-const OTHER_REVENUE_STALE_MODULES = ['REVENUE', 'PNL'] as const;
+const OTHER_REVENUE_STALE_MODULES = ['REVENUE', 'OPEX', 'PNL'] as const;
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
