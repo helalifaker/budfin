@@ -99,6 +99,9 @@ model User {
   updatedOpExLineItems VersionOpExLineItem[] @relation("OpExLineItemUpdater")
   opExCalculations     MonthlyOpEx[]         @relation("OpExCalculator")
 
+  // P&L Reporting relations (Epic 5)
+  createdExportJobs    ExportJob[]       @relation("ExportJobCreator")
+
   // DHG & Staffing Master Data relations (Epic 18)
   createdServiceProfiles  ServiceObligationProfile[] @relation("ServiceProfileCreator")
   updatedServiceProfiles  ServiceObligationProfile[] @relation("ServiceProfileUpdater")
@@ -410,6 +413,11 @@ model BudgetVersion {
   opExLineItems      VersionOpExLineItem[]
   monthlyOpEx        MonthlyOpEx[]
 
+  // P&L Reporting (Epic 5)
+  monthlyPnlLines    MonthlyPnlLine[]
+  exportJobs         ExportJob[]          @relation("ExportJobVersion")
+  comparisonExportJobs ExportJob[]        @relation("ExportJobComparison")
+
   // DHG & Staffing (Epic 18)
   staffingSettings          VersionStaffingSettings?
   serviceProfileOverrides   VersionServiceProfileOverride[]
@@ -454,13 +462,21 @@ model FiscalPeriod {
 }
 
 model MonthlyBudgetSummary {
-  id           Int      @id @default(autoincrement())
-  versionId    Int      @map("version_id")
-  month        Int      @db.SmallInt
-  revenueHt    Decimal  @default(0) @map("revenue_ht") @db.Decimal(15, 4)
-  staffCosts   Decimal  @default(0) @map("staff_costs") @db.Decimal(15, 4)
-  netProfit    Decimal  @default(0) @map("net_profit") @db.Decimal(15, 4)
-  calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  id                Int      @id @default(autoincrement())
+  versionId         Int      @map("version_id")
+  month             Int      @db.SmallInt
+  revenueHt         Decimal  @default(0) @map("revenue_ht") @db.Decimal(15, 4)
+  staffCosts        Decimal  @default(0) @map("staff_costs") @db.Decimal(15, 4)
+  opexCosts         Decimal  @default(0) @map("opex_costs") @db.Decimal(15, 4)
+  depreciation      Decimal  @default(0) @db.Decimal(15, 4)
+  impairment        Decimal  @default(0) @db.Decimal(15, 4)
+  ebitda            Decimal  @default(0) @db.Decimal(15, 4)
+  operatingProfit   Decimal  @default(0) @map("operating_profit") @db.Decimal(15, 4)
+  financeNet        Decimal  @default(0) @map("finance_net") @db.Decimal(15, 4)
+  profitBeforeZakat Decimal  @default(0) @map("profit_before_zakat") @db.Decimal(15, 4)
+  zakatAmount       Decimal  @default(0) @map("zakat_amount") @db.Decimal(15, 4)
+  netProfit         Decimal  @default(0) @map("net_profit") @db.Decimal(15, 4)
+  calculatedAt      DateTime @default(now()) @map("calculated_at") @db.Timestamptz
 
   version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
@@ -1245,4 +1261,54 @@ model MonthlyOpEx {
   @@index([versionId], map: "idx_monthly_opex_version")
   @@index([versionId, month], map: "idx_monthly_opex_version_month")
   @@map("monthly_opex")
+}
+
+// ── P&L Reporting (Epic 5) ──────────────────────────────────────────────────
+
+model MonthlyPnlLine {
+  id             Int      @id @default(autoincrement())
+  versionId      Int      @map("version_id")
+  month          Int      @db.SmallInt
+  sectionKey     String   @map("section_key") @db.VarChar(60)
+  categoryKey    String   @map("category_key") @db.VarChar(60)
+  lineItemKey    String   @map("line_item_key") @db.VarChar(80)
+  displayLabel   String   @map("display_label") @db.VarChar(120)
+  depth          Int      @default(3) @db.SmallInt
+  displayOrder   Int      @map("display_order") @db.SmallInt
+  amount         Decimal  @default(0) @db.Decimal(15, 4)
+  signConvention String   @default("POSITIVE") @map("sign_convention") @db.VarChar(10)
+  isSubtotal     Boolean  @default(false) @map("is_subtotal")
+  isSeparator    Boolean  @default(false) @map("is_separator")
+  calculatedAt   DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  version BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, month, sectionKey, categoryKey, lineItemKey], map: "uq_pnl_line")
+  @@index([versionId], map: "idx_pnl_line_version")
+  @@index([versionId, month], map: "idx_pnl_line_version_month")
+  @@map("monthly_pnl_line")
+}
+
+model ExportJob {
+  id                  Int       @id @default(autoincrement())
+  versionId           Int       @map("version_id")
+  reportType          String    @map("report_type") @db.VarChar(30)
+  format              String    @db.VarChar(10)
+  status              String    @default("PENDING") @db.VarChar(20)
+  progress            Int       @default(0) @db.SmallInt
+  filePath            String?   @map("file_path") @db.VarChar(500)
+  errorMessage        String?   @map("error_message") @db.Text
+  comparisonVersionId Int?      @map("comparison_version_id")
+  createdById         Int       @map("created_by_id")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  expiresAt           DateTime? @map("expires_at") @db.Timestamptz
+
+  version           BudgetVersion  @relation("ExportJobVersion", fields: [versionId], references: [id])
+  comparisonVersion BudgetVersion? @relation("ExportJobComparison", fields: [comparisonVersionId], references: [id])
+  createdBy         User           @relation("ExportJobCreator", fields: [createdById], references: [id])
+
+  @@index([versionId], map: "idx_export_job_version")
+  @@index([status], map: "idx_export_job_status")
+  @@map("export_jobs")
 }

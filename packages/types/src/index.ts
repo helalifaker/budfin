@@ -143,3 +143,27 @@ export type {
 	OpExLineItemUpdate,
 	OpExCalculateResponse,
 } from './opex.js';
+
+export {
+	PNL_FORMATS,
+	PNL_SECTION_KEYS,
+	SIGN_CONVENTIONS,
+	EXPORT_REPORT_TYPES,
+	EXPORT_FORMATS,
+	EXPORT_JOB_STATUSES,
+} from './pnl.js';
+
+export type {
+	PnlFormat,
+	PnlSectionKey,
+	SignConvention,
+	PnlLineItem,
+	PnlKpis,
+	PnlResultsResponse,
+	PnlCalculateResponse,
+	ExportReportType,
+	ExportFormat,
+	ExportJobStatus,
+	ExportJobRequest,
+	ExportJobResponse,
+} from './pnl.js';

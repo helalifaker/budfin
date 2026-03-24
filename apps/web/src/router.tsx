@@ -20,6 +20,7 @@ import { AuditPage } from './pages/admin/audit';
 import { SettingsPage } from './pages/admin/settings';
 import { StaffingPage } from './pages/planning/staffing';
 import { OpExPage } from './pages/planning/opex';
+import { PnlPage } from './pages/planning/pnl';
 import { PlaceholderPage } from './pages/placeholder';
 
 export const routes: RouteObject[] = [
@@ -60,12 +61,7 @@ export const routes: RouteObject[] = [
 							},
 							{
 								path: '/planning/pnl',
-								element: (
-									<PlaceholderPage
-										title="P&L Reporting"
-										description="Profit & loss statements and financial reporting"
-									/>
-								),
+								element: <PnlPage />,
 							},
 							{
 								path: '/planning/scenarios',
