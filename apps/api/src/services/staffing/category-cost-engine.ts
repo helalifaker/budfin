@@ -86,6 +86,7 @@ export interface CategoryAssumption {
 	category: string;
 	calculationMode: CalculationMode;
 	value: Decimal;
+	excludeSummerMonths: boolean;
 }
 
 export interface ConfigurableCategoryCostInput {
@@ -141,6 +142,11 @@ export function calculateConfigurableCategoryMonthlyCosts(
 					// value is annual cost per FTE, multiply by total FTE, divide by 12
 					amount = assumption.value.times(input.totalTeachingFteRaw).dividedBy(12);
 					break;
+			}
+
+			// Summer exclusion: zero out months 7-8 (Jul-Aug) for flagged categories
+			if (assumption.excludeSummerMonths && (month === 7 || month === 8)) {
+				amount = new Decimal(0);
 			}
 
 			results.push({

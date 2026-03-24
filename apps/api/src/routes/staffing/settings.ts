@@ -22,8 +22,7 @@ const staffingSettingsBody = z.object({
 	hsaAdditionalHourRate: z.string().regex(/^\d+(\.\d{1,2})?$/),
 	hsaMonths: z.number().int().min(1).max(12),
 	academicWeeks: z.number().int().min(1).max(52),
-	ajeerAnnualLevy: z.string().regex(/^\d+(\.\d{1,4})?$/),
-	ajeerMonthlyFee: z.string().regex(/^\d+(\.\d{1,4})?$/),
+	ajeerAnnualFee: z.string().regex(/^\d+(\.\d{1,4})?$/),
 });
 
 const serviceProfileOverrideItem = z.object({
@@ -50,6 +49,7 @@ const costAssumptionItem = z.object({
 	]),
 	calculationMode: z.enum(['FLAT_ANNUAL', 'PERCENT_OF_PAYROLL', 'AMOUNT_PER_FTE']),
 	value: z.string().regex(/^\d+(\.\d{1,4})?$/),
+	excludeSummerMonths: z.boolean().default(false),
 });
 
 const costAssumptionsBody = z.object({
@@ -181,8 +181,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 					hsaAdditionalHourRate: settings.hsaAdditionalHourRate.toString(),
 					hsaMonths: settings.hsaMonths,
 					academicWeeks: settings.academicWeeks,
-					ajeerAnnualLevy: settings.ajeerAnnualLevy.toString(),
-					ajeerMonthlyFee: settings.ajeerMonthlyFee.toString(),
+					ajeerAnnualFee: settings.ajeerAnnualFee.toString(),
 					reconciliationBaseline: settings.reconciliationBaseline,
 				},
 			};
@@ -216,8 +215,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 						hsaAdditionalHourRate: body.hsaAdditionalHourRate,
 						hsaMonths: body.hsaMonths,
 						academicWeeks: body.academicWeeks,
-						ajeerAnnualLevy: body.ajeerAnnualLevy,
-						ajeerMonthlyFee: body.ajeerMonthlyFee,
+						ajeerAnnualFee: body.ajeerAnnualFee,
 					},
 					update: {
 						hsaTargetHours: body.hsaTargetHours,
@@ -225,8 +223,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 						hsaAdditionalHourRate: body.hsaAdditionalHourRate,
 						hsaMonths: body.hsaMonths,
 						academicWeeks: body.academicWeeks,
-						ajeerAnnualLevy: body.ajeerAnnualLevy,
-						ajeerMonthlyFee: body.ajeerMonthlyFee,
+						ajeerAnnualFee: body.ajeerAnnualFee,
 					},
 				});
 
@@ -256,8 +253,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 					hsaAdditionalHourRate: updated.hsaAdditionalHourRate.toString(),
 					hsaMonths: updated.hsaMonths,
 					academicWeeks: updated.academicWeeks,
-					ajeerAnnualLevy: updated.ajeerAnnualLevy.toString(),
-					ajeerMonthlyFee: updated.ajeerMonthlyFee.toString(),
+					ajeerAnnualFee: updated.ajeerAnnualFee.toString(),
 					reconciliationBaseline: updated.reconciliationBaseline,
 				},
 			};
@@ -390,6 +386,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 					category: a.category,
 					calculationMode: a.calculationMode,
 					value: a.value.toString(),
+					excludeSummerMonths: a.excludeSummerMonths,
 				})),
 			};
 		},
@@ -425,6 +422,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 							category: a.category,
 							calculationMode: a.calculationMode,
 							value: a.value,
+							excludeSummerMonths: a.excludeSummerMonths,
 						})),
 					});
 				}
@@ -456,6 +454,7 @@ export async function staffingSettingsRoutes(app: FastifyInstance) {
 					category: a.category,
 					calculationMode: a.calculationMode,
 					value: a.value.toString(),
+					excludeSummerMonths: a.excludeSummerMonths,
 				})),
 			};
 		},

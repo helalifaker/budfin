@@ -119,8 +119,6 @@ const mockDecryptedEmployee = {
 	hsa_amount: '0.0000',
 	augmentation: '0.0000',
 	augmentation_effective_date: null,
-	ajeer_annual_levy: '0.0000',
-	ajeer_monthly_fee: '0.0000',
 	// Epic 18 new fields
 	record_type: 'EMPLOYEE',
 	cost_mode: 'LOCAL_PAYROLL',
@@ -154,8 +152,6 @@ const validEmployeeBody = {
 	responsibilityPremium: '0.0000',
 	augmentation: '0.0000',
 	augmentationEffectiveDate: null,
-	ajeerAnnualLevy: '0.0000',
-	ajeerMonthlyFee: '0.0000',
 	// New fields
 	recordType: 'EMPLOYEE',
 	costMode: 'LOCAL_PAYROLL',

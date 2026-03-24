@@ -89,7 +89,15 @@ const mockTx = {
 	budgetVersion: {
 		update: vi.fn().mockResolvedValue({}),
 	},
+	staffingAssignment: {
+		deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+		createMany: vi.fn().mockResolvedValue({ count: 0 }),
+	},
+	calculationAuditLog: {
+		create: vi.fn().mockResolvedValue({ id: 1 }),
+	},
 	$executeRawUnsafe: vi.fn().mockResolvedValue(1),
+	$executeRaw: vi.fn().mockResolvedValue(1),
 };
 
 vi.mock('../../lib/prisma.js', () => {
@@ -142,6 +150,7 @@ vi.mock('../../lib/prisma.js', () => {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
 		$queryRawUnsafe: vi.fn(),
+		$queryRaw: vi.fn(),
 		$transaction: vi.fn(),
 	};
 	return { prisma: mockPrisma };
@@ -171,6 +180,7 @@ type MockedPrisma = {
 	staffingAssignment: { findMany: ReturnType<typeof vi.fn> };
 	calculationAuditLog: { create: ReturnType<typeof vi.fn> };
 	$queryRawUnsafe: ReturnType<typeof vi.fn>;
+	$queryRaw: ReturnType<typeof vi.fn>;
 	$transaction: ReturnType<typeof vi.fn>;
 };
 
@@ -212,8 +222,7 @@ const mockSettings = {
 	hsaAdditionalHourRate: new Decimal('400.00'),
 	hsaMonths: 10,
 	academicWeeks: 36,
-	ajeerAnnualLevy: new Decimal('9500.0000'),
-	ajeerMonthlyFee: new Decimal('160.0000'),
+	ajeerAnnualFee: new Decimal('10925.0000'),
 	reconciliationBaseline: null,
 };
 
@@ -270,7 +279,7 @@ function setupFullPipelineMocks() {
 	mockPrisma.demandOverride.findMany.mockResolvedValue([]);
 	mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
 
-	mockPrisma.$queryRawUnsafe.mockResolvedValue([
+	mockPrisma.$queryRaw.mockResolvedValue([
 		{
 			id: 1,
 			employee_code: 'EMP001',
@@ -286,8 +295,6 @@ function setupFullPipelineMocks() {
 			responsibility_premium: '0',
 			hsa_amount: '0',
 			augmentation: '0',
-			ajeer_annual_levy: '0',
-			ajeer_monthly_fee: '0',
 			cost_mode: 'LOCAL_PAYROLL',
 			record_type: 'EMPLOYEE',
 			service_profile_id: 1,
@@ -500,7 +507,7 @@ describe('POST /calculate/staffing', () => {
 			},
 		]);
 		mockPrisma.gradeLevel.findMany.mockResolvedValue([]);
-		mockPrisma.$queryRawUnsafe.mockResolvedValue([]);
+		mockPrisma.$queryRaw.mockResolvedValue([]);
 		mockPrisma.staffingAssignment.findMany.mockResolvedValue([]);
 
 		mockCalculateDemand.mockReturnValue({ sources: [], lines: [] });
@@ -583,8 +590,8 @@ describe('POST /calculate/staffing', () => {
 			data: { staleModules: ['PNL'] },
 		});
 
-		// Verify audit log
-		expect(mockPrisma.calculationAuditLog.create).toHaveBeenCalledOnce();
+		// Verify audit log (now inside transaction)
+		expect(mockTx.calculationAuditLog.create).toHaveBeenCalledOnce();
 	});
 
 	it('applies demand overrides to requirement lines', async () => {
@@ -626,7 +633,7 @@ describe('POST /calculate/staffing', () => {
 		setupFullPipelineMocks();
 
 		// Add a second employee that is LOCAL_PAYROLL but no service profile
-		mockPrisma.$queryRawUnsafe.mockResolvedValue([
+		mockPrisma.$queryRaw.mockResolvedValue([
 			{
 				id: 1,
 				employee_code: 'EMP001',
@@ -642,8 +649,6 @@ describe('POST /calculate/staffing', () => {
 				responsibility_premium: '0',
 				hsa_amount: '0',
 				augmentation: '0',
-				ajeer_annual_levy: '0',
-				ajeer_monthly_fee: '0',
 				cost_mode: 'LOCAL_PAYROLL',
 				record_type: 'EMPLOYEE',
 				service_profile_id: 1,
@@ -664,8 +669,6 @@ describe('POST /calculate/staffing', () => {
 				responsibility_premium: '0',
 				hsa_amount: '0',
 				augmentation: '0',
-				ajeer_annual_levy: '0',
-				ajeer_monthly_fee: '0',
 				cost_mode: 'AEFE_RECHARGE',
 				record_type: 'EMPLOYEE',
 				service_profile_id: 1,
@@ -864,6 +867,7 @@ describe('POST /calculate/staffing', () => {
 				category: 'REMPLACEMENTS',
 				calculationMode: 'PERCENT_OF_PAYROLL',
 				value: new Decimal('0.0200'),
+				excludeSummerMonths: false,
 			},
 		]);
 

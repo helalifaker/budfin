@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { Decimal } from 'decimal.js';
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { getEncryptionKey } from '../../services/staffing/crypto-helper.js';
 import {
@@ -52,12 +53,12 @@ interface RawEmployee {
 	responsibility_premium: string;
 	hsa_amount: string;
 	augmentation: string;
-	ajeer_annual_levy: string;
-	ajeer_monthly_fee: string;
 	cost_mode: string;
 	record_type: string;
 	service_profile_id: number | null;
 	hourly_percentage: string;
+	discipline_id: number | null;
+	home_band: string | null;
 }
 
 // ── Route Plugin ────────────────────────────────────────────────────────────
@@ -66,7 +67,11 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 	// POST /calculate/staffing — Full 10-step orchestration pipeline
 	app.post('/staffing', {
 		schema: { params: versionIdParams },
-		preHandler: [app.authenticate, app.requirePermission('data:edit')],
+		preHandler: [
+			app.authenticate,
+			app.requirePermission('data:edit'),
+			app.requirePermission('salary:view'),
+		],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 			const startTime = Date.now();
@@ -203,27 +208,23 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 			// 2i: Employees (non-Departed) with decrypted salary fields
 			const key = getEncryptionKey();
 
-			// Uses parameterized $queryRawUnsafe ($1=key, $2=versionId) to avoid
-			// interpolating the encryption key into the SQL string.
-			const rawEmployees = await prisma.$queryRawUnsafe<RawEmployee[]>(
-				`SELECT e.id, e.employee_code, e.name, e.status, e.is_saudi, e.is_ajeer,
+			const rawEmployees = await prisma.$queryRaw<RawEmployee[]>(Prisma.sql`
+				SELECT e.id, e.employee_code, e.name, e.status, e.is_saudi, e.is_ajeer,
 					e.is_teaching, e.joining_date,
-					pgp_sym_decrypt(e.base_salary, $1::text) as base_salary,
-					pgp_sym_decrypt(e.housing_allowance, $1::text) as housing_allowance,
-					pgp_sym_decrypt(e.transport_allowance, $1::text) as transport_allowance,
-					pgp_sym_decrypt(e.responsibility_premium, $1::text) as responsibility_premium,
-					pgp_sym_decrypt(e.hsa_amount, $1::text) as hsa_amount,
-					pgp_sym_decrypt(e.augmentation, $1::text) as augmentation,
-					e.ajeer_annual_levy::text as ajeer_annual_levy,
-					e.ajeer_monthly_fee::text as ajeer_monthly_fee,
+					pgp_sym_decrypt(e.base_salary, ${key}) as base_salary,
+					pgp_sym_decrypt(e.housing_allowance, ${key}) as housing_allowance,
+					pgp_sym_decrypt(e.transport_allowance, ${key}) as transport_allowance,
+					pgp_sym_decrypt(e.responsibility_premium, ${key}) as responsibility_premium,
+					pgp_sym_decrypt(e.hsa_amount, ${key}) as hsa_amount,
+					pgp_sym_decrypt(e.augmentation, ${key}) as augmentation,
 					e.cost_mode, e.record_type,
 					e.service_profile_id,
-					e.hourly_percentage::text as hourly_percentage
+					e.hourly_percentage::text as hourly_percentage,
+					e.discipline_id,
+					e.home_band
 				FROM employees e
-				WHERE e.version_id = $2 AND e.status != 'Departed'`,
-				key,
-				versionId
-			);
+				WHERE e.version_id = ${versionId} AND e.status != 'Departed'
+			`);
 
 			// 2j: Staffing assignments with discipline code resolved
 			const assignments = await prisma.staffingAssignment.findMany({
@@ -319,6 +320,113 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 				}
 				return line;
 			});
+
+			// ════════════════════════════════════════════════════════════════
+			// STEP 4.5: AUTO-CREATE DEFAULT STAFFING ASSIGNMENTS
+			// ════════════════════════════════════════════════════════════════
+
+			// Build set of existing assignment keys to avoid duplicates
+			const existingAssignmentKeys = new Set(
+				assignments.map((a) => `${a.employeeId}:${a.band}:${a.discipline.id}`)
+			);
+
+			// Auto-create assignments for teaching employees with discipline + band
+			const autoAssignments: Array<{
+				versionId: number;
+				employeeId: number;
+				band: string;
+				disciplineId: number;
+				hoursPerWeek: string;
+				fteShare: string;
+				source: string;
+				note: string;
+			}> = [];
+
+			for (const emp of rawEmployees) {
+				if (!emp.is_teaching || !emp.discipline_id || !emp.home_band) continue;
+
+				const key = `${emp.id}:${emp.home_band}:${emp.discipline_id}`;
+				if (existingAssignmentKeys.has(key)) continue;
+
+				const hourlyPct = new Decimal(emp.hourly_percentage);
+
+				// Resolve ORS from service profile
+				let ors = new Decimal(18); // default CERTIFIE ORS
+				if (emp.service_profile_id) {
+					const profileCode = profileIdToCode.get(emp.service_profile_id);
+					if (profileCode) {
+						const profile = mergedProfiles.get(profileCode);
+						if (profile) {
+							ors = new Decimal(profile.weeklyServiceHours.toString());
+						}
+					}
+				}
+
+				const fteShare = Decimal.min(Decimal.max(hourlyPct, new Decimal(0)), new Decimal(1));
+				const hoursPerWeek = ors.times(fteShare).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+				autoAssignments.push({
+					versionId,
+					employeeId: emp.id,
+					band: emp.home_band,
+					disciplineId: emp.discipline_id,
+					hoursPerWeek: hoursPerWeek.toFixed(2),
+					fteShare: fteShare.toFixed(4),
+					source: 'AUTO',
+					note: 'Default assignment — home band + discipline',
+				});
+			}
+
+			// Build synthetic assignment objects for in-memory use by coverage
+			// and cost aggregation engines. DB persistence deferred to Step 10
+			// transaction for atomicity.
+			if (autoAssignments.length > 0) {
+				// Build lookup maps for employee + discipline data
+				const empLookup = new Map(rawEmployees.map((e) => [e.id, e]));
+				const discIdToCode = new Map<number, { id: number; code: string }>();
+				for (const rule of dhgRules) {
+					discIdToCode.set(rule.disciplineId, {
+						id: rule.disciplineId,
+						code: rule.discipline.code,
+					});
+				}
+				for (const ov of demandOverrides) {
+					discIdToCode.set(ov.disciplineId, {
+						id: ov.disciplineId,
+						code: ov.discipline.code,
+					});
+				}
+
+				let syntheticId = -1;
+				for (const aa of autoAssignments) {
+					const emp = empLookup.get(aa.employeeId);
+					const disc = discIdToCode.get(aa.disciplineId);
+					if (!emp || !disc) continue;
+
+					assignments.push({
+						id: syntheticId--,
+						versionId: aa.versionId,
+						employeeId: aa.employeeId,
+						band: aa.band,
+						disciplineId: aa.disciplineId,
+						hoursPerWeek: aa.hoursPerWeek as unknown as Prisma.Decimal,
+						fteShare: aa.fteShare as unknown as Prisma.Decimal,
+						source: aa.source,
+						note: aa.note,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						employee: {
+							id: emp.id,
+							name: emp.name,
+							status: emp.status,
+							costMode: emp.cost_mode,
+							recordType: emp.record_type,
+							hourlyPercentage: emp.hourly_percentage as unknown as Prisma.Decimal,
+						},
+						discipline: disc,
+					} as (typeof assignments)[number]);
+				}
+			}
 
 			// ════════════════════════════════════════════════════════════════
 			// STEP 5: RUN COVERAGE ENGINE (AC-04)
@@ -446,8 +554,7 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					isSaudi: emp.is_saudi,
 					isAjeer: emp.is_ajeer,
 					status: emp.status as 'Existing' | 'New' | 'Departed',
-					ajeerAnnualLevy: emp.ajeer_annual_levy ?? '0',
-					ajeerMonthlyFee: emp.ajeer_monthly_fee ?? '0',
+					ajeerAnnualFee: settings.ajeerAnnualFee.toString(),
 					hireDate: emp.joining_date,
 					asOfDate,
 					costMode,
@@ -493,6 +600,7 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 				category: a.category,
 				calculationMode: a.calculationMode as CalculationMode,
 				value: new Decimal(a.value.toString()),
+				excludeSummerMonths: a.excludeSummerMonths,
 			}));
 
 			const categoryCosts = calculateConfigurableCategoryMonthlyCosts({
@@ -606,7 +714,7 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 			}
 
 			await prisma.$transaction(async (tx) => {
-				// Delete old derived rows
+				// Delete old derived rows + stale AUTO assignments
 				await Promise.all([
 					tx.teachingRequirementSource.deleteMany({
 						where: { versionId },
@@ -617,7 +725,19 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					tx.monthlyStaffCost.deleteMany({ where: { versionId } }),
 					tx.eosProvision.deleteMany({ where: { versionId } }),
 					tx.categoryMonthlyCost.deleteMany({ where: { versionId } }),
+					tx.staffingAssignment.deleteMany({
+						where: { versionId, source: 'AUTO' },
+					}),
 				]);
+
+				// Persist AUTO assignments (in-memory copies already used
+				// by coverage + cost engines above)
+				if (autoAssignments.length > 0) {
+					await tx.staffingAssignment.createMany({
+						data: autoAssignments,
+						skipDuplicates: true,
+					});
+				}
 
 				// Insert TeachingRequirementSource rows
 				const sourceData = demandOutput.sources
@@ -740,13 +860,15 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 				}
 
 				// Update HSA amounts on eligible employees via pgcrypto
+				const hsaAmountStr = hsaOutput.hsaCostPerMonth
+					.toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+					.toFixed(4);
 				for (const empId of hsaEligibleEmployeeIds) {
-					await tx.$executeRawUnsafe(
-						`UPDATE employees SET hsa_amount = pgp_sym_encrypt($1, $2) ` + `WHERE id = $3`,
-						hsaOutput.hsaCostPerMonth.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
-						key,
-						empId
-					);
+					await tx.$executeRaw(Prisma.sql`
+						UPDATE employees
+						SET hsa_amount = pgp_sym_encrypt(${hsaAmountStr}, ${key})
+						WHERE id = ${empId}
+					`);
 				}
 
 				// CI-01: Zero out HSA for employees NOT in the eligible set.
@@ -757,12 +879,11 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					.map((e) => e.id)
 					.filter((id) => !hsaEligibleEmployeeIds.has(id));
 				for (const empId of nonEligibleIds) {
-					await tx.$executeRawUnsafe(
-						`UPDATE employees SET hsa_amount = pgp_sym_encrypt($1, $2) WHERE id = $3`,
-						'0.0000',
-						key,
-						empId
-					);
+					await tx.$executeRaw(Prisma.sql`
+						UPDATE employees
+						SET hsa_amount = pgp_sym_encrypt(${'0.0000'}, ${key})
+						WHERE id = ${empId}
+					`);
 				}
 
 				// Update stale modules: remove STAFFING, add PNL
@@ -774,10 +895,59 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 					where: { id: versionId },
 					data: { staleModules: [...staleSet] },
 				});
+
+				// ── Audit log (inside transaction for atomicity) ──────────
+				const totalFteNeeded = finalLines.reduce(
+					(sum, l) => sum.plus(l.requiredFteRaw),
+					new Decimal(0)
+				);
+				const totalFteCovered = finalLines.reduce(
+					(sum, l) => sum.plus(l.coveredFte),
+					new Decimal(0)
+				);
+				const totalGap = finalLines.reduce((sum, l) => sum.plus(l.gapFte), new Decimal(0));
+
+				let txTotalCost = new Decimal(0);
+				for (const result of employeeCostResults) {
+					txTotalCost = txTotalCost.plus(result.annualCost);
+				}
+				for (const c of categoryCosts) {
+					txTotalCost = txTotalCost.plus(c.amount);
+				}
+
+				const durationMs = Date.now() - startTime;
+
+				await tx.calculationAuditLog.create({
+					data: {
+						versionId,
+						runId,
+						module: 'STAFFING',
+						status: 'COMPLETED',
+						completedAt: new Date(),
+						durationMs,
+						inputSummary: {
+							employees: rawEmployees.length,
+							enrollments: enrollments.length,
+							dhgRules: dhgRules.length,
+							assignments: assignments.length,
+							costAssumptions: costAssumptions.length,
+						},
+						outputSummary: {
+							totalFteNeeded: totalFteNeeded.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+							totalFteCovered: totalFteCovered.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+							totalGap: totalGap.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+							totalCost: txTotalCost.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+							warningCount: warnings.length,
+							sourceRows: demandOutput.sources.length,
+							lineRows: finalLines.length,
+						},
+						triggeredBy: request.user.id,
+					},
+				});
 			});
 
 			// ════════════════════════════════════════════════════════════════
-			// STEP 11: AUDIT LOG + RETURN SUMMARY (AC-12)
+			// STEP 11: RETURN SUMMARY (AC-12)
 			// ════════════════════════════════════════════════════════════════
 
 			const totalFteNeeded = finalLines.reduce(
@@ -796,35 +966,6 @@ export async function staffingCalculateRoutes(app: FastifyInstance) {
 			}
 
 			const durationMs = Date.now() - startTime;
-
-			// Audit log (outside transaction — informational)
-			await prisma.calculationAuditLog.create({
-				data: {
-					versionId,
-					runId,
-					module: 'STAFFING',
-					status: 'COMPLETED',
-					completedAt: new Date(),
-					durationMs,
-					inputSummary: {
-						employees: rawEmployees.length,
-						enrollments: enrollments.length,
-						dhgRules: dhgRules.length,
-						assignments: assignments.length,
-						costAssumptions: costAssumptions.length,
-					},
-					outputSummary: {
-						totalFteNeeded: totalFteNeeded.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
-						totalFteCovered: totalFteCovered.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
-						totalGap: totalGap.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
-						totalCost: totalCost.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
-						warningCount: warnings.length,
-						sourceRows: demandOutput.sources.length,
-						lineRows: finalLines.length,
-					},
-					triggeredBy: request.user.id,
-				},
-			});
 
 			return {
 				runId,

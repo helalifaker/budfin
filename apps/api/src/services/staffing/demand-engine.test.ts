@@ -159,7 +159,7 @@ describe('GROUP driver (Lycee specialties)', () => {
 			rules: [
 				{
 					gradeLevel: '2NDE',
-					disciplineCode: 'NSI',
+					disciplineCode: 'SNT',
 					lineType: 'SPECIALTY',
 					driverType: 'GROUP',
 					hoursPerUnit: new Decimal('4'),
@@ -171,7 +171,7 @@ describe('GROUP driver (Lycee specialties)', () => {
 			groupAssumptions: [
 				{
 					gradeLevel: '2NDE',
-					disciplineCode: 'NSI',
+					disciplineCode: 'SNT',
 					groupCount: 3,
 					hoursPerGroup: new Decimal('4'),
 				},

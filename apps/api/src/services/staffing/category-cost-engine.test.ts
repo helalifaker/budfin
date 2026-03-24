@@ -183,26 +183,31 @@ function makeConfigInput(
 				category: 'REMPLACEMENTS',
 				calculationMode: 'PERCENT_OF_PAYROLL',
 				value: new Decimal('0.0200'),
+				excludeSummerMonths: false,
 			},
 			{
 				category: 'FORMATION',
 				calculationMode: 'PERCENT_OF_PAYROLL',
 				value: new Decimal('0.0100'),
+				excludeSummerMonths: false,
 			},
 			{
 				category: 'RESIDENT_SALAIRES',
 				calculationMode: 'FLAT_ANNUAL',
 				value: new Decimal('180000'),
+				excludeSummerMonths: false,
 			},
 			{
 				category: 'RESIDENT_LOGEMENT',
 				calculationMode: 'FLAT_ANNUAL',
 				value: new Decimal('60000'),
+				excludeSummerMonths: false,
 			},
 			{
 				category: 'RESIDENT_PENSION',
 				calculationMode: 'AMOUNT_PER_FTE',
 				value: new Decimal('12000'),
+				excludeSummerMonths: false,
 			},
 		],
 		monthlySubtotals: makeMonthlySubtotals('500000'),
@@ -399,6 +404,7 @@ describe('calculateConfigurableCategoryMonthlyCosts', () => {
 						category: 'CUSTOM',
 						calculationMode: 'FLAT_ANNUAL',
 						value: new Decimal('24000'),
+						excludeSummerMonths: false,
 					},
 				],
 			})
@@ -455,16 +461,19 @@ describe('calculateConfigurableCategoryMonthlyCosts', () => {
 						category: 'TEST_FLAT',
 						calculationMode: 'FLAT_ANNUAL',
 						value: new Decimal('100000.0001'),
+						excludeSummerMonths: false,
 					},
 					{
 						category: 'TEST_PCT',
 						calculationMode: 'PERCENT_OF_PAYROLL',
 						value: new Decimal('0.0333'),
+						excludeSummerMonths: false,
 					},
 					{
 						category: 'TEST_FTE',
 						calculationMode: 'AMOUNT_PER_FTE',
 						value: new Decimal('7777.7777'),
+						excludeSummerMonths: false,
 					},
 				],
 				monthlySubtotals: makeMonthlySubtotals('333333.3333'),
@@ -483,5 +492,118 @@ describe('calculateConfigurableCategoryMonthlyCosts', () => {
 		const fte = results.find((r) => r.month === 1 && r.category === 'TEST_FTE')!;
 		const expected_fte = new Decimal('7777.7777').times(new Decimal('17.333')).dividedBy(12);
 		expect(fte.amount.toString()).toBe(expected_fte.toString());
+	});
+
+	// ── Summer exclusion ────────────────────────────────────────────────────
+
+	it('excludeSummerMonths: FLAT_ANNUAL produces 0 for months 7-8', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({
+				assumptions: [
+					{
+						category: 'SUMMER_FLAT',
+						calculationMode: 'FLAT_ANNUAL',
+						value: new Decimal('120000'),
+						excludeSummerMonths: true,
+					},
+				],
+			})
+		);
+		const jul = results.find((r) => r.month === 7)!;
+		const aug = results.find((r) => r.month === 8)!;
+		const jan = results.find((r) => r.month === 1)!;
+		const sep = results.find((r) => r.month === 9)!;
+		expect(jul.amount.toFixed(4)).toBe('0.0000');
+		expect(aug.amount.toFixed(4)).toBe('0.0000');
+		expect(jan.amount.toFixed(4)).toBe('10000.0000'); // 120000 / 12
+		expect(sep.amount.toFixed(4)).toBe('10000.0000');
+	});
+
+	it('excludeSummerMonths: PERCENT_OF_PAYROLL produces 0 for months 7-8', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({
+				assumptions: [
+					{
+						category: 'SUMMER_PCT',
+						calculationMode: 'PERCENT_OF_PAYROLL',
+						value: new Decimal('0.0200'),
+						excludeSummerMonths: true,
+					},
+				],
+			})
+		);
+		const jul = results.find((r) => r.month === 7)!;
+		const aug = results.find((r) => r.month === 8)!;
+		const jan = results.find((r) => r.month === 1)!;
+		expect(jul.amount.toFixed(4)).toBe('0.0000');
+		expect(aug.amount.toFixed(4)).toBe('0.0000');
+		expect(jan.amount.toFixed(4)).toBe('10000.0000'); // 500000 * 0.02
+	});
+
+	it('excludeSummerMonths: AMOUNT_PER_FTE produces 0 for months 7-8', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({
+				assumptions: [
+					{
+						category: 'SUMMER_FTE',
+						calculationMode: 'AMOUNT_PER_FTE',
+						value: new Decimal('12000'),
+						excludeSummerMonths: true,
+					},
+				],
+			})
+		);
+		const jul = results.find((r) => r.month === 7)!;
+		const aug = results.find((r) => r.month === 8)!;
+		expect(jul.amount.toFixed(4)).toBe('0.0000');
+		expect(aug.amount.toFixed(4)).toBe('0.0000');
+		// Non-summer months still calculate normally
+		const jan = results.find((r) => r.month === 1)!;
+		expect(jan.amount.toFixed(4)).toBe('25000.0000'); // (12000 * 25) / 12
+	});
+
+	it('excludeSummerMonths: only flagged categories are excluded', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({
+				assumptions: [
+					{
+						category: 'EXCLUDED',
+						calculationMode: 'FLAT_ANNUAL',
+						value: new Decimal('120000'),
+						excludeSummerMonths: true,
+					},
+					{
+						category: 'INCLUDED',
+						calculationMode: 'FLAT_ANNUAL',
+						value: new Decimal('120000'),
+						excludeSummerMonths: false,
+					},
+				],
+			})
+		);
+		const exclJul = results.find((r) => r.month === 7 && r.category === 'EXCLUDED')!;
+		const inclJul = results.find((r) => r.month === 7 && r.category === 'INCLUDED')!;
+		expect(exclJul.amount.toFixed(4)).toBe('0.0000');
+		expect(inclJul.amount.toFixed(4)).toBe('10000.0000'); // not excluded
+	});
+
+	it('excludeSummerMonths: months 1-6 and 9-12 are unaffected', () => {
+		const results = calculateConfigurableCategoryMonthlyCosts(
+			makeConfigInput({
+				assumptions: [
+					{
+						category: 'SUMMER_TEST',
+						calculationMode: 'FLAT_ANNUAL',
+						value: new Decimal('120000'),
+						excludeSummerMonths: true,
+					},
+				],
+			})
+		);
+		const nonSummerMonths = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12];
+		for (const m of nonSummerMonths) {
+			const row = results.find((r) => r.month === m)!;
+			expect(row.amount.toFixed(4)).toBe('10000.0000');
+		}
 	});
 });

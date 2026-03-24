@@ -122,3 +122,24 @@ export type {
 	Discipline,
 	DisciplineAlias,
 } from './staffing.js';
+
+export {
+	OPEX_SECTION_TYPES,
+	OPEX_COMPUTE_METHODS,
+	OPEX_IFRS_CATEGORIES,
+	NON_OPERATING_IFRS_CATEGORIES,
+} from './opex.js';
+
+export type {
+	OpExSectionType,
+	OpExComputeMethod,
+	OpExIfrsCategory,
+	NonOperatingIfrsCategory,
+	OpExLineItem,
+	MonthlyOpExEntry,
+	OpExLineItemsResponse,
+	OpExSummary,
+	OpExBulkUpdatePayload,
+	OpExLineItemUpdate,
+	OpExCalculateResponse,
+} from './opex.js';

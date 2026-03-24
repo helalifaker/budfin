@@ -17,8 +17,7 @@ export interface AjeerInput {
 	isAjeer: boolean;
 	isSaudi: boolean;
 	status: 'Existing' | 'New' | 'Departed';
-	ajeerAnnualLevy: string; // decimal string
-	ajeerMonthlyFee: string; // decimal string
+	ajeerAnnualFee: string; // decimal string — single global fee from settings
 }
 
 export function calculateAjeer(input: AjeerInput, month: number): Decimal {
@@ -30,9 +29,7 @@ export function calculateAjeer(input: AjeerInput, month: number): Decimal {
 	if (input.status === 'New' && month < 9) return new Decimal(0);
 
 	// AC-16: existing staff pay all 12 months
-	const annualLevy = new Decimal(input.ajeerAnnualLevy);
-	const monthlyFee = new Decimal(input.ajeerMonthlyFee);
-	return annualLevy.div(12).plus(monthlyFee);
+	return new Decimal(input.ajeerAnnualFee).div(12);
 }
 
 // ── End-of-Service (AC-19, AC-20, AC-21) ─────────────────────────────────────
@@ -99,8 +96,7 @@ export interface EmployeeCostInput {
 	isSaudi: boolean;
 	isAjeer: boolean;
 	status: 'Existing' | 'New' | 'Departed';
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
+	ajeerAnnualFee: string;
 	hireDate: Date;
 	asOfDate: Date;
 	costMode?: CostMode; // defaults to 'LOCAL_PAYROLL' for backwards compatibility
@@ -144,8 +140,7 @@ export function calculateFullMonthlyCost(
 			isAjeer: input.isAjeer,
 			isSaudi: input.isSaudi,
 			status: input.status,
-			ajeerAnnualLevy: input.ajeerAnnualLevy,
-			ajeerMonthlyFee: input.ajeerMonthlyFee,
+			ajeerAnnualFee: input.ajeerAnnualFee,
 		},
 		month
 	);

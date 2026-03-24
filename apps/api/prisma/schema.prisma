@@ -94,6 +94,11 @@ model User {
   costCalculations     MonthlyStaffCost[] @relation("CostCalculator")
   categoryCostCalculations CategoryMonthlyCost[] @relation("CategoryCostCalculator")
 
+  // OpEx relations
+  createdOpExLineItems VersionOpExLineItem[] @relation("OpExLineItemCreator")
+  updatedOpExLineItems VersionOpExLineItem[] @relation("OpExLineItemUpdater")
+  opExCalculations     MonthlyOpEx[]         @relation("OpExCalculator")
+
   // DHG & Staffing Master Data relations (Epic 18)
   createdServiceProfiles  ServiceObligationProfile[] @relation("ServiceProfileCreator")
   updatedServiceProfiles  ServiceObligationProfile[] @relation("ServiceProfileUpdater")
@@ -400,6 +405,10 @@ model BudgetVersion {
 
   // Staff Costs — Category Level (Epic 8)
   categoryMonthlyCosts CategoryMonthlyCost[]
+
+  // Operating Expenses (OpEx Module)
+  opExLineItems      VersionOpExLineItem[]
+  monthlyOpEx        MonthlyOpEx[]
 
   // DHG & Staffing (Epic 18)
   staffingSettings          VersionStaffingSettings?
@@ -861,8 +870,6 @@ model Employee {
   hsaAmount               Bytes     @default(dbgenerated()) @map("hsa_amount")
   augmentation            Bytes     @default(dbgenerated()) @map("augmentation")
   augmentationEffectiveDate DateTime? @map("augmentation_effective_date") @db.Date
-  ajeerAnnualLevy         Decimal   @default(0) @map("ajeer_annual_levy") @db.Decimal(15, 4)
-  ajeerMonthlyFee         Decimal   @default(0) @map("ajeer_monthly_fee") @db.Decimal(15, 4)
   createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   createdBy               Int       @map("created_by")
@@ -875,7 +882,7 @@ model Employee {
   eosProvision       EosProvision?
 
   // Epic 18 — new fields
-  recordType       String    @default("EMPLOYEE") @map("record_type") @db.VarChar(10)
+  recordType       String    @default("EMPLOYEE") @map("record_type") @db.VarChar(15)
   costMode         String    @default("LOCAL_PAYROLL") @map("cost_mode") @db.VarChar(20)
   disciplineId     Int?      @map("discipline_id")
   serviceProfileId Int?      @map("service_profile_id")
@@ -1020,8 +1027,7 @@ model VersionStaffingSettings {
   academicWeeks Int @default(36) @map("academic_weeks")
 
   // Ajeer system defaults
-  ajeerAnnualLevy Decimal @default(9500) @map("ajeer_annual_levy") @db.Decimal(15, 4)
-  ajeerMonthlyFee Decimal @default(160) @map("ajeer_monthly_fee") @db.Decimal(15, 4)
+  ajeerAnnualFee Decimal @default(10925) @map("ajeer_annual_fee") @db.Decimal(15, 4)
 
   // Reconciliation baseline
   reconciliationBaseline Json? @map("reconciliation_baseline") @db.JsonB
@@ -1054,9 +1060,10 @@ model VersionServiceProfileOverride {
 model VersionStaffingCostAssumption {
   id              Int     @id @default(autoincrement())
   versionId       Int     @map("version_id")
-  category        String  @db.VarChar(30)
-  calculationMode String  @map("calculation_mode") @db.VarChar(25)
-  value           Decimal @db.Decimal(15, 4)
+  category            String  @db.VarChar(30)
+  calculationMode     String  @map("calculation_mode") @db.VarChar(25)
+  value               Decimal @db.Decimal(15, 4)
+  excludeSummerMonths Boolean @default(false) @map("exclude_summer_months")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -1186,4 +1193,56 @@ model StaffingAssignment {
   @@index([versionId], map: "idx_staffing_assignment_version")
   @@index([versionId, band, disciplineId], map: "idx_staffing_assignment_demand")
   @@map("staffing_assignments")
+}
+
+// ── Operating Expenses & Non-Operating Items (OpEx Module) ────────────────────
+
+model VersionOpExLineItem {
+  id              Int      @id @default(autoincrement())
+  versionId       Int      @map("version_id")
+  sectionType     String   @map("section_type") @db.VarChar(20)
+  ifrsCategory    String   @map("ifrs_category") @db.VarChar(50)
+  lineItemName    String   @map("line_item_name") @db.VarChar(200)
+  displayOrder    Int      @default(0) @map("display_order")
+  computeMethod   String   @default("MANUAL") @map("compute_method") @db.VarChar(30)
+  computeRate     Decimal? @map("compute_rate") @db.Decimal(7, 6)
+  budgetV6Total   Decimal? @map("budget_v6_total") @db.Decimal(15, 4)
+  fy2025Actual    Decimal? @map("fy2025_actual") @db.Decimal(15, 4)
+  fy2024Actual    Decimal? @map("fy2024_actual") @db.Decimal(15, 4)
+  comment         String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy       Int      @map("created_by")
+  updatedBy       Int?     @map("updated_by")
+
+  version        BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  creator        User          @relation("OpExLineItemCreator", fields: [createdBy], references: [id])
+  updater        User?         @relation("OpExLineItemUpdater", fields: [updatedBy], references: [id])
+  monthlyAmounts MonthlyOpEx[]
+
+  @@unique([versionId, sectionType, lineItemName], map: "uq_opex_line_item")
+  @@index([versionId], map: "idx_opex_line_items_version")
+  @@index([versionId, sectionType], map: "idx_opex_line_items_section")
+  @@map("version_opex_line_items")
+}
+
+model MonthlyOpEx {
+  id           Int      @id @default(autoincrement())
+  versionId    Int      @map("version_id")
+  lineItemId   Int      @map("line_item_id")
+  month        Int      @db.SmallInt
+  amount       Decimal  @default(0) @db.Decimal(15, 4)
+  calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  calculatedBy Int?     @map("calculated_by")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  version    BudgetVersion       @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  lineItem   VersionOpExLineItem @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  calculator User?               @relation("OpExCalculator", fields: [calculatedBy], references: [id])
+
+  @@unique([versionId, lineItemId, month], map: "uq_monthly_opex")
+  @@index([versionId], map: "idx_monthly_opex_version")
+  @@index([versionId, month], map: "idx_monthly_opex_version_month")
+  @@map("monthly_opex")
 }

@@ -127,6 +127,62 @@ const disciplines = [
 		sortOrder: 32,
 	},
 
+	// New SUBJECT disciplines from Excel — host-country & additional subjects
+	{
+		code: 'EDUCATION_ISLAMIQUE',
+		name: 'Education Islamique',
+		category: 'SUBJECT',
+		sortOrder: 16,
+	},
+	{
+		code: 'NSI',
+		name: 'Numerique et Sciences Informatiques',
+		category: 'SUBJECT',
+		sortOrder: 17,
+	},
+	{
+		code: 'SCIENCES_INGENIEUR',
+		name: "Sciences de l'Ingenieur",
+		category: 'SUBJECT',
+		sortOrder: 18,
+	},
+	{
+		code: 'BIOLOGIE_ECOLOGIE',
+		name: 'Biologie-Ecologie',
+		category: 'SUBJECT',
+		sortOrder: 19,
+	},
+	{
+		code: 'LV2',
+		name: 'Langue Vivante 2',
+		category: 'SUBJECT',
+		sortOrder: 20,
+	},
+	{
+		code: 'SOUTIEN',
+		name: 'Soutien / Approfondissement',
+		category: 'SUBJECT',
+		sortOrder: 21,
+	},
+	{
+		code: 'LLCA',
+		name: "Litteratures et Langues et Cultures de l'Antiquite",
+		category: 'SPECIALTY',
+		sortOrder: 33,
+	},
+	{
+		code: 'EPS_SPECIALTY',
+		name: 'Education Physique, Pratiques et Culture Sportives',
+		category: 'SPECIALTY',
+		sortOrder: 34,
+	},
+	{
+		code: 'ARTS_SPECIALTY',
+		name: 'Arts (Specialite)',
+		category: 'SPECIALTY',
+		sortOrder: 35,
+	},
+
 	// OPTION disciplines
 	{ code: 'ESPAGNOL', name: 'Espagnol', category: 'OPTION', sortOrder: 5 },
 	{ code: 'ALLEMAND', name: 'Allemand', category: 'OPTION', sortOrder: 40 },
@@ -166,34 +222,138 @@ const disciplines = [
  * Used by import/migration to normalize discipline names from external data sources.
  */
 const disciplineAliases = [
+	// French with accents -> canonical codes
+	{ alias: 'Français', disciplineCode: 'FRANCAIS' },
+	{ alias: 'Francais', disciplineCode: 'FRANCAIS' },
+	{ alias: 'Mathématiques', disciplineCode: 'MATHEMATIQUES' },
 	{ alias: 'Mathematiques', disciplineCode: 'MATHEMATIQUES' },
 	{ alias: 'Maths', disciplineCode: 'MATHEMATIQUES' },
+
+	// History-Geography variants
+	{ alias: 'Histoire-Géographie', disciplineCode: 'HISTOIRE_GEO' },
 	{ alias: 'Histoire-Geographie', disciplineCode: 'HISTOIRE_GEO' },
 	{ alias: 'Histoire Géographie', disciplineCode: 'HISTOIRE_GEO' },
 	{ alias: 'Histoire-Geo', disciplineCode: 'HISTOIRE_GEO' },
-	{ alias: 'Histoire-Géographie', disciplineCode: 'HISTOIRE_GEO' },
+	{ alias: 'Histoire-géographie', disciplineCode: 'HISTOIRE_GEO' },
+	{ alias: 'Histoire-Géographie-EMC', disciplineCode: 'HISTOIRE_GEO' },
+
+	// EPS / Sports
 	{ alias: 'Education Physique', disciplineCode: 'EPS' },
 	{ alias: 'EPS', disciplineCode: 'EPS' },
+	{ alias: 'Éducation physique et sportive', disciplineCode: 'EPS' },
+
+	// Sciences
 	{ alias: 'Sciences Physiques', disciplineCode: 'PHYSIQUE_CHIMIE' },
 	{ alias: 'Sciences physiques', disciplineCode: 'PHYSIQUE_CHIMIE' },
+	{ alias: 'Physique-Chimie', disciplineCode: 'PHYSIQUE_CHIMIE' },
+	{ alias: 'Physique-chimie', disciplineCode: 'PHYSIQUE_CHIMIE' },
+	{ alias: 'Sciences de la Vie et de la Terre', disciplineCode: 'SVT' },
+	{ alias: 'Sciences de la vie et de la Terre', disciplineCode: 'SVT' },
+	{ alias: 'SVT', disciplineCode: 'SVT' },
+
+	// Arts
 	{ alias: 'Arts Visuels', disciplineCode: 'ARTS_PLASTIQUES' },
-	{ alias: 'Musique', disciplineCode: 'EDUCATION_MUSICALE' },
 	{ alias: 'Arts plastiques', disciplineCode: 'ARTS_PLASTIQUES' },
+	{ alias: 'Arts Plastiques', disciplineCode: 'ARTS_PLASTIQUES' },
+	{ alias: 'Musique', disciplineCode: 'EDUCATION_MUSICALE' },
+	{ alias: 'Éducation Musicale', disciplineCode: 'EDUCATION_MUSICALE' },
+	{ alias: 'Éducation musicale', disciplineCode: 'EDUCATION_MUSICALE' },
+	{ alias: 'Education Musicale', disciplineCode: 'EDUCATION_MUSICALE' },
+
+	// Primary / Homeroom
 	{ alias: 'Generaliste', disciplineCode: 'PRIMARY_HOMEROOM' },
+	{ alias: 'PDMQDC', disciplineCode: 'PRIMARY_HOMEROOM' },
+	{ alias: 'Homeroom Maternelle', disciplineCode: 'PRIMARY_HOMEROOM' },
+	{ alias: 'Homeroom Élémentaire', disciplineCode: 'PRIMARY_HOMEROOM' },
+
+	// Languages
 	{ alias: 'FLE', disciplineCode: 'FLE' },
+	{ alias: 'Espagnol', disciplineCode: 'ESPAGNOL' },
+	{ alias: 'Anglais', disciplineCode: 'ANGLAIS_LV1' },
+	{ alias: 'Anglais LV1', disciplineCode: 'ANGLAIS_LV1' },
+	{ alias: 'LVA — Anglais', disciplineCode: 'ANGLAIS_LV1' },
+	{ alias: 'Langue vivante 1', disciplineCode: 'ANGLAIS_LV1' },
+	{ alias: 'Langue Vivante (Anglais)', disciplineCode: 'ANGLAIS_LV1' },
+	{ alias: 'LVB — Espagnol', disciplineCode: 'ESPAGNOL' },
+	{ alias: 'Langue vivante 2', disciplineCode: 'LV2' },
+	{ alias: 'LVA + LVB', disciplineCode: 'ANGLAIS_LV1' },
+	{ alias: 'Arabe', disciplineCode: 'ARABE' },
+	{ alias: 'Allemand', disciplineCode: 'ALLEMAND' },
+	{ alias: 'ASEM', disciplineCode: 'ASEM' },
+
+	// Sciences Economiques et Sociales variants
 	{ alias: 'Sciences economiques', disciplineCode: 'SES' },
 	{ alias: 'Sciences Economiques', disciplineCode: 'SES' },
 	{ alias: 'Sciences eco.', disciplineCode: 'SES' },
-	{ alias: 'PDMQDC', disciplineCode: 'PRIMARY_HOMEROOM' },
-	{ alias: 'Espagnol', disciplineCode: 'ESPAGNOL' },
-	{ alias: 'Anglais', disciplineCode: 'ANGLAIS_LV1' },
-	{ alias: 'Francais', disciplineCode: 'FRANCAIS' },
-	{ alias: 'Arabe', disciplineCode: 'ARABE' },
-	{ alias: 'SVT', disciplineCode: 'SVT' },
-	{ alias: 'Allemand', disciplineCode: 'ALLEMAND' },
-	{ alias: 'ASEM', disciplineCode: 'ASEM' },
+	{ alias: 'Sciences économiques et sociales', disciplineCode: 'SES' },
+	{ alias: 'Sciences Économiques et Sociales', disciplineCode: 'SES' },
+
+	// Technology variants
 	{ alias: 'Technologie / SNT', disciplineCode: 'TECHNOLOGIE' },
 	{ alias: 'Technologie', disciplineCode: 'TECHNOLOGIE' },
+	{ alias: 'Sciences numériques et technologie', disciplineCode: 'SNT' },
+	{ alias: 'Sciences Numériques et Technologie', disciplineCode: 'SNT' },
+
+	// Enseignement Scientifique
+	{ alias: 'Enseignement scientifique', disciplineCode: 'ENS_SCIENTIFIQUE' },
+	{ alias: 'Enseignement Scientifique', disciplineCode: 'ENS_SCIENTIFIQUE' },
+
+	// EMC
+	{ alias: 'Enseignement moral et civique', disciplineCode: 'EMC' },
+	{ alias: 'Enseignement Moral et Civique', disciplineCode: 'EMC' },
+
+	// Philosophy
+	{ alias: 'Philosophie', disciplineCode: 'PHILOSOPHIE' },
+
+	// Education Islamique
+	{ alias: 'Education Islamique', disciplineCode: 'EDUCATION_ISLAMIQUE' },
+	{ alias: 'Éducation Islamique', disciplineCode: 'EDUCATION_ISLAMIQUE' },
+
+	// NSI / Informatique
+	{ alias: 'Numérique et sciences informatiques', disciplineCode: 'NSI' },
+	{ alias: 'Numérique et Sciences Informatiques', disciplineCode: 'NSI' },
+	{ alias: 'NSI', disciplineCode: 'NSI' },
+
+	// Sciences de l'Ingenieur
+	{ alias: "Sciences de l'ingénieur", disciplineCode: 'SCIENCES_INGENIEUR' },
+	{ alias: "Sciences de l'Ingénieur", disciplineCode: 'SCIENCES_INGENIEUR' },
+
+	// Biologie-ecologie
+	{ alias: 'Biologie-écologie', disciplineCode: 'BIOLOGIE_ECOLOGIE' },
+	{ alias: 'Biologie-Écologie', disciplineCode: 'BIOLOGIE_ECOLOGIE' },
+
+	// Soutien / Approfondissement
+	{
+		alias: 'Soutien / approfondissement',
+		disciplineCode: 'SOUTIEN',
+	},
+	{
+		alias: 'Soutien / approfondissement en français ou mathématiques',
+		disciplineCode: 'SOUTIEN',
+	},
+
+	// Lycee specialties — accented French
+	{
+		alias: 'Histoire-géographie, géopolitique et sciences politiques',
+		disciplineCode: 'HGGSP',
+	},
+	{ alias: 'Humanités, littérature et philosophie', disciplineCode: 'HLP' },
+	{
+		alias: 'Langues, littératures et cultures étrangères et régionales',
+		disciplineCode: 'LLCER',
+	},
+	{
+		alias: "Littératures et langues et cultures de l'Antiquité",
+		disciplineCode: 'LLCA',
+	},
+	{
+		alias: 'Éducation physique, pratiques et culture sportives',
+		disciplineCode: 'EPS_SPECIALTY',
+	},
+
+	// Maths options
+	{ alias: 'Maths Complémentaires', disciplineCode: 'MATHS_COMP' },
+	{ alias: 'Maths Expertes', disciplineCode: 'MATHS_EXPERTES' },
 ] as const;
 
 /**

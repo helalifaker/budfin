@@ -136,8 +136,7 @@ const mockSettings = {
 	hsaAdditionalHourRate: { toString: () => '400.00' },
 	hsaMonths: 10,
 	academicWeeks: 36,
-	ajeerAnnualLevy: { toString: () => '9500.0000' },
-	ajeerMonthlyFee: { toString: () => '160.0000' },
+	ajeerAnnualFee: { toString: () => '10925.0000' },
 	reconciliationBaseline: null,
 };
 
@@ -219,8 +218,7 @@ describe('PUT /staffing-settings', () => {
 		hsaAdditionalHourRate: '500.00',
 		hsaMonths: 10,
 		academicWeeks: 36,
-		ajeerAnnualLevy: '9500.0000',
-		ajeerMonthlyFee: '160.0000',
+		ajeerAnnualFee: '10925.0000',
 	};
 
 	it('updates staffing settings and marks STAFFING stale', async () => {

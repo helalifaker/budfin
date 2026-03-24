@@ -34,8 +34,6 @@ const OPTIONAL_COLUMNS = [
 	'responsibility_premium',
 	'augmentation',
 	'augmentation_effective_date',
-	'ajeer_annual_levy',
-	'ajeer_monthly_fee',
 	'record_type',
 	'cost_mode',
 	'home_band',
@@ -103,8 +101,6 @@ interface ParsedEmployee {
 	responsibilityPremium: string;
 	augmentation: string;
 	augmentationEffectiveDate: Date | null;
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
 	// Epic 18 new fields
 	recordType: string;
 	costMode: string;
@@ -266,12 +262,6 @@ function validateRow(
 		? parseDateCell(getCell('augmentation_effective_date'))
 		: null;
 
-	const ajeerLevyStr = getStr('ajeer_annual_levy');
-	const ajeerAnnualLevy = ajeerLevyStr && !isNaN(Number(ajeerLevyStr)) ? ajeerLevyStr : '0';
-
-	const ajeerFeeStr = getStr('ajeer_monthly_fee');
-	const ajeerMonthlyFee = ajeerFeeStr && !isNaN(Number(ajeerFeeStr)) ? ajeerFeeStr : '0';
-
 	// Epic 18 optional fields
 	const recordTypeRaw = getStr('record_type') || 'EMPLOYEE';
 	const recordType = VALID_RECORD_TYPES.has(recordTypeRaw) ? recordTypeRaw : 'EMPLOYEE';
@@ -309,8 +299,6 @@ function validateRow(
 			responsibilityPremium,
 			augmentation,
 			augmentationEffectiveDate: augDateRaw,
-			ajeerAnnualLevy,
-			ajeerMonthlyFee,
 			recordType,
 			costMode,
 			homeBand,
@@ -664,7 +652,6 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 							responsibility_premium,
 							hsa_amount, augmentation,
 							augmentation_effective_date,
-							ajeer_annual_levy, ajeer_monthly_fee,
 							record_type, cost_mode, discipline_id,
 							service_profile_id, home_band,
 							contract_end_date,
@@ -680,11 +667,10 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 							pgp_sym_encrypt($18, $14),
 							pgp_sym_encrypt($19, $14),
 							$20,
-							$21, $22,
-							$23, $24, $25,
-							$26, $27,
-							$28,
-							$29, NOW(), NOW()
+							$21, $22, $23,
+							$24, $25,
+							$26,
+							$27, NOW(), NOW()
 						)`,
 						versionId,
 						emp.employeeCode,
@@ -706,8 +692,6 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 						'0', // hsaAmount: computed-only by pipeline (AC-03)
 						emp.augmentation,
 						emp.augmentationEffectiveDate,
-						new Decimal(emp.ajeerAnnualLevy).toFixed(4),
-						new Decimal(emp.ajeerMonthlyFee).toFixed(4),
 						emp.recordType,
 						emp.costMode,
 						resolved.disciplineId,

@@ -51,8 +51,7 @@ export interface StaffingSettings {
 	hsaAdditionalHourRate: string;
 	hsaMonths: number;
 	academicWeeks: number;
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
+	ajeerAnnualFee: string;
 	reconciliationBaseline: Record<string, unknown> | null;
 	createdAt: string;
 	updatedAt: string;
@@ -218,8 +217,6 @@ export interface Employee {
 	hsaAmount: string | null;
 	augmentation: string | null;
 	augmentationEffectiveDate: string | null;
-	ajeerAnnualLevy: string;
-	ajeerMonthlyFee: string;
 	recordType: RecordType;
 	costMode: EmployeeCostMode;
 	disciplineId: number | null;

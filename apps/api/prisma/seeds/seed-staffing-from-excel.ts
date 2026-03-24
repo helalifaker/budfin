@@ -5,6 +5,7 @@
 import { PrismaClient } from '@prisma/client';
 import XLSX from 'xlsx';
 import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 
 const prisma = new PrismaClient();
 const VERSION_ID = 20;
@@ -16,26 +17,58 @@ const STAFF_PATH = resolve('../../data/budgets/EFIR_Staff_Costs_Budget_FY2026_V3
 // Discipline name -> code mapping (matches seeded disciplines)
 const DISC_NAME_TO_CODE: Record<string, string> = {
 	Français: 'FRANCAIS',
+	Francais: 'FRANCAIS',
 	Mathématiques: 'MATHEMATIQUES',
+	Mathematiques: 'MATHEMATIQUES',
 	'Histoire-Géographie-EMC': 'HISTOIRE_GEO',
 	'Histoire-Géographie': 'HISTOIRE_GEO',
+	'Histoire-géographie': 'HISTOIRE_GEO',
 	'LVA — Anglais': 'ANGLAIS_LV1',
-	'LVB — Espagnol': 'ESPAGNOL_LV2',
+	'LVB — Espagnol': 'ESPAGNOL',
+	'Langue vivante 1': 'ANGLAIS_LV1',
+	'Langue vivante 2': 'LV2',
+	'Langue Vivante (Anglais)': 'ANGLAIS_LV1',
+	'LVA + LVB': 'ANGLAIS_LV1',
 	'Sciences de la Vie et de la Terre': 'SVT',
+	'Sciences de la vie et de la Terre': 'SVT',
 	'Physique-Chimie': 'PHYSIQUE_CHIMIE',
+	'Physique-chimie': 'PHYSIQUE_CHIMIE',
 	Technologie: 'TECHNOLOGIE',
 	'Arts Plastiques': 'ARTS_PLASTIQUES',
+	'Arts plastiques': 'ARTS_PLASTIQUES',
 	'Éducation Musicale': 'EDUCATION_MUSICALE',
+	'Éducation musicale': 'EDUCATION_MUSICALE',
 	EPS: 'EPS',
+	'Éducation physique et sportive': 'EPS',
 	"Marge d'autonomie (3h/division)": 'AUTONOMY',
 	'Arabic Language': 'ARABE',
-	'Islamic Studies': 'ISLAMIQUE',
+	'[Host-Country] Arabic Language': 'ARABE',
+	Arabe: 'ARABE',
 	'Sciences Économiques et Sociales': 'SES',
-	'Enseignement Scientifique': 'ENS_SCI',
+	'Sciences économiques et sociales': 'SES',
+	'Enseignement Scientifique': 'ENS_SCIENTIFIQUE',
+	'Enseignement scientifique': 'ENS_SCIENTIFIQUE',
 	'Enseignement Moral et Civique': 'EMC',
-	'Sciences Numériques et Technologie': 'NSI',
+	'Enseignement moral et civique': 'EMC',
+	'Sciences Numériques et Technologie': 'SNT',
+	'Sciences numériques et technologie': 'SNT',
 	"Heures d'autonomie (12h/division)": 'AUTONOMY',
+	"Heures d'autonomie (8h/division)": 'AUTONOMY',
 	Philosophie: 'PHILOSOPHIE',
+	'Soutien / approfondissement': 'SOUTIEN',
+	'Soutien / approfondissement en français ou mathématiques': 'SOUTIEN',
+	'Numérique et sciences informatiques': 'NSI',
+	NSI: 'NSI',
+	"Sciences de l'ingénieur": 'SCIENCES_INGENIEUR',
+	'Biologie-écologie': 'BIOLOGIE_ECOLOGIE',
+	'Education Islamique': 'EDUCATION_ISLAMIQUE',
+	'Éducation Islamique': 'EDUCATION_ISLAMIQUE',
+	'Histoire-géographie, géopolitique et sciences politiques': 'HGGSP',
+	'Humanités, littérature et philosophie': 'HLP',
+	'Langues, littératures et cultures étrangères et régionales': 'LLCER',
+	Espagnol: 'ESPAGNOL',
+	Allemand: 'ALLEMAND',
+	Anglais: 'ANGLAIS_LV1',
 };
 
 // Service profile code by grade band
@@ -58,7 +91,7 @@ const GRADE_TO_PROFILE: Record<string, string> = {
 };
 
 function getLineType(discCode: string): string {
-	if (discCode === 'ARABE' || discCode === 'ISLAMIQUE') return 'HOST_COUNTRY';
+	if (discCode === 'ARABE') return 'HOST_COUNTRY';
 	if (discCode === 'AUTONOMY') return 'AUTONOMY';
 	return 'STRUCTURAL';
 }
@@ -132,8 +165,7 @@ async function seedDhgRules() {
 		if (!discCode) continue;
 		const discId = discCodeToId.get(discCode);
 		if (!discId) continue;
-		const profCode =
-			discCode === 'ARABE' || discCode === 'ISLAMIQUE' ? 'ARABIC_ISLAMIC' : 'CERTIFIE';
+		const profCode = discCode === 'ARABE' ? 'ARABIC_ISLAMIC' : 'CERTIFIE';
 		for (let g = 0; g < 4; g++) {
 			const hrs = Number(row[g + 1]);
 			if (!hrs || hrs <= 0) continue;
@@ -236,15 +268,15 @@ async function seedDhgRules() {
 	// ── Maternelle (hardcoded from Grille_Maternelle) ─────────────────────────
 	const maternelleGrades = ['PS', 'MS', 'GS'];
 	const maternelleArabicHours: Record<string, number> = { PS: 2, MS: 3, GS: 3 };
-	const maternelleIslamicHours: Record<string, number> = { PS: 1, MS: 1, GS: 1 };
 
 	const primaryHomeroomId = discCodeToId.get('PRIMARY_HOMEROOM');
 	const asemDiscId = discCodeToId.get('ASEM');
 	const arabeDiscId = discCodeToId.get('ARABE');
-	const islamiqueDiscId = discCodeToId.get('ISLAMIQUE');
+	const anglaisDiscId = discCodeToId.get('ANGLAIS_LV1');
 	const peProfileId = profCodeToId.get('PE');
 	const asemProfileId = profCodeToId.get('ASEM');
 	const arabicIslamicProfileId = profCodeToId.get('ARABIC_ISLAMIC');
+	const certifieProfileId = profCodeToId.get('CERTIFIE');
 
 	if (primaryHomeroomId && peProfileId) {
 		for (const grade of maternelleGrades) {
@@ -300,22 +332,20 @@ async function seedDhgRules() {
 		}
 	}
 
-	if (islamiqueDiscId && arabicIslamicProfileId) {
-		for (const grade of maternelleGrades) {
-			// Islamic Studies: hours/week per section
-			rules.push({
-				gradeLevel: grade,
-				disciplineId: islamiqueDiscId,
-				lineType: 'HOST_COUNTRY',
-				driverType: 'HOURS',
-				hoursPerUnit: maternelleIslamicHours[grade]!.toFixed(2),
-				serviceProfileId: arabicIslamicProfileId,
-				languageCode: null,
-				groupingKey: null,
-				effectiveFromYear: FISCAL_YEAR,
-				effectiveToYear: null,
-			});
-		}
+	// English for GS only (~1h/week, specialist teacher)
+	if (anglaisDiscId && peProfileId) {
+		rules.push({
+			gradeLevel: 'GS',
+			disciplineId: anglaisDiscId,
+			lineType: 'STRUCTURAL',
+			driverType: 'HOURS',
+			hoursPerUnit: '1.00',
+			serviceProfileId: peProfileId,
+			languageCode: null,
+			groupingKey: null,
+			effectiveFromYear: FISCAL_YEAR,
+			effectiveToYear: null,
+		});
 	}
 
 	// ── Elementaire (hardcoded from Grille_Elementaire) ────────────────────────
@@ -327,12 +357,12 @@ async function seedDhgRules() {
 		CM1: 3,
 		CM2: 3,
 	};
-	const elementaireIslamicHours: Record<string, number> = {
-		CP: 2,
-		CE1: 2,
-		CE2: 2,
-		CM1: 1,
-		CM2: 1,
+	const elementaireEnglishHours: Record<string, number> = {
+		CP: 1.5,
+		CE1: 1.5,
+		CE2: 1.5,
+		CM1: 1.5,
+		CM2: 1.5,
 	};
 
 	if (primaryHomeroomId && peProfileId) {
@@ -371,16 +401,16 @@ async function seedDhgRules() {
 		}
 	}
 
-	if (islamiqueDiscId && arabicIslamicProfileId) {
+	if (anglaisDiscId && certifieProfileId) {
 		for (const grade of elementaireGrades) {
-			// Islamic Studies: hours/week per section
+			// English: hours/week per section
 			rules.push({
 				gradeLevel: grade,
-				disciplineId: islamiqueDiscId,
-				lineType: 'HOST_COUNTRY',
+				disciplineId: anglaisDiscId,
+				lineType: 'STRUCTURAL',
 				driverType: 'HOURS',
-				hoursPerUnit: elementaireIslamicHours[grade]!.toFixed(2),
-				serviceProfileId: arabicIslamicProfileId,
+				hoursPerUnit: elementaireEnglishHours[grade]!.toFixed(2),
+				serviceProfileId: certifieProfileId,
 				languageCode: null,
 				groupingKey: null,
 				effectiveFromYear: FISCAL_YEAR,
@@ -400,11 +430,36 @@ async function seedDhgRules() {
 async function seedCostAssumptions() {
 	// From Assumptions sheet rows 28-31
 	const assumptions = [
-		{ category: 'REMPLACEMENTS', calculationMode: 'FLAT_ANNUAL', value: '272167' },
-		{ category: 'FORMATION', calculationMode: 'PERCENT_OF_PAYROLL', value: '0.01' },
-		{ category: 'RESIDENT_SALAIRES', calculationMode: 'FLAT_ANNUAL', value: '7356097' },
-		{ category: 'RESIDENT_LOGEMENT', calculationMode: 'FLAT_ANNUAL', value: '647400' },
-		{ category: 'RESIDENT_PENSION', calculationMode: 'FLAT_ANNUAL', value: '0' },
+		{
+			category: 'REMPLACEMENTS',
+			calculationMode: 'FLAT_ANNUAL',
+			value: '272167',
+			excludeSummerMonths: true,
+		},
+		{
+			category: 'FORMATION',
+			calculationMode: 'PERCENT_OF_PAYROLL',
+			value: '0.01',
+			excludeSummerMonths: false,
+		},
+		{
+			category: 'RESIDENT_SALAIRES',
+			calculationMode: 'FLAT_ANNUAL',
+			value: '7356097',
+			excludeSummerMonths: true,
+		},
+		{
+			category: 'RESIDENT_LOGEMENT',
+			calculationMode: 'FLAT_ANNUAL',
+			value: '647400',
+			excludeSummerMonths: true,
+		},
+		{
+			category: 'RESIDENT_PENSION',
+			calculationMode: 'FLAT_ANNUAL',
+			value: '0',
+			excludeSummerMonths: true,
+		},
 	];
 
 	await prisma.versionStaffingCostAssumption.deleteMany({ where: { versionId: VERSION_ID } });
@@ -424,8 +479,7 @@ async function seedStaffingSettings() {
 			hsaAdditionalHourRate: '400',
 			hsaMonths: 10,
 			academicWeeks: 36,
-			ajeerAnnualLevy: '9500',
-			ajeerMonthlyFee: '160',
+			ajeerAnnualFee: '10925',
 		},
 		create: {
 			versionId: VERSION_ID,
@@ -434,8 +488,7 @@ async function seedStaffingSettings() {
 			hsaAdditionalHourRate: '400',
 			hsaMonths: 10,
 			academicWeeks: 36,
-			ajeerAnnualLevy: '9500',
-			ajeerMonthlyFee: '160',
+			ajeerAnnualFee: '10925',
 		},
 	});
 	console.log('Seeded staffing settings (HSA, Ajeer, academic weeks).');
@@ -456,7 +509,6 @@ async function seedEmployees() {
 	const keyPath = process.env.SALARY_ENCRYPTION_KEY ?? './secrets/salary_encryption_key.txt';
 	let encKey: string;
 	try {
-		const { readFileSync } = await import('node:fs');
 		encKey = readFileSync(keyPath, 'utf-8').trim();
 	} catch {
 		encKey = keyPath; // fallback: use path as literal key (dev mode)
@@ -516,7 +568,7 @@ async function seedEmployees() {
 			department.toLowerCase().includes(d.toLowerCase())
 		);
 
-		const empCode = `EMP-${String(r - 3).padStart(3, '0')}`;
+		const empCode = `EFIR-${String(r - 3).padStart(3, '0')}`;
 
 		await prisma.$executeRawUnsafe(
 			`INSERT INTO employees (
@@ -525,7 +577,6 @@ async function seedEmployees() {
 				is_teaching, hourly_percentage,
 				base_salary, housing_allowance, transport_allowance,
 				responsibility_premium, hsa_amount, augmentation,
-				ajeer_annual_levy, ajeer_monthly_fee,
 				record_type, cost_mode,
 				created_by, created_at, updated_at
 			) VALUES (
@@ -534,7 +585,6 @@ async function seedEmployees() {
 				$11, $12,
 				pgp_sym_encrypt($13, $14), pgp_sym_encrypt($15, $14), pgp_sym_encrypt($16, $14),
 				pgp_sym_encrypt($17, $14), pgp_sym_encrypt('0', $14), pgp_sym_encrypt($18, $14),
-				$19, $20,
 				'EMPLOYEE', 'LOCAL_PAYROLL',
 				1, NOW(), NOW()
 			)`,
@@ -555,9 +605,7 @@ async function seedEmployees() {
 			housingAllowance,
 			transportAllowance,
 			responsibilityPremium,
-			augmentation,
-			isAjeer ? 9500 : 0,
-			isAjeer ? 160 : 0
+			augmentation
 		);
 		count++;
 	}
@@ -574,12 +622,180 @@ async function seedEmployees() {
 	console.log(`Seeded ${count} employees.`);
 }
 
+// ── Subject → Discipline resolution helpers ─────────────────────────────────
+// (Mirrors logic from import-final-qa-staff.ts)
+
+function stripCoordinatorSuffix(subject: string): string {
+	return subject.replace(/\s*\(coordinat(?:eur|rice)\)\s*$/, '').trim();
+}
+
+function getSubjectLookupCandidates(subject: string): string[] {
+	const stripped = stripCoordinatorSuffix(subject);
+	const candidates: string[] = [stripped];
+
+	if (stripped.includes('/')) {
+		const parts = stripped.split('/').map((p) => p.trim());
+		candidates.push(...parts);
+	}
+
+	const parenMatch = stripped.match(/^(.+?)\s*\([^)]+\)\s*$/);
+	if (parenMatch?.[1]) {
+		candidates.push(parenMatch[1].trim());
+	}
+
+	return candidates;
+}
+
+function resolveDisciplineId(
+	subject: string,
+	aliasMap: Map<string, number>,
+	nameMap: Map<string, number>
+): number | null {
+	const candidates = getSubjectLookupCandidates(subject);
+
+	for (const candidate of candidates) {
+		const lower = candidate.toLowerCase();
+		const aliasMatch = aliasMap.get(lower);
+		if (aliasMatch !== undefined) return aliasMatch;
+		const nameMatch = nameMap.get(lower);
+		if (nameMatch !== undefined) return nameMatch;
+	}
+
+	return null;
+}
+
+function resolveServiceProfileCodeFromSubject(
+	subject: string,
+	functionRole: string,
+	isTeaching: boolean,
+	level: string
+): string | null {
+	const subjectLower = subject.toLowerCase();
+	const roleLower = functionRole.toLowerCase();
+	const levelLower = level.toLowerCase();
+
+	if (subjectLower.includes('asem')) return 'ASEM';
+	if (subjectLower.includes('arabe') || subjectLower.includes('islamique')) return 'ARABIC_ISLAMIC';
+	if (subjectLower === 'eps') return 'EPS';
+	if (subjectLower.includes('documentation') || subjectLower.includes('cdi'))
+		return 'DOCUMENTALISTE';
+	if (roleLower.includes('agrege') || roleLower.includes('agrégé')) return 'AGREGE';
+
+	if (
+		isTeaching &&
+		(levelLower === 'maternelle' ||
+			levelLower === 'elementaire' ||
+			levelLower === 'élémentaire' ||
+			levelLower === 'primaire')
+	) {
+		return 'PE';
+	}
+
+	if (isTeaching) return 'CERTIFIE';
+	return null;
+}
+
+interface FixtureRecord {
+	employeeCode: string;
+	subject: string;
+	homeBand: string | null;
+	level: string;
+	costMode: string;
+}
+
+async function resolveEmployeeFields() {
+	// Load fixture data
+	const fixturePath = resolve('../../data/fixtures/fy2026-staff-costs.json');
+	const fixtureData: FixtureRecord[] = JSON.parse(readFileSync(fixturePath, 'utf-8'));
+	const fixtureByCode = new Map<string, FixtureRecord>();
+	for (const rec of fixtureData) {
+		fixtureByCode.set(rec.employeeCode, rec);
+	}
+
+	// Load lookup tables
+	const disciplineAliases = await prisma.disciplineAlias.findMany({
+		select: { alias: true, disciplineId: true },
+	});
+	const aliasMap = new Map<string, number>();
+	for (const da of disciplineAliases) {
+		aliasMap.set(da.alias.toLowerCase(), da.disciplineId);
+	}
+
+	const allDisciplines = await prisma.discipline.findMany({
+		select: { id: true, name: true, code: true },
+	});
+	const nameMap = new Map<string, number>();
+	for (const d of allDisciplines) {
+		nameMap.set(d.name.toLowerCase(), d.id);
+		nameMap.set(d.code.toLowerCase(), d.id);
+	}
+
+	const serviceProfiles = await prisma.serviceObligationProfile.findMany({
+		select: { id: true, code: true },
+	});
+	const profileCodeToId = new Map<string, number>();
+	for (const sp of serviceProfiles) {
+		profileCodeToId.set(sp.code, sp.id);
+	}
+
+	// Load all employees for this version
+	const employees = await prisma.employee.findMany({
+		where: { versionId: VERSION_ID },
+		select: { id: true, employeeCode: true, functionRole: true, isTeaching: true },
+	});
+
+	let resolved = 0;
+	for (const emp of employees) {
+		const fixture = fixtureByCode.get(emp.employeeCode);
+		if (!fixture) continue;
+
+		const updateData: Record<string, unknown> = {};
+
+		// costMode
+		updateData.costMode = fixture.costMode;
+
+		// homeBand
+		if (fixture.homeBand) {
+			updateData.homeBand = fixture.homeBand;
+		}
+
+		// disciplineId
+		const disciplineId = resolveDisciplineId(fixture.subject, aliasMap, nameMap);
+		if (disciplineId !== null) {
+			updateData.disciplineId = disciplineId;
+		}
+
+		// serviceProfileId
+		const profileCode = resolveServiceProfileCodeFromSubject(
+			fixture.subject,
+			emp.functionRole,
+			emp.isTeaching,
+			fixture.level
+		);
+		if (profileCode) {
+			const profileId = profileCodeToId.get(profileCode);
+			if (profileId) {
+				updateData.serviceProfileId = profileId;
+			}
+		}
+
+		await prisma.employee.update({
+			where: { id: emp.id },
+			data: updateData,
+		});
+		resolved++;
+	}
+
+	console.log(`Resolved fields for ${resolved} employees (discipline, profile, band, costMode).`);
+}
+
 async function main() {
 	try {
 		await seedStaffingSettings();
 		await seedCostAssumptions();
 		await seedDhgRules();
 		await seedEmployees();
+		await resolveEmployeeFields();
 
 		// Verify
 		const empCount = await prisma.employee.count({ where: { versionId: VERSION_ID } });

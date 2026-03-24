@@ -1008,7 +1008,7 @@ export async function versionRoutes(app: FastifyInstance) {
 							sourceVersionId: id,
 							createdById: request.user.id,
 							modificationCount: 0,
-							staleModules: ['ENROLLMENT', 'STAFFING'],
+							staleModules: ['ENROLLMENT', 'STAFFING', 'OPEX'],
 							status: 'Draft',
 							dataSource: source.dataSource,
 							rolloverThreshold: source.rolloverThreshold,
@@ -1164,7 +1164,6 @@ export async function versionRoutes(app: FastifyInstance) {
 							responsibility_premium,
 							hsa_amount, augmentation,
 							augmentation_effective_date,
-							ajeer_annual_levy, ajeer_monthly_fee,
 							record_type, cost_mode, discipline_id,
 							service_profile_id, home_band,
 							contract_end_date,
@@ -1181,7 +1180,6 @@ export async function versionRoutes(app: FastifyInstance) {
 							responsibility_premium,
 							hsa_amount, augmentation,
 							augmentation_effective_date,
-							ajeer_annual_levy, ajeer_monthly_fee,
 							record_type, cost_mode, discipline_id,
 							service_profile_id, home_band,
 							contract_end_date,
@@ -1213,8 +1211,7 @@ export async function versionRoutes(app: FastifyInstance) {
 								hsaAdditionalHourRate: srcSettings.hsaAdditionalHourRate,
 								hsaMonths: srcSettings.hsaMonths,
 								academicWeeks: srcSettings.academicWeeks,
-								ajeerAnnualLevy: srcSettings.ajeerAnnualLevy,
-								ajeerMonthlyFee: srcSettings.ajeerMonthlyFee,
+								ajeerAnnualFee: srcSettings.ajeerAnnualFee,
 								reconciliationBaseline: srcSettings.reconciliationBaseline ?? Prisma.JsonNull,
 							},
 						});
@@ -1315,6 +1312,42 @@ export async function versionRoutes(app: FastifyInstance) {
 					// AC-08: TeachingRequirementSource and
 					// TeachingRequirementLine are NOT copied
 					// (derived outputs — regenerated on calculate)
+
+					// ── OpEx line items clone ─────────────────────────────
+					const srcOpExLineItems = await txPrisma.versionOpExLineItem.findMany({
+						where: { versionId: id },
+						include: { monthlyAmounts: true },
+					});
+					if (srcOpExLineItems.length > 0) {
+						for (const li of srcOpExLineItems) {
+							const newLineItem = await txPrisma.versionOpExLineItem.create({
+								data: {
+									versionId: newVersion.id,
+									sectionType: li.sectionType,
+									ifrsCategory: li.ifrsCategory,
+									lineItemName: li.lineItemName,
+									displayOrder: li.displayOrder,
+									computeMethod: li.computeMethod,
+									computeRate: li.computeRate,
+									budgetV6Total: li.budgetV6Total,
+									fy2025Actual: li.fy2025Actual,
+									fy2024Actual: li.fy2024Actual,
+									comment: li.comment,
+									createdBy: request.user.id,
+								},
+							});
+							if (li.monthlyAmounts.length > 0) {
+								await txPrisma.monthlyOpEx.createMany({
+									data: li.monthlyAmounts.map((ma) => ({
+										versionId: newVersion.id,
+										lineItemId: newLineItem.id,
+										month: ma.month,
+										amount: ma.amount,
+									})),
+								});
+							}
+						}
+					}
 
 					await (tx as typeof prisma).auditEntry.create({
 						data: {

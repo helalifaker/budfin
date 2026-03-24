@@ -40,27 +40,27 @@ describe('calculateAjeer', () => {
 		isAjeer: true,
 		isSaudi: false,
 		status: 'Existing',
-		ajeerAnnualLevy: '9600.0000',
-		ajeerMonthlyFee: '100.0000',
+		ajeerAnnualFee: '10925.0000',
 		...overrides,
 	});
 
 	it('AC-16: existing non-Saudi — all 12 months', () => {
 		const input = makeAjeer();
+		const expected = new Decimal('10925').div(12);
 		for (let month = 1; month <= 12; month++) {
 			const result = calculateAjeer(input, month);
-			// 9600/12 + 100 = 800 + 100 = 900
-			expect(result.toString()).toBe('900');
+			expect(result.toFixed(4)).toBe(expected.toFixed(4));
 		}
 	});
 
 	it('AC-17: new non-Saudi — only months 9-12', () => {
 		const input = makeAjeer({ status: 'New' });
+		const expected = new Decimal('10925').div(12);
 		for (let month = 1; month <= 8; month++) {
 			expect(calculateAjeer(input, month).toString()).toBe('0');
 		}
 		for (let month = 9; month <= 12; month++) {
-			expect(calculateAjeer(input, month).toString()).toBe('900');
+			expect(calculateAjeer(input, month).toFixed(4)).toBe(expected.toFixed(4));
 		}
 	});
 
@@ -158,8 +158,7 @@ describe('calculateFullMonthlyCost', () => {
 		isSaudi: true,
 		isAjeer: false,
 		status: 'Existing',
-		ajeerAnnualLevy: '0.0000',
-		ajeerMonthlyFee: '0.0000',
+		ajeerAnnualFee: '0.0000',
 		hireDate: utcDate(2020, 1, 1),
 		asOfDate: utcDate(2025, 1, 1),
 		...overrides,
@@ -215,8 +214,7 @@ describe('calculateEmployeeAnnualCost', () => {
 		isSaudi: false,
 		isAjeer: true,
 		status: 'Existing',
-		ajeerAnnualLevy: '9600.0000',
-		ajeerMonthlyFee: '100.0000',
+		ajeerAnnualFee: '10925.0000',
 		hireDate: utcDate(2020, 1, 1),
 		asOfDate: utcDate(2025, 1, 1),
 		...overrides,
@@ -238,8 +236,7 @@ describe('calculateEmployeeAnnualCost', () => {
 				isTeaching: false,
 				isSaudi: false,
 				isAjeer: false,
-				ajeerAnnualLevy: '0.0000',
-				ajeerMonthlyFee: '0.0000',
+				ajeerAnnualFee: '0.0000',
 			})
 		);
 		const aug = months[7]!; // month 8
@@ -258,8 +255,7 @@ describe('calculateEmployeeAnnualCost', () => {
 				isTeaching: false,
 				isSaudi: false,
 				isAjeer: false,
-				ajeerAnnualLevy: '0.0000',
-				ajeerMonthlyFee: '0.0000',
+				ajeerAnnualFee: '0.0000',
 				hireDate: utcDate(2023, 1, 1),
 			})
 		);

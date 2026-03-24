@@ -115,6 +115,14 @@ vi.mock('../lib/prisma.js', () => {
 			findMany: vi.fn().mockResolvedValue([]),
 			createMany: vi.fn().mockResolvedValue({ count: 0 }),
 		},
+		// OpEx mocks
+		versionOpExLineItem: {
+			findMany: vi.fn().mockResolvedValue([]),
+			create: vi.fn().mockResolvedValue({ id: 1 }),
+		},
+		monthlyOpEx: {
+			createMany: vi.fn().mockResolvedValue({ count: 0 }),
+		},
 		$queryRaw: vi.fn().mockResolvedValue([]),
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
@@ -136,6 +144,8 @@ vi.mock('../lib/prisma.js', () => {
 				versionLyceeGroupAssumption: mockPrisma.versionLyceeGroupAssumption,
 				staffingAssignment: mockPrisma.staffingAssignment,
 				demandOverride: mockPrisma.demandOverride,
+				versionOpExLineItem: mockPrisma.versionOpExLineItem,
+				monthlyOpEx: mockPrisma.monthlyOpEx,
 				$queryRaw: mockPrisma.$queryRaw,
 			})
 		),
@@ -440,7 +450,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 			id: 2,
 			name: 'Stale Clone',
 			sourceVersionId: 1,
-			staleModules: ['ENROLLMENT', 'STAFFING'],
+			staleModules: ['ENROLLMENT', 'STAFFING', 'OPEX'],
 			createdBy: { email: 'admin@budfin.app' },
 		});
 
@@ -458,7 +468,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		expect(mockPrisma.budgetVersion.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				data: expect.objectContaining({
-					staleModules: ['ENROLLMENT', 'STAFFING'],
+					staleModules: ['ENROLLMENT', 'STAFFING', 'OPEX'],
 				}),
 			})
 		);
@@ -707,8 +717,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 			hsaAdditionalHourRate: '400',
 			hsaMonths: 10,
 			academicWeeks: 36,
-			ajeerAnnualLevy: '9500.0000',
-			ajeerMonthlyFee: '160.0000',
+			ajeerAnnualFee: '9500.0000',
 			reconciliationBaseline: { totalFte: 42.5, totalCost: 10000 },
 			createdAt: now,
 			updatedAt: now,
@@ -736,8 +745,7 @@ describe('POST /api/v1/versions/:id/clone', () => {
 					hsaAdditionalHourRate: '400',
 					hsaMonths: 10,
 					academicWeeks: 36,
-					ajeerAnnualLevy: '9500.0000',
-					ajeerMonthlyFee: '160.0000',
+					ajeerAnnualFee: '9500.0000',
 					reconciliationBaseline: {
 						totalFte: 42.5,
 						totalCost: 10000,

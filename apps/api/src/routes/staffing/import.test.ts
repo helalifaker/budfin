@@ -1783,8 +1783,6 @@ describe('POST /employees/import', () => {
 			'responsibility_premium',
 			'hsa_amount',
 			'augmentation',
-			'ajeer_annual_levy',
-			'ajeer_monthly_fee',
 		]);
 		sheet.addRow([
 			'EMP-RESOLVE',
@@ -1800,8 +1798,6 @@ describe('POST /employees/import', () => {
 			'200',
 			'100',
 			'50',
-			'0',
-			'0',
 		]);
 		const buffer = await workbook.xlsx.writeBuffer();
 		const boundary = 'boundary-resolve';
@@ -1835,10 +1831,10 @@ describe('POST /employees/import', () => {
 		// The INSERT query args should include disciplineId=1
 		// and serviceProfileId=1 (CERTIFIE) for the teaching employee
 		expect(capturedInsertArgs.length).toBeGreaterThan(20);
-		// Arg index 24 = disciplineId (resolved from alias)
-		expect(capturedInsertArgs[25]).toBe(1);
-		// Arg index 25 = serviceProfileId (CERTIFIE=1)
-		expect(capturedInsertArgs[26]).toBe(1);
+		// Arg index 23 = disciplineId (resolved from alias) — [0] is SQL string
+		expect(capturedInsertArgs[23]).toBe(1);
+		// Arg index 24 = serviceProfileId (CERTIFIE=1)
+		expect(capturedInsertArgs[24]).toBe(1);
 	});
 
 	// ── Validate with optional fields: all populated ─────────────────────────
@@ -1871,8 +1867,6 @@ describe('POST /employees/import', () => {
 			'hsa_amount',
 			'augmentation',
 			'augmentation_effective_date',
-			'ajeer_annual_levy',
-			'ajeer_monthly_fee',
 			'record_type',
 			'cost_mode',
 			'home_band',
@@ -1897,8 +1891,6 @@ describe('POST /employees/import', () => {
 			'75',
 			'25',
 			'2024-01-15',
-			'1200',
-			'100',
 			'VACANCY',
 			'NO_LOCAL_COST',
 			'COLLEGE',

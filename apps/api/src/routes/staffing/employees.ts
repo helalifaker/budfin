@@ -6,7 +6,7 @@ import { getEncryptionKey } from '../../services/staffing/crypto-helper.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const VALID_RECORD_TYPES = ['EMPLOYEE', 'VACANCY'] as const;
+const VALID_RECORD_TYPES = ['EMPLOYEE', 'VACANCY', 'REPLACEMENT'] as const;
 const VALID_COST_MODES = ['LOCAL_PAYROLL', 'AEFE_RECHARGE', 'NO_LOCAL_COST'] as const;
 const VALID_BANDS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
 
@@ -26,7 +26,7 @@ const employeeListQuery = z.object({
 	status: z.enum(['Existing', 'New', 'Departed']).optional(),
 	recordType: z.enum(VALID_RECORD_TYPES).optional(),
 	page: z.coerce.number().int().positive().default(1),
-	page_size: z.coerce.number().int().positive().max(100).default(50),
+	page_size: z.coerce.number().int().positive().max(500).default(50),
 });
 
 /**
@@ -54,8 +54,6 @@ const employeeBody = z.object({
 	responsibilityPremium: z.string().default('0.0000'),
 	augmentation: z.string().default('0.0000'),
 	augmentationEffectiveDate: z.string().date().nullable().optional(),
-	ajeerAnnualLevy: z.string().default('0.0000'),
-	ajeerMonthlyFee: z.string().default('0.0000'),
 	// Epic 18 — new fields
 	recordType: z.enum(VALID_RECORD_TYPES).default('EMPLOYEE'),
 	costMode: z.enum(VALID_COST_MODES).default('LOCAL_PAYROLL'),
@@ -88,8 +86,6 @@ interface DecryptedEmployee {
 	hsa_amount: string | null;
 	augmentation: string | null;
 	augmentation_effective_date: Date | null;
-	ajeer_annual_levy: string;
-	ajeer_monthly_fee: string;
 	// Epic 18 new fields
 	record_type: string;
 	cost_mode: string;
@@ -126,8 +122,6 @@ function formatEmployee(raw: DecryptedEmployee, redactSalary: boolean) {
 		hsaAmount: redactSalary ? null : raw.hsa_amount,
 		augmentation: redactSalary ? null : raw.augmentation,
 		augmentationEffectiveDate: raw.augmentation_effective_date,
-		ajeerAnnualLevy: raw.ajeer_annual_levy,
-		ajeerMonthlyFee: raw.ajeer_monthly_fee,
 		// Epic 18 new fields (AC-01)
 		recordType: raw.record_type,
 		costMode: raw.cost_mode,
@@ -200,8 +194,6 @@ function buildEmployeeSelect(salaryFragment: Prisma.Sql): Prisma.Sql {
 		e.hourly_percentage::text as hourly_percentage,
 		${salaryFragment},
 		e.augmentation_effective_date,
-		e.ajeer_annual_levy::text as ajeer_annual_levy,
-		e.ajeer_monthly_fee::text as ajeer_monthly_fee,
 		e.record_type, e.cost_mode, e.discipline_id,
 		e.service_profile_id, e.home_band, e.contract_end_date,
 		d.name as discipline_name,
@@ -257,7 +249,7 @@ export async function employeeRoutes(app: FastifyInstance) {
 			params: versionIdParams,
 			querystring: employeeListQuery,
 		},
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 			const { department, status, recordType, page, page_size } = request.query as z.infer<
@@ -326,7 +318,7 @@ export async function employeeRoutes(app: FastifyInstance) {
 		schema: {
 			params: employeeIdParams,
 		},
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId, id } = request.params as z.infer<typeof employeeIdParams>;
 
@@ -449,7 +441,6 @@ export async function employeeRoutes(app: FastifyInstance) {
 						is_teaching, hourly_percentage, base_salary, housing_allowance,
 						transport_allowance, responsibility_premium, hsa_amount,
 						augmentation, augmentation_effective_date,
-						ajeer_annual_levy, ajeer_monthly_fee,
 						record_type, cost_mode, discipline_id,
 						service_profile_id, home_band, contract_end_date,
 						created_by, created_at, updated_at
@@ -467,8 +458,6 @@ export async function employeeRoutes(app: FastifyInstance) {
 						pgp_sym_encrypt(${hsaAmount}, ${key}),
 						pgp_sym_encrypt(${body.augmentation}, ${key}),
 						${augEffDate},
-						${Number(body.ajeerAnnualLevy)},
-						${Number(body.ajeerMonthlyFee)},
 						${body.recordType}, ${body.costMode},
 						${body.disciplineId ?? null},
 						${body.serviceProfileId ?? null},
@@ -645,8 +634,6 @@ export async function employeeRoutes(app: FastifyInstance) {
 						augmentation =
 							pgp_sym_encrypt(${body.augmentation}, ${key}),
 						augmentation_effective_date = ${augEffDate},
-						ajeer_annual_levy = ${Number(body.ajeerAnnualLevy)},
-						ajeer_monthly_fee = ${Number(body.ajeerMonthlyFee)},
 						record_type = ${body.recordType},
 						cost_mode = ${body.costMode},
 						discipline_id = ${body.disciplineId ?? null},
