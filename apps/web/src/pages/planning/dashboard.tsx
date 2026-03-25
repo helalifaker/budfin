@@ -1,10 +1,84 @@
-import { Users, DollarSign, Briefcase, TrendingUp } from 'lucide-react';
+import { Users, DollarSign, Briefcase, TrendingUp, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { PageTransition } from '../../components/shared/page-transition';
 import { KpiCard } from '../../components/dashboard/kpi-card';
 import { ChartCard } from '../../components/dashboard/chart-card';
+import { Skeleton } from '../../components/ui/skeleton';
+import { useWorkspaceContext } from '../../hooks/use-workspace-context';
+import { useDashboard } from '../../hooks/use-dashboard';
+import { formatMoney } from '../../lib/format-money';
+
+const MONTH_LABELS = [
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'May',
+	'Jun',
+	'Jul',
+	'Aug',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dec',
+];
+
+function KpiSkeleton() {
+	return (
+		<div
+			className={cn(
+				'relative overflow-hidden',
+				'rounded-xl border border-(--workspace-border)',
+				'bg-(--workspace-bg-card) shadow-(--shadow-xs)',
+				'p-5'
+			)}
+		>
+			<div className="absolute top-0 left-0 right-0 h-[3px] bg-(--accent-500)" aria-hidden="true" />
+			<div className="flex items-start justify-between">
+				<div className="space-y-3">
+					<Skeleton className="h-4 w-24" />
+					<Skeleton className="h-8 w-36" />
+				</div>
+				<Skeleton className="h-10 w-10 rounded-lg" />
+			</div>
+		</div>
+	);
+}
+
+function StaleBanner({ staleModules }: { staleModules: string[] }) {
+	if (staleModules.length === 0) return null;
+
+	return (
+		<div
+			className={cn(
+				'flex items-center gap-2 rounded-lg px-4 py-3',
+				'border border-(--color-warning-border) bg-(--color-warning-bg)',
+				'text-(--text-sm) text-(--color-warning)'
+			)}
+			role="alert"
+		>
+			<AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+			<span>
+				<strong>Stale data detected.</strong> The following modules need recalculation:{' '}
+				{staleModules.join(', ')}.
+			</span>
+		</div>
+	);
+}
 
 export function DashboardPage() {
+	const { versionId } = useWorkspaceContext();
+	const { data, isLoading } = useDashboard(versionId);
+
+	const kpis = data?.kpis;
+	const monthlyTrend = data?.monthlyTrend ?? [];
+	const staleModules = data?.staleModules ?? [];
+
+	const totalRevenueNum = kpis ? parseFloat(kpis.totalRevenue) : 0;
+	const totalStaffCostsNum = kpis ? parseFloat(kpis.totalStaffCosts) : 0;
+	const netProfitNum = kpis ? parseFloat(kpis.netProfit) : 0;
+	const enrollmentCount = kpis?.enrollmentCount ?? 0;
+
 	return (
 		<PageTransition>
 			<div className="p-6 space-y-6">
@@ -12,65 +86,141 @@ export function DashboardPage() {
 					Budget Planning Dashboard
 				</h1>
 
+				{/* Stale data warning banner */}
+				{!isLoading && <StaleBanner staleModules={staleModules} />}
+
+				{/* No version selected */}
+				{!versionId && !isLoading && (
+					<div className="flex h-48 items-center justify-center rounded-md bg-(--workspace-bg-subtle)">
+						<p className="text-(--text-sm) text-(--text-muted)">
+							Select a budget version to view dashboard data.
+						</p>
+					</div>
+				)}
+
 				{/* KPI Cards Row */}
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-					{[
-						{
-							title: 'Total Students',
-							value: 0,
-							icon: Users,
-							delay: 0,
-						},
-						{
-							title: 'Total Revenue',
-							value: 0,
-							icon: DollarSign,
-							formatter: (v: number) => `SAR ${v.toLocaleString()}`,
-							delay: 50,
-						},
-						{
-							title: 'Staff Costs',
-							value: 0,
-							icon: Briefcase,
-							formatter: (v: number) => `SAR ${v.toLocaleString()}`,
-							delay: 100,
-						},
-						{
-							title: 'Net Result',
-							value: 0,
-							icon: TrendingUp,
-							formatter: (v: number) => `SAR ${v.toLocaleString()}`,
-							delay: 150,
-						},
-					].map((kpi) => (
-						<div
-							key={kpi.title}
-							className={cn('animate-stagger-reveal')}
-							style={{ animationDelay: `${kpi.delay}ms` }}
-						>
-							<KpiCard
-								title={kpi.title}
-								value={kpi.value}
-								icon={kpi.icon}
-								formatter={kpi.formatter}
-							/>
-						</div>
-					))}
+					{isLoading ? (
+						<>
+							<KpiSkeleton />
+							<KpiSkeleton />
+							<KpiSkeleton />
+							<KpiSkeleton />
+						</>
+					) : (
+						<>
+							<div className="animate-stagger-reveal" style={{ animationDelay: '0ms' }}>
+								<KpiCard title="Total Students" value={enrollmentCount} icon={Users} />
+							</div>
+							<div className="animate-stagger-reveal" style={{ animationDelay: '50ms' }}>
+								<KpiCard
+									title="Total Revenue"
+									value={totalRevenueNum}
+									icon={DollarSign}
+									formatter={(v: number) => formatMoney(v, { showCurrency: true })}
+								/>
+							</div>
+							<div className="animate-stagger-reveal" style={{ animationDelay: '100ms' }}>
+								<KpiCard
+									title="Staff Costs"
+									value={totalStaffCostsNum}
+									icon={Briefcase}
+									formatter={(v: number) => formatMoney(v, { showCurrency: true })}
+								/>
+							</div>
+							<div className="animate-stagger-reveal" style={{ animationDelay: '150ms' }}>
+								<KpiCard
+									title="Net Result"
+									value={netProfitNum}
+									icon={TrendingUp}
+									formatter={(v: number) => formatMoney(v, { showCurrency: true })}
+									className={
+										netProfitNum >= 0
+											? '[&_p:nth-child(2)]:text-(--color-success)'
+											: '[&_p:nth-child(2)]:text-(--color-error)'
+									}
+								/>
+							</div>
+						</>
+					)}
 				</div>
 
-				{/* Charts Row */}
-				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+				{/* Monthly Trend Table */}
+				{versionId && (
 					<div className="animate-stagger-reveal" style={{ animationDelay: '200ms' }}>
-						<ChartCard title="Revenue vs Budget" />
+						<ChartCard title="Monthly Trend">
+							{isLoading ? (
+								<div className="space-y-2">
+									{Array.from({ length: 4 }).map((_, i) => (
+										<Skeleton key={i} className="h-6 w-full" />
+									))}
+								</div>
+							) : monthlyTrend.length > 0 ? (
+								<div className="overflow-x-auto">
+									<table className="w-full text-(--text-sm)">
+										<thead>
+											<tr className="border-b border-(--workspace-border)">
+												<th className="px-3 py-2 text-left font-medium text-(--text-secondary)">
+													Month
+												</th>
+												<th className="px-3 py-2 text-right font-medium text-(--text-secondary)">
+													Revenue
+												</th>
+												<th className="px-3 py-2 text-right font-medium text-(--text-secondary)">
+													Staff Costs
+												</th>
+												<th className="px-3 py-2 text-right font-medium text-(--text-secondary)">
+													OpEx
+												</th>
+												<th className="px-3 py-2 text-right font-medium text-(--text-secondary)">
+													Net Profit
+												</th>
+											</tr>
+										</thead>
+										<tbody>
+											{monthlyTrend.map((row) => {
+												const np = parseFloat(row.netProfit);
+												return (
+													<tr
+														key={row.month}
+														className="border-b border-(--workspace-border) last:border-b-0"
+													>
+														<td className="px-3 py-2 font-medium text-(--text-primary)">
+															{MONTH_LABELS[row.month - 1]}
+														</td>
+														<td className="px-3 py-2 text-right tabular-nums text-(--text-primary)">
+															{formatMoney(row.revenue)}
+														</td>
+														<td className="px-3 py-2 text-right tabular-nums text-(--text-primary)">
+															{formatMoney(row.staffCosts)}
+														</td>
+														<td className="px-3 py-2 text-right tabular-nums text-(--text-primary)">
+															{formatMoney(row.opex)}
+														</td>
+														<td
+															className={cn(
+																'px-3 py-2 text-right tabular-nums',
+																np >= 0 ? 'text-(--color-success)' : 'text-(--color-error)'
+															)}
+														>
+															{formatMoney(row.netProfit)}
+														</td>
+													</tr>
+												);
+											})}
+										</tbody>
+									</table>
+								</div>
+							) : (
+								<div className="flex h-48 items-center justify-center rounded-md bg-(--workspace-bg-subtle)">
+									<p className="text-(--text-sm) text-(--text-muted)">
+										No budget data calculated yet.
+									</p>
+								</div>
+							)}
+						</ChartCard>
 					</div>
-					<div className="animate-stagger-reveal" style={{ animationDelay: '250ms' }}>
-						<ChartCard title="Enrollment by Band" />
-					</div>
-				</div>
-
-				<div className="animate-stagger-reveal" style={{ animationDelay: '300ms' }}>
-					<ChartCard title="Monthly Trend" />
-				</div>
+				)}
 			</div>
 		</PageTransition>
 	);
