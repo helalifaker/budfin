@@ -5,6 +5,8 @@ import { getGuideContent, getPanelContent } from '../../lib/right-panel-registry
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import type { RightPanelTab } from '../../stores/right-panel-store';
+import { ActivityFeed } from './activity-feed';
+import { CalculationHistory } from './calculation-history';
 
 const TABS: Array<{ id: RightPanelTab; label: string }> = [
 	{ id: 'details', label: 'Details' },
@@ -150,16 +152,8 @@ export function RightPanel() {
 				{/* Tab content */}
 				<div className="flex-1 overflow-y-auto p-4 scrollbar-thin bg-(--workspace-bg-subtle)">
 					{activeTab === 'details' && <DelegatedDetailsContent />}
-					{activeTab === 'activity' && (
-						<p className="text-(--text-sm) text-(--text-muted)">
-							Recent activity will appear here.
-						</p>
-					)}
-					{activeTab === 'audit' && (
-						<p className="text-(--text-sm) text-(--text-muted)">
-							Audit log entries for the selected item.
-						</p>
-					)}
+					{activeTab === 'activity' && <ActivityFeed />}
+					{activeTab === 'audit' && <CalculationHistory />}
 					{activeTab === 'help' && <DelegatedGuideContent />}
 				</div>
 			</div>

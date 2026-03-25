@@ -57,6 +57,16 @@ vi.mock('../../hooks/use-workspace-context', () => ({
 	}),
 }));
 
+vi.mock('./activity-feed', () => ({
+	ActivityFeed: () => <div data-testid="activity-feed">Activity feed content</div>,
+}));
+
+vi.mock('./calculation-history', () => ({
+	CalculationHistory: () => (
+		<div data-testid="calculation-history">Calculation history content</div>
+	),
+}));
+
 afterEach(() => {
 	cleanup();
 	mockIsOpen = true;
@@ -155,16 +165,16 @@ describe('RightPanel', () => {
 		expect(screen.getByText(/enrollment details will appear here/i)).toBeDefined();
 	});
 
-	it('shows activity placeholder when activity tab is active', () => {
+	it('renders ActivityFeed when activity tab is active', () => {
 		mockActiveTab = 'activity';
 		render(<RightPanel />);
-		expect(screen.getByText(/recent activity will appear here/i)).toBeDefined();
+		expect(screen.getByTestId('activity-feed')).toBeDefined();
 	});
 
-	it('shows audit placeholder when audit tab is active', () => {
+	it('renders CalculationHistory when audit tab is active', () => {
 		mockActiveTab = 'audit';
 		render(<RightPanel />);
-		expect(screen.getByText(/audit log entries/i)).toBeDefined();
+		expect(screen.getByTestId('calculation-history')).toBeDefined();
 	});
 
 	it('shows guide placeholder when help tab is active and no renderer registered', () => {
