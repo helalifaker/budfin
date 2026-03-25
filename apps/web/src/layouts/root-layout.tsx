@@ -1,13 +1,16 @@
 import { Outlet } from 'react-router';
+import { ErrorBoundary } from '../components/shared/error-boundary';
 import { Sidebar } from '../components/shell/sidebar';
 
 export function RootLayout() {
 	return (
-		<div className="flex h-screen overflow-hidden bg-(--workspace-bg)">
-			<Sidebar />
-			<div className="flex flex-1 flex-col overflow-hidden">
-				<Outlet />
+		<ErrorBoundary>
+			<div className="flex h-screen overflow-hidden bg-(--workspace-bg)">
+				<Sidebar />
+				<div className="flex flex-1 flex-col overflow-hidden">
+					<Outlet />
+				</div>
 			</div>
-		</div>
+		</ErrorBoundary>
 	);
 }
