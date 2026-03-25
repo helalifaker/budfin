@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
-import { Printer } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
+import { ExportDialog } from '../../components/shared/export-dialog';
 import { PageTransition } from '../../components/shared/page-transition';
 import { CalculateButton } from '../../components/shared/calculate-button';
 import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
@@ -71,6 +72,7 @@ export function RevenuePage() {
 	);
 	const [bandFilter, setBandFilter] = useState<GradeBand | 'ALL'>('ALL');
 	const [exceptionFilter, setExceptionFilter] = useState<RevenueExceptionFilterValue>('all');
+	const [exportOpen, setExportOpen] = useState(false);
 	const settingsButtonRef = useRef<HTMLButtonElement>(null);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
 	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
@@ -280,6 +282,15 @@ export function RevenuePage() {
 							totalLabel={totalLabel}
 						/>
 						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setExportOpen(true)}
+							className="no-print"
+						>
+							<Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+							Export Report
+						</Button>
+						<Button
 							ref={settingsButtonRef}
 							type="button"
 							variant="outline"
@@ -339,6 +350,8 @@ export function RevenuePage() {
 					onClose={handleSettingsClose}
 				/>
 			</div>
+
+			<ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultReportType="REVENUE" />
 		</PageTransition>
 	);
 }

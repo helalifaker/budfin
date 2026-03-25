@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
-import { FileSpreadsheet } from 'lucide-react';
+import { Download, FileSpreadsheet } from 'lucide-react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
@@ -15,9 +15,11 @@ import {
 import { deriveStaffingEditability } from '../../lib/staffing-workspace';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../../lib/cn';
+import { Button } from '../ui/button';
 import { PageTransition } from '../shared/page-transition';
 import { CalculateButton } from '../shared/calculate-button';
 import { EmptyState } from '../shared/empty-state';
+import { ExportDialog } from '../shared/export-dialog';
 import { StalePill } from '../shared/stale-pill';
 import { OpExKpiRibbon } from './opex-kpi-ribbon';
 import { OpExStatusStrip } from './opex-status-strip';
@@ -44,6 +46,7 @@ export function OpExPage() {
 	const clearSelection = useOpExSelectionStore((s) => s.clearSelection);
 
 	const [activeTab, setActiveTab] = useState<OpExTab>('operating');
+	const [exportOpen, setExportOpen] = useState(false);
 
 	const { data: versionsData } = useVersions(fiscalYear);
 	const { data: lineItemsResponse, isLoading } = useOpExLineItems(versionId);
@@ -231,6 +234,15 @@ export function OpExPage() {
 					</div>
 
 					<div className="flex items-center gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setExportOpen(true)}
+							className="no-print"
+						>
+							<Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+							Export
+						</Button>
 						{isEditable && (
 							<CalculateButton
 								onCalculate={() => calculateMutation.mutate()}
@@ -317,6 +329,8 @@ export function OpExPage() {
 					)}
 				</div>
 			</div>
+
+			<ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultReportType="OPEX" />
 		</PageTransition>
 	);
 }

@@ -17,6 +17,7 @@ import {
 import { useVersions } from '../../hooks/use-versions';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import { useCohortParameters, usePutCohortParameters } from '../../hooks/use-cohort-parameters';
+import { Download } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 import { EnrollmentKpiRibbon } from '../../components/enrollment/kpi-ribbon';
@@ -28,6 +29,7 @@ import {
 	type ExceptionFilterValue,
 } from '../../components/enrollment/exception-filter-menu';
 import { CalculateButton } from '../../components/enrollment/calculate-button';
+import { ExportDialog } from '../../components/shared/export-dialog';
 import { PageTransition } from '../../components/shared/page-transition';
 import { VersionLockBanner } from '../../components/enrollment/version-lock-banner';
 import { EnrollmentSetupWizard } from '../../components/enrollment/setup-wizard';
@@ -74,6 +76,7 @@ export function EnrollmentPage() {
 	const [exceptionFilter, setExceptionFilter] = useState<ExceptionFilterValue>('all');
 	const [quickEdit, setQuickEdit] = useState(false);
 	const [wizardOpen, setWizardOpen] = useState(false);
+	const [exportOpen, setExportOpen] = useState(false);
 	const autoPromptedVersionRef = useRef<number | null>(null);
 
 	const { data: headcountData } = useHeadcount(versionId);
@@ -400,6 +403,15 @@ export function EnrollmentPage() {
 							isFiltered={isFiltered}
 							dirtyCount={dirtyCount}
 						/>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setExportOpen(true)}
+							className="no-print"
+						>
+							<Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+							Export Report
+						</Button>
 						<Button type="button" variant="outline" size="sm" onClick={openEnrollmentSettings}>
 							Enrollment Settings
 						</Button>
@@ -482,6 +494,8 @@ export function EnrollmentPage() {
 				onClose={() => setWizardOpen(false)}
 			/>
 			<EnrollmentSettingsSheet versionId={versionId} editability={editability} />
+
+			<ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultReportType="ENROLLMENT" />
 		</PageTransition>
 	);
 }

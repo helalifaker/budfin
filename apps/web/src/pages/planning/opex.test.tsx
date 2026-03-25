@@ -3,6 +3,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { OpExPage } from '../../components/opex/opex-page';
 
+vi.mock('../../components/shared/export-dialog', () => ({
+	ExportDialog: () => null,
+}));
+
 let mockWorkspaceContext = {
 	versionId: 10 as number | null,
 	fiscalYear: 2026,
@@ -10,6 +14,8 @@ let mockWorkspaceContext = {
 };
 
 let mockUserRole = 'Admin';
+
+const mockSetActivePage = vi.fn();
 
 let mockVersionsData = {
 	data: [
@@ -31,6 +37,18 @@ vi.mock('../../hooks/use-workspace-context', () => ({
 vi.mock('../../stores/auth-store', () => ({
 	useAuthStore: (selector: (state: { user: { role: string } }) => unknown) =>
 		selector({ user: { role: mockUserRole } }),
+}));
+
+vi.mock('../../stores/right-panel-store', () => ({
+	useRightPanelStore: (
+		selector: (state: { setActivePage: typeof mockSetActivePage; isOpen: boolean }) => unknown
+	) => selector({ setActivePage: mockSetActivePage, isOpen: false }),
+}));
+
+vi.mock('../../stores/opex-selection-store', () => ({
+	useOpExSelectionStore: (
+		selector: (state: { selection: null; clearSelection: () => void }) => unknown
+	) => selector({ selection: null, clearSelection: vi.fn() }),
 }));
 
 vi.mock('../../hooks/use-versions', () => ({
@@ -91,6 +109,8 @@ vi.mock('../../hooks/use-opex', () => ({
 	useCalculateOpEx: () => ({
 		mutate: vi.fn(),
 		isPending: false,
+		isSuccess: false,
+		isError: false,
 	}),
 	useBulkUpdateOpEx: () => ({
 		mutate: vi.fn(),
@@ -148,6 +168,35 @@ vi.mock('../../components/shared/page-transition', () => ({
 	PageTransition: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('../../components/shared/calculate-button', () => ({
+	CalculateButton: ({
+		onCalculate,
+		isPending,
+	}: {
+		onCalculate: () => void;
+		isPending: boolean;
+		isSuccess: boolean;
+		isError: boolean;
+	}) => (
+		<button type="button" onClick={onCalculate} disabled={isPending}>
+			Calculate
+		</button>
+	),
+}));
+
+vi.mock('../../components/shared/empty-state', () => ({
+	EmptyState: ({ title, description }: { icon: unknown; title: string; description: string }) => (
+		<div data-testid="empty-state">
+			<p>{title}</p>
+			<p>{description}</p>
+		</div>
+	),
+}));
+
+vi.mock('../../components/shared/stale-pill', () => ({
+	StalePill: ({ label }: { label: string }) => <span aria-label="Stale data">{label}</span>,
+}));
+
 vi.mock('../../components/opex/opex-kpi-ribbon', () => ({
 	OpExKpiRibbon: () => <div data-testid="opex-kpi-ribbon">KPI Ribbon</div>,
 }));
@@ -163,6 +212,8 @@ vi.mock('../../components/opex/opex-grid', () => ({
 vi.mock('../../components/opex/non-operating-grid', () => ({
 	NonOperatingGrid: () => <div data-testid="non-operating-grid">Non-Operating Grid</div>,
 }));
+
+vi.mock('../../components/opex/opex-inspector', () => ({}));
 
 describe('OpExPage', () => {
 	beforeEach(() => {
@@ -193,11 +244,7 @@ describe('OpExPage', () => {
 	it('renders select-version message when no versionId', () => {
 		mockWorkspaceContext = { ...mockWorkspaceContext, versionId: null };
 		render(<OpExPage />);
-		expect(
-			screen.getByText(
-				'Select a version from the context bar to begin operating expenses planning.'
-			)
-		).toBeTruthy();
+		expect(screen.getByText('No version selected')).toBeTruthy();
 	});
 
 	it('renders OpEx grid with line items', () => {

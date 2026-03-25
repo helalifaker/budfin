@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { RevenuePage } from './revenue';
 
+vi.mock('../../components/shared/export-dialog', () => ({
+	ExportDialog: () => null,
+}));
+
 const { mockSetActivePage, mockClearSelection, mockPanelClose } = vi.hoisted(() => ({
 	mockSetActivePage: vi.fn(),
 	mockClearSelection: vi.fn(),

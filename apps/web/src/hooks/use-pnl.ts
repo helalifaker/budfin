@@ -1,16 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../lib/api-client';
+import { apiClient, ApiError } from '../lib/api-client';
 import { toast } from '../components/ui/toast-state';
 import { useWorkspaceContextStore } from '../stores/workspace-context-store';
-import type {
-	PnlResultsResponse,
-	PnlKpis,
-	PnlCalculateResponse,
-	PnlFormat,
-	ExportJobResponse,
-	ExportFormat,
-	ExportReportType,
-} from '@budfin/types';
+import type { PnlResultsResponse, PnlKpis, PnlCalculateResponse, PnlFormat } from '@budfin/types';
+
+// Re-export from dedicated export hook for backward compatibility
+export { useCreateExportJob, useExportJobStatus } from './use-export.js';
 
 // ── Query Keys ──────────────────────────────────────────────────────────────
 
@@ -19,7 +14,6 @@ export const pnlKeys = {
 	results: (versionId: number, format: PnlFormat, comparisonVersionId?: number) =>
 		['pnl', 'results', versionId, format, comparisonVersionId] as const,
 	kpis: (versionId: number) => ['pnl', 'kpis', versionId] as const,
-	exportJob: (jobId: number) => ['pnl', 'export-job', jobId] as const,
 };
 
 // ── P&L Results Hook ────────────────────────────────────────────────────────
@@ -34,12 +28,14 @@ export function usePnlResults(format: PnlFormat = 'ifrs', comparisonVersionId?: 
 			if (comparisonVersionId) {
 				params.set('comparison_version_id', String(comparisonVersionId));
 			}
-			return apiClient<PnlResultsResponse>(
-				`/api/v1/versions/${versionId}/pnl?${params.toString()}`
-			);
+			return apiClient<PnlResultsResponse>(`/versions/${versionId}/pnl?${params.toString()}`);
 		},
 		enabled: !!versionId,
 		staleTime: 30_000,
+		retry: (failureCount, error) => {
+			if (error instanceof ApiError && error.code === 'PNL_NOT_CALCULATED') return false;
+			return failureCount < 3;
+		},
 	});
 }
 
@@ -51,10 +47,14 @@ export function usePnlKpis() {
 	return useQuery({
 		queryKey: pnlKeys.kpis(versionId!),
 		queryFn: async () => {
-			return apiClient<PnlKpis>(`/api/v1/versions/${versionId}/pnl/kpis`);
+			return apiClient<PnlKpis>(`/versions/${versionId}/pnl/kpis`);
 		},
 		enabled: !!versionId,
 		staleTime: 30_000,
+		retry: (failureCount, error) => {
+			if (error instanceof ApiError && error.code === 'PNL_NOT_CALCULATED') return false;
+			return failureCount < 3;
+		},
 	});
 }
 
@@ -66,7 +66,7 @@ export function useCalculatePnl() {
 
 	return useMutation({
 		mutationFn: async () => {
-			return apiClient<PnlCalculateResponse>(`/api/v1/versions/${versionId}/calculate/pnl`, {
+			return apiClient<PnlCalculateResponse>(`/versions/${versionId}/calculate/pnl`, {
 				method: 'POST',
 			});
 		},
@@ -83,47 +83,5 @@ export function useCalculatePnl() {
 				toast.error(`Calculation failed: ${error.message}`);
 			}
 		},
-	});
-}
-
-// ── Export Job Mutation ──────────────────────────────────────────────────────
-
-export function useCreateExportJob() {
-	return useMutation({
-		mutationFn: async (params: {
-			versionId: number;
-			reportType: ExportReportType;
-			format: ExportFormat;
-			comparisonVersionId?: number;
-		}) => {
-			return apiClient<ExportJobResponse>('/api/v1/export/jobs', {
-				method: 'POST',
-				body: JSON.stringify(params),
-			});
-		},
-		onSuccess: () => {
-			toast.info('Export started — generating report...');
-		},
-		onError: (error: Error) => {
-			toast.error(`Export failed: ${error.message}`);
-		},
-	});
-}
-
-// ── Export Job Polling Hook ──────────────────────────────────────────────────
-
-export function useExportJobStatus(jobId: number | null) {
-	return useQuery({
-		queryKey: pnlKeys.exportJob(jobId!),
-		queryFn: async () => {
-			return apiClient<ExportJobResponse>(`/api/v1/export/jobs/${jobId}`);
-		},
-		enabled: !!jobId,
-		refetchInterval: (query) => {
-			const status = query.state.data?.status;
-			if (status === 'DONE' || status === 'FAILED') return false;
-			return 2_000;
-		},
-		staleTime: 0,
 	});
 }

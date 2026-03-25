@@ -12,6 +12,7 @@ import {
 	ArrowUpRight,
 	BarChart3,
 	DollarSign,
+	Download,
 	Landmark,
 	Printer,
 	TrendingUp,
@@ -37,6 +38,7 @@ import { KpiCard } from '../shared/kpi-card';
 import { PageTransition } from '../shared/page-transition';
 import { StalePill } from '../shared/stale-pill';
 import { WorkspaceStatusStrip, type StatusSection } from '../shared/workspace-status-strip';
+import { ExportDialog } from '../shared/export-dialog';
 import type { PnlFormat, PnlLineItem, PnlKpis } from '@budfin/types';
 import { ComparisonBarChart } from './comparison-bar-chart';
 import { VarianceWaterfallChart } from './variance-waterfall-chart';
@@ -560,6 +562,7 @@ export function PnlPage() {
 	const navigate = useNavigate();
 
 	const [format, setFormat] = useState<PnlFormat>('ifrs');
+	const [exportOpen, setExportOpen] = useState(false);
 
 	const {
 		data: pnlData,
@@ -656,6 +659,15 @@ export function PnlPage() {
 					</ToggleGroup>
 
 					<div className="flex flex-wrap items-center gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setExportOpen(true)}
+							className="no-print"
+						>
+							<Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+							Export
+						</Button>
 						<Button variant="outline" size="sm" onClick={() => window.print()} className="no-print">
 							<Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
 							Print
@@ -730,6 +742,8 @@ export function PnlPage() {
 					</div>
 				)}
 			</div>
+
+			<ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultReportType="PNL" />
 		</PageTransition>
 	);
 }

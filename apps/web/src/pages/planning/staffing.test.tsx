@@ -3,6 +3,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { StaffingPage } from './staffing';
 
+vi.mock('../../components/shared/export-dialog', () => ({
+	ExportDialog: () => null,
+}));
+
 const mockSetActivePage = vi.fn();
 const mockClearSelection = vi.fn();
 const mockOpenSettings = vi.fn();

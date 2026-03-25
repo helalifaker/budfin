@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
-import { Printer } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
@@ -26,6 +26,7 @@ import { Button } from '../ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { CalculateButton } from '../shared/calculate-button';
 import { cn } from '../../lib/cn';
+import { ExportDialog } from '../shared/export-dialog';
 import { PageTransition } from '../shared/page-transition';
 import { StaffingKpiRibbonV2 } from './staffing-kpi-ribbon';
 import { StaffingStatusStrip } from './staffing-status-strip';
@@ -48,6 +49,7 @@ export function StaffingPageV2() {
 	const openSettings = useStaffingSettingsDialogStore((state) => state.open);
 
 	const [activeTab, setActiveTab] = useState<WorkspaceTab>('demand');
+	const [exportOpen, setExportOpen] = useState(false);
 
 	const { data: versionsData } = useVersions(fiscalYear);
 	const { isUpstreamStale, ...calculateMutation } = useCalculateStaffing(versionId);
@@ -293,6 +295,17 @@ export function StaffingPageV2() {
 					</div>
 
 					<div className="flex items-center gap-2">
+						{/* Export Report */}
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setExportOpen(true)}
+							className="no-print"
+						>
+							<Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+							Export Report
+						</Button>
+
 						{/* Print */}
 						<Button variant="outline" size="sm" onClick={() => window.print()} className="no-print">
 							<Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
@@ -428,6 +441,8 @@ export function StaffingPageV2() {
 				{/* Settings dialog */}
 				<StaffingSettingsDialog versionId={versionId} isEditable={isEditable} />
 			</div>
+
+			<ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultReportType="STAFFING" />
 		</PageTransition>
 	);
 }
