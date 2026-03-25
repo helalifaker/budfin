@@ -36,6 +36,8 @@ import { PageTransition } from '../shared/page-transition';
 import { StalePill } from '../shared/stale-pill';
 import { WorkspaceStatusStrip, type StatusSection } from '../shared/workspace-status-strip';
 import type { PnlFormat, PnlLineItem, PnlKpis } from '@budfin/types';
+import { ComparisonBarChart } from './comparison-bar-chart';
+import { VarianceWaterfallChart } from './variance-waterfall-chart';
 import '../pnl/pnl-inspector-content';
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -619,6 +621,12 @@ export function PnlPage() {
 	const isEmpty =
 		!pnlLoading && (isNotCalculated || (!pnlError && (!pnlData || pnlData.lines.length === 0)));
 
+	const hasComparison = !!comparisonVersionId && !isEmpty && (pnlData?.lines ?? []).length > 0;
+	const primaryVersion = versionsData?.data?.find((v) => v.id === versionId);
+	const comparisonVersion = versionsData?.data?.find((v) => v.id === comparisonVersionId);
+	const primaryLabel = primaryVersion?.name ?? 'Primary';
+	const comparisonLabel = comparisonVersion?.name ?? 'Comparison';
+
 	return (
 		<PageTransition>
 			<div className="flex h-full flex-col overflow-hidden">
@@ -673,6 +681,20 @@ export function PnlPage() {
 						staleModules={staleModules}
 					/>
 				</div>
+
+				{/* Comparison Charts (shown only when a comparison version is selected) */}
+				{hasComparison && (
+					<div className="shrink-0 border-b border-(--workspace-border) px-6 py-4">
+						<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+							<ComparisonBarChart
+								lines={pnlData!.lines}
+								primaryLabel={primaryLabel}
+								comparisonLabel={comparisonLabel}
+							/>
+							<VarianceWaterfallChart lines={pnlData!.lines} />
+						</div>
+					</div>
+				)}
 
 				{/* Empty State */}
 				{isEmpty && (
