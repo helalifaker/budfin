@@ -11,6 +11,7 @@ import { StaffingDistributionChart } from '../../components/dashboard/staffing-d
 import { CapacityAlerts } from '../../components/dashboard/capacity-alerts';
 import { SetupChecklist } from '../../components/dashboard/setup-checklist';
 import { BudgetCycleWizard } from '../../components/dashboard/budget-cycle-wizard';
+import { YoyTrendsCard } from '../../components/dashboard/yoy-trends-card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Button } from '../../components/ui/button';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
@@ -245,6 +246,11 @@ export function DashboardPage() {
 						</div>
 					</div>
 				)}
+
+				{/* Year-over-Year Trends Summary */}
+				<div className="animate-stagger-reveal" style={{ animationDelay: '400ms' }}>
+					<YoyTrendsCard />
+				</div>
 
 				{/* Monthly Trend Table */}
 				{versionId && (
