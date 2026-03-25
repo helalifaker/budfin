@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { getEncryptionKey } from '../../services/staffing/crypto-helper.js';
+import { versionAccess } from '../../plugins/version-access.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -243,30 +244,23 @@ async function generateVacancyCode(versionId: number): Promise<string> {
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 export async function employeeRoutes(app: FastifyInstance) {
+	// Register version-access plugin for IDOR prevention on this route group
+	await app.register(versionAccess);
+
 	// GET /employees — list with pagination, filtering, salary redaction
 	app.get('/employees', {
 		schema: {
 			params: versionIdParams,
 			querystring: employeeListQuery,
 		},
-		preHandler: [app.authenticate, app.requirePermission('data:view')],
-		handler: async (request, reply) => {
+		preHandler: [app.authenticate, app.requirePermission('data:view'), app.validateVersionAccess],
+		handler: async (request) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 			const { department, status, recordType, page, page_size } = request.query as z.infer<
 				typeof employeeListQuery
 			>;
 
-			// TODO(security): Add fiscal year ownership check per TDD §7.6 IDOR prevention.
-			// This requires a shared middleware applied to all version-scoped routes.
-			const version = await prisma.budgetVersion.findUnique({
-				where: { id: versionId },
-			});
-			if (!version) {
-				return reply.status(404).send({
-					code: 'VERSION_NOT_FOUND',
-					message: `Version ${versionId} not found`,
-				});
-			}
+			// Version existence validated by validateVersionAccess middleware
 
 			const redactSalary = request.user.role === 'Viewer';
 			const key = redactSalary ? '' : getEncryptionKey();

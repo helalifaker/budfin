@@ -3,7 +3,12 @@ import Decimal from 'decimal.js';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useVersions } from '../../hooks/use-versions';
-import { useOpExLineItems, useUpdateOpExMonthly, useCalculateOpEx } from '../../hooks/use-opex';
+import {
+	useOpExLineItems,
+	useUpdateOpExMonthly,
+	useBulkUpdateOpEx,
+	useCalculateOpEx,
+} from '../../hooks/use-opex';
 import { deriveStaffingEditability } from '../../lib/staffing-workspace';
 import { Button } from '../ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
@@ -35,6 +40,7 @@ export function OpExPage() {
 	const { data: lineItemsResponse, isLoading } = useOpExLineItems(versionId);
 	const calculateMutation = useCalculateOpEx(versionId);
 	const updateMonthlyMutation = useUpdateOpExMonthly(versionId);
+	const bulkUpdateMutation = useBulkUpdateOpEx(versionId);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId || !versionsData?.data) return null;
@@ -104,12 +110,30 @@ export function OpExPage() {
 		[updateMonthlyMutation]
 	);
 
-	// Comment update handler (uses same monthly mutation with comment field)
-	const handleCommentUpdate = useCallback((_lineItemId: number, _comment: string) => {
-		// Comments are updated via bulk update; for now this is a placeholder.
-		// The bulk mutation would handle comments. For inline, we'd need
-		// a dedicated comment endpoint or extend the monthly update.
-	}, []);
+	// Comment update handler — sends a single-item bulk update with the new comment
+	const handleCommentUpdate = useCallback(
+		(lineItemId: number, comment: string) => {
+			const allItems = lineItemsResponse?.data ?? [];
+			const item = allItems.find((i) => i.id === lineItemId);
+			if (!item) return;
+
+			bulkUpdateMutation.mutate({
+				lineItems: [
+					{
+						id: item.id,
+						sectionType: item.sectionType,
+						ifrsCategory: item.ifrsCategory,
+						lineItemName: item.lineItemName,
+						displayOrder: item.displayOrder,
+						computeMethod: item.computeMethod,
+						comment,
+						monthlyAmounts: item.monthlyAmounts,
+					},
+				],
+			});
+		},
+		[lineItemsResponse?.data, bulkUpdateMutation]
+	);
 
 	const handleTabChange = useCallback((value: string) => {
 		setActiveTab(value as OpExTab);

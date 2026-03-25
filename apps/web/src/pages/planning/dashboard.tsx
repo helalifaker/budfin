@@ -3,6 +3,10 @@ import { cn } from '../../lib/cn';
 import { PageTransition } from '../../components/shared/page-transition';
 import { KpiCard } from '../../components/dashboard/kpi-card';
 import { ChartCard } from '../../components/dashboard/chart-card';
+import { EnrollmentTrendChart } from '../../components/dashboard/enrollment-trend-chart';
+import { RevenueBreakdownChart } from '../../components/dashboard/revenue-breakdown-chart';
+import { StaffingDistributionChart } from '../../components/dashboard/staffing-distribution-chart';
+import { CapacityAlerts } from '../../components/dashboard/capacity-alerts';
 import { Skeleton } from '../../components/ui/skeleton';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useDashboard } from '../../hooks/use-dashboard';
@@ -144,6 +148,32 @@ export function DashboardPage() {
 						</>
 					)}
 				</div>
+
+				{/* Charts & Alerts Grid (2x2) */}
+				{versionId && (
+					<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+						<div className="animate-stagger-reveal" style={{ animationDelay: '200ms' }}>
+							<ChartCard title="Enrollment Trend">
+								<EnrollmentTrendChart />
+							</ChartCard>
+						</div>
+						<div className="animate-stagger-reveal" style={{ animationDelay: '250ms' }}>
+							<ChartCard title="Revenue Breakdown">
+								<RevenueBreakdownChart monthlyTrend={monthlyTrend} isLoading={isLoading} />
+							</ChartCard>
+						</div>
+						<div className="animate-stagger-reveal" style={{ animationDelay: '300ms' }}>
+							<ChartCard title="Staffing Distribution">
+								<StaffingDistributionChart versionId={versionId} />
+							</ChartCard>
+						</div>
+						<div className="animate-stagger-reveal" style={{ animationDelay: '350ms' }}>
+							<ChartCard title="Capacity Alerts">
+								<CapacityAlerts versionId={versionId} />
+							</ChartCard>
+						</div>
+					</div>
+				)}
 
 				{/* Monthly Trend Table */}
 				{versionId && (

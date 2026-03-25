@@ -23,12 +23,16 @@ export function deriveStaffingReadiness({
 	hasEnrollment,
 	lyceeGroupData,
 	hasGroupDriverRules,
+	teachingRequirementSourceCount,
+	staleModules,
 }: {
 	settingsData: StaffingSettingsResponse | undefined;
 	costAssumptionsData: CostAssumptionsResponse | undefined;
 	hasEnrollment: boolean;
 	lyceeGroupData: LyceeGroupAssumptionsResponse | undefined;
 	hasGroupDriverRules: boolean;
+	teachingRequirementSourceCount: number | undefined;
+	staleModules: string[];
 }): StaffingReadiness {
 	const areas: ReadinessArea[] = [
 		{
@@ -44,9 +48,7 @@ export function deriveStaffingReadiness({
 		{
 			key: 'curriculum',
 			label: 'Curriculum',
-			// Placeholder: always ready. Curriculum readiness check will be implemented
-			// when the curriculum validation engine is wired up.
-			ready: true,
+			ready: teachingRequirementSourceCount === undefined || teachingRequirementSourceCount > 0,
 		},
 		{
 			key: 'enrollment',
@@ -66,9 +68,7 @@ export function deriveStaffingReadiness({
 	areas.push({
 		key: 'reconciliation',
 		label: 'Reconciliation',
-		// Placeholder: always ready. Reconciliation readiness check will be implemented
-		// when the reconciliation workflow is built.
-		ready: true,
+		ready: !staleModules.includes('STAFFING'),
 	});
 
 	const readyCount = areas.filter((a) => a.ready).length;

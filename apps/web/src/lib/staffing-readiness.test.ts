@@ -41,6 +41,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: makeLyceeGroupData(2),
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 5,
+			staleModules: [],
 		});
 
 		expect(result.areas).toHaveLength(5);
@@ -64,6 +66,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: undefined,
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		const profilesArea = result.areas.find((a) => a.key === 'profiles');
@@ -78,6 +82,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: undefined,
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		const costArea = result.areas.find((a) => a.key === 'costAssumptions');
@@ -92,6 +98,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: undefined,
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		const costArea = result.areas.find((a) => a.key === 'costAssumptions');
@@ -106,6 +114,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: makeLyceeGroupData(2),
 			hasGroupDriverRules: true,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		expect(withGroups.areas.find((a) => a.key === 'lyceeGroups')).toBeDefined();
@@ -120,6 +130,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: makeLyceeGroupData(2),
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		expect(withoutGroups.areas.find((a) => a.key === 'lyceeGroups')).toBeUndefined();
@@ -133,6 +145,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: makeLyceeGroupData(0),
 			hasGroupDriverRules: true,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		const lyceeArea = result.areas.find((a) => a.key === 'lyceeGroups');
@@ -147,6 +161,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: undefined,
 			hasGroupDriverRules: true,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		const lyceeArea = result.areas.find((a) => a.key === 'lyceeGroups');
@@ -160,6 +176,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: undefined,
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 		expect(allReady.overallReady).toBe(true);
 		expect(allReady.readyCount).toBe(allReady.totalCount);
@@ -170,6 +188,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: undefined,
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 		expect(notAllReady.overallReady).toBe(false);
 		expect(notAllReady.readyCount).toBeLessThan(notAllReady.totalCount);
@@ -182,10 +202,12 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: false,
 			lyceeGroupData: undefined,
 			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
-		// profiles: ready, costAssumptions: not ready, curriculum: ready (placeholder),
-		// enrollment: not ready, reconciliation: ready (placeholder)
+		// profiles: ready, costAssumptions: not ready, curriculum: ready (sources exist),
+		// enrollment: not ready, reconciliation: ready (not stale)
 		expect(result.readyCount).toBe(3);
 		expect(result.totalCount).toBe(5);
 		expect(result.overallReady).toBe(false);
@@ -204,6 +226,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: makeLyceeGroupData(1),
 			hasGroupDriverRules: true,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		const lastArea = result.areas[result.areas.length - 1];
@@ -217,6 +241,8 @@ describe('deriveStaffingReadiness', () => {
 			hasEnrollment: true,
 			lyceeGroupData: makeLyceeGroupData(1),
 			hasGroupDriverRules: true,
+			teachingRequirementSourceCount: 1,
+			staleModules: [],
 		});
 
 		const keys = result.areas.map((a) => a.key);
@@ -224,5 +250,86 @@ describe('deriveStaffingReadiness', () => {
 		const reconIdx = keys.indexOf('reconciliation');
 		expect(lyceeIdx).toBeLessThan(reconIdx);
 		expect(lyceeIdx).toBe(keys.length - 2);
+	});
+
+	// ── Curriculum readiness tests ──────────────────────────────────────────
+
+	it('marks curriculum not ready when teachingRequirementSourceCount is 0', () => {
+		const result = deriveStaffingReadiness({
+			settingsData: makeSettingsData(),
+			costAssumptionsData: makeCostAssumptions(1),
+			hasEnrollment: true,
+			lyceeGroupData: undefined,
+			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 0,
+			staleModules: [],
+		});
+
+		const curriculumArea = result.areas.find((a) => a.key === 'curriculum');
+		expect(curriculumArea?.ready).toBe(false);
+		expect(result.overallReady).toBe(false);
+	});
+
+	it('marks curriculum ready when teachingRequirementSourceCount is undefined (loading)', () => {
+		const result = deriveStaffingReadiness({
+			settingsData: makeSettingsData(),
+			costAssumptionsData: makeCostAssumptions(1),
+			hasEnrollment: true,
+			lyceeGroupData: undefined,
+			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: undefined,
+			staleModules: [],
+		});
+
+		const curriculumArea = result.areas.find((a) => a.key === 'curriculum');
+		expect(curriculumArea?.ready).toBe(true);
+	});
+
+	it('marks curriculum ready when teachingRequirementSourceCount > 0', () => {
+		const result = deriveStaffingReadiness({
+			settingsData: makeSettingsData(),
+			costAssumptionsData: makeCostAssumptions(1),
+			hasEnrollment: true,
+			lyceeGroupData: undefined,
+			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 3,
+			staleModules: [],
+		});
+
+		const curriculumArea = result.areas.find((a) => a.key === 'curriculum');
+		expect(curriculumArea?.ready).toBe(true);
+	});
+
+	// ── Reconciliation readiness tests ──────────────────────────────────────
+
+	it('marks reconciliation not ready when STAFFING is in staleModules', () => {
+		const result = deriveStaffingReadiness({
+			settingsData: makeSettingsData(),
+			costAssumptionsData: makeCostAssumptions(1),
+			hasEnrollment: true,
+			lyceeGroupData: undefined,
+			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: ['STAFFING'],
+		});
+
+		const reconArea = result.areas.find((a) => a.key === 'reconciliation');
+		expect(reconArea?.ready).toBe(false);
+		expect(result.overallReady).toBe(false);
+	});
+
+	it('marks reconciliation ready when STAFFING is not in staleModules', () => {
+		const result = deriveStaffingReadiness({
+			settingsData: makeSettingsData(),
+			costAssumptionsData: makeCostAssumptions(1),
+			hasEnrollment: true,
+			lyceeGroupData: undefined,
+			hasGroupDriverRules: false,
+			teachingRequirementSourceCount: 1,
+			staleModules: ['REVENUE', 'PNL'],
+		});
+
+		const reconArea = result.areas.find((a) => a.key === 'reconciliation');
+		expect(reconArea?.ready).toBe(true);
 	});
 });
