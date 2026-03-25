@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 
 interface CounterProps {
 	value: number;
@@ -11,7 +12,7 @@ interface CounterProps {
 export function Counter({
 	value,
 	duration = 600,
-	formatter = (v) => v.toLocaleString(),
+	formatter = (v) => formatMoney(v),
 	className,
 }: CounterProps) {
 	const [displayValue, setDisplayValue] = useState(0);

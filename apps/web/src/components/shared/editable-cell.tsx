@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 
 export type EditableCellProps = {
 	value: number | string;
@@ -19,7 +20,7 @@ function formatDisplay(value: number | string, type: 'number' | 'percentage'): s
 	if (isNaN(num)) return String(value);
 	if (num === 0) return '';
 	if (type === 'percentage') return `${num}%`;
-	return num.toLocaleString();
+	return formatMoney(num);
 }
 
 function toEditValue(value: number | string): string {

@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { ChartWrapper } from '../shared/chart-wrapper';
 import { useStaffingSummary } from '../../hooks/use-staffing';
 import { Skeleton } from '../ui/skeleton';
+import { formatMoney } from '../../lib/format-money';
 
 export type StaffingDistributionChartProps = {
 	versionId: number | null;
@@ -72,8 +73,8 @@ export function StaffingDistributionChart({ versionId }: StaffingDistributionCha
 							fontSize: '12px',
 						}}
 						formatter={(value: number | undefined) => [
-							(value ?? 0).toLocaleString('fr-FR'),
-							'Staff Cost (SAR)',
+							formatMoney(value ?? 0, { showCurrency: true }),
+							'Staff Cost',
 						]}
 					/>
 					<Bar dataKey="cost" fill="#2563EB" radius={[0, 4, 4, 0]} />

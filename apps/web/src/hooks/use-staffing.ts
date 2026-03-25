@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
+import { formatMoney } from '../lib/format-money';
 import { toast } from '../components/ui/toast-state';
 import { useWorkspaceContextStore } from '../stores/workspace-context-store';
 
@@ -287,7 +288,7 @@ export function useCalculateStaffing(versionId: number | null) {
 			queryClient.invalidateQueries({ queryKey: ['staffing'] });
 			queryClient.invalidateQueries({ queryKey: ['versions'] });
 			toast.success(
-				`Staffing calculated: ${result.summary.totalFteNeeded} FTE, SAR ${Number(result.summary.totalCost).toLocaleString()}`
+				`Staffing calculated: ${result.summary.totalFteNeeded} FTE, ${formatMoney(Number(result.summary.totalCost), { showCurrency: true })}`
 			);
 		},
 		onError: (err) =>

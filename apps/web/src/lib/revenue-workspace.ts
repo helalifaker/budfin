@@ -2,6 +2,7 @@ import Decimal from 'decimal.js';
 import type { RevenueResultsResponse, RevenueSettingsTab, RevenueViewMode } from '@budfin/types';
 import type { GradeLevel } from '../hooks/use-grade-levels';
 import { BAND_LABELS } from './band-styles';
+import { formatMoney } from './format-money';
 
 export type RevenueForecastPeriod = 'AY1' | 'AY2' | 'both';
 export type RevenueRowType = 'data' | 'subtotal' | 'total' | 'group-header';
@@ -179,9 +180,7 @@ export function formatRevenueGridAmount(value: string, monthIndex?: number) {
 	const isZero = decimalValue.eq(0);
 	const isSummerZero = isZero && (monthIndex === 6 || monthIndex === 7);
 	const rounded = decimalValue.abs().toDecimalPlaces(0);
-	const formatted = rounded.toNumber().toLocaleString('fr-FR', {
-		maximumFractionDigits: 0,
-	});
+	const formatted = formatMoney(rounded);
 
 	if (isZero) {
 		return {

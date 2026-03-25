@@ -1,4 +1,5 @@
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 
 interface BadgeCellProps {
 	value: string;
@@ -45,7 +46,7 @@ interface NumericCellProps {
 export function NumericCell({ value, className }: NumericCellProps) {
 	return (
 		<span className={cn('font-[family-name:var(--font-mono)] text-(--text-xs)', className)}>
-			{typeof value === 'number' ? value.toLocaleString() : value}
+			{typeof value === 'number' ? formatMoney(value) : value}
 		</span>
 	);
 }

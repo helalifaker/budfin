@@ -18,7 +18,8 @@ describe('EditableCell', () => {
 
 		const button = screen.getByRole('button');
 		expect(button).toBeDefined();
-		expect(button.textContent).toContain('1,500');
+		// formatMoney uses fr-FR locale: "1<NNBSP>500" (narrow no-break space separator)
+		expect(button.textContent).toMatch(/1.500/);
 	});
 
 	it('renders as a read-only span when isReadOnly is true', () => {
@@ -201,7 +202,8 @@ describe('EditableCell', () => {
 		render(<EditableCell value="250.5" onChange={vi.fn()} />);
 
 		const button = screen.getByRole('button');
-		expect(button.textContent).toContain('250.5');
+		// formatMoney rounds to whole numbers: 250.5 -> "251"
+		expect(button.textContent).toContain('251');
 	});
 
 	it('sets aria-label on the input', () => {
