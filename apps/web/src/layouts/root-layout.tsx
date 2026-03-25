@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet } from 'react-router';
 import { ErrorBoundary } from '../components/shared/error-boundary';
+import { CommandPalette } from '../components/shared/command-palette';
 import { Sidebar } from '../components/shell/sidebar';
 import { initTheme } from '../lib/theme';
 
@@ -19,6 +20,7 @@ export function RootLayout() {
 					<Outlet />
 				</div>
 			</div>
+			<CommandPalette />
 		</ErrorBoundary>
 	);
 }
