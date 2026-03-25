@@ -1,4 +1,5 @@
-import { Users, DollarSign, Briefcase, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { Users, DollarSign, Briefcase, TrendingUp, AlertTriangle, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { PageTransition } from '../../components/shared/page-transition';
 import { KpiCard } from '../../components/dashboard/kpi-card';
@@ -7,7 +8,10 @@ import { EnrollmentTrendChart } from '../../components/dashboard/enrollment-tren
 import { RevenueBreakdownChart } from '../../components/dashboard/revenue-breakdown-chart';
 import { StaffingDistributionChart } from '../../components/dashboard/staffing-distribution-chart';
 import { CapacityAlerts } from '../../components/dashboard/capacity-alerts';
+import { SetupChecklist } from '../../components/dashboard/setup-checklist';
+import { BudgetCycleWizard } from '../../components/dashboard/budget-cycle-wizard';
 import { Skeleton } from '../../components/ui/skeleton';
+import { Button } from '../../components/ui/button';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useDashboard } from '../../hooks/use-dashboard';
 import { formatMoney } from '../../lib/format-money';
@@ -71,6 +75,7 @@ function StaleBanner({ staleModules }: { staleModules: string[] }) {
 }
 
 export function DashboardPage() {
+	const [wizardOpen, setWizardOpen] = useState(false);
 	const { versionId } = useWorkspaceContext();
 	const { data, isLoading } = useDashboard(versionId);
 
@@ -86,12 +91,24 @@ export function DashboardPage() {
 	return (
 		<PageTransition>
 			<div className="p-6 space-y-6">
-				<h1 className="text-(--text-xl) font-semibold text-(--text-primary)">
-					Budget Planning Dashboard
-				</h1>
+				<div className="flex items-center justify-between">
+					<h1 className="text-(--text-xl) font-semibold text-(--text-primary)">
+						Budget Planning Dashboard
+					</h1>
+					<Button variant="primary" size="sm" onClick={() => setWizardOpen(true)}>
+						<Sparkles className="h-4 w-4" aria-hidden="true" />
+						New Budget
+					</Button>
+				</div>
+
+				{/* Budget Cycle Wizard */}
+				<BudgetCycleWizard open={wizardOpen} onOpenChange={setWizardOpen} />
 
 				{/* Stale data warning banner */}
 				{!isLoading && <StaleBanner staleModules={staleModules} />}
+
+				{/* Setup Checklist */}
+				{!isLoading && <SetupChecklist />}
 
 				{/* No version selected */}
 				{!versionId && !isLoading && (
