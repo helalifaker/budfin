@@ -14,13 +14,15 @@ const scenarioNameParams = z.object({
 	scenarioName: z.enum(['Base', 'Optimistic', 'Pessimistic']),
 });
 
+const decimalString = z.string().regex(/^-?\d+(\.\d+)?$/, 'Must be a valid decimal number');
+
 const updateScenarioBody = z.object({
-	newEnrollmentFactor: z.string().optional(),
-	retentionAdjustment: z.string().optional(),
-	feeCollectionRate: z.string().optional(),
-	scholarshipAllocation: z.string().optional(),
-	attritionRate: z.string().optional(),
-	orsHours: z.string().optional(),
+	newEnrollmentFactor: decimalString.optional(),
+	retentionAdjustment: decimalString.optional(),
+	feeCollectionRate: decimalString.optional(),
+	scholarshipAllocation: decimalString.optional(),
+	attritionRate: decimalString.optional(),
+	orsHours: decimalString.optional(),
 });
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -62,7 +64,7 @@ export async function scenarioParameterRoutes(app: FastifyInstance) {
 		schema: {
 			params: versionIdParams,
 		},
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 
@@ -179,7 +181,7 @@ export async function scenarioParameterRoutes(app: FastifyInstance) {
 		schema: {
 			params: versionIdParams,
 		},
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 

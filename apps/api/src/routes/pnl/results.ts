@@ -153,7 +153,7 @@ export async function pnlResultsRoutes(app: FastifyInstance) {
 			params: versionIdParams,
 			querystring: pnlQuerySchema,
 		},
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 			const { format, comparison_version_id } = request.query as z.infer<typeof pnlQuerySchema>;
@@ -310,7 +310,7 @@ export async function pnlResultsRoutes(app: FastifyInstance) {
 		schema: {
 			params: versionIdParams,
 		},
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 

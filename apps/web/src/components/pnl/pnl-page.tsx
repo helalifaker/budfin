@@ -14,7 +14,9 @@ import { useVersions } from '../../hooks/use-versions';
 import { useAuthStore } from '../../stores/auth-store';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
+import { useNavigate } from 'react-router';
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 import { PageTransition } from '../shared/page-transition';
 import type { PnlFormat, PnlLineItem, PnlKpis } from '@budfin/types';
 
@@ -27,17 +29,13 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 function formatPnlAmount(value: string): string {
 	const d = new Decimal(value);
 	if (d.isZero()) return '--';
-	const abs = d.abs();
-	const formatted = abs.toNumber().toLocaleString('en-US', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-	});
+	const formatted = formatMoney(d.abs());
 	return d.isNeg() ? `(${formatted})` : formatted;
 }
 
 function formatPnlPercent(value: string): string {
 	const d = new Decimal(value);
-	const formatted = d.abs().toFixed(1);
+	const formatted = d.abs().toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toFixed(1);
 	if (d.isNeg()) return `(${formatted}%)`;
 	return `${formatted}%`;
 }
@@ -385,6 +383,7 @@ export function PnlPage() {
 	const isLocked = versionStatus === 'Locked' || versionStatus === 'Archived';
 	const canCalculate = !isViewerOnly && !isLocked;
 
+	const navigate = useNavigate();
 	const handleNavigateToModule = (module: string) => {
 		const paths: Record<string, string> = {
 			REVENUE: '/planning/revenue',
@@ -392,7 +391,7 @@ export function PnlPage() {
 			OPEX: '/planning/opex',
 		};
 		const path = paths[module];
-		if (path) window.location.href = path;
+		if (path) navigate(path);
 	};
 
 	const handleCalculate = () => {

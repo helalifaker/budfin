@@ -26,6 +26,7 @@ export async function pnlCalculateRoutes(app: FastifyInstance) {
 		preHandler: [app.authenticate, app.requireRole('Admin', 'BudgetOwner', 'Editor')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParamsSchema>;
+			const startDate = new Date();
 			const startTime = performance.now();
 			const runId = randomUUID();
 
@@ -239,7 +240,7 @@ export async function pnlCalculateRoutes(app: FastifyInstance) {
 						runId,
 						module: 'PNL',
 						status: 'COMPLETED',
-						startedAt: new Date(startTime),
+						startedAt: startDate,
 						completedAt: new Date(),
 						durationMs: Math.round(performance.now() - startTime),
 						triggeredBy: (request as { user: { id: number } }).user.id,
