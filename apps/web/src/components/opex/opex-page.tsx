@@ -1,7 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
+import { FileSpreadsheet } from 'lucide-react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
+import { useRightPanelStore } from '../../stores/right-panel-store';
+import { useOpExSelectionStore } from '../../stores/opex-selection-store';
 import { useVersions } from '../../hooks/use-versions';
 import {
 	useOpExLineItems,
@@ -10,14 +13,17 @@ import {
 	useCalculateOpEx,
 } from '../../hooks/use-opex';
 import { deriveStaffingEditability } from '../../lib/staffing-workspace';
-import { Button } from '../ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../../lib/cn';
 import { PageTransition } from '../shared/page-transition';
+import { CalculateButton } from '../shared/calculate-button';
+import { EmptyState } from '../shared/empty-state';
+import { StalePill } from '../shared/stale-pill';
 import { OpExKpiRibbon } from './opex-kpi-ribbon';
 import { OpExStatusStrip } from './opex-status-strip';
 import { OpExGrid } from './opex-grid';
 import { NonOperatingGrid } from './non-operating-grid';
+import './opex-inspector';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +39,9 @@ const OPEX_TABS: Array<{ value: OpExTab; label: string }> = [
 export function OpExPage() {
 	const { versionId, fiscalYear, versionStatus } = useWorkspaceContext();
 	const user = useAuthStore((state) => state.user);
+	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
+	const clearSelection = useOpExSelectionStore((s) => s.clearSelection);
 
 	const [activeTab, setActiveTab] = useState<OpExTab>('operating');
 
@@ -42,12 +51,28 @@ export function OpExPage() {
 	const updateMonthlyMutation = useUpdateOpExMonthly(versionId);
 	const bulkUpdateMutation = useBulkUpdateOpEx(versionId);
 
+	// Register right panel on mount
+	useEffect(() => {
+		setActivePage('opex');
+		return () => {
+			setActivePage(null);
+			clearSelection();
+		};
+	}, [clearSelection, setActivePage]);
+
+	// Clear selection when panel closes
+	useEffect(() => {
+		if (!isPanelOpen) {
+			clearSelection();
+		}
+	}, [clearSelection, isPanelOpen]);
+
 	const currentVersion = useMemo(() => {
 		if (!versionId || !versionsData?.data) return null;
 		return versionsData.data.find((version) => version.id === versionId) ?? null;
 	}, [versionId, versionsData]);
 
-	// Editability & permissions (reuse staffing editability logic)
+	// Editability & permissions
 	const editability = deriveStaffingEditability({
 		role: user?.role ?? null,
 		versionStatus: currentVersion?.status ?? versionStatus,
@@ -91,7 +116,7 @@ export function OpExPage() {
 			totalOperating: new Decimal(summary.totalOperating || '0').toNumber(),
 			totalDepreciation: new Decimal(summary.totalDepreciation || '0').toNumber(),
 			financeNet: financeNet.toNumber(),
-			opexPercentOfRevenue: 0, // Computed by API when revenue data available
+			opexPercentOfRevenue: 0,
 			totalNonOperating: new Decimal(summary.totalNonOperating || '0').toNumber(),
 		};
 	}, [summary]);
@@ -110,7 +135,7 @@ export function OpExPage() {
 		[updateMonthlyMutation]
 	);
 
-	// Comment update handler — sends a single-item bulk update with the new comment
+	// Comment update handler
 	const handleCommentUpdate = useCallback(
 		(lineItemId: number, comment: string) => {
 			const allItems = lineItemsResponse?.data ?? [];
@@ -141,9 +166,11 @@ export function OpExPage() {
 
 	if (!versionId) {
 		return (
-			<div className="flex h-64 items-center justify-center text-(--text-muted)">
-				Select a version from the context bar to begin operating expenses planning.
-			</div>
+			<EmptyState
+				icon={FileSpreadsheet}
+				title="No version selected"
+				description="Select a version from the context bar to begin operating expenses planning."
+			/>
 		);
 	}
 
@@ -152,19 +179,34 @@ export function OpExPage() {
 			<div className="flex h-full min-h-0 flex-col overflow-hidden">
 				{/* Conditional banners */}
 				{isLocked && versionStatus && (
-					<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-4 py-3">
+					<div
+						className={cn(
+							'animate-stagger-reveal shrink-0',
+							'border-b border-(--color-info) bg-(--color-info-bg) px-6 py-3'
+						)}
+					>
 						<p className="text-sm font-semibold text-(--color-info)">
 							This version is locked. Operating expenses data is read-only.
 						</p>
 					</div>
 				)}
 				{isViewer && (
-					<div className="shrink-0 border-b border-(--color-info) bg-(--color-info-bg) px-4 py-3">
+					<div
+						className={cn(
+							'animate-stagger-reveal shrink-0',
+							'border-b border-(--color-info) bg-(--color-info-bg) px-6 py-3'
+						)}
+					>
 						<p className="text-sm font-semibold text-(--color-info)">You have view-only access.</p>
 					</div>
 				)}
 				{isUncalculated && (
-					<div className="shrink-0 border-b border-(--color-warning) bg-(--color-warning-bg) px-4 py-3">
+					<div
+						className={cn(
+							'animate-stagger-reveal shrink-0',
+							'border-b border-(--color-warning) bg-(--color-warning-bg) px-6 py-3'
+						)}
+					>
 						<p className="text-sm font-semibold text-(--color-warning)">
 							Operating expenses have not been calculated. Click Calculate to generate.
 						</p>
@@ -180,12 +222,7 @@ export function OpExPage() {
 									<TabsTrigger key={tab.value} value={tab.value}>
 										<span className="flex items-center gap-1.5">
 											{tab.label}
-											{tab.value === 'operating' && isStale && (
-												<span
-													className="size-2 animate-pulse rounded-full bg-(--color-stale)"
-													aria-label="Stale data"
-												/>
-											)}
+											{tab.value === 'operating' && isStale && <StalePill label="Stale" />}
 										</span>
 									</TabsTrigger>
 								))}
@@ -194,21 +231,13 @@ export function OpExPage() {
 					</div>
 
 					<div className="flex items-center gap-2">
-						{/* Settings placeholder */}
-						<Button type="button" variant="outline" size="sm" disabled>
-							Settings
-						</Button>
-
-						{/* Calculate */}
 						{isEditable && (
-							<Button
-								type="button"
-								size="sm"
-								disabled={calculateMutation.isPending}
-								onClick={() => calculateMutation.mutate()}
-							>
-								{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
-							</Button>
+							<CalculateButton
+								onCalculate={() => calculateMutation.mutate()}
+								isPending={calculateMutation.isPending}
+								isSuccess={calculateMutation.isSuccess}
+								isError={calculateMutation.isError}
+							/>
 						)}
 					</div>
 				</div>
@@ -237,14 +266,17 @@ export function OpExPage() {
 
 				{/* Tab content zone */}
 				<div className="flex-1 min-h-0 overflow-hidden px-6 py-2">
-					<div className="h-full overflow-y-auto scrollbar-thin">
-						{isLoading && (
-							<div className="flex h-full items-center justify-center text-(--text-muted)">
-								Loading operating expenses...
+					{isLoading && (
+						<div className="flex h-full items-center justify-center">
+							<div className="flex items-center gap-3 text-(--text-muted)">
+								<div className="h-5 w-5 animate-spin rounded-full border-2 border-(--accent-200) border-t-(--accent-500)" />
+								<span className="text-sm">Loading operating expenses...</span>
 							</div>
-						)}
+						</div>
+					)}
 
-						{!isLoading && activeTab === 'operating' && operatingItems.length > 0 && (
+					{!isLoading && activeTab === 'operating' && operatingItems.length > 0 && (
+						<div className="h-full animate-stagger-reveal">
 							<OpExGrid
 								lineItems={operatingItems}
 								monthlyTotals={summary?.monthlyOperatingTotals ?? []}
@@ -252,9 +284,11 @@ export function OpExPage() {
 								onMonthlyUpdate={handleMonthlyUpdate}
 								onCommentUpdate={handleCommentUpdate}
 							/>
-						)}
+						</div>
+					)}
 
-						{!isLoading && activeTab === 'non-operating' && nonOperatingItems.length > 0 && (
+					{!isLoading && activeTab === 'non-operating' && nonOperatingItems.length > 0 && (
+						<div className="h-full animate-stagger-reveal">
 							<NonOperatingGrid
 								lineItems={nonOperatingItems}
 								monthlyTotals={summary?.monthlyNonOperatingTotals ?? []}
@@ -262,50 +296,24 @@ export function OpExPage() {
 								onMonthlyUpdate={handleMonthlyUpdate}
 								onCommentUpdate={handleCommentUpdate}
 							/>
-						)}
+						</div>
+					)}
 
-						{!isLoading && activeTab === 'operating' && operatingItems.length === 0 && (
-							<div
-								className={cn(
-									'flex h-full flex-col items-center justify-center gap-3',
-									'text-(--text-muted)'
-								)}
-							>
-								<p className="text-sm font-medium">No operating expense line items found.</p>
-								{isEditable && (
-									<Button
-										type="button"
-										size="sm"
-										disabled={calculateMutation.isPending}
-										onClick={() => calculateMutation.mutate()}
-									>
-										{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
-									</Button>
-								)}
-							</div>
-						)}
+					{!isLoading && activeTab === 'operating' && operatingItems.length === 0 && (
+						<EmptyState
+							icon={FileSpreadsheet}
+							title="No operating expense line items"
+							description="Click Calculate to generate operating expense line items from the budget template."
+						/>
+					)}
 
-						{!isLoading && activeTab === 'non-operating' && nonOperatingItems.length === 0 && (
-							<div
-								className={cn(
-									'flex h-full flex-col items-center justify-center gap-3',
-									'text-(--text-muted)'
-								)}
-							>
-								<p className="text-sm font-medium">No non-operating items found.</p>
-								{isEditable && (
-									<Button
-										type="button"
-										size="sm"
-										disabled={calculateMutation.isPending}
-										onClick={() => calculateMutation.mutate()}
-									>
-										{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
-									</Button>
-								)}
-							</div>
-						)}
-					</div>
+					{!isLoading && activeTab === 'non-operating' && nonOperatingItems.length === 0 && (
+						<EmptyState
+							icon={FileSpreadsheet}
+							title="No non-operating items"
+							description="Click Calculate to generate non-operating items from the budget template."
+						/>
+					)}
 				</div>
 			</div>
 		</PageTransition>

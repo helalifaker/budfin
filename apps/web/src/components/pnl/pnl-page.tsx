@@ -1,30 +1,53 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
 import {
 	useReactTable,
 	getCoreRowModel,
-	getExpandedRowModel,
 	flexRender,
 	type ColumnDef,
 	type Row,
 } from '@tanstack/react-table';
+import { AlertTriangle, BarChart3, DollarSign, Landmark, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { usePnlResults, usePnlKpis, useCalculatePnl } from '../../hooks/use-pnl';
 import { useVersions } from '../../hooks/use-versions';
 import { useAuthStore } from '../../stores/auth-store';
-import { Button } from '../ui/button';
-import { Skeleton } from '../ui/skeleton';
-import { useNavigate } from 'react-router';
+import { useRightPanelStore } from '../../stores/right-panel-store';
+import { usePnlSelectionStore, type PnlSelection } from '../../stores/pnl-selection-store';
+import { ApiError } from '../../lib/api-client';
 import { cn } from '../../lib/cn';
 import { formatMoney } from '../../lib/format-money';
+import { formatDateTime } from '../../lib/format-date';
+import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
+import { Skeleton } from '../ui/skeleton';
+import { CalculateButton } from '../shared/calculate-button';
+import { Counter } from '../shared/counter';
+import { EmptyState } from '../shared/empty-state';
+import { KpiCard } from '../shared/kpi-card';
 import { PageTransition } from '../shared/page-transition';
+import { StalePill } from '../shared/stale-pill';
+import { WorkspaceStatusStrip, type StatusSection } from '../shared/workspace-status-strip';
 import type { PnlFormat, PnlLineItem, PnlKpis } from '@budfin/types';
+import '../pnl/pnl-inspector-content';
 
-// ── Month Labels ────────────────────────────────────────────────────────────
+// ── Constants ───────────────────────────────────────────────────────────────
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// ── Format Money for P&L ────────────────────────────────────────────────────
+const STALE_MODULE_LABELS: Record<string, string> = {
+	REVENUE: 'Revenue',
+	STAFFING: 'Staffing',
+	OPEX: 'OpEx',
+};
+
+const STALE_MODULE_PATHS: Record<string, string> = {
+	REVENUE: '/planning/revenue',
+	STAFFING: '/planning/staffing',
+	OPEX: '/planning/opex',
+};
+
+// ── Format helpers ──────────────────────────────────────────────────────────
 
 function formatPnlAmount(value: string): string {
 	const d = new Decimal(value);
@@ -33,40 +56,65 @@ function formatPnlAmount(value: string): string {
 	return d.isNeg() ? `(${formatted})` : formatted;
 }
 
-function formatPnlPercent(value: string): string {
-	const d = new Decimal(value);
-	const formatted = d.abs().toDecimalPlaces(1, Decimal.ROUND_HALF_UP).toFixed(1);
-	if (d.isNeg()) return `(${formatted}%)`;
-	return `${formatted}%`;
+// ── Grid Row Type ───────────────────────────────────────────────────────────
+
+interface PnlGridRow {
+	id: string;
+	displayLabel: string;
+	depth: 1 | 2 | 3;
+	displayOrder: number;
+	isSubtotal: boolean;
+	isSeparator: boolean;
+	sectionKey: string;
+	monthlyAmounts: string[];
+	annualTotal: string;
+	isClickable: boolean;
+	comparisonMonthlyAmounts?: string[] | undefined;
+	comparisonAnnualTotal?: string | undefined;
+	varianceMonthlyAmounts?: string[] | undefined;
+	varianceAnnualTotal?: string | undefined;
+	varianceAnnualPercent?: string | undefined;
 }
 
-// ── KPI Card ────────────────────────────────────────────────────────────────
-
-function KpiCard({
-	label,
-	value,
-	colorClass,
-}: {
-	label: string;
-	value: string;
-	colorClass?: string;
-}) {
-	return (
-		<div className="flex flex-col gap-1 rounded-lg border bg-card px-4 py-3">
-			<span className="text-xs font-medium text-muted-foreground">{label}</span>
-			<span className={cn('text-lg font-semibold tabular-nums', colorClass)}>{value}</span>
-		</div>
-	);
+function buildGridRows(lines: PnlLineItem[]): PnlGridRow[] {
+	return lines.map((line) => {
+		const row: PnlGridRow = {
+			id: `${line.sectionKey}/${line.categoryKey}/${line.lineItemKey}`,
+			displayLabel: line.displayLabel,
+			depth: line.depth,
+			displayOrder: line.displayOrder,
+			isSubtotal: line.isSubtotal,
+			isSeparator: line.isSeparator,
+			sectionKey: line.sectionKey,
+			monthlyAmounts: line.monthlyAmounts,
+			annualTotal: line.annualTotal,
+			isClickable: (line.depth === 1 || line.isSubtotal) && !line.isSeparator,
+		};
+		if (line.comparisonMonthlyAmounts) row.comparisonMonthlyAmounts = line.comparisonMonthlyAmounts;
+		if (line.comparisonAnnualTotal) row.comparisonAnnualTotal = line.comparisonAnnualTotal;
+		if (line.varianceMonthlyAmounts) row.varianceMonthlyAmounts = line.varianceMonthlyAmounts;
+		if (line.varianceAnnualTotal) row.varianceAnnualTotal = line.varianceAnnualTotal;
+		if (line.varianceAnnualPercent) row.varianceAnnualPercent = line.varianceAnnualPercent;
+		return row;
+	});
 }
 
 // ── KPI Strip ───────────────────────────────────────────────────────────────
 
-function PnlKpiStrip({ kpis, isLoading }: { kpis?: PnlKpis | undefined; isLoading: boolean }) {
+function PnlKpiRibbon({
+	kpis,
+	isLoading,
+	isStale,
+}: {
+	kpis: PnlKpis | undefined;
+	isLoading: boolean;
+	isStale: boolean;
+}) {
 	if (isLoading) {
 		return (
-			<div className="flex gap-4 px-6 py-3">
+			<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				{Array.from({ length: 4 }).map((_, i) => (
-					<Skeleton key={i} className="h-16 w-48" />
+					<Skeleton key={i} className="h-24 rounded-xl" />
 				))}
 			</div>
 		);
@@ -75,68 +123,188 @@ function PnlKpiStrip({ kpis, isLoading }: { kpis?: PnlKpis | undefined; isLoadin
 	if (!kpis) return null;
 
 	const marginPct = new Decimal(kpis.ebitdaMarginPct || '0');
-	const marginColor = marginPct.gte(15)
-		? 'text-(--color-success)'
-		: marginPct.gte(5)
-			? 'text-(--color-warning)'
-			: 'text-(--color-error)';
-
 	const ebitda = new Decimal(kpis.ebitda || '0');
-	const ebitdaColor = ebitda.gte(0) ? 'text-(--color-success)' : 'text-(--color-error)';
-
 	const netProfit = new Decimal(kpis.netProfit || '0');
-	const profitColor = netProfit.gte(0) ? 'text-(--color-success)' : 'text-(--color-error)';
+
+	const marginAccent = marginPct.gte(15)
+		? 'var(--color-success)'
+		: marginPct.gte(5)
+			? 'var(--color-warning)'
+			: 'var(--color-error)';
+
+	const ebitdaAccent = ebitda.gte(0) ? 'var(--color-success)' : 'var(--color-error)';
+	const profitAccent = netProfit.gte(0) ? 'var(--color-success)' : 'var(--color-error)';
 
 	return (
-		<div className="flex gap-4 px-6 py-3">
-			<KpiCard label="Total Revenue HT" value={formatPnlAmount(kpis.totalRevenueHt)} />
-			<KpiCard label="EBITDA" value={formatPnlAmount(kpis.ebitda)} colorClass={ebitdaColor} />
+		<div
+			className="grid grid-cols-2 gap-3 lg:grid-cols-4"
+			role="list"
+			aria-label="P&L key performance indicators"
+		>
+			<KpiCard
+				label="Total Revenue HT"
+				icon={DollarSign}
+				index={0}
+				isStale={isStale}
+				accentColor="var(--color-info)"
+				subtitle="Gross revenue before costs"
+			>
+				<Counter
+					value={parseFloat(kpis.totalRevenueHt)}
+					formatter={(v) => formatMoney(v, { showCurrency: true, compact: true })}
+				/>
+			</KpiCard>
+
+			<KpiCard
+				label="EBITDA"
+				icon={TrendingUp}
+				index={1}
+				isStale={isStale}
+				accentColor={ebitdaAccent}
+				subtitle="Earnings before interest, tax, depreciation"
+			>
+				<Counter
+					value={parseFloat(kpis.ebitda)}
+					formatter={(v) => formatMoney(v, { showCurrency: true, compact: true })}
+				/>
+			</KpiCard>
+
 			<KpiCard
 				label="EBITDA Margin"
-				value={formatPnlPercent(kpis.ebitdaMarginPct)}
-				colorClass={marginColor}
-			/>
+				icon={BarChart3}
+				index={2}
+				isStale={isStale}
+				accentColor={marginAccent}
+				subtitle="Operating profitability ratio"
+			>
+				<Counter value={marginPct.toNumber()} formatter={(v) => `${v.toFixed(1)}%`} />
+			</KpiCard>
+
 			<KpiCard
 				label="Net Profit"
-				value={formatPnlAmount(kpis.netProfit)}
-				colorClass={profitColor}
-			/>
+				icon={Landmark}
+				index={3}
+				isStale={isStale}
+				accentColor={profitAccent}
+				subtitle="Bottom line after all charges"
+			>
+				<Counter
+					value={parseFloat(kpis.netProfit)}
+					formatter={(v) => formatMoney(v, { showCurrency: true, compact: true })}
+				/>
+			</KpiCard>
 		</div>
 	);
 }
 
-// ── Grid Row Type ───────────────────────────────────────────────────────────
+// ── Status Strip ────────────────────────────────────────────────────────────
 
-interface PnlGridRow {
-	id: string;
-	displayLabel: string;
-	depth: number;
-	displayOrder: number;
-	isSubtotal: boolean;
-	isSeparator: boolean;
-	sectionKey: string;
-	monthlyAmounts: string[];
-	annualTotal: string;
-	subRows?: PnlGridRow[];
+function PnlStatusStrip({
+	calculatedAt,
+	staleModules,
+}: {
+	calculatedAt: string | null;
+	staleModules: string[];
+}) {
+	const upstreamStale = staleModules.filter((m) => ['REVENUE', 'STAFFING', 'OPEX'].includes(m));
+	const isPnlStale = staleModules.includes('PNL');
+
+	const sections: StatusSection[] = [
+		{
+			key: 'last-calculated',
+			label: 'Last calculated',
+			value: calculatedAt ? formatDateTime(calculatedAt) : 'Not yet calculated',
+			priority: 0,
+		},
+		{
+			key: 'pnl-status',
+			label: 'P&L',
+			value: isPnlStale ? 'Stale' : 'Fresh',
+			severity: isPnlStale ? 'warning' : 'success',
+			priority: 1,
+		},
+	];
+
+	if (upstreamStale.length > 0) {
+		sections.push({
+			key: 'upstream',
+			label: 'Upstream',
+			value: (
+				<span className="inline-flex items-center gap-1.5">
+					{upstreamStale.map((mod) => (
+						<StalePill key={mod} label={STALE_MODULE_LABELS[mod] ?? mod} />
+					))}
+				</span>
+			),
+			severity: 'warning',
+			priority: 2,
+		});
+	}
+
+	return <WorkspaceStatusStrip sections={sections} />;
 }
 
-function buildGridRows(lines: PnlLineItem[]): PnlGridRow[] {
-	return lines.map((line) => ({
-		id: `${line.sectionKey}/${line.categoryKey}/${line.lineItemKey}`,
-		displayLabel: line.displayLabel,
-		depth: line.depth,
-		displayOrder: line.displayOrder,
-		isSubtotal: line.isSubtotal,
-		isSeparator: line.isSeparator,
-		sectionKey: line.sectionKey,
-		monthlyAmounts: line.monthlyAmounts,
-		annualTotal: line.annualTotal,
-	}));
+// ── Stale Banner ────────────────────────────────────────────────────────────
+
+function StaleBanner({
+	staleModules,
+	onNavigate,
+}: {
+	staleModules: string[];
+	onNavigate: (path: string) => void;
+}) {
+	const upstreamStale = staleModules.filter((m) => ['REVENUE', 'STAFFING', 'OPEX'].includes(m));
+
+	if (upstreamStale.length === 0) return null;
+
+	return (
+		<div
+			className={cn(
+				'mx-6 mt-3 flex items-start gap-3 rounded-lg',
+				'border border-(--color-warning)/20 bg-(--color-warning-bg)',
+				'px-4 py-3 text-(--text-sm) text-(--color-warning)'
+			)}
+			role="alert"
+		>
+			<AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+			<div>
+				<span className="font-medium">Prerequisites outdated.</span> Recalculate{' '}
+				{upstreamStale.map((m, i) => (
+					<span key={m}>
+						{i > 0 && ', '}
+						<button
+							className={cn(
+								'underline transition-colors duration-(--duration-fast)',
+								'hover:text-(--color-warning-hover)'
+							)}
+							onClick={() => {
+								const path = STALE_MODULE_PATHS[m];
+								if (path) onNavigate(path);
+							}}
+						>
+							{STALE_MODULE_LABELS[m]?.toLowerCase() ?? m.toLowerCase()}
+						</button>
+					</span>
+				))}{' '}
+				before running P&L.
+			</div>
+		</div>
+	);
 }
 
 // ── P&L Grid ────────────────────────────────────────────────────────────────
 
-function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolean }) {
+function PnlGrid({
+	lines,
+	isLoading,
+	selection,
+	onSelectRow,
+}: {
+	lines: PnlLineItem[];
+	isLoading: boolean;
+	selection: PnlSelection | null;
+	onSelectRow: (row: PnlGridRow) => void;
+}) {
 	const rows = useMemo(() => buildGridRows(lines), [lines]);
 
 	const columns = useMemo<ColumnDef<PnlGridRow, string>[]>(() => {
@@ -154,7 +322,7 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 							className={cn(
 								'truncate',
 								row.original.isSubtotal && 'font-semibold',
-								row.original.depth === 1 && 'font-semibold'
+								row.original.depth === 1 && !row.original.isSeparator && 'font-semibold'
 							)}
 						>
 							{row.original.displayLabel}
@@ -170,15 +338,17 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 				id: `month-${monthIdx}`,
 				accessorFn: (row) => row.monthlyAmounts[monthIdx] ?? '0',
 				header: MONTHS[monthIdx]!,
-				size: 110,
+				size: 100,
 				cell: ({ row }) => {
 					if (row.original.isSeparator) return null;
 					const val = row.original.monthlyAmounts[monthIdx] ?? '0';
+					const d = new Decimal(val);
 					return (
 						<div
 							className={cn(
-								'text-right tabular-nums text-sm',
-								new Decimal(val).isNeg() && 'text-(--color-error)'
+								'text-right font-[family-name:var(--font-mono)] tabular-nums',
+								d.isNeg() && 'text-(--color-error)',
+								d.isZero() && 'text-(--text-muted)'
 							)}
 						>
 							{formatPnlAmount(val)}
@@ -192,14 +362,16 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 			id: 'annual',
 			accessorFn: (row) => row.annualTotal,
 			header: 'FY Total',
-			size: 130,
+			size: 120,
 			cell: ({ row }) => {
 				if (row.original.isSeparator) return null;
+				const d = new Decimal(row.original.annualTotal);
 				return (
 					<div
 						className={cn(
-							'text-right tabular-nums text-sm font-medium',
-							new Decimal(row.original.annualTotal).isNeg() && 'text-(--color-error)'
+							'text-right font-[family-name:var(--font-mono)] tabular-nums font-medium',
+							d.isNeg() && 'text-(--color-error)',
+							d.isZero() && 'text-(--text-muted)'
 						)}
 					>
 						{formatPnlAmount(row.original.annualTotal)}
@@ -215,15 +387,14 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 		data: rows,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
-		getExpandedRowModel: getExpandedRowModel(),
 		getRowId: (row) => row.id,
 	});
 
 	if (isLoading) {
 		return (
-			<div className="px-6 py-4 space-y-2">
+			<div className="space-y-2 px-6 py-4">
 				{Array.from({ length: 15 }).map((_, i) => (
-					<Skeleton key={i} className="h-8 w-full" />
+					<Skeleton key={i} className="h-8 w-full rounded-md" />
 				))}
 			</div>
 		);
@@ -231,12 +402,15 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 
 	if (rows.length === 0) return null;
 
+	const isSelected = (row: PnlGridRow) =>
+		selection?.sectionKey === row.sectionKey && selection?.displayLabel === row.displayLabel;
+
 	return (
-		<div className="overflow-x-auto px-6">
+		<div className="h-full overflow-y-auto scrollbar-thin">
 			<table
 				role="grid"
 				aria-label="P&L Income Statement"
-				className="w-full border-collapse text-sm"
+				className="w-full border-collapse text-(--text-sm)"
 			>
 				<thead>
 					{table.getHeaderGroups().map((headerGroup) => (
@@ -247,8 +421,13 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 									role="columnheader"
 									aria-readonly="true"
 									className={cn(
-										'sticky top-0 z-10 bg-muted/50 px-3 py-2 text-left text-xs font-medium text-muted-foreground',
-										header.id !== 'label' && 'text-right'
+										'sticky top-0 z-10',
+										'bg-(--workspace-bg-card)',
+										'border-b border-(--workspace-border)',
+										'px-3 py-2.5',
+										'text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)',
+										header.id !== 'label' && 'text-right',
+										header.id === 'annual' && 'bg-(--workspace-bg-subtle)'
 									)}
 									style={{ width: header.getSize() }}
 								>
@@ -261,101 +440,60 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 					))}
 				</thead>
 				<tbody>
-					{table.getRowModel().rows.map((row: Row<PnlGridRow>) => (
-						<tr
-							key={row.id}
-							role="row"
-							aria-level={row.original.depth}
-							className={cn(
-								'border-b border-border/50',
-								row.original.isSeparator && 'border-t-2 border-dashed border-border h-2',
-								row.original.isSubtotal && 'bg-muted/30 border-t-2 border-border font-semibold',
-								row.original.depth === 1 &&
-									!row.original.isSubtotal &&
-									!row.original.isSeparator &&
-									'bg-muted/20'
-							)}
-						>
-							{row.getVisibleCells().map((cell) => (
-								<td key={cell.id} role="gridcell" aria-readonly="true" className="px-3 py-1.5">
-									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</td>
-							))}
-						</tr>
-					))}
+					{table.getRowModel().rows.map((row: Row<PnlGridRow>) => {
+						const orig = row.original;
+						const selected = isSelected(orig);
+
+						return (
+							<tr
+								key={row.id}
+								role="row"
+								aria-level={orig.depth}
+								aria-selected={selected}
+								tabIndex={orig.isClickable ? 0 : undefined}
+								onClick={() => {
+									if (orig.isClickable) onSelectRow(orig);
+								}}
+								onKeyDown={(e) => {
+									if (orig.isClickable && (e.key === 'Enter' || e.key === ' ')) {
+										e.preventDefault();
+										onSelectRow(orig);
+									}
+								}}
+								className={cn(
+									'border-b border-(--workspace-border)/50',
+									'transition-colors duration-(--duration-fast)',
+									orig.isSeparator && 'h-1',
+									orig.isSubtotal &&
+										'bg-(--workspace-bg-subtle) border-t border-(--workspace-border) font-semibold',
+									orig.depth === 1 &&
+										!orig.isSubtotal &&
+										!orig.isSeparator &&
+										'bg-(--workspace-bg-muted)',
+									orig.isClickable && !selected && 'cursor-pointer hover:bg-(--workspace-bg-muted)',
+									selected && 'bg-(--accent-50) border-l-[3px] border-l-(--accent-500)'
+								)}
+							>
+								{row.getVisibleCells().map((cell) => (
+									<td
+										key={cell.id}
+										role="gridcell"
+										aria-readonly="true"
+										className={cn(
+											'px-3 py-1.5',
+											cell.column.id === 'annual' && 'bg-(--workspace-bg-subtle)/50'
+										)}
+									>
+										{orig.isSeparator
+											? null
+											: flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</td>
+								))}
+							</tr>
+						);
+					})}
 				</tbody>
 			</table>
-		</div>
-	);
-}
-
-// ── Stale Banner ────────────────────────────────────────────────────────────
-
-function StaleBanner({
-	staleModules,
-	onNavigate,
-}: {
-	staleModules: string[];
-	onNavigate: (module: string) => void;
-}) {
-	const hasPnlStale = staleModules.includes('PNL');
-	const hasUpstreamStale = staleModules.some((m) => ['REVENUE', 'STAFFING', 'OPEX'].includes(m));
-
-	if (!hasPnlStale && !hasUpstreamStale) return null;
-
-	return (
-		<div className="mx-6 mt-3 rounded-md border border-(--color-warning)/20 bg-(--color-warning-bg) px-4 py-2 text-sm text-(--color-warning)">
-			{hasUpstreamStale ? (
-				<>
-					<span className="font-medium">Prerequisites outdated.</span> Recalculate{' '}
-					{staleModules
-						.filter((m) => ['REVENUE', 'STAFFING', 'OPEX'].includes(m))
-						.map((m) => (
-							<button
-								key={m}
-								className="underline hover:text-amber-900 mx-1"
-								onClick={() => onNavigate(m)}
-							>
-								{m.toLowerCase()}
-							</button>
-						))}{' '}
-					before running P&L.
-				</>
-			) : (
-				<>
-					<span className="font-medium">P&L data may be outdated.</span> Click Calculate to refresh.
-				</>
-			)}
-		</div>
-	);
-}
-
-// ── Format Toggle ───────────────────────────────────────────────────────────
-
-function FormatToggle({ value, onChange }: { value: PnlFormat; onChange: (f: PnlFormat) => void }) {
-	const options: { value: PnlFormat; label: string }[] = [
-		{ value: 'summary', label: 'Summary' },
-		{ value: 'detailed', label: 'Detailed' },
-		{ value: 'ifrs', label: 'IFRS' },
-	];
-
-	return (
-		<div className="inline-flex rounded-md border border-input bg-background">
-			{options.map((opt) => (
-				<button
-					key={opt.value}
-					onClick={() => onChange(opt.value)}
-					className={cn(
-						'px-3 py-1.5 text-xs font-medium transition-colors',
-						'first:rounded-l-md last:rounded-r-md',
-						opt.value === value
-							? 'bg-primary text-primary-foreground'
-							: 'text-muted-foreground hover:text-foreground'
-					)}
-				>
-					{opt.label}
-				</button>
-			))}
 		</div>
 	);
 }
@@ -366,6 +504,12 @@ export function PnlPage() {
 	const { versionId, versionStatus, comparisonVersionId, fiscalYear } = useWorkspaceContext();
 	const user = useAuthStore((state) => state.user);
 	const { data: versionsData } = useVersions(fiscalYear);
+	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
+	const selection = usePnlSelectionStore((state) => state.selection);
+	const selectRow = usePnlSelectionStore((state) => state.selectRow);
+	const clearSelection = usePnlSelectionStore((state) => state.clearSelection);
+	const navigate = useNavigate();
 
 	const [format, setFormat] = useState<PnlFormat>('ifrs');
 
@@ -373,8 +517,13 @@ export function PnlPage() {
 		data: pnlData,
 		isLoading: pnlLoading,
 		isError: pnlError,
+		error: pnlErrorObj,
 	} = usePnlResults(format, comparisonVersionId ?? undefined);
-	const { data: kpisData, isLoading: kpisLoading } = usePnlKpis();
+	const { data: kpisData, isLoading: kpisLoading, error: kpisErrorObj } = usePnlKpis();
+
+	const isNotCalculated =
+		(pnlErrorObj instanceof ApiError && pnlErrorObj.code === 'PNL_NOT_CALCULATED') ||
+		(kpisErrorObj instanceof ApiError && kpisErrorObj.code === 'PNL_NOT_CALCULATED');
 	const calculateMutation = useCalculatePnl();
 
 	const version = versionsData?.data?.find((v) => v.id === versionId);
@@ -382,17 +531,21 @@ export function PnlPage() {
 	const isViewerOnly = user?.role === 'Viewer';
 	const isLocked = versionStatus === 'Locked' || versionStatus === 'Archived';
 	const canCalculate = !isViewerOnly && !isLocked;
+	const isPnlStale = staleModules.includes('PNL');
 
-	const navigate = useNavigate();
-	const handleNavigateToModule = (module: string) => {
-		const paths: Record<string, string> = {
-			REVENUE: '/planning/revenue',
-			STAFFING: '/planning/staffing',
-			OPEX: '/planning/opex',
+	useEffect(() => {
+		setActivePage('pnl');
+		return () => {
+			setActivePage(null);
+			clearSelection();
 		};
-		const path = paths[module];
-		if (path) navigate(path);
-	};
+	}, [clearSelection, setActivePage]);
+
+	useEffect(() => {
+		if (!isPanelOpen) {
+			clearSelection();
+		}
+	}, [clearSelection, isPanelOpen]);
 
 	const handleCalculate = () => {
 		const hasUpstreamStale = staleModules.some((m) => ['REVENUE', 'STAFFING', 'OPEX'].includes(m));
@@ -400,53 +553,107 @@ export function PnlPage() {
 		calculateMutation.mutate();
 	};
 
-	const isEmpty = !pnlLoading && !pnlError && (!pnlData || pnlData.lines.length === 0);
+	const handleSelectRow = (row: PnlGridRow) => {
+		const pnlSelection: PnlSelection = {
+			sectionKey: row.sectionKey,
+			displayLabel: row.displayLabel,
+			depth: row.depth,
+			isSubtotal: row.isSubtotal,
+			monthlyAmounts: row.monthlyAmounts,
+			annualTotal: row.annualTotal,
+		};
+		if (row.comparisonMonthlyAmounts)
+			pnlSelection.comparisonMonthlyAmounts = row.comparisonMonthlyAmounts;
+		if (row.comparisonAnnualTotal) pnlSelection.comparisonAnnualTotal = row.comparisonAnnualTotal;
+		if (row.varianceMonthlyAmounts)
+			pnlSelection.varianceMonthlyAmounts = row.varianceMonthlyAmounts;
+		if (row.varianceAnnualTotal) pnlSelection.varianceAnnualTotal = row.varianceAnnualTotal;
+		if (row.varianceAnnualPercent) pnlSelection.varianceAnnualPercent = row.varianceAnnualPercent;
+		selectRow(pnlSelection);
+	};
+
+	const isEmpty =
+		!pnlLoading && (isNotCalculated || (!pnlError && (!pnlData || pnlData.lines.length === 0)));
 
 	return (
 		<PageTransition>
-			<div className="flex h-full flex-col">
-				{/* Module Toolbar */}
-				<div className="flex items-center justify-between border-b px-6 py-3">
-					<div className="flex items-center gap-4">
-						<h1 className="text-lg font-semibold">P&L Reporting</h1>
-						<FormatToggle value={format} onChange={setFormat} />
-					</div>
-					<div className="flex items-center gap-2">
+			<div className="flex h-full flex-col overflow-hidden">
+				{/* Toolbar */}
+				<div
+					className={cn(
+						'flex shrink-0 flex-wrap items-center justify-between gap-3',
+						'border-b border-(--workspace-border) px-6 py-2'
+					)}
+				>
+					<ToggleGroup
+						type="single"
+						value={format}
+						onValueChange={(value) => {
+							if (value) {
+								setFormat(value as PnlFormat);
+								clearSelection();
+							}
+						}}
+						aria-label="P&L format"
+					>
+						<ToggleGroupItem value="summary">Summary</ToggleGroupItem>
+						<ToggleGroupItem value="detailed">Detailed</ToggleGroupItem>
+						<ToggleGroupItem value="ifrs">IFRS</ToggleGroupItem>
+					</ToggleGroup>
+
+					<div className="flex flex-wrap items-center gap-2">
 						{canCalculate && (
-							<Button size="sm" onClick={handleCalculate} disabled={calculateMutation.isPending}>
-								{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
-							</Button>
+							<CalculateButton
+								onCalculate={handleCalculate}
+								isPending={calculateMutation.isPending}
+								isSuccess={calculateMutation.isSuccess}
+								isError={calculateMutation.isError}
+								disabled={staleModules.some((m) => ['REVENUE', 'STAFFING', 'OPEX'].includes(m))}
+							/>
 						)}
 					</div>
 				</div>
 
 				{/* Stale Banner */}
-				<StaleBanner staleModules={staleModules} onNavigate={handleNavigateToModule} />
+				<StaleBanner staleModules={staleModules} onNavigate={(path) => navigate(path)} />
 
-				{/* KPI Strip */}
-				<PnlKpiStrip kpis={kpisData} isLoading={kpisLoading} />
+				{/* KPI Ribbon */}
+				<div className="shrink-0 px-6 py-3">
+					<PnlKpiRibbon kpis={kpisData} isLoading={kpisLoading} isStale={isPnlStale} />
+				</div>
+
+				{/* Status Strip */}
+				<div className="shrink-0">
+					<PnlStatusStrip
+						calculatedAt={pnlData?.calculatedAt ?? null}
+						staleModules={staleModules}
+					/>
+				</div>
 
 				{/* Empty State */}
 				{isEmpty && (
-					<div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-						<p className="text-muted-foreground">
-							No P&L data yet.{' '}
-							{canCalculate
-								? 'Click Calculate to generate.'
-								: 'A Budget Owner or Editor must calculate the P&L first.'}
-						</p>
-						{canCalculate && (
-							<Button onClick={handleCalculate} disabled={calculateMutation.isPending}>
-								Calculate P&L
-							</Button>
-						)}
+					<div className="flex flex-1 items-center justify-center">
+						<EmptyState
+							icon={Landmark}
+							title="No P&L data yet"
+							description={
+								canCalculate
+									? 'Click Calculate to generate the P&L statement.'
+									: 'A Budget Owner or Editor must calculate the P&L first.'
+							}
+						/>
 					</div>
 				)}
 
 				{/* P&L Grid */}
 				{!isEmpty && (
-					<div className="flex-1 overflow-y-auto pb-6">
-						<PnlGrid lines={pnlData?.lines ?? []} isLoading={pnlLoading} />
+					<div className="min-h-0 flex-1 overflow-hidden px-6 py-2">
+						<PnlGrid
+							lines={pnlData?.lines ?? []}
+							isLoading={pnlLoading}
+							selection={selection}
+							onSelectRow={handleSelectRow}
+						/>
 					</div>
 				)}
 			</div>

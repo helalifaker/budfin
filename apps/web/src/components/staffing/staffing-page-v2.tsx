@@ -23,6 +23,7 @@ import {
 } from '../../lib/staffing-workspace';
 import { Button } from '../ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
+import { CalculateButton } from '../shared/calculate-button';
 import { cn } from '../../lib/cn';
 import { PageTransition } from '../shared/page-transition';
 import { StaffingKpiRibbonV2 } from './staffing-kpi-ribbon';
@@ -310,14 +311,12 @@ export function StaffingPageV2() {
 
 						{/* Calculate — editable only */}
 						{isEditable && (
-							<Button
-								type="button"
-								size="sm"
-								disabled={calculateMutation.isPending}
-								onClick={() => calculateMutation.mutate()}
-							>
-								{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
-							</Button>
+							<CalculateButton
+								onCalculate={() => calculateMutation.mutate()}
+								isPending={calculateMutation.isPending}
+								isSuccess={calculateMutation.isSuccess}
+								isError={calculateMutation.isError}
+							/>
 						)}
 					</div>
 				</div>
@@ -369,16 +368,6 @@ export function StaffingPageV2() {
 											? 'Staffing data is stale. Click Calculate to regenerate teaching requirements.'
 											: 'Unable to load teaching requirements.'}
 									</p>
-									{isEditable && (
-										<Button
-											type="button"
-											size="sm"
-											disabled={calculateMutation.isPending}
-											onClick={() => calculateMutation.mutate()}
-										>
-											{calculateMutation.isPending ? 'Calculating...' : 'Calculate'}
-										</Button>
-									)}
 								</div>
 							) : (
 								<div
