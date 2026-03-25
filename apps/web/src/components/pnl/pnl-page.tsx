@@ -7,7 +7,14 @@ import {
 	type ColumnDef,
 	type Row,
 } from '@tanstack/react-table';
-import { AlertTriangle, BarChart3, DollarSign, Landmark, TrendingUp } from 'lucide-react';
+import {
+	AlertTriangle,
+	ArrowUpRight,
+	BarChart3,
+	DollarSign,
+	Landmark,
+	TrendingUp,
+} from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { usePnlResults, usePnlKpis, useCalculatePnl } from '../../hooks/use-pnl';
@@ -47,6 +54,14 @@ const STALE_MODULE_PATHS: Record<string, string> = {
 	OPEX: '/planning/opex',
 };
 
+/** Maps P&L section keys to the planning module that sources them. */
+const SECTION_DRILL_DOWN_PATHS: Record<string, string> = {
+	REVENUE_CONTRACTS: '/planning/revenue',
+	STAFF_COSTS: '/planning/staffing',
+	EMPLOYER_CHARGES: '/planning/staffing',
+	OTHER_OPEX: '/planning/opex',
+};
+
 // ── Format helpers ──────────────────────────────────────────────────────────
 
 function formatPnlAmount(value: string): string {
@@ -69,6 +84,8 @@ interface PnlGridRow {
 	monthlyAmounts: string[];
 	annualTotal: string;
 	isClickable: boolean;
+	/** Route path for drill-down navigation (only set on depth-1 header rows). */
+	drillDownPath: string | null;
 	comparisonMonthlyAmounts?: string[] | undefined;
 	comparisonAnnualTotal?: string | undefined;
 	varianceMonthlyAmounts?: string[] | undefined;
@@ -78,6 +95,11 @@ interface PnlGridRow {
 
 function buildGridRows(lines: PnlLineItem[]): PnlGridRow[] {
 	return lines.map((line) => {
+		const drillDownPath =
+			line.depth === 1 && !line.isSeparator && !line.isSubtotal
+				? (SECTION_DRILL_DOWN_PATHS[line.sectionKey] ?? null)
+				: null;
+
 		const row: PnlGridRow = {
 			id: `${line.sectionKey}/${line.categoryKey}/${line.lineItemKey}`,
 			displayLabel: line.displayLabel,
@@ -89,6 +111,7 @@ function buildGridRows(lines: PnlLineItem[]): PnlGridRow[] {
 			monthlyAmounts: line.monthlyAmounts,
 			annualTotal: line.annualTotal,
 			isClickable: (line.depth === 1 || line.isSubtotal) && !line.isSeparator,
+			drillDownPath,
 		};
 		if (line.comparisonMonthlyAmounts) row.comparisonMonthlyAmounts = line.comparisonMonthlyAmounts;
 		if (line.comparisonAnnualTotal) row.comparisonAnnualTotal = line.comparisonAnnualTotal;
@@ -299,11 +322,13 @@ function PnlGrid({
 	isLoading,
 	selection,
 	onSelectRow,
+	onNavigate,
 }: {
 	lines: PnlLineItem[];
 	isLoading: boolean;
 	selection: PnlSelection | null;
 	onSelectRow: (row: PnlGridRow) => void;
+	onNavigate: (path: string) => void;
 }) {
 	const rows = useMemo(() => buildGridRows(lines), [lines]);
 
@@ -316,6 +341,7 @@ function PnlGrid({
 				size: 280,
 				cell: ({ row }) => {
 					const indent = (row.original.depth - 1) * 20;
+					const path = row.original.drillDownPath;
 					return (
 						<div
 							style={{ paddingLeft: `${indent}px` }}
@@ -325,7 +351,25 @@ function PnlGrid({
 								row.original.depth === 1 && !row.original.isSeparator && 'font-semibold'
 							)}
 						>
-							{row.original.displayLabel}
+							{path ? (
+								<button
+									className={cn(
+										'inline-flex items-center gap-1',
+										'text-left hover:text-(--accent-600)',
+										'transition-colors duration-(--duration-fast)'
+									)}
+									aria-label={`Navigate to ${row.original.displayLabel}`}
+									onClick={(e) => {
+										e.stopPropagation();
+										onNavigate(path);
+									}}
+								>
+									{row.original.displayLabel}
+									<ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
+								</button>
+							) : (
+								row.original.displayLabel
+							)}
 						</div>
 					);
 				},
@@ -381,7 +425,7 @@ function PnlGrid({
 		});
 
 		return cols;
-	}, []);
+	}, [onNavigate]);
 
 	const table = useReactTable({
 		data: rows,
@@ -653,6 +697,7 @@ export function PnlPage() {
 							isLoading={pnlLoading}
 							selection={selection}
 							onSelectRow={handleSelectRow}
+							onNavigate={(path) => navigate(path)}
 						/>
 					</div>
 				)}

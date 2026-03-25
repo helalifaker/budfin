@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Users, DollarSign, Briefcase, TrendingUp, AlertTriangle, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { PageTransition } from '../../components/shared/page-transition';
@@ -78,6 +79,7 @@ export function DashboardPage() {
 	const [wizardOpen, setWizardOpen] = useState(false);
 	const { versionId } = useWorkspaceContext();
 	const { data, isLoading } = useDashboard(versionId);
+	const navigate = useNavigate();
 
 	const kpis = data?.kpis;
 	const monthlyTrend = data?.monthlyTrend ?? [];
@@ -130,10 +132,36 @@ export function DashboardPage() {
 						</>
 					) : (
 						<>
-							<div className="animate-stagger-reveal" style={{ animationDelay: '0ms' }}>
+							<div
+								className="animate-stagger-reveal cursor-pointer"
+								style={{ animationDelay: '0ms' }}
+								role="link"
+								aria-label="View enrollment details"
+								tabIndex={0}
+								onClick={() => navigate('/planning/enrollment')}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										navigate('/planning/enrollment');
+									}
+								}}
+							>
 								<KpiCard title="Total Students" value={enrollmentCount} icon={Users} />
 							</div>
-							<div className="animate-stagger-reveal" style={{ animationDelay: '50ms' }}>
+							<div
+								className="animate-stagger-reveal cursor-pointer"
+								style={{ animationDelay: '50ms' }}
+								role="link"
+								aria-label="View revenue details"
+								tabIndex={0}
+								onClick={() => navigate('/planning/revenue')}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										navigate('/planning/revenue');
+									}
+								}}
+							>
 								<KpiCard
 									title="Total Revenue"
 									value={totalRevenueNum}
@@ -141,7 +169,20 @@ export function DashboardPage() {
 									formatter={(v: number) => formatMoney(v, { showCurrency: true })}
 								/>
 							</div>
-							<div className="animate-stagger-reveal" style={{ animationDelay: '100ms' }}>
+							<div
+								className="animate-stagger-reveal cursor-pointer"
+								style={{ animationDelay: '100ms' }}
+								role="link"
+								aria-label="View staff costs details"
+								tabIndex={0}
+								onClick={() => navigate('/planning/staffing')}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										navigate('/planning/staffing');
+									}
+								}}
+							>
 								<KpiCard
 									title="Staff Costs"
 									value={totalStaffCostsNum}
@@ -149,7 +190,20 @@ export function DashboardPage() {
 									formatter={(v: number) => formatMoney(v, { showCurrency: true })}
 								/>
 							</div>
-							<div className="animate-stagger-reveal" style={{ animationDelay: '150ms' }}>
+							<div
+								className="animate-stagger-reveal cursor-pointer"
+								style={{ animationDelay: '150ms' }}
+								role="link"
+								aria-label="View P&L details"
+								tabIndex={0}
+								onClick={() => navigate('/planning/pnl')}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										navigate('/planning/pnl');
+									}
+								}}
+							>
 								<KpiCard
 									title="Net Result"
 									value={netProfitNum}
