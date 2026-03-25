@@ -671,6 +671,8 @@ CREATE TRIGGER enrollment_detail_updated_at_trigger
 
 ### Table 8: class_capacity_config
 
+> **Implementation note:** This table was merged into `grade_levels` (Prisma model `GradeLevel`) during Epic 7 master data implementation. Capacity fields (`maxClassSize`, `plafondPercent`) are columns on the `grade_levels` table.
+
 Reference table defining maximum class sizes and capacity thresholds per grade level. Not version-scoped — these are school-wide structural parameters. Used by the DHG engine to calculate sections needed.
 
 ```sql
@@ -724,6 +726,8 @@ CREATE TRIGGER class_capacity_config_updated_at_trigger
 ---
 
 ### Table 9: discount_policies
+
+> **Implementation note:** Per-tariff/nationality discount policies were replaced by a single flat discount rate (`flatDiscountPct`) on `VersionRevenueSettings` per ADR-029. See `apps/api/prisma/schema.prisma` model `VersionRevenueSettings`.
 
 Version-scoped discount rates for reduced-price tariffs. The discount rate is a percentage off the Plein (full) tariff. Only RP and R3+ tariffs have discounts.
 
@@ -1214,6 +1218,8 @@ CREATE TRIGGER version_capacity_config_updated_at_trigger
 
 ### Table 14: monthly_staff_costs
 
+> **Implementation note:** The `hsa_included` column was removed. Four cost breakdown columns were added: `housingAllowance`, `transportAllowance`, `responsibilityPremium`, `hsaAmount` (all `DECIMAL(15,4)`).
+
 Calculated output: monthly cost breakdown per employee. Includes base gross, adjusted gross (after hourly percentage), GOSI, Ajeer, and EoS accrual. Populated by the Staff Cost Engine.
 
 ```sql
@@ -1344,6 +1350,8 @@ CREATE TRIGGER eos_provisions_updated_at_trigger
 
 ### Table 16: monthly_budget_summary
 
+> **Implementation note:** Simplified to 11 columns (revenueHt, staffCosts, opexCosts, ebitda, netProfit, etc.). The 17-column P&L detail from the original spec now lives in `MonthlyPnlLine`. The `scenario_name` column was removed.
+
 Consolidated P&L summary per month. Populated by the P&L Engine after revenue and staff costs are calculated. This is the primary output table for dashboard display and report generation.
 
 ```sql
@@ -1426,6 +1434,8 @@ CREATE TRIGGER monthly_budget_summary_updated_at_trigger
 
 ### Table 17: ifrs_line_items
 
+> **Implementation note:** Replaced by `MonthlyPnlLine` model with tree-structured key hierarchy (`sectionKey`/`categoryKey`/`lineItemKey`) and monthly amount arrays. This flexible design supports Summary, Detailed, and IFRS view modes.
+
 IFRS-classified financial line items for standards-compliant P&L reporting. Generated alongside monthly_budget_summary by the P&L Engine.
 
 ```sql
@@ -1493,6 +1503,8 @@ CREATE TRIGGER ifrs_line_items_updated_at_trigger
 ---
 
 ### Table 18: scenario_parameters
+
+> **Implementation note:** `created_by` and `updated_by` FK columns were not implemented. The `ors_hours` field was added for ORS (Obligation Reglementaire de Service) configuration.
 
 Per-version scenario assumptions. Each version can have Base, Optimistic, and Pessimistic parameter sets. These feed into the calculation engines as adjustment factors.
 
@@ -1809,6 +1821,8 @@ CREATE TRIGGER export_jobs_updated_at_trigger
 
 ### Table 23: other_operating_costs
 
+> **Implementation note:** Split into two models: `VersionOpExLineItem` (input configuration with account code, distribution method, amounts) and `MonthlyOpEx` (calculated monthly output). This separation follows the input/output pattern used across all calculation modules.
+
 Input table for non-staff operating expenses (facilities, utilities, materials, D&A, finance items). Provides the source data for `monthly_budget_summary.other_operating_expenses`, `depreciation_amortization`, and `net_finance_income` populated by the P&L Engine. Added to resolve S-06 (missing P&L input source).
 
 ```sql
@@ -1872,6 +1886,8 @@ CREATE TRIGGER other_operating_costs_updated_at_trigger
 
 ### Table 24: pdpl_consent_records
 
+> **Implementation note:** Deferred to post-v1 per ADR-033.
+
 PDPL Article 11 compliance: records employee consent for processing of personal data (salary, HR data). Consent grant and withdrawal events are captured as separate rows for an immutable audit trail. Added to resolve S-05.
 
 ```sql
@@ -1924,6 +1940,8 @@ CREATE INDEX pdpl_consent_employee_type_idx ON pdpl_consent_records (employee_id
 ---
 
 ### Table 25: pdpl_data_requests
+
+> **Implementation note:** Deferred to post-v1 per ADR-033.
 
 PDPL Article 12–14 compliance: tracks data subject access requests (DSAR), correction requests, and deletion requests. The 30-day fulfilment window (NFR 11.7) is enforced by setting `due_by` at insert time. Added to resolve S-18.
 
@@ -2340,6 +2358,8 @@ The following tables have known differences between the TDD DDL and the current 
 - `is_teaching` and `notes` fields described in some early TDD drafts were ultimately implemented (`is_teaching` exists in Prisma; `notes` was not implemented).
 
 **EosProvision (`eos_provisions`):**
+
+> **Implementation note:** Simplified to 2 columns (`eosAnnual`, `eosMonthlyAccrual`). The `opening_provision`, `annual_fy_charge`, `provision_amount`, and `calculation_note` columns are computed on-the-fly by the cost engine rather than stored.
 
 - Simplified from the TDD design. Uses `eosAnnual` (`eos_annual`) and `eosMonthlyAccrual` (`eos_monthly_accrual`) instead of the TDD's `opening_provision`, `annual_fy_charge`, and `provision_amount` columns.
 - Added `eosBase` (`eos_base`) and `asOfDate` (`as_of_date`) not in the original TDD.

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useRevenueResults } from '../../hooks/use-revenue';
+import { formatMoney } from '../../lib/format-money';
 import { DataGrid } from '../data-grid/data-grid';
 import { Button } from '../ui/button';
 import { RevenueMatrixTable } from './revenue-matrix-table';
@@ -43,10 +44,7 @@ const GROUP_LABELS: Record<GroupBy, string> = {
 };
 
 function formatAmount(value: string) {
-	return Number(value).toLocaleString('fr-FR', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-	});
+	return formatMoney(value);
 }
 
 export function ForecastTab({ versionId }: ForecastTabProps) {

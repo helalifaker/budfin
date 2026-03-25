@@ -226,6 +226,17 @@ export async function pnlResultsRoutes(app: FastifyInstance) {
 			> | null = null;
 
 			if (comparison_version_id) {
+				// Validate comparison version exists
+				const compVersion = await prisma.budgetVersion.findUnique({
+					where: { id: comparison_version_id },
+				});
+				if (!compVersion) {
+					return reply.status(404).send({
+						code: 'COMPARISON_VERSION_NOT_FOUND',
+						message: `Comparison version ${comparison_version_id} not found`,
+					});
+				}
+
 				const comparisonRows = await prisma.monthlyPnlLine.findMany({
 					where: {
 						versionId: comparison_version_id,

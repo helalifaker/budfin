@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, X } from 'lucide-react';
 import { cn } from '../../lib/cn';
 
 interface EditableCellProps {
@@ -140,38 +141,10 @@ export function EditableCell({
 		>
 			{value === 0 || value === '0' ? '' : value}
 			{saveState === 'saved' && (
-				<svg
-					className="inline-block ml-1 h-3 w-3 text-(--color-success)"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="3"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden="true"
-				>
-					<path
-						d="M5 12l5 5L20 7"
-						style={{
-							strokeDasharray: 24,
-							animation: 'checkmark-draw 300ms ease-out forwards',
-						}}
-					/>
-				</svg>
+				<Check className="inline-block ml-1 h-3 w-3 text-(--color-success)" aria-hidden="true" />
 			)}
 			{saveState === 'error' && (
-				<svg
-					className="inline-block ml-1 h-3 w-3 text-(--color-error)"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="3"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden="true"
-				>
-					<path d="M18 6L6 18M6 6l12 12" />
-				</svg>
+				<X className="inline-block ml-1 h-3 w-3 text-(--color-error)" aria-hidden="true" />
 			)}
 		</button>
 	);

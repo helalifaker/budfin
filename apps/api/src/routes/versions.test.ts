@@ -66,6 +66,9 @@ vi.mock('../lib/prisma.js', () => {
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
+		scenarioParameters: {
+			createMany: vi.fn().mockResolvedValue({ count: 3 }),
+		},
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
 				budgetVersion: mockPrisma.budgetVersion,
@@ -75,6 +78,7 @@ vi.mock('../lib/prisma.js', () => {
 				gradeLevel: mockPrisma.gradeLevel,
 				versionCapacityConfig: mockPrisma.versionCapacityConfig,
 				auditEntry: mockPrisma.auditEntry,
+				scenarioParameters: mockPrisma.scenarioParameters,
 			})
 		),
 	};
@@ -113,6 +117,7 @@ const mockPrisma = prisma as unknown as {
 	};
 	actualsImportLog: { findMany: ReturnType<typeof vi.fn> };
 	auditEntry: { create: ReturnType<typeof vi.fn> };
+	scenarioParameters: { createMany: ReturnType<typeof vi.fn> };
 	$transaction: ReturnType<typeof vi.fn>;
 };
 
@@ -447,6 +452,27 @@ describe('POST /api/v1/versions', () => {
 			})
 		);
 		expect(mockPrisma.monthlyBudgetSummary.createMany).toHaveBeenCalled();
+	});
+
+	it('creates default scenario parameters when creating a version', async () => {
+		mockPrisma.budgetVersion.create.mockResolvedValue(mockVersion);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions',
+			headers: authHeader(token),
+			payload: { name: 'Budget v1', type: 'Budget', fiscalYear: 2026 },
+		});
+
+		expect(res.statusCode).toBe(201);
+		expect(mockPrisma.scenarioParameters.createMany).toHaveBeenCalledWith({
+			data: [
+				{ versionId: 1, scenarioName: 'Base' },
+				{ versionId: 1, scenarioName: 'Optimistic' },
+				{ versionId: 1, scenarioName: 'Pessimistic' },
+			],
+		});
 	});
 
 	it('returns 404 for invalid sourceVersionId', async () => {

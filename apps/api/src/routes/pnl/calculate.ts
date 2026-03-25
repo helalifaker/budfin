@@ -44,7 +44,7 @@ export async function pnlCalculateRoutes(app: FastifyInstance) {
 
 			// Block locked/archived versions
 			if (version.status === 'Locked' || version.status === 'Archived') {
-				return reply.status(403).send({
+				return reply.status(409).send({
 					code: 'VERSION_LOCKED',
 					message: `Cannot calculate on ${version.status.toLowerCase()} version`,
 				});

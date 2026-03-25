@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import Decimal from 'decimal.js';
 import type { RevenueMatrixRow } from '@budfin/types';
+import { formatMoney } from '../../lib/format-money';
 
 const MONTH_NAMES = [
 	'Jan',
@@ -23,10 +24,7 @@ function formatAmount(value: string) {
 		return '-';
 	}
 
-	return Number(d.toFixed(2)).toLocaleString('fr-FR', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-	});
+	return formatMoney(d);
 }
 
 function formatPercent(value: string) {

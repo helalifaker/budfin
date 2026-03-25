@@ -43,6 +43,8 @@ BudFin exposes a RESTful JSON API with URL-based versioning under the `/api/v1/`
 - `message`: Human-readable description suitable for logging.
 - `field_errors`: Present only for 400/422 validation errors; omitted otherwise.
 
+> **Naming convention:** Response payloads use camelCase for domain object fields. Auth and audit responses use snake_case for historical compatibility.
+
 **Standard HTTP status codes used:**
 
 | Code | Usage                                                                |
@@ -1534,6 +1536,8 @@ Check revenue configuration readiness across 3 areas: fee grid, discounts, other
 
 #### GET /api/v1/versions/:versionId/discounts
 
+> **Implementation note:** These endpoints were not implemented. Discount functionality is provided by `flatDiscountPct` on `VersionRevenueSettings` (ADR-029). Revenue readiness `totalCount` is 2 (feeGrid + otherRevenue), not 3.
+
 Retrieve discount policies by tariff and nationality.
 
 **RBAC:** All authenticated.
@@ -1555,6 +1559,8 @@ Retrieve discount policies by tariff and nationality.
 ---
 
 #### PUT /api/v1/versions/:versionId/discounts
+
+> **Implementation note:** These endpoints were not implemented. Discount functionality is provided by `flatDiscountPct` on `VersionRevenueSettings` (ADR-029). Revenue readiness `totalCount` is 2 (feeGrid + otherRevenue), not 3.
 
 Update discount policies (FR-REV-007 through FR-REV-010). Marks REVENUE module as stale.
 
@@ -1733,9 +1739,9 @@ Run the DHG (Dotation Horaire Globale) calculation and Staff Cost Engine. Comput
 
 #### POST /api/v1/versions/:versionId/calculate/pnl
 
-> **Status: Not yet implemented.** This endpoint is planned for a future epic.
-
 Run P&L consolidation. Aggregates revenue and staff cost results into IFRS-aligned monthly P&L statements.
+
+> **Implementation note:** OpEx calculate (`POST /calculate/opex`) checks for REVENUE_STALE before proceeding — OpEx depends on revenue being current.
 
 **Prerequisites:** REVENUE and STAFFING modules must not be stale.
 
@@ -1762,8 +1768,6 @@ Run P&L consolidation. Aggregates revenue and staff cost results into IFRS-align
 ---
 
 #### GET /api/v1/versions/:versionId/stale-flags
-
-> **Status: Deferred to Epic 5.** This endpoint is not yet implemented.
 
 Check which modules have stale calculated data for a version.
 
@@ -2278,9 +2282,9 @@ Retrieve the Contrats Locaux & Residents monthly cost breakdown. Returns categor
 
 #### GET /api/v1/versions/:versionId/pnl
 
-> **Status: Not yet implemented.** This endpoint is planned for a future epic.
-
 Retrieve the IFRS monthly P&L statement (FR-PNL-001 through FR-PNL-018).
+
+> **Implementation note:** Response uses a `lines[]` tree structure (`sectionKey`/`categoryKey`/`lineItemKey`) instead of the flat `months[]` format shown below. Supports Summary, Detailed, and IFRS view modes via the `format` query parameter.
 
 **RBAC:** All authenticated.
 
@@ -2338,9 +2342,9 @@ Retrieve the IFRS monthly P&L statement (FR-PNL-001 through FR-PNL-018).
 
 #### GET /api/v1/versions/:versionId/scenarios
 
-> **Status: Not yet implemented.** This endpoint is planned for a future epic.
-
 Scenario comparison view (FR-SCN-004, FR-SCN-006). Returns Base, Optimistic, and Pessimistic scenarios side-by-side.
+
+> **Implementation note:** Split into two endpoints: `GET /scenarios/parameters` (read/write scenario assumptions) and `GET /scenarios/comparison` (computed side-by-side comparison with deltas).
 
 **RBAC:** All authenticated.
 
@@ -2383,9 +2387,9 @@ Scenario comparison view (FR-SCN-004, FR-SCN-006). Returns Base, Optimistic, and
 
 #### GET /api/v1/versions/:versionId/dashboard
 
-> **Status: Not yet implemented.** This endpoint is planned for a future epic.
-
 Returns aggregated dashboard data for all 4 KPI cards, chart data, alerts, and a stale flag in a single response (FR-DSH-001 through FR-DSH-005). Designed to avoid N+1 requests from the dashboard UI.
+
+> **Implementation note:** Returns 5 KPIs (`totalRevenue`, `totalStaffCosts`, `enrollmentCount`, `costPerStudent`, `ebitda`) + `monthlyTrend` array + `staleModules` list. The `FORBIDDEN` 403 error was replaced by standard RBAC middleware (all authenticated roles can view).
 
 **RBAC:** All authenticated (Admin, BudgetOwner, Editor, Viewer).
 
@@ -2563,8 +2567,6 @@ Retrieve the audit log with filters (FR-AUD-003).
 ---
 
 #### GET /api/v1/audit/calculation
-
-> **Status: Deferred to Epic 5.** This endpoint is not yet implemented.
 
 Retrieve calculation run history (NFR 11.12).
 

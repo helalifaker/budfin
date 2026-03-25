@@ -229,9 +229,9 @@ describe('GET /api/v1/audit/calculation', () => {
 		expect(body.page_size).toBe(20);
 	});
 
-	it('allows BudgetOwner access', async () => {
-		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([]);
-		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(0);
+	it('returns 200 for BudgetOwner role', async () => {
+		vi.mocked(prisma.calculationAuditLog.findMany).mockResolvedValue([mockCalcEntry]);
+		vi.mocked(prisma.calculationAuditLog.count).mockResolvedValue(1);
 
 		const token = await makeToken({ role: 'BudgetOwner' });
 		const res = await app.inject({
@@ -240,6 +240,8 @@ describe('GET /api/v1/audit/calculation', () => {
 			headers: authHeader(token),
 		});
 		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.entries).toHaveLength(1);
 	});
 
 	it('returns 403 for Editor role', async () => {

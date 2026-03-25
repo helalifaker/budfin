@@ -34,6 +34,13 @@ export async function opExCalculateRoutes(app: FastifyInstance) {
 				});
 			}
 
+			if (version.staleModules.includes('REVENUE')) {
+				return reply.status(409).send({
+					code: 'REVENUE_STALE',
+					message: 'Recalculate revenue before running OpEx.',
+				});
+			}
+
 			// Fetch all line items with monthly amounts
 			const lineItems = await prisma.versionOpExLineItem.findMany({
 				where: { versionId },

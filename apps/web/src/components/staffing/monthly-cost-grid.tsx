@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { cn } from '../../lib/cn';
+import { formatMoney } from '../../lib/format-money';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import type { StaffCostRow } from '../../hooks/use-staffing';
 
@@ -16,7 +17,7 @@ export type MonthlyCostGridProps = {
 
 function formatSar(val: string | null): string {
 	if (val === null) return '\u2014';
-	return `SAR ${Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+	return formatMoney(val, { showCurrency: true });
 }
 
 type GroupBy = 'month' | 'department' | 'employee';

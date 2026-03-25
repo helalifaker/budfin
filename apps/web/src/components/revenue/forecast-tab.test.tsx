@@ -133,7 +133,7 @@ describe('ForecastTab', () => {
 		expect(screen.getByRole('table', { name: 'Executive summary matrix' })).toBeDefined();
 		expect(screen.getAllByText('Net Tuition').length).toBeGreaterThan(0);
 		expect(screen.getAllByText('Total Operating Revenue').length).toBeGreaterThan(0);
-		expect(screen.getAllByText(/2.?025,00/).length).toBeGreaterThan(0);
+		expect(screen.getAllByText(/2.?025/).length).toBeGreaterThan(0);
 		expect(screen.getByText('Registration Fees')).toBeDefined();
 	});
 });

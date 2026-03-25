@@ -28,7 +28,7 @@ export function ComparisonView({ versionIds, onClose }: ComparisonViewProps) {
 	if (isError || !data) {
 		return (
 			<div className="rounded-lg border border-(--workspace-border) bg-(--bg-card) p-6">
-				<p className="text-(--text-sm) text-red-600">Failed to load comparison data.</p>
+				<p className="text-(--text-sm) text-(--color-error)">Failed to load comparison data.</p>
 			</div>
 		);
 	}

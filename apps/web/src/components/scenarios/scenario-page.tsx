@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import Decimal from 'decimal.js';
+import { formatMoney } from '../../lib/format-money';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import {
 	useScenarioParameters,
@@ -47,11 +48,7 @@ interface ScenarioFormValues {
 function formatComparisonAmount(value: string): string {
 	const d = new Decimal(value);
 	if (d.isZero()) return '--';
-	const abs = d.abs();
-	const formatted = abs.toNumber().toLocaleString('en-US', {
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 0,
-	});
+	const formatted = formatMoney(d.abs());
 	return d.isNeg() ? `(${formatted})` : formatted;
 }
 
@@ -286,7 +283,9 @@ function DeltaBadge({ value }: { value: number }) {
 		<span
 			className={cn(
 				'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium tabular-nums',
-				isPositive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+				isPositive
+					? 'bg-(--color-success-bg) text-(--color-success)'
+					: 'bg-(--color-error-bg) text-(--color-error)'
 			)}
 		>
 			{isPositive ? '+' : ''}

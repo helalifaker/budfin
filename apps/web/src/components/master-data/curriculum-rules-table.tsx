@@ -40,9 +40,9 @@ const BAND_STYLES: Record<string, string> = {
 
 const LINE_TYPE_STYLES: Record<string, string> = {
 	STRUCTURAL: 'bg-(--accent-50) text-(--accent-700)',
-	HOST_COUNTRY: 'bg-amber-50 text-amber-700',
+	HOST_COUNTRY: 'bg-(--color-warning-bg) text-(--color-warning)',
 	AUTONOMY: 'bg-purple-50 text-purple-700',
-	SPECIALTY: 'bg-emerald-50 text-emerald-700',
+	SPECIALTY: 'bg-(--color-success-bg) text-(--color-success)',
 };
 
 const BAND_ORDER = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'];

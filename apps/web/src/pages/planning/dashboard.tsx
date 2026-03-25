@@ -188,18 +188,18 @@ export function DashboardPage() {
 														<td className="px-3 py-2 font-medium text-(--text-primary)">
 															{MONTH_LABELS[row.month - 1]}
 														</td>
-														<td className="px-3 py-2 text-right tabular-nums text-(--text-primary)">
+														<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 															{formatMoney(row.revenue)}
 														</td>
-														<td className="px-3 py-2 text-right tabular-nums text-(--text-primary)">
+														<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 															{formatMoney(row.staffCosts)}
 														</td>
-														<td className="px-3 py-2 text-right tabular-nums text-(--text-primary)">
+														<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 															{formatMoney(row.opex)}
 														</td>
 														<td
 															className={cn(
-																'px-3 py-2 text-right tabular-nums',
+																'px-3 py-2 text-right font-mono tabular-nums',
 																np >= 0 ? 'text-(--color-success)' : 'text-(--color-error)'
 															)}
 														>

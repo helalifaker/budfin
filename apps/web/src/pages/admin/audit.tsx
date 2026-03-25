@@ -131,9 +131,9 @@ function buildCalcQueryString(page: number, pageSize: number, filters: CalcFilte
 
 function StatusBadge({ status }: { status: string }) {
 	const colors: Record<string, string> = {
-		COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-		FAILED: 'bg-red-50 text-red-700 border-red-200',
-		STARTED: 'bg-amber-50 text-amber-700 border-amber-200',
+		COMPLETED: 'bg-(--color-success-bg) text-(--color-success) border-(--color-success)/20',
+		FAILED: 'bg-(--color-error-bg) text-(--color-error) border-(--color-error)/20',
+		STARTED: 'bg-(--color-warning-bg) text-(--color-warning) border-(--color-warning)/20',
 	};
 
 	return (

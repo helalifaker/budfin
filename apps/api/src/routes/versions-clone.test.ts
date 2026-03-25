@@ -123,6 +123,11 @@ vi.mock('../lib/prisma.js', () => {
 		monthlyOpEx: {
 			createMany: vi.fn().mockResolvedValue({ count: 0 }),
 		},
+		// Scenario parameters
+		scenarioParameters: {
+			findMany: vi.fn().mockResolvedValue([]),
+			createMany: vi.fn().mockResolvedValue({ count: 3 }),
+		},
 		$queryRaw: vi.fn().mockResolvedValue([]),
 		$transaction: vi.fn().mockImplementation((fn: (tx: Record<string, unknown>) => unknown) =>
 			fn({
@@ -146,6 +151,7 @@ vi.mock('../lib/prisma.js', () => {
 				demandOverride: mockPrisma.demandOverride,
 				versionOpExLineItem: mockPrisma.versionOpExLineItem,
 				monthlyOpEx: mockPrisma.monthlyOpEx,
+				scenarioParameters: mockPrisma.scenarioParameters,
 				$queryRaw: mockPrisma.$queryRaw,
 			})
 		),
@@ -218,6 +224,10 @@ const mockPrisma = prisma as unknown as {
 		createMany: ReturnType<typeof vi.fn>;
 	};
 	demandOverride: {
+		findMany: ReturnType<typeof vi.fn>;
+		createMany: ReturnType<typeof vi.fn>;
+	};
+	scenarioParameters: {
 		findMany: ReturnType<typeof vi.fn>;
 		createMany: ReturnType<typeof vi.fn>;
 	};
@@ -1231,5 +1241,114 @@ describe('POST /api/v1/versions/:id/clone', () => {
 		expect(res.statusCode).toBe(201);
 		// Verify $queryRaw was called (for INSERT...SELECT employee clone)
 		expect(mockPrisma.$queryRaw).toHaveBeenCalled();
+	});
+
+	it('clones scenario parameters with their values', async () => {
+		const source = makeVersion({ id: 1 });
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Scenario Clone',
+			sourceVersionId: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		});
+		const scenarioParams = [
+			{
+				id: 10,
+				versionId: 1,
+				scenarioName: 'Base',
+				newEnrollmentFactor: '1.0000',
+				retentionAdjustment: '0.0000',
+				feeCollectionRate: '0.9500',
+				scholarshipAllocation: '0.0500',
+				attritionRate: '0.0300',
+				orsHours: '0.0000',
+			},
+			{
+				id: 11,
+				versionId: 1,
+				scenarioName: 'Optimistic',
+				newEnrollmentFactor: '1.1000',
+				retentionAdjustment: '0.0200',
+				feeCollectionRate: '0.9800',
+				scholarshipAllocation: '0.0300',
+				attritionRate: '0.0200',
+				orsHours: '0.0000',
+			},
+			{
+				id: 12,
+				versionId: 1,
+				scenarioName: 'Pessimistic',
+				newEnrollmentFactor: '0.9000',
+				retentionAdjustment: '-0.0200',
+				feeCollectionRate: '0.9000',
+				scholarshipAllocation: '0.0800',
+				attritionRate: '0.0500',
+				orsHours: '0.0000',
+			},
+		];
+
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
+		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
+		mockPrisma.scenarioParameters.findMany.mockResolvedValue(scenarioParams);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions/1/clone',
+			headers: authHeader(token),
+			payload: { name: 'Scenario Clone' },
+		});
+
+		expect(res.statusCode).toBe(201);
+		expect(mockPrisma.scenarioParameters.createMany).toHaveBeenCalledWith({
+			data: expect.arrayContaining([
+				expect.objectContaining({
+					versionId: 2,
+					scenarioName: 'Base',
+					feeCollectionRate: '0.9500',
+				}),
+				expect.objectContaining({
+					versionId: 2,
+					scenarioName: 'Optimistic',
+					newEnrollmentFactor: '1.1000',
+				}),
+				expect.objectContaining({
+					versionId: 2,
+					scenarioName: 'Pessimistic',
+					attritionRate: '0.0500',
+				}),
+			]),
+		});
+	});
+
+	it('creates default scenario parameters when source has none', async () => {
+		const source = makeVersion({ id: 1 });
+		const cloned = makeVersion({
+			id: 2,
+			name: 'Default Scenario Clone',
+			sourceVersionId: 1,
+			createdBy: { email: 'admin@budfin.app' },
+		});
+
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(source);
+		mockPrisma.budgetVersion.create.mockResolvedValue(cloned);
+		mockPrisma.scenarioParameters.findMany.mockResolvedValue([]);
+
+		const token = await makeToken({ role: 'Admin' });
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/versions/1/clone',
+			headers: authHeader(token),
+			payload: { name: 'Default Scenario Clone' },
+		});
+
+		expect(res.statusCode).toBe(201);
+		expect(mockPrisma.scenarioParameters.createMany).toHaveBeenCalledWith({
+			data: [
+				{ versionId: 2, scenarioName: 'Base' },
+				{ versionId: 2, scenarioName: 'Optimistic' },
+				{ versionId: 2, scenarioName: 'Pessimistic' },
+			],
+		});
 	});
 });

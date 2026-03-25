@@ -8,6 +8,7 @@ import {
 	DEFAULT_VERSION_REVENUE_SETTINGS,
 	formatRevenueSettingsRecord,
 } from '../services/revenue-config.js';
+import { SCENARIO_NAMES } from './scenarios/parameters.js';
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -870,6 +871,13 @@ export async function versionRoutes(app: FastifyInstance) {
 						actorUserId: request.user.id,
 					});
 
+					await (tx as typeof prisma).scenarioParameters.createMany({
+						data: SCENARIO_NAMES.map((name) => ({
+							versionId: created.id,
+							scenarioName: name,
+						})),
+					});
+
 					// Clone data from source version if specified
 					if (body.sourceVersionId) {
 						const summaries = await (tx as typeof prisma).monthlyBudgetSummary.findMany({
@@ -1347,6 +1355,32 @@ export async function versionRoutes(app: FastifyInstance) {
 								});
 							}
 						}
+					}
+
+					// ── Scenario parameters clone ────────────────────────────
+					const sourceScenarioParams = await (tx as typeof prisma).scenarioParameters.findMany({
+						where: { versionId: id },
+					});
+					if (sourceScenarioParams.length > 0) {
+						await (tx as typeof prisma).scenarioParameters.createMany({
+							data: sourceScenarioParams.map((sp) => ({
+								versionId: newVersion.id,
+								scenarioName: sp.scenarioName,
+								newEnrollmentFactor: sp.newEnrollmentFactor,
+								retentionAdjustment: sp.retentionAdjustment,
+								feeCollectionRate: sp.feeCollectionRate,
+								scholarshipAllocation: sp.scholarshipAllocation,
+								attritionRate: sp.attritionRate,
+								orsHours: sp.orsHours,
+							})),
+						});
+					} else {
+						await (tx as typeof prisma).scenarioParameters.createMany({
+							data: SCENARIO_NAMES.map((name) => ({
+								versionId: newVersion.id,
+								scenarioName: name,
+							})),
+						});
 					}
 
 					await (tx as typeof prisma).auditEntry.create({

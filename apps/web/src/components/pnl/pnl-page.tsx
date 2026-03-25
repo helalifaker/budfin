@@ -76,16 +76,16 @@ function PnlKpiStrip({ kpis, isLoading }: { kpis?: PnlKpis | undefined; isLoadin
 
 	const marginPct = new Decimal(kpis.ebitdaMarginPct || '0');
 	const marginColor = marginPct.gte(15)
-		? 'text-emerald-600'
+		? 'text-(--color-success)'
 		: marginPct.gte(5)
-			? 'text-amber-600'
-			: 'text-red-600';
+			? 'text-(--color-warning)'
+			: 'text-(--color-error)';
 
 	const ebitda = new Decimal(kpis.ebitda || '0');
-	const ebitdaColor = ebitda.gte(0) ? 'text-emerald-600' : 'text-red-600';
+	const ebitdaColor = ebitda.gte(0) ? 'text-(--color-success)' : 'text-(--color-error)';
 
 	const netProfit = new Decimal(kpis.netProfit || '0');
-	const profitColor = netProfit.gte(0) ? 'text-emerald-600' : 'text-red-600';
+	const profitColor = netProfit.gte(0) ? 'text-(--color-success)' : 'text-(--color-error)';
 
 	return (
 		<div className="flex gap-4 px-6 py-3">
@@ -178,7 +178,7 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 						<div
 							className={cn(
 								'text-right tabular-nums text-sm',
-								new Decimal(val).isNeg() && 'text-red-600'
+								new Decimal(val).isNeg() && 'text-(--color-error)'
 							)}
 						>
 							{formatPnlAmount(val)}
@@ -199,7 +199,7 @@ function PnlGrid({ lines, isLoading }: { lines: PnlLineItem[]; isLoading: boolea
 					<div
 						className={cn(
 							'text-right tabular-nums text-sm font-medium',
-							new Decimal(row.original.annualTotal).isNeg() && 'text-red-600'
+							new Decimal(row.original.annualTotal).isNeg() && 'text-(--color-error)'
 						)}
 					>
 						{formatPnlAmount(row.original.annualTotal)}
@@ -304,7 +304,7 @@ function StaleBanner({
 	if (!hasPnlStale && !hasUpstreamStale) return null;
 
 	return (
-		<div className="mx-6 mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+		<div className="mx-6 mt-3 rounded-md border border-(--color-warning)/20 bg-(--color-warning-bg) px-4 py-2 text-sm text-(--color-warning)">
 			{hasUpstreamStale ? (
 				<>
 					<span className="font-medium">Prerequisites outdated.</span> Recalculate{' '}

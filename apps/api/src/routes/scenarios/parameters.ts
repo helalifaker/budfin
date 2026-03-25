@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { Decimal } from 'decimal.js';
 import { prisma } from '../../lib/prisma.js';
@@ -27,7 +28,7 @@ const updateScenarioBody = z.object({
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const SCENARIO_NAMES = ['Base', 'Optimistic', 'Pessimistic'] as const;
+export const SCENARIO_NAMES = ['Base', 'Optimistic', 'Pessimistic'] as const;
 const SCENARIO_STALE_MODULES = ['REVENUE', 'STAFFING', 'OPEX', 'PNL'] as const;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ export async function scenarioParameterRoutes(app: FastifyInstance) {
 		handler: async (request, reply) => {
 			const { versionId, scenarioName } = request.params as z.infer<typeof scenarioNameParams>;
 			const body = request.body as z.infer<typeof updateScenarioBody>;
+			const user = request.user;
 
 			const version = await prisma.budgetVersion.findUnique({
 				where: { id: versionId },
@@ -147,6 +149,13 @@ export async function scenarioParameterRoutes(app: FastifyInstance) {
 			}
 
 			const updated = await prisma.$transaction(async (tx) => {
+				// Fetch previous values for audit trail
+				const previous = await tx.scenarioParameters.findUnique({
+					where: {
+						versionId_scenarioName: { versionId, scenarioName },
+					},
+				});
+
 				const row = await tx.scenarioParameters.upsert({
 					where: {
 						versionId_scenarioName: { versionId, scenarioName },
@@ -156,6 +165,22 @@ export async function scenarioParameterRoutes(app: FastifyInstance) {
 						versionId,
 						scenarioName,
 						...updateData,
+					},
+				});
+
+				// Audit trail for scenario parameter mutation
+				await tx.auditEntry.create({
+					data: {
+						userId: user.id,
+						userEmail: user.email,
+						operation: previous ? 'UPDATE' : 'CREATE',
+						tableName: 'scenario_parameters',
+						recordId: row.id,
+						ipAddress: request.ip,
+						oldValues: previous
+							? (formatParams(previous) as unknown as Prisma.InputJsonValue)
+							: Prisma.JsonNull,
+						newValues: formatParams(row) as unknown as Prisma.InputJsonValue,
 					},
 				});
 
