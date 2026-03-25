@@ -41,7 +41,7 @@ const BAND_STYLES: Record<string, string> = {
 const LINE_TYPE_STYLES: Record<string, string> = {
 	STRUCTURAL: 'bg-(--accent-50) text-(--accent-700)',
 	HOST_COUNTRY: 'bg-(--color-warning-bg) text-(--color-warning)',
-	AUTONOMY: 'bg-purple-50 text-purple-700',
+	AUTONOMY: 'bg-(--badge-profit-center-bg) text-(--badge-profit-center)',
 	SPECIALTY: 'bg-(--color-success-bg) text-(--color-success)',
 };
 

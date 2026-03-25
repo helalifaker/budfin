@@ -138,7 +138,7 @@ function StatusBadge({ status }: { status: string }) {
 
 	return (
 		<span
-			className={`inline-flex items-center rounded-md border px-2 py-0.5 text-(--text-xs) font-medium ${colors[status] ?? 'bg-gray-50 text-gray-700 border-gray-200'}`}
+			className={`inline-flex items-center rounded-md border px-2 py-0.5 text-(--text-xs) font-medium ${colors[status] ?? 'bg-(--workspace-bg-subtle) text-(--text-secondary) border-(--workspace-border)'}`}
 		>
 			{status}
 		</span>

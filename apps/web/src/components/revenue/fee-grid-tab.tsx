@@ -149,7 +149,7 @@ function TuitionRow({
 		<tr
 			className={cn(
 				'border-b border-(--grid-compact-border) last:border-0',
-				'transition-colors duration-(--duration-fast) hover:bg-gray-50/60',
+				'transition-colors duration-(--duration-fast) hover:bg-(--workspace-bg-subtle)/60',
 				row.hasHeterogeneousValues && 'bg-(--color-warning-bg)/40'
 			)}
 		>
@@ -228,7 +228,7 @@ function PerStudentFeeBlock({
 						return (
 							<tr
 								key={field}
-								className="border-b border-(--grid-compact-border) last:border-0 hover:bg-gray-50/60"
+								className="border-b border-(--grid-compact-border) last:border-0 hover:bg-(--workspace-bg-subtle)/60"
 							>
 								<td className={LABEL_CELL_CLASS}>{PER_STUDENT_FEE_LABELS[field]}</td>
 								{isReadOnly ? (
@@ -305,7 +305,7 @@ function FlatDiscountBlock({
 						</tr>
 					</thead>
 					<tbody>
-						<tr className="border-b border-(--grid-compact-border) hover:bg-gray-50/60">
+						<tr className="border-b border-(--grid-compact-border) hover:bg-(--workspace-bg-subtle)/60">
 							<td className={LABEL_CELL_CLASS}>Discount Rate</td>
 							{isReadOnly ? (
 								<td className={CELL_CLASS}>{displayPct}%</td>
@@ -323,7 +323,7 @@ function FlatDiscountBlock({
 								</td>
 							)}
 						</tr>
-						<tr className="hover:bg-gray-50/60">
+						<tr className="hover:bg-(--workspace-bg-subtle)/60">
 							<td className={LABEL_CELL_CLASS}>Billed Rate</td>
 							<td className={cn(CELL_CLASS, 'text-(--text-secondary)')}>{keptPct}%</td>
 						</tr>

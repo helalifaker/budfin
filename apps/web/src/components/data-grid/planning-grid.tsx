@@ -67,6 +67,7 @@ const BAND_COLOR_CLASS_MAP: Record<string, string> = {
 	'var(--color-info)': 'text-(--color-info)',
 	'var(--color-success)': 'text-(--color-success)',
 	'var(--color-warning)': 'text-(--color-warning)',
+	'var(--color-error)': 'text-(--color-error)',
 	'var(--accent-600)': 'text-(--accent-600)',
 };
 
@@ -78,6 +79,7 @@ const BAND_BG_CLASS_MAP: Record<string, string> = {
 	'var(--color-info-bg)': 'bg-(--color-info-bg)',
 	'var(--color-success-bg)': 'bg-(--color-success-bg)',
 	'var(--color-warning-bg)': 'bg-(--color-warning-bg)',
+	'var(--color-error-bg)': 'bg-(--color-error-bg)',
 	'var(--accent-50)': 'bg-(--accent-50)',
 };
 
@@ -89,6 +91,7 @@ const BAND_BORDER_CLASS_MAP: Record<string, string> = {
 	'var(--color-info)': 'border-l-(--color-info)',
 	'var(--color-success)': 'border-l-(--color-success)',
 	'var(--color-warning)': 'border-l-(--color-warning)',
+	'var(--color-error)': 'border-l-(--color-error)',
 	'var(--accent-600)': 'border-l-(--accent-600)',
 };
 
@@ -440,7 +443,10 @@ export function PlanningGrid<T>({
 					numeric && 'text-right font-mono tabular-nums text-(--text-primary)',
 					pinned && 'sticky left-0 z-1',
 					pinned && pinnedBackgroundClass,
-					pinned && (isCompact ? 'group-hover:bg-gray-50/60' : 'group-hover:bg-(--grid-row-hover)'),
+					pinned &&
+						(isCompact
+							? 'group-hover:bg-(--workspace-bg-subtle)/60'
+							: 'group-hover:bg-(--grid-row-hover)'),
 					pinned && isRowSelected && 'group-hover:bg-(--grid-selected-row)',
 					lastPin && 'shadow-(--grid-pinned-shadow)',
 					isActive &&
@@ -475,7 +481,7 @@ export function PlanningGrid<T>({
 					'group border-b border-(--workspace-border) last:border-0',
 					'transition-colors duration-(--duration-fast)',
 					!isCompact && rowIndex % 2 === 1 && 'bg-(--grid-row-stripe)',
-					isCompact ? 'hover:bg-gray-50/60' : 'hover:bg-(--grid-row-hover)',
+					isCompact ? 'hover:bg-(--workspace-bg-subtle)/60' : 'hover:bg-(--grid-row-hover)',
 					isActiveRow && 'bg-(--grid-active-row)',
 					isSelected && 'border-l-[3px] border-l-(--accent-500) bg-(--grid-selected-row)',
 					isFirstInBand && bandGrouping && 'border-t-2 border-t-(--workspace-border-strong)',
