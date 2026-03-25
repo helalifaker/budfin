@@ -176,3 +176,5 @@ export type {
 	ScenarioComparisonRow,
 	ScenarioComparisonResponse,
 } from './scenario.js';
+
+export type { CommentResponse, CommentCountResponse } from './comment.js';

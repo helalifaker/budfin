@@ -28,6 +28,7 @@ import { pnlRoutes } from './routes/pnl/index.js';
 import { pnlCalculateRoutes } from './routes/pnl/calculate.js';
 import { scenarioRoutes } from './routes/scenarios/index.js';
 import { dashboardRoutes } from './routes/dashboard.js';
+import { commentRoutes } from './routes/comments.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -101,6 +102,9 @@ export async function buildApp() {
 	});
 	await app.register(dashboardRoutes, {
 		prefix: '/api/v1/versions/:versionId',
+	});
+	await app.register(commentRoutes, {
+		prefix: '/api/v1/versions/:versionId/comments',
 	});
 
 	return app;
