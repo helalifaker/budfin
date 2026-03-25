@@ -30,6 +30,7 @@ import { scenarioRoutes } from './routes/scenarios/index.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 import { commentRoutes } from './routes/comments.js';
 import { exportRoutes } from './routes/export.js';
+import { trendsRoutes } from './routes/trends.js';
 import { startExportWorker, stopExportWorker } from './services/export/export-worker.js';
 
 export async function buildApp() {
@@ -109,6 +110,7 @@ export async function buildApp() {
 		prefix: '/api/v1/versions/:versionId/comments',
 	});
 	await app.register(exportRoutes, { prefix: '/api/v1/export' });
+	await app.register(trendsRoutes, { prefix: '/api/v1' });
 
 	return app;
 }
