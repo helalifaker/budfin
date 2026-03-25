@@ -110,6 +110,10 @@ model User {
   updatedDemandOverrides  DemandOverride[]           @relation("DemandOverrideUpdater")
   updatedAssignments      StaffingAssignment[]       @relation("AssignmentUpdater")
 
+  // Comments & Annotations
+  commentsAuthored Comment[] @relation("CommentAuthor")
+  commentsResolved Comment[] @relation("CommentResolver")
+
   @@map("users")
 }
 
@@ -430,6 +434,9 @@ model BudgetVersion {
 
   // Scenario Modeling (Epic 6)
   scenarioParameters        ScenarioParameters[]
+
+  // Comments & Annotations
+  comments Comment[]
 
   @@unique([fiscalYear, name], map: "uq_budget_version_name_fy")
   @@index([fiscalYear], map: "idx_budget_versions_fiscal_year")
@@ -1336,4 +1343,30 @@ model ScenarioParameters {
   @@unique([versionId, scenarioName], map: "uq_scenario_params")
   @@index([versionId], map: "idx_scenario_params_version")
   @@map("scenario_parameters")
+}
+
+// ── Comments & Annotations ──────────────────────────────────────────────────
+
+model Comment {
+  id           Int       @id @default(autoincrement())
+  versionId    Int       @map("version_id")
+  targetType   String    @map("target_type") @db.VarChar(30)
+  targetId     String    @map("target_id") @db.VarChar(100)
+  parentId     Int?      @map("parent_id")
+  authorId     Int       @map("author_id")
+  body         String    @db.Text
+  resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz
+  resolvedById Int?      @map("resolved_by_id")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  version    BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  parent     Comment?      @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[]     @relation("CommentThread")
+  author     User          @relation("CommentAuthor", fields: [authorId], references: [id])
+  resolvedBy User?         @relation("CommentResolver", fields: [resolvedById], references: [id])
+
+  @@index([versionId, targetType, targetId], map: "idx_comment_target")
+  @@index([parentId], map: "idx_comment_parent")
+  @@map("comments")
 }
