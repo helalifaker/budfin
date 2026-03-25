@@ -29,6 +29,7 @@ function getSnapshot(): ThemePreference {
 // ── Theme application ───────────────────────────────────────────────────────
 
 function getSystemDark(): boolean {
+	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
 	return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
@@ -44,19 +45,25 @@ function applyTheme(preference: ThemePreference) {
  * Should be called once on app mount (e.g., in RootLayout).
  */
 export function initTheme() {
-	const stored = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-	if (stored && ['light', 'dark', 'system'].includes(stored)) {
-		currentPreference = stored;
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
+		if (stored && ['light', 'dark', 'system'].includes(stored)) {
+			currentPreference = stored;
+		}
+	} catch {
+		// localStorage may be unavailable in some environments (e.g., tests)
 	}
 	applyTheme(currentPreference);
 
 	// Listen for system theme changes
-	const mql = window.matchMedia('(prefers-color-scheme: dark)');
-	mql.addEventListener('change', () => {
-		if (currentPreference === 'system') {
-			applyTheme('system');
-		}
-	});
+	if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+		const mql = window.matchMedia('(prefers-color-scheme: dark)');
+		mql.addEventListener('change', () => {
+			if (currentPreference === 'system') {
+				applyTheme('system');
+			}
+		});
+	}
 }
 
 /**
