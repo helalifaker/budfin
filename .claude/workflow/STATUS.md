@@ -1,8 +1,8 @@
 # BudFin — Current Status
 
-**Phase**: 4 — SPECIFY
-**Current Epic**: Epic 5 — P&L Reporting (#11) *(next up)*
-**Last updated**: 2026-03-20
+**Phase**: COMPLETE — All epics implemented
+**Current Epic**: None — all 20 epics done
+**Last updated**: 2026-03-25
 
 ## Phase History
 
@@ -71,6 +71,10 @@
 | 7 — REVIEW (Epic 19) | ✅ Complete | 2026-03-17 |
 | 6 — IMPLEMENT (Epic 20) | ✅ Complete | 2026-03-19 |
 | 7 — REVIEW (Epic 20) | ✅ Complete | 2026-03-20 |
+| 4-6 — SPECIFY/IMPLEMENT (Epic 5) | ✅ Complete | 2026-03-24 |
+| 4-6 — SPECIFY/IMPLEMENT (Epic 6) | ✅ Complete | 2026-03-25 |
+| 4-6 — SPECIFY/IMPLEMENT (Epic 8) | ✅ Complete | 2026-03-25 |
+| 4-6 — SPECIFY/IMPLEMENT (Epic 9) | ✅ Complete | 2026-03-25 |
 
 ## Feature Progress
 
@@ -80,11 +84,11 @@
 | 2 | Revenue | DONE | All 12 stories complete (12/12), merged PR #113 — 2026-03-07 |
 | 3 | Staffing (DHG) | DONE | All 18 stories complete (18/18), merged PR #156 — 2026-03-09 |
 | 4 | Staff Costs | DONE | All 13 stories complete (13/13) — 2026-03-09 |
-| 5 | P&L Reporting | 2 | Epic Created (#11) |
-| 6 | Scenario Modeling | 2 | Epic Created (#12) |
+| 5 | P&L Reporting | DONE | Core 5/9 stories implemented (engine, routes, frontend) — 2026-03-24; export service deferred |
+| 6 | Scenario Modeling | DONE | All 3 stories complete — 2026-03-25 |
 | 7 | Master Data Management | DONE | All 12 stories complete (12/12), merged PR #49 — 2026-03-06 |
-| 8 | Audit Trail | 2 | Epic Created (#9) |
-| 9 | Dashboard | 2 | Epic Created (#13) |
+| 8 | Audit Trail | DONE | Calculation history endpoint + tabbed UI — 2026-03-25 |
+| 9 | Dashboard | DONE | Live dashboard with KPIs, monthly trend, stale warnings — 2026-03-25 |
 | 10 | Version Management | DONE | All 13 stories complete (13/13), merged PR #63 + remediation PR #66 — 2026-03-06 |
 | 11 | Authentication & RBAC | DONE | All 10 stories complete (10/10) + remediation PR #98 -- 2026-03-06 |
 | 12 | Data Migration | DONE | All 11 stories complete (11/11), PR #183 — 2026-03-09 |
