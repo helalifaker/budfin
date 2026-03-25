@@ -5,6 +5,7 @@ import {
 	Briefcase,
 	BarChart2,
 	GitBranch,
+	TrendingUp,
 	Layers,
 	Calendar,
 	Landmark,
@@ -52,6 +53,7 @@ const navGroups: NavGroup[] = [
 			{ to: '/planning/opex', label: 'Operating Expenses', icon: Receipt },
 			{ to: '/planning/pnl', label: 'P&L', icon: BarChart2 },
 			{ to: '/planning/scenarios', label: 'Scenarios', icon: GitBranch },
+			{ to: '/planning/trends', label: 'Trends', icon: TrendingUp },
 		],
 	},
 	{

@@ -22,6 +22,7 @@ import { StaffingPage } from './pages/planning/staffing';
 import { OpExPage } from './pages/planning/opex';
 import { PnlPage } from './pages/planning/pnl';
 import { ScenarioPage } from './pages/planning/scenarios';
+import { TrendsPage } from './pages/planning/trends';
 
 export const routes: RouteObject[] = [
 	{ path: '/login', element: <LoginPage /> },
@@ -66,6 +67,10 @@ export const routes: RouteObject[] = [
 							{
 								path: '/planning/scenarios',
 								element: <ScenarioPage />,
+							},
+							{
+								path: '/planning/trends',
+								element: <TrendsPage />,
 							},
 						],
 					},
