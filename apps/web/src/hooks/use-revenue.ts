@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
 import { toast } from '../components/ui/toast-state';
+import { useWorkspaceContextStore } from '../stores/workspace-context-store';
 import type {
 	FeeGridEntry,
 	OtherRevenueItem,
@@ -129,7 +130,10 @@ interface CalculateRevenueResponse {
 
 export function useCalculateRevenue(versionId: number | null) {
 	const queryClient = useQueryClient();
-	return useMutation({
+	const staleModules = useWorkspaceContextStore((s) => s.versionStaleModules);
+	const isUpstreamStale = staleModules.includes('ENROLLMENT');
+
+	const mutation = useMutation({
 		mutationFn: () =>
 			apiClient<CalculateRevenueResponse>(`/versions/${versionId}/calculate/revenue`, {
 				method: 'POST',
@@ -141,6 +145,8 @@ export function useCalculateRevenue(versionId: number | null) {
 		onError: (err) =>
 			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});
+
+	return { ...mutation, isUpstreamStale };
 }
 
 // ── Revenue readiness ─────────────────────────────────────────────────────────

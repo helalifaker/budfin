@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
 import { toast } from '../components/ui/toast-state';
+import { useWorkspaceContextStore } from '../stores/workspace-context-store';
 import type {
 	OpExLineItemsResponse,
 	OpExBulkUpdatePayload,
@@ -63,8 +64,10 @@ export function useBulkUpdateOpEx(versionId: number | null) {
 
 export function useCalculateOpEx(versionId: number | null) {
 	const queryClient = useQueryClient();
+	const staleModules = useWorkspaceContextStore((s) => s.versionStaleModules);
+	const isUpstreamStale = staleModules.includes('REVENUE');
 
-	return useMutation({
+	const mutation = useMutation({
 		mutationFn: () =>
 			apiClient<OpExCalculateResponse>(`/versions/${versionId}/calculate/opex`, { method: 'POST' }),
 		onSuccess: (data) => {
@@ -78,6 +81,8 @@ export function useCalculateOpEx(versionId: number | null) {
 			toast.error('Failed to calculate operating expenses');
 		},
 	});
+
+	return { ...mutation, isUpstreamStale };
 }
 
 export function useDeleteOpExLineItem(versionId: number | null) {

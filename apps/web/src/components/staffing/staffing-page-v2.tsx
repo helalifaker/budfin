@@ -49,7 +49,7 @@ export function StaffingPageV2() {
 	const [activeTab, setActiveTab] = useState<WorkspaceTab>('demand');
 
 	const { data: versionsData } = useVersions(fiscalYear);
-	const calculateMutation = useCalculateStaffing(versionId);
+	const { isUpstreamStale, ...calculateMutation } = useCalculateStaffing(versionId);
 
 	// Data hooks
 	const { data: teachingReqData, isError: teachingReqError } = useTeachingRequirements(versionId);
@@ -316,6 +316,7 @@ export function StaffingPageV2() {
 								isPending={calculateMutation.isPending}
 								isSuccess={calculateMutation.isSuccess}
 								isError={calculateMutation.isError}
+								disabled={isUpstreamStale}
 							/>
 						)}
 					</div>

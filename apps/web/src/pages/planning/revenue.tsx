@@ -90,7 +90,7 @@ export function RevenuePage() {
 	const { data: readiness } = useRevenueReadiness(versionId);
 	const { data: headcountData } = useHeadcount(versionId, period === 'both' ? undefined : period);
 	const { data: gradeLevelsData } = useGradeLevels();
-	const calculateMutation = useCalculateRevenue(versionId);
+	const { isUpstreamStale, ...calculateMutation } = useCalculateRevenue(versionId);
 
 	useEffect(() => {
 		setActivePage('revenue');
@@ -289,6 +289,7 @@ export function RevenuePage() {
 								isPending={calculateMutation.isPending}
 								isSuccess={calculateMutation.isSuccess}
 								isError={calculateMutation.isError}
+								disabled={isUpstreamStale}
 							/>
 						)}
 					</div>

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
 import { toast } from '../components/ui/toast-state';
+import { useWorkspaceContextStore } from '../stores/workspace-context-store';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -274,7 +275,10 @@ export function useCategoryCosts(versionId: number | null) {
 
 export function useCalculateStaffing(versionId: number | null) {
 	const queryClient = useQueryClient();
-	return useMutation({
+	const staleModules = useWorkspaceContextStore((s) => s.versionStaleModules);
+	const isUpstreamStale = staleModules.includes('REVENUE');
+
+	const mutation = useMutation({
 		mutationFn: () =>
 			apiClient<CalculateStaffingResponse>(`/versions/${versionId}/calculate/staffing`, {
 				method: 'POST',
@@ -289,6 +293,8 @@ export function useCalculateStaffing(versionId: number | null) {
 		onError: (err) =>
 			toast.error(err instanceof Error ? err.message : 'Staffing calculation failed'),
 	});
+
+	return { ...mutation, isUpstreamStale };
 }
 
 // ── Import Hook ─────────────────────────────────────────────────────────────

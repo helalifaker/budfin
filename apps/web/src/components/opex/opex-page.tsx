@@ -47,7 +47,7 @@ export function OpExPage() {
 
 	const { data: versionsData } = useVersions(fiscalYear);
 	const { data: lineItemsResponse, isLoading } = useOpExLineItems(versionId);
-	const calculateMutation = useCalculateOpEx(versionId);
+	const { isUpstreamStale, ...calculateMutation } = useCalculateOpEx(versionId);
 	const updateMonthlyMutation = useUpdateOpExMonthly(versionId);
 	const bulkUpdateMutation = useBulkUpdateOpEx(versionId);
 
@@ -237,6 +237,7 @@ export function OpExPage() {
 								isPending={calculateMutation.isPending}
 								isSuccess={calculateMutation.isSuccess}
 								isError={calculateMutation.isError}
+								disabled={isUpstreamStale}
 							/>
 						)}
 					</div>
