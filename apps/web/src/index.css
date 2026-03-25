@@ -308,6 +308,110 @@
 	--stagger-delay: 50ms;
 }
 
+/* ── Dark Theme ── */
+.dark {
+	/* ── Workspace (Dark) ── */
+	--workspace-bg: #0f172a;
+	--workspace-bg-subtle: #1e293b;
+	--workspace-bg-muted: #334155;
+	--workspace-bg-card: #1e293b;
+	--workspace-border: #334155;
+	--workspace-border-strong: #475569;
+
+	/* ── Warm Off-White → Dark equivalents ── */
+	--workspace-bg-warm: #0f172a;
+	--workspace-bg-warm-card: #1e293b;
+
+	/* ── Text (inverted) ── */
+	--text-primary: #f1f5f9;
+	--text-secondary: #94a3b8;
+	--text-muted: #64748b;
+
+	/* ── Semantic Colors (adjusted for dark) ── */
+	--color-success-bg: #052e16;
+	--color-warning-bg: #451a03;
+	--color-error-bg: #450a0a;
+	--color-info-bg: #172554;
+
+	/* ── Editable Cell Colors (dark) ── */
+	--cell-editable-bg: #1e293b;
+	--cell-readonly-bg: #0f172a;
+	--cell-override-bg: #1e1b4b;
+
+	/* ── Grid Tokens (dark) ── */
+	--grid-header-bg: #1e293b;
+	--grid-header-border: #334155;
+	--grid-row-stripe: #0f172a;
+	--grid-row-hover: color-mix(in srgb, var(--accent-900) 40%, #1e293b);
+	--grid-active-row: color-mix(in srgb, var(--accent-800) 30%, #1e293b);
+	--grid-footer-bg: #0f172a;
+	--grid-compact-border: #334155;
+	--grid-compact-group-bg: #0f172a;
+	--grid-compact-group-border: #334155;
+	--grid-subheader-bg: #1e293b;
+	--grid-subheader-text: #94a3b8;
+	--grid-grandtotal-bg: #0f172a;
+
+	/* ── Shadows (darker) ── */
+	--shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+	--shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+	--shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.5), 0 4px 8px -4px rgba(0, 0, 0, 0.3);
+	--shadow-card:
+		0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05);
+	--shadow-card-hover:
+		0 4px 16px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -2px rgba(0, 0, 0, 0.3),
+		0 0 0 1px rgba(255, 255, 255, 0.06);
+
+	/* ── Glass / Frosted Effects (dark) ── */
+	--glass-bg: rgba(15, 23, 42, 0.85);
+	--glass-border: rgba(51, 65, 85, 0.6);
+	--glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+	--glass-bg-strong: rgba(15, 23, 42, 0.92);
+	--glass-bg-subtle: rgba(30, 41, 59, 0.6);
+
+	/* ── Selection Tokens (dark) ── */
+	--grid-selected-row: color-mix(in srgb, var(--accent-800) 40%, #1e293b);
+	--grid-selected-row-border: var(--accent-600);
+	--selected-row-accent: var(--accent-900);
+
+	/* ── Status Badge Backgrounds (dark) ── */
+	--status-draft-bg: color-mix(in srgb, var(--status-draft) 25%, #1e293b);
+	--status-published-bg: color-mix(in srgb, var(--status-published) 25%, #1e293b);
+	--status-locked-bg: color-mix(in srgb, var(--status-locked) 25%, #1e293b);
+	--status-archived-bg: color-mix(in srgb, var(--status-archived) 25%, #1e293b);
+
+	/* ── Badge backgrounds (dark) ── */
+	--badge-maternelle-bg: color-mix(in srgb, var(--badge-maternelle) 20%, #1e293b);
+	--badge-elementaire-bg: color-mix(in srgb, var(--badge-elementaire) 20%, #1e293b);
+	--badge-college-bg: color-mix(in srgb, var(--badge-college) 20%, #1e293b);
+	--badge-lycee-bg: color-mix(in srgb, var(--badge-lycee) 20%, #1e293b);
+	--badge-non-academic-bg: var(--workspace-bg-muted);
+	--badge-revenue-bg: color-mix(in srgb, var(--accent-700) 20%, #1e293b);
+	--badge-expense-bg: color-mix(in srgb, #b91c1c 20%, #1e293b);
+	--badge-asset-bg: color-mix(in srgb, #15803d 20%, #1e293b);
+	--badge-liability-bg: color-mix(in srgb, #b45309 20%, #1e293b);
+	--badge-profit-center-bg: color-mix(in srgb, #7e22ce 20%, #1e293b);
+	--badge-cost-center-bg: color-mix(in srgb, #c2410c 20%, #1e293b);
+	--badge-admin-bg: color-mix(in srgb, #b91c1c 20%, #1e293b);
+	--badge-editor-bg: color-mix(in srgb, #15803d 20%, #1e293b);
+
+	/* ── Version Type (dark) ── */
+	--version-budget-bg: color-mix(in srgb, var(--version-budget) 20%, #1e293b);
+	--version-actual-bg: color-mix(in srgb, var(--version-actual) 20%, #1e293b);
+	--version-forecast-bg: color-mix(in srgb, var(--version-forecast) 20%, #1e293b);
+}
+
+/* ── Dark frosted glass override ── */
+.dark .frosted-glass {
+	background: rgba(15, 23, 42, 0.92);
+}
+
+.dark .glass-card {
+	background: var(--glass-bg);
+	border-color: var(--glass-border);
+}
+
 /* ── Base styles ── */
 body {
 	font-family: var(--font-family);

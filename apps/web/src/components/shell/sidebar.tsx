@@ -17,11 +17,15 @@ import {
 	ChevronsLeft,
 	LogOut,
 	Receipt,
+	Sun,
+	Moon,
+	Monitor,
 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
 import { useSidebarStore } from '../../stores/sidebar-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
+import { useTheme, type ThemePreference } from '../../lib/theme';
 import { SidebarNavItem } from './sidebar-nav-item';
 import type { LucideIcon } from 'lucide-react';
 
@@ -77,12 +81,25 @@ const navGroups: NavGroup[] = [
 	},
 ];
 
+const THEME_CYCLE: ThemePreference[] = ['light', 'dark', 'system'];
+const THEME_ICONS = { light: Sun, dark: Moon, system: Monitor } as const;
+const THEME_LABELS = { light: 'Light', dark: 'Dark', system: 'System' } as const;
+
 export function Sidebar() {
 	const user = useAuthStore((s) => s.user);
 	const logout = useAuthStore((s) => s.logout);
 	const { isCollapsed, toggle, expand } = useSidebarStore();
 	const rightPanelOpen = useRightPanelStore((s) => s.isOpen);
 	const closeRightPanel = useRightPanelStore((s) => s.close);
+	const [theme, setTheme] = useTheme();
+
+	const cycleTheme = () => {
+		const idx = THEME_CYCLE.indexOf(theme);
+		const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length]!;
+		setTheme(next);
+	};
+
+	const ThemeIcon = THEME_ICONS[theme];
 
 	const isAdmin = user?.role === 'Admin';
 	const visibleGroups = navGroups.filter((g) => !g.adminOnly || isAdmin);
@@ -195,6 +212,23 @@ export function Sidebar() {
 						</div>
 					</div>
 				)}
+
+				{/* Theme toggle */}
+				<button
+					type="button"
+					onClick={cycleTheme}
+					className={cn(
+						'flex w-full items-center gap-3 rounded-md',
+						'text-(--text-sm) text-(--sidebar-text)',
+						'hover:bg-(--sidebar-bg-hover) hover:text-(--sidebar-text-active)',
+						'transition-colors duration-(--duration-fast)',
+						isCollapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
+					)}
+					aria-label={`Theme: ${THEME_LABELS[theme]}. Click to cycle.`}
+				>
+					<ThemeIcon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+					{!isCollapsed && <span>{THEME_LABELS[theme]}</span>}
+				</button>
 
 				{/* Logout */}
 				<button
