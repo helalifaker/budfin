@@ -29,6 +29,8 @@ import { pnlCalculateRoutes } from './routes/pnl/calculate.js';
 import { scenarioRoutes } from './routes/scenarios/index.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 import { commentRoutes } from './routes/comments.js';
+import { exportRoutes } from './routes/export.js';
+import { startExportWorker, stopExportWorker } from './services/export/export-worker.js';
 
 export async function buildApp() {
 	const app = Fastify({
@@ -106,6 +108,7 @@ export async function buildApp() {
 	await app.register(commentRoutes, {
 		prefix: '/api/v1/versions/:versionId/comments',
 	});
+	await app.register(exportRoutes, { prefix: '/api/v1/export' });
 
 	return app;
 }
@@ -114,7 +117,11 @@ async function startServer() {
 	const app = await buildApp();
 	const port = Number(process.env.PORT) || 3001;
 
+	// Start the pg-boss export worker
+	await startExportWorker();
+
 	const shutdown = async () => {
+		await stopExportWorker();
 		await app.close();
 		process.exit(0);
 	};

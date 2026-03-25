@@ -86,10 +86,18 @@ export interface PnlCalculateResponse {
 
 // ── Export Job Types ────────────────────────────────────────────────────────
 
-export const EXPORT_REPORT_TYPES = ['PNL_MONTHLY', 'FULL_BUDGET'] as const;
+export const EXPORT_REPORT_TYPES = [
+	'PNL',
+	'REVENUE',
+	'STAFFING',
+	'OPEX',
+	'ENROLLMENT',
+	'DASHBOARD',
+	'FULL_BUDGET',
+] as const;
 export type ExportReportType = (typeof EXPORT_REPORT_TYPES)[number];
 
-export const EXPORT_FORMATS = ['xlsx', 'pdf', 'csv'] as const;
+export const EXPORT_FORMATS = ['PDF', 'EXCEL'] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 
 export const EXPORT_JOB_STATUSES = ['PENDING', 'PROCESSING', 'DONE', 'FAILED'] as const;
