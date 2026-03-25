@@ -974,3 +974,82 @@ body {
 		transition: none !important;
 	}
 }
+
+/* ── Print Styles ── */
+.no-print {
+	/* Marker class for elements hidden during print */
+}
+
+@media print {
+	/* Hide non-essential UI chrome */
+	[data-sidebar],
+	[data-context-bar],
+	[data-right-panel],
+	.no-print {
+		display: none !important;
+	}
+
+	/* Reset background and layout for printing */
+	body {
+		background: white !important;
+		color: black !important;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	/* Full-width main content */
+	main {
+		width: 100% !important;
+		max-width: 100% !important;
+		min-width: 0 !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		overflow: visible !important;
+	}
+
+	/* Remove fixed heights so content flows */
+	.h-screen,
+	.h-full {
+		height: auto !important;
+	}
+
+	/* Remove overflow clipping */
+	.overflow-hidden,
+	.overflow-y-auto {
+		overflow: visible !important;
+	}
+
+	/* A4 landscape for tables */
+	@page {
+		size: A4 landscape;
+		margin: 1cm;
+	}
+
+	/* Ensure tables don't break mid-row */
+	table {
+		page-break-inside: auto;
+	}
+
+	tr {
+		page-break-inside: avoid;
+		page-break-after: auto;
+	}
+
+	thead {
+		display: table-header-group;
+	}
+
+	/* Remove shadows and borders that waste ink */
+	.shadow-xs,
+	.shadow-sm,
+	.shadow-md,
+	.shadow-lg {
+		box-shadow: none !important;
+	}
+
+	/* Disable animations */
+	* {
+		animation: none !important;
+		transition: none !important;
+	}
+}

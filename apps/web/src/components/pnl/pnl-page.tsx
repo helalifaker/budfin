@@ -13,6 +13,7 @@ import {
 	BarChart3,
 	DollarSign,
 	Landmark,
+	Printer,
 	TrendingUp,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -26,6 +27,7 @@ import { ApiError } from '../../lib/api-client';
 import { cn } from '../../lib/cn';
 import { formatMoney } from '../../lib/format-money';
 import { formatDateTime } from '../../lib/format-date';
+import { Button } from '../ui/button';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Skeleton } from '../ui/skeleton';
 import { CalculateButton } from '../shared/calculate-button';
@@ -654,6 +656,10 @@ export function PnlPage() {
 					</ToggleGroup>
 
 					<div className="flex flex-wrap items-center gap-2">
+						<Button variant="outline" size="sm" onClick={() => window.print()} className="no-print">
+							<Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
+							Print
+						</Button>
 						{canCalculate && (
 							<CalculateButton
 								onCalculate={handleCalculate}

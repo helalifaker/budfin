@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
+import { Printer } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 import { PageTransition } from '../../components/shared/page-transition';
 import { CalculateButton } from '../../components/shared/calculate-button';
@@ -265,6 +266,10 @@ export function RevenuePage() {
 					</div>
 
 					<div className="flex flex-wrap items-center gap-2">
+						<Button variant="outline" size="sm" onClick={() => window.print()} className="no-print">
+							<Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
+							Print
+						</Button>
 						<RevenueExportButton
 							rows={visibleRows}
 							viewMode={viewMode}

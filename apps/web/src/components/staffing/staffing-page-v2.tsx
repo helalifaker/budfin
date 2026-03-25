@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
+import { Printer } from 'lucide-react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
@@ -292,6 +293,12 @@ export function StaffingPageV2() {
 					</div>
 
 					<div className="flex items-center gap-2">
+						{/* Print */}
+						<Button variant="outline" size="sm" onClick={() => window.print()} className="no-print">
+							<Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
+							Print
+						</Button>
+
 						{/* Settings */}
 						<Button type="button" variant="outline" size="sm" onClick={() => openSettings()}>
 							{isViewer ? 'View Settings' : 'Settings'}

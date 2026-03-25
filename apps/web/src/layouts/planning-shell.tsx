@@ -24,8 +24,10 @@ export function PlanningShell() {
 
 	return (
 		<div className="flex flex-1 flex-col overflow-hidden">
-			<ContextBar />
-			<VersionAccentStrip />
+			<div data-context-bar="">
+				<ContextBar />
+				<VersionAccentStrip />
+			</div>
 			<div className="flex flex-1 overflow-hidden">
 				<main
 					className={cn(
@@ -35,7 +37,9 @@ export function PlanningShell() {
 				>
 					<Outlet />
 				</main>
-				<RightPanel />
+				<div data-right-panel="">
+					<RightPanel />
+				</div>
 			</div>
 		</div>
 	);

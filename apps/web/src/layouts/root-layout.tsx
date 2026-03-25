@@ -12,7 +12,9 @@ export function RootLayout() {
 	return (
 		<ErrorBoundary>
 			<div className="flex h-screen overflow-hidden bg-(--workspace-bg)">
-				<Sidebar />
+				<div data-sidebar="">
+					<Sidebar />
+				</div>
 				<div className="flex flex-1 flex-col overflow-hidden">
 					<Outlet />
 				</div>
