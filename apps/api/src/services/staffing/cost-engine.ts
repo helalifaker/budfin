@@ -50,33 +50,86 @@ export interface EosOutput {
 	eosMonthlyAccrual: Decimal;
 }
 
-export function calculateEoSProvision(input: EosInput): EosOutput {
-	// AC-19: YoS via YEARFRAC US 30/360
-	const yos = yearFrac(input.hireDate, input.asOfDate);
+/**
+ * Compute the cumulative EOS liability at a point in time given eosBase and YoS.
+ */
+export function computeCumulativeEos(eosBase: Decimal, yos: Decimal): Decimal {
+	if (yos.lte(0)) return new Decimal(0);
+	if (yos.lte(5)) {
+		return eosBase.div(2).times(yos);
+	}
+	return eosBase
+		.div(2)
+		.times(5)
+		.plus(eosBase.times(yos.minus(5)));
+}
 
-	// EoS base = base_salary + housing + transport + responsibility (HSA excluded)
+/**
+ * Calculate the annual EOS provision as the incremental liability accrued
+ * during the fiscal year (sum of monthly increments).
+ *
+ * For each month, we compute the cumulative EOS at month-end minus the
+ * cumulative EOS at the previous month-end. The sum of these increments
+ * is the FY provision. This matches the Excel methodology.
+ */
+export function calculateEoSProvision(input: EosInput): EosOutput {
+	const fiscalYear = input.asOfDate.getUTCFullYear();
+
 	const eosBase = new Decimal(input.baseSalary)
 		.plus(new Decimal(input.housingAllowance))
 		.plus(new Decimal(input.transportAllowance))
 		.plus(new Decimal(input.responsibilityPremium));
 
-	let eosAnnual: Decimal;
-	if (yos.lte(0)) {
-		eosAnnual = new Decimal(0);
-	} else if (yos.lte(5)) {
-		// AC-20: YoS <= 5 -> (eosBase/2) * YoS
-		eosAnnual = eosBase.div(2).times(yos);
-	} else {
-		// AC-21: YoS > 5 -> (eosBase/2 * 5) + eosBase * (YoS - 5)
-		eosAnnual = eosBase
-			.div(2)
-			.times(5)
-			.plus(eosBase.times(yos.minus(5)));
-	}
+	// YoS at end of fiscal year (for reporting)
+	const yos = yearFrac(input.hireDate, input.asOfDate);
 
+	// Cumulative EOS at end of previous fiscal year (Dec 31 of year-1)
+	const prevYearEnd = new Date(Date.UTC(fiscalYear - 1, 11, 31));
+	const yosPrev = yearFrac(input.hireDate, prevYearEnd);
+	const cumEosPrev = computeCumulativeEos(eosBase, yosPrev);
+
+	// Cumulative EOS at end of fiscal year
+	const cumEosCurrent = computeCumulativeEos(eosBase, yos);
+
+	// Annual provision = increment over the year
+	const eosAnnual = cumEosCurrent.minus(cumEosPrev);
 	const eosMonthlyAccrual = eosAnnual.div(12);
 
 	return { yearsOfService: yos, eosBase, eosAnnual, eosMonthlyAccrual };
+}
+
+/**
+ * Compute per-month EOS incremental accruals.
+ * Returns an array of 12 Decimal values (one per month).
+ * Each value = cumulative EOS at end of this month - cumulative EOS at end of previous month.
+ */
+export function calculateMonthlyEosAccruals(
+	eosBase: Decimal,
+	hireDate: Date,
+	fiscalYear: number
+): Decimal[] {
+	const accruals: Decimal[] = [];
+	const monthEndDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+	// Check for leap year (Feb)
+	if ((fiscalYear % 4 === 0 && fiscalYear % 100 !== 0) || fiscalYear % 400 === 0) {
+		monthEndDays[1] = 29;
+	}
+
+	// Cumulative EOS at Dec 31 of previous year
+	const prevYearEnd = new Date(Date.UTC(fiscalYear - 1, 11, 31));
+	let prevCumEos = computeCumulativeEos(eosBase, yearFrac(hireDate, prevYearEnd));
+
+	for (let m = 0; m < 12; m++) {
+		const monthEnd = new Date(Date.UTC(fiscalYear, m, monthEndDays[m]!));
+		const yos = yearFrac(hireDate, monthEnd);
+		const cumEos = computeCumulativeEos(eosBase, yos);
+		const increment = cumEos.minus(prevCumEos);
+		accruals.push(increment.lt(0) ? new Decimal(0) : increment);
+		prevCumEos = cumEos;
+	}
+
+	return accruals;
 }
 
 // ── Cost Mode Types (Epic 19, AC-10/AC-11) ──────────────────────────────────
@@ -119,7 +172,7 @@ export interface MonthlyCostOutput {
 export function calculateFullMonthlyCost(
 	input: EmployeeCostInput,
 	month: number,
-	eosProvision: EosOutput
+	monthlyEosAccrual: Decimal
 ): MonthlyCostOutput {
 	const grossInput: MonthlyGrossInput = {
 		baseSalary: input.baseSalary,
@@ -146,10 +199,7 @@ export function calculateFullMonthlyCost(
 	);
 
 	// AC-22: total_cost = adjusted_gross + gosi + ajeer + eos_monthly_accrual
-	const totalCost = gross.adjustedGross
-		.plus(gosiAmount)
-		.plus(ajeerAmount)
-		.plus(eosProvision.eosMonthlyAccrual);
+	const totalCost = gross.adjustedGross.plus(gosiAmount).plus(ajeerAmount).plus(monthlyEosAccrual);
 
 	return {
 		month,
@@ -161,7 +211,7 @@ export function calculateFullMonthlyCost(
 		hsaAmount: gross.hsaAmount,
 		gosiAmount,
 		ajeerAmount,
-		eosMonthlyAccrual: eosProvision.eosMonthlyAccrual,
+		eosMonthlyAccrual: monthlyEosAccrual,
 		totalCost,
 	};
 }
@@ -230,9 +280,22 @@ export function calculateEmployeeAnnualCost(input: EmployeeCostInput): {
 		asOfDate: input.asOfDate,
 	});
 
+	// Compute per-month incremental EOS accruals
+	const fiscalYear = input.asOfDate.getUTCFullYear();
+	const monthlyEosAccruals = calculateMonthlyEosAccruals(eos.eosBase, input.hireDate, fiscalYear);
+
+	// New employees only incur costs from September (month 9) onwards.
+	// Jan-Aug: zero-cost rows. Sep-Dec: full calculation.
+	const startMonth = input.status === 'New' ? 9 : 1;
+
 	const months: MonthlyCostOutput[] = [];
 	for (let month = 1; month <= 12; month++) {
-		months.push(calculateFullMonthlyCost(input, month, eos));
+		if (month < startMonth) {
+			months.push(makeZeroCostRow(month));
+		} else {
+			const monthEos = monthlyEosAccruals[month - 1] ?? new Decimal(0);
+			months.push(calculateFullMonthlyCost(input, month, monthEos));
+		}
 	}
 
 	return { months, eos };

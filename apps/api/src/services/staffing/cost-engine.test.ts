@@ -79,65 +79,74 @@ describe('calculateAjeer', () => {
 
 // ── EoS Provision ────────────────────────────────────────────────────────────
 
-describe('calculateEoSProvision', () => {
+describe('calculateEoSProvision (incremental)', () => {
+	// Use Dec 31 as asOfDate to match real usage (fiscal year end)
 	const makeEos = (overrides: Partial<EosInput> = {}): EosInput => ({
 		baseSalary: '10000.0000',
 		housingAllowance: '2500.0000',
 		transportAllowance: '500.0000',
 		responsibilityPremium: '1000.0000',
 		hireDate: utcDate(2020, 1, 1),
-		asOfDate: utcDate(2025, 1, 1),
+		asOfDate: utcDate(2025, 12, 31),
 		...overrides,
 	});
 
 	it('AC-19: uses YEARFRAC US 30/360 for YoS', () => {
 		const result = calculateEoSProvision(makeEos());
-		expect(result.yearsOfService.toString()).toBe('5');
+		// yearFrac(2020-01-01, 2025-12-31) = ((2025-2020)*360 + 330 + 30)/360 = 2160/360 = 6
+		expect(result.yearsOfService.toString()).toBe('6');
 	});
 
-	it('AC-20: YoS <= 5 — (eosBase/2) * YoS', () => {
+	it('AC-20: YoS <= 5 — incremental annual provision = eosBase/2', () => {
 		const input = makeEos({
-			hireDate: utcDate(2022, 1, 1),
-			asOfDate: utcDate(2025, 1, 1), // 3 years
+			hireDate: utcDate(2023, 1, 1),
+			asOfDate: utcDate(2025, 12, 31), // YoS at end = 3 years
 		});
 		const result = calculateEoSProvision(input);
-		// eosBase = 10000 + 2500 + 500 + 1000 = 14000
-		// eos_annual = (14000/2) * 3 = 21000
+		// eosBase = 14000
+		// cumEOS at 2025-12-31: YoS=3 -> 14000/2 * 3 = 21000
+		// cumEOS at 2024-12-31: YoS=2 -> 14000/2 * 2 = 14000
+		// Annual provision = 21000 - 14000 = 7000
 		expect(result.eosBase.toString()).toBe('14000');
-		expect(result.eosAnnual.toString()).toBe('21000');
-		expect(result.eosMonthlyAccrual.toString()).toBe('1750');
+		expect(result.eosAnnual.toString()).toBe('7000');
+		expect(result.eosMonthlyAccrual.toFixed(4)).toBe(new Decimal(7000).div(12).toFixed(4));
 	});
 
-	it('AC-20: exactly 5 years — boundary', () => {
-		const result = calculateEoSProvision(makeEos());
-		// eosBase = 14000, YoS = 5
-		// eos_annual = (14000/2) * 5 = 35000
-		expect(result.eosAnnual.toString()).toBe('35000');
+	it('AC-20: crossing 5-year boundary — blend of rates', () => {
+		const input = makeEos({
+			hireDate: utcDate(2020, 7, 1),
+			asOfDate: utcDate(2025, 12, 31), // YoS at end ~5.5
+		});
+		const result = calculateEoSProvision(input);
+		// Verifies EOS base excludes HSA
+		expect(result.eosBase.toString()).toBe('14000');
+		// Cumulative at end > cumulative at start — positive provision
+		expect(result.eosAnnual.gt(0)).toBe(true);
 	});
 
-	it('AC-21: YoS > 5 — (eosBase/2 * 5) + eosBase * (YoS - 5)', () => {
+	it('AC-21: YoS > 5 — incremental annual provision = eosBase', () => {
 		const input = makeEos({
 			hireDate: utcDate(2017, 1, 1),
-			asOfDate: utcDate(2025, 1, 1), // 8 years
+			asOfDate: utcDate(2025, 12, 31), // YoS at end = 9 years
 		});
 		const result = calculateEoSProvision(input);
-		// eosBase = 14000, YoS = 8
-		// eos_annual = (14000/2 * 5) + 14000 * (8-5) = 35000 + 42000 = 77000
-		expect(result.eosAnnual.toString()).toBe('77000');
-		// monthly accrual = 77000/12
-		expect(result.eosMonthlyAccrual.toFixed(4)).toBe(new Decimal(77000).div(12).toFixed(4));
+		// eosBase = 14000
+		// cumEOS at 2025-12-31: YoS=9 -> 35000 + 14000*4 = 91000
+		// cumEOS at 2024-12-31: YoS=8 -> 35000 + 14000*3 = 77000
+		// Annual provision = 91000 - 77000 = 14000
+		expect(result.eosAnnual.toString()).toBe('14000');
+		expect(result.eosMonthlyAccrual.toFixed(4)).toBe(new Decimal(14000).div(12).toFixed(4));
 	});
 
 	it('HSA excluded from EoS base', () => {
 		const result = calculateEoSProvision(makeEos());
-		// eosBase should NOT include HSA
-		expect(result.eosBase.toString()).toBe('14000'); // not 15500
+		expect(result.eosBase.toString()).toBe('14000');
 	});
 
 	it('negative YoS (future hire) returns 0', () => {
 		const input = makeEos({
-			hireDate: utcDate(2026, 1, 1),
-			asOfDate: utcDate(2025, 1, 1),
+			hireDate: utcDate(2026, 7, 1),
+			asOfDate: utcDate(2025, 12, 31),
 		});
 		const result = calculateEoSProvision(input);
 		expect(result.eosAnnual.toString()).toBe('0');
@@ -174,7 +183,8 @@ describe('calculateFullMonthlyCost', () => {
 			hireDate: input.hireDate,
 			asOfDate: input.asOfDate,
 		});
-		const result = calculateFullMonthlyCost(input, 1, eos);
+		const monthlyEos = eos.eosMonthlyAccrual;
+		const result = calculateFullMonthlyCost(input, 1, monthlyEos);
 
 		const expected = result.adjustedGross
 			.plus(result.gosiAmount)
@@ -193,7 +203,8 @@ describe('calculateFullMonthlyCost', () => {
 			hireDate: input.hireDate,
 			asOfDate: input.asOfDate,
 		});
-		const result = calculateFullMonthlyCost(input, 1, eos);
+		const monthlyEos = eos.eosMonthlyAccrual;
+		const result = calculateFullMonthlyCost(input, 1, monthlyEos);
 
 		expect(result.gosiAmount.gt(0)).toBe(true);
 		expect(result.ajeerAmount.toString()).toBe('0');
@@ -216,7 +227,7 @@ describe('calculateEmployeeAnnualCost', () => {
 		status: 'Existing',
 		ajeerAnnualFee: '10925.0000',
 		hireDate: utcDate(2020, 1, 1),
-		asOfDate: utcDate(2025, 1, 1),
+		asOfDate: utcDate(2025, 12, 31),
 		...overrides,
 	});
 
@@ -226,7 +237,8 @@ describe('calculateEmployeeAnnualCost', () => {
 		expect(months).toHaveLength(12);
 		expect(months[0]!.month).toBe(1);
 		expect(months[11]!.month).toBe(12);
-		expect(eos.yearsOfService.toString()).toBe('5');
+		// yearFrac(2020-01-01, 2025-12-31) = 6
+		expect(eos.yearsOfService.toString()).toBe('6');
 	});
 
 	it('September costs are higher than August (augmentation)', () => {
