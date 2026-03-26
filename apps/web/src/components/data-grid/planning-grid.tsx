@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Header, Table } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
 import { ChevronDown } from 'lucide-react';
+import { useGridKeyboard } from '../../hooks/use-grid-keyboard';
 import { cn } from '../../lib/cn';
 import { getBandClasses } from './band-styles';
 import { GridSkeleton } from './grid-skeleton';
@@ -19,11 +20,6 @@ interface FooterRow {
 	label: string;
 	type: 'subtotal' | 'grandtotal';
 	values: Record<string, ReactNode>;
-}
-
-interface ActiveCell {
-	rowIndex: number;
-	colIndex: number;
 }
 
 export interface PlanningGridProps<T> {
@@ -45,6 +41,10 @@ export interface PlanningGridProps<T> {
 	forceGridRole?: boolean;
 	className?: string;
 	ariaLabel?: string;
+	rangeSelection?: boolean;
+	clipboardEnabled?: boolean;
+	getCellValue?: (rowIndex: number, colId: string) => string;
+	onPaste?: (startRow: number, startCol: number, data: string[][]) => void;
 }
 
 function isPinned(columnId: string, pinnedColumns?: string[]): boolean {
@@ -127,9 +127,12 @@ export function PlanningGrid<T>({
 	forceGridRole = false,
 	className,
 	ariaLabel,
+	rangeSelection,
+	clipboardEnabled,
+	getCellValue,
+	onPaste,
 }: PlanningGridProps<T>) {
 	const isCompact = variant === 'compact';
-	const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
 	const [collapsedBands, setCollapsedBands] = useState<Set<string>>(new Set());
 	const tableRef = useRef<HTMLTableElement>(null);
 
@@ -143,6 +146,28 @@ export function PlanningGrid<T>({
 	const isEditable = (editableColumns?.length ?? 0) > 0;
 	const tableRole = isEditable || forceGridRole ? 'grid' : 'table';
 	const cellRole = isEditable || forceGridRole ? 'gridcell' : 'cell';
+
+	const columnIds = useMemo(() => leafHeaders.map((h) => h.id), [leafHeaders]);
+
+	const keyboard = useGridKeyboard({
+		tableRef,
+		rowCount: rows.length,
+		colCount: cols,
+		enabled: keyboardNavigation,
+		editableColumns,
+		columnIds,
+		rangeSelection,
+		clipboardEnabled,
+		getCellValue,
+		onPaste,
+		onRowSelect: onRowSelect
+			? (rowIndex: number) => {
+					const row = rows[rowIndex];
+					if (row) onRowSelect(row.original);
+				}
+			: undefined,
+		onActiveRowChange,
+	});
 
 	// Build band groups when bandGrouping is provided
 	const bandedRows = useMemo(() => {
@@ -174,106 +199,12 @@ export function PlanningGrid<T>({
 		});
 	}, []);
 
-	// Notify on active row change
-	useEffect(() => {
-		if (activeCell && onActiveRowChange) {
-			onActiveRowChange(activeCell.rowIndex);
-		}
-	}, [activeCell, onActiveRowChange]);
-
-	useEffect(() => {
-		if (!keyboardNavigation || !activeCell || !tableRef.current) {
-			return;
-		}
-
-		const cell = tableRef.current.querySelector<HTMLElement>(
-			`[data-row-index="${activeCell.rowIndex}"][data-col-index="${activeCell.colIndex}"]`
-		);
-		cell?.focus();
-	}, [activeCell, keyboardNavigation]);
-
-	// Keyboard navigation
-	const handleKeyDown = useCallback(
-		(e: React.KeyboardEvent) => {
-			if (!keyboardNavigation || !activeCell) return;
-
-			const maxRow = rows.length - 1;
-			const maxCol = cols - 1;
-
-			const move = (rowDelta: number, colDelta: number) => {
-				e.preventDefault();
-				setActiveCell((prev) => {
-					if (!prev) return prev;
-					return {
-						rowIndex: Math.max(0, Math.min(maxRow, prev.rowIndex + rowDelta)),
-						colIndex: Math.max(0, Math.min(maxCol, prev.colIndex + colDelta)),
-					};
-				});
-			};
-
-			switch (e.key) {
-				case 'ArrowUp':
-					move(-1, 0);
-					break;
-				case 'ArrowDown':
-					move(1, 0);
-					break;
-				case 'ArrowLeft':
-					if (!(e.target instanceof HTMLInputElement)) move(0, -1);
-					break;
-				case 'ArrowRight':
-					if (!(e.target instanceof HTMLInputElement)) move(0, 1);
-					break;
-				case 'Tab': {
-					e.preventDefault();
-					const dir = e.shiftKey ? -1 : 1;
-					const allHeaders = leafHeaders;
-					let { colIndex, rowIndex } = activeCell;
-					let steps = 0;
-					do {
-						colIndex += dir;
-						if (colIndex > maxCol) {
-							colIndex = 0;
-							rowIndex = rowIndex >= maxRow ? 0 : rowIndex + 1;
-						} else if (colIndex < 0) {
-							colIndex = maxCol;
-							rowIndex = rowIndex <= 0 ? maxRow : rowIndex - 1;
-						}
-						steps++;
-					} while (
-						editableColumns?.length &&
-						steps <= cols * Math.max(rows.length, 1) &&
-						!editableColumns.includes(allHeaders[colIndex]?.id ?? '')
-					);
-					setActiveCell({ rowIndex, colIndex });
-					break;
-				}
-				case 'Enter': {
-					if (onRowSelect && activeCell) {
-						const row = rows[activeCell.rowIndex];
-						if (row) onRowSelect(row.original);
-					}
-					break;
-				}
-				case 'Escape':
-					setActiveCell(null);
-					break;
-			}
-		},
-		[keyboardNavigation, activeCell, rows, cols, editableColumns, leafHeaders, onRowSelect]
-	);
-
-	const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
-		setActiveCell({ rowIndex, colIndex });
-	}, []);
-
 	const handleTableFocus = useCallback(() => {
-		if (!keyboardNavigation || activeCell || rows.length === 0 || cols === 0) {
+		if (!keyboardNavigation || keyboard.activeCell || rows.length === 0 || cols === 0) {
 			return;
 		}
-
-		setActiveCell({ rowIndex: 0, colIndex: 0 });
-	}, [activeCell, cols, keyboardNavigation, rows.length]);
+		keyboard.setActiveCell({ rowIndex: 0, colIndex: 0, colId: columnIds[0] ?? '' });
+	}, [keyboard, cols, keyboardNavigation, rows.length, columnIds]);
 
 	const handleRowClick = useCallback(
 		(row: (typeof rows)[number]) => {
@@ -373,7 +304,8 @@ export function PlanningGrid<T>({
 		const pinned = isPinned(columnId, pinnedColumns);
 		const lastPin = isLastPinned(columnId, pinnedColumns);
 		const numeric = isNumeric(columnId, numericColumns);
-		const isActive = activeCell?.rowIndex === rowIndex && activeCell?.colIndex === colIndex;
+		const isActive = keyboard.isCellActive(rowIndex, colIndex);
+		const isInRange = keyboard.isCellInRange(rowIndex, colIndex);
 		const isRowSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
 		const pinnedBackgroundClass = isRowSelected
 			? 'bg-(--grid-selected-row)'
@@ -384,7 +316,8 @@ export function PlanningGrid<T>({
 		return (
 			<td
 				key={cell.id}
-				onClick={() => handleCellClick(rowIndex, colIndex)}
+				onClick={(e) => keyboard.handlers.onCellClick(rowIndex, colIndex, e)}
+				onDoubleClick={() => keyboard.handlers.onCellDoubleClick(rowIndex, colIndex)}
 				role={cellRole}
 				data-grid-row-id={String((row.original as { id?: unknown }).id ?? row.id)}
 				data-row-index={rowIndex}
@@ -405,10 +338,11 @@ export function PlanningGrid<T>({
 							: 'group-hover:bg-(--grid-row-hover)'),
 					pinned && isRowSelected && 'group-hover:bg-(--grid-selected-row)',
 					lastPin && 'shadow-(--grid-pinned-shadow)',
+					isInRange && 'bg-(--grid-range-bg)',
 					isActive &&
 						(isCompact
-							? 'ring-1 ring-(--accent-300) ring-inset'
-							: 'ring-2 ring-(--accent-400) ring-inset shadow-(--shadow-glow-accent)')
+							? 'ring-(length:--grid-focus-ring-width) ring-(--grid-focus-ring) ring-inset'
+							: 'ring-(length:--grid-focus-ring-width) ring-(--grid-focus-ring) ring-inset shadow-(--shadow-glow-accent)')
 				)}
 			>
 				{flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -422,7 +356,7 @@ export function PlanningGrid<T>({
 		animationIndex: number,
 		isFirstInBand: boolean
 	) => {
-		const isActiveRow = activeCell?.rowIndex === rowIndex;
+		const isActiveRow = keyboard.activeCell?.rowIndex === rowIndex;
 		const isSelected = selectedRowPredicate ? selectedRowPredicate(row.original) : false;
 		const headers = leafHeaders;
 		const customRowClass = getRowClassName?.(row.original);
@@ -647,7 +581,7 @@ export function PlanningGrid<T>({
 				aria-rowcount={tableRole === 'grid' ? rows.length : undefined}
 				aria-colcount={tableRole === 'grid' ? cols : undefined}
 				aria-label={ariaLabel}
-				onKeyDown={handleKeyDown}
+				onKeyDown={keyboard.handlers.onKeyDown}
 				onFocus={handleTableFocus}
 				tabIndex={keyboardNavigation ? 0 : undefined}
 				className={cn(
