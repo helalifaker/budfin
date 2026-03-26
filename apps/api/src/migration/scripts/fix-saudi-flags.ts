@@ -9,7 +9,6 @@ const SAUDI_EMPLOYEE_CODES = ['EFIR-011', 'EFIR-013'];
 const TARGET_VERSION_ID = 1;
 
 async function main() {
-	// eslint-disable-next-line no-console
 	console.log('Fixing Saudi flags for:', SAUDI_EMPLOYEE_CODES.join(', '));
 
 	const result = await prisma.$transaction(async (tx) => {
@@ -39,13 +38,11 @@ async function main() {
 		return updated.count;
 	});
 
-	// eslint-disable-next-line no-console
 	console.log(`Updated ${result} employee(s). STAFFING + PNL marked stale.`);
 }
 
 main()
 	.catch((e) => {
-		// eslint-disable-next-line no-console
 		console.error('Fatal error:', e);
 		process.exitCode = 1;
 	})

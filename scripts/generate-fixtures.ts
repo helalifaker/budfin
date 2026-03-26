@@ -1335,18 +1335,17 @@ function generateEnrollmentCsvs() {
 function writeJson(filename: string, data: unknown) {
 	const path = resolve(FIXTURES, filename);
 	writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
-	 
+
 	console.log(`  Wrote ${path}`);
 }
 
 function writeCsv(filename: string, content: string) {
 	const path = resolve(ENROLLMENT, filename);
 	writeFileSync(path, content);
-	 
+
 	console.log(`  Wrote ${path}`);
 }
 
- 
 console.log('=== Generating BudFin Migration Fixtures ===\n');
 
 // 1. Grade code mapping
@@ -1355,7 +1354,7 @@ writeJson('grade-code-mapping.json', mapping);
 
 // 2. Fee grid
 const feeGrid = generateFeeGrid();
- 
+
 console.log(`  fee_grids: ${feeGrid.length} rows (expected 270)`);
 writeJson('fy2026-fee-grid.json', feeGrid);
 
@@ -1368,7 +1367,7 @@ const enrollmentDetail = generateEnrollmentDetail();
 const ay1Total = enrollmentDetail
 	.filter((e) => e.academicPeriod === 'AY1')
 	.reduce((sum, e) => sum + e.headcount, 0);
- 
+
 console.log(
 	`  enrollment_detail: ${enrollmentDetail.length} rows, AY1 total: ${ay1Total} (expected 1753)`
 );
@@ -1376,7 +1375,7 @@ writeJson('fy2026-enrollment-detail.json', enrollmentDetail);
 
 // 5. Other revenue
 const otherRevenue = generateOtherRevenue();
- 
+
 console.log(`  other_revenue: ${otherRevenue.length} items (expected 21)`);
 writeJson('fy2026-other-revenue.json', otherRevenue);
 
@@ -1386,7 +1385,7 @@ writeJson('fy2026-dhg-structure.json', dhg);
 
 // 7. Staff costs
 const staff = generateStaffCosts();
- 
+
 console.log(`  employees: ${staff.length} records`);
 writeJson('fy2026-staff-costs.json', staff);
 
@@ -1396,5 +1395,4 @@ for (const [yearKey, content] of Object.entries(csvs)) {
 	writeCsv(`enrollment_${yearKey}.csv`, content);
 }
 
- 
 console.log('\n=== Fixture generation complete ===');

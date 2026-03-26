@@ -94,20 +94,20 @@ packages/types/    Shared TypeScript types (@budfin/types)
 
 All routes registered in `apps/api/src/index.ts`:
 
-| Prefix                                   | Route group                                                                           |
-| ---------------------------------------- | ------------------------------------------------------------------------------------- |
-| `/api/v1`                                | health, context                                                                       |
-| `/api/v1/auth`                           | authRoutes (login/logout/refresh)                                                     |
-| `/api/v1/users`                          | userRoutes                                                                            |
-| `/api/v1/audit`                          | auditRoutes                                                                           |
-| `/api/v1/system-config`                  | systemConfigRoutes                                                                    |
-| `/api/v1/master-data`                    | masterDataRoutes (accounts, grades, tariffs, nationalities, departments, assumptions) |
-| `/api/v1/versions`                       | versionRoutes (CRUD + lifecycle)                                                      |
-| `/api/v1/fiscal-periods`                 | fiscalPeriodRoutes                                                                    |
-| `/api/v1/enrollment`                     | enrollmentHistoricalRoutes (not version-scoped)                                       |
-| `/api/v1/versions/:versionId/enrollment` | enrollmentRoutes                                                                      |
-| `/api/v1/versions/:versionId/calculate`  | calculateRoutes + revenueCalculateRoutes + staffingCalculateRoutes                    |
-| `/api/v1/versions/:versionId`            | revenueRoutes, staffingRoutes (sub-paths registered internally)                       |
+| Prefix                                   | Route group                                                                                                             |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `/api/v1`                                | health, context                                                                                                         |
+| `/api/v1/auth`                           | authRoutes (login/logout/refresh)                                                                                       |
+| `/api/v1/users`                          | userRoutes                                                                                                              |
+| `/api/v1/audit`                          | auditRoutes                                                                                                             |
+| `/api/v1/system-config`                  | systemConfigRoutes                                                                                                      |
+| `/api/v1/master-data`                    | masterDataRoutes (accounts, grades, tariffs, nationalities, departments, assumptions)                                   |
+| `/api/v1/versions`                       | versionRoutes (CRUD + lifecycle)                                                                                        |
+| `/api/v1/fiscal-periods`                 | fiscalPeriodRoutes                                                                                                      |
+| `/api/v1/enrollment`                     | enrollmentHistoricalRoutes (not version-scoped)                                                                         |
+| `/api/v1/versions/:versionId/enrollment` | enrollmentRoutes                                                                                                        |
+| `/api/v1/versions/:versionId/calculate`  | calculateRoutes + revenueCalculateRoutes + staffingCalculateRoutes + opExCalculateRoutes + pnlCalculateRoutes           |
+| `/api/v1/versions/:versionId`            | revenueRoutes, staffingRoutes, opExRoutes, pnlRoutes, scenarioRoutes, dashboardRoutes (sub-paths registered internally) |
 
 ### Calculation engine pattern
 
@@ -124,12 +124,14 @@ Pure-function calculation services live in `apps/api/src/services/` with **no DB
 | `services/staffing/monthly-gross.ts`        | Monthly gross salary from annual YEARFRAC         |
 | `services/staffing/yearfrac.ts`             | Excel-compatible YEARFRAC (TC-002)                |
 | `services/staffing/category-cost-engine.ts` | Category-level aggregated staff costs             |
+| `services/opex/opex-engine.ts`              | Operating expenditure line-item calculations      |
+| `services/pnl-engine.ts`                    | P&L aggregation (revenue − staffing − opex)       |
 
 ### Stale module propagation
 
-`BudgetVersion.staleModules` (string array) tracks which calculation modules are out-of-date. When enrollment changes, `REVENUE` is marked stale. When revenue changes, `STAFFING` and `PNL` are marked stale. The frontend reads `staleModules` from the version object to display warning indicators.
+`BudgetVersion.staleModules` (string array) tracks which calculation modules are out-of-date. When enrollment changes, `REVENUE` is marked stale. When revenue changes, `STAFFING` and `PNL` are marked stale. When opex changes, `PNL` is marked stale. The frontend reads `staleModules` from the version object to display warning indicators.
 
-Chain: **ENROLLMENT → REVENUE → STAFFING → PNL**
+Chain: **ENROLLMENT → REVENUE → STAFFING → PNL ← OPEX**
 
 ### Right panel registry
 

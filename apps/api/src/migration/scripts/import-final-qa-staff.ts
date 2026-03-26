@@ -162,11 +162,10 @@ function resolveDisciplineId(
 // ── Main ────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-	// eslint-disable-next-line no-console
 	console.log('=== Import Final QA Staff ===\n');
 
 	// Step 0: Find the first Draft version
-	// eslint-disable-next-line no-console
+
 	console.log('[0/5] Finding Draft version...');
 	const draftVersion = await prisma.budgetVersion.findFirst({
 		where: { status: 'Draft' },
@@ -175,26 +174,25 @@ async function main(): Promise<void> {
 	});
 
 	if (!draftVersion) {
-		// eslint-disable-next-line no-console
 		console.error('ERROR: No Draft version found in budget_versions. Aborting.');
 		process.exitCode = 1;
 		return;
 	}
 
 	const versionId = draftVersion.id;
-	// eslint-disable-next-line no-console
+
 	console.log(
 		`  Found version: id=${versionId}, name="${draftVersion.name}", fy=${draftVersion.fiscalYear}`
 	);
 
 	// Step 0b: Ensure migration user
 	const userId = await ensureMigrationUser(prisma);
-	// eslint-disable-next-line no-console
+
 	console.log(`  Migration user ID: ${userId}`);
 
 	// Step 1: Re-seed discipline master data
 	// Seed file is outside src/ (prisma/seeds/), so we use a wrapper script
-	// eslint-disable-next-line no-console
+
 	console.log('\n[1/5] Re-seeding discipline master data...');
 	const { execSync } = await import('node:child_process');
 	const { dirname, resolve } = await import('node:path');
@@ -205,59 +203,57 @@ async function main(): Promise<void> {
 		cwd: apiRoot,
 		stdio: 'inherit',
 	});
-	// eslint-disable-next-line no-console
+
 	console.log('  Done.');
 
 	// Step 2: Clear existing staffing data for this version
-	// eslint-disable-next-line no-console
+
 	console.log('\n[2/5] Clearing existing staffing data for version...');
 
 	const deletedAssignments = await prisma.staffingAssignment.deleteMany({
 		where: { versionId },
 	});
-	// eslint-disable-next-line no-console
+
 	console.log(`  Deleted ${deletedAssignments.count} staffing assignments`);
 
 	const deletedMonthlyCosts = await prisma.monthlyStaffCost.deleteMany({
 		where: { versionId },
 	});
-	// eslint-disable-next-line no-console
+
 	console.log(`  Deleted ${deletedMonthlyCosts.count} monthly staff costs`);
 
 	const deletedReqSources = await prisma.teachingRequirementSource.deleteMany({
 		where: { versionId },
 	});
-	// eslint-disable-next-line no-console
+
 	console.log(`  Deleted ${deletedReqSources.count} teaching requirement sources`);
 
 	const deletedReqLines = await prisma.teachingRequirementLine.deleteMany({
 		where: { versionId },
 	});
-	// eslint-disable-next-line no-console
+
 	console.log(`  Deleted ${deletedReqLines.count} teaching requirement lines`);
 
 	const deletedCategoryCosts = await prisma.categoryMonthlyCost.deleteMany({
 		where: { versionId },
 	});
-	// eslint-disable-next-line no-console
+
 	console.log(`  Deleted ${deletedCategoryCosts.count} category monthly costs`);
 
 	const deletedEmployees = await prisma.employee.deleteMany({
 		where: { versionId },
 	});
-	// eslint-disable-next-line no-console
+
 	console.log(`  Deleted ${deletedEmployees.count} existing employees`);
 
 	// Step 3: Import employees from fixture
-	// eslint-disable-next-line no-console
+
 	console.log('\n[3/5] Importing employees from fy2026-staff-costs.json...');
 	const importLog = await importEmployees(prisma, versionId, userId);
 
 	if (importLog.status === 'FAILED') {
-		// eslint-disable-next-line no-console
 		console.error('  Employee import FAILED:');
 		for (const err of importLog.errors) {
-			// eslint-disable-next-line no-console
 			console.error(`    ${err.code}: ${err.message}`);
 		}
 		process.exitCode = 1;
@@ -268,18 +264,17 @@ async function main(): Promise<void> {
 		(a: number, b: number) => a + b,
 		0
 	);
-	// eslint-disable-next-line no-console
+
 	console.log(`  Imported ${importedCount} employees (${importLog.warnings.length} warnings)`);
 
 	if (importLog.warnings.length > 0) {
 		for (const w of importLog.warnings) {
-			// eslint-disable-next-line no-console
 			console.log(`    WARN: ${w.code} — ${w.message}`);
 		}
 	}
 
 	// Step 4: Resolve employee fields (disciplineId, serviceProfileId, homeBand, costMode)
-	// eslint-disable-next-line no-console
+
 	console.log('\n[4/5] Resolving employee fields (discipline, profile, band, costMode)...');
 
 	// Load lookup tables
@@ -401,28 +396,25 @@ async function main(): Promise<void> {
 		});
 	}
 
-	// eslint-disable-next-line no-console
 	console.log(`  Employees processed: ${employees.length}`);
-	// eslint-disable-next-line no-console
+
 	console.log(`  Disciplines resolved: ${disciplinesResolved}`);
-	// eslint-disable-next-line no-console
+
 	console.log(`  Service profiles assigned: ${profilesAssigned}`);
-	// eslint-disable-next-line no-console
+
 	console.log(`  Home bands set: ${bandsResolved}`);
-	// eslint-disable-next-line no-console
+
 	console.log(`  Cost modes set: ${costModesSet}`);
 
 	if (exceptions.length > 0) {
-		// eslint-disable-next-line no-console
 		console.log(`\n  Exceptions (${exceptions.length}):`);
 		for (const exc of exceptions) {
-			// eslint-disable-next-line no-console
 			console.log(`    [${exc.code}] ${exc.name}: ${exc.field} — ${exc.reason}`);
 		}
 	}
 
 	// Step 5: Mark STAFFING as stale
-	// eslint-disable-next-line no-console
+
 	console.log('\n[5/5] Marking STAFFING as stale...');
 
 	const version = await prisma.budgetVersion.findUniqueOrThrow({
@@ -438,13 +430,13 @@ async function main(): Promise<void> {
 		where: { id: versionId },
 		data: { staleModules: Array.from(staleSet) },
 	});
-	// eslint-disable-next-line no-console
+
 	console.log(`  staleModules = [${Array.from(staleSet).join(', ')}]`);
 
 	// Final summary
-	// eslint-disable-next-line no-console
+
 	console.log('\n=== Migration Complete ===');
-	// eslint-disable-next-line no-console
+
 	console.log(
 		JSON.stringify(
 			{
@@ -465,7 +457,6 @@ async function main(): Promise<void> {
 
 main()
 	.catch((e) => {
-		// eslint-disable-next-line no-console
 		console.error('Fatal error:', e);
 		process.exitCode = 1;
 	})

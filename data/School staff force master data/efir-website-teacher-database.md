@@ -56,8 +56,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### CP (Cours Preparatoire) - 5 classes
 
-| Class | Teacher             | Email                           | Room | In Master Data? |
-| ----- | ------------------- | ------------------------------- | ---- | --------------- |
+| Class | Teacher             | Email                             | Room | In Master Data? |
+| ----- | ------------------- | --------------------------------- | ---- | --------------- |
 | CP A  | Mona Labban         | <mona.labban@efiriyad.com>        | 303  | NO (titulaire)  |
 | CP B  | Estelle Chabirand   | <estelle.chabirand@efiriyad.com>  | 306  | YES             |
 | CP C  | Fabienne Figua      | <fabienne.figua@efiriyad.com>     | 302  | NO (titulaire)  |
@@ -66,8 +66,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### CE1 (Cours Elementaire 1) - 6 classes
 
-| Class | Teacher           | Email                         | Room | In Master Data?                                                                                                           |
-| ----- | ----------------- | ----------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
+| Class | Teacher           | Email                           | Room | In Master Data?                                                                                                           |
+| ----- | ----------------- | ------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
 | CE1 A | Myriam Almashrah  | <myriam.almashrah@efiriyad.com> | 514  | NO (titulaire)                                                                                                            |
 | CE1 B | Tiphaine Dumas    | <tiphaine.dumas@efiriyad.com>   | 512  | YES                                                                                                                       |
 | CE1 C | Boutheina Zribi   | <boutheina.zribi@efiriyad.com>  | 513  | YES                                                                                                                       |
@@ -77,8 +77,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### CE2 (Cours Elementaire 2) - 5 classes
 
-| Class | Teacher         | Email                        | Room | In Master Data? |
-| ----- | --------------- | ---------------------------- | ---- | --------------- |
+| Class | Teacher         | Email                          | Room | In Master Data? |
+| ----- | --------------- | ------------------------------ | ---- | --------------- |
 | CE2 A | Amira Ben Amar  | <amira.benamar@efiriyad.com>   | 411  | YES             |
 | CE2 B | Rachida Alami   | <rachida.alami@efiriyad.com>   | 414  | NO (titulaire)  |
 | CE2 C | Sonia Rojkoff   | <sonia.rojkoff@efiriyad.com>   | 415  | YES             |
@@ -87,8 +87,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### CM1 (Cours Moyen 1) - 5 classes
 
-| Class | Teacher             | Email                            | Room | In Master Data?         |
-| ----- | ------------------- | -------------------------------- | ---- | ----------------------- |
+| Class | Teacher             | Email                              | Room | In Master Data?         |
+| ----- | ------------------- | ---------------------------------- | ---- | ----------------------- |
 | CM1 A | Saliha Ben Abdellah | <saliha.ben-abdellah@efiriyad.com> | 518  | NO (titulaire)          |
 | CM1 B | Leila El Smaili     | <laila.el-smaili@efiriyad.com>     | 206  | YES                     |
 | CM1 C | Hiba Harb           | <hiba.harb@efiriyad.com>           | 516  | YES (as Inclusion role) |
@@ -97,8 +97,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### CM2 (Cours Moyen 2) - 6 classes
 
-| Class | Teacher               | Email                             | Room | In Master Data? |
-| ----- | --------------------- | --------------------------------- | ---- | --------------- |
+| Class | Teacher               | Email                               | Room | In Master Data? |
+| ----- | --------------------- | ----------------------------------- | ---- | --------------- |
 | CM2 A | Abdallah Amghar       | <abdellah.amghar@efiriyad.com>      | 308  | NO (titulaire)  |
 | CM2 B | Kinda Cadet           | <kinda.cadet@efiriyad.com>          | 416  | NO (titulaire)  |
 | CM2 C | Claudelle Rigollet    | <claudelle.rigollet@efiriyad.com>   | 705B | YES             |
@@ -108,8 +108,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### Special Positions (Elementaire)
 
-| Role                                    | Teacher             | Email                            | Room | In Master Data?                             |
-| --------------------------------------- | ------------------- | -------------------------------- | ---- | ------------------------------------------- |
+| Role                                    | Teacher             | Email                              | Room | In Master Data?                             |
+| --------------------------------------- | ------------------- | ---------------------------------- | ---- | ------------------------------------------- |
 | PDMQDC (Plus de maitres que de classes) | Alexandra Van Oordt | <alexandra.van-oordt@efiriyad.com> | 208B | YES                                         |
 | FLE (Francais Langue Etrangere)         | Valerie Chout       | <valerie.chout@efiriyad.com>       | 219  | YES (but listed as Enseignant second degre) |
 
@@ -121,8 +121,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### Arabic Language Teachers
 
-| Name            | Email                        | Role                | In Master Data?       |
-| --------------- | ---------------------------- | ------------------- | --------------------- |
+| Name            | Email                          | Role                | In Master Data?       |
+| --------------- | ------------------------------ | ------------------- | --------------------- |
 | Fadia Saliba    | <fadia.saliba@efiriyad.com>    | Coordinatrice arabe | YES                   |
 | Reem Bachour    | <reem.bachour@efiriyad.com>    | Enseignante arabe   | YES                   |
 | Tamara Al Jundi | <tamara.al-jundi@efiriyad.com> | Enseignante arabe   | YES                   |
@@ -133,8 +133,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### English Language Teachers
 
-| Name               | Email                       | Role                  | In Master Data?        |
-| ------------------ | --------------------------- | --------------------- | ---------------------- |
+| Name               | Email                         | Role                  | In Master Data?        |
+| ------------------ | ----------------------------- | --------------------- | ---------------------- |
 | Myriam Shawbah     | <myriam.shawbah@efiriyad.com> | Coordinatrice anglais | YES                    |
 | Noura Hammoud      | <noura.hammoud@efiriyad.com>  | Enseignante anglais   | YES                    |
 | Lina El Ghazal     | <lina.el-ghazal@efiriyad.com> | Enseignante anglais   | YES                    |
@@ -148,8 +148,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### 6eme (5 classes on structure page, 6 on website)
 
-| Class  | Professeur Principal | Email                      | Subject (from enseignants page) | In Master Data?  |
-| ------ | -------------------- | -------------------------- | ------------------------------- | ---------------- |
+| Class  | Professeur Principal | Email                        | Subject (from enseignants page) | In Master Data?  |
+| ------ | -------------------- | ---------------------------- | ------------------------------- | ---------------- |
 | 6eme A | Najeh Belhadj        | <najeh.belhadj@efiriyad.com> | Mathematiques                   | YES (to confirm) |
 | 6eme B | Kehena Amri          | <kehena.amri@efiriyad.com>   | Francais                        | YES              |
 | 6eme C | Marie Dauphin        | <marie.dauphin@efiriyad.com> | Francais                        | NO (titulaire)   |
@@ -159,8 +159,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### 5eme (5 classes)
 
-| Class  | Professeur Principal               | Email                              | Subject                                 | In Master Data? |
-| ------ | ---------------------------------- | ---------------------------------- | --------------------------------------- | --------------- |
+| Class  | Professeur Principal               | Email                                | Subject                                 | In Master Data? |
+| ------ | ---------------------------------- | ------------------------------------ | --------------------------------------- | --------------- |
 | 5eme A | Laure Simon                        | <laure.simon@efiriyad.com>           | Histoire-Geo                            | NO (titulaire)  |
 | 5eme B | Salwa Fessi (email: youmna.younes) | <youmna.younes@efiriyad.com>         | Note: PP name/email mismatch on website | YES (Younes)    |
 | 5eme C | Ahmed Figua                        | <ahmed.figua@efiriyad.com>           | Technologie/SNT                         | NO (titulaire)  |
@@ -169,8 +169,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### 4eme (4 classes)
 
-| Class  | Professeur Principal | Email                            | Subject            | In Master Data?  |
-| ------ | -------------------- | -------------------------------- | ------------------ | ---------------- |
+| Class  | Professeur Principal | Email                              | Subject            | In Master Data?  |
+| ------ | -------------------- | ---------------------------------- | ------------------ | ---------------- |
 | 4eme A | Fatma-Chiraz Khaldi  | <fatma-chiraz.khaldi@efiriyad.com> | SVT                | YES              |
 | 4eme B | Arwa Mamlouk         | <arwa.mamlouk@efiriyad.com>        | Arts plastiques    | YES              |
 | 4eme C | Hela Yacoubi         | <hela.yacoubi@efiriyad.com>        | Mathematiques      | YES (to confirm) |
@@ -178,8 +178,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### 3eme (5 classes)
 
-| Class  | Professeur Principal | Email                          | Subject            | In Master Data? |
-| ------ | -------------------- | ------------------------------ | ------------------ | --------------- |
+| Class  | Professeur Principal | Email                            | Subject            | In Master Data? |
+| ------ | -------------------- | -------------------------------- | ------------------ | --------------- |
 | 3eme A | Zeina Maksoud        | <zeina.maksoud@efiriyad.com>     | Arabe              | YES             |
 | 3eme B | Amel Messaoudi       | <amel.messaoudi@efiriyad.com>    | Sciences physiques | YES             |
 | 3eme C | Maryelle Faye        | <maryelle.faye@efiriyad.com>     | Francais           | YES             |
@@ -192,8 +192,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### 2nde (5 classes)
 
-| Class  | Professeur Principal | Email                            | Subject            | In Master Data? |
-| ------ | -------------------- | -------------------------------- | ------------------ | --------------- |
+| Class  | Professeur Principal | Email                              | Subject            | In Master Data? |
+| ------ | -------------------- | ---------------------------------- | ------------------ | --------------- |
 | 2nde A | Khadija Ben Smida    | <khadija.ben-smida@efiriyad.com>   | Mathematiques      | YES             |
 | 2nde B | Gregory Hu           | <gregory.hu@efiriyad.com>          | SES                | NO (titulaire)  |
 | 2nde C | Mohamed Edouj        | <mohamed.edouj@efiriyad.com>       | Sciences physiques | NO (titulaire)  |
@@ -202,8 +202,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### 1ere (4 classes)
 
-| Class  | Professeur Principal | Email                         | Subject                     | In Master Data? |
-| ------ | -------------------- | ----------------------------- | --------------------------- | --------------- |
+| Class  | Professeur Principal | Email                           | Subject                     | In Master Data? |
+| ------ | -------------------- | ------------------------------- | --------------------------- | --------------- |
 | 1ere A | Kahena Djerad        | <kahena.djerad@efiriyad.com>    | Francais (coordinator)      | NO (titulaire)  |
 | 1ere B | Nasser Neghnagh      | <nasser.neghnagh@efiriyad.com>  | EPS (coordinator)           | NO (titulaire)  |
 | 1ere C | Serge Caratchian     | <serge.caratchian@efiriyad.com> | Francais                    | NO (titulaire)  |
@@ -211,8 +211,8 @@ The school structure page states the school has **"personnels titulaires de l'Ed
 
 ### Terminale (4 classes)
 
-| Class       | Professeur Principal | Email                          | Subject                    | In Master Data? |
-| ----------- | -------------------- | ------------------------------ | -------------------------- | --------------- |
+| Class       | Professeur Principal | Email                            | Subject                    | In Master Data? |
+| ----------- | -------------------- | -------------------------------- | -------------------------- | --------------- |
 | Terminale A | Riad Yakhlef         | <riad.yakhlef@efiriyad.com>      | Histoire-Geo (coordinator) | NO (titulaire)  |
 | Terminale B | Yann Thionel         | <yann.thionel@efiriyad.com>      | Histoire-Geo               | NO (titulaire)  |
 | Terminale C | Laurent Rousselle    | <laurent.rousselle@efiriyad.com> | Philosophie (coordinator)  | NO (titulaire)  |

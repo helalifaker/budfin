@@ -54,7 +54,6 @@ const TEACHING_FIXES: TeachingFix[] = [
 ];
 
 async function main(): Promise<void> {
-	// eslint-disable-next-line no-console
 	console.log('=== Fix Employee Band Mappings ===\n');
 
 	// Find the draft version
@@ -65,14 +64,13 @@ async function main(): Promise<void> {
 	});
 
 	if (!draftVersion) {
-		// eslint-disable-next-line no-console
 		console.error('No Draft version found');
 		process.exitCode = 1;
 		return;
 	}
 
 	const versionId = draftVersion.id;
-	// eslint-disable-next-line no-console
+
 	console.log(`Version: ${versionId}\n`);
 
 	// Apply band changes
@@ -84,7 +82,6 @@ async function main(): Promise<void> {
 		});
 
 		if (!emp) {
-			// eslint-disable-next-line no-console
 			console.log(`  NOT FOUND: ${change.name}`);
 			continue;
 		}
@@ -94,7 +91,6 @@ async function main(): Promise<void> {
 			data: { homeBand: change.newBand },
 		});
 
-		// eslint-disable-next-line no-console
 		console.log(`  BAND: ${change.name} ${emp.homeBand} → ${change.newBand}`);
 		bandUpdated++;
 	}
@@ -108,7 +104,6 @@ async function main(): Promise<void> {
 		});
 
 		if (!emp) {
-			// eslint-disable-next-line no-console
 			console.log(`  NOT FOUND: ${fix.name}`);
 			continue;
 		}
@@ -118,7 +113,6 @@ async function main(): Promise<void> {
 			data: { isTeaching: fix.isTeaching },
 		});
 
-		// eslint-disable-next-line no-console
 		console.log(`  TEACHING: ${fix.name} → ${fix.isTeaching}`);
 		teachingFixed++;
 	}
@@ -128,7 +122,6 @@ async function main(): Promise<void> {
 		where: { versionId, source: 'AUTO' },
 	});
 
-	// eslint-disable-next-line no-console
 	console.log(`\n  Deleted ${deleted.count} AUTO assignments (will be recreated on Calculate)`);
 
 	// Mark STAFFING as stale
@@ -143,13 +136,11 @@ async function main(): Promise<void> {
 		data: { staleModules: Array.from(staleSet) },
 	});
 
-	// eslint-disable-next-line no-console
 	console.log(`\n=== Done: ${bandUpdated} band changes, ${teachingFixed} teaching fixes ===`);
 }
 
 main()
 	.catch((e) => {
-		// eslint-disable-next-line no-console
 		console.error('Fatal error:', e);
 		process.exitCode = 1;
 	})

@@ -895,11 +895,10 @@ function computeFyTotal(monthlyAmounts: string[]): Decimal {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-	 
 	console.log('=== Import OpEx Budget Data (FY2026) ===\n');
 
 	// Step 1: Find version v2 for FY2026
-	 
+
 	console.log('[1/4] Finding target version...');
 
 	let version = await prisma.budgetVersion.findFirst({
@@ -909,7 +908,6 @@ async function main(): Promise<void> {
 
 	// Fallback: find the latest Draft version for FY2026
 	if (!version) {
-		 
 		console.log('  Version "v2" not found. Looking for latest Draft version (FY2026)...');
 		version = await prisma.budgetVersion.findFirst({
 			where: { fiscalYear: 2026, status: 'Draft' },
@@ -919,14 +917,13 @@ async function main(): Promise<void> {
 	}
 
 	if (!version) {
-		 
 		console.error('ERROR: No version "v2" (FY2026) or Draft version found. Aborting.');
 		process.exitCode = 1;
 		return;
 	}
 
 	const versionId = version.id;
-	 
+
 	console.log(
 		`  Found version: id=${versionId}, name="${version.name}", ` +
 			`fy=${version.fiscalYear}, status="${version.status}"`
@@ -934,27 +931,27 @@ async function main(): Promise<void> {
 
 	// Step 1b: Ensure migration user for createdBy
 	const userId = await ensureMigrationUser(prisma);
-	 
+
 	console.log(`  Migration user ID: ${userId}`);
 
 	// Step 2: Delete existing OpEx data for this version (idempotent)
-	 
+
 	console.log('\n[2/4] Clearing existing OpEx data for version...');
 
 	const deletedMonthly = await prisma.monthlyOpEx.deleteMany({
 		where: { versionId },
 	});
-	 
+
 	console.log(`  Deleted ${deletedMonthly.count} monthly_opex records`);
 
 	const deletedLineItems = await prisma.versionOpExLineItem.deleteMany({
 		where: { versionId },
 	});
-	 
+
 	console.log(`  Deleted ${deletedLineItems.count} version_opex_line_items records`);
 
 	// Step 3: Insert line items and monthly amounts in a transaction
-	 
+
 	console.log('\n[3/4] Inserting OpEx line items and monthly amounts...');
 
 	let lineItemCount = 0;
@@ -1014,13 +1011,12 @@ async function main(): Promise<void> {
 		}
 	);
 
-	 
 	console.log(`  Inserted ${lineItemCount} line items`);
-	 
+
 	console.log(`  Inserted ${monthlyCount} monthly records`);
 
 	// Step 4: Verification
-	 
+
 	console.log('\n[4/4] Verification...');
 
 	const dbLineItems = await prisma.versionOpExLineItem.count({
@@ -1033,23 +1029,22 @@ async function main(): Promise<void> {
 	const operatingItems = OPERATING_LINE_ITEMS.length;
 	const nonOperatingItems = NON_OPERATING_LINE_ITEMS.length;
 
-	 
 	console.log(`  DB line items: ${dbLineItems} (expected ${ALL_LINE_ITEMS.length})`);
-	 
+
 	console.log(`  DB monthly records: ${dbMonthly} (expected ${ALL_LINE_ITEMS.length * 12})`);
-	 
+
 	console.log(`  Operating items: ${operatingItems}`);
-	 
+
 	console.log(`  Non-operating items: ${nonOperatingItems}`);
-	 
+
 	console.log(`  Operating FY total: SAR ${operatingTotal.toFixed(4)}`);
-	 
+
 	console.log(`  Non-operating FY total: SAR ${nonOperatingTotal.toFixed(4)}`);
-	 
+
 	console.log(`  Combined FY total: SAR ${operatingTotal.plus(nonOperatingTotal).toFixed(4)}`);
 
 	// Per-category breakdown
-	 
+
 	console.log('\n  Per-category breakdown:');
 	const categoryTotals = new Map<string, Decimal>();
 	for (const item of ALL_LINE_ITEMS) {
@@ -1059,7 +1054,6 @@ async function main(): Promise<void> {
 		categoryTotals.set(key, existing.plus(fyTotal));
 	}
 	for (const [category, total] of categoryTotals) {
-		 
 		console.log(`    ${category}: SAR ${total.toFixed(4)}`);
 	}
 
@@ -1067,7 +1061,6 @@ async function main(): Promise<void> {
 	const expectedLineItems = ALL_LINE_ITEMS.length;
 	const expectedMonthly = expectedLineItems * 12;
 	if (dbLineItems !== expectedLineItems || dbMonthly !== expectedMonthly) {
-		 
 		console.error('\n  VALIDATION FAILED: Record counts do not match!');
 		process.exitCode = 1;
 		return;
@@ -1085,13 +1078,12 @@ async function main(): Promise<void> {
 		data: { staleModules: Array.from(staleSet) },
 	});
 
-	 
 	console.log(`\n  staleModules updated: [${Array.from(staleSet).join(', ')}]`);
 
 	// Final summary
-	 
+
 	console.log('\n=== Import Complete ===');
-	 
+
 	console.log(
 		JSON.stringify(
 			{
@@ -1113,7 +1105,6 @@ async function main(): Promise<void> {
 
 main()
 	.catch((e) => {
-		 
 		console.error('Fatal error:', e);
 		process.exitCode = 1;
 	})

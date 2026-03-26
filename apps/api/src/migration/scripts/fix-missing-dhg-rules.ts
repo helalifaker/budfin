@@ -138,7 +138,6 @@ const MISSING_RULES: RuleSpec[] = [
 ];
 
 async function main(): Promise<void> {
-	// eslint-disable-next-line no-console
 	console.log('=== Fix Missing DHG Rules ===\n');
 
 	// Load discipline and profile lookups
@@ -156,7 +155,6 @@ async function main(): Promise<void> {
 	for (const spec of MISSING_RULES) {
 		const disciplineId = discCodeToId.get(spec.disciplineCode);
 		if (!disciplineId) {
-			// eslint-disable-next-line no-console
 			console.log(`  SKIP: discipline '${spec.disciplineCode}' not found`);
 			skipped++;
 			continue;
@@ -164,7 +162,6 @@ async function main(): Promise<void> {
 
 		const serviceProfileId = profCodeToId.get(spec.serviceProfileCode);
 		if (!serviceProfileId) {
-			// eslint-disable-next-line no-console
 			console.log(`  SKIP: profile '${spec.serviceProfileCode}' not found`);
 			skipped++;
 			continue;
@@ -180,7 +177,6 @@ async function main(): Promise<void> {
 		});
 
 		if (existing) {
-			// eslint-disable-next-line no-console
 			console.log(
 				`  EXISTS: ${spec.gradeLevel} ${spec.disciplineCode} ${spec.lineType} (id=${existing.id})`
 			);
@@ -203,14 +199,12 @@ async function main(): Promise<void> {
 			},
 		});
 
-		// eslint-disable-next-line no-console
 		console.log(
 			`  ADDED: ${spec.gradeLevel} | ${spec.disciplineCode} | ${spec.hoursPerUnit}h | ${spec.lineType} | ${spec.serviceProfileCode}`
 		);
 		inserted++;
 	}
 
-	// eslint-disable-next-line no-console
 	console.log(`\n=== Done: ${inserted} inserted, ${skipped} skipped ===`);
 
 	// Mark STAFFING as stale so next Calculate picks up new rules
@@ -227,14 +221,13 @@ async function main(): Promise<void> {
 			where: { id: draftVersion.id },
 			data: { staleModules: Array.from(staleSet) },
 		});
-		// eslint-disable-next-line no-console
+
 		console.log(`Marked STAFFING as stale on version ${draftVersion.id}`);
 	}
 }
 
 main()
 	.catch((e) => {
-		// eslint-disable-next-line no-console
 		console.error('Fatal error:', e);
 		process.exitCode = 1;
 	})

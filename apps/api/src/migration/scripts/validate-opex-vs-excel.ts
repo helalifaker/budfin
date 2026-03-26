@@ -310,13 +310,12 @@ async function main() {
 	const version = await prisma.budgetVersion.findFirst({
 		where: { name: 'v2', fiscalYear: 2026 },
 	});
-	 
+
 	if (!version) {
 		console.error('Version v2 not found');
 		process.exit(1);
 	}
 
-	 
 	console.log('Validating OpEx for version', version.name, 'id=', version.id);
 
 	const lineItems = await prisma.versionOpExLineItem.findMany({
@@ -331,7 +330,6 @@ async function main() {
 	// Count check
 	checks++;
 	if (lineItems.length !== EXPECTED.length) {
-		 
 		console.error('FAIL count:', lineItems.length, 'vs', EXPECTED.length);
 		errors++;
 	} else {
@@ -343,7 +341,6 @@ async function main() {
 			(li) => li.lineItemName === exp.lineItemName && li.sectionType === exp.sectionType
 		);
 		if (!db) {
-			 
 			console.error('FAIL missing:', exp.lineItemName);
 			errors++;
 			continue;
@@ -355,7 +352,6 @@ async function main() {
 			const dbAmt = dbMa ? new Decimal(String(dbMa.amount)) : new Decimal(0);
 			const expAmt = new Decimal(exp.monthly[m]!);
 			if (dbAmt.minus(expAmt).abs().gt(TOLERANCE)) {
-				 
 				console.error(
 					'FAIL',
 					exp.lineItemName,
@@ -374,7 +370,6 @@ async function main() {
 		checks++;
 		const dbFy = db.monthlyAmounts.reduce((s, ma) => s.plus(String(ma.amount)), new Decimal(0));
 		if (dbFy.minus(exp.fyTotal).abs().gt(TOLERANCE)) {
-			 
 			console.error('FAIL FY', exp.lineItemName, ':', dbFy.toFixed(4), 'vs', exp.fyTotal);
 			errors++;
 		} else {
@@ -390,31 +385,26 @@ async function main() {
 		.reduce((s, ma) => s.plus(String(ma.amount)), new Decimal(0));
 
 	if (dbOpTotal.minus(EXPECTED_OPERATING_TOTAL).abs().gt(TOLERANCE)) {
-		 
 		console.error('FAIL grand total:', dbOpTotal.toFixed(4), 'vs', EXPECTED_OPERATING_TOTAL);
 		errors++;
 	} else {
 		passed++;
-		 
+
 		console.log('PASS grand total:', dbOpTotal.toFixed(4));
 	}
 
-	 
 	console.log('\n=== RESULT ===');
-	 
+
 	console.log('Checks:', checks, '| Passed:', passed, '| Failed:', errors);
 
 	if (errors === 0) {
-		 
 		console.log('\n*** 100% MATCH — ALL CHECKS PASSED ***');
 	} else {
-		 
 		console.error('\n***', errors, 'FAILURES ***');
 		process.exit(1);
 	}
 }
 
- 
 main()
 	.catch((e) => {
 		console.error(e);
