@@ -201,7 +201,8 @@ describe('pnl-engine', () => {
 			const result = calculatePnl([], [], staffCosts, [], []);
 			const baseSalaries = findLine(result.lines, 'BASE_SALARIES_EXISTING', 1);
 			expect(baseSalaries!.signConvention).toBe('NEGATIVE');
-			expect(baseSalaries!.amount).toBe('5000.0000');
+			// baseSalary = adjustedGross(6000) - housing(1500) - transport(500) - resp(200) - hsa(0) = 3800
+			expect(baseSalaries!.amount).toBe('3800.0000');
 		});
 
 		it('should output operating expenses with NEGATIVE sign convention', () => {
@@ -258,7 +259,8 @@ describe('pnl-engine', () => {
 			];
 			const result = calculatePnl([], [], staffCosts, [], []);
 
-			expect(findLine(result.lines, 'BASE_SALARIES_EXISTING', 1)!.amount).toBe('5000.0000');
+			// baseSalary = adjustedGross(6000) - housing(1500) - transport(500) - resp(200) - hsa(100) = 3700
+			expect(findLine(result.lines, 'BASE_SALARIES_EXISTING', 1)!.amount).toBe('3700.0000');
 			expect(findLine(result.lines, 'HOUSING_EXISTING', 1)!.amount).toBe('1500.0000');
 			expect(findLine(result.lines, 'TRANSPORT_EXISTING', 1)!.amount).toBe('500.0000');
 			expect(findLine(result.lines, 'RESPONSIBILITY_EXISTING', 1)!.amount).toBe('200.0000');
@@ -289,7 +291,9 @@ describe('pnl-engine', () => {
 			];
 			const result = calculatePnl([], [], staffCosts, [], []);
 
-			expect(findLine(result.lines, 'BASE_SALARIES_EXISTING', 1)!.amount).toBe('5000.0000');
+			// baseSalary = adjustedGross(6000) - housing(1500) - transport(500) - resp(200) - hsa(0) = 3800
+			expect(findLine(result.lines, 'BASE_SALARIES_EXISTING', 1)!.amount).toBe('3800.0000');
+			// newPositions = adjustedGross(6000) for the new employee
 			expect(findLine(result.lines, 'NEW_POSITIONS', 1)!.amount).toBe('6000.0000');
 			expect(findLine(result.lines, 'AJEER_EXISTING', 1)!.amount).toBe('500.0000');
 			expect(findLine(result.lines, 'AJEER_NEW', 1)!.amount).toBe('400.0000');
@@ -304,8 +308,10 @@ describe('pnl-engine', () => {
 			const result = calculatePnl([], [], staffCosts, categoryCosts, []);
 			const totalStaff = findLine(result.lines, 'STAFF_COSTS_SUBTOTAL', 1);
 			expect(totalStaff!.isSubtotal).toBe(true);
-			// Local: 5000+1500+500+200+0+0new=7200, Cat: 300, Emp: 705+300+910.42+0new=1915.42
-			expect(totalStaff!.amount).toBe('9415.4200');
+			// Local: baseSalary(3800)+housing(1500)+transport(500)+resp(200)+hsa(0)+0new=6000
+			// Cat: 300, Emp: 705+300+910.42+0new=1915.42
+			// Total: 6000+300+1915.42=8215.42
+			expect(totalStaff!.amount).toBe('8215.4200');
 		});
 
 		it('should display correct category cost labels', () => {
@@ -625,7 +631,9 @@ describe('pnl-engine', () => {
 				makeStaffCost({ month: 1, employeeId: 3, isNew: false, baseGross: '3000.0000' }),
 			];
 			const result = calculatePnl([], [], staffCosts, [], []);
-			expect(findLine(result.lines, 'BASE_SALARIES_EXISTING', 1)!.amount).toBe('15000.0000');
+			// Each employee: adjustedGross(6000) - housing(1500) - transport(500) - resp(200) - hsa(0) = 3800
+			// 3 employees: 3800 * 3 = 11400
+			expect(findLine(result.lines, 'BASE_SALARIES_EXISTING', 1)!.amount).toBe('11400.0000');
 		});
 
 		it('should keep months independent', () => {
@@ -739,16 +747,19 @@ describe('pnl-engine', () => {
 			const result = calculatePnl(revenue, otherRevenue, staffCosts, categoryCosts, opex);
 
 			expect(findLine(result.lines, 'TOTAL_REVENUE', 1)!.amount).toBe('107000.0000');
-			expect(findLine(result.lines, 'STAFF_COSTS_SUBTOTAL', 1)!.amount).toBe('31160.4200');
-			expect(findLine(result.lines, 'TOTAL_OPEX', 1)!.amount).toBe('42160.4200');
-			expect(findLine(result.lines, 'OPERATING_PROFIT', 1)!.amount).toBe('64839.5800');
+			// staffCosts: local(baseSalary 13500+housing 5000+transport 1000+resp 500+hsa 0)=20000
+			//   + cat 400 + employer(gosi 2350+eos 1000+ajeer 910.42)=4260.42
+			//   = 24660.42
+			expect(findLine(result.lines, 'STAFF_COSTS_SUBTOTAL', 1)!.amount).toBe('24660.4200');
+			expect(findLine(result.lines, 'TOTAL_OPEX', 1)!.amount).toBe('35660.4200');
+			expect(findLine(result.lines, 'OPERATING_PROFIT', 1)!.amount).toBe('71339.5800');
 			expect(findLine(result.lines, 'NET_FINANCE', 1)!.amount).toBe('500.0000');
-			expect(findLine(result.lines, 'PROFIT_BEFORE_ZAKAT', 1)!.amount).toBe('65339.5800');
-			expect(findLine(result.lines, 'ZAKAT', 1)!.amount).toBe('1633.4895');
-			expect(findLine(result.lines, 'NET_PROFIT', 1)!.amount).toBe('63706.0905');
+			expect(findLine(result.lines, 'PROFIT_BEFORE_ZAKAT', 1)!.amount).toBe('71839.5800');
+			expect(findLine(result.lines, 'ZAKAT', 1)!.amount).toBe('1795.9895');
+			expect(findLine(result.lines, 'NET_PROFIT', 1)!.amount).toBe('70043.5905');
 			expect(result.summaries[0]!.revenueHt).toBe('107000.0000');
-			expect(result.summaries[0]!.staffCosts).toBe('31160.4200');
-			expect(result.summaries[0]!.ebitda).toBe('67839.5800');
+			expect(result.summaries[0]!.staffCosts).toBe('24660.4200');
+			expect(result.summaries[0]!.ebitda).toBe('74339.5800');
 		});
 
 		it('should compute full 12-month P&L', () => {

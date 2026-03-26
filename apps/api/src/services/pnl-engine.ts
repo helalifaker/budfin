@@ -356,11 +356,21 @@ export function calculatePnl(
 	const isExisting = (s: StaffCostInput) => !s.isNew;
 	const isNew = (s: StaffCostInput) => s.isNew;
 
+	// Base salary = adjustedGross minus the component allowances (housing, transport, resp, HSA)
+	// This avoids double-counting since components are shown as separate P&L lines.
 	const baseSalariesExisting = aggregateFiltered(
 		staffCosts,
 		isExisting,
 		(s) => s.month,
-		(s) => s.baseGross
+		(s) => {
+			const adj = new Decimal(s.adjustedGross);
+			return adj
+				.minus(new Decimal(s.housingAllowance))
+				.minus(new Decimal(s.transportAllowance))
+				.minus(new Decimal(s.responsibilityPremium))
+				.minus(new Decimal(s.hsaAmount))
+				.toFixed(4);
+		}
 	);
 	const housingExisting = aggregateFiltered(
 		staffCosts,
@@ -386,11 +396,13 @@ export function calculatePnl(
 		(s) => s.month,
 		(s) => s.hsaAmount
 	);
+	// New positions: use adjustedGross (salary only), since employer charges
+	// (GOSI, Ajeer, EOS) are aggregated separately for all employees.
 	const newPositionsCost = aggregateFiltered(
 		staffCosts,
 		isNew,
 		(s) => s.month,
-		(s) => s.totalCost
+		(s) => s.adjustedGross
 	);
 
 	const localSalariesTotal = sumAccumulators(
