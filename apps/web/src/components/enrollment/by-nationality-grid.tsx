@@ -1,17 +1,11 @@
 import { useMemo } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Check, AlertTriangle } from 'lucide-react';
-import { cn } from '../../lib/cn';
 import { useHeadcount, useDetail } from '../../hooks/use-enrollment';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import type { AcademicPeriod } from '@budfin/types';
 import type { GradeBand } from '../../hooks/use-grade-levels';
-import { TableSkeleton } from '../ui/skeleton';
+import { PlanningGrid } from '../data-grid/planning-grid';
 
 interface NationalityRow {
 	gradeLevel: string;
@@ -90,12 +84,14 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('gradeName', {
+				id: 'gradeName',
 				header: 'Grade',
 				cell: (info) => (
 					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
 				),
 			}),
 			columnHelper.accessor('francais', {
+				id: 'francais',
 				header: 'Francais',
 				cell: (info) => (
 					<span className="inline-block w-16 px-2 py-1 text-right text-(--text-sm) tabular-nums">
@@ -104,6 +100,7 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 				),
 			}),
 			columnHelper.accessor('nationaux', {
+				id: 'nationaux',
 				header: 'Nationaux',
 				cell: (info) => (
 					<span className="inline-block w-16 px-2 py-1 text-right text-(--text-sm) tabular-nums">
@@ -112,6 +109,7 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 				),
 			}),
 			columnHelper.accessor('autres', {
+				id: 'autres',
 				header: 'Autres',
 				cell: (info) => (
 					<span className="inline-block w-16 px-2 py-1 text-right text-(--text-sm) tabular-nums">
@@ -120,10 +118,12 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 				),
 			}),
 			columnHelper.accessor('total', {
+				id: 'total',
 				header: 'Total',
 				cell: (info) => <span className="font-medium tabular-nums">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('matches', {
+				id: 'matches',
 				header: 'Match',
 				cell: (info) => {
 					const row = info.row.original;
@@ -141,6 +141,7 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 				},
 			}),
 			columnHelper.accessor('stage1Total', {
+				id: 'stage1Total',
 				header: 'Stage 1',
 				cell: (info) => <span className="text-(--text-muted) tabular-nums">{info.getValue()}</span>,
 			}),
@@ -162,48 +163,18 @@ export function ByNationalityGrid({ versionId, bandFilter, academicPeriod }: Pro
 					{mismatchCount} grade{mismatchCount > 1 ? 's' : ''} with nationality total mismatch
 				</div>
 			)}
-			<div className="overflow-x-auto rounded-lg border">
-				<table
-					role="table"
-					className="w-full text-left text-(--text-sm)"
-					aria-label="Enrollment by nationality"
-				>
-					<thead className="border-b bg-(--workspace-bg-muted)">
-						{table.getHeaderGroups().map((hg) => (
-							<tr key={hg.id}>
-								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-										{flexRender(header.column.columnDef.header, header.getContext())}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{isLoading ? (
-							<TableSkeleton rows={15} cols={columns.length} />
-						) : (
-							table.getRowModel().rows.map((row) => (
-								<tr
-									key={row.id}
-									className={cn(
-										'border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)',
-										!row.original.matches &&
-											row.original.stage1Total > 0 &&
-											'bg-(--color-warning-bg)/30'
-									)}
-								>
-									{row.getVisibleCells().map((cell) => (
-										<td key={cell.id} className="px-4 py-2">
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
-								</tr>
-							))
-						)}
-					</tbody>
-				</table>
-			</div>
+			<PlanningGrid
+				table={table}
+				isLoading={isLoading}
+				ariaLabel="Enrollment by nationality"
+				rangeSelection
+				clipboardEnabled
+				pinnedColumns={['gradeName']}
+				numericColumns={['francais', 'nationaux', 'autres', 'total', 'stage1Total']}
+				getRowClassName={(row) =>
+					!row.matches && row.stage1Total > 0 ? 'bg-(--color-warning-bg)/30' : undefined
+				}
+			/>
 		</div>
 	);
 }

@@ -136,6 +136,8 @@ export function CapacityGrid({
 		<PlanningGrid
 			table={table}
 			isLoading={gradesLoading}
+			rangeSelection
+			clipboardEnabled
 			bandGrouping={{
 				getBand: (row) => row.band,
 				bandLabels: BAND_LABELS,

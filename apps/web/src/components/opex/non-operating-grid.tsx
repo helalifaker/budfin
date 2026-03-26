@@ -135,7 +135,7 @@ function buildColumns(
 			cell: ({ row }) => {
 				const total = computeFyTotal(row.original);
 				return (
-					<span className="font-[family-name:var(--font-mono)] text-[11px] font-semibold tabular-nums text-(--text-primary)">
+					<span className="font-mono text-(--text-xs) font-semibold tabular-nums text-(--text-primary)">
 						{total.isZero() ? '' : formatGridValue(total)}
 					</span>
 				);
@@ -149,7 +149,7 @@ function buildColumns(
 			cell: ({ getValue }) => {
 				const val = getValue();
 				return (
-					<span className="font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-(--text-muted)">
+					<span className="font-mono text-(--text-xs) tabular-nums text-(--text-muted)">
 						{val ? formatGridValue(val) : ''}
 					</span>
 				);
@@ -163,7 +163,7 @@ function buildColumns(
 			cell: ({ getValue }) => {
 				const val = getValue();
 				return (
-					<span className="font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-(--text-muted)">
+					<span className="font-mono text-(--text-xs) tabular-nums text-(--text-muted)">
 						{val ? formatGridValue(val) : ''}
 					</span>
 				);
@@ -177,7 +177,7 @@ function buildColumns(
 			cell: ({ getValue }) => {
 				const val = getValue();
 				return (
-					<span className="font-[family-name:var(--font-mono)] text-[11px] tabular-nums text-(--text-muted)">
+					<span className="font-mono text-(--text-xs) tabular-nums text-(--text-muted)">
 						{val ? formatGridValue(val) : ''}
 					</span>
 				);
@@ -285,6 +285,8 @@ export function NonOperatingGrid({
 			table={table}
 			variant="compact"
 			ariaLabel="Non-operating items grid"
+			rangeSelection
+			clipboardEnabled
 			pinnedColumns={['lineItemName']}
 			numericColumns={numericColumnIds}
 			editableColumns={editableColumnIds}

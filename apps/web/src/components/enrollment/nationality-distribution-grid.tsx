@@ -190,6 +190,8 @@ export function NationalityDistributionGrid({
 		<PlanningGrid
 			table={table}
 			isLoading={isLoading}
+			rangeSelection
+			clipboardEnabled
 			bandGrouping={{
 				getBand: (row) => row.band,
 				bandLabels: BAND_LABELS,

@@ -1,31 +1,13 @@
-import React, { useMemo, useCallback } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { useMemo, useCallback } from 'react';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
 import type { HeadcountEntry, CapacityResult, CapacityAlert } from '@budfin/types';
 import type { HeadcountRow } from '../../hooks/use-enrollment';
 import type { GradeLevel, GradeBand } from '../../hooks/use-grade-levels';
-import { TableSkeleton } from '../ui/skeleton';
 import { AlertBadge, UtilizationCell } from './capacity-columns';
 import { EditableCell } from '../shared/editable-cell';
-
-const BAND_LABELS: Record<string, string> = {
-	MATERNELLE: 'Maternelle',
-	ELEMENTAIRE: 'Elementaire',
-	COLLEGE: 'College',
-	LYCEE: 'Lycee',
-};
-
-const BAND_STYLES: Record<string, string> = {
-	MATERNELLE: 'bg-(--badge-maternelle-bg) text-(--badge-maternelle)',
-	ELEMENTAIRE: 'bg-(--badge-elementaire-bg) text-(--badge-elementaire)',
-	COLLEGE: 'bg-(--badge-college-bg) text-(--badge-college)',
-	LYCEE: 'bg-(--badge-lycee-bg) text-(--badge-lycee)',
-};
+import { PlanningGrid } from '../data-grid/planning-grid';
+import { BAND_LABELS, BAND_STYLES } from '../../lib/band-styles';
 
 interface ByGradeGridProps {
 	entries: HeadcountRow[];
@@ -178,45 +160,27 @@ export function ByGradeGrid({
 		[onSave]
 	);
 
-	// Group by band for visual separators
-	const bands = useMemo(() => {
-		const bandMap = new Map<string, GridRow[]>();
-		for (const row of rows) {
-			const existing = bandMap.get(row.band) ?? [];
-			existing.push(row);
-			bandMap.set(row.band, existing);
-		}
-		return bandMap;
-	}, [rows]);
-
-	// Grand totals
-	const grandTotal = useMemo(
-		() => ({
-			ay1: rows.reduce((sum, r) => sum + r.ay1, 0),
-			ay2: rows.reduce((sum, r) => sum + r.ay2, 0),
-			total: rows.reduce((sum, r) => sum + r.total, 0),
-		}),
-		[rows]
-	);
-
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('gradeName', {
+				id: 'gradeName',
 				header: 'Grade',
 				cell: (info) => (
 					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
 				),
 			}),
 			columnHelper.accessor('band', {
+				id: 'band',
 				header: 'Band',
 				cell: (info) => {
 					const band = info.getValue();
 					return (
 						<span
-							className={cn(
-								'inline-block rounded-sm px-2 py-0.5 text-(length:--text-xs) font-medium',
-								BAND_STYLES[band] ?? ''
-							)}
+							className="inline-block rounded-sm px-2 py-0.5 text-(length:--text-xs) font-medium"
+							style={{
+								color: BAND_STYLES[band]?.color,
+								backgroundColor: BAND_STYLES[band]?.bg,
+							}}
 						>
 							{BAND_LABELS[band] ?? band}
 						</span>
@@ -224,6 +188,7 @@ export function ByGradeGrid({
 				},
 			}),
 			columnHelper.accessor('ay1', {
+				id: 'ay1',
 				header: 'AY1 (Jan-Jun)',
 				cell: (info) => (
 					<EditableCell
@@ -235,6 +200,7 @@ export function ByGradeGrid({
 				),
 			}),
 			columnHelper.accessor('ay2', {
+				id: 'ay2',
 				header: 'AY2 (Sep-Dec)',
 				cell: (info) => (
 					<EditableCell
@@ -246,18 +212,22 @@ export function ByGradeGrid({
 				),
 			}),
 			columnHelper.accessor('total', {
+				id: 'total',
 				header: 'Total',
 				cell: (info) => <span className="font-medium tabular-nums">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('deltaAy1', {
+				id: 'deltaAy1',
 				header: 'Delta AY1',
 				cell: (info) => <DeltaCell delta={info.getValue()} isNew={info.row.original.isNew} />,
 			}),
 			columnHelper.accessor('deltaAy2', {
+				id: 'deltaAy2',
 				header: 'Delta AY2',
 				cell: (info) => <DeltaCell delta={info.getValue()} isNew={info.row.original.isNew} />,
 			}),
 			columnHelper.accessor('sectionsNeeded', {
+				id: 'sectionsNeeded',
 				header: 'Sections',
 				cell: (info) => {
 					const val = info.getValue();
@@ -269,10 +239,12 @@ export function ByGradeGrid({
 				},
 			}),
 			columnHelper.accessor('utilization', {
+				id: 'utilization',
 				header: 'Utilization',
 				cell: (info) => <UtilizationCell value={info.getValue()} />,
 			}),
 			columnHelper.accessor('alert', {
+				id: 'alert',
 				header: 'Alert',
 				cell: (info) => <AlertBadge alert={info.getValue()} />,
 			}),
@@ -286,83 +258,62 @@ export function ByGradeGrid({
 		getCoreRowModel: getCoreRowModel(),
 	});
 
+	const grandTotalRow = useMemo(() => {
+		if (rows.length === 0) return [];
+		return [
+			{
+				label: 'Grand Total',
+				type: 'grandtotal' as const,
+				values: {
+					ay1: rows.reduce((sum, r) => sum + r.ay1, 0),
+					ay2: rows.reduce((sum, r) => sum + r.ay2, 0),
+					total: rows.reduce((sum, r) => sum + r.total, 0),
+				},
+			},
+		];
+	}, [rows]);
+
+	const bandFooterBuilder = useCallback((bandRows: GridRow[], band: string) => {
+		return {
+			label: `${BAND_LABELS[band] ?? band} Subtotal`,
+			type: 'subtotal' as const,
+			values: {
+				ay1: bandRows.reduce((sum, r) => sum + r.ay1, 0),
+				ay2: bandRows.reduce((sum, r) => sum + r.ay2, 0),
+				total: bandRows.reduce((sum, r) => sum + r.total, 0),
+			},
+		};
+	}, []);
+
+	const editableColumnIds = isReadOnly ? [] : ['ay1', 'ay2'];
+
 	return (
-		<div className="overflow-x-auto rounded-lg border">
-			<table
-				role="grid"
-				className="w-full text-left text-(length:--text-sm)"
-				aria-label="Enrollment by grade"
-			>
-				<thead className="border-b bg-(--workspace-bg-muted)">
-					{table.getHeaderGroups().map((hg) => (
-						<tr key={hg.id}>
-							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{isLoading ? (
-						<TableSkeleton rows={15} cols={columns.length} />
-					) : rows.length === 0 ? (
-						<tr>
-							<td colSpan={columns.length} className="px-4 py-6 text-center text-(--text-muted)">
-								No enrollment data. Start entering headcount for each grade.
-							</td>
-						</tr>
-					) : (
-						<>
-							{[...bands.entries()].map(([band, bandRows]) => (
-								<React.Fragment key={`band-${band}`}>
-									{/* Band group header */}
-									<tr className="bg-(--workspace-bg-muted)/50">
-										<td
-											colSpan={columns.length}
-											className="px-4 py-1.5 text-(length:--text-xs) font-semibold text-(--text-muted) uppercase tracking-wider"
-										>
-											{BAND_LABELS[band] ?? band} ({bandRows.length} grades)
-										</td>
-									</tr>
-									{bandRows.map((row) => {
-										const tableRow = table
-											.getRowModel()
-											.rows.find((r) => r.original.gradeLevel === row.gradeLevel);
-										if (!tableRow) return null;
-										return (
-											<tr
-												key={tableRow.id}
-												className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-											>
-												{tableRow.getVisibleCells().map((cell) => (
-													<td key={cell.id} className="px-4 py-2">
-														{flexRender(cell.column.columnDef.cell, cell.getContext())}
-													</td>
-												))}
-											</tr>
-										);
-									})}
-								</React.Fragment>
-							))}
-							{/* Grand total row */}
-							<tr className="sticky bottom-0 border-t-2 bg-(--workspace-bg-muted) font-semibold">
-								<td className="px-4 py-2 text-(--text-primary)">Grand Total</td>
-								<td className="px-4 py-2" />
-								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.ay1}</td>
-								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.ay2}</td>
-								<td className="px-4 py-2 text-right tabular-nums">{grandTotal.total}</td>
-								<td className="px-4 py-2" />
-								<td className="px-4 py-2" />
-								<td className="px-4 py-2" />
-								<td className="px-4 py-2" />
-								<td className="px-4 py-2" />
-							</tr>
-						</>
-					)}
-				</tbody>
-			</table>
-		</div>
+		<PlanningGrid
+			table={table}
+			isLoading={isLoading}
+			ariaLabel="Enrollment by grade"
+			rangeSelection
+			clipboardEnabled
+			pinnedColumns={['gradeName']}
+			numericColumns={[
+				'ay1',
+				'ay2',
+				'total',
+				'deltaAy1',
+				'deltaAy2',
+				'sectionsNeeded',
+				'utilization',
+			]}
+			editableColumns={editableColumnIds}
+			bandGrouping={{
+				getBand: (row) => row.band,
+				bandLabels: BAND_LABELS,
+				bandStyles: BAND_STYLES,
+				collapsible: true,
+				footerBuilder: bandFooterBuilder,
+			}}
+			footerRows={grandTotalRow}
+			forceGridRole
+		/>
 	);
 }

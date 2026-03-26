@@ -1,16 +1,11 @@
 import { useMemo, useCallback } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useDetail, usePutDetail } from '../../hooks/use-enrollment';
 import { useGradeLevels } from '../../hooks/use-grade-levels';
 import type { AcademicPeriod, DetailEntry } from '@budfin/types';
 import type { GradeBand } from '../../hooks/use-grade-levels';
-import { TableSkeleton } from '../ui/skeleton';
 import { EditableCell } from '../shared/editable-cell';
+import { PlanningGrid } from '../data-grid/planning-grid';
 
 interface TariffRow {
 	gradeLevel: string;
@@ -135,11 +130,13 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 	const columns = useMemo(() => {
 		const makeTariffCol = (
 			accessor: keyof TariffRow,
+			id: string,
 			header: string,
 			nationality: string,
 			tariff: string
 		) =>
 			columnHelper.accessor(accessor as 'francaisRp', {
+				id,
 				header,
 				cell: (info) => (
 					<EditableCell
@@ -155,21 +152,41 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 
 		return [
 			columnHelper.accessor('gradeName', {
+				id: 'gradeName',
 				header: 'Grade',
 				cell: (info) => (
 					<span className="font-medium text-(--text-primary)">{info.getValue()}</span>
 				),
 			}),
-			makeTariffCol('francaisRp', 'FR RP', 'Francais', 'RP'),
-			makeTariffCol('francaisR3', 'FR R3+', 'Francais', 'R3+'),
-			makeTariffCol('francaisPlein', 'FR Plein', 'Francais', 'Plein'),
-			makeTariffCol('nationauxRp', 'NAT RP', 'Nationaux', 'RP'),
-			makeTariffCol('nationauxR3', 'NAT R3+', 'Nationaux', 'R3+'),
-			makeTariffCol('nationauxPlein', 'NAT Plein', 'Nationaux', 'Plein'),
-			makeTariffCol('autresRp', 'AUT RP', 'Autres', 'RP'),
-			makeTariffCol('autresR3', 'AUT R3+', 'Autres', 'R3+'),
-			makeTariffCol('autresPlein', 'AUT Plein', 'Autres', 'Plein'),
+			columnHelper.group({
+				id: 'francais-group',
+				header: 'Francais',
+				columns: [
+					makeTariffCol('francaisRp', 'francaisRp', 'RP', 'Francais', 'RP'),
+					makeTariffCol('francaisR3', 'francaisR3', 'R3+', 'Francais', 'R3+'),
+					makeTariffCol('francaisPlein', 'francaisPlein', 'Plein', 'Francais', 'Plein'),
+				],
+			}),
+			columnHelper.group({
+				id: 'nationaux-group',
+				header: 'Nationaux',
+				columns: [
+					makeTariffCol('nationauxRp', 'nationauxRp', 'RP', 'Nationaux', 'RP'),
+					makeTariffCol('nationauxR3', 'nationauxR3', 'R3+', 'Nationaux', 'R3+'),
+					makeTariffCol('nationauxPlein', 'nationauxPlein', 'Plein', 'Nationaux', 'Plein'),
+				],
+			}),
+			columnHelper.group({
+				id: 'autres-group',
+				header: 'Autres',
+				columns: [
+					makeTariffCol('autresRp', 'autresRp', 'RP', 'Autres', 'RP'),
+					makeTariffCol('autresR3', 'autresR3', 'R3+', 'Autres', 'R3+'),
+					makeTariffCol('autresPlein', 'autresPlein', 'Plein', 'Autres', 'Plein'),
+				],
+			}),
 			columnHelper.accessor('total', {
+				id: 'total',
 				header: 'Total',
 				cell: (info) => <span className="font-medium tabular-nums">{info.getValue()}</span>,
 			}),
@@ -182,71 +199,34 @@ export function ByTariffGrid({ versionId, isReadOnly, bandFilter, academicPeriod
 		getCoreRowModel: getCoreRowModel(),
 	});
 
+	const editableColumnIds = isReadOnly
+		? []
+		: [
+				'francaisRp',
+				'francaisR3',
+				'francaisPlein',
+				'nationauxRp',
+				'nationauxR3',
+				'nationauxPlein',
+				'autresRp',
+				'autresR3',
+				'autresPlein',
+			];
+
+	const numericColumnIds = [...editableColumnIds, 'total'];
+
 	return (
-		<div className="overflow-x-auto rounded-lg border">
-			<table
-				role="grid"
-				className="w-full text-left text-(length:--text-sm)"
-				aria-label="Enrollment by tariff"
-			>
-				<thead className="border-b bg-(--workspace-bg-muted)">
-					{/* Two-level header */}
-					<tr>
-						<th rowSpan={2} className="px-4 py-3 font-medium text-(--text-secondary)">
-							Grade
-						</th>
-						<th
-							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
-						>
-							Francais
-						</th>
-						<th
-							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
-						>
-							Nationaux
-						</th>
-						<th
-							colSpan={3}
-							className="border-b border-l px-4 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
-						>
-							Autres
-						</th>
-						<th rowSpan={2} className="border-l px-4 py-3 font-medium text-(--text-secondary)">
-							Total
-						</th>
-					</tr>
-					<tr>
-						{['RP', 'R3+', 'Plein', 'RP', 'R3+', 'Plein', 'RP', 'R3+', 'Plein'].map((t, i) => (
-							<th
-								key={`${t}-${i}`}
-								className="border-l px-3 py-1.5 text-center text-(length:--text-xs) font-medium text-(--text-muted)"
-							>
-								{t}
-							</th>
-						))}
-					</tr>
-				</thead>
-				<tbody>
-					{isLoading ? (
-						<TableSkeleton rows={15} cols={11} />
-					) : (
-						table.getRowModel().rows.map((row) => (
-							<tr
-								key={row.id}
-								className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-							>
-								{row.getVisibleCells().map((cell) => (
-									<td key={cell.id} className="px-3 py-2">
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</td>
-								))}
-							</tr>
-						))
-					)}
-				</tbody>
-			</table>
-		</div>
+		<PlanningGrid
+			table={table}
+			isLoading={isLoading}
+			variant="compact"
+			ariaLabel="Enrollment by tariff"
+			rangeSelection
+			clipboardEnabled
+			pinnedColumns={['gradeName']}
+			numericColumns={numericColumnIds}
+			editableColumns={editableColumnIds}
+			forceGridRole
+		/>
 	);
 }

@@ -106,7 +106,7 @@ export function TeachingMasterGrid({
 				header: 'Profile',
 				size: 80,
 				cell: ({ getValue }) => (
-					<span className="text-center font-[family-name:var(--font-mono)] text-(--text-secondary)">
+					<span className="text-center font-mono text-(--text-secondary)">
 						{String(getValue())}
 					</span>
 				),
@@ -116,9 +116,7 @@ export function TeachingMasterGrid({
 				header: 'Units',
 				size: 60,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('totalWeeklyHours', {
@@ -126,9 +124,7 @@ export function TeachingMasterGrid({
 				header: 'Hrs/w',
 				size: 70,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('baseOrs', {
@@ -138,9 +134,7 @@ export function TeachingMasterGrid({
 				),
 				size: 55,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums text-(--text-muted)">{String(getValue())}</span>
 				),
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('effectiveOrs', {
@@ -152,7 +146,7 @@ export function TeachingMasterGrid({
 					return (
 						<span
 							className={cn(
-								'font-[family-name:var(--font-mono)] tabular-nums',
+								'font-mono tabular-nums',
 								isBold ? 'font-bold text-(--text-primary)' : 'text-(--text-muted)'
 							)}
 						>
@@ -166,7 +160,7 @@ export function TeachingMasterGrid({
 				header: () => <span title="Required FTE = total hours / base ORS">Raw FTE</span>,
 				size: 75,
 				cell: ({ getValue }) => (
-					<span className="font-bold font-[family-name:var(--font-mono)] tabular-nums">
+					<span className="font-bold font-mono tabular-nums">
 						{parseFloat(String(getValue())).toFixed(2)}
 					</span>
 				),
@@ -178,7 +172,7 @@ export function TeachingMasterGrid({
 				),
 				size: 75,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
+					<span className="font-mono tabular-nums text-(--text-muted)">
 						{parseFloat(String(getValue())).toFixed(2)}
 					</span>
 				),
@@ -188,9 +182,7 @@ export function TeachingMasterGrid({
 				header: () => <span title="Recommended positions (Raw FTE rounded up)">Rec.Pos</span>,
 				size: 65,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums text-(--text-muted)">{String(getValue())}</span>
 				),
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('coveredFte', {
@@ -198,7 +190,7 @@ export function TeachingMasterGrid({
 				header: 'Covered',
 				size: 75,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
+					<span className="font-mono tabular-nums">
 						{parseFloat(String(getValue())).toFixed(2)}
 					</span>
 				),
@@ -214,7 +206,7 @@ export function TeachingMasterGrid({
 						<span
 							data-column="gapFte"
 							className={cn(
-								'inline-block w-full rounded px-1 font-[family-name:var(--font-mono)] tabular-nums',
+								'inline-block w-full rounded px-1 font-mono tabular-nums',
 								getGapTintClass(value),
 								num < 0 && 'text-(--delta-negative)',
 								num > 0 && 'text-(--delta-positive)',
@@ -241,9 +233,7 @@ export function TeachingMasterGrid({
 				header: 'Staff',
 				size: 55,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<TeachingGridRow, unknown>,
 			columnHelper.accessor('directCostAnnual', {
@@ -251,7 +241,7 @@ export function TeachingMasterGrid({
 				header: 'Direct Cost',
 				size: 110,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
+					<span className="font-mono tabular-nums">
 						{formatMoney(String(getValue()), { compact: true, showCurrency: true })}
 					</span>
 				),
@@ -261,7 +251,7 @@ export function TeachingMasterGrid({
 				header: 'HSA Cost',
 				size: 100,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
+					<span className="font-mono tabular-nums">
 						{formatMoney(String(getValue()), { compact: true, showCurrency: true })}
 					</span>
 				),
@@ -345,6 +335,8 @@ export function TeachingMasterGrid({
 			table={table}
 			variant="compact"
 			ariaLabel="Teaching master grid"
+			rangeSelection
+			clipboardEnabled
 			pinnedColumns={['lineLabel']}
 			numericColumns={numericColumns}
 			bandGrouping={{

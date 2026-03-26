@@ -125,7 +125,7 @@ export function EnrollmentMasterGrid({
 								{isDirty && <DirtyDot />}
 								{gradeName}
 							</span>
-							<span className="ml-1.5 text-(--text-xs) font-[family-name:var(--font-mono)] text-(--text-muted)">
+							<span className="ml-1.5 text-(--text-xs) font-mono text-(--text-muted)">
 								{gradeLevel}
 							</span>
 							{hasManualOverride && (
@@ -160,9 +160,7 @@ export function EnrollmentMasterGrid({
 									/>
 								</div>
 							) : (
-								<span className="font-[family-name:var(--font-mono)] tabular-nums">
-									{formatInt(getValue())}
-								</span>
+								<span className="font-mono tabular-nums">{formatInt(getValue())}</span>
 							);
 						},
 					}),
@@ -196,7 +194,7 @@ export function EnrollmentMasterGrid({
 							row.original.isPS || getValue() === null ? (
 								<span className="text-(--text-muted)">--</span>
 							) : (
-								<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+								<span className="font-mono tabular-nums text-(--text-secondary)">
 									{Math.round((getValue() ?? 0) * 100)}%
 								</span>
 							),
@@ -208,9 +206,7 @@ export function EnrollmentMasterGrid({
 							row.original.isPS ? (
 								<span className="text-(--text-muted)">--</span>
 							) : (
-								<span className="font-[family-name:var(--font-mono)] tabular-nums">
-									{formatInt(getValue())}
-								</span>
+								<span className="font-mono tabular-nums">{formatInt(getValue())}</span>
 							),
 					}),
 					columnHelper.accessor((row) => row.historicalTargetHeadcount ?? null, {
@@ -220,9 +216,7 @@ export function EnrollmentMasterGrid({
 							row.original.isPS || getValue() === null ? (
 								<span className="text-(--text-muted)">--</span>
 							) : (
-								<span className="font-[family-name:var(--font-mono)] tabular-nums">
-									{formatInt(getValue() ?? 0)}
-								</span>
+								<span className="font-mono tabular-nums">{formatInt(getValue() ?? 0)}</span>
 							),
 					}),
 					columnHelper.accessor('lateralEntry', {
@@ -233,7 +227,7 @@ export function EnrollmentMasterGrid({
 								return <span className="text-(--text-muted)">--</span>;
 							}
 							return (
-								<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+								<span className="font-mono tabular-nums text-(--text-secondary)">
 									{formatInt(getValue())}
 								</span>
 							);
@@ -277,7 +271,7 @@ export function EnrollmentMasterGrid({
 							}
 
 							return (
-								<span className="font-[family-name:var(--font-mono)] font-medium tabular-nums text-(--text-primary)">
+								<span className="font-mono font-medium tabular-nums text-(--text-primary)">
 									{formatInt(value)}
 									{isDirty && (
 										<span className="ml-0.5 text-(--color-warning)" title="Recalculation needed">
@@ -306,18 +300,14 @@ export function EnrollmentMasterGrid({
 						id: 'maxClassSize',
 						header: 'Max',
 						cell: ({ getValue }) => (
-							<span className="font-[family-name:var(--font-mono)] tabular-nums">
-								{formatInt(getValue())}
-							</span>
+							<span className="font-mono tabular-nums">{formatInt(getValue())}</span>
 						),
 					}),
 					columnHelper.accessor('sectionsNeeded', {
 						id: 'sectionsNeeded',
 						header: 'Sec',
 						cell: ({ getValue }) => (
-							<span className="font-[family-name:var(--font-mono)] tabular-nums">
-								{formatInt(getValue())}
-							</span>
+							<span className="font-mono tabular-nums">{formatInt(getValue())}</span>
 						),
 					}),
 					columnHelper.display({
@@ -376,6 +366,8 @@ export function EnrollmentMasterGrid({
 			table={table}
 			variant="compact"
 			ariaLabel="Enrollment master grid"
+			rangeSelection
+			clipboardEnabled
 			pinnedColumns={['grade']}
 			numericColumns={[
 				'ay1Headcount',

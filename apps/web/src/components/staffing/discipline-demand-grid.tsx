@@ -1,15 +1,10 @@
 import { useMemo } from 'react';
-import {
-	createColumnHelper,
-	getCoreRowModel,
-	useReactTable,
-	flexRender,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TeachingRequirementsResponse } from '../../hooks/use-staffing';
 import { buildDisciplineDemandRows, type DisciplineDemandRow } from '../../lib/staffing-workspace';
 import { BAND_STYLES } from '../../lib/band-styles';
-import { cn } from '../../lib/cn';
+import { PlanningGrid } from '../data-grid/planning-grid';
 
 export type DisciplineDemandGridProps = {
 	data: TeachingRequirementsResponse;
@@ -60,9 +55,7 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 				header: 'Col h/wk',
 				size: 80,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<DisciplineDemandRow, unknown>,
 			columnHelper.accessor('lycHoursPerWeek', {
@@ -70,9 +63,7 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 				header: 'Lyc h/wk',
 				size: 80,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<DisciplineDemandRow, unknown>,
 			columnHelper.accessor('totalHoursPerWeek', {
@@ -80,9 +71,7 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 				header: 'Total h/wk',
 				size: 90,
 				cell: ({ getValue }) => (
-					<span className="font-bold font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-bold font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<DisciplineDemandRow, unknown>,
 			columnHelper.accessor('effectiveOrs', {
@@ -90,9 +79,7 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 				header: () => <span title="Obligation Reglementaire de Service">ORS</span>,
 				size: 60,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums text-(--text-muted)">{String(getValue())}</span>
 				),
 			}) as ColumnDef<DisciplineDemandRow, unknown>,
 			columnHelper.accessor('fteRaw', {
@@ -100,9 +87,7 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 				header: () => <span title="FTE = total hours / ORS">FTE Raw</span>,
 				size: 75,
 				cell: ({ getValue }) => (
-					<span className="font-bold font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-bold font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<DisciplineDemandRow, unknown>,
 			columnHelper.accessor('postes', {
@@ -110,9 +95,7 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 				header: () => <span title="Positions = ceil(FTE Raw)">Postes</span>,
 				size: 70,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums">{String(getValue())}</span>
 				),
 			}) as ColumnDef<DisciplineDemandRow, unknown>,
 			columnHelper.accessor('hsaHours', {
@@ -120,9 +103,7 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 				header: () => <span title="Heures Supplementaires d'Annualisation">HSA Hrs</span>,
 				size: 75,
 				cell: ({ getValue }) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-muted)">
-						{String(getValue())}
-					</span>
+					<span className="font-mono tabular-nums text-(--text-muted)">{String(getValue())}</span>
 				),
 			}) as ColumnDef<DisciplineDemandRow, unknown>,
 		],
@@ -135,70 +116,22 @@ export function DisciplineDemandGrid({ data }: DisciplineDemandGridProps) {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
-	const NUMERIC_COLS = new Set([
-		'colHoursPerWeek',
-		'lycHoursPerWeek',
-		'totalHoursPerWeek',
-		'effectiveOrs',
-		'fteRaw',
-		'postes',
-		'hsaHours',
-	]);
-
 	return (
-		<div className={cn('overflow-x-auto rounded-md', 'border border-(--workspace-border)')}>
-			<table
-				className="w-full border-collapse text-sm"
-				role="table"
-				aria-label="Discipline demand grid"
-			>
-				<thead>
-					<tr className="bg-(--workspace-bg-subtle)">
-						{table.getHeaderGroups().map((group) =>
-							group.headers.map((header) => (
-								<th
-									key={header.id}
-									style={{ width: header.getSize() }}
-									className={cn(
-										'px-3 py-2 font-medium text-(--text-muted)',
-										'text-xs uppercase tracking-wider',
-										'border-b border-(--workspace-border)',
-										NUMERIC_COLS.has(header.id) ? 'text-right' : 'text-left'
-									)}
-								>
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))
-						)}
-					</tr>
-				</thead>
-				<tbody>
-					{rows.length === 0 ? (
-						<tr>
-							<td colSpan={columns.length} className="px-3 py-8 text-center text-(--text-muted)">
-								No discipline demand data available.
-							</td>
-						</tr>
-					) : (
-						table.getRowModel().rows.map((row) => (
-							<tr key={row.id} className="hover:bg-(--workspace-bg-subtle) transition-colors">
-								{row.getVisibleCells().map((cell) => (
-									<td
-										key={cell.id}
-										style={{ width: cell.column.getSize() }}
-										className={cn(
-											'px-3 py-2 border-b border-(--workspace-border)',
-											NUMERIC_COLS.has(cell.column.id) ? 'text-right' : 'text-left'
-										)}
-									>
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</td>
-								))}
-							</tr>
-						))
-					)}
-				</tbody>
-			</table>
-		</div>
+		<PlanningGrid
+			table={table}
+			ariaLabel="Discipline demand grid"
+			rangeSelection
+			clipboardEnabled
+			pinnedColumns={['disciplineCode']}
+			numericColumns={[
+				'colHoursPerWeek',
+				'lycHoursPerWeek',
+				'totalHoursPerWeek',
+				'effectiveOrs',
+				'fteRaw',
+				'postes',
+				'hsaHours',
+			]}
+		/>
 	);
 }

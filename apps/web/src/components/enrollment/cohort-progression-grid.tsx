@@ -226,7 +226,7 @@ export function CohortProgressionGrid({
 				cell: (info) => (
 					<div className="min-w-0">
 						<span className="block font-medium text-(--text-primary)">{info.getValue()}</span>
-						<span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+						<span className="mt-1 block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 							{info.row.original.gradeLevel}
 						</span>
 					</div>
@@ -364,6 +364,8 @@ export function CohortProgressionGrid({
 		<PlanningGrid
 			table={table}
 			isLoading={isLoading}
+			rangeSelection
+			clipboardEnabled
 			onRowSelect={(row) => selectGrade(row.gradeLevel)}
 			selectedRowPredicate={(row) => row.gradeLevel === selectedGrade}
 			bandGrouping={{

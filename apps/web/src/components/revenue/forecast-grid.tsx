@@ -177,6 +177,8 @@ export function ForecastGrid({
 			table={table}
 			isLoading={isLoading}
 			ariaLabel="Revenue forecast grid"
+			rangeSelection
+			clipboardEnabled
 			forceGridRole={true}
 			pinnedColumns={['label']}
 			numericColumns={numericColumnIds}
