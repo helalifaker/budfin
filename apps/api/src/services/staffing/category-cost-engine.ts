@@ -124,29 +124,36 @@ export function calculateConfigurableCategoryMonthlyCosts(
 	const results: CategoryMonthlyCostOutput[] = [];
 
 	for (const assumption of input.assumptions) {
+		// When summer months excluded, FLAT_ANNUAL divides by 10 (not 12)
+		// so the full annual amount is spread across non-summer months.
+		const divisor = assumption.excludeSummerMonths ? 10 : 12;
+
 		for (let month = 1; month <= 12; month++) {
+			// Summer exclusion: zero out months 7-8 (Jul-Aug) for flagged categories
+			if (assumption.excludeSummerMonths && (month === 7 || month === 8)) {
+				results.push({
+					month,
+					category: assumption.category,
+					amount: new Decimal(0),
+					calculationMode: assumption.calculationMode,
+				});
+				continue;
+			}
+
 			let amount: Decimal;
 
 			switch (assumption.calculationMode) {
 				case 'FLAT_ANNUAL':
-					// value is the annual amount, divide by 12
-					amount = assumption.value.dividedBy(12);
+					amount = assumption.value.dividedBy(divisor);
 					break;
 
 				case 'PERCENT_OF_PAYROLL':
-					// value is a rate (e.g., 0.02 = 2%), multiply by LOCAL_PAYROLL subtotal
 					amount = (input.monthlySubtotals.get(month) ?? new Decimal(0)).times(assumption.value);
 					break;
 
 				case 'AMOUNT_PER_FTE':
-					// value is annual cost per FTE, multiply by total FTE, divide by 12
-					amount = assumption.value.times(input.totalTeachingFteRaw).dividedBy(12);
+					amount = assumption.value.times(input.totalTeachingFteRaw).dividedBy(divisor);
 					break;
-			}
-
-			// Summer exclusion: zero out months 7-8 (Jul-Aug) for flagged categories
-			if (assumption.excludeSummerMonths && (month === 7 || month === 8)) {
-				amount = new Decimal(0);
 			}
 
 			results.push({

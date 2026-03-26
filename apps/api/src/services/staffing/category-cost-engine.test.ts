@@ -515,8 +515,8 @@ describe('calculateConfigurableCategoryMonthlyCosts', () => {
 		const sep = results.find((r) => r.month === 9)!;
 		expect(jul.amount.toFixed(4)).toBe('0.0000');
 		expect(aug.amount.toFixed(4)).toBe('0.0000');
-		expect(jan.amount.toFixed(4)).toBe('10000.0000'); // 120000 / 12
-		expect(sep.amount.toFixed(4)).toBe('10000.0000');
+		expect(jan.amount.toFixed(4)).toBe('12000.0000'); // 120000 / 10 (summer excluded)
+		expect(sep.amount.toFixed(4)).toBe('12000.0000');
 	});
 
 	it('excludeSummerMonths: PERCENT_OF_PAYROLL produces 0 for months 7-8', () => {
@@ -559,7 +559,7 @@ describe('calculateConfigurableCategoryMonthlyCosts', () => {
 		expect(aug.amount.toFixed(4)).toBe('0.0000');
 		// Non-summer months still calculate normally
 		const jan = results.find((r) => r.month === 1)!;
-		expect(jan.amount.toFixed(4)).toBe('25000.0000'); // (12000 * 25) / 12
+		expect(jan.amount.toFixed(4)).toBe('30000.0000'); // (12000 * 25) / 10 (summer excluded)
 	});
 
 	it('excludeSummerMonths: only flagged categories are excluded', () => {
@@ -587,7 +587,7 @@ describe('calculateConfigurableCategoryMonthlyCosts', () => {
 		expect(inclJul.amount.toFixed(4)).toBe('10000.0000'); // not excluded
 	});
 
-	it('excludeSummerMonths: months 1-6 and 9-12 are unaffected', () => {
+	it('excludeSummerMonths: non-summer months get value/10 (not value/12)', () => {
 		const results = calculateConfigurableCategoryMonthlyCosts(
 			makeConfigInput({
 				assumptions: [
@@ -600,10 +600,11 @@ describe('calculateConfigurableCategoryMonthlyCosts', () => {
 				],
 			})
 		);
+		// 120000 / 10 = 12000 per non-summer month
 		const nonSummerMonths = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12];
 		for (const m of nonSummerMonths) {
 			const row = results.find((r) => r.month === m)!;
-			expect(row.amount.toFixed(4)).toBe('10000.0000');
+			expect(row.amount.toFixed(4)).toBe('12000.0000');
 		}
 	});
 });
