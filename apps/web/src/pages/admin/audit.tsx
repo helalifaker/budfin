@@ -1,17 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import { useQuery } from '@tanstack/react-query';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { apiClient } from '../../lib/api-client';
 import { AuditFilters, type AuditFilterValues } from '../../components/admin/audit-filters';
-import { Button } from '../../components/ui/button';
-import { TableSkeleton } from '../../components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+import { ListGrid } from '../../components/data-grid/list-grid';
 import { Input } from '../../components/ui/input';
 import {
 	Select,
@@ -20,6 +12,7 @@ import {
 	SelectContent,
 	SelectItem,
 } from '../../components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { useVersions } from '../../hooks/use-versions';
 
 // ── Audit Log Types ──────────────────────────────────────────────────────────
@@ -145,45 +138,6 @@ function StatusBadge({ status }: { status: string }) {
 	);
 }
 
-// ── Pagination Controls ──────────────────────────────────────────────────────
-
-function PaginationControls({
-	page,
-	totalPages,
-	total,
-	onPrev,
-	onNext,
-}: {
-	page: number;
-	totalPages: number;
-	total: number;
-	onPrev: () => void;
-	onNext: () => void;
-}) {
-	return (
-		<div className="flex items-center justify-between pt-4 text-(--text-sm)">
-			<span className="text-(--text-muted)">{total} total entries</span>
-			<div className="flex gap-2">
-				<Button type="button" variant="outline" size="sm" disabled={page <= 1} onClick={onPrev}>
-					Previous
-				</Button>
-				<span className="px-2 py-1">
-					Page {page} of {totalPages || 1}
-				</span>
-				<Button
-					type="button"
-					variant="outline"
-					size="sm"
-					disabled={page >= totalPages}
-					onClick={onNext}
-				>
-					Next
-				</Button>
-			</div>
-		</div>
-	);
-}
-
 // ── Audit Log Tab ────────────────────────────────────────────────────────────
 
 function AuditLogTab() {
@@ -252,56 +206,21 @@ function AuditLogTab() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
-	const totalPages = data ? Math.ceil(data.total / data.page_size) : 0;
-	const showSkeleton = useDelayedSkeleton(isLoading);
-
 	return (
 		<>
 			<AuditFilters onFilterChange={handleFilterChange} />
 
-			<div className="overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-(--text-sm)">
-					<thead className="border-b bg-(--workspace-bg-muted)">
-						{table.getHeaderGroups().map((hg) => (
-							<tr key={hg.id}>
-								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-										{flexRender(header.column.columnDef.header, header.getContext())}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{isLoading && showSkeleton ? (
-							<TableSkeleton rows={10} cols={6} />
-						) : (
-							table.getRowModel().rows.map((row) => (
-								<tr
-									key={row.id}
-									className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-								>
-									{row.getVisibleCells().map((cell) => (
-										<td key={cell.id} className="px-4 py-3">
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
-								</tr>
-							))
-						)}
-					</tbody>
-				</table>
-			</div>
-
-			{!isLoading && (
-				<PaginationControls
-					page={page}
-					totalPages={totalPages}
-					total={data?.total ?? 0}
-					onPrev={() => setPage((p) => p - 1)}
-					onNext={() => setPage((p) => p + 1)}
-				/>
-			)}
+			<ListGrid
+				table={table}
+				isLoading={isLoading}
+				pagination={{
+					page,
+					pageSize,
+					total: data?.total ?? 0,
+					onPageChange: setPage,
+				}}
+				ariaLabel="Audit log"
+			/>
 		</>
 	);
 }
@@ -481,56 +400,21 @@ function CalcHistoryTab() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
-	const totalPages = data ? Math.ceil(data.total / data.page_size) : 0;
-	const showSkeleton = useDelayedSkeleton(isLoading);
-
 	return (
 		<>
 			<CalcHistoryFilters onFilterChange={handleFilterChange} />
 
-			<div className="overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-(--text-sm)">
-					<thead className="border-b bg-(--workspace-bg-muted)">
-						{table.getHeaderGroups().map((hg) => (
-							<tr key={hg.id}>
-								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-										{flexRender(header.column.columnDef.header, header.getContext())}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{isLoading && showSkeleton ? (
-							<TableSkeleton rows={10} cols={7} />
-						) : (
-							table.getRowModel().rows.map((row) => (
-								<tr
-									key={row.id}
-									className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-								>
-									{row.getVisibleCells().map((cell) => (
-										<td key={cell.id} className="px-4 py-3">
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
-								</tr>
-							))
-						)}
-					</tbody>
-				</table>
-			</div>
-
-			{!isLoading && (
-				<PaginationControls
-					page={page}
-					totalPages={totalPages}
-					total={data?.total ?? 0}
-					onPrev={() => setPage((p) => p - 1)}
-					onNext={() => setPage((p) => p + 1)}
-				/>
-			)}
+			<ListGrid
+				table={table}
+				isLoading={isLoading}
+				pagination={{
+					page,
+					pageSize,
+					total: data?.total ?? 0,
+					onPageChange: setPage,
+				}}
+				ariaLabel="Calculation history"
+			/>
 		</>
 	);
 }

@@ -1,11 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAuthStore } from '../../stores/auth-store';
@@ -17,6 +11,7 @@ import {
 } from '../../hooks/use-accounts';
 import type { Account, AccountFilters } from '../../hooks/use-accounts';
 import { AccountsSidePanel } from '../../components/master-data/accounts-side-panel';
+import { ListGrid } from '../../components/data-grid/list-grid';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -43,7 +38,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
-import { TableSkeleton } from '../../components/ui/skeleton';
 import { toast } from '../../components/ui/toast-state';
 
 const columnHelper = createColumnHelper<Account>();
@@ -112,8 +106,6 @@ export function AccountsPage() {
 	// Delete confirmation state
 	const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
 	const [deleteConfirmCode, setDeleteConfirmCode] = useState('');
-
-	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	const handleSave = useCallback(
 		(formData: Record<string, unknown>) => {
@@ -248,45 +240,41 @@ export function AccountsPage() {
 					);
 				},
 			}),
-			...(isAdmin
-				? [
-						columnHelper.display({
-							id: 'actions',
-							header: 'Actions',
-							cell: ({ row }) => {
-								const account = row.original;
-								return (
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<button
-												type="button"
-												className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
-												aria-label={`Actions for ${account.accountCode}`}
-											>
-												<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
-											</button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent align="end">
-											<DropdownMenuItem
-												onSelect={() => {
-													setEditingAccount(account);
-													setPanelOpen(true);
-												}}
-											>
-												<Pencil className="h-4 w-4" /> Edit
-											</DropdownMenuItem>
-											<DropdownMenuSeparator />
-											<DropdownMenuItem destructive onSelect={() => setDeleteTarget(account)}>
-												<Trash2 className="h-4 w-4" /> Delete
-											</DropdownMenuItem>
-										</DropdownMenuContent>
-									</DropdownMenu>
-								);
-							},
-						}),
-					]
-				: []),
 		],
+		[]
+	);
+
+	const renderActions = useCallback(
+		(account: Account) => {
+			if (!isAdmin) return null;
+			return (
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
+							aria-label={`Actions for ${account.accountCode}`}
+						>
+							<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							onSelect={() => {
+								setEditingAccount(account);
+								setPanelOpen(true);
+							}}
+						>
+							<Pencil className="h-4 w-4" /> Edit
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem destructive onSelect={() => setDeleteTarget(account)}>
+							<Trash2 className="h-4 w-4" /> Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			);
+		},
 		[isAdmin]
 	);
 
@@ -370,48 +358,13 @@ export function AccountsPage() {
 			</div>
 
 			{/* Data table */}
-			<div className="overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-(--text-sm)">
-					<thead className="border-b bg-(--workspace-bg-muted)">
-						{table.getHeaderGroups().map((hg) => (
-							<tr key={hg.id}>
-								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-										{flexRender(header.column.columnDef.header, header.getContext())}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{isLoading && showSkeleton ? (
-							<TableSkeleton rows={10} cols={columns.length} />
-						) : table.getRowModel().rows.length === 0 ? (
-							<tr>
-								<td
-									colSpan={columns.length}
-									className="px-4 py-8 text-center text-(--text-sm) text-(--text-muted)"
-								>
-									No accounts found
-								</td>
-							</tr>
-						) : (
-							table.getRowModel().rows.map((row) => (
-								<tr
-									key={row.id}
-									className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-								>
-									{row.getVisibleCells().map((cell) => (
-										<td key={cell.id} className="px-4 py-3">
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
-								</tr>
-							))
-						)}
-					</tbody>
-				</table>
-			</div>
+			<ListGrid
+				table={table}
+				isLoading={isLoading}
+				{...(isAdmin ? { actionsColumn: { render: renderActions } } : {})}
+				emptyState={<p className="text-(--text-sm) text-(--text-muted)">No accounts found</p>}
+				ariaLabel="Chart of accounts"
+			/>
 
 			{/* Side panel */}
 			<AccountsSidePanel

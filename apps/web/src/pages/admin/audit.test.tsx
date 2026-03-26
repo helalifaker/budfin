@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuditPage } from './audit';
@@ -53,10 +53,6 @@ vi.mock('../../lib/api-client', () => ({
 	},
 }));
 
-vi.mock('../../hooks/use-delayed-skeleton', () => ({
-	useDelayedSkeleton: () => false,
-}));
-
 vi.mock('../../hooks/use-versions', () => ({
 	useVersions: () => ({
 		data: { data: [] },
@@ -85,6 +81,7 @@ vi.mock('../../components/ui/button', () => ({
 }));
 
 vi.mock('../../components/ui/skeleton', () => ({
+	Skeleton: () => null,
 	TableSkeleton: () => null,
 }));
 
@@ -170,10 +167,12 @@ describe('AuditPage', () => {
 		expect(screen.getByTestId('audit-filters')).toBeTruthy();
 	});
 
-	it('renders audit log table', () => {
+	it('renders audit log table', async () => {
 		renderWithQueryClient(<AuditPage />);
-		const tables = screen.getAllByRole('table');
-		expect(tables.length).toBeGreaterThanOrEqual(1);
+		await waitFor(() => {
+			const tables = screen.getAllByRole('table');
+			expect(tables.length).toBeGreaterThanOrEqual(1);
+		});
 	});
 
 	it('renders calculation history filter controls', () => {

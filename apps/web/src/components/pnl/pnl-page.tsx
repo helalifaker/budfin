@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
-import {
-	useReactTable,
-	getCoreRowModel,
-	flexRender,
-	type ColumnDef,
-	type Row,
-} from '@tanstack/react-table';
+import { useReactTable, getCoreRowModel, type ColumnDef } from '@tanstack/react-table';
 import {
 	AlertTriangle,
 	ArrowUpRight,
@@ -40,6 +34,7 @@ import { StalePill } from '../shared/stale-pill';
 import { WorkspaceStatusStrip, type StatusSection } from '../shared/workspace-status-strip';
 import { ExportDialog } from '../shared/export-dialog';
 import type { PnlFormat, PnlLineItem, PnlKpis } from '@budfin/types';
+import { PlanningGrid } from '../data-grid/planning-grid';
 import { ComparisonBarChart } from './comparison-bar-chart';
 import { VarianceWaterfallChart } from './variance-waterfall-chart';
 import '../pnl/pnl-inspector-content';
@@ -433,12 +428,49 @@ function PnlGrid({
 		return cols;
 	}, [onNavigate]);
 
+	const numericColumns = useMemo(
+		() => [...Array.from({ length: 12 }, (_, i) => `month-${i}`), 'annual'],
+		[]
+	);
+
 	const table = useReactTable({
 		data: rows,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getRowId: (row) => row.id,
 	});
+
+	const getRowClassName = useMemo(
+		() => (row: PnlGridRow) => {
+			if (row.isSeparator) return 'h-1 bg-transparent';
+			if (row.isSubtotal) {
+				return cn(
+					'bg-(--workspace-bg-subtle)',
+					'border-t border-(--workspace-border)',
+					'font-semibold'
+				);
+			}
+			if (row.depth === 1 && !row.isSubtotal && !row.isSeparator) {
+				return 'bg-(--workspace-bg-muted)';
+			}
+			if (row.isClickable) return 'cursor-pointer';
+			return undefined;
+		},
+		[]
+	);
+
+	const selectedRowPredicate = useMemo(
+		() => (row: PnlGridRow) =>
+			selection?.sectionKey === row.sectionKey && selection?.displayLabel === row.displayLabel,
+		[selection]
+	);
+
+	const handleRowSelect = useMemo(
+		() => (row: PnlGridRow) => {
+			if (row.isClickable) onSelectRow(row);
+		},
+		[onSelectRow]
+	);
 
 	if (isLoading) {
 		return (
@@ -452,102 +484,20 @@ function PnlGrid({
 
 	if (rows.length === 0) return null;
 
-	const isSelected = (row: PnlGridRow) =>
-		selection?.sectionKey === row.sectionKey && selection?.displayLabel === row.displayLabel;
-
 	return (
-		<div className="h-full overflow-y-auto scrollbar-thin">
-			<table
-				role="grid"
-				aria-label="P&L Income Statement"
-				className="w-full border-collapse text-(--text-sm)"
-			>
-				<thead>
-					{table.getHeaderGroups().map((headerGroup) => (
-						<tr key={headerGroup.id} role="row">
-							{headerGroup.headers.map((header) => (
-								<th
-									key={header.id}
-									role="columnheader"
-									aria-readonly="true"
-									className={cn(
-										'sticky top-0 z-10',
-										'bg-(--workspace-bg-card)',
-										'border-b border-(--workspace-border)',
-										'px-3 py-2.5',
-										'text-(--text-xs) font-medium uppercase tracking-wider text-(--text-muted)',
-										header.id !== 'label' && 'text-right',
-										header.id === 'annual' && 'bg-(--workspace-bg-subtle)'
-									)}
-									style={{ width: header.getSize() }}
-								>
-									{header.isPlaceholder
-										? null
-										: flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{table.getRowModel().rows.map((row: Row<PnlGridRow>, rowIndex: number) => {
-						const orig = row.original;
-						const selected = isSelected(orig);
-
-						return (
-							<tr
-								key={row.id}
-								role="row"
-								data-row-index={rowIndex}
-								aria-level={orig.depth}
-								aria-selected={selected}
-								tabIndex={orig.isClickable ? 0 : undefined}
-								onClick={() => {
-									if (orig.isClickable) onSelectRow(orig);
-								}}
-								onKeyDown={(e) => {
-									if (orig.isClickable && (e.key === 'Enter' || e.key === ' ')) {
-										e.preventDefault();
-										onSelectRow(orig);
-									}
-								}}
-								className={cn(
-									'border-b border-(--workspace-border)/50',
-									'transition-colors duration-(--duration-fast)',
-									orig.isSeparator && 'h-1',
-									orig.isSubtotal &&
-										'bg-(--workspace-bg-subtle) border-t border-(--workspace-border) font-semibold',
-									orig.depth === 1 &&
-										!orig.isSubtotal &&
-										!orig.isSeparator &&
-										'bg-(--workspace-bg-muted)',
-									orig.isClickable && !selected && 'cursor-pointer hover:bg-(--workspace-bg-muted)',
-									selected && 'bg-(--accent-50) border-l-[3px] border-l-(--accent-500)'
-								)}
-							>
-								{row.getVisibleCells().map((cell, colIndex) => (
-									<td
-										key={cell.id}
-										role="gridcell"
-										aria-readonly="true"
-										data-row-index={rowIndex}
-										data-col-index={colIndex}
-										className={cn(
-											'px-3 py-1.5',
-											cell.column.id === 'annual' && 'bg-(--workspace-bg-subtle)/50'
-										)}
-									>
-										{orig.isSeparator
-											? null
-											: flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</td>
-								))}
-							</tr>
-						);
-					})}
-				</tbody>
-			</table>
-		</div>
+		<PlanningGrid
+			table={table}
+			isLoading={isLoading}
+			numericColumns={numericColumns}
+			pinnedColumns={['label']}
+			getRowClassName={getRowClassName}
+			selectedRowPredicate={selectedRowPredicate}
+			onRowSelect={handleRowSelect}
+			keyboardNavigation={false}
+			rowAnimation={false}
+			forceGridRole
+			ariaLabel="P&L Income Statement"
+		/>
 	);
 }
 

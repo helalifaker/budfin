@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import {
 	createColumnHelper,
-	flexRender,
 	getCoreRowModel,
 	getFilteredRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import type { DhgRuleDetail } from '../../hooks/use-master-data';
 import type { GradeLevel } from '../../hooks/use-grade-levels';
@@ -19,8 +18,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 } from '../ui/dropdown-menu';
-import { TableSkeleton } from '../ui/skeleton';
 import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
+import { PlanningGrid } from '../data-grid/planning-grid';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -31,11 +30,11 @@ const BAND_LABELS: Record<string, string> = {
 	LYCEE: 'Lycee',
 };
 
-const BAND_STYLES: Record<string, string> = {
-	MATERNELLE: 'bg-(--badge-maternelle-bg) text-(--badge-maternelle)',
-	ELEMENTAIRE: 'bg-(--badge-elementaire-bg) text-(--badge-elementaire)',
-	COLLEGE: 'bg-(--badge-college-bg) text-(--badge-college)',
-	LYCEE: 'bg-(--badge-lycee-bg) text-(--badge-lycee)',
+const BAND_STYLES: Record<string, { color: string; bg: string }> = {
+	MATERNELLE: { color: 'var(--badge-maternelle)', bg: 'var(--badge-maternelle-bg)' },
+	ELEMENTAIRE: { color: 'var(--badge-elementaire)', bg: 'var(--badge-elementaire-bg)' },
+	COLLEGE: { color: 'var(--badge-college)', bg: 'var(--badge-college-bg)' },
+	LYCEE: { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
 };
 
 const LINE_TYPE_STYLES: Record<string, string> = {
@@ -77,7 +76,6 @@ export function CurriculumRulesTable({
 	const [search, setSearch] = useState('');
 	const [bandFilter, setBandFilter] = useState('ALL');
 	const [lineTypeFilter, setLineTypeFilter] = useState('ALL');
-	const [collapsedBands, setCollapsedBands] = useState<Set<string>>(new Set());
 
 	// Build grade-to-band lookup
 	const gradeToBand = useMemo(() => {
@@ -122,27 +120,11 @@ export function CurriculumRulesTable({
 			});
 	}, [rules, gradeToBand, gradeOrder, bandFilter, lineTypeFilter]);
 
-	// Group by band
-	const bandGroups = useMemo(() => {
-		const grouped = new Map<string, RuleWithBand[]>();
-		for (const rule of enrichedRules) {
-			const list = grouped.get(rule.band) ?? [];
-			list.push(rule);
-			grouped.set(rule.band, list);
-		}
-		return BAND_ORDER.filter((b) => grouped.has(b)).map((band) => ({
-			band,
-			rules: grouped.get(band)!,
-		}));
-	}, [enrichedRules]);
-
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor('gradeLevel', {
 				header: 'Grade',
-				cell: (info) => (
-					<span className="font-[family-name:var(--font-mono)] font-medium">{info.getValue()}</span>
-				),
+				cell: (info) => <span className="font-mono font-medium">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('disciplineName', {
 				header: 'Discipline',
@@ -173,29 +155,19 @@ export function CurriculumRulesTable({
 			}),
 			columnHelper.accessor('hoursPerUnit', {
 				header: 'Hours/Unit',
-				cell: (info) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{info.getValue()}
-					</span>
-				),
+				cell: (info) => <span className="font-mono tabular-nums">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('serviceProfileName', {
 				header: 'Service Profile',
 			}),
 			columnHelper.accessor('effectiveFromYear', {
 				header: 'From',
-				cell: (info) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{info.getValue()}
-					</span>
-				),
+				cell: (info) => <span className="font-mono tabular-nums">{info.getValue()}</span>,
 			}),
 			columnHelper.accessor('effectiveToYear', {
 				header: 'To',
 				cell: (info) => (
-					<span className="font-[family-name:var(--font-mono)] tabular-nums">
-						{info.getValue() ?? '\u2014'}
-					</span>
+					<span className="font-mono tabular-nums">{info.getValue() ?? '\u2014'}</span>
 				),
 			}),
 			columnHelper.display({
@@ -241,19 +213,12 @@ export function CurriculumRulesTable({
 		onGlobalFilterChange: setSearch,
 	});
 
-	const showSkeleton = useDelayedSkeleton(isLoading);
+	const _showSkeleton = useDelayedSkeleton(isLoading);
 
-	const toggleBand = (band: string) => {
-		setCollapsedBands((prev) => {
-			const next = new Set(prev);
-			if (next.has(band)) {
-				next.delete(band);
-			} else {
-				next.add(band);
-			}
-			return next;
-		});
-	};
+	const numericColumns = useMemo(
+		() => ['hoursPerUnit', 'effectiveFromYear', 'effectiveToYear'],
+		[]
+	);
 
 	return (
 		<div className="space-y-3">
@@ -299,140 +264,24 @@ export function CurriculumRulesTable({
 				</Select>
 			</div>
 
-			{/* Grouped table */}
-			<div className="overflow-x-auto rounded-lg border border-(--workspace-border) shadow-(--shadow-xs)">
-				<table role="table" className="w-full text-left text-(--text-sm)">
-					<thead className="border-b bg-(--workspace-bg-muted)">
-						{table.getHeaderGroups().map((hg) => (
-							<tr key={hg.id}>
-								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-										{flexRender(header.column.columnDef.header, header.getContext())}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{isLoading && showSkeleton ? (
-							<TableSkeleton rows={10} cols={columns.length} />
-						) : bandGroups.length === 0 ? (
-							<tr>
-								<td
-									colSpan={columns.length}
-									className="px-4 py-8 text-center text-(--text-sm) text-(--text-muted)"
-								>
-									No rules found.
-								</td>
-							</tr>
-						) : (
-							bandGroups.map((group) => (
-								<BandGroupRows
-									key={group.band}
-									band={group.band}
-									rules={group.rules}
-									columnCount={columns.length}
-									collapsed={collapsedBands.has(group.band)}
-									onToggle={() => toggleBand(group.band)}
-								/>
-							))
-						)}
-					</tbody>
-				</table>
-			</div>
+			{/* Grouped grid */}
+			<PlanningGrid
+				table={table}
+				variant="compact"
+				isLoading={isLoading}
+				bandGrouping={{
+					getBand: (row: RuleWithBand) => row.band,
+					bandLabels: BAND_LABELS,
+					bandStyles: BAND_STYLES,
+					collapsible: true,
+				}}
+				numericColumns={numericColumns}
+				keyboardNavigation={false}
+				rowAnimation={false}
+				rangeSelection
+				clipboardEnabled
+				ariaLabel="Curriculum rules"
+			/>
 		</div>
-	);
-}
-
-// ── Band Group Rows ──────────────────────────────────────────────────────────
-
-function BandGroupRows({
-	band,
-	rules,
-	columnCount,
-	collapsed,
-	onToggle,
-}: {
-	band: string;
-	rules: RuleWithBand[];
-	columnCount: number;
-	collapsed: boolean;
-	onToggle: () => void;
-}) {
-	return (
-		<>
-			{/* Band header */}
-			<tr className="bg-(--workspace-bg-muted)/50">
-				<td colSpan={columnCount} className="px-4 py-2">
-					<button
-						type="button"
-						onClick={onToggle}
-						className="flex items-center gap-2 font-medium text-(--text-primary)"
-						aria-expanded={!collapsed}
-					>
-						{collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-						<span
-							className={cn(
-								'inline-block rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
-								BAND_STYLES[band] ?? 'bg-(--workspace-bg-muted) text-(--text-primary)'
-							)}
-						>
-							{BAND_LABELS[band] ?? band}
-						</span>
-						<span className="text-(--text-sm) text-(--text-muted)">({rules.length} rules)</span>
-					</button>
-				</td>
-			</tr>
-			{/* Rules */}
-			{!collapsed &&
-				rules.map((rule) => (
-					<tr
-						key={rule.id}
-						className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-					>
-						<td className="px-4 py-3">
-							<span className="font-[family-name:var(--font-mono)] font-medium">
-								{rule.gradeLevel}
-							</span>
-						</td>
-						<td className="px-4 py-3">{rule.disciplineName}</td>
-						<td className="px-4 py-3">
-							<span
-								className={cn(
-									'inline-block rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
-									LINE_TYPE_STYLES[rule.lineType] ??
-										'bg-(--workspace-bg-muted) text-(--text-secondary)'
-								)}
-							>
-								{rule.lineType.replace('_', ' ')}
-							</span>
-						</td>
-						<td className="px-4 py-3">
-							<span className="inline-block rounded-sm bg-(--workspace-bg-muted) px-2 py-0.5 text-(--text-xs) font-medium">
-								{rule.driverType}
-							</span>
-						</td>
-						<td className="px-4 py-3">
-							<span className="font-[family-name:var(--font-mono)] tabular-nums">
-								{rule.hoursPerUnit}
-							</span>
-						</td>
-						<td className="px-4 py-3">{rule.serviceProfileName}</td>
-						<td className="px-4 py-3">
-							<span className="font-[family-name:var(--font-mono)] tabular-nums">
-								{rule.effectiveFromYear}
-							</span>
-						</td>
-						<td className="px-4 py-3">
-							<span className="font-[family-name:var(--font-mono)] tabular-nums">
-								{rule.effectiveToYear ?? '\u2014'}
-							</span>
-						</td>
-						<td className="px-4 py-3">
-							{/* Actions handled by column def but rendered manually in grouped mode */}
-						</td>
-					</tr>
-				))}
-		</>
 	);
 }

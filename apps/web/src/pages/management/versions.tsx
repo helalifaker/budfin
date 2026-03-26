@@ -1,8 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import {
 	createColumnHelper,
-	flexRender,
 	getCoreRowModel,
 	getSortedRowModel,
 	useReactTable,
@@ -16,6 +14,7 @@ import { useVersions } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
 import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
 import { toast } from '../../components/ui/toast-state';
+import { ListGrid } from '../../components/data-grid/list-grid';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -33,7 +32,6 @@ import {
 	DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
 import { Checkbox } from '../../components/ui/checkbox';
-import { TableSkeleton } from '../../components/ui/skeleton';
 import { CreateVersionPanel } from '../../components/versions/create-version-panel';
 import { CloneVersionDialog } from '../../components/versions/clone-version-dialog';
 import { VersionDetailPanel } from '../../components/versions/version-detail-panel';
@@ -119,22 +117,24 @@ export function VersionsPage() {
 			const lower = searchQuery.toLowerCase();
 			rows = rows.filter((v) => v.name.toLowerCase().includes(lower));
 		}
-		return rows;
+		// Sort by fiscal year descending so groups appear newest-first
+		return [...rows].sort((a, b) => b.fiscalYear - a.fiscalYear);
 	}, [data, searchQuery]);
 
-	// Group rows by FY when "All Years" selected
-	const groupedRows = useMemo(() => {
-		if (fiscalYear !== null) return null;
-		const groups = new Map<number, BudgetVersion[]>();
-		for (const row of filteredRows) {
-			const fy = row.fiscalYear;
-			if (!groups.has(fy)) groups.set(fy, []);
-			groups.get(fy)!.push(row);
-		}
-		return new Map([...groups.entries()].sort((a, b) => b[0] - a[0]));
-	}, [filteredRows, fiscalYear]);
+	const showSkeleton = isLoading;
 
-	const showSkeleton = useDelayedSkeleton(isLoading);
+	// FY group expandable config — always expanded, acts as visual separator
+	const fyExpandable = useMemo(
+		() => ({
+			groupKey: (row: BudgetVersion) => String(row.fiscalYear),
+			isExpanded: () => true,
+			onToggle: () => {},
+			renderExpanded: () => null,
+			groupLabel: (key: string) => `FY ${key}`,
+			groupCount: (key: string) => filteredRows.filter((v) => String(v.fiscalYear) === key).length,
+		}),
+		[filteredRows]
+	);
 
 	// Fiscal year options
 	const fiscalYearOptions = useMemo(() => {
@@ -437,71 +437,24 @@ export function VersionsPage() {
 			)}
 
 			{/* Data table */}
-			<div className="mt-4 overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-(--text-sm)">
-					<thead className="border-b bg-(--workspace-bg-muted)">
-						{table.getHeaderGroups().map((hg) => (
-							<tr key={hg.id}>
-								{hg.headers.map((header) => (
-									<th
-										key={header.id}
-										className="px-4 py-3 font-medium text-(--text-secondary)"
-										aria-sort={
-											header.column.getIsSorted() === 'asc'
-												? 'ascending'
-												: header.column.getIsSorted() === 'desc'
-													? 'descending'
-													: undefined
-										}
-									>
-										{header.column.getCanSort() ? (
-											<button
-												type="button"
-												className="inline-flex items-center gap-1"
-												onClick={header.column.getToggleSortingHandler()}
-											>
-												{flexRender(header.column.columnDef.header, header.getContext())}
-												{header.column.getIsSorted() === 'asc' && ' \u2191'}
-												{header.column.getIsSorted() === 'desc' && ' \u2193'}
-											</button>
-										) : (
-											flexRender(header.column.columnDef.header, header.getContext())
-										)}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{isLoading && showSkeleton ? (
-							<TableSkeleton rows={10} cols={columns.length} />
-						) : table.getRowModel().rows.length === 0 ? (
-							<tr>
-								<td
-									colSpan={columns.length}
-									className="px-4 py-12 text-center text-(--text-sm) text-(--text-muted)"
-								>
-									<EmptyState
-										fiscalYear={fiscalYear}
-										typeFilter={typeFilter}
-										statusFilter={statusFilter}
-										searchQuery={searchQuery}
-										canCreate={!!canCreate}
-										onCreateClick={() => setCreateOpen(true)}
-									/>
-								</td>
-							</tr>
-						) : fiscalYear === null && groupedRows ? (
-							<>
-								{[...groupedRows.entries()].map(([fy, rows]) => (
-									<FYGroup key={fy} fy={fy} rows={rows} table={table} colSpan={columns.length} />
-								))}
-							</>
-						) : (
-							table.getRowModel().rows.map((row) => <VersionRow key={row.id} row={row} />)
-						)}
-					</tbody>
-				</table>
+			<div className="mt-4">
+				<ListGrid
+					table={table}
+					isLoading={showSkeleton}
+					sortable
+					expandable={fyExpandable}
+					emptyState={
+						<EmptyState
+							fiscalYear={fiscalYear}
+							typeFilter={typeFilter}
+							statusFilter={statusFilter}
+							searchQuery={searchQuery}
+							canCreate={!!canCreate}
+							onCreateClick={() => setCreateOpen(true)}
+						/>
+					}
+					ariaLabel="Budget versions"
+				/>
 			</div>
 
 			{/* Comparison View */}
@@ -597,58 +550,6 @@ export function VersionsPage() {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-function VersionRow({
-	row,
-}: {
-	row: ReturnType<ReturnType<typeof useReactTable<BudgetVersion>>['getRowModel']>['rows'][number];
-}) {
-	const isActual = row.original.type === 'Actual';
-	return (
-		<tr
-			className={cn(
-				'border-b last:border-0 transition-colors hover:bg-(--accent-50)',
-				isActual && 'border-l-2 border-l-(--version-actual)'
-			)}
-		>
-			{row.getVisibleCells().map((cell) => (
-				<td key={cell.id} role="cell" className="px-4 py-3">
-					{flexRender(cell.column.columnDef.cell, cell.getContext())}
-				</td>
-			))}
-		</tr>
-	);
-}
-
-function FYGroup({
-	fy,
-	rows: _rows,
-	table,
-	colSpan,
-}: {
-	fy: number;
-	rows: BudgetVersion[];
-	table: ReturnType<typeof useReactTable<BudgetVersion>>;
-	colSpan: number;
-}) {
-	const tableRows = table.getRowModel().rows.filter((r) => r.original.fiscalYear === fy);
-
-	return (
-		<>
-			<tr>
-				<td
-					colSpan={colSpan}
-					className="bg-(--workspace-bg-muted) px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-(--text-muted)"
-				>
-					FY {fy}
-				</td>
-			</tr>
-			{tableRows.map((row) => (
-				<VersionRow key={row.id} row={row} />
-			))}
-		</>
-	);
-}
 
 type VersionActionsProps = {
 	version: BudgetVersion;

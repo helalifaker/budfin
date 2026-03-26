@@ -1,10 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { cn } from '../../lib/cn';
 import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
 import { toast } from '../../components/ui/toast-state';
@@ -13,6 +8,7 @@ import { useFiscalPeriods, useLockFiscalPeriod } from '../../hooks/use-fiscal-pe
 import type { FiscalPeriod } from '../../hooks/use-fiscal-periods';
 import { useVersions } from '../../hooks/use-versions';
 import type { BudgetVersion } from '../../hooks/use-versions';
+import { ListGrid } from '../../components/data-grid/list-grid';
 import { Button } from '../../components/ui/button';
 import {
 	Select,
@@ -21,7 +17,6 @@ import {
 	SelectContent,
 	SelectItem,
 } from '../../components/ui/select';
-import { TableSkeleton } from '../../components/ui/skeleton';
 
 const columnHelper = createColumnHelper<FiscalPeriod>();
 
@@ -173,56 +168,16 @@ export function FiscalPeriodsPage() {
 			</div>
 
 			{/* Data table */}
-			{isLoading ? (
-				<div className="overflow-x-auto rounded-lg border">
-					<table role="table" className="w-full text-left text-(--text-sm)">
-						<tbody>
-							<TableSkeleton rows={6} cols={6} />
-						</tbody>
-					</table>
-				</div>
-			) : (
-				<div className="overflow-x-auto rounded-lg border">
-					<table role="table" className="w-full text-left text-(--text-sm)">
-						<thead className="border-b bg-(--workspace-bg-muted)">
-							{table.getHeaderGroups().map((hg) => (
-								<tr key={hg.id}>
-									{hg.headers.map((header) => (
-										<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-											{flexRender(header.column.columnDef.header, header.getContext())}
-										</th>
-									))}
-								</tr>
-							))}
-						</thead>
-						<tbody>
-							{table.getRowModel().rows.length === 0 ? (
-								<tr>
-									<td
-										colSpan={columns.length}
-										className="px-4 py-12 text-center text-(--text-sm) text-(--text-muted)"
-									>
-										No fiscal periods for FY{fiscalYear}
-									</td>
-								</tr>
-							) : (
-								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-									>
-										{row.getVisibleCells().map((cell) => (
-											<td key={cell.id} role="cell" className="px-4 py-3">
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
-											</td>
-										))}
-									</tr>
-								))
-							)}
-						</tbody>
-					</table>
-				</div>
-			)}
+			<ListGrid
+				table={table}
+				isLoading={isLoading}
+				emptyState={
+					<p className="text-(--text-sm) text-(--text-muted)">
+						No fiscal periods for FY{fiscalYear}
+					</p>
+				}
+				ariaLabel="Fiscal periods"
+			/>
 		</div>
 	);
 }

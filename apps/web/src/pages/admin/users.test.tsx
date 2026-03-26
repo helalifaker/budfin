@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UsersPage } from './users';
@@ -51,10 +51,6 @@ vi.mock('../../lib/api-client', () => ({
 	apiClient: () => Promise.resolve(mockUsersData),
 }));
 
-vi.mock('../../hooks/use-delayed-skeleton', () => ({
-	useDelayedSkeleton: () => false,
-}));
-
 vi.mock('../../components/admin/role-badge', () => ({
 	RoleBadge: ({ role }: { role: string }) => <span data-testid={`role-badge-${role}`}>{role}</span>,
 }));
@@ -87,6 +83,7 @@ vi.mock('../../components/ui/button', () => ({
 }));
 
 vi.mock('../../components/ui/skeleton', () => ({
+	Skeleton: () => null,
 	TableSkeleton: () => null,
 }));
 
@@ -143,14 +140,18 @@ describe('UsersPage', () => {
 		expect(screen.getByText('+ Add User')).toBeTruthy();
 	});
 
-	it('renders user table', () => {
+	it('renders user table', async () => {
 		renderWithQueryClient(<UsersPage />);
-		expect(screen.getByRole('table')).toBeTruthy();
+		await waitFor(() => {
+			expect(screen.getByRole('table')).toBeTruthy();
+		});
 	});
 
 	it('renders table column headers', async () => {
 		renderWithQueryClient(<UsersPage />);
-		expect(screen.getByText('Email')).toBeTruthy();
+		await waitFor(() => {
+			expect(screen.getByText('Email')).toBeTruthy();
+		});
 		expect(screen.getByText('Role')).toBeTruthy();
 		expect(screen.getByText('Status')).toBeTruthy();
 		expect(screen.getByText('Last Login')).toBeTruthy();

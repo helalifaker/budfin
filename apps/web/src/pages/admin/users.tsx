@@ -1,20 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-	createColumnHelper,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
 import { useAuthStore } from '../../stores/auth-store';
 import { RoleBadge } from '../../components/admin/role-badge';
 import { StatusBadge } from '../../components/admin/status-badge';
 import { UserSidePanel } from '../../components/admin/user-side-panel';
+import { ListGrid } from '../../components/data-grid/list-grid';
 import { Button } from '../../components/ui/button';
-import { TableSkeleton } from '../../components/ui/skeleton';
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
@@ -162,53 +156,51 @@ export function UsersPage() {
 				header: 'Created',
 				cell: (info) => formatDate(info.getValue()),
 			}),
-			columnHelper.display({
-				id: 'actions',
-				header: 'Actions',
-				cell: ({ row }) => {
-					const user = row.original;
-					const isSelf = user.id === currentUser?.id;
-					if (isSelf) return null;
-					return (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<button
-									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center
-										rounded-md hover:bg-(--workspace-bg-muted)"
-									aria-label={`Actions for ${user.email}`}
-								>
-									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
-								</button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem
-									onSelect={() => {
-										setEditingUser(user);
-										setPanelMode('edit');
-										setPanelOpen(true);
-									}}
-								>
-									Edit
-								</DropdownMenuItem>
-								{user.locked_until && (
-									<>
-										<DropdownMenuSeparator />
-										<DropdownMenuItem onSelect={() => handleUnlock(user)}>
-											Unlock Account
-										</DropdownMenuItem>
-									</>
-								)}
-								<DropdownMenuSeparator />
-								<DropdownMenuItem destructive onSelect={() => handleForceLogout(user)}>
-									Force Logout
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					);
-				},
-			}),
 		],
+		[]
+	);
+
+	const renderActions = useCallback(
+		(user: User) => {
+			const isSelf = user.id === currentUser?.id;
+			if (isSelf) return null;
+			return (
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
+							aria-label={`Actions for ${user.email}`}
+						>
+							<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							onSelect={() => {
+								setEditingUser(user);
+								setPanelMode('edit');
+								setPanelOpen(true);
+							}}
+						>
+							Edit
+						</DropdownMenuItem>
+						{user.locked_until && (
+							<>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onSelect={() => handleUnlock(user)}>
+									Unlock Account
+								</DropdownMenuItem>
+							</>
+						)}
+						<DropdownMenuSeparator />
+						<DropdownMenuItem destructive onSelect={() => handleForceLogout(user)}>
+							Force Logout
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			);
+		},
 		[currentUser?.id, handleUnlock, handleForceLogout]
 	);
 
@@ -217,8 +209,6 @@ export function UsersPage() {
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 	});
-
-	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	return (
 		<div className="p-6">
@@ -237,39 +227,12 @@ export function UsersPage() {
 				</Button>
 			</div>
 
-			<div className="overflow-x-auto rounded-lg border">
-				<table role="table" className="w-full text-left text-(--text-sm)">
-					<thead className="border-b bg-(--workspace-bg-muted)">
-						{table.getHeaderGroups().map((hg) => (
-							<tr key={hg.id}>
-								{hg.headers.map((header) => (
-									<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-										{flexRender(header.column.columnDef.header, header.getContext())}
-									</th>
-								))}
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{isLoading && showSkeleton ? (
-							<TableSkeleton rows={5} cols={8} />
-						) : (
-							table.getRowModel().rows.map((row) => (
-								<tr
-									key={row.id}
-									className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-								>
-									{row.getVisibleCells().map((cell) => (
-										<td key={cell.id} className="px-4 py-3">
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
-								</tr>
-							))
-						)}
-					</tbody>
-				</table>
-			</div>
+			<ListGrid
+				table={table}
+				isLoading={isLoading}
+				actionsColumn={{ render: renderActions }}
+				ariaLabel="Users"
+			/>
 
 			<UserSidePanel
 				open={panelOpen}

@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
-import type { Table as TanstackTable } from '@tanstack/react-table';
 import {
 	createColumnHelper,
-	flexRender,
 	getCoreRowModel,
 	getFilteredRowModel,
 	useReactTable,
@@ -31,6 +28,7 @@ import { NationalitySidePanel } from '../../components/master-data/nationality-s
 import { TariffSidePanel } from '../../components/master-data/tariff-side-panel';
 import { DepartmentSidePanel } from '../../components/master-data/department-side-panel';
 import { CurriculumTabContent } from '../../components/master-data/curriculum-tab-content';
+import { ListGrid } from '../../components/data-grid/list-grid';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -50,7 +48,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
-import { TableSkeleton } from '../../components/ui/skeleton';
 import { toast } from '../../components/ui/toast-state';
 
 // --- Delete Confirmation Dialog ---
@@ -157,63 +154,6 @@ const natColumnHelper = createColumnHelper<Nationality>();
 const tariffColumnHelper = createColumnHelper<Tariff>();
 const deptColumnHelper = createColumnHelper<Department>();
 
-// --- Generic Data Grid ---
-
-function DataGrid<T>({
-	table,
-	isLoading,
-	showSkeleton,
-}: {
-	table: TanstackTable<T>;
-	isLoading: boolean;
-	showSkeleton: boolean;
-}) {
-	return (
-		<div className="overflow-x-auto rounded-lg border">
-			<table role="table" className="w-full text-left text-(--text-sm)">
-				<thead className="border-b bg-(--workspace-bg-muted)">
-					{table.getHeaderGroups().map((hg) => (
-						<tr key={hg.id}>
-							{hg.headers.map((header) => (
-								<th key={header.id} className="px-4 py-3 font-medium text-(--text-secondary)">
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{isLoading && showSkeleton ? (
-						<TableSkeleton rows={10} cols={table.getAllColumns().length} />
-					) : table.getRowModel().rows.length === 0 ? (
-						<tr>
-							<td
-								colSpan={table.getAllColumns().length}
-								className="px-4 py-8 text-center text-(--text-sm) text-(--text-muted)"
-							>
-								No records found.
-							</td>
-						</tr>
-					) : (
-						table.getRowModel().rows.map((row) => (
-							<tr
-								key={row.id}
-								className="border-b last:border-0 hover:bg-(--accent-50) transition-colors duration-(--duration-fast)"
-							>
-								{row.getVisibleCells().map((cell) => (
-									<td key={cell.id} className="px-4 py-3">
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</td>
-								))}
-							</tr>
-						))
-					)}
-				</tbody>
-			</table>
-		</div>
-	);
-}
-
 // --- Main Page ---
 
 export function ReferencePage() {
@@ -272,51 +212,50 @@ export function ReferencePage() {
 					</span>
 				),
 			}),
-			natColumnHelper.display({
-				id: 'actions',
-				header: 'Actions',
-				cell: ({ row }) => {
-					if (!isAdmin) return null;
-					const item = row.original;
-					return (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<button
-									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
-									aria-label={`Actions for ${item.code}`}
-								>
-									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
-								</button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem
-									onSelect={() => {
-										setEditingNationality(item);
-										setPanelOpen(true);
-									}}
-								>
-									<Pencil className="h-4 w-4" /> Edit
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem
-									destructive
-									onSelect={() =>
-										setDeleteTarget({
-											type: 'nationality',
-											code: item.code,
-											id: item.id,
-										})
-									}
-								>
-									<Trash2 className="h-4 w-4" /> Delete
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					);
-				},
-			}),
 		],
+		[]
+	);
+
+	const renderNatActions = useCallback(
+		(item: Nationality) => {
+			if (!isAdmin) return null;
+			return (
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
+							aria-label={`Actions for ${item.code}`}
+						>
+							<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							onSelect={() => {
+								setEditingNationality(item);
+								setPanelOpen(true);
+							}}
+						>
+							<Pencil className="h-4 w-4" /> Edit
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem
+							destructive
+							onSelect={() =>
+								setDeleteTarget({
+									type: 'nationality',
+									code: item.code,
+									id: item.id,
+								})
+							}
+						>
+							<Trash2 className="h-4 w-4" /> Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			);
+		},
 		[isAdmin]
 	);
 
@@ -346,51 +285,50 @@ export function ReferencePage() {
 				header: 'Description',
 				cell: (info) => info.getValue() ?? '-',
 			}),
-			tariffColumnHelper.display({
-				id: 'actions',
-				header: 'Actions',
-				cell: ({ row }) => {
-					if (!isAdmin) return null;
-					const item = row.original;
-					return (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<button
-									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
-									aria-label={`Actions for ${item.code}`}
-								>
-									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
-								</button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem
-									onSelect={() => {
-										setEditingTariff(item);
-										setPanelOpen(true);
-									}}
-								>
-									<Pencil className="h-4 w-4" /> Edit
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem
-									destructive
-									onSelect={() =>
-										setDeleteTarget({
-											type: 'tariff',
-											code: item.code,
-											id: item.id,
-										})
-									}
-								>
-									<Trash2 className="h-4 w-4" /> Delete
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					);
-				},
-			}),
 		],
+		[]
+	);
+
+	const renderTariffActions = useCallback(
+		(item: Tariff) => {
+			if (!isAdmin) return null;
+			return (
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
+							aria-label={`Actions for ${item.code}`}
+						>
+							<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							onSelect={() => {
+								setEditingTariff(item);
+								setPanelOpen(true);
+							}}
+						>
+							<Pencil className="h-4 w-4" /> Edit
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem
+							destructive
+							onSelect={() =>
+								setDeleteTarget({
+									type: 'tariff',
+									code: item.code,
+									id: item.id,
+								})
+							}
+						>
+							<Trash2 className="h-4 w-4" /> Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			);
+		},
 		[isAdmin]
 	);
 
@@ -420,51 +358,50 @@ export function ReferencePage() {
 				header: 'Band Mapping',
 				cell: (info) => <BandBadge band={info.getValue()} />,
 			}),
-			deptColumnHelper.display({
-				id: 'actions',
-				header: 'Actions',
-				cell: ({ row }) => {
-					if (!isAdmin) return null;
-					const item = row.original;
-					return (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<button
-									type="button"
-									className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
-									aria-label={`Actions for ${item.code}`}
-								>
-									<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
-								</button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem
-									onSelect={() => {
-										setEditingDepartment(item);
-										setPanelOpen(true);
-									}}
-								>
-									<Pencil className="h-4 w-4" /> Edit
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem
-									destructive
-									onSelect={() =>
-										setDeleteTarget({
-											type: 'department',
-											code: item.code,
-											id: item.id,
-										})
-									}
-								>
-									<Trash2 className="h-4 w-4" /> Delete
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					);
-				},
-			}),
 		],
+		[]
+	);
+
+	const renderDeptActions = useCallback(
+		(item: Department) => {
+			if (!isAdmin) return null;
+			return (
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-(--workspace-bg-muted)"
+							aria-label={`Actions for ${item.code}`}
+						>
+							<MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							onSelect={() => {
+								setEditingDepartment(item);
+								setPanelOpen(true);
+							}}
+						>
+							<Pencil className="h-4 w-4" /> Edit
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem
+							destructive
+							onSelect={() =>
+								setDeleteTarget({
+									type: 'department',
+									code: item.code,
+									id: item.id,
+								})
+							}
+						>
+							<Trash2 className="h-4 w-4" /> Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			);
+		},
 		[isAdmin]
 	);
 
@@ -615,14 +552,6 @@ export function ReferencePage() {
 		}
 	}, [deleteTarget, deleteNat, deleteTariff, deleteDept]);
 
-	const isLoading =
-		activeTab === 'nationalities'
-			? natLoading
-			: activeTab === 'tariffs'
-				? tariffLoading
-				: deptLoading;
-
-	const showSkeleton = useDelayedSkeleton(isLoading);
 	const showToolbar = activeTab !== 'curriculum';
 
 	return (
@@ -692,13 +621,28 @@ export function ReferencePage() {
 
 				{/* Tables */}
 				{activeTab === 'nationalities' && (
-					<DataGrid table={natTable} isLoading={natLoading} showSkeleton={showSkeleton} />
+					<ListGrid
+						table={natTable}
+						isLoading={natLoading}
+						{...(isAdmin ? { actionsColumn: { render: renderNatActions } } : {})}
+						ariaLabel="Nationalities"
+					/>
 				)}
 				{activeTab === 'tariffs' && (
-					<DataGrid table={tariffTable} isLoading={tariffLoading} showSkeleton={showSkeleton} />
+					<ListGrid
+						table={tariffTable}
+						isLoading={tariffLoading}
+						{...(isAdmin ? { actionsColumn: { render: renderTariffActions } } : {})}
+						ariaLabel="Tariffs"
+					/>
 				)}
 				{activeTab === 'departments' && (
-					<DataGrid table={deptTable} isLoading={deptLoading} showSkeleton={showSkeleton} />
+					<ListGrid
+						table={deptTable}
+						isLoading={deptLoading}
+						{...(isAdmin ? { actionsColumn: { render: renderDeptActions } } : {})}
+						ariaLabel="Departments"
+					/>
 				)}
 				{activeTab === 'curriculum' && <CurriculumTabContent isAdmin={isAdmin} />}
 			</div>
