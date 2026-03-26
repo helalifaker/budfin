@@ -248,7 +248,7 @@ export function InspectorDefaultView() {
 						<ShieldCheck className="h-4 w-4 text-(--accent-700)" aria-hidden="true" />
 					</span>
 					<div className="space-y-1">
-						<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+						<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 							Enrollment workflow
 						</p>
 						<h3 className="text-(--text-lg) font-semibold text-(--text-primary)">
@@ -264,7 +264,7 @@ export function InspectorDefaultView() {
 
 			<div className="grid gap-3 md:grid-cols-2">
 				<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						AY1 coverage
 					</p>
 					<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">
@@ -272,7 +272,7 @@ export function InspectorDefaultView() {
 					</p>
 				</div>
 				<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						Exception queue
 					</p>
 					<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">

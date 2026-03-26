@@ -9,7 +9,7 @@ export function AnimatedGradient({ className }: AnimatedGradientProps) {
 		<div
 			className={cn('absolute inset-0', className)}
 			style={{
-				background: 'linear-gradient(-45deg, #0c1222, #0d9488, #134e4a, #1e2d42)',
+				background: 'var(--gradient-login)',
 				backgroundSize: '400% 400%',
 				animation: 'mesh-gradient 20s ease infinite',
 			}}

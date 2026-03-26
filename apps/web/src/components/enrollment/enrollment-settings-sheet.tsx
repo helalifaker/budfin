@@ -349,7 +349,7 @@ export function EnrollmentSettingsSheet({
 								<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 									<div className="flex items-start justify-between gap-4">
 										<div>
-											<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+											<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 												Recommendation Rules
 											</p>
 											<p className="mt-1 text-(--text-sm) text-(--text-secondary)">
@@ -370,7 +370,7 @@ export function EnrollmentSettingsSheet({
 											<div>
 												<label
 													htmlFor="rollover-threshold"
-													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+													className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 												>
 													Rollover threshold (%)
 												</label>
@@ -394,7 +394,7 @@ export function EnrollmentSettingsSheet({
 											<div>
 												<label
 													htmlFor="capped-retention"
-													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+													className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 												>
 													Capped retention (%)
 												</label>
@@ -418,7 +418,7 @@ export function EnrollmentSettingsSheet({
 											<div>
 												<label
 													htmlFor="retention-trend-weight"
-													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+													className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 												>
 													Retention trend weight (%)
 												</label>
@@ -442,7 +442,7 @@ export function EnrollmentSettingsSheet({
 											<div>
 												<label
 													htmlFor="historical-target-weight"
-													className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+													className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 												>
 													Historical target weight (%)
 												</label>
@@ -474,7 +474,7 @@ export function EnrollmentSettingsSheet({
 								<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) p-3">
 									<div className="flex flex-wrap items-end gap-2">
 										<div className="w-[140px]">
-											<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+											<label className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 												Apply to
 											</label>
 											<Select
@@ -504,7 +504,7 @@ export function EnrollmentSettingsSheet({
 											] as const
 										).map(([field, label]) => (
 											<div key={field} className="w-[72px]">
-												<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<label className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													{label}
 												</label>
 												<Input
@@ -549,19 +549,19 @@ export function EnrollmentSettingsSheet({
 									<table className="w-full text-left text-(--text-sm)">
 										<thead className="bg-(--workspace-bg-subtle)">
 											<tr>
-												<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Grade
 												</th>
-												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Max
 												</th>
-												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Floor %
 												</th>
-												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Target %
 												</th>
-												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Ceiling %
 												</th>
 												<th className="w-10 px-2 py-2" />

@@ -17,12 +17,12 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const VARIANT_STYLES: Record<string, string> = {
 	primary: [
-		'bg-(--accent-500) text-white border-transparent',
+		'bg-(--accent-500) text-(--text-on-dark) border-transparent',
 		'hover:bg-(--accent-600) hover:shadow-md hover:-translate-y-px',
 		'active:bg-(--accent-700) active:scale-[0.98] active:translate-y-0',
 	].join(' '),
 	secondary: [
-		'bg-white text-(--accent-600) border-(--accent-300)',
+		'bg-(--workspace-bg-card) text-(--accent-600) border-(--accent-300)',
 		'hover:bg-(--accent-50)',
 		'active:bg-(--accent-100)',
 	].join(' '),
@@ -32,7 +32,7 @@ const VARIANT_STYLES: Record<string, string> = {
 		'active:bg-(--accent-100)',
 	].join(' '),
 	destructive: [
-		'bg-(--color-error) text-white border-transparent',
+		'bg-(--color-error) text-(--text-on-dark) border-transparent',
 		'hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]',
 		'active:bg-[color-mix(in_srgb,var(--color-error),black_25%)] active:scale-[0.98]',
 	].join(' '),

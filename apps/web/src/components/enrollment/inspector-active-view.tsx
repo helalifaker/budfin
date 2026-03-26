@@ -333,7 +333,7 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 
 			<div className="grid gap-3 md:grid-cols-2">
 				<div className="rounded-lg border border-(--inspector-section-border) bg-(--workspace-bg-card) px-3 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						Current AY1
 					</p>
 					<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">
@@ -346,7 +346,7 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 					</p>
 				</div>
 				<div className="rounded-lg border border-(--inspector-section-border) bg-(--workspace-bg-card) px-3 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						Projected AY2
 					</p>
 					<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">
@@ -553,7 +553,7 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 
 			{bandNatContext && bandNatContext.total > 0 && (
 				<div className="rounded-lg border border-(--inspector-section-border) bg-(--workspace-bg-card) px-3 py-2.5">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						{bandNatContext.label} band context
 					</p>
 					<p className="mt-1 font-mono text-(--text-sm) tabular-nums text-(--text-secondary)">

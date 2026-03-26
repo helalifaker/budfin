@@ -147,7 +147,7 @@ function OpExInspectorDefaultView() {
 
 			<div className="grid gap-3 md:grid-cols-2">
 				<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						Operating items
 					</p>
 					<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">
@@ -155,7 +155,7 @@ function OpExInspectorDefaultView() {
 					</p>
 				</div>
 				<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						Non-operating items
 					</p>
 					<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">

@@ -126,8 +126,8 @@ export function EditableCell({
 					'ring-2 ring-(--cell-editable-focus)',
 					'focus:outline-none',
 					isSubtle
-						? 'bg-white'
-						: 'bg-(--cell-editable-bg) shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',
+						? 'bg-(--workspace-bg-card)'
+						: 'bg-(--cell-editable-bg) shadow-(--shadow-cell-inset-focus)',
 					className
 				)}
 				value={draft}
@@ -169,7 +169,7 @@ export function EditableCell({
 				'cursor-pointer',
 				isSubtle
 					? 'bg-transparent hover:bg-(--accent-50)/40'
-					: 'bg-(--cell-editable-bg) shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] hover:border-(--accent-200) hover:bg-[color-mix(in_srgb,var(--cell-editable-bg),white_20%)]',
+					: 'bg-(--cell-editable-bg) shadow-(--shadow-cell-inset) hover:border-(--accent-200) hover:bg-[color-mix(in_srgb,var(--cell-editable-bg),white_20%)]',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-400)',
 				isError && 'border border-(--cell-error-border)',
 				className

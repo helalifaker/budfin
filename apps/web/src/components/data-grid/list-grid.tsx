@@ -217,7 +217,7 @@ export function ListGrid<T>({
 							className={cn(
 								'px-(--list-cell-px) py-3',
 								'bg-(--list-header-bg)',
-								'text-(--text-xs) font-semibold uppercase tracking-[0.08em]',
+								'text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide)',
 								'text-(--list-header-text)',
 								'border-b border-(--list-header-border)',
 								numeric && 'text-right',
@@ -240,7 +240,7 @@ export function ListGrid<T>({
 							'px-2 py-3',
 							'bg-(--list-header-bg)',
 							'border-b border-(--list-header-border)',
-							'text-(--text-xs) font-semibold uppercase tracking-[0.08em]',
+							'text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide)',
 							'text-(--list-header-text) text-center'
 						)}
 						style={actionsColumn.width ? { width: actionsColumn.width } : { width: 64 }}

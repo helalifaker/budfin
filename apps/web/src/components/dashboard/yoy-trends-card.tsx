@@ -127,7 +127,7 @@ export function YoyTrendsCard() {
 						);
 					})}
 				</div>
-				<p className="mt-3 text-[11px] text-(--text-muted)">
+				<p className="mt-3 text-(length:--text-xs) text-(--text-muted)">
 					Comparing {data.years[lastIdx - 1]!.fiscalYear} to {data.years[lastIdx]!.fiscalYear}
 				</p>
 			</CardContent>

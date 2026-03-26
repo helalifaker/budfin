@@ -26,7 +26,7 @@ export function DropdownMenuContent({
 				className={cn(
 					'z-50 min-w-[8rem] overflow-hidden',
 					'rounded-md border border-(--workspace-border)',
-					'bg-white p-1 shadow-(--shadow-md)',
+					'bg-(--workspace-bg-card) p-1 shadow-(--shadow-md)',
 					'text-(--text-sm) text-(--text-primary)',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',

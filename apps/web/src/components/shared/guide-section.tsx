@@ -25,7 +25,7 @@ export function GuideSection({
 				onClick={() => setOpen((prev) => !prev)}
 				className={cn(
 					'flex w-full items-center gap-2 py-2.5',
-					'text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)',
+					'text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)',
 					'hover:text-(--text-primary) transition-colors duration-(--duration-fast)'
 				)}
 				aria-expanded={open}

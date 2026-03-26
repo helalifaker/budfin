@@ -72,7 +72,7 @@ function CommentItem({ comment, versionId, isReply = false }: CommentItemProps) 
 						<span className="font-medium text-(--text-primary)">{comment.authorEmail}</span>
 						<span className="text-(--text-muted)">{relativeTime}</span>
 						{comment.resolvedAt && (
-							<span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700">
+							<span className="rounded bg-(--badge-resolved-bg) px-1.5 py-0.5 text-(length:--text-2xs) font-medium text-(--badge-resolved)">
 								Resolved
 							</span>
 						)}
@@ -221,7 +221,7 @@ function RootComment({ comment, versionId, targetType, targetId }: RootCommentPr
 					<button
 						type="button"
 						onClick={handleResolve}
-						className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-700"
+						className="inline-flex items-center gap-1 text-xs text-(--color-success) hover:text-(--color-success)"
 						aria-label="Resolve thread"
 					>
 						<CheckCircle2 className="h-3 w-3" />

@@ -43,9 +43,9 @@ export function LoginPage() {
 				{/* Logo */}
 				<div className="flex items-center justify-center gap-3 mb-8">
 					<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-(--accent-500)">
-						<span className="text-lg font-bold text-white">B</span>
+						<span className="text-lg font-bold text-(--text-on-dark)">B</span>
 					</div>
-					<span className="text-2xl font-bold text-white">BudFin</span>
+					<span className="text-2xl font-bold text-(--text-on-dark)">BudFin</span>
 				</div>
 
 				{/* Glassmorphic card */}
@@ -60,8 +60,10 @@ export function LoginPage() {
 					)}
 				>
 					<div className="text-center mb-6">
-						<h1 className="text-(--text-xl) font-semibold text-white">Welcome back</h1>
-						<p className="mt-1 text-(--text-sm) text-white/60">Sign in to your account</p>
+						<h1 className="text-(--text-xl) font-semibold text-(--text-on-dark)">Welcome back</h1>
+						<p className="mt-1 text-(--text-sm) text-(--text-on-dark-muted)">
+							Sign in to your account
+						</p>
 					</div>
 
 					<div>
@@ -79,7 +81,7 @@ export function LoginPage() {
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
 							className={cn(
-								'bg-white/10 border-white/20 text-white',
+								'bg-white/10 border-white/20 text-(--text-on-dark)',
 								'placeholder:text-white/40',
 								'focus:border-(--accent-400) focus:shadow-(--shadow-glow-accent)'
 							)}
@@ -102,7 +104,7 @@ export function LoginPage() {
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							className={cn(
-								'bg-white/10 border-white/20 text-white',
+								'bg-white/10 border-white/20 text-(--text-on-dark)',
 								'placeholder:text-white/40',
 								'focus:border-(--accent-400) focus:shadow-(--shadow-glow-accent)'
 							)}
@@ -116,7 +118,7 @@ export function LoginPage() {
 							className={cn(
 								'rounded-md px-3 py-2',
 								'bg-(--color-error)/15 border border-(--color-error)/30',
-								'text-(--text-sm) text-white',
+								'text-(--text-sm) text-(--text-on-dark)',
 								'animate-shake'
 							)}
 						>

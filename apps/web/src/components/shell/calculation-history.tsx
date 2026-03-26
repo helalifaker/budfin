@@ -12,17 +12,17 @@ const STATUS_CONFIG: Record<string, { label: string; icon: ReactNode; className:
 	COMPLETED: {
 		label: 'Completed',
 		icon: <CheckCircle2 className="h-3.5 w-3.5" />,
-		className: 'text-green-600',
+		className: 'text-(--color-success)',
 	},
 	FAILED: {
 		label: 'Failed',
 		icon: <XCircle className="h-3.5 w-3.5" />,
-		className: 'text-red-600',
+		className: 'text-(--color-error)',
 	},
 	STARTED: {
 		label: 'Running',
 		icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-		className: 'text-amber-600',
+		className: 'text-(--color-warning)',
 	},
 };
 

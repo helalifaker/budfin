@@ -29,7 +29,7 @@ export function SelectTrigger({ className, children, ...props }: SelectTriggerPr
 			className={cn(
 				'flex h-9 w-full items-center justify-between',
 				'rounded-md border border-(--workspace-border)',
-				'bg-white px-3 py-2 text-(--text-sm)',
+				'bg-(--workspace-bg-card) px-3 py-2 text-(--text-sm)',
 				'shadow-(--shadow-xs)',
 				'placeholder:text-(--text-muted)',
 				'focus:outline-none focus:border-(--accent-500)',
@@ -93,7 +93,7 @@ export function SelectContent({
 				className={cn(
 					'relative z-50 max-h-96 min-w-[8rem] overflow-hidden',
 					'rounded-md border border-(--workspace-border)',
-					'bg-white text-(--text-primary) shadow-(--shadow-lg)',
+					'bg-(--workspace-bg-card) text-(--text-primary) shadow-(--shadow-lg)',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 					'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',

@@ -23,7 +23,7 @@ export function CommentIndicator({ count, className, onClick }: CommentIndicator
 			className={cn(
 				'inline-flex items-center gap-1 rounded-full',
 				'bg-(--accent-50) px-1.5 py-0.5',
-				'text-[11px] font-medium text-(--accent-700)',
+				'text-(length:--text-xs) font-medium text-(--accent-700)',
 				'hover:bg-(--accent-100) transition-colors',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-500)',
 				className

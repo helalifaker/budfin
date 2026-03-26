@@ -176,7 +176,11 @@ export function AcademicYearSidePanel({ open, onClose, academicYear }: AcademicY
 
 	return (
 		<>
-			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
+			<div
+				className="fixed inset-0 z-40 bg-(--overlay-bg-subtle)"
+				onClick={onClose}
+				aria-hidden="true"
+			/>
 			<div
 				ref={panelRef}
 				role="dialog"

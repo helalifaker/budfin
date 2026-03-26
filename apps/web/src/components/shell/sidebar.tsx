@@ -143,12 +143,12 @@ export function Sidebar() {
 				)}
 			>
 				<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-(--accent-500)">
-					<span className="text-sm font-bold text-white">B</span>
+					<span className="text-sm font-bold text-(--text-on-dark)">B</span>
 				</div>
 				{!isCollapsed && (
 					<span
 						className={cn(
-							'text-(--text-lg) font-bold text-white',
+							'text-(--text-lg) font-bold text-(--text-on-dark)',
 							'transition-opacity duration-(--duration-fast)'
 						)}
 					>
@@ -171,7 +171,7 @@ export function Sidebar() {
 						{!isCollapsed && (
 							<h2
 								className={cn(
-									'px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider',
+									'px-3 pb-2 text-(length:--text-xs) font-semibold uppercase tracking-wider',
 									'text-(--text-muted)',
 									'transition-opacity duration-(--duration-fast)'
 								)}
@@ -205,12 +205,12 @@ export function Sidebar() {
 				{/* User info */}
 				{!isCollapsed && user && (
 					<div className="flex items-center gap-3 px-3 py-2">
-						<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--accent-600) text-xs font-medium text-white">
+						<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--accent-600) text-xs font-medium text-(--text-on-dark)">
 							{user.email.charAt(0).toUpperCase()}
 						</div>
 						<div className="min-w-0 flex-1">
 							<p className="truncate text-(--text-sm) text-(--sidebar-text-active)">{user.email}</p>
-							<p className="text-[11px] text-(--text-muted)">{user.role}</p>
+							<p className="text-(length:--text-xs) text-(--text-muted)">{user.role}</p>
 						</div>
 					</div>
 				)}

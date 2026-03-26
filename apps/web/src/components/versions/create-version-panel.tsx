@@ -137,7 +137,11 @@ export function CreateVersionPanel({
 
 	return (
 		<>
-			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
+			<div
+				className="fixed inset-0 z-40 bg-(--overlay-bg-subtle)"
+				onClick={onClose}
+				aria-hidden="true"
+			/>
 			<div
 				ref={panelRef}
 				role="dialog"
@@ -178,7 +182,7 @@ export function CreateVersionPanel({
 							</div>
 
 							<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
-								<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+								<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 									Next step
 								</p>
 								<p className="mt-2 text-(--text-sm) text-(--text-secondary)">

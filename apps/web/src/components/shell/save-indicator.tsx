@@ -12,7 +12,7 @@ export function SaveIndicator({ status, className }: SaveIndicatorProps) {
 	return (
 		<div
 			className={cn(
-				'flex items-center gap-1.5 text-[11px] font-medium',
+				'flex items-center gap-1.5 text-(length:--text-xs) font-medium',
 				status === 'saving' && 'text-(--text-muted) animate-pulse-save',
 				status === 'saved' && 'text-(--color-success)',
 				status === 'unsaved' && 'text-(--color-warning)',

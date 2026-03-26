@@ -84,7 +84,7 @@ export function RevenueMatrixTable({ rows, ariaLabel }: RevenueMatrixTableProps)
 									>
 										<td
 											colSpan={15}
-											className="bg-(--workspace-bg-subtle) px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-(--text-secondary)"
+											className="bg-(--workspace-bg-subtle) px-4 py-2 text-xs font-semibold uppercase tracking-(--grid-header-tracking) text-(--text-secondary)"
 										>
 											{row.section}
 										</td>

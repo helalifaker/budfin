@@ -335,6 +335,39 @@
 	--grid-header-size: var(--text-xs);
 	--grid-header-weight: 600;
 	--grid-header-tracking: 0.12em;
+
+	/* ── Surface / Contrast ── */
+	--text-on-dark: #f8fafc;
+	--text-on-dark-muted: rgba(248, 250, 252, 0.6);
+	--workspace-bg-elevated: #1e293b;
+
+	/* ── Overlay ── */
+	--overlay-bg: rgba(0, 0, 0, 0.4);
+	--overlay-bg-subtle: rgba(0, 0, 0, 0.3);
+
+	/* ── Financial Chart Series ── */
+	--chart-revenue: var(--chart-series-1);
+	--chart-staff-cost: var(--chart-series-5);
+	--chart-opex: #0891b2;
+	--chart-net-profit: var(--color-success);
+
+	/* ── Login Gradient ── */
+	--gradient-login: linear-gradient(-45deg, #0c1222, var(--accent-600), var(--accent-900), #1e2d42);
+
+	/* ── Micro Typography ── */
+	--text-2xs: 10px;
+
+	/* ── Extra Tracking ── */
+	--tracking-wide: 0.08em;
+
+	/* ── Inset Shadows ── */
+	--shadow-cell-inset: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+	--shadow-cell-inset-focus: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+	--shadow-footer-sticky: 0 -2px 4px rgba(0, 0, 0, 0.06);
+
+	/* ── Resolved Badge ── */
+	--badge-resolved: var(--color-success);
+	--badge-resolved-bg: var(--color-success-bg);
 }
 
 /* ── Dark Theme ── */
@@ -443,6 +476,24 @@
 	--grid-range-bg: color-mix(in srgb, var(--accent-700) 30%, transparent);
 	--grid-range-border: var(--accent-600);
 	--grid-clipboard-flash: color-mix(in srgb, var(--accent-800) 50%, #1e293b);
+
+	/* ── Surface / Contrast (dark) ── */
+	--workspace-bg-elevated: #334155;
+
+	/* ── Overlay (dark) ── */
+	--overlay-bg: rgba(0, 0, 0, 0.6);
+	--overlay-bg-subtle: rgba(0, 0, 0, 0.5);
+
+	/* ── Chart Opex (dark — brighter for visibility) ── */
+	--chart-opex: #22d3ee;
+
+	/* ── Inset Shadows (dark) ── */
+	--shadow-cell-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	--shadow-cell-inset-focus: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+	--shadow-footer-sticky: 0 -2px 4px rgba(0, 0, 0, 0.25);
+
+	/* ── Resolved Badge (dark) ── */
+	--badge-resolved-bg: color-mix(in srgb, var(--color-success) 20%, #1e293b);
 }
 
 /* ── Dark frosted glass override ── */

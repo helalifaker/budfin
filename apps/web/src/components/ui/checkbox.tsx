@@ -19,7 +19,7 @@ export const Checkbox = React.forwardRef<
 			'disabled:cursor-not-allowed disabled:opacity-50',
 			'data-[state=checked]:bg-(--accent-500)',
 			'data-[state=checked]:border-(--accent-500)',
-			'data-[state=checked]:text-white',
+			'data-[state=checked]:text-(--text-on-dark)',
 			'transition-colors duration-(--duration-fast)',
 			className
 		)}

@@ -64,3 +64,24 @@ export const CHART_TOOLTIP_STYLE: React.CSSProperties = {
 	border: '1px solid var(--chart-tooltip-border)',
 	fontSize: 'var(--chart-tooltip-size)',
 };
+
+export const CHART_TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
+	backgroundColor: 'var(--workspace-bg-card)',
+	border: '1px solid var(--chart-tooltip-border)',
+	borderRadius: 'var(--radius-sm)',
+	fontSize: 'var(--chart-tooltip-size)',
+};
+
+export const CHART_AXIS_TICK = {
+	fontSize: 'var(--chart-tick-size)',
+	fill: 'var(--text-secondary)',
+};
+
+export const CHART_AXIS_TICK_LG = {
+	fontSize: 'var(--chart-tooltip-size)',
+	fill: 'var(--text-secondary)',
+};
+
+export const CHART_LEGEND_STYLE: React.CSSProperties = {
+	fontSize: 'var(--chart-tooltip-size)',
+};

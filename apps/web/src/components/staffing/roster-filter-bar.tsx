@@ -109,7 +109,7 @@ export function RosterFilterBar({
 									className={cn(
 										'ml-1.5 inline-flex h-5 min-w-5 items-center justify-center',
 										'rounded-full bg-(--accent-500) px-1',
-										'text-xs font-medium text-white'
+										'text-xs font-medium text-(--text-on-dark)'
 									)}
 								>
 									{filters.departments.length}
@@ -154,7 +154,7 @@ export function RosterFilterBar({
 									className={cn(
 										'ml-1.5 inline-flex h-5 min-w-5 items-center justify-center',
 										'rounded-full bg-(--accent-500) px-1',
-										'text-xs font-medium text-white'
+										'text-xs font-medium text-(--text-on-dark)'
 									)}
 								>
 									{filters.costModes.length}
@@ -183,7 +183,7 @@ export function RosterFilterBar({
 							className={cn(
 								'ml-1.5 inline-flex h-5 min-w-5 items-center justify-center',
 								'rounded-full bg-(--text-muted) px-1',
-								'text-xs font-medium text-white'
+								'text-xs font-medium text-(--text-on-dark)'
 							)}
 						>
 							{activeCount}

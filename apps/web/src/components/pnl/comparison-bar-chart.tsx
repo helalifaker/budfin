@@ -3,6 +3,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'rec
 import Decimal from 'decimal.js';
 import { ChartWrapper } from '../shared/chart-wrapper';
 import { formatMoney } from '../../lib/format-money';
+import {
+	CHART_TOOLTIP_CONTENT_STYLE,
+	CHART_AXIS_TICK,
+	CHART_AXIS_TICK_LG,
+	CHART_LEGEND_STYLE,
+} from '../../lib/chart-utils';
 import type { PnlLineItem } from '@budfin/types';
 
 interface ComparisonBarChartProps {
@@ -66,26 +72,17 @@ export function ComparisonBarChart({
 			<ChartWrapper height={260}>
 				<BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
 					<CartesianGrid strokeDasharray="3 3" stroke="var(--workspace-border)" />
-					<XAxis
-						dataKey="label"
-						tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
-						stroke="var(--workspace-border)"
-					/>
+					<XAxis dataKey="label" tick={CHART_AXIS_TICK_LG} stroke="var(--workspace-border)" />
 					<YAxis
-						tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
+						tick={CHART_AXIS_TICK}
 						stroke="var(--workspace-border)"
 						tickFormatter={(v: number) => formatMoney(v, { compact: true })}
 					/>
 					<Tooltip
-						contentStyle={{
-							backgroundColor: 'var(--workspace-bg-card)',
-							border: '1px solid var(--workspace-border)',
-							borderRadius: '6px',
-							fontSize: '12px',
-						}}
+						contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
 						formatter={(value: number | undefined) => [formatMoney(value ?? 0)]}
 					/>
-					<Legend wrapperStyle={{ fontSize: '12px' }} />
+					<Legend wrapperStyle={CHART_LEGEND_STYLE} />
 					<Bar
 						dataKey="primary"
 						name={primaryLabel}
@@ -95,7 +92,7 @@ export function ComparisonBarChart({
 					<Bar
 						dataKey="comparison"
 						name={comparisonLabel}
-						fill="var(--chart-series-5, #7c3aed)"
+						fill="var(--chart-series-5)"
 						radius={[2, 2, 0, 0]}
 					/>
 				</BarChart>

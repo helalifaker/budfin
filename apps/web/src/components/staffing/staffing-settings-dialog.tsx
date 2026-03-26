@@ -656,7 +656,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 												<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 													<div className="flex items-start justify-between gap-4">
 														<div>
-															<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																Service Profiles & HSA
 															</p>
 															<p className="mt-1 text-(--text-sm) text-(--text-secondary)">
@@ -675,16 +675,16 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<table className="w-full text-left text-(--text-sm)">
 															<thead className="bg-(--workspace-bg-subtle)">
 																<tr>
-																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Code
 																	</th>
-																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Name
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		ORS
 																	</th>
-																	<th className="px-3 py-2 text-center text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-center text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		HSA Eligible
 																	</th>
 																</tr>
@@ -723,7 +723,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<div>
 															<label
 																htmlFor="hsa-target"
-																className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+																className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 															>
 																HSA Target Hours/Week
 															</label>
@@ -748,7 +748,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<div>
 															<label
 																htmlFor="hsa-rate-first"
-																className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+																className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 															>
 																First Hour Rate (SAR)
 															</label>
@@ -772,7 +772,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<div>
 															<label
 																htmlFor="hsa-rate-additional"
-																className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+																className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 															>
 																Additional Hour Rate (SAR)
 															</label>
@@ -796,7 +796,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<div>
 															<label
 																htmlFor="hsa-months"
-																className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+																className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 															>
 																HSA Active Months
 															</label>
@@ -822,14 +822,14 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 
 													{/* Ajeer settings */}
 													<div className="mt-6">
-														<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															Ajeer Fee
 														</p>
 														<div className="mt-2 grid gap-3 md:grid-cols-2">
 															<div>
 																<label
 																	htmlFor="ajeer-annual-fee"
-																	className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+																	className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 																>
 																	Annual Ajeer Fee (SAR)
 																</label>
@@ -846,7 +846,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																/>
 															</div>
 															<div>
-																<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																<label className="block text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																	Monthly (computed)
 																</label>
 																<p className="mt-2 px-3 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
@@ -864,7 +864,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 											{activeTab === 'curriculum' && (
 												<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 													<div className="flex items-start justify-between gap-4">
-														<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															DHG Rules (Read-Only)
 														</p>
 														<Button
@@ -893,16 +893,16 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																	<table className="w-full text-left text-(--text-sm)">
 																		<thead className="bg-(--workspace-bg-subtle)">
 																			<tr>
-																				<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																				<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																					Grade
 																				</th>
-																				<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																				<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																					Discipline
 																				</th>
-																				<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																				<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																					Type
 																				</th>
-																				<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																				<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																					Hours/Unit
 																				</th>
 																			</tr>
@@ -939,7 +939,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 											{/* ── Tab: Lycee Group Assumptions ──────────────────────── */}
 											{activeTab === 'lyceeGroups' && hasGroupDriverRules && (
 												<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
-													<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Lycee Group Assumptions
 													</p>
 													<p className="mt-1 text-(--text-sm) text-(--text-secondary)">
@@ -950,13 +950,13 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<table className="w-full text-left text-(--text-sm)">
 															<thead className="bg-(--workspace-bg-subtle)">
 																<tr>
-																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Discipline
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Group Count
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Hours/Group
 																	</th>
 																</tr>
@@ -1023,7 +1023,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 											{/* ── Tab: Additional Cost Assumptions ──────────────────── */}
 											{activeTab === 'costAssumptions' && (
 												<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
-													<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Additional Cost Assumptions
 													</p>
 
@@ -1031,19 +1031,19 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<table className="w-full text-left text-(--text-sm)">
 															<thead className="bg-(--workspace-bg-subtle)">
 																<tr>
-																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Category
 																	</th>
-																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Mode
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Value
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Monthly
 																	</th>
-																	<th className="px-3 py-2 text-center text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-center text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Summer Excl.
 																	</th>
 																</tr>
@@ -1145,7 +1145,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 											{/* ── Tab: Enrollment ───────────────────────────────────── */}
 											{activeTab === 'enrollment' && (
 												<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
-													<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Enrollment Headcounts (AY2)
 													</p>
 
@@ -1163,10 +1163,10 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<table className="w-full text-left text-(--text-sm)">
 															<thead className="bg-(--workspace-bg-subtle)">
 																<tr>
-																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Grade
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		AY2 Headcount
 																	</th>
 																</tr>
@@ -1204,7 +1204,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 											{/* ── Tab: Reconciliation ───────────────────────────────── */}
 											{activeTab === 'reconciliation' && (
 												<section className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
-													<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Reconciliation
 													</p>
 													<p className="mt-1 text-(--text-sm) text-(--text-secondary)">
@@ -1215,19 +1215,19 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 														<table className="w-full text-left text-(--text-sm)">
 															<thead className="bg-(--workspace-bg-subtle)">
 																<tr>
-																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Metric
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		App-Computed
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Baseline
 																	</th>
-																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Delta
 																	</th>
-																	<th className="px-3 py-2 text-center text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+																	<th className="px-3 py-2 text-center text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																		Status
 																	</th>
 																</tr>

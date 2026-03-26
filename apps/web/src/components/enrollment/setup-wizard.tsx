@@ -181,7 +181,7 @@ function MetricCard({
 				'bg-(--workspace-bg-card) px-4 py-3 shadow-(--shadow-xs)'
 			)}
 		>
-			<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+			<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 				{label}
 			</p>
 			<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">{value}</p>
@@ -296,22 +296,22 @@ function GroupedHeadcountTable({
 			<table className="w-full text-left text-(--text-sm)">
 				<thead className="bg-(--grid-header-bg)">
 					<tr>
-						<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+						<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 							Grade
 						</th>
-						<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+						<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 							Baseline
 						</th>
-						<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+						<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 							Working AY1
 						</th>
 						{showBaselineDelta && (
-							<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+							<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 								Delta
 							</th>
 						)}
 						{showImportedDelta && (
-							<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+							<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 								Import Delta
 							</th>
 						)}
@@ -326,7 +326,7 @@ function GroupedHeadcountTable({
 							<tr key={`${band}-header`} className="border-t border-(--workspace-border)">
 								<td
 									colSpan={columnCount}
-									className="px-4 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)"
+									className="px-4 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)"
 								>
 									{band}
 								</td>
@@ -391,7 +391,7 @@ function GroupedHeadcountTable({
 								key={`${band}-subtotal`}
 								className="border-t border-(--workspace-border) bg-(--workspace-bg-subtle)"
 							>
-								<td className="px-4 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-secondary)">
+								<td className="px-4 py-2 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-secondary)">
 									{band} subtotal
 								</td>
 								<td className="px-4 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
@@ -410,7 +410,7 @@ function GroupedHeadcountTable({
 						];
 					})}
 					<tr className="border-t border-(--workspace-border-strong) bg-(--grid-footer-bg)">
-						<td className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-secondary)">
+						<td className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-secondary)">
 							Grand total
 						</td>
 						<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-secondary)">
@@ -975,7 +975,7 @@ export function EnrollmentSetupWizard({
 					<header className="sticky top-0 z-[1] border-b border-(--workspace-border) bg-(--workspace-bg-card) px-6 py-5">
 						<div className="flex items-start justify-between gap-4">
 							<div className="space-y-1">
-								<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--accent-700)">
+								<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--accent-700)">
 									Enrollment setup
 								</p>
 								<h2 className="text-(--text-2xl) font-semibold font-[family-name:var(--font-display)] text-(--text-primary)">
@@ -1298,7 +1298,7 @@ export function EnrollmentSetupWizard({
 										</div>
 										<div className="mt-4 grid gap-4 md:grid-cols-4">
 											<div>
-												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Rollover threshold
 												</p>
 												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
@@ -1306,7 +1306,7 @@ export function EnrollmentSetupWizard({
 												</p>
 											</div>
 											<div>
-												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Capped retention
 												</p>
 												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
@@ -1314,7 +1314,7 @@ export function EnrollmentSetupWizard({
 												</p>
 											</div>
 											<div>
-												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Retention trend weight
 												</p>
 												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
@@ -1322,7 +1322,7 @@ export function EnrollmentSetupWizard({
 												</p>
 											</div>
 											<div>
-												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+												<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 													Historical target weight
 												</p>
 												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
@@ -1358,31 +1358,31 @@ export function EnrollmentSetupWizard({
 										<table className="w-full text-left text-(--text-sm)">
 											<thead className="bg-(--grid-header-bg)">
 												<tr>
-													<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Grade
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Retention %
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Trend Ret %
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Retained
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Hist Target
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Laterals
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Override
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Suggested
 													</th>
-													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+													<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 														Confidence
 													</th>
 												</tr>
@@ -1547,25 +1547,25 @@ export function EnrollmentSetupWizard({
 											<table className="w-full text-left text-(--text-sm)">
 												<thead className="bg-(--grid-header-bg)">
 													<tr>
-														<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															Grade
 														</th>
-														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															AY1
 														</th>
-														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															Retained
 														</th>
-														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															Hist Target
 														</th>
-														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															Laterals
 														</th>
-														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															Override
 														</th>
-														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+														<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 															AY2
 														</th>
 													</tr>
@@ -1612,16 +1612,16 @@ export function EnrollmentSetupWizard({
 												<table className="w-full text-left text-(--text-sm)">
 													<thead className="bg-(--grid-header-bg)">
 														<tr>
-															<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															<th className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																Grade
 															</th>
-															<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																Sections
 															</th>
-															<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																Utilization
 															</th>
-															<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															<th className="px-4 py-3 text-right text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																Alert
 															</th>
 														</tr>
@@ -1680,7 +1680,7 @@ export function EnrollmentSetupWizard({
 															key={nationality}
 															className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-4 py-3"
 														>
-															<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+															<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 																{NATIONALITY_LABELS[nationality as NationalityType]}
 															</p>
 															<p className="mt-2 text-(--text-xl) font-semibold text-(--text-primary)">

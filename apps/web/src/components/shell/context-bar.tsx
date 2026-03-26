@@ -363,7 +363,7 @@ function SelectorGroup({
 			<label
 				htmlFor={htmlFor}
 				className={cn(
-					'text-[11px] font-semibold uppercase tracking-wider',
+					'text-(length:--text-xs) font-semibold uppercase tracking-wider',
 					'text-(--text-muted) whitespace-nowrap'
 				)}
 			>

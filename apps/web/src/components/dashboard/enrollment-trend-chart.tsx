@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { ChartWrapper } from '../shared/chart-wrapper';
 import { useHistorical } from '../../hooks/use-enrollment';
 import { Skeleton } from '../ui/skeleton';
+import { CHART_TOOLTIP_CONTENT_STYLE, CHART_AXIS_TICK_LG } from '../../lib/chart-utils';
 
 interface YearTotal {
 	year: string;
@@ -53,23 +54,10 @@ export function EnrollmentTrendChart() {
 			<ChartWrapper height={280}>
 				<LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
 					<CartesianGrid strokeDasharray="3 3" stroke="var(--workspace-border)" />
-					<XAxis
-						dataKey="year"
-						tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
-						stroke="var(--workspace-border)"
-					/>
-					<YAxis
-						tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
-						stroke="var(--workspace-border)"
-						allowDecimals={false}
-					/>
+					<XAxis dataKey="year" tick={CHART_AXIS_TICK_LG} stroke="var(--workspace-border)" />
+					<YAxis tick={CHART_AXIS_TICK_LG} stroke="var(--workspace-border)" allowDecimals={false} />
 					<Tooltip
-						contentStyle={{
-							backgroundColor: 'var(--workspace-bg-card)',
-							border: '1px solid var(--workspace-border)',
-							borderRadius: '6px',
-							fontSize: '12px',
-						}}
+						contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
 						formatter={(value: number | undefined) => [
 							(value ?? 0).toLocaleString('fr-FR'),
 							'Students',

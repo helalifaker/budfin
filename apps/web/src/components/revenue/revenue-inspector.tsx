@@ -455,7 +455,7 @@ function RevenueInspectorDefaultView() {
 			<InspectorSection title="Readiness checklist">
 				<div className="grid gap-3 md:grid-cols-2">
 					<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-3">
-						<p className="text-(--text-xs) uppercase tracking-[0.08em] text-(--text-muted)">
+						<p className="text-(--text-xs) uppercase tracking-(--tracking-wide) text-(--text-muted)">
 							Config coverage
 						</p>
 						<div className="mt-2 flex items-center justify-between">
@@ -464,7 +464,7 @@ function RevenueInspectorDefaultView() {
 						</div>
 					</div>
 					<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-subtle) px-3 py-3">
-						<p className="text-(--text-xs) uppercase tracking-[0.08em] text-(--text-muted)">
+						<p className="text-(--text-xs) uppercase tracking-(--tracking-wide) text-(--text-muted)">
 							Validation issues
 						</p>
 						<p className="mt-2 text-(--text-lg) font-semibold text-(--text-primary)">
@@ -875,7 +875,7 @@ function RevenueInspectorActiveView({ selection }: { selection: RevenueGridRowId
 					<p
 						className={cn(
 							'text-(--text-xs) font-semibold uppercase',
-							'tracking-[0.08em] text-(--text-muted)'
+							'tracking-(--tracking-wide) text-(--text-muted)'
 						)}
 					>
 						{bandAggregateContext.label} band context

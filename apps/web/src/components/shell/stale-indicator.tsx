@@ -14,7 +14,7 @@ export function StaleIndicator({ staleModules, className }: StaleIndicatorProps)
 			className={cn(
 				'flex items-center gap-1.5',
 				'rounded-sm bg-(--color-warning-bg) px-2 py-1',
-				'text-[11px] font-medium text-(--color-warning)',
+				'text-(length:--text-xs) font-medium text-(--color-warning)',
 				className
 			)}
 			title={`Stale modules: ${staleModules.join(', ')}`}

@@ -35,7 +35,7 @@ export function ToggleGroupItem({ className, ...props }: ToggleGroupItemProps) {
 				'first:rounded-l-(--radius-md) last:rounded-r-(--radius-md)',
 				'bg-transparent text-(--text-secondary)',
 				'hover:text-(--text-primary)',
-				'data-[state=on]:bg-(--accent-500) data-[state=on]:text-white',
+				'data-[state=on]:bg-(--accent-500) data-[state=on]:text-(--text-on-dark)',
 				'data-[state=on]:shadow-(--shadow-sm)',
 				'focus-visible:outline-none focus-visible:ring-2',
 				'focus-visible:ring-(--accent-500) focus-visible:ring-offset-2',

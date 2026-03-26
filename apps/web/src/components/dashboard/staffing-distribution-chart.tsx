@@ -4,12 +4,15 @@ import { ChartWrapper } from '../shared/chart-wrapper';
 import { useStaffingSummary } from '../../hooks/use-staffing';
 import { Skeleton } from '../ui/skeleton';
 import { formatMoney } from '../../lib/format-money';
+import { CHART_TOOLTIP_CONTENT_STYLE, CHART_AXIS_TICK } from '../../lib/chart-utils';
+import { useChartColors } from '../../hooks/use-chart-colors';
 
 export type StaffingDistributionChartProps = {
 	versionId: number | null;
 };
 
 export function StaffingDistributionChart({ versionId }: StaffingDistributionChartProps) {
+	const chartColors = useChartColors();
 	const { data, isLoading } = useStaffingSummary(versionId);
 
 	const chartData = useMemo(() => {
@@ -54,30 +57,25 @@ export function StaffingDistributionChart({ versionId }: StaffingDistributionCha
 					<CartesianGrid strokeDasharray="3 3" stroke="var(--workspace-border)" />
 					<XAxis
 						type="number"
-						tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
+						tick={CHART_AXIS_TICK}
 						stroke="var(--workspace-border)"
 						allowDecimals={false}
 					/>
 					<YAxis
 						type="category"
 						dataKey="department"
-						tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
+						tick={CHART_AXIS_TICK}
 						stroke="var(--workspace-border)"
 						width={90}
 					/>
 					<Tooltip
-						contentStyle={{
-							backgroundColor: 'var(--workspace-bg-card)',
-							border: '1px solid var(--workspace-border)',
-							borderRadius: '6px',
-							fontSize: '12px',
-						}}
+						contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
 						formatter={(value: number | undefined) => [
 							formatMoney(value ?? 0, { showCurrency: true }),
 							'Staff Cost',
 						]}
 					/>
-					<Bar dataKey="cost" fill="#2563EB" radius={[0, 4, 4, 0]} />
+					<Bar dataKey="cost" fill={chartColors.staffCost} radius={[0, 4, 4, 0]} />
 				</BarChart>
 			</ChartWrapper>
 		</div>

@@ -494,7 +494,11 @@ export function VersionDetailPanel({
 	return (
 		<>
 			{/* Backdrop */}
-			<div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
+			<div
+				className="fixed inset-0 z-40 bg-(--overlay-bg-subtle)"
+				onClick={onClose}
+				aria-hidden="true"
+			/>
 
 			{/* Panel */}
 			<aside

@@ -189,7 +189,7 @@ function KpiMini({ label, value }: { label: string; value: string }) {
 				'bg-(--workspace-bg-card) p-4 shadow-(--shadow-xs)'
 			)}
 		>
-			<p className="text-[11px] font-medium uppercase tracking-wider text-(--text-muted)">
+			<p className="text-(length:--text-xs) font-medium uppercase tracking-wider text-(--text-muted)">
 				{label}
 			</p>
 			<p className="mt-1 text-(--text-lg) font-semibold tabular-nums text-(--text-primary)">

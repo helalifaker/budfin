@@ -327,7 +327,7 @@ function InspectorDefaultView() {
 						<ShieldCheck className="h-4 w-4 text-(--accent-700)" aria-hidden="true" />
 					</span>
 					<div className="space-y-1">
-						<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+						<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 							Staffing workflow
 						</p>
 						<p className="text-sm text-(--text-secondary)">
@@ -340,7 +340,7 @@ function InspectorDefaultView() {
 			{/* Quick stats */}
 			<div className="grid gap-3 md:grid-cols-2">
 				<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						Total FTE required
 					</p>
 					<p className="mt-2 text-xl font-semibold text-(--text-primary)">
@@ -348,7 +348,7 @@ function InspectorDefaultView() {
 					</p>
 				</div>
 				<div className="rounded-xl border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						Total FTE covered
 					</p>
 					<p className="mt-2 text-xl font-semibold text-(--text-primary)">

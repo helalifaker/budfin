@@ -18,6 +18,10 @@ export interface ChartColors {
 	versionForecast: string;
 	versionActual: string;
 	fallback: string;
+	revenue: string;
+	staffCost: string;
+	opex: string;
+	netProfit: string;
 }
 
 export function useChartColors(): ChartColors {
@@ -35,6 +39,10 @@ export function useChartColors(): ChartColors {
 			versionForecast: getCSSVariableValue('--version-forecast') || 'var(--version-forecast)',
 			versionActual: getCSSVariableValue('--version-actual') || 'var(--version-actual)',
 			fallback: getCSSVariableValue('--text-secondary') || 'var(--text-secondary)',
+			revenue: getCSSVariableValue('--chart-revenue') || '#2563eb',
+			staffCost: getCSSVariableValue('--chart-staff-cost') || '#7c3aed',
+			opex: getCSSVariableValue('--chart-opex') || '#0891b2',
+			netProfit: getCSSVariableValue('--chart-net-profit') || '#16a34a',
 		}),
 		[]
 	);

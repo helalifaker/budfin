@@ -2,6 +2,13 @@ import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { ChartWrapper } from '../shared/chart-wrapper';
 import { formatMoney } from '../../lib/format-money';
+import {
+	CHART_TOOLTIP_CONTENT_STYLE,
+	CHART_AXIS_TICK,
+	CHART_AXIS_TICK_LG,
+	CHART_LEGEND_STYLE,
+} from '../../lib/chart-utils';
+import { useChartColors } from '../../hooks/use-chart-colors';
 import type { MonthlyTrendItem } from '../../hooks/use-dashboard';
 import { Skeleton } from '../ui/skeleton';
 
@@ -29,6 +36,7 @@ export type RevenueBreakdownChartProps = {
 };
 
 export function RevenueBreakdownChart({ monthlyTrend, isLoading }: RevenueBreakdownChartProps) {
+	const chartColors = useChartColors();
 	const chartData = useMemo(() => {
 		if (!monthlyTrend.length) return [];
 
@@ -70,37 +78,33 @@ export function RevenueBreakdownChart({ monthlyTrend, isLoading }: RevenueBreakd
 			<ChartWrapper height={280}>
 				<BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
 					<CartesianGrid strokeDasharray="3 3" stroke="var(--workspace-border)" />
-					<XAxis
-						dataKey="month"
-						tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
-						stroke="var(--workspace-border)"
-					/>
+					<XAxis dataKey="month" tick={CHART_AXIS_TICK_LG} stroke="var(--workspace-border)" />
 					<YAxis
-						tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
+						tick={CHART_AXIS_TICK}
 						stroke="var(--workspace-border)"
 						tickFormatter={(v: number) => formatMoney(v, { compact: true })}
 					/>
 					<Tooltip
-						contentStyle={{
-							backgroundColor: 'var(--workspace-bg-card)',
-							border: '1px solid var(--workspace-border)',
-							borderRadius: '6px',
-							fontSize: '12px',
-						}}
+						contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
 						formatter={(value: number | undefined, name: string | undefined) => [
 							formatMoney(value ?? 0),
 							name === 'revenue' ? 'Revenue' : name === 'staffCosts' ? 'Staff Costs' : 'OpEx',
 						]}
 					/>
 					<Legend
-						wrapperStyle={{ fontSize: '12px' }}
+						wrapperStyle={CHART_LEGEND_STYLE}
 						formatter={(value: string) =>
 							value === 'revenue' ? 'Revenue' : value === 'staffCosts' ? 'Staff Costs' : 'OpEx'
 						}
 					/>
-					<Bar dataKey="revenue" stackId="a" fill="#2563EB" radius={[0, 0, 0, 0]} />
-					<Bar dataKey="staffCosts" stackId="a" fill="#7C3AED" radius={[0, 0, 0, 0]} />
-					<Bar dataKey="opex" stackId="a" fill="#0891B2" radius={[2, 2, 0, 0]} />
+					<Bar dataKey="revenue" stackId="a" fill={chartColors.revenue} radius={[0, 0, 0, 0]} />
+					<Bar
+						dataKey="staffCosts"
+						stackId="a"
+						fill={chartColors.staffCost}
+						radius={[0, 0, 0, 0]}
+					/>
+					<Bar dataKey="opex" stackId="a" fill={chartColors.opex} radius={[2, 2, 0, 0]} />
 				</BarChart>
 			</ChartWrapper>
 		</div>

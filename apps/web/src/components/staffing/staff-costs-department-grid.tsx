@@ -636,7 +636,7 @@ export function StaffCostsDepartmentGrid({
 								key={col.key}
 								className={cn(
 									'px-2 py-2 font-semibold',
-									'text-(--text-xs) uppercase tracking-[0.08em]',
+									'text-(--text-xs) uppercase tracking-(--tracking-wide)',
 									'text-(--text-muted)',
 									'border-b border-(--workspace-border)',
 									col.key !== 'expand' && col.key !== 'department' && 'text-right font-mono',
@@ -672,7 +672,7 @@ export function StaffCostsDepartmentGrid({
 				</tbody>
 
 				{/* Grand total footer */}
-				<tfoot className="sticky bottom-0 z-20 border-t-2 border-(--workspace-border) shadow-[0_-2px_4px_rgba(0,0,0,0.06)]">
+				<tfoot className="sticky bottom-0 z-20 border-t-2 border-(--workspace-border) shadow-(--shadow-footer-sticky)">
 					<GrandTotalRow groups={groups} isReadOnly={isReadOnly} />
 				</tfoot>
 			</table>
@@ -825,7 +825,7 @@ function DepartmentSection({
 									key={col.id ?? i}
 									className={cn(
 										'px-2 py-1.5 font-semibold',
-										'text-(--text-xs) uppercase tracking-[0.08em]',
+										'text-(--text-xs) uppercase tracking-(--tracking-wide)',
 										'text-(--text-muted)',
 										'border-b border-(--workspace-border)',
 										isPinned && 'bg-(--workspace-bg-subtle)',

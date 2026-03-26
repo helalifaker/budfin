@@ -17,7 +17,7 @@ function AlertDialogOverlay({
 	return (
 		<P.Overlay
 			className={cn(
-				'fixed inset-0 z-50 bg-black/40',
+				'fixed inset-0 z-50 bg-(--overlay-bg)',
 				'data-[state=open]:animate-in data-[state=closed]:animate-out',
 				'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 				className
@@ -38,7 +38,7 @@ export function AlertDialogContent({
 			<P.Content
 				className={cn(
 					'fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2',
-					'rounded-lg bg-white p-6 shadow-(--shadow-lg)',
+					'rounded-lg bg-(--workspace-bg-card) p-6 shadow-(--shadow-lg)',
 					'data-[state=open]:animate-in data-[state=closed]:animate-out',
 					'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 					'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -93,7 +93,7 @@ export function AlertDialogAction({
 			className={cn(
 				'inline-flex h-9 items-center justify-center rounded-md',
 				'border border-transparent bg-(--accent-500) px-4',
-				'text-(--text-sm) font-medium text-white',
+				'text-(--text-sm) font-medium text-(--text-on-dark)',
 				'hover:bg-(--accent-600)',
 				'focus:outline-none focus:ring-2 focus:ring-(--accent-500) focus:ring-offset-2',
 				'disabled:pointer-events-none disabled:opacity-50',
@@ -113,7 +113,7 @@ export function AlertDialogCancel({
 		<P.Cancel
 			className={cn(
 				'inline-flex h-9 items-center justify-center rounded-md',
-				'border border-(--workspace-border) bg-white px-4',
+				'border border-(--workspace-border) bg-(--workspace-bg-card) px-4',
 				'text-(--text-sm) font-medium text-(--text-primary)',
 				'hover:bg-(--workspace-bg-subtle)',
 				'focus:outline-none focus:ring-2 focus:ring-(--accent-500) focus:ring-offset-2',

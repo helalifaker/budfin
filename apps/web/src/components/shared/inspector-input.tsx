@@ -124,7 +124,7 @@ export function InspectorInput({
 				'focus:outline-none focus:ring-2 focus:ring-(--cell-editable-focus)',
 				isReadOnly
 					? 'cursor-not-allowed bg-(--cell-readonly-bg) text-(--text-secondary)'
-					: 'bg-(--cell-editable-bg) text-(--text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]',
+					: 'bg-(--cell-editable-bg) text-(--text-primary) shadow-(--shadow-cell-inset)',
 				className
 			)}
 		/>

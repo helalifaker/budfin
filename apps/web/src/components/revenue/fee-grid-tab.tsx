@@ -31,7 +31,7 @@ interface FeeGridTabProps {
 
 const CELL_CLASS = 'px-3 py-2 text-xs font-mono tabular-nums text-right';
 const HEADER_CELL_CLASS =
-	'px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.12em] text-right';
+	'px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-(--grid-header-tracking) text-right';
 const LABEL_CELL_CLASS = 'px-3 py-2 text-xs font-medium text-(--text-primary)';
 const TABLE_CLASS = 'w-full border-collapse text-left text-sm';
 
@@ -93,7 +93,7 @@ function TuitionSection({
 			<table className={TABLE_CLASS} role="grid" aria-label={section.title}>
 				<thead className="sticky top-0 z-[2] border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
 					<tr>
-						<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-[0.12em]">
+						<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-(--grid-header-tracking)">
 							Band
 						</th>
 						<th className={HEADER_CELL_CLASS}>DAI</th>
@@ -123,7 +123,7 @@ function renderTuitionGroup(
 		>
 			<td
 				colSpan={6}
-				className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-(--text-secondary)"
+				className="px-3 py-2 text-xs font-semibold uppercase tracking-(--tracking-wide) text-(--text-secondary)"
 			>
 				{group.nationalityLabel}
 			</td>
@@ -157,7 +157,7 @@ function TuitionRow({
 				<div className="flex items-center gap-2">
 					<span>{row.label}</span>
 					{row.hasHeterogeneousValues && (
-						<span className="inline-flex items-center gap-1 rounded-full bg-(--color-warning-bg) px-2 py-0.5 text-[10px] font-semibold text-(--color-warning)">
+						<span className="inline-flex items-center gap-1 rounded-full bg-(--color-warning-bg) px-2 py-0.5 text-(length:--text-2xs) font-semibold text-(--color-warning)">
 							<AlertTriangle className="h-3 w-3" aria-hidden="true" />
 							Mixed values
 						</span>
@@ -216,7 +216,7 @@ function PerStudentFeeBlock({
 			<table className={TABLE_CLASS} role="table" aria-label="Per-Student Fees">
 				<thead className="sticky top-0 z-[2] border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
 					<tr>
-						<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-[0.12em]">
+						<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-(--grid-header-tracking)">
 							Fee Type
 						</th>
 						<th className={HEADER_CELL_CLASS}>Amount HT</th>
@@ -298,7 +298,7 @@ function FlatDiscountBlock({
 				<table className={TABLE_CLASS} role="table" aria-label="Flat Discount">
 					<thead className="border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
 						<tr>
-							<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-[0.12em]">
+							<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-(--grid-header-tracking)">
 								Setting
 							</th>
 							<th className={HEADER_CELL_CLASS}>Value</th>

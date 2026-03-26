@@ -90,7 +90,7 @@ export function RevenueSetupChecklist({
 	};
 
 	return (
-		<div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 px-4">
+		<div className="fixed inset-0 z-40 flex items-center justify-center bg-(--overlay-bg-subtle) px-4">
 			<div
 				role="dialog"
 				aria-modal="true"

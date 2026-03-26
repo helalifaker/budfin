@@ -43,7 +43,7 @@ export function WorkflowStatusCard({
 					<Icon className="h-4 w-4 text-(--accent-700)" aria-hidden="true" />
 				</span>
 				<div className="space-y-1">
-					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
+					<p className="text-(--text-xs) font-semibold uppercase tracking-(--tracking-wide) text-(--text-muted)">
 						{label}
 					</p>
 					<h3 className="text-(--text-lg) font-semibold text-(--text-primary)">{status}</h3>
