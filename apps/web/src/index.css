@@ -3,6 +3,10 @@
 @import '@fontsource/geist-mono';
 @import 'tailwindcss';
 
+@theme {
+	--font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+
 :root {
 	/* ── Brand Teal (Signature Accent) ── */
 	--accent-50: #f0fdfa;
@@ -306,6 +310,31 @@
 	--duration-slow: 400ms;
 	--duration-slower: 600ms;
 	--stagger-delay: 50ms;
+
+	/* ── ListGrid Variant ── */
+	--list-cell-px: 16px;
+	--list-cell-py: 12px;
+	--list-header-bg: var(--workspace-bg-subtle);
+	--list-header-text: var(--text-secondary);
+	--list-header-border: var(--workspace-border);
+	--list-row-hover: var(--accent-50);
+	--list-row-selected: var(--grid-selected-row);
+	--list-border-radius: var(--radius-lg);
+	--list-sort-indicator: var(--accent-600);
+
+	/* ── Grid Selection & Keyboard ── */
+	--grid-focus-ring: var(--accent-400);
+	--grid-focus-ring-width: 2px;
+	--grid-range-bg: color-mix(in srgb, var(--accent-200) 30%, transparent);
+	--grid-range-border: var(--accent-300);
+	--grid-clipboard-flash: var(--accent-100);
+
+	/* ── Typography Normalization ── */
+	--grid-font-numeric: var(--font-mono);
+	--grid-font-header: var(--font-display);
+	--grid-header-size: var(--text-xs);
+	--grid-header-weight: 600;
+	--grid-header-tracking: 0.12em;
 }
 
 /* ── Dark Theme ── */
@@ -400,6 +429,20 @@
 	--version-budget-bg: color-mix(in srgb, var(--version-budget) 20%, #1e293b);
 	--version-actual-bg: color-mix(in srgb, var(--version-actual) 20%, #1e293b);
 	--version-forecast-bg: color-mix(in srgb, var(--version-forecast) 20%, #1e293b);
+
+	/* ── ListGrid Variant (dark) ── */
+	--list-header-bg: var(--workspace-bg-subtle);
+	--list-header-text: var(--text-secondary);
+	--list-header-border: var(--workspace-border);
+	--list-row-hover: color-mix(in srgb, var(--accent-900) 40%, #1e293b);
+	--list-row-selected: var(--grid-selected-row);
+	--list-sort-indicator: var(--accent-400);
+
+	/* ── Grid Selection & Keyboard (dark) ── */
+	--grid-focus-ring: var(--accent-300);
+	--grid-range-bg: color-mix(in srgb, var(--accent-700) 30%, transparent);
+	--grid-range-border: var(--accent-600);
+	--grid-clipboard-flash: color-mix(in srgb, var(--accent-800) 50%, #1e293b);
 }
 
 /* ── Dark frosted glass override ── */
