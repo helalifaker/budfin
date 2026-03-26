@@ -7,6 +7,7 @@ import {
 	useReactTable,
 	type SortingState,
 } from '@tanstack/react-table';
+import { ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { formatMoney } from '../../lib/format-money';
 import type { Employee } from '../../hooks/use-staffing';
@@ -213,7 +214,7 @@ export function EmployeeGrid({
 								className={cn(
 									'w-9 px-2 py-2 text-left font-semibold',
 									'text-(--text-muted)',
-									'text-[11px] uppercase tracking-[0.12em]',
+									'text-(--text-xs) uppercase tracking-[0.08em]',
 									'border-b border-(--workspace-border)'
 								)}
 								aria-label="Expand or collapse"
@@ -223,7 +224,7 @@ export function EmployeeGrid({
 									key={header.id}
 									className={cn(
 										'px-3 py-2 text-left font-semibold text-(--text-muted)',
-										'text-[11px] uppercase tracking-[0.12em]',
+										'text-(--text-xs) uppercase tracking-[0.08em]',
 										'border-b border-(--workspace-border)',
 										header.column.getCanSort() && 'cursor-pointer select-none'
 									)}
@@ -328,16 +329,14 @@ function DepartmentRows({
 				data-department={group.department}
 			>
 				<td className="w-9 px-2 py-2 border-b border-(--workspace-border)">
-					<span
+					<ChevronRight
 						className={cn(
-							'inline-flex h-5 w-5 items-center justify-center',
-							'text-(--text-muted) transition-transform',
+							'h-4 w-4 text-(--text-muted)',
+							'transition-transform duration-150',
 							isExpanded && 'rotate-90'
 						)}
 						aria-hidden="true"
-					>
-						&#9654;
-					</span>
+					/>
 				</td>
 				<td
 					colSpan={colCount - 1}

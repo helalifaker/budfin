@@ -473,7 +473,7 @@ function EmployeeSubTable({
 										'whitespace-nowrap',
 										isPinned && 'bg-(--workspace-bg)',
 										isSelected && isPinned && 'bg-(--accent-50)',
-										isCurrency && 'text-right font-[family-name:var(--font-mono)]',
+										isCurrency && 'text-right font-mono',
 										!isCurrency && 'text-left',
 										isDeparted && isEncrypted && 'bg-(--cell-readonly-bg)',
 										cellIndex === 0 && 'pl-10' // 24px indent + 16px padding
@@ -535,25 +535,25 @@ function GrandTotalRow({ groups, isReadOnly }: { groups: DepartmentGroup[]; isRe
 		<tr className="bg-(--workspace-bg-muted) font-bold" role="row">
 			<td className="px-2 py-2" />
 			<td className="px-2 py-2 text-(--text-sm) text-(--text-primary)">Grand Total</td>
-			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
+			<td className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)">
 				{totals.headcount}
 			</td>
-			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
+			<td className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)">
 				{formatMoney(totals.monthlyGross)}
 			</td>
-			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
+			<td className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)">
 				{formatMoney(totals.annualCost)}
 			</td>
-			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
+			<td className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)">
 				{formatMoney(totals.eos)}
 			</td>
-			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
+			<td className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)">
 				{formatMoney(totals.ajeer)}
 			</td>
-			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)">
+			<td className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)">
 				{formatMoney(totals.gosi)}
 			</td>
-			<td className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] font-bold text-(--accent-700)">
+			<td className="px-2 py-2 text-right text-(--text-sm) font-mono font-bold text-(--accent-700)">
 				{formatMoney(totals.grandTotal)}
 			</td>
 		</tr>
@@ -636,12 +636,10 @@ export function StaffCostsDepartmentGrid({
 								key={col.key}
 								className={cn(
 									'px-2 py-2 font-semibold',
-									'text-[11px] uppercase tracking-[0.12em]',
+									'text-(--text-xs) uppercase tracking-[0.08em]',
 									'text-(--text-muted)',
 									'border-b border-(--workspace-border)',
-									col.key !== 'expand' &&
-										col.key !== 'department' &&
-										'text-right font-[family-name:var(--font-mono)]',
+									col.key !== 'expand' && col.key !== 'department' && 'text-right font-mono',
 									(col.key === 'expand' || col.key === 'department') && 'text-left'
 								)}
 								style={{ width: col.width, minWidth: col.width }}
@@ -757,7 +755,7 @@ function DepartmentSection({
 
 				{/* Headcount */}
 				<td
-					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
+					className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)"
 					style={{ width: 80 }}
 				>
 					{group.headcount}
@@ -765,37 +763,37 @@ function DepartmentSection({
 
 				{/* Aggregated monetary columns */}
 				<td
-					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
+					className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)"
 					style={{ width: 140 }}
 				>
 					{isReadOnly ? '--' : formatMoney(group.totalMonthlyGross)}
 				</td>
 				<td
-					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
+					className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)"
 					style={{ width: 140 }}
 				>
 					{isReadOnly ? '--' : formatMoney(group.totalAnnualCost)}
 				</td>
 				<td
-					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
+					className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)"
 					style={{ width: 120 }}
 				>
 					{isReadOnly ? '--' : formatMoney(group.totalEos)}
 				</td>
 				<td
-					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
+					className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)"
 					style={{ width: 120 }}
 				>
 					{isReadOnly ? '--' : formatMoney(group.totalAjeer)}
 				</td>
 				<td
-					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] text-(--text-primary)"
+					className="px-2 py-2 text-right text-(--text-sm) font-mono text-(--text-primary)"
 					style={{ width: 120 }}
 				>
 					{isReadOnly ? '--' : formatMoney(group.totalGosi)}
 				</td>
 				<td
-					className="px-2 py-2 text-right text-(--text-sm) font-[family-name:var(--font-mono)] font-bold text-(--accent-700)"
+					className="px-2 py-2 text-right text-(--text-sm) font-mono font-bold text-(--accent-700)"
 					style={{ width: 140 }}
 				>
 					<div className="flex flex-col items-end">
@@ -827,7 +825,7 @@ function DepartmentSection({
 									key={col.id ?? i}
 									className={cn(
 										'px-2 py-1.5 font-semibold',
-										'text-[11px] uppercase tracking-[0.12em]',
+										'text-(--text-xs) uppercase tracking-[0.08em]',
 										'text-(--text-muted)',
 										'border-b border-(--workspace-border)',
 										isPinned && 'bg-(--workspace-bg-subtle)',
