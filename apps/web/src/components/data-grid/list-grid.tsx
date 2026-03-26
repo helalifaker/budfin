@@ -423,18 +423,29 @@ export function ListGrid<T>({
 			);
 		}
 
-		// Grouped rendering
+		// Grouped rendering with collapsible support
 		if (groupedRows) {
 			return groupedRows.flatMap((group) => {
 				const elements: ReactNode[] = [];
 				elements.push(renderGroupHeader(group.key));
-				group.rowIndices.forEach((rowIndex) => {
-					const row = rows[rowIndex];
-					if (row) {
-						elements.push(renderDataRow(row, rowIndex));
-						elements.push(renderExpandedRow(row));
-					}
-				});
+
+				// Only render data rows if the group is expanded
+				const isGroupExpanded = rows.some(
+					(row) =>
+						expandable?.groupKey?.(row.original) === group.key &&
+						expandable?.isExpanded(row.original)
+				);
+
+				if (isGroupExpanded) {
+					group.rowIndices.forEach((rowIndex) => {
+						const row = rows[rowIndex];
+						if (row) {
+							elements.push(renderDataRow(row, rowIndex));
+							elements.push(renderExpandedRow(row));
+						}
+					});
+				}
+
 				return elements;
 			});
 		}
