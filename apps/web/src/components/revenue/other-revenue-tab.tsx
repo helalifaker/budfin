@@ -4,7 +4,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import type { DistributionMethod, IfrsCategory, OtherRevenueItem } from '@budfin/types';
 import { useOtherRevenue, usePutOtherRevenue } from '../../hooks/use-revenue';
 import { EditableCell } from '../data-grid/editable-cell';
-import { DataGrid } from '../data-grid/data-grid';
+import { PlanningGrid } from '../data-grid/planning-grid';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -146,6 +146,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 			}),
 			columnHelper.accessor('distributionMethod', {
 				header: 'Distribution',
+				size: 170,
 				cell: (info) =>
 					isReadOnly ? (
 						<span className="text-xs text-(--text-secondary)">{info.getValue()}</span>
@@ -159,7 +160,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 								}))
 							}
 						>
-							<SelectTrigger className="w-[170px]">
+							<SelectTrigger className="w-full">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
@@ -214,6 +215,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 			}),
 			columnHelper.accessor('ifrsCategory', {
 				header: 'Category',
+				size: 180,
 				cell: (info) =>
 					isReadOnly ? (
 						<span className="text-xs text-(--text-secondary)">{info.getValue()}</span>
@@ -227,7 +229,7 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 								}))
 							}
 						>
-							<SelectTrigger className="w-[180px]">
+							<SelectTrigger className="w-full">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
@@ -283,16 +285,22 @@ export function OtherRevenueTab({ versionId, isReadOnly }: OtherRevenueTabProps)
 				)}
 			</div>
 
-			<DataGrid
-				table={table}
-				isLoading={isLoading}
-				showSkeleton
-				emptyState={
+			{draftItems.length === 0 && !isLoading ? (
+				<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-12 text-center">
 					<p className="text-sm text-(--text-muted)">
 						No custom revenue lines are configured for this version.
 					</p>
-				}
-			/>
+				</div>
+			) : (
+				<PlanningGrid
+					table={table}
+					variant="compact"
+					isLoading={isLoading}
+					rangeSelection
+					clipboardEnabled
+					ariaLabel="Other revenue custom lines"
+				/>
+			)}
 		</div>
 	);
 }

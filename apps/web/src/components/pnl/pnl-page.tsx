@@ -396,7 +396,7 @@ function PnlGrid({
 					return (
 						<div
 							className={cn(
-								'text-right font-[family-name:var(--font-mono)] tabular-nums',
+								'text-right font-mono tabular-nums',
 								d.isNeg() && 'text-(--color-error)',
 								d.isZero() && 'text-(--text-muted)'
 							)}
@@ -419,7 +419,7 @@ function PnlGrid({
 				return (
 					<div
 						className={cn(
-							'text-right font-[family-name:var(--font-mono)] tabular-nums font-medium',
+							'text-right font-mono tabular-nums font-medium',
 							d.isNeg() && 'text-(--color-error)',
 							d.isZero() && 'text-(--text-muted)'
 						)}
@@ -490,7 +490,7 @@ function PnlGrid({
 					))}
 				</thead>
 				<tbody>
-					{table.getRowModel().rows.map((row: Row<PnlGridRow>) => {
+					{table.getRowModel().rows.map((row: Row<PnlGridRow>, rowIndex: number) => {
 						const orig = row.original;
 						const selected = isSelected(orig);
 
@@ -498,6 +498,7 @@ function PnlGrid({
 							<tr
 								key={row.id}
 								role="row"
+								data-row-index={rowIndex}
 								aria-level={orig.depth}
 								aria-selected={selected}
 								tabIndex={orig.isClickable ? 0 : undefined}
@@ -524,11 +525,13 @@ function PnlGrid({
 									selected && 'bg-(--accent-50) border-l-[3px] border-l-(--accent-500)'
 								)}
 							>
-								{row.getVisibleCells().map((cell) => (
+								{row.getVisibleCells().map((cell, colIndex) => (
 									<td
 										key={cell.id}
 										role="gridcell"
 										aria-readonly="true"
+										data-row-index={rowIndex}
+										data-col-index={colIndex}
 										className={cn(
 											'px-3 py-1.5',
 											cell.column.id === 'annual' && 'bg-(--workspace-bg-subtle)/50'

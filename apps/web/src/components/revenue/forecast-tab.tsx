@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useRevenueResults } from '../../hooks/use-revenue';
 import { formatMoney } from '../../lib/format-money';
-import { DataGrid } from '../data-grid/data-grid';
+import { PlanningGrid } from '../data-grid/planning-grid';
 import { Button } from '../ui/button';
 import { RevenueMatrixTable } from './revenue-matrix-table';
 
@@ -123,25 +123,25 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 	return (
 		<div className="space-y-6">
 			<div className="grid gap-4 md:grid-cols-4">
-				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+				<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 					<div className="text-xs uppercase tracking-wide text-(--text-muted)">Tuition Fees</div>
 					<div className="mt-2 text-lg font-semibold tabular-nums">
 						{formatAmount(data?.totals.grossRevenueHt ?? '0')}
 					</div>
 				</div>
-				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+				<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 					<div className="text-xs uppercase tracking-wide text-(--text-muted)">Discount Impact</div>
 					<div className="mt-2 text-lg font-semibold tabular-nums text-(--color-error)">
 						-{formatAmount(data?.totals.discountAmount ?? '0')}
 					</div>
 				</div>
-				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+				<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 					<div className="text-xs uppercase tracking-wide text-(--text-muted)">Net Tuition</div>
 					<div className="mt-2 text-lg font-semibold tabular-nums text-(--text-primary)">
 						{formatAmount(data?.totals.netRevenueHt ?? '0')}
 					</div>
 				</div>
-				<div className="rounded-lg border border-(--workspace-border) bg-white p-4">
+				<div className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-4">
 					<div className="text-xs uppercase tracking-wide text-(--text-muted)">
 						Total Operating Revenue
 					</div>
@@ -168,7 +168,7 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 				{composition.map((item) => (
 					<div
 						key={item.label}
-						className="rounded-lg border border-(--workspace-border) bg-white px-4 py-3"
+						className="rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-3"
 					>
 						<div className="text-xs uppercase tracking-wide text-(--text-muted)">{item.label}</div>
 						<div className="mt-2 text-base font-semibold tabular-nums">
@@ -196,15 +196,22 @@ export function ForecastTab({ versionId }: ForecastTabProps) {
 					))}
 				</div>
 
-				<DataGrid
-					table={table}
-					isLoading={isLoading}
-					emptyState={
+				{summaryRows.length === 0 && !isLoading ? (
+					<div className="rounded-[18px] border border-(--workspace-border) bg-(--workspace-bg-card) px-4 py-12 text-center shadow-(--shadow-card)">
 						<p className="text-sm text-(--text-muted)">
 							Run the revenue calculation to generate tuition detail rows.
 						</p>
-					}
-				/>
+					</div>
+				) : (
+					<PlanningGrid
+						table={table}
+						isLoading={isLoading}
+						numericColumns={['grossRevenueHt', 'discountAmount', 'netRevenueHt', 'vatAmount']}
+						rangeSelection
+						clipboardEnabled
+						ariaLabel="Revenue forecast breakdown"
+					/>
+				)}
 			</div>
 		</div>
 	);
