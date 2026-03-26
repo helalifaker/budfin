@@ -136,7 +136,7 @@ export function UtilizationGauge({
 			</div>
 			<span
 				className={cn(
-					'text-(--text-xs) font-[family-name:var(--font-mono)] tabular-nums font-medium',
+					'text-(--text-xs) font-mono tabular-nums font-medium',
 					utilization > 100 && 'text-(--color-error)',
 					utilization > 95 && utilization <= 100 && 'text-(--color-warning)',
 					utilization >= 70 && utilization <= 95 && 'text-(--color-success)',
@@ -156,7 +156,7 @@ export function DeltaCell({ delta, ay1Headcount }: { delta: number; ay1Headcount
 	return (
 		<span
 			className={cn(
-				'font-[family-name:var(--font-mono)] tabular-nums',
+				'font-mono tabular-nums',
 				delta > 0 && 'text-(--delta-positive)',
 				delta < 0 && 'text-(--delta-negative)',
 				delta === 0 && 'text-(--delta-zero)',

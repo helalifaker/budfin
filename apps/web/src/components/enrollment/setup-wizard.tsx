@@ -337,12 +337,12 @@ function GroupedHeadcountTable({
 									className="border-t border-(--workspace-border) bg-(--workspace-bg-card)"
 								>
 									<td className="px-4 py-3 font-medium text-(--text-primary)">{row.gradeName}</td>
-									<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+									<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-secondary)">
 										{row.baselineHeadcount}
 									</td>
 									<td className="px-4 py-2 text-right">
 										{readOnly ? (
-											<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+											<span className="font-mono tabular-nums text-(--text-primary)">
 												{row.headcount}
 											</span>
 										) : (
@@ -353,7 +353,7 @@ function GroupedHeadcountTable({
 												onChange={(event) => onChange?.(row.gradeLevel, Number(event.target.value))}
 												className={cn(
 													'w-24 rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5 text-right',
-													'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
+													'font-mono tabular-nums text-(--text-primary)',
 													'focus:outline-none focus:ring-2 focus:ring-(--accent-400)'
 												)}
 											/>
@@ -362,7 +362,7 @@ function GroupedHeadcountTable({
 									{showBaselineDelta && (
 										<td
 											className={cn(
-												'px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums',
+												'px-4 py-3 text-right font-mono tabular-nums',
 												row.headcount > row.baselineHeadcount && 'text-(--color-success)',
 												row.headcount < row.baselineHeadcount && 'text-(--color-error)',
 												row.headcount === row.baselineHeadcount && 'text-(--text-muted)'
@@ -374,7 +374,7 @@ function GroupedHeadcountTable({
 									{showImportedDelta && (
 										<td
 											className={cn(
-												'px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums',
+												'px-4 py-3 text-right font-mono tabular-nums',
 												(showImportedDelta.get(row.gradeLevel) ?? 0) > 0 &&
 													'text-(--color-success)',
 												(showImportedDelta.get(row.gradeLevel) ?? 0) < 0 && 'text-(--color-error)',
@@ -394,14 +394,14 @@ function GroupedHeadcountTable({
 								<td className="px-4 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-secondary)">
 									{band} subtotal
 								</td>
-								<td className="px-4 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+								<td className="px-4 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 									{bandBaseline}
 								</td>
-								<td className="px-4 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+								<td className="px-4 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 									{bandWorking}
 								</td>
 								{showBaselineDelta && (
-									<td className="px-4 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+									<td className="px-4 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 										{formatDelta(bandWorking - bandBaseline)}
 									</td>
 								)}
@@ -413,14 +413,14 @@ function GroupedHeadcountTable({
 						<td className="px-4 py-3 text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-secondary)">
 							Grand total
 						</td>
-						<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+						<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-secondary)">
 							{rows.reduce((sum, row) => sum + row.baselineHeadcount, 0)}
 						</td>
-						<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+						<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-primary)">
 							{rows.reduce((sum, row) => sum + row.headcount, 0)}
 						</td>
 						{showBaselineDelta && (
-							<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+							<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-secondary)">
 								{formatDelta(
 									rows.reduce((sum, row) => sum + row.headcount - row.baselineHeadcount, 0)
 								)}
@@ -1262,7 +1262,7 @@ export function EnrollmentSetupWizard({
 											disabled={!isEditable}
 											className={cn(
 												'w-28 rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5 text-right',
-												'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
+												'font-mono tabular-nums text-(--text-primary)',
 												'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
 												!isEditable && 'bg-(--cell-readonly-bg)'
 											)}
@@ -1301,7 +1301,7 @@ export function EnrollmentSetupWizard({
 												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 													Rollover threshold
 												</p>
-												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
 													{planningRules.rolloverThreshold.toFixed(2)}
 												</p>
 											</div>
@@ -1309,7 +1309,7 @@ export function EnrollmentSetupWizard({
 												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 													Capped retention
 												</p>
-												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
 													{(planningRules.cappedRetention ?? 0.98).toFixed(2)}
 												</p>
 											</div>
@@ -1317,7 +1317,7 @@ export function EnrollmentSetupWizard({
 												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 													Retention trend weight
 												</p>
-												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
 													{planningRules.retentionRecentWeight.toFixed(2)}
 												</p>
 											</div>
@@ -1325,7 +1325,7 @@ export function EnrollmentSetupWizard({
 												<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 													Historical target weight
 												</p>
-												<p className="mt-2 font-[family-name:var(--font-mono)] text-(--text-base) tabular-nums text-(--text-primary)">
+												<p className="mt-2 font-mono text-(--text-base) tabular-nums text-(--text-primary)">
 													{planningRules.historicalTargetRecentWeight.toFixed(2)}
 												</p>
 											</div>
@@ -1418,7 +1418,7 @@ export function EnrollmentSetupWizard({
 																		disabled={!isEditable}
 																		className={cn(
 																			'w-24 rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5 text-right',
-																			'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
+																			'font-mono tabular-nums text-(--text-primary)',
 																			'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
 																			(!isEditable || row.usesConfiguredRetention !== true) &&
 																				'bg-(--cell-readonly-bg)'
@@ -1431,18 +1431,18 @@ export function EnrollmentSetupWizard({
 																{isPS ? (
 																	<span className="text-(--text-muted)">--</span>
 																) : (
-																	<span className="font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																	<span className="font-mono tabular-nums text-(--text-secondary)">
 																		{Math.round((row.historicalTrendRetention ?? 0) * 100)}%
 																	</span>
 																)}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+															<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-secondary)">
 																{isPS ? '--' : (row.retainedFromPrior ?? '--')}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+															<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-secondary)">
 																{isPS ? '--' : (row.historicalTargetHeadcount ?? '--')}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+															<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-secondary)">
 																{isPS ? '--' : (row.derivedLaterals ?? '--')}
 															</td>
 															<td className="px-4 py-2 text-right">
@@ -1464,7 +1464,7 @@ export function EnrollmentSetupWizard({
 																		disabled={!isEditable}
 																		className={cn(
 																			'w-24 rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-1.5 text-right',
-																			'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)',
+																			'font-mono tabular-nums text-(--text-primary)',
 																			'focus:outline-none focus:ring-2 focus:ring-(--accent-400)',
 																			!isEditable && 'bg-(--cell-readonly-bg)'
 																		)}
@@ -1579,22 +1579,22 @@ export function EnrollmentSetupWizard({
 															<td className="px-4 py-3 font-medium text-(--text-primary)">
 																{row.gradeName}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+															<td className="px-4 py-3 text-right font-mono tabular-nums">
 																{row.ay1Headcount}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+															<td className="px-4 py-3 text-right font-mono tabular-nums">
 																{row.retainedFromPrior}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+															<td className="px-4 py-3 text-right font-mono tabular-nums">
 																{row.isPS ? '--' : (row.historicalTargetHeadcount ?? '--')}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+															<td className="px-4 py-3 text-right font-mono tabular-nums">
 																{row.isPS ? '--' : row.lateralEntry}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+															<td className="px-4 py-3 text-right font-mono tabular-nums">
 																{row.isPS ? '--' : row.manualAdjustment}
 															</td>
-															<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+															<td className="px-4 py-3 text-right font-mono tabular-nums text-(--text-primary)">
 																{row.ay2Headcount}
 															</td>
 														</tr>
@@ -1637,10 +1637,10 @@ export function EnrollmentSetupWizard({
 																	<td className="px-4 py-3 font-medium text-(--text-primary)">
 																		{row.gradeLevel}
 																	</td>
-																	<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+																	<td className="px-4 py-3 text-right font-mono tabular-nums">
 																		{row.sectionsNeeded}
 																	</td>
-																	<td className="px-4 py-3 text-right font-[family-name:var(--font-mono)] tabular-nums">
+																	<td className="px-4 py-3 text-right font-mono tabular-nums">
 																		{row.utilization.toFixed(1)}%
 																	</td>
 																	<td className="px-4 py-3 text-right">

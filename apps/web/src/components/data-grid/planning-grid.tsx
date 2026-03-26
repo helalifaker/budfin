@@ -265,7 +265,7 @@ export function PlanningGrid<T>({
 							colSpan={header.colSpan}
 							className={cn(
 								'relative align-middle',
-								'text-[11px] font-semibold uppercase tracking-[0.12em]',
+								'text-(--text-xs) font-semibold uppercase tracking-[0.12em]',
 								isCompact
 									? 'px-(--grid-compact-cell-px) py-2 border border-(--grid-compact-border)'
 									: 'px-(--grid-cell-px) py-4',
@@ -454,7 +454,7 @@ export function PlanningGrid<T>({
 							className={cn(
 								'inline-flex items-center justify-center',
 								'min-w-6 rounded-full px-2 py-0.5',
-								'text-[11px] font-semibold',
+								'text-(--text-xs) font-semibold',
 								backgroundClass,
 								textClass
 							)}

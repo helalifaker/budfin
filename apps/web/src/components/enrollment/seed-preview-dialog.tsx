@@ -167,10 +167,10 @@ export function SeedPreviewDialog({ open, onClose }: SeedPreviewDialogProps) {
 											className={cn('border-t border-(--workspace-border)', isPS && 'opacity-50')}
 										>
 											<td className="py-1.5 font-medium">{r.gradeLevel}</td>
-											<td className="py-1.5 text-right tabular-nums font-[family-name:var(--font-mono)]">
+											<td className="py-1.5 text-right tabular-nums font-mono">
 												{isPS ? '-' : `${(r.suggestedRetention * 100).toFixed(0)}%`}
 											</td>
-											<td className="py-1.5 text-right tabular-nums font-[family-name:var(--font-mono)]">
+											<td className="py-1.5 text-right tabular-nums font-mono">
 												{isPS ? '-' : r.suggestedLaterals}
 											</td>
 											<td className="py-1.5 text-center">

@@ -50,7 +50,7 @@ interface NumericCellProps {
 
 export function NumericCell({ value, className }: NumericCellProps) {
 	return (
-		<span className={cn('font-[family-name:var(--font-mono)] text-(--text-xs)', className)}>
+		<span className={cn('font-mono text-(--text-xs)', className)}>
 			{typeof value === 'number' ? formatMoney(value) : value}
 		</span>
 	);

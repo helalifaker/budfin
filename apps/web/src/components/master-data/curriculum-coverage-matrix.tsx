@@ -305,7 +305,7 @@ function CoverageCell({
 							className={cn(
 								'inline-flex min-w-[40px] items-center justify-center',
 								'rounded px-1.5 py-0.5',
-								'font-[family-name:var(--font-mono)] text-(--text-xs) tabular-nums',
+								'font-mono text-(--text-xs) tabular-nums',
 								'bg-(--accent-50) text-(--accent-700)',
 								'hover:bg-(--accent-100) cursor-pointer',
 								'transition-colors duration-(--duration-fast)',

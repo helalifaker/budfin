@@ -42,9 +42,7 @@ function BreakdownRow({
 				{label}
 				{note && <span className="opacity-70"> {note}</span>}
 			</span>
-			<span className="font-[family-name:var(--font-mono)] tabular-nums whitespace-nowrap">
-				SAR {value}
-			</span>
+			<span className="font-mono tabular-nums whitespace-nowrap">SAR {value}</span>
 		</div>
 	);
 }
@@ -85,9 +83,7 @@ export function GrossTooltip({ data, children }: GrossTooltipProps) {
 					<BreakdownRow label="Subtotal:" value={subtotal} />
 					<div className="flex justify-between gap-6">
 						<span className="whitespace-nowrap">{'\u00D7 Hourly %:'}</span>
-						<span className="font-[family-name:var(--font-mono)] tabular-nums">
-							{hourlyDisplay}
-						</span>
+						<span className="font-mono tabular-nums">{hourlyDisplay}</span>
 					</div>
 					<div className="my-1 border-t border-current opacity-30" role="separator" />
 					<BreakdownRow label="Monthly Gross:" value={monthlyGross} bold />

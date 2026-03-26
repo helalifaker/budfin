@@ -332,7 +332,7 @@ export function MonthlyCostBudgetGrid({
 					>
 						<thead>
 							<tr className="bg-(--workspace-bg-subtle)">
-								<th className="sticky left-0 z-10 bg-(--workspace-bg-subtle) px-3 py-2 text-left text-[11px] font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[180px]">
+								<th className="sticky left-0 z-10 bg-(--workspace-bg-subtle) px-3 py-2 text-left text-(--text-xs) font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[180px]">
 									Category
 								</th>
 								{MONTH_LABELS.map((m, idx) => {
@@ -342,7 +342,7 @@ export function MonthlyCostBudgetGrid({
 										<th
 											key={m}
 											className={cn(
-												'px-3 py-2 text-right text-[11px] font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[100px]',
+												'px-3 py-2 text-right text-(--text-xs) font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[100px]',
 												isSep && 'bg-(--color-warning-bg)/30'
 											)}
 											aria-description={isSep ? 'New positions start in September' : undefined}
@@ -366,7 +366,7 @@ export function MonthlyCostBudgetGrid({
 										</th>
 									);
 								})}
-								<th className="px-3 py-2 text-right text-[11px] font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[110px]">
+								<th className="px-3 py-2 text-right text-(--text-xs) font-semibold text-(--text-muted) uppercase tracking-[0.12em] min-w-[110px]">
 									Annual
 								</th>
 							</tr>

@@ -82,7 +82,7 @@ export function EditableCell({
 				className={cn(
 					'block px-2 py-1 text-(--text-xs)',
 					'bg-(--cell-readonly-bg) rounded-sm',
-					'font-[family-name:var(--font-mono)]',
+					'font-mono',
 					isNumber && 'text-right tabular-nums',
 					className
 				)}
@@ -106,8 +106,8 @@ export function EditableCell({
 					'rounded-sm',
 					'border border-(--cell-editable-focus)',
 					'shadow-(--shadow-glow-accent)',
-					'bg-white scale-[1.02] origin-center',
-					'font-[family-name:var(--font-mono)]',
+					'bg-(--workspace-bg-card) scale-[1.02] origin-center',
+					'font-mono',
 					'outline-none',
 					'transition-all duration-(--duration-fast)',
 					isNumber && 'text-right tabular-nums',
@@ -125,7 +125,7 @@ export function EditableCell({
 				'block w-full text-left px-2 py-1 text-(--text-xs)',
 				'rounded-sm cursor-text',
 				'bg-(--cell-editable-bg)',
-				'font-[family-name:var(--font-mono)]',
+				'font-mono',
 				'hover:border-(--accent-200) hover:shadow-(--shadow-xs)',
 				'border border-transparent',
 				'border-b border-dashed border-b-(--accent-200)',

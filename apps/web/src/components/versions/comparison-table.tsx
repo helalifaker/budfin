@@ -123,22 +123,14 @@ export function ComparisonTable({ data, metric }: ComparisonTableProps) {
 								{row.values.map((val, i) => (
 									<td
 										key={versions[i]?.id ?? i}
-										className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-(--text-primary)"
+										className="px-3 py-2 text-right font-mono text-(--text-primary)"
 									>
 										{intFmt.format(val)}
 									</td>
 								))}
-								<td
-									className={`px-3 py-2 text-right font-[family-name:var(--font-mono)] ${var12.cls}`}
-								>
-									{var12.text}
-								</td>
+								<td className={`px-3 py-2 text-right font-mono ${var12.cls}`}>{var12.text}</td>
 								{hasThird && (
-									<td
-										className={`px-3 py-2 text-right font-[family-name:var(--font-mono)] ${var13.cls}`}
-									>
-										{var13.text}
-									</td>
+									<td className={`px-3 py-2 text-right font-mono ${var13.cls}`}>{var13.text}</td>
 								)}
 							</tr>
 						);
@@ -149,20 +141,16 @@ export function ComparisonTable({ data, metric }: ComparisonTableProps) {
 						{totals.map((val, i) => (
 							<td
 								key={versions[i]?.id ?? i}
-								className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-(--text-primary)"
+								className="px-3 py-2 text-right font-mono text-(--text-primary)"
 							>
 								{intFmt.format(val)}
 							</td>
 						))}
-						<td
-							className={`px-3 py-2 text-right font-[family-name:var(--font-mono)] ${totalVar12.cls}`}
-						>
+						<td className={`px-3 py-2 text-right font-mono ${totalVar12.cls}`}>
 							{totalVar12.text}
 						</td>
 						{hasThird && (
-							<td
-								className={`px-3 py-2 text-right font-[family-name:var(--font-mono)] ${totalVar13.cls}`}
-							>
+							<td className={`px-3 py-2 text-right font-mono ${totalVar13.cls}`}>
 								{totalVar13.text}
 							</td>
 						)}

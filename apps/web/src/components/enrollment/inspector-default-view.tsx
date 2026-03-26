@@ -308,7 +308,7 @@ export function InspectorDefaultView() {
 						].map((item) => (
 							<div key={item.label} className="flex items-center justify-between px-3 py-2">
 								<span className="text-(--text-sm) text-(--text-secondary)">{item.label}</span>
-								<span className="font-[family-name:var(--font-mono)] text-(--text-sm) tabular-nums text-(--text-primary)">
+								<span className="font-mono text-(--text-sm) tabular-nums text-(--text-primary)">
 									{item.value}
 								</span>
 							</div>
@@ -395,7 +395,7 @@ export function InspectorDefaultView() {
 									return (
 										<tr key={row.gradeLevel} className="border-t border-(--workspace-border)">
 											<td className="px-3 py-1.5 font-medium">{row.gradeName}</td>
-											<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+											<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 												{row.ay2Headcount}
 											</td>
 											<td className="px-3 py-1.5 text-right text-(--text-muted)">
@@ -453,15 +453,11 @@ export function InspectorDefaultView() {
 												{row.label}
 											</span>
 										</td>
-										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-											{row.ay1}
-										</td>
-										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-											{row.ay2}
-										</td>
+										<td className="px-3 py-1.5 text-right font-mono tabular-nums">{row.ay1}</td>
+										<td className="px-3 py-1.5 text-right font-mono tabular-nums">{row.ay2}</td>
 										<td
 											className={cn(
-												'px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums',
+												'px-3 py-1.5 text-right font-mono tabular-nums',
 												row.change > 0 && 'text-(--color-success)',
 												row.change < 0 && 'text-(--color-error)',
 												row.change === 0 && 'text-(--text-muted)'
@@ -514,13 +510,13 @@ export function InspectorDefaultView() {
 												{row.label}
 											</span>
 										</td>
-										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+										<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 											{row.total === 0 ? '--' : `${row.francaisPct.toFixed(1)}%`}
 										</td>
-										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+										<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 											{row.total === 0 ? '--' : `${row.nationauxPct.toFixed(1)}%`}
 										</td>
-										<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+										<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 											{row.total === 0 ? '--' : `${row.autresPct.toFixed(1)}%`}
 										</td>
 									</tr>

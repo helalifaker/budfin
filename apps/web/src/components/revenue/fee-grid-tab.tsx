@@ -29,9 +29,9 @@ interface FeeGridTabProps {
 	isReadOnly: boolean;
 }
 
-const CELL_CLASS = 'px-3 py-2 text-xs font-[family-name:var(--font-mono)] tabular-nums text-right';
+const CELL_CLASS = 'px-3 py-2 text-xs font-mono tabular-nums text-right';
 const HEADER_CELL_CLASS =
-	'px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-right';
+	'px-3 py-2 text-(--text-xs) font-semibold uppercase tracking-[0.12em] text-right';
 const LABEL_CELL_CLASS = 'px-3 py-2 text-xs font-medium text-(--text-primary)';
 const TABLE_CLASS = 'w-full border-collapse text-left text-sm';
 
@@ -93,7 +93,7 @@ function TuitionSection({
 			<table className={TABLE_CLASS} role="grid" aria-label={section.title}>
 				<thead className="sticky top-0 z-[2] border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
 					<tr>
-						<th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+						<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-[0.12em]">
 							Band
 						</th>
 						<th className={HEADER_CELL_CLASS}>DAI</th>
@@ -216,7 +216,7 @@ function PerStudentFeeBlock({
 			<table className={TABLE_CLASS} role="table" aria-label="Per-Student Fees">
 				<thead className="sticky top-0 z-[2] border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
 					<tr>
-						<th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+						<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-[0.12em]">
 							Fee Type
 						</th>
 						<th className={HEADER_CELL_CLASS}>Amount HT</th>
@@ -298,7 +298,7 @@ function FlatDiscountBlock({
 				<table className={TABLE_CLASS} role="table" aria-label="Flat Discount">
 					<thead className="border-b-2 border-b-(--grid-frame-border) bg-(--grid-subheader-bg)">
 						<tr>
-							<th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+							<th className="px-3 py-2 text-left text-(--text-xs) font-semibold uppercase tracking-[0.12em]">
 								Setting
 							</th>
 							<th className={HEADER_CELL_CLASS}>Value</th>

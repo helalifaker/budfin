@@ -119,7 +119,7 @@ export function InspectorInput({
 			className={cn(
 				'w-20 rounded-md border border-[color-mix(in_srgb,var(--workspace-border),white_35%)]',
 				'px-2.5 py-1.5 text-right text-(length:--text-sm)',
-				'font-[family-name:var(--font-mono)] tabular-nums',
+				'font-mono tabular-nums',
 				'transition-[background-color,border-color,box-shadow] duration-(--duration-fast)',
 				'focus:outline-none focus:ring-2 focus:ring-(--cell-editable-focus)',
 				isReadOnly

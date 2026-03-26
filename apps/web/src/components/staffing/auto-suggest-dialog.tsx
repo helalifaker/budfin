@@ -172,7 +172,7 @@ export function AutoSuggestDialog({
 											<td className="px-3 py-2 text-(--text-secondary)">
 												{suggestion.disciplineCode}
 											</td>
-											<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+											<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 												{suggestion.fteShare}
 											</td>
 											<td className="px-3 py-2">

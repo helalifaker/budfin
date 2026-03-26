@@ -84,9 +84,9 @@ export function EditableNumericCell({
 				onKeyDown={handleKeyDown}
 				onBlur={commitEdit}
 				className={cn(
-					'w-full rounded border border-(--cell-editable-focus) bg-white',
+					'w-full rounded border border-(--cell-editable-focus) bg-(--workspace-bg-card)',
 					'px-2 py-0.5 text-right',
-					'font-[family-name:var(--font-mono)] text-(--text-xs)',
+					'font-mono text-(--text-xs)',
 					'outline-none ring-1 ring-(--cell-editable-focus)/30',
 					className
 				)}
@@ -114,7 +114,7 @@ export function EditableNumericCell({
 					: undefined
 			}
 			className={cn(
-				'text-right font-[family-name:var(--font-mono)] text-(--text-xs) tabular-nums',
+				'text-right font-mono text-(--text-xs) tabular-nums',
 				'px-2 py-0.5',
 				editable && [
 					'cursor-pointer rounded',

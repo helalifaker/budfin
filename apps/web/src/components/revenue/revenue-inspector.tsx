@@ -882,7 +882,7 @@ function RevenueInspectorActiveView({ selection }: { selection: RevenueGridRowId
 					</p>
 					<p
 						className={cn(
-							'mt-1 font-[family-name:var(--font-mono)]',
+							'mt-1 font-mono',
 							'text-(--text-sm) tabular-nums text-(--text-secondary)'
 						)}
 					>

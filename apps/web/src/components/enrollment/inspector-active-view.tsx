@@ -74,7 +74,7 @@ function ReadOnlyValue({ value, label }: { value: string | number | null; label:
 	return (
 		<div className="flex items-center justify-between">
 			<span className="text-(--text-sm) text-(--text-secondary)">{label}</span>
-			<span className="font-[family-name:var(--font-mono)] text-(--text-sm) tabular-nums text-(--text-primary)">
+			<span className="font-mono text-(--text-sm) tabular-nums text-(--text-primary)">
 				{display}
 			</span>
 		</div>
@@ -556,7 +556,7 @@ export function InspectorActiveView({ gradeLevel }: { gradeLevel: string }) {
 					<p className="text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 						{bandNatContext.label} band context
 					</p>
-					<p className="mt-1 font-[family-name:var(--font-mono)] text-(--text-sm) tabular-nums text-(--text-secondary)">
+					<p className="mt-1 font-mono text-(--text-sm) tabular-nums text-(--text-secondary)">
 						Fr {bandNatContext.francaisPct.toFixed(1)}%{' \u00B7 '}
 						Nat {bandNatContext.nationauxPct.toFixed(1)}%{' \u00B7 '}
 						Aut {bandNatContext.autresPct.toFixed(1)}%

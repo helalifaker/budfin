@@ -62,7 +62,7 @@ const BAND_ORDER = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
 
 const monoInputClass = cn(
 	'w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-2',
-	'text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)'
+	'text-right font-mono tabular-nums text-(--text-primary)'
 );
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -849,7 +849,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																<label className="block text-(--text-xs) font-semibold uppercase tracking-[0.08em] text-(--text-muted)">
 																	Monthly (computed)
 																</label>
-																<p className="mt-2 px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																<p className="mt-2 px-3 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 																	{Number(draftAjeerFee) > 0
 																		? new Decimal(draftAjeerFee).dividedBy(12).toFixed(2)
 																		: '-'}
@@ -922,7 +922,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																					<td className="px-3 py-2 text-(--text-secondary)">
 																						{r.dhgType}
 																					</td>
-																					<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+																					<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 																						{r.hoursPerWeekPerSection}
 																					</td>
 																				</tr>
@@ -1109,7 +1109,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																					className={cn(monoInputClass, 'h-8 w-28')}
 																				/>
 																			</td>
-																			<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																			<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 																				{computeMonthlyPreview(mode, value)}
 																			</td>
 																			<td className="px-3 py-2 text-center">
@@ -1180,7 +1180,7 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																		<td className="px-3 py-2 font-medium text-(--text-primary)">
 																			{entry.gradeLevel}
 																		</td>
-																		<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+																		<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 																			{entry.ay2}
 																		</td>
 																	</tr>
@@ -1237,13 +1237,13 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																	<td className="px-3 py-2 font-medium text-(--text-primary)">
 																		Total FTE
 																	</td>
-																	<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+																	<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 																		{summary?.fte ?? '-'}
 																	</td>
-																	<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																	<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 																		-
 																	</td>
-																	<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																	<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 																		-
 																	</td>
 																	<td className="px-3 py-2 text-center text-(--text-muted)">-</td>
@@ -1252,13 +1252,13 @@ export function StaffingSettingsDialog({ versionId, isEditable }: StaffingSettin
 																	<td className="px-3 py-2 font-medium text-(--text-primary)">
 																		Total Cost
 																	</td>
-																	<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)">
+																	<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-primary)">
 																		{summary?.cost ?? '-'}
 																	</td>
-																	<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																	<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 																		-
 																	</td>
-																	<td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] tabular-nums text-(--text-secondary)">
+																	<td className="px-3 py-2 text-right font-mono tabular-nums text-(--text-secondary)">
 																		-
 																	</td>
 																	<td className="px-3 py-2 text-center text-(--text-muted)">-</td>

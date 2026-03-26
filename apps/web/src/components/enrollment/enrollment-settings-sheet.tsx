@@ -116,7 +116,7 @@ function buildUpdatePayload({
 
 const fieldInputClass = cn(
 	'w-full rounded-md border border-(--workspace-border) bg-(--cell-editable-bg) px-3 py-2 text-right',
-	'font-[family-name:var(--font-mono)] tabular-nums text-(--text-primary)'
+	'font-mono tabular-nums text-(--text-primary)'
 );
 
 function rowDiffersFromTemplate(row: EnrollmentCapacityByGradeSetting) {

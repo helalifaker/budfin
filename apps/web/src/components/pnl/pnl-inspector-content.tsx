@@ -415,7 +415,7 @@ function PnlInspectorActiveView({ selection }: { selection: PnlSelection }) {
 							</span>
 							<span
 								className={cn(
-									'font-[family-name:var(--font-mono)] text-(--text-sm) font-semibold tabular-nums',
+									'font-mono text-(--text-sm) font-semibold tabular-nums',
 									new Decimal(selection.varianceAnnualTotal).isNeg()
 										? 'text-(--color-error)'
 										: 'text-(--color-success)'

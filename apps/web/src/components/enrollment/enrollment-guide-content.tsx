@@ -43,7 +43,7 @@ export function EnrollmentGuideContent() {
 			<GuideSection title="Cohort Progression Formula" icon={Calculator}>
 				<div className="space-y-2">
 					<p>For each grade (except Petite Section):</p>
-					<div className="rounded-md bg-(--workspace-bg-muted) px-3 py-2 font-[family-name:var(--font-mono)] text-(--text-xs)">
+					<div className="rounded-md bg-(--workspace-bg-muted) px-3 py-2 font-mono text-(--text-xs)">
 						AY2 = floor(Prior_Grade_AY1 &times; Retention%) + Laterals
 					</div>
 					<p className="text-(--text-xs) text-(--text-muted)">

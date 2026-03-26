@@ -47,13 +47,9 @@ export function SummaryTable({ rows, header }: SummaryTableProps) {
 									{row.label}
 								</span>
 							</td>
-							<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-								{row.amount}
-							</td>
+							<td className="px-3 py-1.5 text-right font-mono tabular-nums">{row.amount}</td>
 							{row.percent !== undefined && (
-								<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-									{row.percent}
-								</td>
+								<td className="px-3 py-1.5 text-right font-mono tabular-nums">{row.percent}</td>
 							)}
 						</tr>
 					))}

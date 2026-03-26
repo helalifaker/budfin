@@ -367,7 +367,7 @@ function InspectorDefaultView() {
 						{Object.entries(coverageDist).map(([status, count]) => (
 							<div key={status} className="flex items-center justify-between px-3 py-2">
 								<span className="text-sm capitalize text-(--text-secondary)">{status}</span>
-								<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+								<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 									{count}
 								</span>
 							</div>
@@ -419,10 +419,8 @@ function InspectorDefaultView() {
 							{bandSummary.map((row) => (
 								<tr key={row.band} className="border-t border-(--workspace-border)">
 									<td className="px-3 py-1.5 font-medium">{row.label}</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-										{row.count}
-									</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">{row.count}</td>
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 										{row.fteRaw.toFixed(2)}
 									</td>
 								</tr>
@@ -585,16 +583,14 @@ function InspectorRequirementView({
 							{sources.map((src) => (
 								<tr key={src.gradeLevel} className="border-t border-(--workspace-border)">
 									<td className="px-3 py-1.5 font-medium">{src.gradeLevel}</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
-										{src.headcount}
-									</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">{src.headcount}</td>
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 										{src.driverUnits}
 									</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 										{src.hoursPerUnit}
 									</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 										{src.totalWeeklyHours}
 									</td>
 								</tr>
@@ -670,7 +666,7 @@ function InspectorRequirementView({
 									</span>
 								</div>
 								<div className="flex items-center gap-2">
-									<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-secondary)">
+									<span className="font-mono text-sm tabular-nums text-(--text-secondary)">
 										{assignment.fteShare}
 									</span>
 									{isEditable && (
@@ -736,19 +732,19 @@ function InspectorRequirementView({
 				<div className="space-y-2 rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-3">
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-(--text-secondary)">Raw need</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 							{line.requiredFteRaw}
 						</span>
 					</div>
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-(--text-secondary)">Planned need</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 							{line.requiredFtePlanned}
 						</span>
 					</div>
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-(--text-secondary)">Covered</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 							{line.coveredFte}
 						</span>
 					</div>
@@ -756,7 +752,7 @@ function InspectorRequirementView({
 						<span className="text-sm text-(--text-secondary)">Gap</span>
 						<span
 							className={cn(
-								'font-[family-name:var(--font-mono)] text-sm tabular-nums font-semibold',
+								'font-mono text-sm tabular-nums font-semibold',
 								gapValue < 0 && 'text-(--color-error)',
 								gapValue > 0 && 'text-(--color-warning)',
 								gapValue === 0 && 'text-(--color-success)'
@@ -781,19 +777,19 @@ function InspectorRequirementView({
 				<div className="space-y-2 rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-3">
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-(--text-secondary)">Direct payroll</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 							{formatMoney(directCost, { showCurrency: true })}
 						</span>
 					</div>
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-(--text-secondary)">HSA cost</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 							{formatMoney(hsaCost, { showCurrency: true })}
 						</span>
 					</div>
 					<div className="flex items-center justify-between border-t border-(--workspace-border) pt-2">
 						<span className="text-sm font-semibold text-(--text-primary)">Total loaded cost</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums font-semibold text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums font-semibold text-(--text-primary)">
 							{formatMoney(totalCost, { showCurrency: true })}
 						</span>
 					</div>
@@ -860,7 +856,7 @@ function InspectorSupportView({ employeeId }: { employeeId: number }) {
 					{empData.monthlyCost && (
 						<div className="flex items-center justify-between">
 							<span className="text-sm text-(--text-secondary)">Monthly cost</span>
-							<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+							<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 								{formatMoney(empData.monthlyCost, { showCurrency: true })}
 							</span>
 						</div>
@@ -868,7 +864,7 @@ function InspectorSupportView({ employeeId }: { employeeId: number }) {
 					{empData.annualCost && (
 						<div className="flex items-center justify-between">
 							<span className="text-sm text-(--text-secondary)">Annual cost</span>
-							<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+							<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 								{formatMoney(empData.annualCost, { showCurrency: true })}
 							</span>
 						</div>
@@ -970,7 +966,7 @@ function InspectorEmployeeView({ employeeId }: { employeeId: number }) {
 										{BAND_LABELS[a.band] ?? a.band}
 									</span>
 								</div>
-								<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-secondary)">
+								<span className="font-mono text-sm tabular-nums text-(--text-secondary)">
 									{a.fteShare} FTE
 								</span>
 							</div>
@@ -987,7 +983,7 @@ function InspectorEmployeeView({ employeeId }: { employeeId: number }) {
 					{empData.monthlyCost && (
 						<div className="flex items-center justify-between">
 							<span className="text-sm text-(--text-secondary)">Monthly cost</span>
-							<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+							<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 								{formatMoney(empData.monthlyCost, { showCurrency: true })}
 							</span>
 						</div>
@@ -995,7 +991,7 @@ function InspectorEmployeeView({ employeeId }: { employeeId: number }) {
 					{empData.annualCost && (
 						<div className="flex items-center justify-between">
 							<span className="text-sm text-(--text-secondary)">Annual cost</span>
-							<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+							<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 								{formatMoney(empData.annualCost, { showCurrency: true })}
 							</span>
 						</div>
@@ -1108,10 +1104,10 @@ function InspectorDisciplineSummaryView({
 											{BAND_LABELS[l.band] ?? l.band}
 										</span>
 									</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 										{parseFloat(l.requiredFteRaw).toFixed(2)}
 									</td>
-									<td className="px-3 py-1.5 text-right font-[family-name:var(--font-mono)] tabular-nums">
+									<td className="px-3 py-1.5 text-right font-mono tabular-nums">
 										{parseFloat(l.coveredFte).toFixed(2)}
 									</td>
 								</tr>
@@ -1139,7 +1135,7 @@ function InspectorDisciplineSummaryView({
 									className="flex items-center justify-between rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) px-3 py-2"
 								>
 									<span className="text-sm font-medium text-(--text-primary)">{emp.name}</span>
-									<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-secondary)">
+									<span className="font-mono text-sm tabular-nums text-(--text-secondary)">
 										{totalFteShare.toFixed(2)} FTE
 									</span>
 								</div>
@@ -1156,13 +1152,13 @@ function InspectorDisciplineSummaryView({
 				<div className="space-y-2 rounded-lg border border-(--workspace-border) bg-(--workspace-bg-card) p-3">
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-(--text-secondary)">Total FTE needed</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 							{totalFte.toFixed(2)}
 						</span>
 					</div>
 					<div className="flex items-center justify-between">
 						<span className="text-sm text-(--text-secondary)">Total covered</span>
-						<span className="font-[family-name:var(--font-mono)] text-sm tabular-nums text-(--text-primary)">
+						<span className="font-mono text-sm tabular-nums text-(--text-primary)">
 							{totalCovered.toFixed(2)}
 						</span>
 					</div>
@@ -1170,7 +1166,7 @@ function InspectorDisciplineSummaryView({
 						<span className="text-sm text-(--text-secondary)">Gap</span>
 						<span
 							className={cn(
-								'font-[family-name:var(--font-mono)] text-sm tabular-nums font-semibold',
+								'font-mono text-sm tabular-nums font-semibold',
 								gap < 0 && 'text-(--color-error)',
 								gap > 0 && 'text-(--color-warning)',
 								gap === 0 && 'text-(--color-success)'
