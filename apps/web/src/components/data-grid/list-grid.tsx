@@ -33,10 +33,12 @@ export interface ListGridProps<T> {
 	numericColumns?: string[];
 	pagination?: PaginationConfig;
 	expandable?: ExpandableConfig<T>;
-	actionsColumn?: {
-		render: (row: T) => ReactNode;
-		width?: number;
-	};
+	actionsColumn?:
+		| {
+				render: (row: T) => ReactNode;
+				width?: number;
+		  }
+		| undefined;
 	selectable?: boolean;
 	selectedRowPredicate?: (row: T) => boolean;
 	onRowSelect?: (rowData: T) => void;
