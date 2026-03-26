@@ -6,6 +6,14 @@ export type OpExSectionType = (typeof OPEX_SECTION_TYPES)[number];
 export const OPEX_COMPUTE_METHODS = ['MANUAL', 'PERCENT_OF_REVENUE'] as const;
 export type OpExComputeMethod = (typeof OPEX_COMPUTE_METHODS)[number];
 
+export const OPEX_ENTRY_MODES = [
+	'FLAT',
+	'SEASONAL',
+	'ANNUAL_SPREAD',
+	'PERCENT_OF_REVENUE',
+] as const;
+export type OpExEntryMode = (typeof OPEX_ENTRY_MODES)[number];
+
 export const OPEX_IFRS_CATEGORIES = [
 	'Rent & Utilities',
 	'Building Services',
@@ -44,6 +52,11 @@ export interface OpExLineItem {
 	fy2024Actual: string | null;
 	comment: string | null;
 	monthlyAmounts: MonthlyOpExEntry[];
+	entryMode: OpExEntryMode;
+	activeMonths: number[];
+	annualTotal: string | null;
+	flatAmount: string | null;
+	flatOverrideMonths: number[];
 }
 
 export interface MonthlyOpExEntry {
@@ -78,13 +91,17 @@ export interface OpExLineItemUpdate {
 	ifrsCategory: string;
 	lineItemName: string;
 	displayOrder?: number;
-	computeMethod?: OpExComputeMethod;
 	computeRate?: string | null;
 	budgetV6Total?: string | null;
 	fy2025Actual?: string | null;
 	fy2024Actual?: string | null;
 	comment?: string | null;
 	monthlyAmounts: MonthlyOpExEntry[];
+	entryMode?: OpExEntryMode;
+	activeMonths?: number[];
+	annualTotal?: string | null;
+	flatAmount?: string | null;
+	flatOverrideMonths?: number[];
 }
 
 export interface OpExCalculateResponse {
@@ -92,4 +109,31 @@ export interface OpExCalculateResponse {
 	monthlyRecordCount: number;
 	totalOperating: string;
 	totalNonOperating: string;
+}
+
+export interface OpExInitializePayload {
+	source: 'PRIOR_YEAR_ACTUALS' | 'VERSION';
+	sourceVersionId?: number;
+	priorYear?: 'FY2025' | 'FY2024';
+}
+
+export interface OpExReorderPayload {
+	moves: Array<{
+		lineItemId: number;
+		ifrsCategory: string;
+		displayOrder: number;
+	}>;
+}
+
+export interface OpExLineItemPatch {
+	entryMode?: OpExEntryMode;
+	activeMonths?: number[];
+	ifrsCategory?: string;
+	displayOrder?: number;
+	comment?: string | null;
+	lineItemName?: string;
+	annualTotal?: string | null;
+	flatAmount?: string | null;
+	flatOverrideMonths?: number[];
+	computeRate?: string | null;
 }

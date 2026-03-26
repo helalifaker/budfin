@@ -3,9 +3,13 @@ import { apiClient } from '../lib/api-client';
 import { toast } from '../components/ui/toast-state';
 import { useWorkspaceContextStore } from '../stores/workspace-context-store';
 import type {
+	OpExLineItem,
+	OpExLineItemPatch,
 	OpExLineItemsResponse,
 	OpExBulkUpdatePayload,
 	OpExCalculateResponse,
+	OpExInitializePayload,
+	OpExReorderPayload,
 } from '@budfin/types';
 
 // ── Query Keys ───────────────────────────────────────────────────────────────
@@ -85,6 +89,42 @@ export function useCalculateOpEx(versionId: number | null) {
 	return { ...mutation, isUpstreamStale };
 }
 
+export function useUpdateOpExLineItem(versionId: number | null) {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({ lineItemId, patch }: { lineItemId: number; patch: OpExLineItemPatch }) =>
+			apiClient<{ data: OpExLineItem }>(`/versions/${versionId}/opex/line-items/${lineItemId}`, {
+				method: 'PATCH',
+				body: JSON.stringify(patch),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: opexKeys.lineItems(versionId) });
+		},
+		onError: () => {
+			toast.error('Failed to update line item');
+		},
+	});
+}
+
+export function useReorderOpExLineItem(versionId: number | null) {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (payload: OpExReorderPayload) =>
+			apiClient<void>(`/versions/${versionId}/opex/line-items/reorder`, {
+				method: 'PUT',
+				body: JSON.stringify(payload),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: opexKeys.lineItems(versionId) });
+		},
+		onError: () => {
+			toast.error('Failed to reorder line items');
+		},
+	});
+}
+
 export function useDeleteOpExLineItem(versionId: number | null) {
 	const queryClient = useQueryClient();
 
@@ -97,6 +137,26 @@ export function useDeleteOpExLineItem(versionId: number | null) {
 		},
 		onError: () => {
 			toast.error('Failed to delete line item');
+		},
+	});
+}
+
+export function useInitializeOpEx(versionId: number | null) {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (payload: OpExInitializePayload) =>
+			apiClient<OpExLineItemsResponse>(`/versions/${versionId}/opex/initialize`, {
+				method: 'POST',
+				body: JSON.stringify(payload),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: opexKeys.lineItems(versionId) });
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+			toast.success('Operating expenses initialized successfully');
+		},
+		onError: () => {
+			toast.error('Failed to initialize operating expenses');
 		},
 	});
 }

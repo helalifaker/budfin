@@ -98,7 +98,7 @@ export function useGridKeyboard({
 		columnIds,
 	});
 
-	const { copySelection, pasteAtCell } = useGridClipboard({
+	const { copySelection, pasteAtCell, fillDown, fillRight } = useGridClipboard({
 		enabled: clipboardEnabled,
 		getCellValue,
 		onPaste,
@@ -420,6 +420,20 @@ export function useGridKeyboard({
 					}
 					break;
 				}
+				case 'd': {
+					if (isMod(e) && clipboardEnabled && selection) {
+						e.preventDefault();
+						fillDown(selection);
+					}
+					break;
+				}
+				case 'r': {
+					if (isMod(e) && clipboardEnabled && selection) {
+						e.preventDefault();
+						fillRight(selection);
+					}
+					break;
+				}
 				default:
 					break;
 			}
@@ -443,6 +457,8 @@ export function useGridKeyboard({
 			makeCellCoord,
 			copySelection,
 			pasteAtCell,
+			fillDown,
+			fillRight,
 			isEditable,
 			onRowSelect,
 		]

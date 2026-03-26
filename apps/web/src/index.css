@@ -86,6 +86,24 @@
 	--cell-error-border: #dc2626;
 	--cell-override-bg: #f5f3ff;
 
+	/* ── Entry Mode Badge Colors ── */
+	--entry-mode-flat: var(--info);
+	--entry-mode-flat-bg: var(--info-bg);
+	--entry-mode-seasonal: var(--success);
+	--entry-mode-seasonal-bg: var(--success-bg);
+	--entry-mode-annual: var(--error);
+	--entry-mode-annual-bg: var(--error-bg);
+	--entry-mode-revenue: var(--version-locked);
+	--entry-mode-revenue-bg: var(--version-locked-bg);
+
+	/* ── Inactive Month Cells ── */
+	--cell-inactive-bg: var(--workspace-bg);
+	--cell-inactive-text: var(--text-muted);
+
+	/* ── Drag and Drop ── */
+	--grid-drop-zone-bg: color-mix(in srgb, var(--accent-100) 50%, transparent);
+	--grid-drop-zone-border: var(--accent-300);
+
 	/* ── Typography ── */
 	--font-family: 'DM Sans Variable', 'DM Sans', system-ui, -apple-system, sans-serif;
 	--font-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -399,6 +417,15 @@
 	--cell-editable-bg: #1e293b;
 	--cell-readonly-bg: #0f172a;
 	--cell-override-bg: #1e1b4b;
+
+	/* ── Entry Mode Badge Colors (dark) ── */
+	--entry-mode-flat-bg: color-mix(in srgb, var(--info) 20%, var(--workspace-bg-card));
+	--entry-mode-seasonal-bg: color-mix(in srgb, var(--success) 20%, var(--workspace-bg-card));
+	--entry-mode-annual-bg: color-mix(in srgb, var(--error) 20%, var(--workspace-bg-card));
+	--entry-mode-revenue-bg: color-mix(in srgb, var(--version-locked) 20%, var(--workspace-bg-card));
+
+	/* ── Inactive Month Cells (dark) ── */
+	--cell-inactive-bg: color-mix(in srgb, var(--workspace-bg) 80%, black);
 
 	/* ── Grid Tokens (dark) ── */
 	--grid-header-bg: #1e293b;

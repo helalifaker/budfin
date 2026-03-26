@@ -13,6 +13,7 @@ export interface BudgetVersion {
 	sourceVersionId: number | null;
 	modificationCount: number;
 	staleModules: string[];
+	schoolCalendarMonths: number[];
 	createdById: number;
 	createdByEmail: string | null;
 	publishedAt: string | null;
@@ -97,6 +98,25 @@ export function useDeleteVersion() {
 	return useMutation({
 		mutationFn: (id: number) => apiClient<void>(`/versions/${id}`, { method: 'DELETE' }),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versions'] }),
+		onError: (err) =>
+			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
+	});
+}
+
+export function usePatchVersion() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			id,
+			...data
+		}: { id: number } & Partial<Pick<BudgetVersion, 'schoolCalendarMonths'>>) =>
+			apiClient<BudgetVersion>(`/versions/${id}`, {
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['versions'] });
+		},
 		onError: (err) =>
 			toast.error(err instanceof Error ? err.message : 'An unexpected error occurred'),
 	});

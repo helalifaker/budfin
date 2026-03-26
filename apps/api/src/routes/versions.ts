@@ -1411,6 +1411,50 @@ export async function versionRoutes(app: FastifyInstance) {
 		},
 	});
 
+	// PATCH /:id — Update version settings (e.g., school calendar)
+	app.patch('/:id', {
+		schema: {
+			params: idParamsSchema,
+			body: z.object({
+				schoolCalendarMonths: z
+					.array(z.number().int().min(1).max(12))
+					.min(1, 'At least 1 month required')
+					.max(12)
+					.refine((arr) => new Set(arr).size === arr.length, 'Months must be unique')
+					.optional(),
+			}),
+		},
+		preHandler: [app.authenticate, app.requireRole('Admin', 'BudgetOwner', 'Editor')],
+		handler: async (request, reply) => {
+			const { id } = request.params as z.infer<typeof idParamsSchema>;
+			const body = request.body as { schoolCalendarMonths?: number[] };
+
+			const version = await prisma.budgetVersion.findUnique({ where: { id } });
+			if (!version) {
+				return reply
+					.status(404)
+					.send({ code: 'VERSION_NOT_FOUND', message: `Version ${id} not found` });
+			}
+			if (version.status === 'Locked' || version.status === 'Archived') {
+				return reply
+					.status(409)
+					.send({ code: 'VERSION_LOCKED', message: 'Cannot modify a locked or archived version' });
+			}
+
+			const updated = await prisma.budgetVersion.update({
+				where: { id },
+				data: {
+					...(body.schoolCalendarMonths !== undefined && {
+						schoolCalendarMonths: body.schoolCalendarMonths,
+					}),
+					updatedById: request.user.id,
+				},
+			});
+
+			return reply.send({ data: updated });
+		},
+	});
+
 	// PATCH /:id/status — Lifecycle state machine (AC-04 to AC-08, AC-19)
 	app.patch('/:id/status', {
 		schema: { params: idParamsSchema, body: patchStatusSchema },

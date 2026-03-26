@@ -27,6 +27,7 @@ export type OpExStatusStripProps = {
 	staleModules: string[];
 	operatingLineCount: number;
 	nonOperatingLineCount: number;
+	unsavedCount?: number;
 };
 
 export function OpExStatusStrip({
@@ -34,6 +35,7 @@ export function OpExStatusStrip({
 	staleModules,
 	operatingLineCount,
 	nonOperatingLineCount,
+	unsavedCount = 0,
 }: OpExStatusStripProps) {
 	const isOpExStale = staleModules.includes('OPEX');
 	const downstreamStale = staleModules.filter(
@@ -71,6 +73,17 @@ export function OpExStatusStrip({
 		value: `${totalItems} total (${operatingLineCount} operating, ${nonOperatingLineCount} non-operating)`,
 		priority: 2,
 	});
+
+	// Section 4: Unsaved changes
+	if (unsavedCount > 0) {
+		sections.push({
+			key: 'unsaved',
+			label: 'Unsaved',
+			value: `${unsavedCount} change${unsavedCount === 1 ? '' : 's'}`,
+			severity: 'warning',
+			priority: 4,
+		});
+	}
 
 	// Downstream stale pills
 	if (downstreamStale.length > 0) {

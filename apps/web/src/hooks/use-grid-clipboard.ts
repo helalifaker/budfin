@@ -13,6 +13,8 @@ export interface UseGridClipboardOptions {
 export interface UseGridClipboardReturn {
 	copySelection: (selection: GridSelection) => Promise<void>;
 	pasteAtCell: (cell: CellCoord) => Promise<void>;
+	fillDown: (selection: GridSelection) => void;
+	fillRight: (selection: GridSelection) => void;
 }
 
 function isClipboardAvailable(): boolean {
@@ -80,5 +82,90 @@ export function useGridClipboard({
 		[enabled, onPaste, editableColumns]
 	);
 
-	return { copySelection, pasteAtCell };
+	const fillDown = useCallback(
+		(selection: GridSelection): void => {
+			if (!enabled || !getCellValue || !onPaste) return;
+
+			const { anchor, focus } = selection;
+			const minRow = Math.min(anchor.rowIndex, focus.rowIndex);
+			const maxRow = Math.max(anchor.rowIndex, focus.rowIndex);
+			const minCol = Math.min(anchor.colIndex, focus.colIndex);
+			const maxCol = Math.max(anchor.colIndex, focus.colIndex);
+
+			// No-op if selection has fewer than 2 cells
+			const rowSpan = maxRow - minRow + 1;
+			const colSpan = maxCol - minCol + 1;
+			if (rowSpan * colSpan < 2) return;
+
+			// Need at least 2 rows for fill-down to have any effect
+			if (rowSpan < 2) return;
+
+			// Build data matrix: each row gets the topmost row's value per column,
+			// but only for editable columns. Non-editable columns get their existing value
+			// (effectively a no-op for those columns).
+			const data: string[][] = [];
+			for (let r = minRow; r <= maxRow; r++) {
+				const row: string[] = [];
+				for (let c = minCol; c <= maxCol; c++) {
+					const colId = columnIds[c] ?? '';
+					if (editableColumns?.length && !editableColumns.includes(colId)) {
+						// Not editable: preserve existing value
+						row.push(getCellValue(r, colId));
+					} else {
+						// Editable: use topmost row value
+						row.push(getCellValue(minRow, colId));
+					}
+				}
+				data.push(row);
+			}
+
+			onPaste(minRow, minCol, data);
+		},
+		[enabled, getCellValue, onPaste, columnIds, editableColumns]
+	);
+
+	const fillRight = useCallback(
+		(selection: GridSelection): void => {
+			if (!enabled || !getCellValue || !onPaste) return;
+
+			const { anchor, focus } = selection;
+			const minRow = Math.min(anchor.rowIndex, focus.rowIndex);
+			const maxRow = Math.max(anchor.rowIndex, focus.rowIndex);
+			const minCol = Math.min(anchor.colIndex, focus.colIndex);
+			const maxCol = Math.max(anchor.colIndex, focus.colIndex);
+
+			// No-op if selection has fewer than 2 cells
+			const rowSpan = maxRow - minRow + 1;
+			const colSpan = maxCol - minCol + 1;
+			if (rowSpan * colSpan < 2) return;
+
+			// Need at least 2 columns for fill-right to have any effect
+			if (colSpan < 2) return;
+
+			// Build data matrix: each column gets the leftmost column's value per row,
+			// but only for editable columns. Non-editable columns get their existing value.
+			const data: string[][] = [];
+			for (let r = minRow; r <= maxRow; r++) {
+				const row: string[] = [];
+				const leftColId = columnIds[minCol] ?? '';
+				const sourceValue = getCellValue(r, leftColId);
+				for (let c = minCol; c <= maxCol; c++) {
+					const colId = columnIds[c] ?? '';
+					if (editableColumns?.length && !editableColumns.includes(colId)) {
+						// Not editable: preserve existing value
+						row.push(getCellValue(r, colId));
+					} else {
+						// Editable: use leftmost column value
+						row.push(sourceValue);
+					}
+				}
+				data.push(row);
+			}
+
+			onPaste(minRow, minCol, data);
+		},
+		[enabled, getCellValue, onPaste, columnIds, editableColumns]
+	);
+
+	return { copySelection, pasteAtCell, fillDown, fillRight };
 }

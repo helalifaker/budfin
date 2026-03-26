@@ -11,6 +11,9 @@ interface EditableCellProps {
 	className?: string;
 }
 
+/** Entry mode for edit state: 'full' preserves existing value, 'overwrite' replaces it. */
+type EditEntryMode = 'full' | 'overwrite';
+
 export function EditableCell({
 	value,
 	onChange,
@@ -24,6 +27,7 @@ export function EditableCell({
 	const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle');
 	const [showFlash, setShowFlash] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const entryModeRef = useRef<EditEntryMode>('full');
 
 	useEffect(() => {
 		setEditValue(String(value));
@@ -32,7 +36,20 @@ export function EditableCell({
 	useEffect(() => {
 		if (isEditing && inputRef.current) {
 			inputRef.current.focus();
-			inputRef.current.select();
+			if (entryModeRef.current === 'full') {
+				inputRef.current.select();
+			} else {
+				// For overwrite mode, place cursor at end (after the typed character).
+				// setSelectionRange is not supported on type="number" inputs, so we
+				// guard with a try-catch.
+				try {
+					const len = inputRef.current.value.length;
+					inputRef.current.setSelectionRange(len, len);
+				} catch {
+					// type="number" inputs throw InvalidStateError — cursor positioning
+					// is not supported, but the value is already correct.
+				}
+			}
 		}
 	}, [isEditing]);
 
@@ -72,6 +89,56 @@ export function EditableCell({
 			}
 		},
 		[commitEdit, value, onNavigate]
+	);
+
+	/** Enter edit mode with specified entry mode. */
+	const enterEdit = useCallback(
+		(mode: EditEntryMode, initialValue?: string) => {
+			entryModeRef.current = mode;
+			if (initialValue !== undefined) {
+				setEditValue(initialValue);
+			} else {
+				setEditValue(String(value));
+			}
+			setIsEditing(true);
+		},
+		[value]
+	);
+
+	/** Handle keyboard events on the display button (non-editing state). */
+	const handleButtonKeyDown = useCallback(
+		(e: React.KeyboardEvent) => {
+			// Delete/Backspace: clear to '0' without entering edit mode
+			if (e.key === 'Delete' || e.key === 'Backspace') {
+				e.preventDefault();
+				if (String(value) !== '0') {
+					setEditValue('0');
+					onChange('0');
+					setSaveState('saved');
+					setShowFlash(true);
+					setTimeout(() => setSaveState('idle'), 1500);
+					setTimeout(() => setShowFlash(false), 800);
+				}
+				return;
+			}
+
+			// F2: enter edit mode preserving existing value (cursor at end via select)
+			if (e.key === 'F2') {
+				e.preventDefault();
+				enterEdit('full');
+				return;
+			}
+
+			// Printable character (single char, no modifier keys): overwrite mode
+			if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+				e.preventDefault();
+				enterEdit('overwrite', e.key);
+				return;
+			}
+
+			// All other keys (arrows, Tab, Enter, Home, End, etc.): let parent handle
+		},
+		[value, onChange, enterEdit]
 	);
 
 	const isNumber = type === 'number';
@@ -120,7 +187,8 @@ export function EditableCell({
 	return (
 		<button
 			type="button"
-			onClick={() => setIsEditing(true)}
+			onClick={() => enterEdit('full')}
+			onKeyDown={handleButtonKeyDown}
 			className={cn(
 				'block w-full text-left px-2 py-1 text-(--text-xs)',
 				'rounded-sm cursor-text',

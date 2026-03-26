@@ -90,6 +90,11 @@ export async function opExCalculateRoutes(app: FastifyInstance) {
 				lineItemName: li.lineItemName,
 				computeMethod: li.computeMethod,
 				computeRate: li.computeRate != null ? String(li.computeRate) : null,
+				entryMode: li.entryMode,
+				flatAmount: li.flatAmount != null ? String(li.flatAmount) : null,
+				annualTotal: li.annualTotal != null ? String(li.annualTotal) : null,
+				activeMonths: li.activeMonths,
+				flatOverrideMonths: li.flatOverrideMonths,
 				monthlyAmounts: li.monthlyAmounts.map((ma) => ({
 					month: ma.month,
 					amount: String(ma.amount),

@@ -126,6 +126,7 @@ export type {
 export {
 	OPEX_SECTION_TYPES,
 	OPEX_COMPUTE_METHODS,
+	OPEX_ENTRY_MODES,
 	OPEX_IFRS_CATEGORIES,
 	NON_OPERATING_IFRS_CATEGORIES,
 } from './opex.js';
@@ -133,6 +134,7 @@ export {
 export type {
 	OpExSectionType,
 	OpExComputeMethod,
+	OpExEntryMode,
 	OpExIfrsCategory,
 	NonOperatingIfrsCategory,
 	OpExLineItem,
@@ -142,6 +144,9 @@ export type {
 	OpExBulkUpdatePayload,
 	OpExLineItemUpdate,
 	OpExCalculateResponse,
+	OpExInitializePayload,
+	OpExReorderPayload,
+	OpExLineItemPatch,
 } from './opex.js';
 
 export {

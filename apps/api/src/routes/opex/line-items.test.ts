@@ -33,6 +33,7 @@ vi.mock('../../lib/prisma.js', () => {
 		},
 		versionOpExLineItem: {
 			findMany: vi.fn(),
+			findUnique: vi.fn(),
 			create: vi.fn(),
 			delete: vi.fn(),
 		},
@@ -56,6 +57,7 @@ const mockPrisma = prisma as unknown as {
 	budgetVersion: { findUnique: ReturnType<typeof vi.fn> };
 	versionOpExLineItem: {
 		findMany: ReturnType<typeof vi.fn>;
+		findUnique: ReturnType<typeof vi.fn>;
 		create: ReturnType<typeof vi.fn>;
 		delete: ReturnType<typeof vi.fn>;
 	};
@@ -101,6 +103,11 @@ const mockLineItem = {
 	fy2025Actual: null,
 	fy2024Actual: null,
 	comment: null,
+	entryMode: 'SEASONAL',
+	activeMonths: [],
+	annualTotal: null,
+	flatAmount: null,
+	flatOverrideMonths: [],
 	monthlyAmounts: [
 		{ month: 1, amount: '1000.0000' },
 		{ month: 2, amount: '1200.0000' },
@@ -415,6 +422,192 @@ describe('DELETE /api/v1/versions/:versionId/opex/line-items/:lineItemId', () =>
 			method: 'DELETE',
 			url: `${URL_PREFIX}/opex/line-items/10`,
 			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(403);
+	});
+});
+
+// ── PATCH Tests ──────────────────────────────────────────────────────────────
+
+describe('PATCH /api/v1/versions/:versionId/opex/line-items/:lineItemId', () => {
+	it('patches a line item and returns the updated record', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+		mockPrisma.versionOpExLineItem.findUnique.mockResolvedValue({
+			id: 10,
+			versionId: 1,
+			sectionType: 'OPERATING',
+		});
+		const updated = { ...mockLineItem, entryMode: 'FLAT', flatAmount: '5000.0000' };
+		mockTx.versionOpExLineItem.update.mockResolvedValue(updated);
+		mockTx.versionOpExLineItem.findUniqueOrThrow.mockResolvedValue(updated);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PATCH',
+			url: `${URL_PREFIX}/opex/line-items/10`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: { entryMode: 'FLAT', flatAmount: '5000.0000' },
+		});
+
+		expect(res.statusCode).toBe(200);
+		const body = res.json();
+		expect(body.entryMode).toBe('FLAT');
+		expect(body.flatAmount).toBe('5000.0000');
+	});
+
+	it('returns 404 when version not found or locked', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PATCH',
+			url: `${URL_PREFIX}/opex/line-items/10`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: { comment: 'test' },
+		});
+
+		expect(res.statusCode).toBe(404);
+	});
+
+	it('returns 404 when line item not found in version', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+		mockPrisma.versionOpExLineItem.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PATCH',
+			url: `${URL_PREFIX}/opex/line-items/999`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: { comment: 'test' },
+		});
+
+		expect(res.statusCode).toBe(404);
+	});
+
+	it('returns 400 for invalid IFRS category', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+		mockPrisma.versionOpExLineItem.findUnique.mockResolvedValue({
+			id: 10,
+			versionId: 1,
+			sectionType: 'OPERATING',
+		});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PATCH',
+			url: `${URL_PREFIX}/opex/line-items/10`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: { ifrsCategory: 'InvalidCategory' },
+		});
+
+		expect(res.statusCode).toBe(400);
+		expect(res.json().code).toBe('INVALID_IFRS_CATEGORY');
+	});
+
+	it('marks stale when entryMode changes', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+		mockPrisma.versionOpExLineItem.findUnique.mockResolvedValue({
+			id: 10,
+			versionId: 1,
+			sectionType: 'OPERATING',
+		});
+		mockTx.versionOpExLineItem.update.mockResolvedValue(mockLineItem);
+		mockTx.versionOpExLineItem.findUniqueOrThrow.mockResolvedValue(mockLineItem);
+
+		const token = await makeToken();
+		await app.inject({
+			method: 'PATCH',
+			url: `${URL_PREFIX}/opex/line-items/10`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: { entryMode: 'FLAT' },
+		});
+
+		expect(mockTx.budgetVersion.update).toHaveBeenCalled();
+	});
+
+	it('does not mark stale when only comment changes', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+		mockPrisma.versionOpExLineItem.findUnique.mockResolvedValue({
+			id: 10,
+			versionId: 1,
+			sectionType: 'OPERATING',
+		});
+		mockTx.versionOpExLineItem.update.mockResolvedValue(mockLineItem);
+		mockTx.versionOpExLineItem.findUniqueOrThrow.mockResolvedValue(mockLineItem);
+
+		const token = await makeToken();
+		await app.inject({
+			method: 'PATCH',
+			url: `${URL_PREFIX}/opex/line-items/10`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: { comment: 'just a comment' },
+		});
+
+		expect(mockTx.budgetVersion.update).not.toHaveBeenCalled();
+	});
+
+	it('returns 403 for Viewer (needs data:edit)', async () => {
+		const token = await makeToken('Viewer');
+		const res = await app.inject({
+			method: 'PATCH',
+			url: `${URL_PREFIX}/opex/line-items/10`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: { comment: 'test' },
+		});
+
+		expect(res.statusCode).toBe(403);
+	});
+});
+
+// ── Reorder Tests ────────────────────────────────────────────────────────────
+
+describe('PUT /api/v1/versions/:versionId/opex/line-items/reorder', () => {
+	const validReorderBody = {
+		moves: [
+			{ lineItemId: 10, ifrsCategory: 'Rent & Utilities', displayOrder: 0 },
+			{ lineItemId: 11, ifrsCategory: 'Rent & Utilities', displayOrder: 1 },
+		],
+	};
+
+	it('reorders line items and returns success', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(mockDraftVersion);
+		mockTx.versionOpExLineItem.update.mockResolvedValue({});
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/opex/line-items/reorder`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: validReorderBody,
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(res.json().success).toBe(true);
+		expect(mockTx.versionOpExLineItem.update).toHaveBeenCalledTimes(2);
+	});
+
+	it('returns 404 when version not found or locked', async () => {
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue(null);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/opex/line-items/reorder`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: validReorderBody,
+		});
+
+		expect(res.statusCode).toBe(404);
+	});
+
+	it('returns 403 for Viewer (needs data:edit)', async () => {
+		const token = await makeToken('Viewer');
+		const res = await app.inject({
+			method: 'PUT',
+			url: `${URL_PREFIX}/opex/line-items/reorder`,
+			headers: { ...authHeader(token), 'content-type': 'application/json' },
+			payload: validReorderBody,
 		});
 
 		expect(res.statusCode).toBe(403);

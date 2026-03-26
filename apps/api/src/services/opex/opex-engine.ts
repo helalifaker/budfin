@@ -19,6 +19,11 @@ export interface OpExLineItemInput {
 	computeMethod: string;
 	computeRate: string | null;
 	monthlyAmounts: { month: number; amount: string }[];
+	entryMode: string;
+	flatAmount: string | null;
+	annualTotal: string | null;
+	activeMonths: number[];
+	flatOverrideMonths: number[];
 }
 
 export interface MonthlyRevenueInput {
@@ -55,6 +60,98 @@ export interface OpExComputeResult {
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
 /**
+ * Resolve effective active months for a line item.
+ * If the item has explicit activeMonths, use those; otherwise fall back to schoolCalendar.
+ */
+function resolveActiveMonths(item: OpExLineItemInput, schoolCalendar: number[]): Set<number> {
+	const months = item.activeMonths.length > 0 ? item.activeMonths : schoolCalendar;
+	return new Set(months);
+}
+
+/**
+ * Compute monthly amounts for a single line item based on its entry mode.
+ * Returns exactly 12 entries (months 1-12).
+ *
+ * - FLAT: active non-override months get flatAmount; override months keep existing; inactive = 0
+ * - ANNUAL_SPREAD: annualTotal / activeCount with remainder on last active month; inactive = 0
+ * - SEASONAL: passthrough of existing monthlyAmounts; missing months filled with 0; inactive = 0
+ */
+export function computeEntryModeAmounts(
+	item: OpExLineItemInput,
+	schoolCalendar: number[]
+): { month: number; amount: string }[] {
+	const activeSet = resolveActiveMonths(item, schoolCalendar);
+	const overrideSet = new Set(item.flatOverrideMonths);
+
+	// Build a lookup for existing monthly amounts
+	const existingByMonth = new Map<number, string>();
+	for (const ma of item.monthlyAmounts) {
+		existingByMonth.set(ma.month, ma.amount);
+	}
+
+	if (item.entryMode === 'FLAT') {
+		const flatAmt = item.flatAmount ? new Decimal(item.flatAmount) : new Decimal(0);
+		return MONTHS.map((month) => {
+			if (!activeSet.has(month)) {
+				return { month, amount: '0.0000' };
+			}
+			if (overrideSet.has(month)) {
+				// Override months keep their existing monthlyAmounts value
+				const existing = existingByMonth.get(month) ?? '0.0000';
+				return {
+					month,
+					amount: new Decimal(existing).toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+				};
+			}
+			return {
+				month,
+				amount: flatAmt.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+			};
+		});
+	}
+
+	if (item.entryMode === 'ANNUAL_SPREAD') {
+		const total = item.annualTotal ? new Decimal(item.annualTotal) : new Decimal(0);
+		const activeMonthsSorted = [...activeSet].sort((a, b) => a - b);
+		const activeCount = activeMonthsSorted.length;
+
+		if (activeCount === 0) {
+			return MONTHS.map((month) => ({ month, amount: '0.0000' }));
+		}
+
+		const perMonth = total.dividedBy(activeCount).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+		// Remainder goes to the last active month (highest month number)
+		const lastActiveMonth = activeMonthsSorted[activeCount - 1]!;
+		const remainder = total.minus(perMonth.times(activeCount - 1));
+
+		return MONTHS.map((month) => {
+			if (!activeSet.has(month)) {
+				return { month, amount: '0.0000' };
+			}
+			if (month === lastActiveMonth) {
+				return {
+					month,
+					amount: remainder.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+				};
+			}
+			return { month, amount: perMonth.toFixed(4) };
+		});
+	}
+
+	// SEASONAL: passthrough existing monthlyAmounts, zero for inactive months
+	return MONTHS.map((month) => {
+		if (!activeSet.has(month)) {
+			return { month, amount: '0.0000' };
+		}
+		const existing = existingByMonth.get(month) ?? '0.0000';
+		return {
+			month,
+			amount: new Decimal(existing).toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4),
+		};
+	});
+}
+
+/**
  * Compute PERCENT_OF_REVENUE amounts for line items that use this method.
  * Returns the computed monthly amounts for those line items.
  */
@@ -70,7 +167,7 @@ export function computeRevenueBasedItems(
 	const results: { lineItemId: number; month: number; amount: string }[] = [];
 
 	for (const item of lineItems) {
-		if (item.computeMethod !== 'PERCENT_OF_REVENUE' || !item.computeRate) continue;
+		if (item.entryMode !== 'PERCENT_OF_REVENUE' || !item.computeRate) continue;
 
 		const rate = new Decimal(item.computeRate);
 		for (const month of MONTHS) {
@@ -166,14 +263,29 @@ export function computeSectionTotals(lineItems: OpExLineItemInput[]): SectionTot
 }
 
 /**
- * Full OpEx computation: compute revenue-based items, then aggregate.
+ * Full OpEx computation: resolve entry modes, compute revenue-based items, then aggregate.
  */
 export function computeOpEx(
 	lineItems: OpExLineItemInput[],
-	monthlyRevenue: MonthlyRevenueInput[]
+	monthlyRevenue: MonthlyRevenueInput[],
+	schoolCalendar: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 ): OpExComputeResult {
+	// Step 0: Resolve FLAT and ANNUAL_SPREAD entry modes into monthly amounts
+	const entryModeResolved: OpExLineItemInput[] = lineItems.map((item) => {
+		if (item.entryMode === 'FLAT' || item.entryMode === 'ANNUAL_SPREAD') {
+			const resolvedAmounts = computeEntryModeAmounts(item, schoolCalendar);
+			return { ...item, monthlyAmounts: resolvedAmounts };
+		}
+		if (item.entryMode === 'SEASONAL') {
+			const resolvedAmounts = computeEntryModeAmounts(item, schoolCalendar);
+			return { ...item, monthlyAmounts: resolvedAmounts };
+		}
+		// PERCENT_OF_REVENUE — monthly amounts will be computed in Step 1
+		return item;
+	});
+
 	// Step 1: Compute PERCENT_OF_REVENUE items
-	const computedLineItems = computeRevenueBasedItems(lineItems, monthlyRevenue);
+	const computedLineItems = computeRevenueBasedItems(entryModeResolved, monthlyRevenue);
 
 	// Step 2: Merge computed amounts back into line items for aggregation
 	const computedMap = new Map<string, string>();
@@ -181,8 +293,8 @@ export function computeOpEx(
 		computedMap.set(`${ci.lineItemId}::${ci.month}`, ci.amount);
 	}
 
-	const mergedLineItems: OpExLineItemInput[] = lineItems.map((item) => {
-		if (item.computeMethod !== 'PERCENT_OF_REVENUE') return item;
+	const mergedLineItems: OpExLineItemInput[] = entryModeResolved.map((item) => {
+		if (item.entryMode !== 'PERCENT_OF_REVENUE') return item;
 
 		const mergedMonthly = MONTHS.map((month) => {
 			const key = `${item.id}::${month}`;

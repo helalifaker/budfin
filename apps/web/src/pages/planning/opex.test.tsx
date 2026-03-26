@@ -16,6 +16,7 @@ let mockWorkspaceContext = {
 let mockUserRole = 'Admin';
 
 const mockSetActivePage = vi.fn();
+const mockSetOverlay = vi.fn();
 
 let mockVersionsData = {
 	data: [
@@ -41,8 +42,12 @@ vi.mock('../../stores/auth-store', () => ({
 
 vi.mock('../../stores/right-panel-store', () => ({
 	useRightPanelStore: (
-		selector: (state: { setActivePage: typeof mockSetActivePage; isOpen: boolean }) => unknown
-	) => selector({ setActivePage: mockSetActivePage, isOpen: false }),
+		selector: (state: {
+			setActivePage: typeof mockSetActivePage;
+			setOverlay: typeof mockSetOverlay;
+			isOpen: boolean;
+		}) => unknown
+	) => selector({ setActivePage: mockSetActivePage, setOverlay: mockSetOverlay, isOpen: false }),
 }));
 
 vi.mock('../../stores/opex-selection-store', () => ({
@@ -51,9 +56,40 @@ vi.mock('../../stores/opex-selection-store', () => ({
 	) => selector({ selection: null, clearSelection: vi.fn() }),
 }));
 
+vi.mock('../../stores/opex-dirty-store', () => ({
+	useOpExDirtyStore: Object.assign(
+		(selector?: (state: { dirtyMap: { size: number } }) => unknown) => {
+			if (selector) return selector({ dirtyMap: { size: 0 } });
+			return {
+				setDirty: vi.fn(),
+				getDirtyUpdates: vi.fn(() => []),
+				flush: vi.fn(),
+				dirtyCount: vi.fn(() => 0),
+			};
+		},
+		{}
+	),
+}));
+
+vi.mock('../../hooks/use-grid-undo-redo', () => ({
+	useGridUndoRedo: () => ({
+		push: vi.fn(),
+		undo: vi.fn(),
+		redo: vi.fn(),
+		flush: vi.fn(),
+		canUndo: false,
+		canRedo: false,
+		pendingCount: 0,
+	}),
+}));
+
 vi.mock('../../hooks/use-versions', () => ({
 	useVersions: () => ({
 		data: mockVersionsData,
+	}),
+	usePatchVersion: () => ({
+		mutateAsync: vi.fn(),
+		isPending: false,
 	}),
 }));
 
@@ -115,6 +151,30 @@ vi.mock('../../hooks/use-opex', () => ({
 	useBulkUpdateOpEx: () => ({
 		mutate: vi.fn(),
 		isPending: false,
+	}),
+	useUpdateOpExLineItem: () => ({
+		mutate: vi.fn(),
+		isPending: false,
+	}),
+	useReorderOpExLineItem: () => ({
+		mutate: vi.fn(),
+		isPending: false,
+	}),
+	useDeleteOpExLineItem: () => ({
+		mutate: vi.fn(),
+		isPending: false,
+	}),
+	useInitializeOpEx: () => ({
+		mutate: vi.fn(),
+		isPending: false,
+	}),
+}));
+
+vi.mock('../../hooks/use-revenue', () => ({
+	useRevenueResults: () => ({
+		data: {
+			totals: { totalOperatingRevenue: '500000.0000' },
+		},
 	}),
 }));
 
@@ -206,14 +266,22 @@ vi.mock('../../components/opex/opex-status-strip', () => ({
 }));
 
 vi.mock('../../components/opex/opex-grid', () => ({
-	OpExGrid: () => <div data-testid="opex-grid">OpEx Grid</div>,
-}));
-
-vi.mock('../../components/opex/non-operating-grid', () => ({
-	NonOperatingGrid: () => <div data-testid="non-operating-grid">Non-Operating Grid</div>,
+	OpExGrid: ({ sectionType }: { sectionType: string }) => {
+		const testId = sectionType === 'NON_OPERATING' ? 'non-operating-grid' : 'opex-grid';
+		const label = sectionType === 'NON_OPERATING' ? 'Non-Operating Grid' : 'OpEx Grid';
+		return <div data-testid={testId}>{label}</div>;
+	},
 }));
 
 vi.mock('../../components/opex/opex-inspector', () => ({}));
+
+vi.mock('../../components/opex/opex-settings-dialog', () => ({
+	OpExSettingsDialog: () => null,
+}));
+
+vi.mock('../../components/opex/opex-initialize-dialog', () => ({
+	OpExInitializeDialog: () => null,
+}));
 
 describe('OpExPage', () => {
 	beforeEach(() => {

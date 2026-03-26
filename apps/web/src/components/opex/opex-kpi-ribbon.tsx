@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { Building2, DollarSign, Landmark, Percent, TrendingDown } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { Counter } from '../shared/counter';
@@ -7,14 +8,14 @@ export type OpExKpiRibbonProps = {
 	totalOperating: number;
 	totalDepreciation: number;
 	financeNet: number;
-	opexPercentOfRevenue: number;
+	totalRevenue: string;
 	totalNonOperating: number;
 	isStale: boolean;
 };
 
 type KpiDef = {
 	label: string;
-	key: keyof Omit<OpExKpiRibbonProps, 'isStale'>;
+	key: keyof Omit<OpExKpiRibbonProps, 'isStale'> | 'opexPercentOfRevenue';
 	icon: typeof DollarSign;
 	formatter: (v: number) => string;
 	getBorderClass?: (value: number) => string;
@@ -80,10 +81,15 @@ export function OpExKpiRibbon({
 	totalOperating,
 	totalDepreciation,
 	financeNet,
-	opexPercentOfRevenue,
+	totalRevenue,
 	totalNonOperating,
 	isStale,
 }: OpExKpiRibbonProps) {
+	const revDec = new Decimal(totalRevenue || '0');
+	const opexPercentOfRevenue = revDec.gt(0)
+		? new Decimal(totalOperating).div(revDec).times(100).toNumber()
+		: 0;
+
 	const values: Record<string, number> = {
 		totalOperating,
 		totalDepreciation,

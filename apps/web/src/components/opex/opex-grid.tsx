@@ -1,10 +1,12 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import Decimal from 'decimal.js';
-import type { OpExLineItem } from '@budfin/types';
+import { GripVertical } from 'lucide-react';
+import type { OpExLineItem, OpExReorderPayload } from '@budfin/types';
 import { PlanningGrid } from '../data-grid/planning-grid';
 import { EditableCell } from '../data-grid/editable-cell';
 import { formatMoney } from '../../lib/format-money';
+import { cn } from '../../lib/cn';
 import { useOpExSelectionStore } from '../../stores/opex-selection-store';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -39,9 +41,28 @@ const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
 	'Activities & Projects': { color: 'var(--badge-college)', bg: 'var(--badge-college-bg)' },
 };
 
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-	Object.keys(CATEGORY_STYLES).map((k) => [k, k])
-);
+const NON_OP_CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
+	Depreciation: { color: 'var(--color-warning)', bg: 'var(--color-warning-bg)' },
+	Impairment: { color: 'var(--color-error)', bg: 'var(--color-error-bg)' },
+	'Finance Income': { color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+	'Finance Costs': { color: 'var(--badge-lycee)', bg: 'var(--badge-lycee-bg)' },
+};
+
+const SECTION_CATEGORY_STYLES = {
+	OPERATING: CATEGORY_STYLES,
+	NON_OPERATING: NON_OP_CATEGORY_STYLES,
+} as const;
+
+const SECTION_LABELS = {
+	OPERATING: {
+		grandTotal: 'Grand Total',
+		ariaLabel: 'Operating expenses grid',
+	},
+	NON_OPERATING: {
+		grandTotal: 'Non-Operating Total',
+		ariaLabel: 'Non-operating items grid',
+	},
+} as const;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -80,23 +101,64 @@ function buildCategorySubtotalValues(items: OpExLineItem[]): Record<string, Reac
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type OpExGridProps = {
+	sectionType: 'OPERATING' | 'NON_OPERATING';
 	lineItems: OpExLineItem[];
 	monthlyTotals: string[];
 	isEditable: boolean;
 	onMonthlyUpdate: (lineItemId: number, month: number, amount: string) => void;
 	onCommentUpdate: (lineItemId: number, comment: string) => void;
+	onAnnualTotalUpdate?: (lineItemId: number, annualTotal: string) => void;
+	onReorder?: ((payload: OpExReorderPayload) => void) | undefined;
 };
 
 // ── Column definitions ───────────────────────────────────────────────────────
 
 const columnHelper = createColumnHelper<OpExLineItem>();
 
+// ── Entry mode badge config ─────────────────────────────────────────────────
+
+type EntryModeBadge = { label: string; colorVar: string; bgVar: string };
+
+const DEFAULT_ENTRY_MODE_BADGE: EntryModeBadge = {
+	label: 'SEAS',
+	colorVar: '--entry-mode-seasonal',
+	bgVar: '--entry-mode-seasonal-bg',
+};
+
+const ENTRY_MODE_CONFIG: Record<string, EntryModeBadge> = {
+	FLAT: { label: 'FLAT', colorVar: '--entry-mode-flat', bgVar: '--entry-mode-flat-bg' },
+	SEASONAL: DEFAULT_ENTRY_MODE_BADGE,
+	ANNUAL_SPREAD: {
+		label: 'ANNUAL',
+		colorVar: '--entry-mode-annual',
+		bgVar: '--entry-mode-annual-bg',
+	},
+	PERCENT_OF_REVENUE: {
+		label: '% REV',
+		colorVar: '--entry-mode-revenue',
+		bgVar: '--entry-mode-revenue-bg',
+	},
+};
+
 function buildColumns(
 	isEditable: boolean,
 	onMonthlyChange: (lineItemId: number, month: number, value: string) => void,
-	onCommentUpdate: (lineItemId: number, comment: string) => void
+	onCommentUpdate: (lineItemId: number, comment: string) => void,
+	onAnnualTotalUpdate?: (lineItemId: number, annualTotal: string) => void,
+	dragHandleRenderer?: (item: OpExLineItem) => React.ReactNode
 ) {
 	return [
+		...(dragHandleRenderer
+			? [
+					columnHelper.display({
+						id: 'drag-handle',
+						size: 28,
+						header: () => null,
+						cell: ({ row }) => dragHandleRenderer(row.original),
+					}),
+				]
+			: []),
+
 		columnHelper.accessor('lineItemName', {
 			id: 'lineItemName',
 			header: 'Line Item',
@@ -104,6 +166,34 @@ function buildColumns(
 			cell: ({ getValue }) => (
 				<span className="font-medium text-(--text-primary)">{getValue()}</span>
 			),
+		}),
+
+		columnHelper.accessor('entryMode', {
+			id: 'entryMode',
+			header: 'Mode',
+			size: 70,
+			cell: ({ getValue, row }) => {
+				const mode = getValue() ?? 'SEASONAL';
+				const baseCfg = ENTRY_MODE_CONFIG[mode] ?? DEFAULT_ENTRY_MODE_BADGE;
+
+				// For PERCENT_OF_REVENUE, show the compute rate as the label if available
+				const label =
+					mode === 'PERCENT_OF_REVENUE' && row.original.computeRate
+						? `${new Decimal(row.original.computeRate).times(100).toFixed(1)}%`
+						: baseCfg.label;
+
+				return (
+					<span
+						className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium"
+						style={{
+							color: `var(${baseCfg.colorVar})`,
+							backgroundColor: `var(${baseCfg.bgVar})`,
+						}}
+					>
+						{label}
+					</span>
+				);
+			},
 		}),
 
 		columnHelper.group({
@@ -118,6 +208,41 @@ function buildColumns(
 					cell: ({ row }) => {
 						const amount = getMonthlyAmount(row.original, month);
 						const d = new Decimal(amount);
+						const entryMode = row.original.entryMode ?? 'SEASONAL';
+						const itemActiveMonths = row.original.activeMonths ?? [];
+						const isInactive = itemActiveMonths.length > 0 && !itemActiveMonths.includes(month);
+						const isComputed = entryMode === 'ANNUAL_SPREAD' || entryMode === 'PERCENT_OF_REVENUE';
+						const isOverride =
+							entryMode === 'FLAT' && (row.original.flatOverrideMonths ?? []).includes(month);
+
+						if (isInactive) {
+							return (
+								<span className="block px-2 py-1 text-center text-(--cell-inactive-text)">—</span>
+							);
+						}
+
+						if (isComputed) {
+							return (
+								<span className="block px-2 py-1 text-right font-mono tabular-nums text-(--text-muted) italic">
+									{d.isZero() ? '' : formatGridValue(amount)}
+								</span>
+							);
+						}
+
+						if (isOverride) {
+							return (
+								<EditableCell
+									value={d.isZero() ? '' : formatGridValue(amount)}
+									onChange={(val) => {
+										const parsed = val.replace(/[^\d.-]/g, '');
+										onMonthlyChange(row.original.id, month, parsed === '' ? '0' : parsed);
+									}}
+									isReadOnly={!isEditable}
+									type="number"
+									className="rounded-none border-0 bg-(--cell-override-bg)"
+								/>
+							);
+						}
 
 						return (
 							<EditableCell
@@ -141,7 +266,25 @@ function buildColumns(
 			header: 'FY Total',
 			size: 110,
 			cell: ({ row }) => {
+				const entryMode = row.original.entryMode ?? 'SEASONAL';
 				const total = computeFyTotal(row.original);
+
+				// ANNUAL_SPREAD: editable annual total that drives monthly distribution
+				if (entryMode === 'ANNUAL_SPREAD' && onAnnualTotalUpdate) {
+					return (
+						<EditableCell
+							value={total.isZero() ? '' : formatGridValue(total)}
+							onChange={(val) => {
+								const parsed = val.replace(/[^\d.-]/g, '');
+								onAnnualTotalUpdate(row.original.id, parsed === '' ? '0' : parsed);
+							}}
+							isReadOnly={!isEditable}
+							type="number"
+							className="rounded-none border-0 font-semibold"
+						/>
+					);
+				}
+
 				return (
 					<span className="font-mono text-(--text-xs) font-semibold tabular-nums text-(--text-primary)">
 						{total.isZero() ? '' : formatGridValue(total)}
@@ -215,14 +358,159 @@ function buildColumns(
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function OpExGrid({
+	sectionType,
 	lineItems,
 	monthlyTotals,
 	isEditable,
 	onMonthlyUpdate,
 	onCommentUpdate,
+	onAnnualTotalUpdate,
+	onReorder,
 }: OpExGridProps) {
 	const selectLineItem = useOpExSelectionStore((s) => s.selectLineItem);
 	const selectedId = useOpExSelectionStore((s) => s.selection?.lineItem.id ?? null);
+
+	// ── Drag-and-drop state ──────────────────────────────────────────────────
+	const [dragItemId, setDragItemId] = useState<number | null>(null);
+	const [dropTargetId, setDropTargetId] = useState<number | null>(null);
+	const wrapperRef = useRef<HTMLDivElement>(null);
+
+	const dragItem = useMemo(
+		() => (dragItemId !== null ? (lineItems.find((i) => i.id === dragItemId) ?? null) : null),
+		[dragItemId, lineItems]
+	);
+
+	const handleDragStart = useCallback((e: React.DragEvent, item: OpExLineItem) => {
+		setDragItemId(item.id);
+		e.dataTransfer.effectAllowed = 'move';
+		e.dataTransfer.setData('text/plain', String(item.id));
+		// Set a lightweight drag image
+		if (e.currentTarget.parentElement) {
+			const row = e.currentTarget.closest('tr');
+			if (row) {
+				e.dataTransfer.setDragImage(row, 0, 0);
+			}
+		}
+	}, []);
+
+	const handleDragEnd = useCallback(() => {
+		setDragItemId(null);
+		setDropTargetId(null);
+	}, []);
+
+	// Resolve the target row ID from a drag event using DOM data attributes
+	const resolveDropRowId = useCallback((e: React.DragEvent): number | null => {
+		const target = e.target as HTMLElement;
+		const cell = target.closest('td[data-grid-row-id]');
+		if (!cell) return null;
+		const rowId = Number(cell.getAttribute('data-grid-row-id'));
+		if (Number.isNaN(rowId)) return null;
+		return rowId;
+	}, []);
+
+	const handleWrapperDragOver = useCallback(
+		(e: React.DragEvent) => {
+			if (!dragItem) return;
+			const targetId = resolveDropRowId(e);
+			if (targetId === null || targetId === dragItem.id) {
+				setDropTargetId(null);
+				return;
+			}
+			// Only allow drops within the same category
+			const targetItem = lineItems.find((i) => i.id === targetId);
+			if (!targetItem || targetItem.ifrsCategory !== dragItem.ifrsCategory) {
+				e.dataTransfer.dropEffect = 'none';
+				setDropTargetId(null);
+				return;
+			}
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'move';
+			setDropTargetId(targetId);
+		},
+		[dragItem, lineItems, resolveDropRowId]
+	);
+
+	const handleWrapperDrop = useCallback(
+		(e: React.DragEvent) => {
+			e.preventDefault();
+			if (!dragItem || !onReorder) {
+				setDragItemId(null);
+				setDropTargetId(null);
+				return;
+			}
+
+			const targetId = resolveDropRowId(e);
+			if (targetId === null || targetId === dragItem.id) {
+				setDragItemId(null);
+				setDropTargetId(null);
+				return;
+			}
+
+			const targetItem = lineItems.find((i) => i.id === targetId);
+			if (!targetItem || targetItem.ifrsCategory !== dragItem.ifrsCategory) {
+				setDragItemId(null);
+				setDropTargetId(null);
+				return;
+			}
+
+			// Compute new display orders for all items within this category
+			const categoryItems = lineItems
+				.filter((i) => i.ifrsCategory === dragItem.ifrsCategory)
+				.sort((a, b) => a.displayOrder - b.displayOrder);
+
+			// Remove drag item, then insert at target position
+			const withoutDrag = categoryItems.filter((i) => i.id !== dragItem.id);
+			const targetIndex = withoutDrag.findIndex((i) => i.id === targetId);
+			if (targetIndex === -1) {
+				setDragItemId(null);
+				setDropTargetId(null);
+				return;
+			}
+
+			// Insert after the target if we were below it, before if above
+			const dragOrigIndex = categoryItems.findIndex((i) => i.id === dragItem.id);
+			const targetOrigIndex = categoryItems.findIndex((i) => i.id === targetId);
+			const insertAt = dragOrigIndex < targetOrigIndex ? targetIndex + 1 : targetIndex;
+
+			const reordered = [
+				...withoutDrag.slice(0, insertAt),
+				dragItem,
+				...withoutDrag.slice(insertAt),
+			];
+
+			const moves = reordered.map((item, idx) => ({
+				lineItemId: item.id,
+				ifrsCategory: item.ifrsCategory,
+				displayOrder: idx,
+			}));
+
+			onReorder({ moves });
+			setDragItemId(null);
+			setDropTargetId(null);
+		},
+		[dragItem, lineItems, onReorder, resolveDropRowId]
+	);
+
+	const dragHandleRenderer = useMemo(() => {
+		if (!isEditable || !onReorder) return undefined;
+		return (item: OpExLineItem) => (
+			<span
+				className={cn(
+					'flex cursor-grab items-center justify-center',
+					'text-(--text-muted) hover:text-(--text-secondary)',
+					'active:cursor-grabbing'
+				)}
+				draggable
+				onDragStart={(e) => handleDragStart(e, item)}
+				onDragEnd={handleDragEnd}
+				aria-label={`Drag to reorder ${item.lineItemName}`}
+				role="button"
+				tabIndex={0}
+			>
+				<GripVertical size={14} aria-hidden="true" />
+			</span>
+		);
+	}, [isEditable, onReorder, handleDragStart, handleDragEnd]);
 
 	const handleMonthlyChange = useCallback(
 		(lineItemId: number, month: number, value: string) => {
@@ -232,8 +520,15 @@ export function OpExGrid({
 	);
 
 	const columns = useMemo(
-		() => buildColumns(isEditable, handleMonthlyChange, onCommentUpdate),
-		[isEditable, handleMonthlyChange, onCommentUpdate]
+		() =>
+			buildColumns(
+				isEditable,
+				handleMonthlyChange,
+				onCommentUpdate,
+				onAnnualTotalUpdate,
+				dragHandleRenderer
+			),
+		[isEditable, handleMonthlyChange, onCommentUpdate, onAnnualTotalUpdate, dragHandleRenderer]
 	);
 
 	const table = useReactTable({
@@ -263,6 +558,13 @@ export function OpExGrid({
 		[]
 	);
 
+	const categoryStyles = useMemo(() => SECTION_CATEGORY_STYLES[sectionType], [sectionType]);
+
+	const categoryLabels = useMemo(
+		() => Object.fromEntries(Object.keys(categoryStyles).map((k) => [k, k])),
+		[categoryStyles]
+	);
+
 	const grandTotalRow = useMemo(() => {
 		if (lineItems.length === 0) return [];
 
@@ -281,34 +583,70 @@ export function OpExGrid({
 
 		return [
 			{
-				label: 'Grand Total',
+				label: SECTION_LABELS[sectionType].grandTotal,
 				type: 'grandtotal' as const,
 				values,
 			},
 		];
-	}, [lineItems, monthlyTotals]);
+	}, [lineItems, monthlyTotals, sectionType]);
+
+	// Row class name callback for drag visual feedback
+	const getRowClassName = useCallback(
+		(item: OpExLineItem) => {
+			if (!dragItemId) return undefined;
+			if (item.id === dragItemId) return 'opacity-40';
+			if (item.id === dropTargetId) {
+				// Only highlight if same category as the dragged item
+				if (dragItem && item.ifrsCategory === dragItem.ifrsCategory) {
+					return 'ring-2 ring-inset ring-(--accent-400) bg-(--accent-50)/30';
+				}
+			}
+			// Show not-allowed cursor for items in a different category
+			if (dragItem && item.ifrsCategory !== dragItem.ifrsCategory) {
+				return 'cursor-not-allowed opacity-60';
+			}
+			return undefined;
+		},
+		[dragItemId, dropTargetId, dragItem]
+	);
+
+	const pinnedCols = useMemo(() => {
+		const base = ['lineItemName', 'entryMode'];
+		if (dragHandleRenderer) return ['drag-handle', ...base];
+		return base;
+	}, [dragHandleRenderer]);
+
+	const isDragging = dragItemId !== null;
 
 	return (
-		<PlanningGrid
-			table={table}
-			variant="compact"
-			ariaLabel="Operating expenses grid"
-			rangeSelection
-			clipboardEnabled
-			pinnedColumns={['lineItemName']}
-			numericColumns={numericColumnIds}
-			editableColumns={editableColumnIds}
-			bandGrouping={{
-				getBand: (item) => item.ifrsCategory,
-				bandLabels: CATEGORY_LABELS,
-				bandStyles: CATEGORY_STYLES,
-				collapsible: true,
-				footerBuilder: bandFooterBuilder,
-			}}
-			footerRows={grandTotalRow}
-			onRowSelect={selectLineItem}
-			selectedRowPredicate={(item) => item.id === selectedId}
-			forceGridRole
-		/>
+		<div
+			ref={wrapperRef}
+			className="h-full"
+			onDragOver={isDragging ? handleWrapperDragOver : undefined}
+			onDrop={isDragging ? handleWrapperDrop : undefined}
+		>
+			<PlanningGrid
+				table={table}
+				variant="compact"
+				ariaLabel={SECTION_LABELS[sectionType].ariaLabel}
+				rangeSelection
+				clipboardEnabled
+				pinnedColumns={pinnedCols}
+				numericColumns={numericColumnIds}
+				editableColumns={editableColumnIds}
+				bandGrouping={{
+					getBand: (item) => item.ifrsCategory,
+					bandLabels: categoryLabels,
+					bandStyles: categoryStyles,
+					collapsible: true,
+					footerBuilder: bandFooterBuilder,
+				}}
+				footerRows={grandTotalRow}
+				onRowSelect={selectLineItem}
+				selectedRowPredicate={(item) => item.id === selectedId}
+				getRowClassName={getRowClassName}
+				forceGridRole
+			/>
+		</div>
 	);
 }

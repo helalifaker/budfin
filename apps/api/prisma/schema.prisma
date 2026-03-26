@@ -366,7 +366,8 @@ model BudgetVersion {
   dataSource        String   @default("CALCULATED") @map("data_source") @db.VarChar(12)
   sourceVersionId   Int?     @map("source_version_id")
   modificationCount Int      @default(0) @map("modification_count")
-  staleModules      String[] @default([]) @map("stale_modules")
+  staleModules         String[] @default([]) @map("stale_modules")
+  schoolCalendarMonths Int[]    @default([1, 2, 3, 4, 5, 6, 9, 10, 11, 12]) @map("school_calendar_months")
   rolloverThreshold Decimal  @default(1.0000) @map("rollover_threshold") @db.Decimal(5, 4)
   cappedRetention   Decimal  @default(0.9800) @map("capped_retention") @db.Decimal(5, 4)
   retentionRecentWeight Decimal @default(0.6000) @map("retention_recent_weight") @db.Decimal(5, 4)
@@ -1235,11 +1236,16 @@ model VersionOpExLineItem {
   budgetV6Total   Decimal? @map("budget_v6_total") @db.Decimal(15, 4)
   fy2025Actual    Decimal? @map("fy2025_actual") @db.Decimal(15, 4)
   fy2024Actual    Decimal? @map("fy2024_actual") @db.Decimal(15, 4)
-  comment         String?  @db.Text
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
-  createdBy       Int      @map("created_by")
-  updatedBy       Int?     @map("updated_by")
+  comment            String?  @db.Text
+  entryMode          String   @default("SEASONAL") @map("entry_mode") @db.VarChar(30)
+  activeMonths       Int[]    @default([]) @map("active_months")
+  annualTotal        Decimal? @map("annual_total") @db.Decimal(15, 4)
+  flatAmount         Decimal? @map("flat_amount") @db.Decimal(15, 4)
+  flatOverrideMonths Int[]    @default([]) @map("flat_override_months")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy          Int      @map("created_by")
+  updatedBy          Int?     @map("updated_by")
 
   version        BudgetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
   creator        User          @relation("OpExLineItemCreator", fields: [createdBy], references: [id])

@@ -1,17 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
-import { Download, FileSpreadsheet } from 'lucide-react';
+import { Download, FileSpreadsheet, FolderInput, Settings2 } from 'lucide-react';
 import { useWorkspaceContext } from '../../hooks/use-workspace-context';
 import { useAuthStore } from '../../stores/auth-store';
 import { useRightPanelStore } from '../../stores/right-panel-store';
 import { useOpExSelectionStore } from '../../stores/opex-selection-store';
+import { useOpExDirtyStore } from '../../stores/opex-dirty-store';
+import { useGridUndoRedo } from '../../hooks/use-grid-undo-redo';
 import { useVersions } from '../../hooks/use-versions';
 import {
 	useOpExLineItems,
 	useUpdateOpExMonthly,
+	useUpdateOpExLineItem,
 	useBulkUpdateOpEx,
 	useCalculateOpEx,
+	useReorderOpExLineItem,
 } from '../../hooks/use-opex';
+import { useRevenueResults } from '../../hooks/use-revenue';
 import { deriveStaffingEditability } from '../../lib/staffing-workspace';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../../lib/cn';
@@ -21,10 +26,11 @@ import { CalculateButton } from '../shared/calculate-button';
 import { EmptyState } from '../shared/empty-state';
 import { ExportDialog } from '../shared/export-dialog';
 import { StalePill } from '../shared/stale-pill';
+import { OpExInitializeDialog } from './opex-initialize-dialog';
 import { OpExKpiRibbon } from './opex-kpi-ribbon';
+import { OpExSettingsDialog } from './opex-settings-dialog';
 import { OpExStatusStrip } from './opex-status-strip';
 import { OpExGrid } from './opex-grid';
-import { NonOperatingGrid } from './non-operating-grid';
 import './opex-inspector';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -42,26 +48,39 @@ export function OpExPage() {
 	const { versionId, fiscalYear, versionStatus } = useWorkspaceContext();
 	const user = useAuthStore((state) => state.user);
 	const setActivePage = useRightPanelStore((state) => state.setActivePage);
+	const setOverlay = useRightPanelStore((state) => state.setOverlay);
 	const isPanelOpen = useRightPanelStore((state) => state.isOpen);
 	const clearSelection = useOpExSelectionStore((s) => s.clearSelection);
 
+	const { setDirty, getDirtyUpdates, flush: flushDirty } = useOpExDirtyStore();
+	const pendingCount = useOpExDirtyStore((s) => s.dirtyMap.size);
+	const undoRedo = useGridUndoRedo();
+	const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 	const [activeTab, setActiveTab] = useState<OpExTab>('operating');
 	const [exportOpen, setExportOpen] = useState(false);
+	const [initializeOpen, setInitializeOpen] = useState(false);
+	const [settingsOpen, setSettingsOpen] = useState(false);
 
 	const { data: versionsData } = useVersions(fiscalYear);
 	const { data: lineItemsResponse, isLoading } = useOpExLineItems(versionId);
+	const { data: revenueData } = useRevenueResults(versionId);
 	const { isUpstreamStale, ...calculateMutation } = useCalculateOpEx(versionId);
 	const updateMonthlyMutation = useUpdateOpExMonthly(versionId);
+	const patchMutation = useUpdateOpExLineItem(versionId);
 	const bulkUpdateMutation = useBulkUpdateOpEx(versionId);
+	const reorderMutation = useReorderOpExLineItem(versionId);
 
 	// Register right panel on mount
 	useEffect(() => {
 		setActivePage('opex');
+		setOverlay(true);
 		return () => {
 			setActivePage(null);
+			setOverlay(false);
 			clearSelection();
 		};
-	}, [clearSelection, setActivePage]);
+	}, [clearSelection, setActivePage, setOverlay]);
 
 	// Clear selection when panel closes
 	useEffect(() => {
@@ -69,6 +88,13 @@ export function OpExPage() {
 			clearSelection();
 		}
 	}, [clearSelection, isPanelOpen]);
+
+	// Clean up flush timer on unmount
+	useEffect(() => {
+		return () => {
+			if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+		};
+	}, []);
 
 	const currentVersion = useMemo(() => {
 		if (!versionId || !versionsData?.data) return null;
@@ -99,6 +125,9 @@ export function OpExPage() {
 
 	const summary = lineItemsResponse?.summary;
 
+	// Revenue total for KPI % calculation
+	const totalRevenue = revenueData?.totals?.totalOperatingRevenue ?? '0';
+
 	// KPI values
 	const kpiValues = useMemo(() => {
 		if (!summary) {
@@ -106,7 +135,6 @@ export function OpExPage() {
 				totalOperating: 0,
 				totalDepreciation: 0,
 				financeNet: 0,
-				opexPercentOfRevenue: 0,
 				totalNonOperating: 0,
 			};
 		}
@@ -119,7 +147,6 @@ export function OpExPage() {
 			totalOperating: new Decimal(summary.totalOperating || '0').toNumber(),
 			totalDepreciation: new Decimal(summary.totalDepreciation || '0').toNumber(),
 			financeNet: financeNet.toNumber(),
-			opexPercentOfRevenue: 0,
 			totalNonOperating: new Decimal(summary.totalNonOperating || '0').toNumber(),
 		};
 	}, [summary]);
@@ -130,12 +157,52 @@ export function OpExPage() {
 		[currentVersion?.staleModules]
 	);
 
-	// Monthly update handler
+	// Monthly update handler — debounced batch save via dirty store
 	const handleMonthlyUpdate = useCallback(
 		(lineItemId: number, month: number, amount: string) => {
-			updateMonthlyMutation.mutate([{ lineItemId, month, amount }]);
+			// Find old value for undo
+			const allItems = lineItemsResponse?.data ?? [];
+			const item = allItems.find((li) => li.id === lineItemId);
+			const oldAmount = item?.monthlyAmounts?.find((m) => m.month === month)?.amount ?? '0';
+
+			undoRedo.push({
+				type: 'cell-edit',
+				cellKey: `${lineItemId}-${month}`,
+				oldValue: oldAmount,
+				newValue: amount,
+			});
+			setDirty(lineItemId, month, amount);
+
+			// Debounce: flush after 2 seconds of inactivity
+			if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+			flushTimerRef.current = setTimeout(() => {
+				const updates = getDirtyUpdates();
+				if (updates.length > 0) {
+					updateMonthlyMutation.mutate(updates, {
+						onSuccess: () => {
+							flushDirty();
+							undoRedo.flush();
+						},
+					});
+				}
+			}, 2000);
 		},
-		[updateMonthlyMutation]
+		[
+			lineItemsResponse?.data,
+			undoRedo,
+			setDirty,
+			getDirtyUpdates,
+			flushDirty,
+			updateMonthlyMutation,
+		]
+	);
+
+	// Annual total update handler (for ANNUAL_SPREAD entry mode)
+	const handleAnnualTotalUpdate = useCallback(
+		(lineItemId: number, annualTotal: string) => {
+			patchMutation.mutate({ lineItemId, patch: { annualTotal } });
+		},
+		[patchMutation]
 	);
 
 	// Comment update handler
@@ -153,7 +220,6 @@ export function OpExPage() {
 						ifrsCategory: item.ifrsCategory,
 						lineItemName: item.lineItemName,
 						displayOrder: item.displayOrder,
-						computeMethod: item.computeMethod,
 						comment,
 						monthlyAmounts: item.monthlyAmounts,
 					},
@@ -161,6 +227,14 @@ export function OpExPage() {
 			});
 		},
 		[lineItemsResponse?.data, bulkUpdateMutation]
+	);
+
+	// Reorder handler for drag-and-drop
+	const handleReorder = useCallback(
+		(payload: Parameters<typeof reorderMutation.mutate>[0]) => {
+			reorderMutation.mutate(payload);
+		},
+		[reorderMutation]
 	);
 
 	const handleTabChange = useCallback((value: string) => {
@@ -234,6 +308,17 @@ export function OpExPage() {
 					</div>
 
 					<div className="flex items-center gap-2">
+						{isEditable && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setInitializeOpen(true)}
+								className="no-print"
+							>
+								<FolderInput className="mr-1.5 h-4 w-4" aria-hidden="true" />
+								Initialize from...
+							</Button>
+						)}
 						<Button
 							variant="outline"
 							size="sm"
@@ -243,6 +328,18 @@ export function OpExPage() {
 							<Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
 							Export
 						</Button>
+						{isEditable && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setSettingsOpen(true)}
+								className="no-print"
+								aria-label="OpEx Settings"
+							>
+								<Settings2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+								Settings
+							</Button>
+						)}
 						{isEditable && (
 							<CalculateButton
 								onCalculate={() => calculateMutation.mutate()}
@@ -262,6 +359,7 @@ export function OpExPage() {
 						staleModules={staleModules}
 						operatingLineCount={operatingItems.length}
 						nonOperatingLineCount={nonOperatingItems.length}
+						unsavedCount={pendingCount}
 					/>
 				</div>
 
@@ -271,7 +369,7 @@ export function OpExPage() {
 						totalOperating={kpiValues.totalOperating}
 						totalDepreciation={kpiValues.totalDepreciation}
 						financeNet={kpiValues.financeNet}
-						opexPercentOfRevenue={kpiValues.opexPercentOfRevenue}
+						totalRevenue={totalRevenue}
 						totalNonOperating={kpiValues.totalNonOperating}
 						isStale={isStale}
 					/>
@@ -291,23 +389,29 @@ export function OpExPage() {
 					{!isLoading && activeTab === 'operating' && operatingItems.length > 0 && (
 						<div className="h-full animate-stagger-reveal">
 							<OpExGrid
+								sectionType="OPERATING"
 								lineItems={operatingItems}
 								monthlyTotals={summary?.monthlyOperatingTotals ?? []}
 								isEditable={isEditable}
 								onMonthlyUpdate={handleMonthlyUpdate}
 								onCommentUpdate={handleCommentUpdate}
+								onAnnualTotalUpdate={handleAnnualTotalUpdate}
+								onReorder={isEditable ? handleReorder : undefined}
 							/>
 						</div>
 					)}
 
 					{!isLoading && activeTab === 'non-operating' && nonOperatingItems.length > 0 && (
 						<div className="h-full animate-stagger-reveal">
-							<NonOperatingGrid
+							<OpExGrid
+								sectionType="NON_OPERATING"
 								lineItems={nonOperatingItems}
 								monthlyTotals={summary?.monthlyNonOperatingTotals ?? []}
 								isEditable={isEditable}
 								onMonthlyUpdate={handleMonthlyUpdate}
 								onCommentUpdate={handleCommentUpdate}
+								onAnnualTotalUpdate={handleAnnualTotalUpdate}
+								onReorder={isEditable ? handleReorder : undefined}
 							/>
 						</div>
 					)}
@@ -331,6 +435,24 @@ export function OpExPage() {
 			</div>
 
 			<ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultReportType="OPEX" />
+
+			{versionId && (
+				<OpExInitializeDialog
+					open={initializeOpen}
+					onOpenChange={setInitializeOpen}
+					versionId={versionId}
+					currentItemCount={(lineItemsResponse?.data ?? []).length}
+				/>
+			)}
+
+			{versionId && (
+				<OpExSettingsDialog
+					open={settingsOpen}
+					onOpenChange={setSettingsOpen}
+					versionId={versionId}
+					currentMonths={currentVersion?.schoolCalendarMonths ?? [1, 2, 3, 4, 5, 6, 9, 10, 11, 12]}
+				/>
+			)}
 		</PageTransition>
 	);
 }
