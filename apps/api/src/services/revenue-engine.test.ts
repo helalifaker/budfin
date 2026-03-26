@@ -172,8 +172,7 @@ describe('Revenue Engine', () => {
 			expect(totalNet.toFixed(4)).toBe(totalGross.toFixed(4));
 		});
 
-		it('should apply flatDiscountPct uniformly across all tariffs', () => {
-			// Both Plein and RP rows get the same flat discount
+		it('should apply tariff-based discount for RP (gross at RP rate, discount = Plein - RP)', () => {
 			const result = calculateRevenue(
 				makeInput({
 					enrollmentDetails: [
@@ -181,23 +180,27 @@ describe('Revenue Engine', () => {
 						makeEnrollment({ tariff: 'RP', headcount: 10 }),
 					],
 					feeGrid: [
-						makeFee({ tariff: 'Plein' }),
+						makeFee({ tariff: 'Plein' }), // tuitionHt = 52173.9130
 						makeFee({ tariff: 'RP', tuitionHt: '40000.0000', tuitionTtc: '46000.0000' }),
 					],
-					flatDiscountPct: '0.100000',
 				})
 			);
 
 			const pleinRows = result.tuitionRevenue.filter((r) => r.tariff === 'Plein');
 			const rpRows = result.tuitionRevenue.filter((r) => r.tariff === 'RP');
 
-			const pleinGross = sumField(pleinRows, 'grossRevenueHt');
+			// Plein has no discount
 			const pleinDiscount = sumField(pleinRows, 'discountAmount');
-			expect(pleinDiscount.toFixed(4)).toBe(pleinGross.mul(new Decimal('0.10')).toFixed(4));
+			expect(pleinDiscount.toFixed(4)).toBe('0.0000');
 
+			// RP gross = RP rate per student (40000), discount = (Plein - RP)
 			const rpGross = sumField(rpRows, 'grossRevenueHt');
 			const rpDiscount = sumField(rpRows, 'discountAmount');
-			expect(rpDiscount.toFixed(4)).toBe(rpGross.mul(new Decimal('0.10')).toFixed(4));
+			// 10 students × 40000 × 6/10 FY share = 240000 gross
+			expect(rpGross.toFixed(4)).toBe(new Decimal('40000').times(10).times(6).div(10).toFixed(4));
+			// 10 students × (52173.913 - 40000) × 6/10 = 73043.478 discount
+			const expectedDiscount = new Decimal('52173.9130').minus('40000').times(10).times(6).div(10);
+			expect(rpDiscount.toFixed(4)).toBe(expectedDiscount.toFixed(4));
 		});
 	});
 

@@ -174,18 +174,36 @@ function buildFeeMap(feeGrid: FeeGridInput[]): Map<FeeKey, FeeGridInput> {
 
 function resolveEffectiveTuitionAmounts(
 	fee: FeeGridInput,
+	pleinFee: FeeGridInput | undefined,
 	nationality: string,
+	tariff: string,
 	flatDiscountPct: Decimal
 ): {
 	grossTuitionPerStudentHt: Decimal;
 	discountPerStudentHt: Decimal;
 	vatRate: Decimal;
 } {
+	const vatRate = nationality === 'Nationaux' ? ZERO : VAT_RATE;
+
+	// Tariff-based discount: gross at actual tariff rate, discount = (Plein - actual).
+	// Net in P&L = gross - discount = actual - (Plein - actual).
+	// This matches IFRS presentation where tuition is shown net of fee reductions.
+	if (pleinFee && (tariff === 'RP' || tariff === 'R3+')) {
+		const pleinHt = new Decimal(pleinFee.tuitionHt);
+		const ownHt = new Decimal(fee.tuitionHt);
+		return {
+			grossTuitionPerStudentHt: ownHt,
+			discountPerStudentHt: pleinHt.minus(ownHt),
+			vatRate,
+		};
+	}
+
+	// Plein tariff or flat discount fallback
 	const ownTuitionHt = new Decimal(fee.tuitionHt);
 	return {
 		grossTuitionPerStudentHt: ownTuitionHt,
 		discountPerStudentHt: ownTuitionHt.mul(flatDiscountPct),
-		vatRate: nationality === 'Nationaux' ? ZERO : VAT_RATE,
+		vatRate,
 	};
 }
 
@@ -311,10 +329,25 @@ export function calculateRevenue(input: RevenueEngineInput): RevenueEngineResult
 			continue;
 		}
 
+		// Look up Plein fee for tariff-based discount calculation
+		const pleinKey = makeFeeKey(
+			enrollment.academicPeriod,
+			enrollment.gradeLevel,
+			enrollment.nationality,
+			'Plein'
+		);
+		const pleinFee = feeMap.get(pleinKey);
+
 		const headcount = new Decimal(enrollment.headcount);
 		const months = enrollment.academicPeriod === 'AY1' ? AY1_MONTHS : AY2_MONTHS;
 		const { grossTuitionPerStudentHt, discountPerStudentHt, vatRate } =
-			resolveEffectiveTuitionAmounts(fee, enrollment.nationality, flatDiscountPct);
+			resolveEffectiveTuitionAmounts(
+				fee,
+				pleinFee,
+				enrollment.nationality,
+				enrollment.tariff,
+				flatDiscountPct
+			);
 
 		const academicYearGrossTuition = headcount.mul(grossTuitionPerStudentHt);
 		const academicYearDiscounts = headcount.mul(discountPerStudentHt);
