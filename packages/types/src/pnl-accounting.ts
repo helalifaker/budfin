@@ -10,7 +10,6 @@ export interface AccountingPnlLine {
 	variance?: string;
 	variancePct?: string;
 	accountCode?: string;
-	visibility: 'SHOW' | 'GROUP';
 }
 
 // ── Accounting P&L Section ──────────────────────────────────────────────────
@@ -23,7 +22,6 @@ export interface AccountingPnlSection {
 	signConvention: 'POSITIVE' | 'NEGATIVE';
 	lines: AccountingPnlLine[];
 	othersAmount?: string;
-	subtotal: string;
 	budgetSubtotal: string;
 	actualSubtotal?: string;
 	varianceSubtotal?: string;

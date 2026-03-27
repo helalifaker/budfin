@@ -187,13 +187,6 @@ function PnlMappingEditor({
 		[allAccounts, updateSections]
 	);
 
-	const handleAssignUnassigned = useCallback(
-		(sectionKey: string, accountCode: string) => {
-			handleAddAccount(sectionKey, accountCode);
-		},
-		[handleAddAccount]
-	);
-
 	const handleSave = useCallback(() => {
 		if (!templateId || !localSections) return;
 
@@ -302,7 +295,7 @@ function PnlMappingEditor({
 					<UnassignedAccounts
 						accounts={unassignedAccounts}
 						sections={sections}
-						onAssignAccount={handleAssignUnassigned}
+						onAssignAccount={handleAddAccount}
 					/>
 				</div>
 			</div>

@@ -254,7 +254,7 @@ describe('GET /pnl/accounting', () => {
 		expect(gp).toBeDefined();
 		expect(gp.isSubtotal).toBe(true);
 		// GP = REVENUE - COST_OF_SERVICE = 120000 - 0 = 120000
-		expect(gp.subtotal).toBe('120000.0000');
+		expect(gp.budgetSubtotal).toBe('120000.0000');
 
 		// KPIs should be present
 		expect(body.kpis).toBeDefined();

@@ -67,8 +67,8 @@ export function PnlKpiRibbon({ kpis, isStale }: PnlKpiRibbonProps) {
 		>
 			{CARDS.map((card, index) => {
 				const rawValue = card.getValue(kpis);
-				const numericValue = parseFloat(rawValue);
 				const d = new Decimal(rawValue);
+				const numericValue = d.toNumber();
 
 				const accentColor =
 					card.format === 'money' && d.lt(0) ? 'var(--color-error)' : card.accentColor;

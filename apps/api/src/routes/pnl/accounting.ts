@@ -16,7 +16,7 @@ const versionIdParams = z.object({
 
 const accountingQuerySchema = z.object({
 	compareYear: z.coerce.number().int().positive().optional(),
-	view: z.enum(['annual']).default('annual'),
+	profitCenter: z.enum(['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE']).optional(),
 });
 
 // ── Route ───────────────────────────────────────────────────────────────────
@@ -45,11 +45,29 @@ export async function pnlAccountingRoutes(app: FastifyInstance) {
 				});
 			}
 
-			// 2. Load P&L lines for the version
-			const pnlRows = await prisma.monthlyPnlLine.findMany({
-				where: { versionId },
-				orderBy: [{ displayOrder: 'asc' }, { month: 'asc' }],
-			});
+			// 2. Load P&L lines, template, and historical actuals in parallel
+			const [pnlRows, template, rawActuals] = await Promise.all([
+				prisma.monthlyPnlLine.findMany({
+					where: { versionId },
+					orderBy: [{ displayOrder: 'asc' }, { month: 'asc' }],
+				}),
+				prisma.pnlTemplate.findFirst({
+					where: { isDefault: true },
+					include: {
+						sections: {
+							orderBy: { displayOrder: 'asc' },
+							include: {
+								mappings: {
+									orderBy: { displayOrder: 'asc' },
+								},
+							},
+						},
+					},
+				}),
+				compareYear
+					? prisma.historicalActual.findMany({ where: { fiscalYear: compareYear } })
+					: Promise.resolve([]),
+			]);
 
 			// 3. If no P&L lines, return 409 PNL_NOT_CALCULATED
 			if (pnlRows.length === 0) {
@@ -59,21 +77,6 @@ export async function pnlAccountingRoutes(app: FastifyInstance) {
 				});
 			}
 
-			// 4. Load default PnlTemplate with sections and mappings
-			const template = await prisma.pnlTemplate.findFirst({
-				where: { isDefault: true },
-				include: {
-					sections: {
-						orderBy: { displayOrder: 'asc' },
-						include: {
-							mappings: {
-								orderBy: { displayOrder: 'asc' },
-							},
-						},
-					},
-				},
-			});
-
 			if (!template) {
 				return reply.status(404).send({
 					code: 'TEMPLATE_NOT_FOUND',
@@ -81,17 +84,13 @@ export async function pnlAccountingRoutes(app: FastifyInstance) {
 				});
 			}
 
-			// 5. If compareYear provided, load HistoricalActual[] for that year
-			let historicalActuals: HistoricalActualInput[] | undefined;
-			if (compareYear) {
-				const actuals = await prisma.historicalActual.findMany({
-					where: { fiscalYear: compareYear },
-				});
-				historicalActuals = actuals.map((a) => ({
-					accountCode: a.accountCode,
-					annualAmount: a.annualAmount.toString(),
-				}));
-			}
+			const historicalActuals: HistoricalActualInput[] | undefined =
+				rawActuals.length > 0
+					? rawActuals.map((a) => ({
+							accountCode: a.accountCode,
+							annualAmount: a.annualAmount.toString(),
+						}))
+					: undefined;
 
 			// 6. Map DB rows to service input types
 			const pnlLines: MonthlyPnlLineInput[] = pnlRows.map((row) => ({

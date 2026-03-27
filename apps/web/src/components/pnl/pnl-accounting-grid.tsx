@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import Decimal from 'decimal.js';
 import type { AccountingPnlSection } from '@budfin/types';
 import { cn } from '../../lib/cn';
@@ -84,7 +85,7 @@ function flattenSections(sections: AccountingPnlSection[]): GridRow[] {
 }
 
 export function PnlAccountingGrid({ sections, hasComparison, onRowClick }: PnlAccountingGridProps) {
-	const rows = flattenSections(sections);
+	const rows = useMemo(() => flattenSections(sections), [sections]);
 
 	if (rows.length === 0) return null;
 

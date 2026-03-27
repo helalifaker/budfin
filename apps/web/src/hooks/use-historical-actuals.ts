@@ -7,9 +7,12 @@ export interface HistoricalActual {
 	id: number;
 	fiscalYear: number;
 	accountCode: string;
-	amount: string;
-	profitCenter: string | null;
-	notes: string | null;
+	annualAmount: string;
+	q1Amount: string | null;
+	q2Amount: string | null;
+	q3Amount: string | null;
+	source: 'SEED' | 'MANUAL';
+	importedAt: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -17,9 +20,7 @@ export interface HistoricalActual {
 export interface ActualInput {
 	fiscalYear: number;
 	accountCode: string;
-	amount: string;
-	profitCenter?: string | null;
-	notes?: string | null;
+	annualAmount: number;
 }
 
 // ── Query Keys ───────────────────────────────────────────────────────────────

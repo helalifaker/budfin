@@ -13,19 +13,12 @@ import type {
 	AccountingPnlKpis,
 } from '@budfin/types';
 import { evaluateFormula } from './pnl-formula-parser.js';
+import { toFixed4, toFixed2 } from './decimal-utils.js';
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const ZERO = new Decimal(0);
 const HUNDRED = new Decimal(100);
-
-function toFixed4(d: Decimal): string {
-	return d.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
-}
-
-function toFixed2(d: Decimal): string {
-	return d.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2);
-}
 
 // ── Input Types ─────────────────────────────────────────────────────────────
 
@@ -142,7 +135,6 @@ export function transformToAccountingPnl(
 				isSubtotal: true,
 				signConvention: section.signConvention as 'POSITIVE' | 'NEGATIVE',
 				lines: [],
-				subtotal: toFixed4(subtotal),
 				budgetSubtotal: toFixed4(subtotal),
 			};
 
@@ -156,7 +148,6 @@ export function transformToAccountingPnl(
 		let sectionBudgetTotal = ZERO;
 		let sectionActualTotal: Decimal | undefined = hasActuals ? ZERO : undefined;
 
-		// Sort mappings: LINE_ITEM first, then CATEGORY, then by displayOrder
 		const sortedMappings = [...section.mappings].sort((a, b) => {
 			if (a.analyticalKeyType !== b.analyticalKeyType) {
 				return a.analyticalKeyType === 'LINE_ITEM' ? -1 : 1;
@@ -184,23 +175,7 @@ export function transformToAccountingPnl(
 				}
 
 				mappingTotal = mappingTotal.plus(line.amount);
-
-				// Mark as consumed so category mappings don't double-count
-				if (mapping.analyticalKeyType === 'LINE_ITEM') {
-					line.consumed = true;
-				}
-			}
-
-			// For CATEGORY mappings, mark matched but unconsumed lines as consumed
-			if (mapping.analyticalKeyType === 'CATEGORY') {
-				for (const line of detailLines) {
-					if (line.consumed) continue;
-					if (line.categoryKey !== mapping.analyticalKey) continue;
-					if (mapping.monthFilter.length > 0 && !mapping.monthFilter.includes(line.month)) {
-						continue;
-					}
-					line.consumed = true;
-				}
+				line.consumed = true;
 			}
 
 			if (mapping.visibility === 'EXCLUDE') {
@@ -220,7 +195,6 @@ export function transformToAccountingPnl(
 				const line: AccountingPnlLine = {
 					displayLabel: mapping.displayLabel ?? mapping.analyticalKey,
 					budgetAmount: toFixed4(mappingTotal),
-					visibility: 'SHOW',
 				};
 
 				if (mapping.accountCode) {
@@ -251,7 +225,6 @@ export function transformToAccountingPnl(
 			isSubtotal: false,
 			signConvention: section.signConvention as 'POSITIVE' | 'NEGATIVE',
 			lines: showLines,
-			subtotal: toFixed4(sectionBudgetTotal),
 			budgetSubtotal: toFixed4(sectionBudgetTotal),
 		};
 

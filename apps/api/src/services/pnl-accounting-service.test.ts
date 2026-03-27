@@ -382,7 +382,7 @@ describe('transformToAccountingPnl', () => {
 		expect(gp).toBeDefined();
 		expect(gp.isSubtotal).toBe(true);
 		// Revenue = 12 * 10000 = 120000, COS = 12 * 2000 = 24000, GP = 96000
-		expect(gp.subtotal).toBe('96000.0000');
+		expect(gp.budgetSubtotal).toBe('96000.0000');
 	});
 
 	it('computes variance when actuals are provided', () => {

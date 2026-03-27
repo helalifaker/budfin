@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../lib/cn';
+import { PROFIT_CENTERS, PROFIT_CENTER_LABELS } from '../../lib/profit-center';
 import type { Account } from '../../hooks/use-accounts';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -43,14 +44,6 @@ const CENTER_TYPES = ['PROFIT_CENTER', 'COST_CENTER'] as const;
 const CENTER_TYPE_LABELS: Record<string, string> = {
 	PROFIT_CENTER: 'Profit Center',
 	COST_CENTER: 'Cost Center',
-};
-
-const PROFIT_CENTERS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
-const PROFIT_CENTER_LABELS: Record<string, string> = {
-	MATERNELLE: 'Maternelle',
-	ELEMENTAIRE: 'Élémentaire',
-	COLLEGE: 'Collège',
-	LYCEE: 'Lycée',
 };
 
 const STATUSES = ['ACTIVE', 'INACTIVE'] as const;

@@ -9,6 +9,7 @@ import {
 	type PnlAccountingSelection,
 } from '../../stores/pnl-accounting-selection-store';
 import { cn } from '../../lib/cn';
+import { PROFIT_CENTERS, PROFIT_CENTER_LABELS } from '../../lib/profit-center';
 import { PnlKpiRibbon } from './pnl-kpi-ribbon';
 import { PnlAccountingGrid } from './pnl-accounting-grid';
 import { PageTransition } from '../shared/page-transition';
@@ -128,10 +129,11 @@ export function PnlAccountingPage() {
 							aria-label="Filter by profit center"
 						>
 							<ToggleGroupItem value="">All</ToggleGroupItem>
-							<ToggleGroupItem value="MATERNELLE">Maternelle</ToggleGroupItem>
-							<ToggleGroupItem value="ELEMENTAIRE">Élémentaire</ToggleGroupItem>
-							<ToggleGroupItem value="COLLEGE">Collège</ToggleGroupItem>
-							<ToggleGroupItem value="LYCEE">Lycée</ToggleGroupItem>
+							{PROFIT_CENTERS.map((pc) => (
+								<ToggleGroupItem key={pc} value={pc}>
+									{PROFIT_CENTER_LABELS[pc]}
+								</ToggleGroupItem>
+							))}
 						</ToggleGroup>
 					</div>
 				</div>

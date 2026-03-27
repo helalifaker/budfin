@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Lock, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import { PROFIT_CENTER_LABELS } from '../../lib/profit-center';
 import { useAuthStore } from '../../stores/auth-store';
 import {
 	useAccounts,
@@ -72,13 +73,6 @@ const TYPE_LABELS: Record<string, string> = {
 const CENTER_TYPE_LABELS: Record<string, string> = {
 	PROFIT_CENTER: 'Profit Center',
 	COST_CENTER: 'Cost Center',
-};
-
-const PROFIT_CENTER_LABELS: Record<string, string> = {
-	MATERNELLE: 'Maternelle',
-	ELEMENTAIRE: 'Élémentaire',
-	COLLEGE: 'Collège',
-	LYCEE: 'Lycée',
 };
 
 export function AccountsPage() {
