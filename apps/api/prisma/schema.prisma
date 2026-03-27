@@ -110,6 +110,10 @@ model User {
   updatedDemandOverrides  DemandOverride[]           @relation("DemandOverrideUpdater")
   updatedAssignments      StaffingAssignment[]       @relation("AssignmentUpdater")
 
+  // P&L Template relations (P&L Accounting Bridge)
+  createdTemplates PnlTemplate[] @relation("TemplateCreator")
+  updatedTemplates PnlTemplate[] @relation("TemplateUpdater")
+
   // Comments & Annotations
   commentsAuthored Comment[] @relation("CommentAuthor")
   commentsResolved Comment[] @relation("CommentResolver")
@@ -195,6 +199,15 @@ enum AccountStatus {
   @@map("account_status")
 }
 
+enum ProfitCenter {
+  MATERNELLE
+  ELEMENTAIRE
+  COLLEGE
+  LYCEE
+
+  @@map("profit_center")
+}
+
 enum GradeBand {
   MATERNELLE
   ELEMENTAIRE
@@ -224,6 +237,36 @@ enum AssumptionValueType {
   @@map("assumption_value_type")
 }
 
+enum AnalyticalKeyType {
+  CATEGORY
+  LINE_ITEM
+
+  @@map("analytical_key_type")
+}
+
+enum MappingVisibility {
+  SHOW
+  GROUP
+  EXCLUDE
+
+  @@map("mapping_visibility")
+}
+
+enum AllocationMethod {
+  DIRECT
+  HEADCOUNT
+  MANUAL
+
+  @@map("allocation_method")
+}
+
+enum ActualSource {
+  SEED
+  MANUAL
+
+  @@map("actual_source")
+}
+
 model ChartOfAccount {
   id           Int           @id @default(autoincrement())
   accountCode  String        @unique @map("account_code") @db.VarChar(10)
@@ -238,9 +281,14 @@ model ChartOfAccount {
   updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz
   createdBy    Int           @map("created_by")
   updatedBy    Int           @map("updated_by")
+  parentCode   String?       @map("parent_code") @db.VarChar(10)
+  profitCenter ProfitCenter? @map("profit_center")
+  isSystem     Boolean       @default(false) @map("is_system")
 
-  creator User @relation("AccountCreator", fields: [createdBy], references: [id])
-  updater User @relation("AccountUpdater", fields: [updatedBy], references: [id])
+  creator           User                @relation("AccountCreator", fields: [createdBy], references: [id])
+  updater           User                @relation("AccountUpdater", fields: [updatedBy], references: [id])
+  mappings          PnlAccountMapping[]
+  historicalActuals HistoricalActual[]
 
   @@map("chart_of_accounts")
 }
@@ -1375,4 +1423,79 @@ model Comment {
   @@index([versionId, targetType, targetId], map: "idx_comment_target")
   @@index([parentId], map: "idx_comment_parent")
   @@map("comments")
+}
+
+// ── P&L Accounting Bridge ────────────────────────────────────────────────────
+
+model PnlTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  isDefault Boolean  @default(false) @map("is_default")
+  isSystem  Boolean  @default(false) @map("is_system")
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy Int      @map("created_by")
+  updatedBy Int      @map("updated_by")
+
+  creator  User                 @relation("TemplateCreator", fields: [createdBy], references: [id])
+  updater  User                 @relation("TemplateUpdater", fields: [updatedBy], references: [id])
+  sections PnlTemplateSection[]
+
+  @@unique([name], map: "uq_pnl_template_name")
+  @@map("pnl_templates")
+}
+
+model PnlTemplateSection {
+  id              Int     @id @default(autoincrement())
+  templateId      Int     @map("template_id")
+  sectionKey      String  @map("section_key") @db.VarChar(40)
+  displayLabel    String  @map("display_label") @db.VarChar(100)
+  displayOrder    Int     @map("display_order") @db.SmallInt
+  isSubtotal      Boolean @default(false) @map("is_subtotal")
+  subtotalFormula String? @map("subtotal_formula") @db.VarChar(200)
+  signConvention  String  @default("POSITIVE") @map("sign_convention") @db.VarChar(10)
+
+  template PnlTemplate          @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  mappings PnlAccountMapping[]
+
+  @@unique([templateId, sectionKey], map: "uq_template_section")
+  @@map("pnl_template_sections")
+}
+
+model PnlAccountMapping {
+  id                     Int               @id @default(autoincrement())
+  sectionId              Int               @map("section_id")
+  analyticalKey          String            @map("analytical_key") @db.VarChar(80)
+  analyticalKeyType      AnalyticalKeyType @map("analytical_key_type")
+  accountCode            String?           @map("account_code") @db.VarChar(10)
+  monthFilter            Int[]             @map("month_filter") @db.SmallInt
+  displayLabel           String?           @map("display_label") @db.VarChar(120)
+  visibility             MappingVisibility @default(SHOW)
+  displayOrder           Int               @map("display_order") @db.SmallInt
+  profitCenterAllocation AllocationMethod  @default(HEADCOUNT) @map("profit_center_allocation")
+  manualAllocation       Json?             @map("manual_allocation")
+
+  section PnlTemplateSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  account ChartOfAccount?    @relation(fields: [accountCode], references: [accountCode])
+
+  @@unique([sectionId, analyticalKey, accountCode], map: "uq_mapping_key")
+  @@map("pnl_account_mappings")
+}
+
+model HistoricalActual {
+  id           Int          @id @default(autoincrement())
+  fiscalYear   Int          @map("fiscal_year") @db.SmallInt
+  accountCode  String       @map("account_code") @db.VarChar(10)
+  annualAmount Decimal      @default(0) @map("annual_amount") @db.Decimal(15, 4)
+  q1Amount     Decimal?     @map("q1_amount") @db.Decimal(15, 4)
+  q2Amount     Decimal?     @map("q2_amount") @db.Decimal(15, 4)
+  q3Amount     Decimal?     @map("q3_amount") @db.Decimal(15, 4)
+  source       ActualSource @default(MANUAL)
+  importedAt   DateTime     @default(now()) @map("imported_at") @db.Timestamptz
+
+  account ChartOfAccount @relation(fields: [accountCode], references: [accountCode], onDelete: Restrict)
+
+  @@unique([fiscalYear, accountCode], map: "uq_historical_actual")
+  @@map("historical_actuals")
 }
