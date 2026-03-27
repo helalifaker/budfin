@@ -26,7 +26,7 @@ export interface PnlTemplateSection {
 export interface PnlAccountMapping {
 	id: number;
 	sectionId: number;
-	accountCode: string;
+	accountCode: string | null;
 	displayLabel: string | null;
 	displayOrder: number;
 	visibility: 'SHOW' | 'GROUP';
@@ -47,7 +47,7 @@ export interface SectionInput {
 	isSubtotal: boolean;
 	signConvention: 'POSITIVE' | 'NEGATIVE';
 	mappings: {
-		accountCode: string;
+		accountCode: string | null;
 		displayLabel?: string | null;
 		displayOrder: number;
 		visibility: 'SHOW' | 'GROUP';

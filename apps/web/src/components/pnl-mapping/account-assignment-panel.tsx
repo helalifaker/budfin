@@ -10,12 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 export interface AccountAssignmentPanelProps {
 	section: PnlTemplateSection;
 	allAccounts: Account[];
-	onVisibilityChange: (
-		sectionKey: string,
-		accountCode: string,
-		visibility: 'SHOW' | 'GROUP'
-	) => void;
-	onRemoveAccount: (sectionKey: string, accountCode: string) => void;
+	onVisibilityChange: (sectionKey: string, mappingId: number, visibility: 'SHOW' | 'GROUP') => void;
+	onRemoveAccount: (sectionKey: string, mappingId: number) => void;
 	onAddAccount: (sectionKey: string, accountCode: string) => void;
 }
 
@@ -31,7 +27,7 @@ export function AccountAssignmentPanel({
 
 	// Filter accounts for the add dropdown to exclude already-assigned ones
 	const assignedCodes = useMemo(
-		() => new Set(section.mappings.map((m) => m.accountCode)),
+		() => new Set(section.mappings.map((m) => m.accountCode).filter(Boolean)),
 		[section.mappings]
 	);
 
@@ -149,7 +145,7 @@ export function AccountAssignmentPanel({
 				<div className="space-y-1">
 					{section.mappings.map((mapping) => (
 						<AccountMappingRow
-							key={mapping.accountCode}
+							key={mapping.id}
 							mapping={mapping}
 							sectionKey={section.sectionKey}
 							onVisibilityChange={onVisibilityChange}
@@ -172,13 +168,10 @@ function AccountMappingRow({
 }: {
 	mapping: PnlAccountMapping;
 	sectionKey: string;
-	onVisibilityChange: (
-		sectionKey: string,
-		accountCode: string,
-		visibility: 'SHOW' | 'GROUP'
-	) => void;
-	onRemove: (sectionKey: string, accountCode: string) => void;
+	onVisibilityChange: (sectionKey: string, mappingId: number, visibility: 'SHOW' | 'GROUP') => void;
+	onRemove: (sectionKey: string, mappingId: number) => void;
 }) {
+	const label = mapping.displayLabel ?? mapping.accountCode ?? 'Category mapping';
 	return (
 		<div
 			className={cn(
@@ -190,21 +183,19 @@ function AccountMappingRow({
 			)}
 		>
 			<span className="font-mono text-(--text-xs) text-(--text-muted) shrink-0">
-				{mapping.accountCode}
+				{mapping.accountCode ?? '\u2014'}
 			</span>
 			<span className="min-w-0 flex-1 truncate text-(--text-sm) text-(--text-primary)">
-				{mapping.displayLabel ?? mapping.accountCode}
+				{label}
 			</span>
 
 			<Select
 				value={mapping.visibility}
-				onValueChange={(v) =>
-					onVisibilityChange(sectionKey, mapping.accountCode, v as 'SHOW' | 'GROUP')
-				}
+				onValueChange={(v) => onVisibilityChange(sectionKey, mapping.id, v as 'SHOW' | 'GROUP')}
 			>
 				<SelectTrigger
 					className="w-[100px] h-7 text-(--text-xs)"
-					aria-label={`Visibility for ${mapping.accountCode}`}
+					aria-label={`Visibility for ${label}`}
 				>
 					<SelectValue />
 				</SelectTrigger>
@@ -221,8 +212,8 @@ function AccountMappingRow({
 					'text-(--text-muted) hover:text-(--color-error)',
 					'transition-colors duration-(--duration-fast)'
 				)}
-				onClick={() => onRemove(sectionKey, mapping.accountCode)}
-				aria-label={`Remove ${mapping.accountCode} from ${sectionKey}`}
+				onClick={() => onRemove(sectionKey, mapping.id)}
+				aria-label={`Remove ${label} from ${sectionKey}`}
 			>
 				<X className="h-3.5 w-3.5" />
 			</button>

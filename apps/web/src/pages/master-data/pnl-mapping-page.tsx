@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Save } from 'lucide-react';
 import {
 	usePnlTemplates,
@@ -87,6 +87,7 @@ function PnlMappingEditor({
 	);
 	const [localSections, setLocalSections] = useState<PnlTemplateSection[] | null>(null);
 	const [isDirty, setIsDirty] = useState(false);
+	const nextTempId = useRef(-1);
 
 	// Use local overrides if dirty, otherwise fall back to remote data
 	const sections = useMemo(
@@ -99,7 +100,9 @@ function PnlMappingEditor({
 		const codes = new Set<string>();
 		for (const section of sections) {
 			for (const mapping of section.mappings) {
-				codes.add(mapping.accountCode);
+				if (mapping.accountCode) {
+					codes.add(mapping.accountCode);
+				}
 			}
 		}
 		return codes;
@@ -125,15 +128,13 @@ function PnlMappingEditor({
 	);
 
 	const handleVisibilityChange = useCallback(
-		(sectionKey: string, accountCode: string, visibility: 'SHOW' | 'GROUP') => {
+		(sectionKey: string, mappingId: number, visibility: 'SHOW' | 'GROUP') => {
 			updateSections((prev) =>
 				prev.map((section) => {
 					if (section.sectionKey !== sectionKey) return section;
 					return {
 						...section,
-						mappings: section.mappings.map((m) =>
-							m.accountCode === accountCode ? { ...m, visibility } : m
-						),
+						mappings: section.mappings.map((m) => (m.id === mappingId ? { ...m, visibility } : m)),
 					};
 				})
 			);
@@ -142,13 +143,13 @@ function PnlMappingEditor({
 	);
 
 	const handleRemoveAccount = useCallback(
-		(sectionKey: string, accountCode: string) => {
+		(sectionKey: string, mappingId: number) => {
 			updateSections((prev) =>
 				prev.map((section) => {
 					if (section.sectionKey !== sectionKey) return section;
 					return {
 						...section,
-						mappings: section.mappings.filter((m) => m.accountCode !== accountCode),
+						mappings: section.mappings.filter((m) => m.id !== mappingId),
 					};
 				})
 			);
@@ -167,12 +168,13 @@ function PnlMappingEditor({
 					if (section.mappings.some((m) => m.accountCode === accountCode)) {
 						return section;
 					}
+					const tempId = nextTempId.current--;
 					return {
 						...section,
 						mappings: [
 							...section.mappings,
 							{
-								id: 0,
+								id: tempId,
 								sectionId: section.id,
 								accountCode,
 								displayLabel: account.accountName,
