@@ -149,7 +149,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 			signConvention: 'NEGATIVE',
 			mappings: [
 				{
-					analyticalKey: 'OPEX_AGENCE_ENSEIGNEMENT_FRANCAIS',
+					analyticalKey: 'OPEX_AGENCE',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '648000',
 					monthFilter: [],
@@ -159,7 +159,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 					profitCenterAllocation: 'HEADCOUNT' as const,
 				},
 				{
-					analyticalKey: 'OPEX_MANUELS_SCOLAIRES_PRIMAIRE',
+					analyticalKey: 'OPEX_MANUELS',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '618100',
 					monthFilter: [],
@@ -188,7 +188,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 			signConvention: 'NEGATIVE',
 			mappings: [
 				{
-					analyticalKey: 'OPEX_CONTRIBUTION_FRAIS_DE_SCOLARITE',
+					analyticalKey: 'OPEX_CONTRIBUTION',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '648010',
 					monthFilter: [],
@@ -298,7 +298,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 			signConvention: 'NEGATIVE',
 			mappings: [
 				{
-					analyticalKey: 'OPEX_SCHOOL_MAINTENANCE_CONTRACT',
+					analyticalKey: 'OPEX_SCHOOL_MAINTENANCE',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '615100',
 					monthFilter: [],
@@ -328,7 +328,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 					profitCenterAllocation: 'HEADCOUNT' as const,
 				},
 				{
-					analyticalKey: 'OPEX_INSURANCE_POLICIES',
+					analyticalKey: 'OPEX_INSURANCE',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '616000',
 					monthFilter: [],
@@ -338,7 +338,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 					profitCenterAllocation: 'HEADCOUNT' as const,
 				},
 				{
-					analyticalKey: 'OPEX_TRAVEL_INDEMNITIES',
+					analyticalKey: 'OPEX_TRAVEL',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '625600',
 					monthFilter: [],
@@ -348,7 +348,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 					profitCenterAllocation: 'HEADCOUNT' as const,
 				},
 				{
-					analyticalKey: 'OPEX_MOYASAR_CHARGES',
+					analyticalKey: 'OPEX_MOYASAR',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '627003',
 					monthFilter: [],
@@ -358,7 +358,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 					profitCenterAllocation: 'HEADCOUNT' as const,
 				},
 				{
-					analyticalKey: 'OPEX_FORMATION_CONTINUE',
+					analyticalKey: 'OPEX_FORMATION',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '631300',
 					monthFilter: [],
@@ -427,7 +427,7 @@ export async function seedPnlTemplate(prisma: PrismaClient): Promise<void> {
 					profitCenterAllocation: 'HEADCOUNT' as const,
 				},
 				{
-					analyticalKey: 'OPEX_PROVISION_RH_NOUVELLE_ECOLE',
+					analyticalKey: 'OPEX_PROVISION',
 					analyticalKeyType: 'LINE_ITEM' as const,
 					accountCode: '687500',
 					monthFilter: [],

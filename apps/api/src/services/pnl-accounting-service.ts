@@ -59,6 +59,16 @@ export interface HistoricalActualInput {
 	annualAmount: string | Decimal;
 }
 
+/** Profit center filter options */
+export interface ProfitCenterFilter {
+	/** The band to isolate (MATERNELLE, ELEMENTAIRE, COLLEGE, LYCEE) */
+	band: string;
+	/** Headcount for the selected band */
+	bandHeadcount: number;
+	/** Total headcount across all bands */
+	totalHeadcount: number;
+}
+
 // ── Internal types ──────────────────────────────────────────────────────────
 
 /** A matched analytical line with its amount and consumed flag */
@@ -70,16 +80,44 @@ interface MatchedLine {
 	consumed: boolean;
 }
 
+// ── Matching helpers ────────────────────────────────────────────────────────
+
+/**
+ * LINE_ITEM matching uses prefix match: analyticalKey "OPEX_AGENCE" matches
+ * lineItemKey "OPEX_AGENCE_ENSEIGNEMENT_FRANCAIS". This is more robust than
+ * exact equality because lineItemKey values are derived from safeKey(name)
+ * and the exact suffix depends on user-entered line item names.
+ *
+ * For CATEGORY matching, exact equality is used since categoryKey values are
+ * stable engine constants (TUITION_FEES, LOCAL_SALARIES, etc.).
+ */
+function matchesKey(line: MatchedLine, mapping: MappingInput): boolean {
+	if (mapping.analyticalKeyType === 'LINE_ITEM') {
+		return (
+			line.lineItemKey === mapping.analyticalKey ||
+			line.lineItemKey.startsWith(mapping.analyticalKey + '_')
+		);
+	}
+	return line.categoryKey === mapping.analyticalKey;
+}
+
 // ── Main transformation ─────────────────────────────────────────────────────
 
 /**
  * Transform analytical P&L lines into an IFRS-structured accounting P&L.
  *
- * Algorithm:
+ * Algorithm (two-pass to prevent cross-section consumption):
  * 1. Filter to depth===3, isSubtotal===false, isSeparator===false (detail rows)
  * 2. Build actuals index from historical data
- * 3. Process mappings: LINE_ITEM first, then CATEGORY (prevents double-counting)
- * 4. Separate SHOW lines from GROUP lines (rolled into "Others")
+ * 3. GLOBAL PASS 1: Process ALL LINE_ITEM mappings across all sections first.
+ *    This ensures specific line items (e.g., EOS_PROVISION) are claimed by
+ *    their target section before a broad CATEGORY mapping (EMPLOYER_CHARGES)
+ *    in another section can consume them. Uses prefix matching.
+ * 4. PASS 2: Process CATEGORY mappings per section in display order.
+ *    When the same categoryKey appears multiple times in one section (e.g.,
+ *    LOCAL_SALARIES → 641100/641400/641200), the total is computed once and
+ *    assigned to the first mapping. Later mappings for the same key get zero.
+ *    (Proper department-based splitting requires employee data — see spec §6.)
  * 5. Evaluate subtotal formulas for computed sections (GP, EBITDA, etc.)
  * 6. Compute variance when actuals are available
  * 7. Derive KPIs from section totals
@@ -87,7 +125,8 @@ interface MatchedLine {
 export function transformToAccountingPnl(
 	pnlLines: MonthlyPnlLineInput[],
 	sections: TemplateSectionInput[],
-	historicalActuals?: HistoricalActualInput[]
+	historicalActuals?: HistoricalActualInput[],
+	profitCenterFilter?: ProfitCenterFilter
 ): AccountingPnlView {
 	// Step 1: Filter to detail rows only (depth 3, not subtotals, not separators)
 	const detailLines: MatchedLine[] = pnlLines
@@ -99,6 +138,36 @@ export function transformToAccountingPnl(
 			amount: new Decimal(line.amount.toString()),
 			consumed: false,
 		}));
+
+	// Step 1b: Apply profit center allocation if a filter is active.
+	// Revenue lines (REVENUE_CONTRACTS, RENTAL_INCOME) are filtered to the grade
+	// band matching the profit center. Cost lines are weighted by headcount ratio.
+	if (profitCenterFilter && profitCenterFilter.totalHeadcount > 0) {
+		const ratio = new Decimal(profitCenterFilter.bandHeadcount).dividedBy(
+			profitCenterFilter.totalHeadcount
+		);
+		const bandUpper = profitCenterFilter.band.toUpperCase();
+		const revenueKeys = new Set([
+			'TUITION_FEES',
+			'REGISTRATION_FEES',
+			'ACTIVITIES_SERVICES',
+			'EXAMINATION_FEES',
+		]);
+
+		for (const line of detailLines) {
+			if (revenueKeys.has(line.categoryKey)) {
+				// Revenue: check if the lineItemKey contains the band name (e.g., TUITION_MATERNELLE)
+				// If not, apply headcount ratio as an approximation
+				if (!line.lineItemKey.toUpperCase().includes(bandUpper)) {
+					line.amount = line.amount.times(ratio);
+				}
+				// Lines matching the band keep their full amount
+			} else {
+				// Costs and other items: allocate by headcount ratio
+				line.amount = line.amount.times(ratio);
+			}
+		}
+	}
 
 	// Step 2: Build actuals index keyed by accountCode
 	const actualsIndex = new Map<string, Decimal>();
@@ -113,22 +182,60 @@ export function transformToAccountingPnl(
 	}
 	const hasActuals = actualsIndex.size > 0;
 
-	// Step 3 & 4: Process each section
-	const sectionTotals = new Map<string, Decimal>();
 	const sortedSections = [...sections].sort((a, b) => a.displayOrder - b.displayOrder);
 
+	// ── Step 3: GLOBAL LINE_ITEM pass ────────────────────────────────────────
+	// Collect all LINE_ITEM mappings from all non-subtotal sections, ordered by
+	// section displayOrder then mapping displayOrder. Process them globally so
+	// specific line items are claimed regardless of section ordering.
+	type LineItemResult = {
+		sectionKey: string;
+		mapping: MappingInput;
+		total: Decimal;
+	};
+	const lineItemResults: LineItemResult[] = [];
+
+	for (const section of sortedSections) {
+		if (section.isSubtotal) continue;
+
+		const lineItemMappings = section.mappings
+			.filter((m) => m.analyticalKeyType === 'LINE_ITEM')
+			.sort((a, b) => a.displayOrder - b.displayOrder);
+
+		for (const mapping of lineItemMappings) {
+			let mappingTotal = ZERO;
+
+			for (const line of detailLines) {
+				if (line.consumed) continue;
+				if (!matchesKey(line, mapping)) continue;
+				if (mapping.monthFilter.length > 0 && !mapping.monthFilter.includes(line.month)) {
+					continue;
+				}
+				mappingTotal = mappingTotal.plus(line.amount);
+				line.consumed = true;
+			}
+
+			lineItemResults.push({
+				sectionKey: section.sectionKey,
+				mapping,
+				total: mappingTotal,
+			});
+		}
+	}
+
+	// ── Step 4: CATEGORY pass per section ────────────────────────────────────
+	const sectionTotals = new Map<string, Decimal>();
 	const outputSections: AccountingPnlSection[] = [];
 
 	for (const section of sortedSections) {
 		if (section.isSubtotal) {
-			// Subtotal sections: evaluate formula against accumulated section totals
 			const subtotal = section.subtotalFormula
 				? evaluateFormula(section.subtotalFormula, sectionTotals)
 				: ZERO;
 
 			sectionTotals.set(section.sectionKey, subtotal);
 
-			const outputSection: AccountingPnlSection = {
+			outputSections.push({
 				sectionKey: section.sectionKey,
 				displayLabel: section.displayLabel,
 				displayOrder: section.displayOrder,
@@ -136,53 +243,62 @@ export function transformToAccountingPnl(
 				signConvention: section.signConvention as 'POSITIVE' | 'NEGATIVE',
 				lines: [],
 				budgetSubtotal: toFixed4(subtotal),
-			};
-
-			outputSections.push(outputSection);
+			});
 			continue;
 		}
 
-		// Non-subtotal section: process mappings
+		// Gather pre-computed LINE_ITEM results for this section
+		const sectionLineItemResults = lineItemResults.filter(
+			(r) => r.sectionKey === section.sectionKey
+		);
+
+		// Process CATEGORY mappings. Lines are consumed per-line (not per-key),
+		// so month-filtered mappings with the same categoryKey (e.g., TUITION_FEES
+		// × T1/T2/T3) naturally partition by month — no conflict. Same-key mappings
+		// WITHOUT month filters (e.g., LOCAL_SALARIES × 3) see the first mapping
+		// consume all lines, leaving zero for subsequent ones. Proper splitting of
+		// LOCAL_SALARIES by department requires employee data (see spec §6).
+		const categoryMappings = section.mappings
+			.filter((m) => m.analyticalKeyType === 'CATEGORY')
+			.sort((a, b) => a.displayOrder - b.displayOrder);
+
+		type MappingResult = { mapping: MappingInput; total: Decimal };
+		const categoryResults: MappingResult[] = [];
+
+		for (const mapping of categoryMappings) {
+			let mappingTotal = ZERO;
+
+			for (const line of detailLines) {
+				if (line.consumed) continue;
+				if (!matchesKey(line, mapping)) continue;
+				if (mapping.monthFilter.length > 0 && !mapping.monthFilter.includes(line.month)) {
+					continue;
+				}
+				mappingTotal = mappingTotal.plus(line.amount);
+				line.consumed = true;
+			}
+
+			categoryResults.push({ mapping, total: mappingTotal });
+		}
+
+		// Merge LINE_ITEM + CATEGORY results and build output lines
+		const allResults: MappingResult[] = [
+			...sectionLineItemResults.map((r) => ({ mapping: r.mapping, total: r.total })),
+			...categoryResults,
+		];
+		// Sort by displayOrder for final output
+		allResults.sort((a, b) => a.mapping.displayOrder - b.mapping.displayOrder);
+
 		const showLines: AccountingPnlLine[] = [];
 		let groupTotal = ZERO;
 		let sectionBudgetTotal = ZERO;
 		let sectionActualTotal: Decimal | undefined = hasActuals ? ZERO : undefined;
 
-		const sortedMappings = [...section.mappings].sort((a, b) => {
-			if (a.analyticalKeyType !== b.analyticalKeyType) {
-				return a.analyticalKeyType === 'LINE_ITEM' ? -1 : 1;
-			}
-			return a.displayOrder - b.displayOrder;
-		});
-
-		for (const mapping of sortedMappings) {
-			// Sum matching lines
-			let mappingTotal = ZERO;
-
-			for (const line of detailLines) {
-				if (line.consumed) continue;
-
-				const matches =
-					mapping.analyticalKeyType === 'LINE_ITEM'
-						? line.lineItemKey === mapping.analyticalKey
-						: line.categoryKey === mapping.analyticalKey;
-
-				if (!matches) continue;
-
-				// Apply month filter if specified
-				if (mapping.monthFilter.length > 0 && !mapping.monthFilter.includes(line.month)) {
-					continue;
-				}
-
-				mappingTotal = mappingTotal.plus(line.amount);
-				line.consumed = true;
-			}
-
+		for (const { mapping, total: mappingTotal } of allResults) {
 			if (mapping.visibility === 'EXCLUDE') {
 				continue;
 			}
 
-			// Look up actuals by accountCode
 			let actualAmount: Decimal | undefined;
 			if (hasActuals && mapping.accountCode) {
 				actualAmount = actualsIndex.get(mapping.accountCode) ?? ZERO;

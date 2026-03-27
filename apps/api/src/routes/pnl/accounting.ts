@@ -6,6 +6,7 @@ import type {
 	TemplateSectionInput,
 	MonthlyPnlLineInput,
 	HistoricalActualInput,
+	ProfitCenterFilter,
 } from '../../services/pnl-accounting-service.js';
 
 // ── Schemas ─────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export async function pnlAccountingRoutes(app: FastifyInstance) {
 		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
-			const { compareYear } = request.query as z.infer<typeof accountingQuerySchema>;
+			const { compareYear, profitCenter } = request.query as z.infer<typeof accountingQuerySchema>;
 
 			// 1. Validate version exists
 			const version = await prisma.budgetVersion.findUnique({
@@ -123,8 +124,40 @@ export async function pnlAccountingRoutes(app: FastifyInstance) {
 				})),
 			}));
 
-			// 7. Call transformation service
-			const result = transformToAccountingPnl(pnlLines, sections, historicalActuals);
+			// 7. Build profit center filter if requested
+			let pcFilter: ProfitCenterFilter | undefined;
+			if (profitCenter) {
+				// Load enrollment headcounts for AY1, grouped by grade level
+				const enrollmentRows = await prisma.enrollmentHeadcount.findMany({
+					where: { versionId, academicPeriod: 'AY1' },
+					select: { gradeLevel: true, headcount: true },
+				});
+
+				// Resolve grade band for each grade code via GradeLevel
+				const gradeCodes = [...new Set(enrollmentRows.map((r) => r.gradeLevel))];
+				const gradeLevels = await prisma.gradeLevel.findMany({
+					where: { gradeCode: { in: gradeCodes } },
+					select: { gradeCode: true, band: true },
+				});
+				const bandByCode = new Map(gradeLevels.map((gl) => [gl.gradeCode, gl.band]));
+
+				let bandHeadcount = 0;
+				let totalHeadcount = 0;
+				for (const row of enrollmentRows) {
+					totalHeadcount += row.headcount;
+					const band = bandByCode.get(row.gradeLevel);
+					if (band === profitCenter) {
+						bandHeadcount += row.headcount;
+					}
+				}
+
+				if (totalHeadcount > 0) {
+					pcFilter = { band: profitCenter, bandHeadcount, totalHeadcount };
+				}
+			}
+
+			// 8. Call transformation service
+			const result = transformToAccountingPnl(pnlLines, sections, historicalActuals, pcFilter);
 
 			return result;
 		},

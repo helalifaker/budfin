@@ -572,6 +572,134 @@ describe('transformToAccountingPnl', () => {
 		expect(result.kpis.netProfit).toBe('96000.0000');
 	});
 
+	it('LINE_ITEM prefix matching catches safeKey-derived keys', () => {
+		// The template maps "OPEX_AGENCE" but the engine produces
+		// "OPEX_AGENCE_ENSEIGNEMENT_FRANCAIS" via safeKey(). Prefix matching
+		// should catch this.
+		const lines = makeMonthlyDetailLines({
+			sectionKey: 'OTHER_OPEX',
+			categoryKey: 'OPEX_OTHER_GENERAL',
+			lineItemKey: 'OPEX_AGENCE_ENSEIGNEMENT_FRANCAIS',
+			amount: '1000.0000',
+		});
+
+		const template: TemplateSectionInput[] = [
+			{
+				sectionKey: 'COST_OF_SERVICE',
+				displayLabel: 'Cost of Service',
+				displayOrder: 10,
+				isSubtotal: false,
+				subtotalFormula: null,
+				signConvention: 'NEGATIVE',
+				mappings: [
+					{
+						analyticalKey: 'OPEX_AGENCE',
+						analyticalKeyType: 'LINE_ITEM',
+						accountCode: '648000',
+						monthFilter: [],
+						displayLabel: 'AEFE Fees',
+						visibility: 'SHOW',
+						displayOrder: 10,
+					},
+				],
+			},
+		];
+
+		const result = transformToAccountingPnl(lines, template);
+		const cos = result.sections.find((s) => s.sectionKey === 'COST_OF_SERVICE')!;
+
+		// 12 * 1000 = 12000
+		expect(cos.lines[0]!.budgetAmount).toBe('12000.0000');
+		expect(cos.lines[0]!.displayLabel).toBe('AEFE Fees');
+	});
+
+	it('cross-section LINE_ITEM claims before CATEGORY in later section', () => {
+		// EOS_PROVISION and GOSI_SAUDI are both under EMPLOYER_CHARGES category.
+		// PROVISIONS section (order 10) has a LINE_ITEM mapping for EOS_PROVISION.
+		// STAFF_COSTS section (order 20) has a CATEGORY mapping for EMPLOYER_CHARGES.
+		// Even though PROVISIONS comes first, the global LINE_ITEM pass ensures
+		// EOS_PROVISION is claimed before EMPLOYER_CHARGES can consume it.
+		const lines = [
+			...makeMonthlyDetailLines({
+				categoryKey: 'EMPLOYER_CHARGES',
+				lineItemKey: 'EOS_PROVISION',
+				amount: '2000.0000',
+			}),
+			...makeMonthlyDetailLines({
+				categoryKey: 'EMPLOYER_CHARGES',
+				lineItemKey: 'GOSI_SAUDI',
+				amount: '1500.0000',
+			}),
+		];
+
+		const template: TemplateSectionInput[] = [
+			// Staff costs first by display order
+			{
+				sectionKey: 'STAFF_COSTS',
+				displayLabel: 'Staff Costs',
+				displayOrder: 10,
+				isSubtotal: false,
+				subtotalFormula: null,
+				signConvention: 'NEGATIVE',
+				mappings: [
+					{
+						analyticalKey: 'GOSI_SAUDI',
+						analyticalKeyType: 'LINE_ITEM',
+						accountCode: '645100',
+						monthFilter: [],
+						displayLabel: 'GOSI',
+						visibility: 'SHOW',
+						displayOrder: 10,
+					},
+					{
+						analyticalKey: 'EMPLOYER_CHARGES',
+						analyticalKeyType: 'CATEGORY',
+						accountCode: '648030',
+						monthFilter: [],
+						displayLabel: 'Other Charges',
+						visibility: 'SHOW',
+						displayOrder: 20,
+					},
+				],
+			},
+			// Provisions second — its LINE_ITEM mapping should still claim EOS
+			{
+				sectionKey: 'PROVISIONS',
+				displayLabel: 'Provisions',
+				displayOrder: 20,
+				isSubtotal: false,
+				subtotalFormula: null,
+				signConvention: 'NEGATIVE',
+				mappings: [
+					{
+						analyticalKey: 'EOS_PROVISION',
+						analyticalKeyType: 'LINE_ITEM',
+						accountCode: '681750',
+						monthFilter: [],
+						displayLabel: 'EOS Provision',
+						visibility: 'SHOW',
+						displayOrder: 10,
+					},
+				],
+			},
+		];
+
+		const result = transformToAccountingPnl(lines, template);
+
+		// EOS claimed by PROVISIONS LINE_ITEM pass: 12 * 2000 = 24000
+		const prov = result.sections.find((s) => s.sectionKey === 'PROVISIONS')!;
+		expect(prov.lines[0]!.budgetAmount).toBe('24000.0000');
+
+		// GOSI claimed by STAFF_COSTS LINE_ITEM: 12 * 1500 = 18000
+		const staff = result.sections.find((s) => s.sectionKey === 'STAFF_COSTS')!;
+		const gosiLine = staff.lines.find((l) => l.displayLabel === 'GOSI')!;
+		expect(gosiLine.budgetAmount).toBe('18000.0000');
+
+		// EMPLOYER_CHARGES CATEGORY gets zero (both lines already consumed)
+		const otherLine = staff.lines.find((l) => l.displayLabel === 'Other Charges')!;
+		expect(otherLine.budgetAmount).toBe('0.0000');
+	});
+
 	it('filters out non-detail rows (depth!=3, subtotals, separators)', () => {
 		const lines: MonthlyPnlLineInput[] = [
 			// Depth 1 header — should be filtered out
