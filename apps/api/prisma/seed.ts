@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import { gradeLevels } from '../src/lib/seed-data.js';
 import { staffCostConfigs } from '../src/services/staffing/seed-config.js';
 import { seedStaffingMasterData } from './seeds/staffing-master-data.js';
+import { seedCoaAccounts } from './seeds/seed-coa-accounts.js';
+import { seedHistoricalActuals } from './seeds/seed-historical-actuals.js';
+import { seedPnlTemplate } from './seeds/seed-pnl-template.js';
 
 const prisma = new PrismaClient();
 
@@ -123,6 +126,11 @@ async function main() {
 
 	// Staffing master data (service profiles, disciplines, aliases)
 	await seedStaffingMasterData(prisma);
+
+	// P&L Accounting Bridge: COA accounts, historical actuals, default template
+	await seedCoaAccounts(prisma);
+	await seedHistoricalActuals(prisma);
+	await seedPnlTemplate(prisma);
 }
 
 main()

@@ -6,6 +6,7 @@ import { prisma } from '../../lib/prisma.js';
 const accountTypeEnum = z.enum(['REVENUE', 'EXPENSE', 'ASSET', 'LIABILITY']);
 const centerTypeEnum = z.enum(['PROFIT_CENTER', 'COST_CENTER']);
 const accountStatusEnum = z.enum(['ACTIVE', 'INACTIVE']);
+const profitCenterEnum = z.enum(['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE']);
 
 const createAccountSchema = z.object({
 	accountCode: z
@@ -19,6 +20,8 @@ const createAccountSchema = z.object({
 	centerType: centerTypeEnum,
 	description: z.string().max(500).optional(),
 	status: accountStatusEnum.optional(),
+	parentCode: z.string().max(10).optional(),
+	profitCenter: profitCenterEnum.optional().nullable(),
 });
 
 const updateAccountSchema = createAccountSchema.extend({
@@ -30,6 +33,7 @@ const listQuerySchema = z.object({
 	centerType: centerTypeEnum.optional(),
 	status: accountStatusEnum.optional(),
 	search: z.string().optional(),
+	profitCenter: profitCenterEnum.optional(),
 });
 
 const idParamsSchema = z.object({
@@ -42,12 +46,15 @@ export async function accountRoutes(app: FastifyInstance) {
 		schema: { querystring: listQuerySchema },
 		preHandler: [app.authenticate],
 		handler: async (request) => {
-			const { type, centerType, status, search } = request.query as z.infer<typeof listQuerySchema>;
+			const { type, centerType, status, search, profitCenter } = request.query as z.infer<
+				typeof listQuerySchema
+			>;
 
 			const where: Prisma.ChartOfAccountWhereInput = {};
 			if (type) where.type = type;
 			if (centerType) where.centerType = centerType;
 			if (status) where.status = status;
+			if (profitCenter) where.profitCenter = profitCenter;
 			if (search) {
 				where.OR = [
 					{ accountCode: { contains: search, mode: 'insensitive' } },
@@ -104,6 +111,8 @@ export async function accountRoutes(app: FastifyInstance) {
 							centerType: body.centerType,
 							description: body.description ?? null,
 							status: body.status ?? 'ACTIVE',
+							parentCode: body.parentCode ?? null,
+							profitCenter: body.profitCenter ?? null,
 							createdBy: request.user.id,
 							updatedBy: request.user.id,
 						},
@@ -167,6 +176,8 @@ export async function accountRoutes(app: FastifyInstance) {
 							ifrsCategory: data.ifrsCategory,
 							centerType: data.centerType,
 							description: data.description ?? null,
+							parentCode: data.parentCode ?? null,
+							...(data.profitCenter !== undefined ? { profitCenter: data.profitCenter } : {}),
 							...(data.status !== undefined ? { status: data.status } : {}),
 							updatedBy: request.user.id,
 							version: { increment: 1 },
@@ -232,6 +243,13 @@ export async function accountRoutes(app: FastifyInstance) {
 				return reply.status(404).send({
 					code: 'NOT_FOUND',
 					message: `Account ${id} not found`,
+				});
+			}
+
+			if (existing.isSystem) {
+				return reply.status(403).send({
+					code: 'SYSTEM_ACCOUNT',
+					message: 'Cannot delete system accounts',
 				});
 			}
 

@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Lock, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import { PROFIT_CENTER_LABELS } from '../../lib/profit-center';
 import { useAuthStore } from '../../stores/auth-store';
 import {
 	useAccounts,
@@ -54,6 +55,14 @@ const CENTER_TYPE_BADGE_COLORS: Record<string, string> = {
 	COST_CENTER: 'bg-(--badge-cost-center-bg) text-(--badge-cost-center)',
 };
 
+// A neutral badge palette for the profit center subdivision labels
+const PROFIT_CENTER_BADGE_COLORS: Record<string, string> = {
+	MATERNELLE: 'bg-(--badge-asset-bg) text-(--badge-asset)',
+	ELEMENTAIRE: 'bg-(--badge-revenue-bg) text-(--badge-revenue)',
+	COLLEGE: 'bg-(--badge-profit-center-bg) text-(--badge-profit-center)',
+	LYCEE: 'bg-(--badge-liability-bg) text-(--badge-liability)',
+};
+
 const TYPE_LABELS: Record<string, string> = {
 	REVENUE: 'Revenue',
 	EXPENSE: 'Expense',
@@ -76,6 +85,7 @@ export function AccountsPage() {
 	const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const [typeFilter, setTypeFilter] = useState('');
 	const [centerTypeFilter, setCenterTypeFilter] = useState('');
+	const [profitCenterFilter, setProfitCenterFilter] = useState('');
 	const [statusFilter, setStatusFilter] = useState('');
 
 	const handleSearchChange = useCallback((value: string) => {
@@ -89,9 +99,10 @@ export function AccountsPage() {
 		if (searchDebounced) f.search = searchDebounced;
 		if (typeFilter) f.type = typeFilter;
 		if (centerTypeFilter) f.centerType = centerTypeFilter;
+		if (profitCenterFilter) f.profitCenter = profitCenterFilter;
 		if (statusFilter) f.status = statusFilter;
 		return f;
-	}, [searchDebounced, typeFilter, centerTypeFilter, statusFilter]);
+	}, [searchDebounced, typeFilter, centerTypeFilter, profitCenterFilter, statusFilter]);
 
 	// Data hooks
 	const { data, isLoading } = useAccounts(filters);
@@ -119,6 +130,8 @@ export function AccountsPage() {
 						type: formData.type as Account['type'],
 						ifrsCategory: formData.ifrsCategory as string,
 						centerType: formData.centerType as Account['centerType'],
+						profitCenter: (formData.profitCenter as Account['profitCenter']) ?? null,
+						parentCode: (formData.parentCode as string | null) ?? null,
 						description: formData.description as string | null,
 						status: formData.status as Account['status'],
 					},
@@ -141,6 +154,8 @@ export function AccountsPage() {
 						type: formData.type as Account['type'],
 						ifrsCategory: formData.ifrsCategory as string,
 						centerType: formData.centerType as Account['centerType'],
+						profitCenter: (formData.profitCenter as Account['profitCenter']) ?? null,
+						parentCode: (formData.parentCode as string | null) ?? null,
 						description: formData.description as string | null,
 						status: formData.status as Account['status'],
 					},
@@ -177,7 +192,20 @@ export function AccountsPage() {
 		() => [
 			columnHelper.accessor('accountCode', {
 				header: 'Account Code',
-				cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+				cell: (info) => {
+					const account = info.row.original;
+					return (
+						<span className="inline-flex items-center gap-1.5 font-medium">
+							{account.isSystem && (
+								<Lock
+									className="h-3 w-3 shrink-0 text-(--text-muted)"
+									aria-label="System account"
+								/>
+							)}
+							{info.getValue()}
+						</span>
+					);
+				},
 			}),
 			columnHelper.accessor('accountName', {
 				header: 'Account Name',
@@ -215,6 +243,30 @@ export function AccountsPage() {
 							aria-label={`Center type: ${CENTER_TYPE_LABELS[value]}`}
 						>
 							{CENTER_TYPE_LABELS[value]}
+						</span>
+					);
+				},
+			}),
+			columnHelper.accessor('profitCenter', {
+				header: 'Profit Center',
+				cell: (info) => {
+					const value = info.getValue();
+					if (!value) {
+						return (
+							<span className="text-(--text-xs) text-(--text-muted)" aria-label="Shared account">
+								Shared
+							</span>
+						);
+					}
+					return (
+						<span
+							className={cn(
+								'inline-flex rounded-sm px-2 py-0.5 text-(--text-xs) font-medium',
+								PROFIT_CENTER_BADGE_COLORS[value]
+							)}
+							aria-label={`Profit center: ${PROFIT_CENTER_LABELS[value]}`}
+						>
+							{PROFIT_CENTER_LABELS[value]}
 						</span>
 					);
 				},
@@ -267,10 +319,14 @@ export function AccountsPage() {
 						>
 							<Pencil className="h-4 w-4" /> Edit
 						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem destructive onSelect={() => setDeleteTarget(account)}>
-							<Trash2 className="h-4 w-4" /> Delete
-						</DropdownMenuItem>
+						{!account.isSystem && (
+							<>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem destructive onSelect={() => setDeleteTarget(account)}>
+									<Trash2 className="h-4 w-4" /> Delete
+								</DropdownMenuItem>
+							</>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			);
@@ -326,6 +382,22 @@ export function AccountsPage() {
 						<SelectItem value="all">All Center Types</SelectItem>
 						<SelectItem value="PROFIT_CENTER">Profit Center</SelectItem>
 						<SelectItem value="COST_CENTER">Cost Center</SelectItem>
+					</SelectContent>
+				</Select>
+
+				<Select
+					value={profitCenterFilter || 'all'}
+					onValueChange={(v) => setProfitCenterFilter(v === 'all' ? '' : v)}
+				>
+					<SelectTrigger className="w-[180px]" aria-label="Filter by profit center">
+						<SelectValue placeholder="All Divisions" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All Divisions</SelectItem>
+						<SelectItem value="MATERNELLE">Maternelle</SelectItem>
+						<SelectItem value="ELEMENTAIRE">Élémentaire</SelectItem>
+						<SelectItem value="COLLEGE">Collège</SelectItem>
+						<SelectItem value="LYCEE">Lycée</SelectItem>
 					</SelectContent>
 				</Select>
 

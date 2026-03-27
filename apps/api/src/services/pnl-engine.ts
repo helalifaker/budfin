@@ -4,6 +4,7 @@
 // TC-004: Accumulate full precision, round only at final serialization
 
 import { Decimal } from 'decimal.js';
+import { toFixed4 } from './decimal-utils.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -130,10 +131,6 @@ function sumAll(acc: MonthlyAccumulator): Decimal {
 		total = total.plus(v);
 	}
 	return total;
-}
-
-function toFixed4(d: Decimal): string {
-	return d.toDecimalPlaces(4, Decimal.ROUND_HALF_UP).toFixed(4);
 }
 
 function makeLine(
