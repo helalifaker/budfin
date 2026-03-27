@@ -21,8 +21,10 @@ import { SettingsPage } from './pages/admin/settings';
 import { StaffingPage } from './pages/planning/staffing';
 import { OpExPage } from './pages/planning/opex';
 import { PnlPage } from './pages/planning/pnl';
+import { PnlAccountingPage } from './pages/planning/pnl-accounting';
 import { ScenarioPage } from './pages/planning/scenarios';
 import { TrendsPage } from './pages/planning/trends';
+import { PnlMappingPage } from './pages/master-data/pnl-mapping-page';
 
 export const routes: RouteObject[] = [
 	{ path: '/login', element: <LoginPage /> },
@@ -65,6 +67,10 @@ export const routes: RouteObject[] = [
 								element: <PnlPage />,
 							},
 							{
+								path: '/planning/pnl/accounting',
+								element: <PnlAccountingPage />,
+							},
+							{
 								path: '/planning/scenarios',
 								element: <ScenarioPage />,
 							},
@@ -102,6 +108,10 @@ export const routes: RouteObject[] = [
 							{
 								path: '/master-data/assumptions',
 								element: <AssumptionsPage />,
+							},
+							{
+								path: '/master-data/pnl-mapping',
+								element: <PnlMappingPage />,
 							},
 							// Admin (role-gated)
 							{
