@@ -131,6 +131,25 @@ describe('GET /api/v1/master-data/accounts', () => {
 		);
 	});
 
+	it('filters by profitCenter', async () => {
+		const accountWithProfitCenter = { ...mockAccount, profitCenter: 'MATERNELLE' as const };
+		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([accountWithProfitCenter]);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'GET',
+			url: '/api/v1/master-data/accounts?profitCenter=MATERNELLE',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(200);
+		expect(vi.mocked(prisma.chartOfAccount.findMany)).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: expect.objectContaining({ profitCenter: 'MATERNELLE' }),
+			})
+		);
+	});
+
 	it('filters by search (case-insensitive)', async () => {
 		vi.mocked(prisma.chartOfAccount.findMany).mockResolvedValue([mockAccount]);
 
@@ -210,6 +229,33 @@ describe('POST /api/v1/master-data/accounts', () => {
 		ifrsCategory: 'Revenue from Contracts',
 		centerType: 'PROFIT_CENTER',
 	};
+
+	it('creates account with profitCenter and parentCode', async () => {
+		const accountWithExtras = {
+			...mockAccount,
+			accountCode: 'REV002',
+			parentCode: 'REV001',
+			profitCenter: 'MATERNELLE' as const,
+		};
+		vi.mocked(prisma.chartOfAccount.create).mockResolvedValue(accountWithExtras);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'POST',
+			url: '/api/v1/master-data/accounts',
+			headers: authHeader(token),
+			payload: {
+				...createPayload,
+				accountCode: 'REV002',
+				parentCode: 'REV001',
+				profitCenter: 'MATERNELLE',
+			},
+		});
+
+		expect(res.statusCode).toBe(201);
+		expect(res.json().parentCode).toBe('REV001');
+		expect(res.json().profitCenter).toBe('MATERNELLE');
+	});
 
 	it('creates account with 201', async () => {
 		vi.mocked(prisma.chartOfAccount.create).mockResolvedValue(mockAccount);
@@ -401,6 +447,21 @@ describe('DELETE /api/v1/master-data/accounts/:id', () => {
 				}),
 			})
 		);
+	});
+
+	it('returns 403 for system account', async () => {
+		const systemAccount = { ...mockAccount, isSystem: true };
+		vi.mocked(prisma.chartOfAccount.findUnique).mockResolvedValue(systemAccount);
+
+		const token = await makeToken();
+		const res = await app.inject({
+			method: 'DELETE',
+			url: '/api/v1/master-data/accounts/1',
+			headers: authHeader(token),
+		});
+
+		expect(res.statusCode).toBe(403);
+		expect(res.json().code).toBe('SYSTEM_ACCOUNT');
 	});
 
 	it('returns 404 for non-existent id', async () => {
