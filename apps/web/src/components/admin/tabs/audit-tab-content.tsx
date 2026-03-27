@@ -1,19 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { apiClient } from '../../lib/api-client';
-import { AuditFilters, type AuditFilterValues } from '../../components/admin/audit-filters';
-import { ListGrid } from '../../components/data-grid/list-grid';
-import { Input } from '../../components/ui/input';
-import {
-	Select,
-	SelectTrigger,
-	SelectValue,
-	SelectContent,
-	SelectItem,
-} from '../../components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
-import { useVersions } from '../../hooks/use-versions';
+import { apiClient } from '../../../lib/api-client';
+import { AuditFilters, type AuditFilterValues } from '../audit-filters';
+import { ListGrid } from '../../data-grid/list-grid';
+import { Input } from '../../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../ui/tabs';
+import { useVersions } from '../../../hooks/use-versions';
 
 // ── Audit Log Types ──────────────────────────────────────────────────────────
 
@@ -66,6 +60,34 @@ interface CalcFilterValues {
 	module?: string;
 	from?: string;
 	to?: string;
+}
+
+// ── KPI Stats ────────────────────────────────────────────────────────────────
+
+/**
+ * KPI stats derived from audit data.
+ * Used by the parent page to populate the AdminKpiRibbon.
+ */
+export type AuditKpiStats = {
+	totalEvents: number;
+	operations: number;
+	tables: number;
+};
+
+export function useAuditKpiStats(): AuditKpiStats | null {
+	const { data } = useQuery({
+		queryKey: ['audit', 'page=1&page_size=1'],
+		queryFn: () => apiClient<AuditResponse>('/audit?page=1&page_size=1'),
+	});
+
+	return useMemo(() => {
+		if (!data) return null;
+		return {
+			totalEvents: data.total,
+			operations: 0,
+			tables: 0,
+		};
+	}, [data]);
 }
 
 // ── Shared Utilities ─────────────────────────────────────────────────────────
@@ -122,7 +144,7 @@ function buildCalcQueryString(page: number, pageSize: number, filters: CalcFilte
 
 // ── Status Badge ─────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: string }) {
+function CalcStatusBadge({ status }: { status: string }) {
 	const colors: Record<string, string> = {
 		COMPLETED: 'bg-(--color-success-bg) text-(--color-success) border-(--color-success)/20',
 		FAILED: 'bg-(--color-error-bg) text-(--color-error) border-(--color-error)/20',
@@ -288,13 +310,13 @@ function CalcHistoryFilters({
 			</div>
 			<div>
 				<label
-					htmlFor="calc-filter-from"
+					htmlFor="calc-tab-filter-from"
 					className="block text-(--text-xs) font-medium text-(--text-secondary)"
 				>
 					From
 				</label>
 				<Input
-					id="calc-filter-from"
+					id="calc-tab-filter-from"
 					type="date"
 					className="mt-1"
 					onChange={(e) => update('from', e.target.value)}
@@ -302,13 +324,13 @@ function CalcHistoryFilters({
 			</div>
 			<div>
 				<label
-					htmlFor="calc-filter-to"
+					htmlFor="calc-tab-filter-to"
 					className="block text-(--text-xs) font-medium text-(--text-secondary)"
 				>
 					To
 				</label>
 				<Input
-					id="calc-filter-to"
+					id="calc-tab-filter-to"
 					type="date"
 					className="mt-1"
 					onChange={(e) => update('to', e.target.value)}
@@ -353,7 +375,7 @@ function CalcHistoryTab() {
 			}),
 			calcColumnHelper.accessor('status', {
 				header: 'Status',
-				cell: (info) => <StatusBadge status={info.getValue()} />,
+				cell: (info) => <CalcStatusBadge status={info.getValue()} />,
 			}),
 			calcColumnHelper.accessor('duration_ms', {
 				header: 'Duration',
@@ -419,27 +441,23 @@ function CalcHistoryTab() {
 	);
 }
 
-// ── Main Page ────────────────────────────────────────────────────────────────
+// ── Main Tab Content ─────────────────────────────────────────────────────────
 
-export function AuditPage() {
+export function AuditTabContent() {
 	return (
-		<div className="p-6">
-			<h1 className="pb-4 text-(--text-xl) font-semibold">Audit Trail</h1>
+		<Tabs defaultValue="audit-log">
+			<TabsList>
+				<TabsTrigger value="audit-log">Audit Log</TabsTrigger>
+				<TabsTrigger value="calculation-history">Calculation History</TabsTrigger>
+			</TabsList>
 
-			<Tabs defaultValue="audit-log">
-				<TabsList>
-					<TabsTrigger value="audit-log">Audit Log</TabsTrigger>
-					<TabsTrigger value="calculation-history">Calculation History</TabsTrigger>
-				</TabsList>
+			<TabsContent value="audit-log">
+				<AuditLogTab />
+			</TabsContent>
 
-				<TabsContent value="audit-log">
-					<AuditLogTab />
-				</TabsContent>
-
-				<TabsContent value="calculation-history">
-					<CalcHistoryTab />
-				</TabsContent>
-			</Tabs>
-		</div>
+			<TabsContent value="calculation-history">
+				<CalcHistoryTab />
+			</TabsContent>
+		</Tabs>
 	);
 }

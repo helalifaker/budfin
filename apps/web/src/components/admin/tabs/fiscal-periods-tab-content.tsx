@@ -1,22 +1,16 @@
 import { useCallback, useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { cn } from '../../lib/cn';
-import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
-import { toast } from '../../components/ui/toast-state';
-import { useAuthStore } from '../../stores/auth-store';
-import { useFiscalPeriods, useLockFiscalPeriod } from '../../hooks/use-fiscal-periods';
-import type { FiscalPeriod } from '../../hooks/use-fiscal-periods';
-import { useVersions } from '../../hooks/use-versions';
-import type { BudgetVersion } from '../../hooks/use-versions';
-import { ListGrid } from '../../components/data-grid/list-grid';
-import { Button } from '../../components/ui/button';
-import {
-	Select,
-	SelectTrigger,
-	SelectValue,
-	SelectContent,
-	SelectItem,
-} from '../../components/ui/select';
+import { cn } from '../../../lib/cn';
+import { formatDate, getCurrentFiscalYear } from '../../../lib/format-date';
+import { toast } from '../../ui/toast-state';
+import { useAuthStore } from '../../../stores/auth-store';
+import { useFiscalPeriods, useLockFiscalPeriod } from '../../../hooks/use-fiscal-periods';
+import type { FiscalPeriod } from '../../../hooks/use-fiscal-periods';
+import { useVersions } from '../../../hooks/use-versions';
+import type { BudgetVersion } from '../../../hooks/use-versions';
+import { ListGrid } from '../../data-grid/list-grid';
+import { Button } from '../../ui/button';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui/select';
 
 const columnHelper = createColumnHelper<FiscalPeriod>();
 
@@ -42,7 +36,7 @@ const STATUS_BADGE_COLORS: Record<string, string> = {
 
 const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
 
-export function FiscalPeriodsPage() {
+export function FiscalPeriodsTabContent() {
 	const currentUser = useAuthStore((s) => s.user);
 	const canLock = currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
 
@@ -102,7 +96,9 @@ export function FiscalPeriodsPage() {
 				header: 'Actual Version',
 				cell: (info) => {
 					const value = info.getValue();
-					if (value == null) return <span className="text-(--text-muted)">—</span>;
+					if (value == null) {
+						return <span className="text-(--text-muted)">&mdash;</span>;
+					}
 					// Find the version name if available
 					const version = lockedActualVersions.find((v: BudgetVersion) => v.id === value);
 					return <span>{version ? `${version.name} (#${value})` : `#${value}`}</span>;
@@ -112,7 +108,9 @@ export function FiscalPeriodsPage() {
 				header: 'Locked At',
 				cell: (info) => {
 					const iso = info.getValue();
-					if (!iso) return <span className="text-(--text-muted)">—</span>;
+					if (!iso) {
+						return <span className="text-(--text-muted)">&mdash;</span>;
+					}
 					return formatDate(iso);
 				},
 			}),
@@ -120,7 +118,9 @@ export function FiscalPeriodsPage() {
 				header: 'Locked By',
 				cell: (info) => {
 					const value = info.getValue();
-					if (value == null) return <span className="text-(--text-muted)">—</span>;
+					if (value == null) {
+						return <span className="text-(--text-muted)">&mdash;</span>;
+					}
 					return <span>User #{value}</span>;
 				},
 			}),
@@ -148,11 +148,9 @@ export function FiscalPeriodsPage() {
 	});
 
 	return (
-		<div className="p-6">
-			{/* Toolbar */}
+		<>
+			{/* FY selector */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-(--text-xl) font-semibold">Fiscal Period Management</h1>
-
 				<Select value={String(fiscalYear)} onValueChange={(v) => setFiscalYear(Number(v))}>
 					<SelectTrigger className="w-[130px]" aria-label="Filter by fiscal year">
 						<SelectValue />
@@ -178,7 +176,7 @@ export function FiscalPeriodsPage() {
 				}
 				ariaLabel="Fiscal periods"
 			/>
-		</div>
+		</>
 	);
 }
 

@@ -7,19 +7,12 @@ import {
 	GitBranch,
 	TrendingUp,
 	Layers,
-	Calendar,
-	Landmark,
-	GraduationCap,
 	Database,
 	SlidersHorizontal,
-	Users,
-	ScrollText,
 	Settings,
 	ChevronsLeft,
 	LogOut,
 	Receipt,
-	FileSpreadsheet,
-	Workflow,
 	Sun,
 	Moon,
 	Monitor,
@@ -36,6 +29,7 @@ interface NavItem {
 	to: string;
 	label: string;
 	icon: LucideIcon;
+	adminOnly?: boolean;
 }
 
 interface NavGroup {
@@ -54,35 +48,17 @@ const navGroups: NavGroup[] = [
 			{ to: '/planning/staffing', label: 'Staffing', icon: Briefcase },
 			{ to: '/planning/opex', label: 'Operating Expenses', icon: Receipt },
 			{ to: '/planning/pnl', label: 'P&L', icon: BarChart2 },
-			{ to: '/planning/pnl/accounting', label: 'P&L (Accounting)', icon: FileSpreadsheet },
 			{ to: '/planning/scenarios', label: 'Scenarios', icon: GitBranch },
 			{ to: '/planning/trends', label: 'Trends', icon: TrendingUp },
 		],
 	},
 	{
-		label: 'Management',
+		label: 'Administration',
 		items: [
-			{ to: '/management/versions', label: 'Versions', icon: Layers },
-			{ to: '/management/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
-		],
-	},
-	{
-		label: 'Master Data',
-		items: [
-			{ to: '/master-data/accounts', label: 'Accounts & Centers', icon: Landmark },
-			{ to: '/master-data/academic', label: 'Academic Years', icon: GraduationCap },
-			{ to: '/master-data/reference', label: 'Reference Data', icon: Database },
-			{ to: '/master-data/assumptions', label: 'Assumptions', icon: SlidersHorizontal },
-			{ to: '/master-data/pnl-mapping', label: 'P&L Mapping', icon: Workflow },
-		],
-	},
-	{
-		label: 'Admin',
-		adminOnly: true,
-		items: [
-			{ to: '/admin/users', label: 'Users', icon: Users },
-			{ to: '/admin/audit', label: 'Audit Trail', icon: ScrollText },
-			{ to: '/admin/settings', label: 'Settings', icon: Settings },
+			{ to: '/admin/versions', label: 'Versions', icon: Layers },
+			{ to: '/admin/master-data', label: 'Master Data', icon: Database },
+			{ to: '/admin/financial-setup', label: 'Financial Setup', icon: SlidersHorizontal },
+			{ to: '/admin/system', label: 'System', icon: Settings, adminOnly: true },
 		],
 	},
 ];
@@ -108,7 +84,13 @@ export function Sidebar() {
 	const ThemeIcon = THEME_ICONS[theme];
 
 	const isAdmin = user?.role === 'Admin';
-	const visibleGroups = navGroups.filter((g) => !g.adminOnly || isAdmin);
+	const visibleGroups = navGroups
+		.filter((g) => !g.adminOnly || isAdmin)
+		.map((g) => ({
+			...g,
+			items: g.items.filter((item) => !item.adminOnly || isAdmin),
+		}))
+		.filter((g) => g.items.length > 0);
 
 	const handleToggle = () => {
 		if (isCollapsed && rightPanelOpen) {

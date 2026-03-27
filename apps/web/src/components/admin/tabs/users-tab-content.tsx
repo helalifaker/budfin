@@ -2,21 +2,21 @@ import { useCallback, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
-import { apiClient } from '../../lib/api-client';
-import { useAuthStore } from '../../stores/auth-store';
-import { RoleBadge } from '../../components/admin/role-badge';
-import { StatusBadge } from '../../components/admin/status-badge';
-import { UserSidePanel } from '../../components/admin/user-side-panel';
-import { ListGrid } from '../../components/data-grid/list-grid';
-import { Button } from '../../components/ui/button';
+import { apiClient } from '../../../lib/api-client';
+import { useAuthStore } from '../../../stores/auth-store';
+import { RoleBadge } from '../role-badge';
+import { StatusBadge } from '../status-badge';
+import { UserSidePanel } from '../user-side-panel';
+import { ListGrid } from '../../data-grid/list-grid';
+import { Button } from '../../ui/button';
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
-import { toast } from '../../components/ui/toast-state';
+} from '../../ui/dropdown-menu';
+import { toast } from '../../ui/toast-state';
 
 interface User {
 	id: number;
@@ -42,7 +42,37 @@ function formatDate(iso: string | null): string {
 	});
 }
 
-export function UsersPage() {
+/**
+ * KPI stats derived from users data.
+ * Used by the parent page to populate the AdminKpiRibbon.
+ */
+export type UsersKpiStats = {
+	totalUsers: number;
+	activeUsers: number;
+	adminCount: number;
+	lockedCount: number;
+};
+
+export function useUsersKpiStats(): UsersKpiStats | null {
+	const { data } = useQuery({
+		queryKey: ['users'],
+		queryFn: () => apiClient<{ users: User[] }>('/users'),
+	});
+
+	return useMemo(() => {
+		if (!data) return null;
+
+		const users = data.users;
+		return {
+			totalUsers: users.length,
+			activeUsers: users.filter((u) => u.is_active).length,
+			adminCount: users.filter((u) => u.role === 'Admin').length,
+			lockedCount: users.filter((u) => u.locked_until !== null).length,
+		};
+	}, [data]);
+}
+
+export function UsersTabContent() {
 	const queryClient = useQueryClient();
 	const currentUser = useAuthStore((s) => s.user);
 	const [panelOpen, setPanelOpen] = useState(false);
@@ -211,9 +241,8 @@ export function UsersPage() {
 	});
 
 	return (
-		<div className="p-6">
-			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-(--text-xl) font-semibold">User Management</h1>
+		<>
+			<div className="flex justify-end pb-4">
 				<Button
 					type="button"
 					variant="primary"
@@ -242,6 +271,6 @@ export function UsersPage() {
 				onSave={handleSave}
 				loading={createMutation.isPending || updateMutation.isPending}
 			/>
-		</div>
+		</>
 	);
 }

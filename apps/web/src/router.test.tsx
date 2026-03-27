@@ -21,40 +21,20 @@ vi.mock('./pages/planning/scenarios', () => ({
 	ScenarioPage: () => <div>Scenario Page</div>,
 }));
 
-vi.mock('./pages/management/versions', () => ({
+vi.mock('./pages/admin/versions-page', () => ({
 	VersionsPage: () => <div>Versions Page</div>,
 }));
 
-vi.mock('./pages/management/fiscal-periods', () => ({
-	FiscalPeriodsPage: () => <div>Fiscal Periods Page</div>,
+vi.mock('./pages/admin/master-data-page', () => ({
+	MasterDataPage: () => <div>Master Data Page</div>,
 }));
 
-vi.mock('./pages/master-data/accounts', () => ({
-	AccountsPage: () => <div>Accounts Page</div>,
+vi.mock('./pages/admin/financial-setup-page', () => ({
+	FinancialSetupPage: () => <div>Financial Setup Page</div>,
 }));
 
-vi.mock('./pages/master-data/academic', () => ({
-	AcademicPage: () => <div>Academic Page</div>,
-}));
-
-vi.mock('./pages/master-data/reference', () => ({
-	ReferencePage: () => <div>Reference Page</div>,
-}));
-
-vi.mock('./pages/master-data/assumptions', () => ({
-	AssumptionsPage: () => <div>Assumptions Page</div>,
-}));
-
-vi.mock('./pages/admin/users', () => ({
-	UsersPage: () => <div>Users Page</div>,
-}));
-
-vi.mock('./pages/admin/audit', () => ({
-	AuditPage: () => <div>Audit Page</div>,
-}));
-
-vi.mock('./pages/admin/settings', () => ({
-	SettingsPage: () => <div>Settings Page</div>,
+vi.mock('./pages/admin/system-page', () => ({
+	SystemPage: () => <div>System Page</div>,
 }));
 
 // Mock layout shells to render Outlet directly
@@ -63,9 +43,9 @@ vi.mock('./layouts/planning-shell', async () => {
 	return { PlanningShell: () => <Outlet /> };
 });
 
-vi.mock('./layouts/management-shell', async () => {
+vi.mock('./layouts/admin-shell', async () => {
 	const { Outlet } = await import('react-router');
-	return { ManagementShell: () => <Outlet /> };
+	return { AdminShell: () => <Outlet /> };
 });
 
 function renderRoute(
@@ -101,16 +81,15 @@ afterEach(() => {
 });
 
 describe('router access control', () => {
-	it('redirects Admin users at / to /admin/users', async () => {
+	it('redirects Admin users at / to /admin/system', async () => {
 		renderRoute('/', {
 			id: 1,
 			email: 'admin@budfin.app',
 			role: 'Admin',
 		});
 
-		expect(await screen.findByText('Users Page')).toBeDefined();
-		expect(screen.getByRole('heading', { name: 'Master Data' })).toBeDefined();
-		expect(screen.getByRole('heading', { name: 'Admin' })).toBeDefined();
+		expect(await screen.findByText('System Page')).toBeDefined();
+		expect(screen.getByRole('heading', { name: 'Administration' })).toBeDefined();
 	});
 
 	it('redirects non-admin users at / to /planning', async () => {
@@ -121,31 +100,32 @@ describe('router access control', () => {
 		});
 
 		expect(await screen.findByText('Dashboard Page')).toBeDefined();
-		expect(screen.getByRole('heading', { name: 'Master Data' })).toBeDefined();
-		expect(screen.queryByRole('heading', { name: 'Admin' })).toBeNull();
+		expect(screen.getByRole('heading', { name: 'Administration' })).toBeDefined();
+		// System nav item should be hidden for non-admins
+		expect(screen.queryByRole('link', { name: 'System' })).toBeNull();
 	});
 
-	it('keeps master-data pages reachable for authenticated non-admin users', async () => {
-		renderRoute('/master-data/assumptions', {
+	it('keeps admin pages reachable for authenticated non-admin users', async () => {
+		renderRoute('/admin/financial-setup', {
 			id: 3,
 			email: 'viewer@budfin.app',
 			role: 'Viewer',
 		});
 
-		expect(await screen.findByText('Assumptions Page')).toBeDefined();
-		expect(screen.getByText('Accounts & Centers')).toBeDefined();
-		expect(screen.queryByRole('heading', { name: 'Admin' })).toBeNull();
+		expect(await screen.findByText('Financial Setup Page')).toBeDefined();
+		expect(screen.getByText('Master Data')).toBeDefined();
+		expect(screen.queryByRole('link', { name: 'System' })).toBeNull();
 	});
 
-	it('redirects non-admin users away from admin routes', async () => {
-		renderRoute('/admin/users', {
+	it('redirects non-admin users away from system routes', async () => {
+		renderRoute('/admin/system', {
 			id: 4,
 			email: 'budget-owner@budfin.app',
 			role: 'BudgetOwner',
 		});
 
 		expect(await screen.findByText('Dashboard Page')).toBeDefined();
-		expect(screen.queryByText('Users Page')).toBeNull();
-		expect(screen.queryByRole('heading', { name: 'Admin' })).toBeNull();
+		expect(screen.queryByText('System Page')).toBeNull();
+		expect(screen.queryByRole('link', { name: 'System' })).toBeNull();
 	});
 });

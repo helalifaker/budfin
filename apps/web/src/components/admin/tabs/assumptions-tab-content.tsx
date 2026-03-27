@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
-import { useAuthStore } from '../../stores/auth-store';
-import { useAssumptions, useUpdateAssumptions, type Assumption } from '../../hooks/use-assumptions';
+import { useDelayedSkeleton } from '../../../hooks/use-delayed-skeleton';
+import { useAuthStore } from '../../../stores/auth-store';
+import {
+	useAssumptions,
+	useUpdateAssumptions,
+	type Assumption,
+} from '../../../hooks/use-assumptions';
 import { ChevronRight, Calculator } from 'lucide-react';
-import { cn } from '../../lib/cn';
-import { Input } from '../../components/ui/input';
-import { TableSkeleton } from '../../components/ui/skeleton';
-import { toast } from '../../components/ui/toast-state';
+import { cn } from '../../../lib/cn';
+import { Input } from '../../ui/input';
+import { TableSkeleton } from '../../ui/skeleton';
+import { toast } from '../../ui/toast-state';
 
 const SECTION_ORDER = ['tax', 'financial', 'social_charges', 'academic', 'fees'] as const;
 
@@ -25,7 +29,36 @@ interface CellSaveStatus {
 	timerId?: ReturnType<typeof setTimeout>;
 }
 
-export function AssumptionsPage() {
+/**
+ * KPI stats derived from assumptions data.
+ * Used by the parent page to populate the AdminKpiRibbon.
+ */
+export type AssumptionsKpiStats = {
+	parameterCount: number;
+	categoryCount: number;
+	gosiRateTotal: string;
+	lastUpdated: string | null;
+};
+
+export function useAssumptionsKpiStats(): AssumptionsKpiStats | null {
+	const { data } = useAssumptions();
+
+	return useMemo(() => {
+		if (!data) return null;
+
+		const assumptions = data.assumptions;
+		const sections = new Set(assumptions.map((a) => a.section));
+
+		return {
+			parameterCount: assumptions.length,
+			categoryCount: sections.size,
+			gosiRateTotal: data.computed.gosiRateTotal,
+			lastUpdated: null,
+		};
+	}, [data]);
+}
+
+export function AssumptionsTabContent() {
 	const { data, isLoading } = useAssumptions();
 	const updateMutation = useUpdateAssumptions();
 	const user = useAuthStore((s) => s.user);
@@ -187,40 +220,11 @@ export function AssumptionsPage() {
 	const showSkeleton = useDelayedSkeleton(isLoading);
 
 	if (isLoading && !showSkeleton) {
-		return (
-			<div className="p-6">
-				<h1 className="text-(--text-xl) font-semibold">Assumptions &amp; Parameters</h1>
-			</div>
-		);
+		return null;
 	}
 
 	if (isLoading && showSkeleton) {
 		return (
-			<div className="p-6">
-				<h1 className="text-(--text-xl) font-semibold pb-4">Assumptions &amp; Parameters</h1>
-				<div className="overflow-x-auto rounded-lg border">
-					<table role="table" className="w-full text-left text-(--text-sm)">
-						<thead className="border-b bg-(--workspace-bg-muted)">
-							<tr>
-								<th className="w-[40%] px-4 py-3 font-medium text-(--text-secondary)">Label</th>
-								<th className="w-[30%] px-4 py-3 font-medium text-(--text-secondary)">Value</th>
-								<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Unit</th>
-								<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Status</th>
-							</tr>
-						</thead>
-						<tbody>
-							<TableSkeleton rows={15} cols={4} />
-						</tbody>
-					</table>
-				</div>
-			</div>
-		);
-	}
-
-	return (
-		<div className="p-6">
-			<h1 className="text-(--text-xl) font-semibold pb-4">Assumptions &amp; Parameters</h1>
-
 			<div className="overflow-x-auto rounded-lg border">
 				<table role="table" className="w-full text-left text-(--text-sm)">
 					<thead className="border-b bg-(--workspace-bg-muted)">
@@ -232,38 +236,58 @@ export function AssumptionsPage() {
 						</tr>
 					</thead>
 					<tbody>
-						{Array.from(grouped.entries()).map(([section, sectionAssumptions]) => {
-							const isCollapsed = collapsedSections.has(section);
-							return (
-								<SectionGroup
-									key={section}
-									section={section}
-									assumptions={sectionAssumptions}
-									isCollapsed={isCollapsed}
-									onToggle={() => toggleSection(section)}
-									editingKey={editingKey}
-									editValue={editValue}
-									canEdit={canEdit}
-									onStartEdit={startEdit}
-									onEditValueChange={setEditValue}
-									onKeyDown={handleKeyDown}
-									onBlur={(a) => saveEdit(a.key, editValue, a.version)}
-									renderSaveStatus={renderSaveStatus}
-									{...(section === 'social_charges' && data?.computed.gosiRateTotal
-										? {
-												gosiRateTotal: data.computed.gosiRateTotal,
-											}
-										: {})}
-									inputRef={inputRef}
-								/>
-							);
-						})}
+						<TableSkeleton rows={15} cols={4} />
 					</tbody>
 				</table>
 			</div>
+		);
+	}
+
+	return (
+		<div className="overflow-x-auto rounded-lg border">
+			<table role="table" className="w-full text-left text-(--text-sm)">
+				<thead className="border-b bg-(--workspace-bg-muted)">
+					<tr>
+						<th className="w-[40%] px-4 py-3 font-medium text-(--text-secondary)">Label</th>
+						<th className="w-[30%] px-4 py-3 font-medium text-(--text-secondary)">Value</th>
+						<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Unit</th>
+						<th className="w-[15%] px-4 py-3 font-medium text-(--text-secondary)">Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					{Array.from(grouped.entries()).map(([section, sectionAssumptions]) => {
+						const isCollapsed = collapsedSections.has(section);
+						return (
+							<SectionGroup
+								key={section}
+								section={section}
+								assumptions={sectionAssumptions}
+								isCollapsed={isCollapsed}
+								onToggle={() => toggleSection(section)}
+								editingKey={editingKey}
+								editValue={editValue}
+								canEdit={canEdit}
+								onStartEdit={startEdit}
+								onEditValueChange={setEditValue}
+								onKeyDown={handleKeyDown}
+								onBlur={(a) => saveEdit(a.key, editValue, a.version)}
+								renderSaveStatus={renderSaveStatus}
+								{...(section === 'social_charges' && data?.computed.gosiRateTotal
+									? {
+											gosiRateTotal: data.computed.gosiRateTotal,
+										}
+									: {})}
+								inputRef={inputRef}
+							/>
+						);
+					})}
+				</tbody>
+			</table>
 		</div>
 	);
 }
+
+// ── SectionGroup sub-component ──────────────────────────────────────────────
 
 interface SectionGroupProps {
 	section: string;

@@ -1,45 +1,30 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Lock, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { cn } from '../../lib/cn';
-import { PROFIT_CENTER_LABELS } from '../../lib/profit-center';
-import { useAuthStore } from '../../stores/auth-store';
+import { cn } from '../../../lib/cn';
+import { PROFIT_CENTER_LABELS } from '../../../lib/profit-center';
+import { useAuthStore } from '../../../stores/auth-store';
 import {
 	useAccounts,
 	useCreateAccount,
 	useUpdateAccount,
 	useDeleteAccount,
-} from '../../hooks/use-accounts';
-import type { Account, AccountFilters } from '../../hooks/use-accounts';
-import { AccountsSidePanel } from '../../components/master-data/accounts-side-panel';
-import { ListGrid } from '../../components/data-grid/list-grid';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import {
-	Select,
-	SelectTrigger,
-	SelectValue,
-	SelectContent,
-	SelectItem,
-} from '../../components/ui/select';
-import {
-	AlertDialog,
-	AlertDialogContent,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogAction,
-	AlertDialogCancel,
-} from '../../components/ui/alert-dialog';
+} from '../../../hooks/use-accounts';
+import type { Account, AccountFilters } from '../../../hooks/use-accounts';
+import { AccountsSidePanel } from '../../master-data/accounts-side-panel';
+import { ListGrid } from '../../data-grid/list-grid';
+import { DeleteConfirmDialog } from '../delete-confirm-dialog';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui/select';
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
-import { toast } from '../../components/ui/toast-state';
+} from '../../ui/dropdown-menu';
+import { toast } from '../../ui/toast-state';
 
 const columnHelper = createColumnHelper<Account>();
 
@@ -55,7 +40,6 @@ const CENTER_TYPE_BADGE_COLORS: Record<string, string> = {
 	COST_CENTER: 'bg-(--badge-cost-center-bg) text-(--badge-cost-center)',
 };
 
-// A neutral badge palette for the profit center subdivision labels
 const PROFIT_CENTER_BADGE_COLORS: Record<string, string> = {
 	MATERNELLE: 'bg-(--badge-asset-bg) text-(--badge-asset)',
 	ELEMENTAIRE: 'bg-(--badge-revenue-bg) text-(--badge-revenue)',
@@ -75,7 +59,7 @@ const CENTER_TYPE_LABELS: Record<string, string> = {
 	COST_CENTER: 'Cost Center',
 };
 
-export function AccountsPage() {
+export function AccountsTabContent() {
 	const currentUser = useAuthStore((s) => s.user);
 	const isAdmin = currentUser?.role === 'Admin';
 
@@ -116,7 +100,6 @@ export function AccountsPage() {
 
 	// Delete confirmation state
 	const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
-	const [deleteConfirmCode, setDeleteConfirmCode] = useState('');
 
 	const handleSave = useCallback(
 		(formData: Record<string, unknown>) => {
@@ -175,18 +158,17 @@ export function AccountsPage() {
 	);
 
 	const handleDelete = useCallback(() => {
-		if (!deleteTarget || deleteConfirmCode !== deleteTarget.accountCode) return;
+		if (!deleteTarget) return;
 		deleteMutation.mutate(deleteTarget.id, {
 			onSuccess: () => {
 				setDeleteTarget(null);
-				setDeleteConfirmCode('');
 				toast.success('Account deleted successfully');
 			},
 			onError: () => {
 				toast.error('Failed to delete account');
 			},
 		});
-	}, [deleteTarget, deleteConfirmCode, deleteMutation]);
+	}, [deleteTarget, deleteMutation]);
 
 	const columns = useMemo(
 		() => [
@@ -341,11 +323,9 @@ export function AccountsPage() {
 	});
 
 	return (
-		<div className="p-6">
+		<div className="space-y-4">
 			{/* Toolbar */}
-			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-(--text-xl) font-semibold">Chart of Accounts</h1>
-
+			<div className="flex flex-wrap items-center gap-3">
 				<Input
 					type="search"
 					placeholder="Search accounts..."
@@ -395,9 +375,9 @@ export function AccountsPage() {
 					<SelectContent>
 						<SelectItem value="all">All Divisions</SelectItem>
 						<SelectItem value="MATERNELLE">Maternelle</SelectItem>
-						<SelectItem value="ELEMENTAIRE">Élémentaire</SelectItem>
-						<SelectItem value="COLLEGE">Collège</SelectItem>
-						<SelectItem value="LYCEE">Lycée</SelectItem>
+						<SelectItem value="ELEMENTAIRE">Elementaire</SelectItem>
+						<SelectItem value="COLLEGE">College</SelectItem>
+						<SelectItem value="LYCEE">Lycee</SelectItem>
 					</SelectContent>
 				</Select>
 
@@ -419,6 +399,7 @@ export function AccountsPage() {
 					<Button
 						type="button"
 						variant="primary"
+						className="ml-auto"
 						onClick={() => {
 							setEditingAccount(null);
 							setPanelOpen(true);
@@ -451,55 +432,14 @@ export function AccountsPage() {
 			/>
 
 			{/* Delete confirmation dialog */}
-			<AlertDialog
+			<DeleteConfirmDialog
 				open={!!deleteTarget}
-				onOpenChange={(v) => {
-					if (!v) {
-						setDeleteTarget(null);
-						setDeleteConfirmCode('');
-					}
-				}}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete Account</AlertDialogTitle>
-						<AlertDialogDescription>
-							This action cannot be undone. Type{' '}
-							<strong className="font-semibold">{deleteTarget?.accountCode}</strong> to confirm
-							deletion.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<div className="mt-2">
-						<label htmlFor="delete-confirm" className="sr-only">
-							Type account code to confirm
-						</label>
-						<Input
-							id="delete-confirm"
-							type="text"
-							value={deleteConfirmCode}
-							onChange={(e) => setDeleteConfirmCode(e.target.value)}
-							placeholder={deleteTarget?.accountCode ?? ''}
-							autoFocus
-							onKeyDown={(e) => {
-								if (e.key === 'Escape') {
-									setDeleteTarget(null);
-									setDeleteConfirmCode('');
-								}
-							}}
-						/>
-					</div>
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							className="bg-(--color-error) hover:bg-[color-mix(in_srgb,var(--color-error),black_15%)]"
-							disabled={deleteConfirmCode !== deleteTarget?.accountCode || deleteMutation.isPending}
-							onClick={handleDelete}
-						>
-							{deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+				entityCode={deleteTarget?.accountCode ?? ''}
+				entityType="Account"
+				onConfirm={handleDelete}
+				onCancel={() => setDeleteTarget(null)}
+				loading={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }

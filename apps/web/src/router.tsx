@@ -1,30 +1,24 @@
 import type { RouteObject } from 'react-router';
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import { LandingRedirect } from './components/landing-redirect';
 import { ProtectedRoute } from './components/protected-route';
 import { LoginPage } from './pages/login';
 import { RootLayout } from './layouts/root-layout';
 import { PlanningShell } from './layouts/planning-shell';
-import { ManagementShell } from './layouts/management-shell';
+import { AdminShell } from './layouts/admin-shell';
 import { DashboardPage } from './pages/planning/dashboard';
 import { EnrollmentPage } from './pages/planning/enrollment';
 import { RevenuePage } from './pages/planning/revenue';
-import { VersionsPage } from './pages/management/versions';
-import { FiscalPeriodsPage } from './pages/management/fiscal-periods';
-import { AccountsPage } from './pages/master-data/accounts';
-import { AcademicPage } from './pages/master-data/academic';
-import { ReferencePage } from './pages/master-data/reference';
-import { AssumptionsPage } from './pages/master-data/assumptions';
-import { UsersPage } from './pages/admin/users';
-import { AuditPage } from './pages/admin/audit';
-import { SettingsPage } from './pages/admin/settings';
 import { StaffingPage } from './pages/planning/staffing';
 import { OpExPage } from './pages/planning/opex';
 import { PnlPage } from './pages/planning/pnl';
 import { PnlAccountingPage } from './pages/planning/pnl-accounting';
 import { ScenarioPage } from './pages/planning/scenarios';
 import { TrendsPage } from './pages/planning/trends';
-import { PnlMappingPage } from './pages/master-data/pnl-mapping-page';
+import { VersionsPage } from './pages/admin/versions-page';
+import { MasterDataPage } from './pages/admin/master-data-page';
+import { FinancialSetupPage } from './pages/admin/financial-setup-page';
+import { SystemPage } from './pages/admin/system-page';
 
 export const routes: RouteObject[] = [
 	{ path: '/login', element: <LoginPage /> },
@@ -80,58 +74,74 @@ export const routes: RouteObject[] = [
 							},
 						],
 					},
-					// Management Shell
+					// Administration Shell
 					{
-						element: <ManagementShell />,
+						element: <AdminShell />,
 						children: [
 							{
-								path: '/management/versions',
+								path: '/admin/versions',
 								element: <VersionsPage />,
 							},
 							{
-								path: '/management/fiscal-periods',
-								element: <FiscalPeriodsPage />,
-							},
-							// Master Data
-							{
-								path: '/master-data/accounts',
-								element: <AccountsPage />,
+								path: '/admin/master-data',
+								element: <MasterDataPage />,
 							},
 							{
-								path: '/master-data/academic',
-								element: <AcademicPage />,
+								path: '/admin/financial-setup',
+								element: <FinancialSetupPage />,
 							},
-							{
-								path: '/master-data/reference',
-								element: <ReferencePage />,
-							},
-							{
-								path: '/master-data/assumptions',
-								element: <AssumptionsPage />,
-							},
-							{
-								path: '/master-data/pnl-mapping',
-								element: <PnlMappingPage />,
-							},
-							// Admin (role-gated)
+							// System (Admin-only)
 							{
 								element: <ProtectedRoute roles={['Admin']} />,
 								children: [
 									{
-										path: '/admin/users',
-										element: <UsersPage />,
-									},
-									{
-										path: '/admin/audit',
-										element: <AuditPage />,
-									},
-									{
-										path: '/admin/settings',
-										element: <SettingsPage />,
+										path: '/admin/system',
+										element: <SystemPage />,
 									},
 								],
 							},
 						],
+					},
+					// Backward-compatible redirects
+					{
+						path: '/management/versions',
+						element: <Navigate to="/admin/versions?tab=versions" replace />,
+					},
+					{
+						path: '/management/fiscal-periods',
+						element: <Navigate to="/admin/versions?tab=periods" replace />,
+					},
+					{
+						path: '/master-data/accounts',
+						element: <Navigate to="/admin/master-data?tab=accounts" replace />,
+					},
+					{
+						path: '/master-data/academic',
+						element: <Navigate to="/admin/master-data?tab=academic" replace />,
+					},
+					{
+						path: '/master-data/reference',
+						element: <Navigate to="/admin/master-data?tab=nationalities" replace />,
+					},
+					{
+						path: '/master-data/assumptions',
+						element: <Navigate to="/admin/financial-setup?tab=assumptions" replace />,
+					},
+					{
+						path: '/master-data/pnl-mapping',
+						element: <Navigate to="/admin/financial-setup?tab=pnl-template" replace />,
+					},
+					{
+						path: '/admin/users',
+						element: <Navigate to="/admin/system?tab=users" replace />,
+					},
+					{
+						path: '/admin/audit',
+						element: <Navigate to="/admin/system?tab=audit" replace />,
+					},
+					{
+						path: '/admin/settings',
+						element: <Navigate to="/admin/system?tab=settings" replace />,
 					},
 				],
 			},

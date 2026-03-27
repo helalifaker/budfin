@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useDelayedSkeleton } from '../../hooks/use-delayed-skeleton';
+import { useDelayedSkeleton } from '../../../hooks/use-delayed-skeleton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../lib/api-client';
-import { SettingsCard } from '../../components/admin/settings-card';
-import { Button } from '../../components/ui/button';
-import { Skeleton } from '../../components/ui/skeleton';
-import { toast } from '../../components/ui/toast-state';
+import { apiClient } from '../../../lib/api-client';
+import { SettingsCard } from '../settings-card';
+import { Button } from '../../ui/button';
+import { Skeleton } from '../../ui/skeleton';
+import { toast } from '../../ui/toast-state';
 
 interface ConfigItem {
 	key: string;
@@ -73,7 +73,41 @@ const GROUPS: SettingGroup[] = [
 	},
 ];
 
-export function SettingsPage() {
+/**
+ * KPI stats derived from system config data.
+ * Used by the parent page to populate the AdminKpiRibbon.
+ */
+export type SettingsKpiStats = {
+	sessionTimeout: string;
+	lockoutThreshold: string;
+	fiscalYear: string;
+	autosaveInterval: string;
+};
+
+export function useSettingsKpiStats(): SettingsKpiStats | null {
+	const { data } = useQuery({
+		queryKey: ['system-config'],
+		queryFn: () => apiClient<ConfigResponse>('/system-config'),
+	});
+
+	return useMemo(() => {
+		if (!data) return null;
+
+		const configMap: Record<string, string> = {};
+		for (const item of data.config) {
+			configMap[item.key] = item.value;
+		}
+
+		return {
+			sessionTimeout: configMap['session_timeout_minutes'] ?? '-',
+			lockoutThreshold: configMap['lockout_threshold'] ?? '-',
+			fiscalYear: configMap['fiscal_year_start_month'] ?? '-',
+			autosaveInterval: configMap['autosave_interval_seconds'] ?? '-',
+		};
+	}, [data]);
+}
+
+export function SettingsTabContent() {
 	const queryClient = useQueryClient();
 	const { data, isLoading } = useQuery({
 		queryKey: ['system-config'],
@@ -132,9 +166,8 @@ export function SettingsPage() {
 
 	if (isLoading && showSkeleton) {
 		return (
-			<div className="p-6">
-				<div className="flex items-center justify-between pb-6">
-					<Skeleton className="h-7 w-40" />
+			<div>
+				<div className="flex items-center justify-end pb-6">
 					<Skeleton className="h-9 w-32" />
 				</div>
 				<div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
@@ -157,13 +190,12 @@ export function SettingsPage() {
 	}
 
 	if (isLoading) {
-		return <div className="p-6" />;
+		return null;
 	}
 
 	return (
-		<div className="p-6">
-			<div className="flex items-center justify-between pb-6">
-				<h1 className="text-(--text-xl) font-semibold">System Settings</h1>
+		<div>
+			<div className="flex items-center justify-end pb-6">
 				<Button
 					type="button"
 					variant="primary"

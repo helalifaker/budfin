@@ -7,42 +7,36 @@ import {
 } from '@tanstack/react-table';
 import type { SortingState } from '@tanstack/react-table';
 import { Layers, MoreHorizontal, BarChart3 } from 'lucide-react';
-import { cn } from '../../lib/cn';
-import { useAuthStore } from '../../stores/auth-store';
-import { useVersionPageStore } from '../../stores/version-page-store';
-import { useVersions } from '../../hooks/use-versions';
-import type { BudgetVersion } from '../../hooks/use-versions';
-import { formatDate, getCurrentFiscalYear } from '../../lib/format-date';
-import { toast } from '../../components/ui/toast-state';
-import { ListGrid } from '../../components/data-grid/list-grid';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import {
-	Select,
-	SelectTrigger,
-	SelectValue,
-	SelectContent,
-	SelectItem,
-} from '../../components/ui/select';
+import { cn } from '../../../lib/cn';
+import { useAuthStore } from '../../../stores/auth-store';
+import { useVersionPageStore } from '../../../stores/version-page-store';
+import { useVersions } from '../../../hooks/use-versions';
+import type { BudgetVersion } from '../../../hooks/use-versions';
+import { formatDate, getCurrentFiscalYear } from '../../../lib/format-date';
+import { toast } from '../../ui/toast-state';
+import { ListGrid } from '../../data-grid/list-grid';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui/select';
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
-import { Checkbox } from '../../components/ui/checkbox';
-import { CreateVersionPanel } from '../../components/versions/create-version-panel';
-import { CloneVersionDialog } from '../../components/versions/clone-version-dialog';
-import { VersionDetailPanel } from '../../components/versions/version-detail-panel';
-import { ComparisonView } from '../../components/versions/comparison-view';
+} from '../../ui/dropdown-menu';
+import { Checkbox } from '../../ui/checkbox';
+import { CreateVersionPanel } from '../../versions/create-version-panel';
+import { CloneVersionDialog } from '../../versions/clone-version-dialog';
+import { VersionDetailPanel } from '../../versions/version-detail-panel';
+import { ComparisonView } from '../../versions/comparison-view';
 import {
 	PublishDialog,
 	LockDialog,
 	ArchiveDialog,
 	RevertDialog,
 	DeleteDialog,
-} from '../../components/versions/lifecycle-dialogs';
+} from '../../versions/lifecycle-dialogs';
 
 const columnHelper = createColumnHelper<BudgetVersion>();
 
@@ -67,7 +61,7 @@ const TYPE_DOT_COLORS: Record<BudgetVersion['type'], string> = {
 
 const CURRENT_FISCAL_YEAR = getCurrentFiscalYear();
 
-export function VersionsPage() {
+export function VersionsTabContent() {
 	const currentUser = useAuthStore((s) => s.user);
 	const canCreate = currentUser?.role === 'Admin' || currentUser?.role === 'BudgetOwner';
 
@@ -330,11 +324,9 @@ export function VersionsPage() {
 	});
 
 	return (
-		<div className="p-6">
+		<>
 			{/* Toolbar */}
 			<div className="flex flex-wrap items-center gap-3 pb-4">
-				<h1 className="mr-auto text-(--text-xl) font-semibold">Version Management</h1>
-
 				<Button variant={isCompareMode ? 'primary' : 'secondary'} onClick={handleCompareToggle}>
 					<BarChart3 className="mr-1.5 h-4 w-4" aria-hidden="true" />
 					{isCompareMode ? 'Cancel' : 'Compare'}
@@ -345,6 +337,8 @@ export function VersionsPage() {
 						+ Add Version
 					</Button>
 				)}
+
+				<div className="ml-auto" />
 			</div>
 
 			{/* Inline filter bar */}
@@ -543,7 +537,7 @@ export function VersionsPage() {
 					setDeleteTarget(null);
 				}}
 			/>
-		</div>
+		</>
 	);
 }
 

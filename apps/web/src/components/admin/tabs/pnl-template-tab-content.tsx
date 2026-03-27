@@ -7,19 +7,66 @@ import {
 	type PnlTemplateSection,
 	type SectionInput,
 	type TemplateMappingsResponse,
-} from '../../hooks/use-pnl-templates';
-import { useAccounts, type Account } from '../../hooks/use-accounts';
-import { cn } from '../../lib/cn';
-import { Button } from '../../components/ui/button';
-import { Skeleton } from '../../components/ui/skeleton';
-import { PnlPreviewPanel } from '../../components/pnl-mapping/pnl-preview-panel';
-import { AccountAssignmentPanel } from '../../components/pnl-mapping/account-assignment-panel';
-import { UnassignedAccounts } from '../../components/pnl-mapping/unassigned-accounts';
-import { toast } from '../../components/ui/toast-state';
+} from '../../../hooks/use-pnl-templates';
+import { useAccounts, type Account } from '../../../hooks/use-accounts';
+import { cn } from '../../../lib/cn';
+import { Button } from '../../ui/button';
+import { Skeleton } from '../../ui/skeleton';
+import { PnlPreviewPanel } from '../../pnl-mapping/pnl-preview-panel';
+import { AccountAssignmentPanel } from '../../pnl-mapping/account-assignment-panel';
+import { UnassignedAccounts } from '../../pnl-mapping/unassigned-accounts';
+import { toast } from '../../ui/toast-state';
 
-// ── Page Shell (handles loading) ─────────────────────────────────────────────
+/**
+ * KPI stats derived from P&L template data.
+ * Used by the parent page to populate the AdminKpiRibbon.
+ */
+export type PnlTemplateKpiStats = {
+	sectionCount: number;
+	mappedAccountCount: number;
+	unassignedCount: number;
+	coveragePct: number;
+};
 
-export function PnlMappingPage() {
+export function usePnlTemplateKpiStats(): PnlTemplateKpiStats | null {
+	const { data: templates } = usePnlTemplates();
+	const { data: accountsData } = useAccounts();
+
+	const defaultTemplate = templates?.find((t) => t.isDefault) ?? templates?.[0];
+	const templateId = defaultTemplate?.id;
+
+	const { data: mappingsData } = useTemplateMappings(templateId);
+
+	return useMemo(() => {
+		if (!mappingsData || !accountsData) return null;
+
+		const sections = mappingsData.sections;
+		const nonSubtotalSections = sections.filter((s) => !s.isSubtotal);
+
+		const assignedCodes = new Set<string>();
+		for (const section of sections) {
+			for (const mapping of section.mappings) {
+				if (mapping.accountCode) {
+					assignedCodes.add(mapping.accountCode);
+				}
+			}
+		}
+
+		const activeAccounts = accountsData.accounts.filter((a) => a.status === 'ACTIVE');
+		const unassignedCount = activeAccounts.filter((a) => !assignedCodes.has(a.accountCode)).length;
+		const totalActive = activeAccounts.length;
+		const coveragePct = totalActive > 0 ? Math.round((assignedCodes.size / totalActive) * 100) : 0;
+
+		return {
+			sectionCount: nonSubtotalSections.length,
+			mappedAccountCount: assignedCodes.size,
+			unassignedCount,
+			coveragePct,
+		};
+	}, [mappingsData, accountsData]);
+}
+
+export function PnlTemplateTabContent() {
 	const { data: templates, isLoading: templatesLoading } = usePnlTemplates();
 	const { data: accountsData, isLoading: accountsLoading } = useAccounts();
 
@@ -31,7 +78,7 @@ export function PnlMappingPage() {
 
 	if (isLoading) {
 		return (
-			<div className="p-6">
+			<div>
 				<div className="mb-6 flex items-center justify-between">
 					<Skeleton className="h-8 w-48" />
 					<Skeleton className="h-9 w-24" />
@@ -221,12 +268,11 @@ function PnlMappingEditor({
 	}, [templateId, localSections, saveMutation]);
 
 	return (
-		<div className="flex h-full flex-col overflow-hidden p-6">
+		<div className="flex h-full flex-col overflow-hidden">
 			{/* Header */}
 			<div className="mb-6 flex shrink-0 flex-wrap items-center justify-between gap-3">
 				<div>
-					<h1 className="text-(--text-xl) font-semibold text-(--text-primary)">P&L Mapping</h1>
-					<p className="mt-1 text-(--text-sm) text-(--text-muted)">
+					<p className="text-(--text-sm) text-(--text-muted)">
 						Configure account assignments for the IFRS P&L template
 						{templateName && <span className="ml-1 font-medium">({templateName})</span>}
 					</p>
