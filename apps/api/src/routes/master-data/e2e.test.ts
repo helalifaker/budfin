@@ -126,45 +126,6 @@ const mockNationality = {
 	updatedBy: 1,
 };
 
-const _mockGradeLevel = {
-	id: 1,
-	code: 'PS',
-	label: 'Petite Section',
-	band: 'MATERNELLE',
-	maxClassSize: 25,
-	plancherPct: new Prisma.Decimal('0.60'),
-	ciblePct: new Prisma.Decimal('0.80'),
-	plafondPct: new Prisma.Decimal('1.00'),
-	displayOrder: 1,
-	version: 1,
-	createdAt: now,
-	updatedAt: now,
-};
-
-const _mockTariff = {
-	id: 1,
-	code: 'STD',
-	label: 'Standard',
-	description: null,
-	version: 1,
-	createdAt: now,
-	updatedAt: now,
-	createdBy: 1,
-	updatedBy: 1,
-};
-
-const _mockDepartment = {
-	id: 1,
-	code: 'MATERNELLE',
-	label: 'Maternelle',
-	bandMapping: 'MATERNELLE' as const,
-	version: 1,
-	createdAt: now,
-	updatedAt: now,
-	createdBy: 1,
-	updatedBy: 1,
-};
-
 const mockAssumptions = [
 	{
 		id: 1,

@@ -45,5 +45,11 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "sourcegraph@claude-plugins-official": true,
+    "postman@claude-plugins-official": true,
+    "remember@claude-plugins-official": true,
+    "prisma@claude-plugins-official": true
   }
 }

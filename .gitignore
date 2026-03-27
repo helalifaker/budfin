@@ -4,6 +4,9 @@ node_modules/
 package-lock.json
 .worktrees/
 
+# Claude plugin session logs (ephemeral, not project code)
+.remember/
+
 # Environment files — never commit secrets
 .env
 .env.*
