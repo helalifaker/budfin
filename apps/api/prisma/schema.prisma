@@ -1388,7 +1388,7 @@ model ScenarioParameters {
   feeCollectionRate     Decimal  @default(1.000000) @map("fee_collection_rate") @db.Decimal(7, 6)
   scholarshipAllocation Decimal  @default(0.000000) @map("scholarship_allocation") @db.Decimal(7, 6)
   attritionRate         Decimal  @default(0.000000) @map("attrition_rate") @db.Decimal(7, 6)
-  orsHours              Decimal  @default(18.0000) @map("ors_hours") @db.Decimal(5, 4)
+  orsHours              Decimal  @default(18.0000) @map("ors_hours") @db.Decimal(6, 4)
   createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
