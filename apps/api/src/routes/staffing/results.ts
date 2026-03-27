@@ -35,7 +35,7 @@ export async function staffingResultRoutes(app: FastifyInstance) {
 			params: versionIdParams,
 			querystring: staffCostsQuery,
 		},
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 			const { group_by, include_breakdown } = request.query as z.infer<typeof staffCostsQuery>;
@@ -175,7 +175,7 @@ export async function staffingResultRoutes(app: FastifyInstance) {
 	// GET /staffing-summary
 	app.get('/staffing-summary', {
 		schema: { params: versionIdParams },
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 
@@ -235,7 +235,7 @@ export async function staffingResultRoutes(app: FastifyInstance) {
 	// GET /category-costs — Contrats Locaux & Residents monthly costs
 	app.get('/category-costs', {
 		schema: { params: versionIdParams },
-		preHandler: [app.authenticate],
+		preHandler: [app.authenticate, app.requirePermission('data:view')],
 		handler: async (request, reply) => {
 			const { versionId } = request.params as z.infer<typeof versionIdParams>;
 

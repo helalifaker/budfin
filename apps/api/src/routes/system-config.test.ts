@@ -17,6 +17,10 @@ vi.mock('../lib/prisma.js', () => ({
 		auditEntry: {
 			create: vi.fn().mockResolvedValue({ id: 1 }),
 		},
+		$transaction: vi.fn().mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) => {
+			const { prisma: innerPrisma } = await import('../lib/prisma.js');
+			return cb(innerPrisma);
+		}),
 	},
 }));
 

@@ -312,7 +312,7 @@ export async function employeeRoutes(app: FastifyInstance) {
 		schema: {
 			params: employeeIdParams,
 		},
-		preHandler: [app.authenticate, app.requirePermission('data:view')],
+		preHandler: [app.authenticate, app.requirePermission('data:view'), app.validateVersionAccess],
 		handler: async (request, reply) => {
 			const { versionId, id } = request.params as z.infer<typeof employeeIdParams>;
 

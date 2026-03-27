@@ -88,26 +88,30 @@ export async function userRoutes(app: FastifyInstance) {
 
 			const passwordHash = await hashPassword(password);
 
-			const user = await prisma.user.create({
-				data: {
-					email,
-					passwordHash,
-					role,
-					isActive: true,
-					failedAttempts: 0,
-				},
-			});
+			const user = await prisma.$transaction(async (tx) => {
+				const created = await tx.user.create({
+					data: {
+						email,
+						passwordHash,
+						role,
+						isActive: true,
+						failedAttempts: 0,
+					},
+				});
 
-			await prisma.auditEntry.create({
-				data: {
-					userId: request.user.id,
-					userEmail: request.user.email,
-					operation: 'USER_CREATED',
-					tableName: 'users',
-					recordId: user.id,
-					ipAddress: request.ip,
-					newValues: { email, role },
-				},
+				await tx.auditEntry.create({
+					data: {
+						userId: request.user.id,
+						userEmail: request.user.email,
+						operation: 'USER_CREATED',
+						tableName: 'users',
+						recordId: created.id,
+						ipAddress: request.ip,
+						newValues: { email, role },
+					},
+				});
+
+				return created;
 			});
 
 			return reply.status(201).send({

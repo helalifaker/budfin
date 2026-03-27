@@ -214,6 +214,15 @@ export function ListGrid<T>({
 							key={header.id}
 							colSpan={header.colSpan}
 							onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
+							aria-sort={
+								isSortable
+									? header.column.getIsSorted() === 'asc'
+										? 'ascending'
+										: header.column.getIsSorted() === 'desc'
+											? 'descending'
+											: 'none'
+									: undefined
+							}
 							className={cn(
 								'px-(--list-cell-px) py-3',
 								'bg-(--list-header-bg)',

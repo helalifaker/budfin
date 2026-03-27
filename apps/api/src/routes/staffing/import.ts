@@ -640,8 +640,15 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 					const emp = validEmployees[i]!;
 					const resolved = resolvedFields[i]!;
 
-					await txPrisma.$executeRawUnsafe(
-						`INSERT INTO employees (
+					const augEffDate = emp.augmentationEffectiveDate
+						? Prisma.sql`${emp.augmentationEffectiveDate}::date`
+						: Prisma.sql`NULL`;
+					const contractEnd = emp.contractEndDate
+						? Prisma.sql`${emp.contractEndDate}::date`
+						: Prisma.sql`NULL`;
+
+					await txPrisma.$executeRaw`
+						INSERT INTO employees (
 							version_id, employee_code, name,
 							function_role, department,
 							status, joining_date, payment_method,
@@ -657,49 +664,26 @@ export async function employeeImportRoutes(app: FastifyInstance) {
 							contract_end_date,
 							created_by, created_at, updated_at
 						) VALUES (
-							$1, $2, $3, $4, $5,
-							$6, $7, $8,
-							$9, $10, $11, $12,
-							pgp_sym_encrypt($13, $14),
-							pgp_sym_encrypt($15, $14),
-							pgp_sym_encrypt($16, $14),
-							pgp_sym_encrypt($17, $14),
-							pgp_sym_encrypt($18, $14),
-							pgp_sym_encrypt($19, $14),
-							$20,
-							$21, $22, $23,
-							$24, $25,
-							$26,
-							$27, NOW(), NOW()
-						)`,
-						versionId,
-						emp.employeeCode,
-						emp.name,
-						emp.functionRole,
-						emp.department,
-						emp.status,
-						emp.joiningDate,
-						emp.paymentMethod,
-						emp.isSaudi,
-						emp.isAjeer,
-						emp.isTeaching,
-						new Decimal(emp.hourlyPercentage).toFixed(4),
-						emp.baseSalary,
-						key,
-						emp.housingAllowance,
-						emp.transportAllowance,
-						emp.responsibilityPremium,
-						'0', // hsaAmount: computed-only by pipeline (AC-03)
-						emp.augmentation,
-						emp.augmentationEffectiveDate,
-						emp.recordType,
-						emp.costMode,
-						resolved.disciplineId,
-						resolved.serviceProfileId,
-						emp.homeBand,
-						emp.contractEndDate,
-						request.user.id
-					);
+							${versionId}, ${emp.employeeCode}, ${emp.name},
+							${emp.functionRole}, ${emp.department},
+							${emp.status}, ${emp.joiningDate}::date, ${emp.paymentMethod},
+							${emp.isSaudi}, ${emp.isAjeer}, ${emp.isTeaching},
+							${Number(new Decimal(emp.hourlyPercentage).toFixed(4))},
+							pgp_sym_encrypt(${emp.baseSalary}, ${key}),
+							pgp_sym_encrypt(${emp.housingAllowance}, ${key}),
+							pgp_sym_encrypt(${emp.transportAllowance}, ${key}),
+							pgp_sym_encrypt(${emp.responsibilityPremium}, ${key}),
+							pgp_sym_encrypt(${'0'}, ${key}),
+							pgp_sym_encrypt(${emp.augmentation}, ${key}),
+							${augEffDate},
+							${emp.recordType}, ${emp.costMode},
+							${resolved.disciplineId},
+							${resolved.serviceProfileId},
+							${emp.homeBand},
+							${contractEnd},
+							${request.user.id}, NOW(), NOW()
+						)
+					`;
 					inserted++;
 				}
 

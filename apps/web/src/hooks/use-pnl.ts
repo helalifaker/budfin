@@ -22,7 +22,7 @@ export function usePnlResults(format: PnlFormat = 'ifrs', comparisonVersionId?: 
 	const versionId = useWorkspaceContextStore((s) => s.versionId);
 
 	return useQuery({
-		queryKey: pnlKeys.results(versionId!, format, comparisonVersionId),
+		queryKey: pnlKeys.results(versionId ?? 0, format, comparisonVersionId),
 		queryFn: async () => {
 			const params = new URLSearchParams({ format });
 			if (comparisonVersionId) {
@@ -45,7 +45,7 @@ export function usePnlKpis() {
 	const versionId = useWorkspaceContextStore((s) => s.versionId);
 
 	return useQuery({
-		queryKey: pnlKeys.kpis(versionId!),
+		queryKey: pnlKeys.kpis(versionId ?? 0),
 		queryFn: async () => {
 			return apiClient<PnlKpis>(`/versions/${versionId}/pnl/kpis`);
 		},

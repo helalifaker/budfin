@@ -225,8 +225,17 @@ export async function opExLineItemRoutes(app: FastifyInstance) {
 				where: { id: versionId },
 				select: { id: true, status: true, staleModules: true },
 			});
-			if (!version || version.status === 'Locked' || version.status === 'Archived') {
-				return reply.status(404).send({ message: 'Version not found or locked' });
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: 'Version not found',
+				});
+			}
+			if (version.status === 'Locked' || version.status === 'Archived') {
+				return reply.status(409).send({
+					code: 'VERSION_LOCKED',
+					message: 'Cannot modify a locked or archived version',
+				});
 			}
 
 			const lineItem = await prisma.$transaction(async (tx) => {
@@ -289,8 +298,17 @@ export async function opExLineItemRoutes(app: FastifyInstance) {
 				where: { id: versionId },
 				select: { id: true, status: true, staleModules: true },
 			});
-			if (!version || version.status === 'Locked' || version.status === 'Archived') {
-				return reply.status(404).send({ message: 'Version not found or locked' });
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: 'Version not found',
+				});
+			}
+			if (version.status === 'Locked' || version.status === 'Archived') {
+				return reply.status(409).send({
+					code: 'VERSION_LOCKED',
+					message: 'Cannot modify a locked or archived version',
+				});
 			}
 
 			const result = await prisma.$transaction(async (tx) => {
@@ -399,8 +417,17 @@ export async function opExLineItemRoutes(app: FastifyInstance) {
 				where: { id: versionId },
 				select: { id: true, status: true, staleModules: true },
 			});
-			if (!version || version.status === 'Locked' || version.status === 'Archived') {
-				return reply.status(404).send({ message: 'Version not found or locked' });
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: 'Version not found',
+				});
+			}
+			if (version.status === 'Locked' || version.status === 'Archived') {
+				return reply.status(409).send({
+					code: 'VERSION_LOCKED',
+					message: 'Cannot modify a locked or archived version',
+				});
 			}
 
 			await prisma.$transaction(async (tx) => {
@@ -453,8 +480,17 @@ export async function opExLineItemRoutes(app: FastifyInstance) {
 				where: { id: params.versionId },
 				select: { id: true, status: true, staleModules: true },
 			});
-			if (!version || version.status === 'Locked' || version.status === 'Archived') {
-				return reply.status(404).send({ message: 'Version not found or locked' });
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: 'Version not found',
+				});
+			}
+			if (version.status === 'Locked' || version.status === 'Archived') {
+				return reply.status(409).send({
+					code: 'VERSION_LOCKED',
+					message: 'Cannot modify a locked or archived version',
+				});
 			}
 
 			await prisma.$transaction(async (tx) => {
@@ -510,8 +546,17 @@ export async function opExLineItemRoutes(app: FastifyInstance) {
 				where: { id: params.versionId },
 				select: { id: true, status: true, staleModules: true },
 			});
-			if (!version || version.status === 'Locked' || version.status === 'Archived') {
-				return reply.status(404).send({ message: 'Version not found or locked' });
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: 'Version not found',
+				});
+			}
+			if (version.status === 'Locked' || version.status === 'Archived') {
+				return reply.status(409).send({
+					code: 'VERSION_LOCKED',
+					message: 'Cannot modify a locked or archived version',
+				});
 			}
 
 			// Verify the line item exists and belongs to this version
@@ -520,7 +565,10 @@ export async function opExLineItemRoutes(app: FastifyInstance) {
 				select: { id: true, versionId: true, sectionType: true },
 			});
 			if (!existing || existing.versionId !== params.versionId) {
-				return reply.status(404).send({ message: 'Line item not found in this version' });
+				return reply.status(404).send({
+					code: 'LINE_ITEM_NOT_FOUND',
+					message: 'Line item not found in this version',
+				});
 			}
 
 			// Validate ifrsCategory if changing it
@@ -625,8 +673,17 @@ export async function opExLineItemRoutes(app: FastifyInstance) {
 				where: { id: versionId },
 				select: { id: true, status: true },
 			});
-			if (!version || version.status === 'Locked' || version.status === 'Archived') {
-				return reply.status(404).send({ message: 'Version not found or locked' });
+			if (!version) {
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: 'Version not found',
+				});
+			}
+			if (version.status === 'Locked' || version.status === 'Archived') {
+				return reply.status(409).send({
+					code: 'VERSION_LOCKED',
+					message: 'Cannot modify a locked or archived version',
+				});
 			}
 
 			await prisma.$transaction(async (tx) => {

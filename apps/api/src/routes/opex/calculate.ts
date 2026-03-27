@@ -25,7 +25,10 @@ export async function opExCalculateRoutes(app: FastifyInstance) {
 				select: { id: true, status: true, staleModules: true },
 			});
 			if (!version) {
-				return reply.status(404).send({ message: 'Version not found' });
+				return reply.status(404).send({
+					code: 'VERSION_NOT_FOUND',
+					message: 'Version not found',
+				});
 			}
 			if (version.status === 'Locked' || version.status === 'Archived') {
 				return reply.status(409).send({
