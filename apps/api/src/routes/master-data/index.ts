@@ -7,6 +7,7 @@ import { tariffRoutes } from './tariffs.js';
 import { departmentRoutes } from './departments.js';
 import { assumptionRoutes } from './assumptions.js';
 import { staffingMasterDataRoutes } from './staffing-master-data.js';
+import { pnlTemplateRoutes } from './pnl-templates.js';
 
 export async function masterDataRoutes(app: FastifyInstance) {
 	await app.register(accountRoutes, { prefix: '/accounts' });
@@ -17,4 +18,5 @@ export async function masterDataRoutes(app: FastifyInstance) {
 	await app.register(departmentRoutes, { prefix: '/departments' });
 	await app.register(assumptionRoutes, { prefix: '/assumptions' });
 	await app.register(staffingMasterDataRoutes);
+	await app.register(pnlTemplateRoutes, { prefix: '/pnl-templates' });
 }
