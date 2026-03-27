@@ -31,6 +31,7 @@ import { dashboardRoutes } from './routes/dashboard.js';
 import { commentRoutes } from './routes/comments.js';
 import { exportRoutes } from './routes/export.js';
 import { trendsRoutes } from './routes/trends.js';
+import { historicalActualRoutes } from './routes/historical-actuals.js';
 import { startExportWorker, stopExportWorker } from './services/export/export-worker.js';
 
 export async function buildApp() {
@@ -111,6 +112,7 @@ export async function buildApp() {
 	});
 	await app.register(exportRoutes, { prefix: '/api/v1/export' });
 	await app.register(trendsRoutes, { prefix: '/api/v1' });
+	await app.register(historicalActualRoutes, { prefix: '/api/v1/historical-actuals' });
 
 	return app;
 }
