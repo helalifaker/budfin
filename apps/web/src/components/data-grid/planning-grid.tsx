@@ -386,7 +386,7 @@ export function PlanningGrid<T>({
 		);
 	};
 
-	const renderBandHeader = (band: string, rowCount: number) => {
+	const renderBandHeader = (band: string, rowCount: number, groupIdx: number) => {
 		if (!bandGrouping) return null;
 		const label = bandGrouping.bandLabels[band] ?? band;
 		const style = bandGrouping.bandStyles[band];
@@ -394,7 +394,7 @@ export function PlanningGrid<T>({
 		const isCollapsed = collapsedBands.has(band);
 
 		return (
-			<tr key={`band-${band}`} className="border-b border-(--workspace-border)">
+			<tr key={`band-${groupIdx}-${band}`} className="border-b border-(--workspace-border)">
 				<td
 					colSpan={cols}
 					className={cn(
@@ -530,9 +530,9 @@ export function PlanningGrid<T>({
 
 		if (bandedRows) {
 			let animIdx = 0;
-			return bandedRows.flatMap((group) => {
+			return bandedRows.flatMap((group, groupIdx) => {
 				const isCollapsed = collapsedBands.has(group.band);
-				const elements = [renderBandHeader(group.band, group.rowIndices.length)];
+				const elements = [renderBandHeader(group.band, group.rowIndices.length, groupIdx)];
 				if (!isCollapsed) {
 					const groupRows = group.rowIndices
 						.map((rowIndex) => rows[rowIndex]?.original)
@@ -545,7 +545,7 @@ export function PlanningGrid<T>({
 					});
 					const footerRow = bandGrouping?.footerBuilder?.(groupRows, group.band);
 					if (footerRow) {
-						elements.push(renderSummaryRow(footerRow, `band-summary-${group.band}`));
+						elements.push(renderSummaryRow(footerRow, `band-summary-${groupIdx}-${group.band}`));
 					}
 				}
 				return elements;
