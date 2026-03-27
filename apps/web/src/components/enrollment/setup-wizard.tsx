@@ -1104,6 +1104,7 @@ export function EnrollmentSetupWizard({
 												accept=".xlsx,.xls,.csv"
 												onChange={handleImportFileChange}
 												className="hidden"
+												aria-label="Import enrollment workbook"
 											/>
 											<Button
 												type="button"

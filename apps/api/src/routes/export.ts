@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { createReadStream, existsSync } from 'node:fs';
 import { prisma } from '../lib/prisma.js';
+import { getExportBoss, EXPORT_QUEUE_NAME } from '../services/export/export-worker.js';
 
 // ── Schemas ────────────────────────────────────────────────────────────────
 
@@ -96,6 +97,16 @@ export async function exportRoutes(app: FastifyInstance) {
 				}
 			}
 
+			// Fail fast if the export worker is not running — otherwise the job
+			// would be created in PENDING state with no worker to process it.
+			const boss = getExportBoss();
+			if (!boss) {
+				return reply.status(503).send({
+					code: 'EXPORT_WORKER_UNAVAILABLE',
+					message: 'Export service is temporarily unavailable. Please try again.',
+				});
+			}
+
 			// Create the ExportJob record
 			const job = await prisma.exportJob.create({
 				data: {
@@ -109,11 +120,18 @@ export async function exportRoutes(app: FastifyInstance) {
 				},
 			});
 
-			// Enqueue the pg-boss job
-			const { getExportBoss } = await import('../services/export/export-worker.js');
-			const boss = getExportBoss();
-			if (boss) {
-				await boss.send('export-generate', { jobId: job.id });
+			// Enqueue the pg-boss job (returns null if queue doesn't exist)
+			const pgBossId = await boss.send(EXPORT_QUEUE_NAME, { jobId: job.id });
+
+			if (!pgBossId) {
+				await prisma.exportJob.update({
+					where: { id: job.id },
+					data: { status: 'FAILED', errorMessage: 'Failed to enqueue export job' },
+				});
+				return reply.status(503).send({
+					code: 'EXPORT_WORKER_UNAVAILABLE',
+					message: 'Export service failed to queue the job. Please try again.',
+				});
 			}
 
 			return reply.status(201).send({

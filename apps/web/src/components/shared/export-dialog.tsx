@@ -3,6 +3,9 @@ import { Download, FileText, FileSpreadsheet, Loader2, CheckCircle2, XCircle } f
 import type { ExportReportType, ExportFormat } from '@budfin/types';
 import { useCreateExportJob, useExportJobStatus } from '../../hooks/use-export';
 import { useWorkspaceContextStore } from '../../stores/workspace-context-store';
+import { useAuthStore } from '../../stores/auth-store';
+import { triggerDownload } from '../../lib/download-utils';
+import { toast } from '../ui/toast-state';
 import {
 	Dialog,
 	DialogContent,
@@ -88,10 +91,24 @@ function ExportDialogBody({
 		});
 	}
 
-	function handleDownload() {
+	async function handleDownload() {
 		if (!jobStatus?.downloadUrl) return;
-		window.open(jobStatus.downloadUrl, '_blank');
-		onOpenChange(false);
+		try {
+			const token = useAuthStore.getState().accessToken;
+			const response = await fetch(jobStatus.downloadUrl, {
+				headers: token ? { Authorization: `Bearer ${token}` } : {},
+				credentials: 'include',
+			});
+			if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+			const blob = await response.blob();
+			const disposition = response.headers.get('Content-Disposition') ?? '';
+			const nameMatch = /filename="([^"]+)"/.exec(disposition);
+			const filename = nameMatch?.[1] ?? 'export';
+			triggerDownload(filename, blob);
+			onOpenChange(false);
+		} catch {
+			toast.error('Download failed. Please try again.');
+		}
 	}
 
 	const isGenerating =

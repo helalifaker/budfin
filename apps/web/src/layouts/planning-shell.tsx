@@ -23,12 +23,12 @@ export function PlanningShell() {
 	}, [versionId, openPanel]);
 
 	return (
-		<div className="flex flex-1 flex-col overflow-hidden">
-			<div data-context-bar="">
-				<ContextBar />
-				<VersionAccentStrip />
-			</div>
-			<div className="flex flex-1 overflow-hidden">
+		<div className="flex flex-1 overflow-hidden">
+			<div className="flex flex-1 flex-col overflow-hidden">
+				<div data-context-bar="">
+					<ContextBar />
+					<VersionAccentStrip />
+				</div>
 				<main
 					className={cn(
 						'flex flex-1 flex-col overflow-y-auto scrollbar-thin',
@@ -37,9 +37,9 @@ export function PlanningShell() {
 				>
 					<Outlet />
 				</main>
-				<div data-right-panel="">
-					<RightPanel />
-				</div>
+			</div>
+			<div data-right-panel="" className="flex">
+				<RightPanel />
 			</div>
 		</div>
 	);

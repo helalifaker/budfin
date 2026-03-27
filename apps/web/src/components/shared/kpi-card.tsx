@@ -10,6 +10,7 @@ export type KpiCardProps = {
 	isStale?: boolean;
 	accentColor?: string;
 	sparkline?: React.ReactNode;
+	role?: React.AriaRole;
 };
 
 export function KpiCard({
@@ -21,10 +22,11 @@ export function KpiCard({
 	isStale = false,
 	accentColor = 'var(--accent-500)',
 	sparkline,
+	role,
 }: KpiCardProps) {
 	return (
 		<div
-			role="listitem"
+			role={role}
 			className={cn(
 				'animate-kpi-enter relative overflow-hidden',
 				'rounded-xl',

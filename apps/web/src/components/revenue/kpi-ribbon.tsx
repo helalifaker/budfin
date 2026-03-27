@@ -67,6 +67,7 @@ export function RevenueKpiRibbon(props: RevenueKpiRibbonProps) {
 				return (
 					<KpiCard
 						key={card.key}
+						role="listitem"
 						label={card.label}
 						icon={card.icon}
 						index={index}

@@ -9,6 +9,8 @@ import { generateExcel } from './excel-generator.js';
 
 // ── pg-boss singleton ──────────────────────────────────────────────────────
 
+export const EXPORT_QUEUE_NAME = 'export-generate';
+
 let boss: PgBoss | null = null;
 
 export function getExportBoss(): PgBoss | null {
@@ -130,7 +132,11 @@ export async function startExportWorker(): Promise<void> {
 	boss = new PgBoss(connectionString);
 	await boss.start();
 
-	await boss.work<ExportJobPayload>('export-generate', handleExportJobs);
+	// pg-boss v10 requires explicit queue creation before send/work.
+	// Without this, send() silently drops jobs (INSERT JOINs pgboss.queue).
+	await boss.createQueue(EXPORT_QUEUE_NAME);
+
+	await boss.work<ExportJobPayload>(EXPORT_QUEUE_NAME, handleExportJobs);
 }
 
 export async function stopExportWorker(): Promise<void> {

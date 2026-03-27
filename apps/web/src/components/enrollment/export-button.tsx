@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react';
 import type { EnrollmentMasterGridRow } from '@budfin/types';
+import { triggerDownload } from '../../lib/download-utils';
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
@@ -88,13 +89,8 @@ export function ExportButton({
 
 		const csv = buildCsv(rows, { versionName, activeFilters, isFiltered });
 		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-		const url = window.URL.createObjectURL(blob);
-		const anchor = document.createElement('a');
 		const safeName = versionName.replace(/\s+/g, '-').toLowerCase();
-		anchor.href = url;
-		anchor.download = `enrollment-${safeName}-${formatDateForFilename()}.csv`;
-		anchor.click();
-		window.URL.revokeObjectURL(url);
+		triggerDownload(`enrollment-${safeName}-${formatDateForFilename()}.csv`, blob);
 	}
 
 	const button = (

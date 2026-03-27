@@ -166,6 +166,7 @@ function PnlKpiRibbon({
 			aria-label="P&L key performance indicators"
 		>
 			<KpiCard
+				role="listitem"
 				label="Total Revenue HT"
 				icon={DollarSign}
 				index={0}
@@ -180,6 +181,7 @@ function PnlKpiRibbon({
 			</KpiCard>
 
 			<KpiCard
+				role="listitem"
 				label="EBITDA"
 				icon={TrendingUp}
 				index={1}
@@ -194,6 +196,7 @@ function PnlKpiRibbon({
 			</KpiCard>
 
 			<KpiCard
+				role="listitem"
 				label="EBITDA Margin"
 				icon={BarChart3}
 				index={2}
@@ -205,6 +208,7 @@ function PnlKpiRibbon({
 			</KpiCard>
 
 			<KpiCard
+				role="listitem"
 				label="Net Profit"
 				icon={Landmark}
 				index={3}

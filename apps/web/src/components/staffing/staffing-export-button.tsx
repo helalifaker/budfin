@@ -17,6 +17,7 @@ import type {
 } from '../../hooks/use-staffing';
 import type { CapacityResult } from '@budfin/types';
 import { apiClient, ApiError } from '../../lib/api-client';
+import { sanitizeFilename, triggerDownload } from '../../lib/download-utils';
 import { BAND_LABELS } from '../../lib/band-styles';
 import {
 	buildStaffingWorkbook,
@@ -48,19 +49,6 @@ interface StaffingExportButtonProps {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
-
-function sanitizeFilename(value: string) {
-	return value.replace(/\s+/g, '-').toLowerCase();
-}
-
-function triggerDownload(filename: string, blob: Blob) {
-	const url = window.URL.createObjectURL(blob);
-	const anchor = document.createElement('a');
-	anchor.href = url;
-	anchor.download = filename;
-	anchor.click();
-	window.URL.revokeObjectURL(url);
-}
 
 async function downloadWorkbook(
 	workbook: import('exceljs').Workbook,

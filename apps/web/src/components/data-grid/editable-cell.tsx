@@ -9,6 +9,7 @@ interface EditableCellProps {
 	isReadOnly?: boolean;
 	type?: 'text' | 'number';
 	className?: string;
+	ariaLabel?: string;
 }
 
 /** Entry mode for edit state: 'full' preserves existing value, 'overwrite' replaces it. */
@@ -21,6 +22,7 @@ export function EditableCell({
 	isReadOnly = false,
 	type = 'text',
 	className,
+	ariaLabel,
 }: EditableCellProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(String(value));
@@ -165,6 +167,7 @@ export function EditableCell({
 				ref={inputRef}
 				type={type}
 				value={editValue}
+				aria-label={ariaLabel ?? 'Edit cell value'}
 				onChange={(e) => setEditValue(e.target.value)}
 				onBlur={handleBlur}
 				onKeyDown={handleKeyDown}

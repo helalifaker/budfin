@@ -16,11 +16,8 @@ import {
 	type RevenueForecastGridRow,
 	type RevenueForecastPeriod,
 } from '../../lib/revenue-workspace';
+import { sanitizeFilename, triggerDownload } from '../../lib/download-utils';
 import { BAND_LABELS } from '../../lib/band-styles';
-
-function sanitizeFilename(value: string) {
-	return value.replace(/\s+/g, '-').toLowerCase();
-}
 
 function buildFilenameBase({
 	versionName,
@@ -89,15 +86,6 @@ function buildExportRows({
 
 	exportRows.push(buildTotalRow(rows, visibleMonths, totalLabel));
 	return exportRows;
-}
-
-function triggerDownload(filename: string, blob: Blob) {
-	const url = window.URL.createObjectURL(blob);
-	const anchor = document.createElement('a');
-	anchor.href = url;
-	anchor.download = filename;
-	anchor.click();
-	window.URL.revokeObjectURL(url);
 }
 
 export function RevenueExportButton({

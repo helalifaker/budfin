@@ -86,7 +86,7 @@ export function RightPanel() {
 	return (
 		<div
 			className={cn(
-				'flex shrink-0 border-l-2 border-l-(--accent-100)',
+				'flex h-full shrink-0 border-l-2 border-l-(--accent-100)',
 				'bg-(--workspace-bg) shadow-(--shadow-sm)',
 				'animate-slide-up'
 			)}

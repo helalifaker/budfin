@@ -14,6 +14,7 @@ export function CurriculumKpiRibbon({ kpis }: CurriculumKpiRibbonProps) {
 	return (
 		<div role="list" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
 			<KpiCard
+				role="listitem"
 				label="Total Rules"
 				icon={BookOpen}
 				index={0}
@@ -24,6 +25,7 @@ export function CurriculumKpiRibbon({ kpis }: CurriculumKpiRibbonProps) {
 			</KpiCard>
 
 			<KpiCard
+				role="listitem"
 				label="Primary Hours"
 				icon={GraduationCap}
 				index={1}
@@ -34,6 +36,7 @@ export function CurriculumKpiRibbon({ kpis }: CurriculumKpiRibbonProps) {
 			</KpiCard>
 
 			<KpiCard
+				role="listitem"
 				label="Secondary Hours"
 				icon={School}
 				index={2}
@@ -44,6 +47,7 @@ export function CurriculumKpiRibbon({ kpis }: CurriculumKpiRibbonProps) {
 			</KpiCard>
 
 			<KpiCard
+				role="listitem"
 				label="Coverage Gaps"
 				icon={AlertTriangle}
 				index={3}

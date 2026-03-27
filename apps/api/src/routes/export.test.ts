@@ -21,12 +21,14 @@ vi.mock('../lib/prisma.js', () => {
 });
 
 vi.mock('../services/export/export-worker.js', () => ({
+	EXPORT_QUEUE_NAME: 'export-generate',
 	getExportBoss: vi.fn(() => ({
-		send: vi.fn().mockResolvedValue(undefined),
+		send: vi.fn().mockResolvedValue('00000000-0000-0000-0000-000000000001'),
 	})),
 }));
 
 import { prisma } from '../lib/prisma.js';
+import { getExportBoss } from '../services/export/export-worker.js';
 
 const mockPrisma = prisma as unknown as {
 	budgetVersion: { findUnique: ReturnType<typeof vi.fn> };
@@ -221,6 +223,27 @@ describe('POST /jobs', () => {
 		});
 
 		expect(res.statusCode).toBe(401);
+	});
+
+	it('returns 503 when export worker is not running', async () => {
+		vi.mocked(getExportBoss).mockReturnValueOnce(null);
+		mockPrisma.budgetVersion.findUnique.mockResolvedValue({ id: 1 });
+		const token = await makeToken();
+
+		const res = await app.inject({
+			method: 'POST',
+			url: `${URL_BASE}/jobs`,
+			headers: headers(token),
+			payload: {
+				versionId: 1,
+				reportType: 'PNL',
+				format: 'PDF',
+			},
+		});
+
+		expect(res.statusCode).toBe(503);
+		expect(res.json().code).toBe('EXPORT_WORKER_UNAVAILABLE');
+		expect(mockPrisma.exportJob.create).not.toHaveBeenCalled();
 	});
 });
 
