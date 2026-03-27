@@ -30,6 +30,15 @@ const CARDS = [
 		subtitle: 'Revenue less direct costs',
 	},
 	{
+		key: 'gp-margin',
+		label: 'GP Margin',
+		icon: Percent,
+		accentColor: 'var(--color-success)',
+		getValue: (k: AccountingPnlKpis) => k.gpMargin,
+		format: 'percent' as const,
+		subtitle: 'Gross profit / revenue',
+	},
+	{
 		key: 'ebitda',
 		label: 'EBITDA',
 		icon: BarChart3,
@@ -61,7 +70,7 @@ const CARDS = [
 export function PnlKpiRibbon({ kpis, isStale }: PnlKpiRibbonProps) {
 	return (
 		<div
-			className="grid grid-cols-2 gap-3 lg:grid-cols-5"
+			className="grid grid-cols-2 gap-3 lg:grid-cols-6"
 			role="list"
 			aria-label="P&L accounting key performance indicators"
 		>

@@ -17,6 +17,7 @@ import { EmptyState } from '../shared/empty-state';
 import { Skeleton } from '../ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import '../pnl/pnl-accounting-inspector';
 
 // ── Page Component ───────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ export function PnlAccountingPage() {
 
 	const [compareYear, setCompareYear] = useState<number | undefined>();
 	const [profitCenter, setProfitCenter] = useState<string | undefined>();
+	const [viewMode, setViewMode] = useState<'annual' | 'quarterly' | 'monthly'>('annual');
 
 	const queryOptions: { compareYear?: number; profitCenter?: string } = {};
 	if (compareYear !== undefined) queryOptions.compareYear = compareYear;
@@ -106,6 +108,18 @@ export function PnlAccountingPage() {
 					</h1>
 
 					<div className="flex flex-wrap items-center gap-3">
+						{/* View toggle */}
+						<Tabs
+							value={viewMode}
+							onValueChange={(v) => setViewMode(v as 'annual' | 'quarterly' | 'monthly')}
+						>
+							<TabsList>
+								<TabsTrigger value="annual">Annual</TabsTrigger>
+								<TabsTrigger value="quarterly">Quarterly</TabsTrigger>
+								<TabsTrigger value="monthly">Monthly</TabsTrigger>
+							</TabsList>
+						</Tabs>
+
 						{/* Compare dropdown */}
 						<Select
 							value={compareYear ? String(compareYear) : 'none'}
@@ -138,11 +152,26 @@ export function PnlAccountingPage() {
 					</div>
 				</div>
 
+				{/* Stale P&L warning */}
+				{isPnlStale && (
+					<div
+						className={cn(
+							'shrink-0 border-b border-(--color-warning)',
+							'bg-(--color-warning-bg) px-6 py-3'
+						)}
+						role="alert"
+					>
+						<p className="text-sm font-semibold text-(--color-warning)">
+							P&L data is stale. Recalculate to see updated figures.
+						</p>
+					</div>
+				)}
+
 				{/* KPI Ribbon */}
 				{isLoading && (
 					<div className="shrink-0 px-6 py-3">
-						<div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-							{Array.from({ length: 5 }).map((_, i) => (
+						<div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+							{Array.from({ length: 6 }).map((_, i) => (
 								<Skeleton key={i} className="h-24 rounded-xl" />
 							))}
 						</div>
