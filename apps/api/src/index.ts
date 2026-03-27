@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
+import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { logging } from './plugins/logging.js';
@@ -44,6 +45,13 @@ export async function buildApp() {
 
 	await app.register(logging);
 	await app.register(metrics);
+	await app.register(helmet, {
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+			},
+		},
+	});
 	await app.register(cors, {
 		origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
 		credentials: true,

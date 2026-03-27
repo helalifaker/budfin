@@ -63,24 +63,26 @@ export async function systemConfigRoutes(app: FastifyInstance) {
 				}
 
 				const oldValue = existing.value;
-				await prisma.systemConfig.update({
-					where: { key },
-					data: {
-						value,
-						updatedBy: request.user.id,
-					},
-				});
+				await prisma.$transaction(async (tx) => {
+					await tx.systemConfig.update({
+						where: { key },
+						data: {
+							value,
+							updatedBy: request.user.id,
+						},
+					});
 
-				await prisma.auditEntry.create({
-					data: {
-						userId: request.user.id,
-						userEmail: request.user.email,
-						operation: 'CONFIG_UPDATED',
-						tableName: 'system_config',
-						ipAddress: request.ip,
-						oldValues: { key, value: oldValue },
-						newValues: { key, value },
-					},
+					await tx.auditEntry.create({
+						data: {
+							userId: request.user.id,
+							userEmail: request.user.email,
+							operation: 'CONFIG_UPDATED',
+							tableName: 'system_config',
+							ipAddress: request.ip,
+							oldValues: { key, value: oldValue },
+							newValues: { key, value },
+						},
+					});
 				});
 
 				updated++;

@@ -19,13 +19,13 @@ const kpiDefs = [
 		label: 'Total AY1',
 		key: 'totalAy1',
 		icon: Users,
-		formatter: (v: number) => v.toLocaleString(),
+		formatter: (v: number) => new Intl.NumberFormat('fr-FR').format(v),
 	},
 	{
 		label: 'Total AY2',
 		key: 'totalAy2',
 		icon: UserPlus,
-		formatter: (v: number) => v.toLocaleString(),
+		formatter: (v: number) => new Intl.NumberFormat('fr-FR').format(v),
 	},
 	{
 		label: 'Utilization',

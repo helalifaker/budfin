@@ -235,7 +235,7 @@ describe('POST /api/v1/versions/:versionId/opex/line-items', () => {
 		expect(res.statusCode).toBe(404);
 	});
 
-	it('returns 404 when version is locked', async () => {
+	it('returns 409 when version is locked', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			id: 1,
 			status: 'Locked',
@@ -250,7 +250,7 @@ describe('POST /api/v1/versions/:versionId/opex/line-items', () => {
 			payload: validBody,
 		});
 
-		expect(res.statusCode).toBe(404);
+		expect(res.statusCode).toBe(409);
 	});
 
 	it('returns 403 for Viewer (needs data:edit)', async () => {
@@ -399,7 +399,7 @@ describe('DELETE /api/v1/versions/:versionId/opex/line-items/:lineItemId', () =>
 		expect(res.statusCode).toBe(404);
 	});
 
-	it('returns 404 when version is archived', async () => {
+	it('returns 409 when version is archived', async () => {
 		mockPrisma.budgetVersion.findUnique.mockResolvedValue({
 			id: 1,
 			status: 'Archived',
@@ -413,7 +413,7 @@ describe('DELETE /api/v1/versions/:versionId/opex/line-items/:lineItemId', () =>
 			headers: authHeader(token),
 		});
 
-		expect(res.statusCode).toBe(404);
+		expect(res.statusCode).toBe(409);
 	});
 
 	it('returns 403 for Viewer (needs data:edit)', async () => {

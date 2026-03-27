@@ -30,6 +30,15 @@ export function EditableCell({
 	const [showFlash, setShowFlash] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const entryModeRef = useRef<EditEntryMode>('full');
+	const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+	const flashTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+	useEffect(() => {
+		return () => {
+			clearTimeout(saveTimerRef.current);
+			clearTimeout(flashTimerRef.current);
+		};
+	}, []);
 
 	useEffect(() => {
 		setEditValue(String(value));
@@ -61,8 +70,10 @@ export function EditableCell({
 			onChange(editValue);
 			setSaveState('saved');
 			setShowFlash(true);
-			setTimeout(() => setSaveState('idle'), 1500);
-			setTimeout(() => setShowFlash(false), 800);
+			clearTimeout(saveTimerRef.current);
+			clearTimeout(flashTimerRef.current);
+			saveTimerRef.current = setTimeout(() => setSaveState('idle'), 1500);
+			flashTimerRef.current = setTimeout(() => setShowFlash(false), 800);
 		}
 	}, [editValue, value, onChange]);
 
@@ -118,8 +129,10 @@ export function EditableCell({
 					onChange('0');
 					setSaveState('saved');
 					setShowFlash(true);
-					setTimeout(() => setSaveState('idle'), 1500);
-					setTimeout(() => setShowFlash(false), 800);
+					clearTimeout(saveTimerRef.current);
+					clearTimeout(flashTimerRef.current);
+					saveTimerRef.current = setTimeout(() => setSaveState('idle'), 1500);
+					flashTimerRef.current = setTimeout(() => setShowFlash(false), 800);
 				}
 				return;
 			}
