@@ -201,19 +201,24 @@ function EntryModeToggle({
 	value,
 	onChange,
 	disabled,
+	isPending,
 }: {
 	value: OpExEntryMode;
 	onChange: (mode: OpExEntryMode) => void;
 	disabled: boolean;
+	isPending?: boolean;
 }) {
 	return (
 		<div
 			className={cn(
 				'flex rounded-md border border-(--workspace-border)',
-				'bg-(--workspace-bg-subtle)'
+				'bg-(--workspace-bg-subtle)',
+				'transition-opacity duration-(--duration-fast)',
+				isPending && 'opacity-60 pointer-events-none'
 			)}
 			role="radiogroup"
 			aria-label="Entry mode"
+			aria-busy={isPending}
 		>
 			{OPEX_ENTRY_MODES.map((mode) => {
 				const isActive = mode === value;
@@ -264,13 +269,17 @@ function ActiveMonthsPills({
 
 	const handleToggle = (month: number) => {
 		if (disabled) return;
-		const newSet = new Set(activeSet);
-		if (newSet.has(month)) {
-			newSet.delete(month);
+		// [] means all 12 active — expand to explicit set before toggling
+		const base =
+			activeSet.size === 0 ? new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) : new Set(activeSet);
+		if (base.has(month)) {
+			base.delete(month);
 		} else {
-			newSet.add(month);
+			base.add(month);
 		}
-		onChange([...newSet].sort((a, b) => a - b));
+		// Normalize back: all 12 selected → [] (canonical all-active)
+		const result = base.size === 12 ? [] : [...base].sort((a, b) => a - b);
+		onChange(result);
 	};
 
 	return (
@@ -323,6 +332,78 @@ function ActiveMonthsPills({
 	);
 }
 
+// ── Compute Rate Input ───────────────────────────────────────────────────────
+
+function ComputeRateInput({
+	value,
+	onSave,
+	disabled,
+}: {
+	value: string | null;
+	onSave: (rate: string | null) => void;
+	disabled: boolean;
+}) {
+	const toDisplayPercent = (raw: string | null) =>
+		raw ? new Decimal(raw).times(100).toFixed(2) : '';
+
+	const [draft, setDraft] = useState(() => toDisplayPercent(value));
+
+	// Refresh draft from current server value when the user focuses the input.
+	// The parent keys this component on computeRate, so remounts cover item changes.
+	// This covers the case where the same item's rate was updated externally.
+	const handleFocus = () => {
+		setDraft(toDisplayPercent(value));
+	};
+
+	const handleBlur = () => {
+		const num = parseFloat(draft);
+		if (Number.isNaN(num) || draft.trim() === '') {
+			onSave(null);
+			setDraft('');
+			return;
+		}
+		const clamped = Math.max(0, Math.min(100, num));
+		const asDecimal = new Decimal(clamped).div(100).toFixed(6);
+		onSave(asDecimal);
+		setDraft(new Decimal(clamped).toFixed(2));
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === 'Enter') e.currentTarget.blur();
+		if (e.key === 'Escape') setDraft(toDisplayPercent(value));
+	};
+
+	return (
+		<div className="mt-1 flex items-center gap-2">
+			<input
+				type="number"
+				min="0"
+				max="100"
+				step="0.1"
+				value={draft}
+				onChange={(e) => setDraft(e.target.value)}
+				onFocus={handleFocus}
+				onBlur={handleBlur}
+				onKeyDown={handleKeyDown}
+				disabled={disabled}
+				placeholder="0.00"
+				className={cn(
+					'w-full rounded-md border border-(--workspace-border)',
+					'bg-(--workspace-bg-card) px-3 py-1.5',
+					'text-(--text-sm) font-mono tabular-nums text-right',
+					'focus:outline-none focus:ring-2 focus:ring-(--accent-500) focus:border-(--accent-500)',
+					'disabled:opacity-50 disabled:cursor-not-allowed',
+					'[appearance:textfield]',
+					'[&::-webkit-outer-spin-button]:appearance-none',
+					'[&::-webkit-inner-spin-button]:appearance-none'
+				)}
+				aria-label="Compute rate as percentage of revenue"
+			/>
+			<span className="shrink-0 text-(--text-sm) font-medium text-(--text-muted)">%</span>
+		</div>
+	);
+}
+
 // ── KPI Mini Card ────────────────────────────────────────────────────────────
 
 function KpiMiniCard({ label, value }: { label: string; value: string }) {
@@ -354,6 +435,10 @@ function OpExInspectorActiveView({ lineItem }: { lineItem: OpExLineItem }) {
 	const isLocked = versionStatus === 'Locked' || versionStatus === 'Archived';
 	const disabled = isLocked;
 
+	// Optimistic pending state — shows user intent immediately without waiting for refetch.
+	// Null means "no pending change; use server value". Cleared in mutation's onSettled.
+	const [pendingEntryMode, setPendingEntryMode] = useState<OpExEntryMode | null>(null);
+	const [pendingActiveMonths, setPendingActiveMonths] = useState<number[] | null>(null);
 	const [commentDraft, setCommentDraft] = useState(lineItem.comment ?? '');
 
 	// Compute derived values from API data (display only, no arithmetic per ADR-002)
@@ -443,19 +528,34 @@ function OpExInspectorActiveView({ lineItem }: { lineItem: OpExLineItem }) {
 	);
 
 	const handleEntryModeChange = useCallback(
-		(entryMode: OpExEntryMode) => handlePatch({ entryMode }),
-		[handlePatch]
+		(entryMode: OpExEntryMode) => {
+			setPendingEntryMode(entryMode);
+			updateMutation.mutate(
+				{ lineItemId: lineItem.id, patch: { entryMode } },
+				{ onSettled: () => setPendingEntryMode(null) }
+			);
+		},
+		[lineItem.id, updateMutation]
 	);
 
 	const handleActiveMonthsChange = useCallback(
-		(activeMonths: number[]) => handlePatch({ activeMonths }),
-		[handlePatch]
+		(activeMonths: number[]) => {
+			setPendingActiveMonths(activeMonths);
+			updateMutation.mutate(
+				{ lineItemId: lineItem.id, patch: { activeMonths } },
+				{ onSettled: () => setPendingActiveMonths(null) }
+			);
+		},
+		[lineItem.id, updateMutation]
 	);
 
-	const handleActiveMonthsReset = useCallback(
-		() => handlePatch({ activeMonths: [] }),
-		[handlePatch]
-	);
+	const handleActiveMonthsReset = useCallback(() => {
+		setPendingActiveMonths([]);
+		updateMutation.mutate(
+			{ lineItemId: lineItem.id, patch: { activeMonths: [] } },
+			{ onSettled: () => setPendingActiveMonths(null) }
+		);
+	}, [lineItem.id, updateMutation]);
 
 	const handleCommentBlur = useCallback(() => {
 		const trimmed = commentDraft.trim();
@@ -559,19 +659,33 @@ function OpExInspectorActiveView({ lineItem }: { lineItem: OpExLineItem }) {
 				<SectionLabel>Entry Mode</SectionLabel>
 				<div className="mt-1">
 					<EntryModeToggle
-						value={lineItem.entryMode}
+						value={pendingEntryMode ?? lineItem.entryMode}
 						onChange={handleEntryModeChange}
 						disabled={disabled}
+						isPending={updateMutation.isPending}
 					/>
 				</div>
 			</div>
+
+			{/* ── Compute Rate — only for % Revenue mode ───────────────── */}
+			{(pendingEntryMode ?? lineItem.entryMode) === 'PERCENT_OF_REVENUE' && (
+				<div>
+					<SectionLabel>Rate (% of Revenue)</SectionLabel>
+					<ComputeRateInput
+						key={lineItem.computeRate ?? 'none'}
+						value={lineItem.computeRate}
+						onSave={(rate) => handlePatch({ computeRate: rate })}
+						disabled={disabled}
+					/>
+				</div>
+			)}
 
 			{/* ── Active Months ─────────────────────────────────────────── */}
 			<div>
 				<SectionLabel>Active Months</SectionLabel>
 				<div className="mt-1.5">
 					<ActiveMonthsPills
-						activeMonths={lineItem.activeMonths}
+						activeMonths={pendingActiveMonths ?? lineItem.activeMonths}
 						onChange={handleActiveMonthsChange}
 						onReset={handleActiveMonthsReset}
 						disabled={disabled}
