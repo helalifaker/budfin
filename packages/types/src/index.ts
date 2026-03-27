@@ -183,3 +183,10 @@ export type {
 } from './scenario.js';
 
 export type { CommentResponse, CommentCountResponse } from './comment.js';
+
+export type {
+	AccountingPnlLine,
+	AccountingPnlSection,
+	AccountingPnlKpis,
+	AccountingPnlView,
+} from './pnl-accounting.js';
