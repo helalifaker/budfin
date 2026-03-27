@@ -15,6 +15,8 @@ const accountSchema = z.object({
 	type: z.enum(['REVENUE', 'EXPENSE', 'ASSET', 'LIABILITY']),
 	ifrsCategory: z.string().min(1, 'IFRS category is required'),
 	centerType: z.enum(['PROFIT_CENTER', 'COST_CENTER']),
+	profitCenter: z.enum(['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE']).nullable(),
+	parentCode: z.string().nullable(),
 	description: z.string().nullable(),
 	status: z.enum(['ACTIVE', 'INACTIVE']),
 });
@@ -43,6 +45,14 @@ const CENTER_TYPE_LABELS: Record<string, string> = {
 	COST_CENTER: 'Cost Center',
 };
 
+const PROFIT_CENTERS = ['MATERNELLE', 'ELEMENTAIRE', 'COLLEGE', 'LYCEE'] as const;
+const PROFIT_CENTER_LABELS: Record<string, string> = {
+	MATERNELLE: 'Maternelle',
+	ELEMENTAIRE: 'Élémentaire',
+	COLLEGE: 'Collège',
+	LYCEE: 'Lycée',
+};
+
 const STATUSES = ['ACTIVE', 'INACTIVE'] as const;
 
 export function AccountsSidePanel({
@@ -62,6 +72,8 @@ export function AccountsSidePanel({
 		type: 'EXPENSE',
 		ifrsCategory: '',
 		centerType: 'COST_CENTER',
+		profitCenter: null,
+		parentCode: null,
 		description: null,
 		status: 'ACTIVE',
 	};
@@ -78,6 +90,8 @@ export function AccountsSidePanel({
 			type: account.type,
 			ifrsCategory: account.ifrsCategory,
 			centerType: account.centerType,
+			profitCenter: account.profitCenter ?? null,
+			parentCode: account.parentCode ?? null,
 			description: account.description,
 			status: account.status,
 		};
@@ -267,6 +281,48 @@ export function AccountsSidePanel({
 										</SelectContent>
 									</Select>
 								)}
+							/>
+						</div>
+
+						<div>
+							<label htmlFor="profitCenter" className="block text-(--text-sm) font-medium">
+								Profit Center <span className="font-normal text-(--text-muted)">(optional)</span>
+							</label>
+							<Controller
+								control={form.control}
+								name="profitCenter"
+								render={({ field }) => (
+									<Select
+										value={field.value ?? 'none'}
+										onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
+									>
+										<SelectTrigger id="profitCenter" className="mt-1">
+											<SelectValue placeholder="Shared (no profit center)" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="none">Shared (no profit center)</SelectItem>
+											{PROFIT_CENTERS.map((pc) => (
+												<SelectItem key={pc} value={pc}>
+													{PROFIT_CENTER_LABELS[pc]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+							/>
+						</div>
+
+						<div>
+							<label htmlFor="parentCode" className="block text-(--text-sm) font-medium">
+								Parent Account Code{' '}
+								<span className="font-normal text-(--text-muted)">(optional)</span>
+							</label>
+							<Input
+								id="parentCode"
+								type="text"
+								className="mt-1"
+								placeholder="e.g. 4000"
+								{...form.register('parentCode')}
 							/>
 						</div>
 

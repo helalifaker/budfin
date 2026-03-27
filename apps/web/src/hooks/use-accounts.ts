@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
 
+export type ProfitCenter = 'MATERNELLE' | 'ELEMENTAIRE' | 'COLLEGE' | 'LYCEE';
+
 export interface Account {
 	id: number;
 	accountCode: string;
@@ -8,6 +10,9 @@ export interface Account {
 	type: 'REVENUE' | 'EXPENSE' | 'ASSET' | 'LIABILITY';
 	ifrsCategory: string;
 	centerType: 'PROFIT_CENTER' | 'COST_CENTER';
+	profitCenter: ProfitCenter | null;
+	parentCode: string | null;
+	isSystem: boolean;
 	description: string | null;
 	status: 'ACTIVE' | 'INACTIVE';
 	version: number;
@@ -18,6 +23,7 @@ export interface Account {
 export interface AccountFilters {
 	type?: string;
 	centerType?: string;
+	profitCenter?: string;
 	status?: string;
 	search?: string;
 }
@@ -26,6 +32,7 @@ export function useAccounts(filters: AccountFilters = {}) {
 	const params = new URLSearchParams();
 	if (filters.type) params.set('type', filters.type);
 	if (filters.centerType) params.set('centerType', filters.centerType);
+	if (filters.profitCenter) params.set('profitCenter', filters.profitCenter);
 	if (filters.status) params.set('status', filters.status);
 	if (filters.search) params.set('search', filters.search);
 	const query = params.toString();
@@ -40,7 +47,7 @@ export function useAccounts(filters: AccountFilters = {}) {
 export function useCreateAccount() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (data: Omit<Account, 'id' | 'version' | 'createdAt' | 'updatedAt'>) =>
+		mutationFn: (data: Omit<Account, 'id' | 'version' | 'isSystem' | 'createdAt' | 'updatedAt'>) =>
 			apiClient<Account>('/master-data/accounts', {
 				method: 'POST',
 				body: JSON.stringify(data),
