@@ -109,6 +109,9 @@ const mockAccount = {
 	updatedAt: now,
 	createdBy: 1,
 	updatedBy: 1,
+	parentCode: null,
+	profitCenter: null,
+	isSystem: false,
 };
 
 const mockNationality = {
